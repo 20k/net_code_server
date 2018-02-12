@@ -29,7 +29,7 @@ void init_js_interop(stack_duk& sd, const std::string& js_data)
 
 void test_compile(stack_duk& sd, const std::string& data)
 {
-    std::string prologue = "function INTERNAL_TEST()\n{\nvar IVAR = ";
+    std::string prologue = "function INTERNAL_TEST()\n{'use strict'\nvar IVAR = ";
     std::string endlogue = "\n\nreturn IVAR();\n\n}\n";
 
     std::string wrapper = prologue + data + endlogue;
@@ -40,7 +40,7 @@ void test_compile(stack_duk& sd, const std::string& data)
     duk_push_string(sd.ctx, "test-name");
 
     //DUK_COMPILE_FUNCTION
-    if (duk_pcompile(sd.ctx, DUK_COMPILE_FUNCTION) != 0)
+    if (duk_pcompile(sd.ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
     {
         printf("compile failed: %s\n", duk_safe_to_string(sd.ctx, -1));
     }
@@ -49,8 +49,6 @@ void test_compile(stack_duk& sd, const std::string& data)
         duk_pcall(sd.ctx, 0);      /* [ func ] -> [ result ] */
         printf("program result: %s\n", duk_safe_to_string(sd.ctx, -1));
     }
-
-    printf("pc\n");
 
     int ret = duk_pcall(sd.ctx, 0);
 
