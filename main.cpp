@@ -16,6 +16,8 @@
 #include <js/js_interop.hpp>
 #include <js/ui_util.hpp>
 
+#include <algorithm>
+
 void init_js_interop(stack_duk& sd, const std::string& js_data)
 {
     sd.ctx = js_interop_startup();
@@ -25,6 +27,61 @@ void init_js_interop(stack_duk& sd, const std::string& js_data)
     call_global_function(sd, "mainfunc");
 
     sd.save_function_call_point();*/
+}
+
+std::string get_script_from_name_string(const std::string& base_dir, const std::string& name_string)
+{
+    std::string to_parse = strip_whitespace(name_string);
+
+    int num_dots = std::count(to_parse.begin(), to_parse.end(), '.');
+
+    if(num_dots != 1)
+    {
+        return "";
+    }
+
+    bool check_digit = true;
+
+    for(char c : to_parse)
+    {
+        if(check_digit && isdigit(c))
+        {
+            return "";
+        }
+
+        check_digit = false;
+
+        if(c == '.')
+        {
+            check_digit = true;
+        }
+
+        if(!isalnum(c) && c != '.')
+        {
+            return "";
+        }
+    }
+
+    std::replace(to_parse.begin(), to_parse.end(), '.', '/');
+
+    return read_file(base_dir + "/" + to_parse + ".js");
+}
+
+void tests()
+{
+    std::string base = "./scripts";
+
+    std::string s1_data = get_script_from_name_string(base, "i20k.test");
+    std::string s2_data = read_file(base + "/i20k/test.js");
+
+    std::cout << s1_data << " s1\n\n" << s2_data << std::endl;
+
+    std::string s3_data = get_script_from_name_string(base, "i20k.2test");
+    std::string s4_data = read_file(base + "/i20k/2test.js");
+
+    assert(s1_data == s2_data);
+
+    assert(s3_data == "" && s3_data != s4_data);
 }
 
 void test_compile(stack_duk& sd, const std::string& data)
@@ -50,9 +107,7 @@ void test_compile(stack_duk& sd, const std::string& data)
         printf("program result: %s\n", duk_safe_to_string(sd.ctx, -1));
     }
 
-    int ret = duk_pcall(sd.ctx, 0);
-
-    printf("Test %s\n", duk_safe_to_string(sd.ctx, -1));
+    duk_pop(sd.ctx);
 }
 
 int main()
@@ -67,6 +122,8 @@ int main()
         bot_id = call_global_function(sd, "botjs");
     }*/
 
+    std::string base_scripts_directory = "./scripts";
+
     std::string data = read_file("test.js");
 
     stack_duk sd;
@@ -75,6 +132,8 @@ int main()
     std::string data_2 = read_file("test.js");
 
     test_compile(sd, data_2);
+
+    tests();
 
 
     arg_idx global_object = sd.push_global_object();
