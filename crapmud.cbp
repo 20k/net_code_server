@@ -30,7 +30,9 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add option="-std=c++1z" />
 			<Add option="-fexceptions" />
+			<Add directory="deps" />
 		</Compiler>
 		<Linker>
 			<Add option="-lmingw32" />
@@ -49,6 +51,9 @@
 			<Add library="C:/Users/James/Desktop/projects/binmat_game/libduktape.so.202.20200" />
 		</Linker>
 		<Unit filename="main.cpp" />
+		<Unit filename="sandbox.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Extensions>
 			<code_completion />
 			<envvars />

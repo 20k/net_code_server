@@ -233,6 +233,7 @@ static void sandbox_fatal(void *udata, const char *msg) {
 	exit(1);  /* must not return */
 }
 
+#if 0
 int main(int argc, char *argv[]) {
 	duk_context *ctx;
 	duk_int_t rc;
@@ -264,3 +265,4 @@ int main(int argc, char *argv[]) {
 
 	return 1;
 }
+#endif
