@@ -52,6 +52,43 @@ duk_ret_t db_insert(duk_context* ctx)
     return 1;
 }
 
+static
+duk_ret_t db_find(duk_context* ctx)
+{
+    int nargs = duk_get_top(ctx);
+
+    if(nargs == 0)
+        return 0;
+
+    if(nargs > 2)
+        return 0;
+
+    mongo_context* mongo_ctx = get_global_mongo_context();
+    mongo_ctx->change_collection(get_script_host(ctx));
+
+    std::string json = "";//duk_json_encode(ctx, -1);
+
+    std::string proj = "";
+
+    if(nargs == 2)
+    {
+        json = duk_json_encode(ctx, 0);
+        proj = std::string("{ \"projection\" : ") + duk_json_encode(ctx, 1) + " }";
+        //proj = duk_json_encode(ctx, 1);
+    }
+
+    if(nargs == 1)
+    {
+        json = duk_json_encode(ctx, 0);
+    }
+
+    std::cout << "json " << json << std::endl;
+    std::cout << "proj " << proj << std::endl;
+
+    mongo_ctx->find_json(json, proj);
+    return 1;
+}
+
 inline
 void quick_register(duk_context* ctx, const std::string& key, const std::string& value)
 {
@@ -178,6 +215,7 @@ void register_funcs(duk_context* ctx)
     inject_c_function(ctx, hash_d, "hash_d", 1);
 
     inject_c_function(ctx, db_insert, "db_insert", 1);
+    inject_c_function(ctx, db_find, "db_find", DUK_VARARGS);
     /*inject_c_function(ctx, hash_d, "hash_d", 1);
     inject_c_function(ctx, hash_d, "hash_d", 1);
     inject_c_function(ctx, hash_d, "hash_d", 1);

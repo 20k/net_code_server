@@ -92,12 +92,54 @@ struct mongo_context
 
         bson_error_t error;
 
-        if (!mongoc_collection_insert_one (collection, bs, NULL, NULL, &error))
+        if(!mongoc_collection_insert_one(collection, bs, NULL, NULL, &error))
         {
             fprintf (stderr, "%s\n", error.message);
         }
 
         bson_destroy(bs);
+    }
+
+    std::vector<std::string> find_json(const std::string& json, const std::string& proj)
+    {
+        std::vector<std::string> results;
+
+        bson_t* bs = make_bson_from_json(json);
+        bson_t* ps = make_bson_from_json(proj);
+
+        /*ps =  BCON_NEW ("projection", "{",
+                    "doot", BCON_BOOL (false),
+                 "}");*/
+
+        std::cout << bson_as_json(ps, nullptr);
+
+        if(bs == nullptr)
+            return results;
+
+        const bson_t *doc;
+
+        ///hmm. for .first() we should limit to one doc
+        ///for .count we need to run a completely separate query
+        ///for array, we need to do everythang
+        //mongoc_cursor_t* cursor = mongoc_collection_find(collection, MONGOC_QUERY_NONE, 0, 0, 0, bs, NULL, NULL);
+
+        mongoc_cursor_t* cursor = mongoc_collection_find_with_opts(collection, bs, ps, nullptr);
+
+        while(mongoc_cursor_more(cursor) && mongoc_cursor_next (cursor, &doc))
+        {
+            char* str = bson_as_json(doc, NULL);
+            printf ("found %s\n", str);
+
+            results.push_back(str);
+
+            bson_free(str);
+        }
+
+        mongoc_cursor_destroy(cursor);
+
+        bson_destroy(bs);
+
+        return results;
     }
 
     void insert_test_data()

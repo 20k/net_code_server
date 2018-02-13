@@ -15,8 +15,10 @@ function(context, args)
 	
 	#D(context.caller);
 	
-	#db.i({name:"SCRIPT_NAME"});
+	#db.i({name:"SCRIPT_NAME", doot:"doot"});
 	#db.i({name2:"SCRIPT_NAME2"});
+	
+	#db.f({name:"SCRIPT_NAME"}, {doot:0});
 	
 	return context.caller;
 }
