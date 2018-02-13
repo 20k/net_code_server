@@ -115,7 +115,7 @@ duk_ret_t db_find_all(duk_context* ctx)
 
     duk_push_global_stash(ctx);
 
-    duk_get_prop_string(ctx, -1, ("DB_INFO" + std::to_string(id)).c_str());
+    duk_get_prop_string(ctx, -1, (get_caller(ctx) + "DB_INFO" + std::to_string(id)).c_str());
 
     duk_get_prop_string(ctx, -1, "JSON");
     std::string json = duk_get_string(ctx, -1);
@@ -125,10 +125,17 @@ duk_ret_t db_find_all(duk_context* ctx)
     std::string proj = duk_get_string(ctx, -1);
     duk_pop(ctx);
 
+    duk_get_prop_string(ctx, -1, "DB_CALLER");
+    std::string caller = duk_get_string(ctx, -1);
+    duk_pop(ctx);
+
     ///remove get prop db info
     duk_pop(ctx);
     ///remove global stash
     duk_pop(ctx);
+
+    if(caller != get_caller(ctx))
+        return 0;
 
     std::vector<std::string> db_data = mongo_ctx->find_json(json, proj);
 
@@ -181,8 +188,11 @@ duk_ret_t db_find(duk_context* ctx)
     duk_push_string(ctx, proj.c_str());
     duk_put_prop_string(ctx, -2, "PROJ");
 
+    duk_push_string(ctx, get_caller(ctx).c_str());
+    duk_put_prop_string(ctx, -2, "DB_CALLER");
+
     duk_dup_top(ctx); //[glob -> object -> object]
-    duk_put_prop_string(ctx, -3, ("DB_INFO" + std::to_string(id)).c_str()); //[glob -> object]
+    duk_put_prop_string(ctx, -3, (get_caller(ctx) + "DB_INFO" + std::to_string(id)).c_str()); //[glob -> object]
 
     duk_remove(ctx, -2);
 
