@@ -96,9 +96,9 @@ std::string get_script_from_name_string(const std::string& base_dir, const std::
     return read_file(base_dir + "/" + to_parse + ".js");
 }
 
-bool expand(std::string_view& view, std::string& in, int& offset)
+bool expand_to_from(std::string_view& view, std::string& in, int& offset, std::string from, std::string to)
 {
-    std::string srch = "#fs.";
+    std::string srch = from;
 
     if(view.substr(0, srch.size()) != srch)
         return false;
@@ -131,10 +131,29 @@ bool expand(std::string_view& view, std::string& in, int& offset)
         int start = offset;
         int finish = offset + found_loc;
 
-        in.replace(offset, finish - start, "fs_call(\"" + found + "\")");
+        in.replace(offset, finish - start, to + "(\"" + found + "\")");
     }
 
     return valid;
+}
+
+bool expand(std::string_view& view, std::string& in, int& offset)
+{
+    std::vector<std::string> froms{"#fs.", "#hs.", "#ms.", "#ls.", "#ns.",
+                                   "#4s.", "#3s.", "#2s.", "#1s.", "#0s."};
+
+    std::vector<std::string> tos  {"fs_call", "hs_call", "ms_call", "ls_call", "ns_call",
+                                   "fs_call", "hs_call", "ms_call", "ls_call", "ns_call"};
+
+    for(int i=0; i < tos.size(); i++)
+    {
+        bool success = expand_to_from(view, in, offset, froms[i], tos[i]);
+
+        if(success)
+            return true;
+    }
+
+    return false;
 }
 
 std::string parse_script(std::string in)
