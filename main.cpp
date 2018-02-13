@@ -51,6 +51,12 @@ void init_js_interop(stack_duk& sd, const std::string& js_data)
 
 bool is_valid_string(const std::string& to_parse)
 {
+    if(to_parse.size() >= 15)
+        return false;
+
+    if(to_parse.size() == 0)
+        return false;
+
     bool check_digit = true;
 
     for(char c : to_parse)
@@ -115,18 +121,54 @@ std::string get_script_from_name_string(const std::string& base_dir, const std::
     return read_file(base_dir + "/" + to_parse + ".js");
 }
 
+bool expand(std::string_view& view, std::string& in, int& offset)
+{
+    std::string srch = "#fs.";
+
+    if(view.substr(0, srch.size()) != srch)
+        return false;
+
+    std::cout << "expand1\n";
+
+    bool second_half = false;
+
+    std::string found = "";
+    int found_loc = -1;
+
+    for(int i=srch.length(); i < view.size(); i++)
+    {
+        char c = view[i];
+
+        if(c == '(')
+        {
+            found_loc = i;
+            found = std::string(view.begin() + srch.length(), view.begin() + i);
+            break;
+        }
+    }
+
+    bool valid = is_valid_full_name_string(found);
+
+    //std::cout << found << "\n fnd\n";
+
+    if(valid)
+    {
+        int start = offset;
+        int finish = offset + found_loc;
+
+        in.replace(offset, finish - start, "fs_call(\"" + found + "\")");
+    }
+
+    return valid;
+}
+
 std::string parse_script(std::string in)
 {
     for(int i=0; i < in.size(); i++)
     {
         std::string_view strview(&in[i]);
 
-        std::string srch = "#fs.";
-
-        if(strview.substr(0, srch.size()) == srch)
-        {
-            printf("HEYO\n");
-        }
+        expand(strview, in, i);
     }
 
     return in;
