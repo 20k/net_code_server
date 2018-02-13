@@ -4,7 +4,7 @@
 inline
 void sl_call(duk_context* ctx, int sl)
 {
-
+    printf("SL CALL %i\n", sl);
 }
 
 static duk_ret_t fs_call(duk_context *ctx)

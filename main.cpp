@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include "seccallers.hpp"
+#include <string_view>
 
 ///i think something is broken with 7.2s stringstream implementation
 ///i dont know why the stringstream version crashes
@@ -70,9 +71,9 @@ bool is_valid_string(const std::string& to_parse)
     return true;
 }
 
-std::string get_script_from_name_string(const std::string& base_dir, const std::string& name_string)
+bool is_valid_full_name_string(const std::string& name)
 {
-    std::string to_parse = strip_whitespace(name_string);
+    std::string to_parse = strip_whitespace(name);
 
     int num_dots = std::count(to_parse.begin(), to_parse.end(), '.');
 
@@ -84,7 +85,7 @@ std::string get_script_from_name_string(const std::string& base_dir, const std::
     std::vector<std::string> strings = no_ss_split(to_parse, ".");
 
     if(strings.size() != 2)
-        return "";
+        return false;
 
     bool all_valid = true;
 
@@ -95,11 +96,40 @@ std::string get_script_from_name_string(const std::string& base_dir, const std::
     }
 
     if(!all_valid)
+        return false;
+
+    return true;
+}
+
+std::string get_script_from_name_string(const std::string& base_dir, const std::string& name_string)
+{
+    bool is_valid = is_valid_full_name_string(name_string);
+
+    if(!is_valid)
         return "";
+
+    std::string to_parse = strip_whitespace(name_string);
 
     std::replace(to_parse.begin(), to_parse.end(), '.', '/');
 
     return read_file(base_dir + "/" + to_parse + ".js");
+}
+
+std::string parse_script(std::string in)
+{
+    for(int i=0; i < in.size(); i++)
+    {
+        std::string_view strview(&in[i]);
+
+        std::string srch = "#fs.";
+
+        if(strview.substr(0, srch.size()) == srch)
+        {
+            printf("HEYO\n");
+        }
+    }
+
+    return in;
 }
 
 void tests()
@@ -111,7 +141,7 @@ void tests()
     std::string s1_data = get_script_from_name_string(base, "i20k.test");
     std::string s2_data = read_file(base + "/i20k/test.js");
 
-    std::cout << s1_data << " s1\n\n" << s2_data << std::endl;
+    //std::cout << s1_data << " s1\n\n" << s2_data << std::endl;
 
     std::string s3_data = get_script_from_name_string(base, "i20k.2test");
     std::string s4_data = read_file(base + "/i20k/2test.js");
@@ -119,6 +149,11 @@ void tests()
     assert(s1_data == s2_data);
 
     assert(s3_data == "" && s3_data != s4_data);
+
+
+    std::string parsed = parse_script(get_script_from_name_string(base, "i20k.parse"));
+
+    std::cout << parsed << std::endl;
 }
 
 void test_compile(stack_duk& sd, const std::string& data)
@@ -128,7 +163,7 @@ void test_compile(stack_duk& sd, const std::string& data)
 
     std::string wrapper = prologue + data + endlogue;
 
-    std::cout << wrapper << std::endl;
+    //std::cout << wrapper << std::endl;
 
     duk_push_string(sd.ctx, wrapper.c_str());
     duk_push_string(sd.ctx, "test-name");
