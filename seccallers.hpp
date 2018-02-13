@@ -2,12 +2,38 @@
 #define SECCALLERS_HPP_INCLUDED
 
 #include "script_util.hpp"
+#include "mongo.hpp"
+
+inline
+std::string get_caller(duk_context* ctx)
+{
+    duk_push_global_stash(ctx);
+    duk_get_prop_string(ctx, -1, "caller");
+
+    std::string str = duk_safe_to_string(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    return str;
+}
 
 ///#db.i, r, f, u, u1, us,
+
+///ALARM
+///NEED TO REGISTER SCRIPT OWNER AND USE THEIR DB
 static
 duk_ret_t db_insert(duk_context* ctx)
 {
+    ///FIX ME IMMEDIATELY
+    mongo_context mongo_ctx(get_caller(ctx));
 
+    std::string json = duk_json_encode(ctx, -1);
+
+    mongo_ctx.insert_json_1(json);
+
+    //mongo_ctx.insert_test_data();
+
+    std::cout << "json " << json << std::endl;
 
     return 1;
 }
@@ -23,19 +49,6 @@ void startup_state(duk_context* ctx, const std::string& caller)
     duk_put_prop_string(ctx, -2, "caller");
 
     duk_pop_n(ctx, 1);
-}
-
-inline
-std::string get_caller(duk_context* ctx)
-{
-    duk_push_global_stash(ctx);
-    duk_get_prop_string(ctx, -1, "caller");
-
-    std::string str = duk_safe_to_string(ctx, -1);
-
-    duk_pop_n(ctx, 2);
-
-    return str;
 }
 
 static
@@ -142,6 +155,13 @@ void register_funcs(duk_context* ctx)
     inject_c_function(ctx, ns_call, "ns_call", 1);
 
     inject_c_function(ctx, hash_d, "hash_d", 1);
+
+    inject_c_function(ctx, db_insert, "db_insert", 1);
+    /*inject_c_function(ctx, hash_d, "hash_d", 1);
+    inject_c_function(ctx, hash_d, "hash_d", 1);
+    inject_c_function(ctx, hash_d, "hash_d", 1);
+    inject_c_function(ctx, hash_d, "hash_d", 1);
+    inject_c_function(ctx, hash_d, "hash_d", 1);*/
 }
 
 #endif // SECCALLERS_HPP_INCLUDED

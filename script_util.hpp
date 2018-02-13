@@ -178,13 +178,11 @@ bool expand(std::string_view& view, std::string& in, int& offset)
 {
     std::vector<std::string> froms{"#fs.", "#hs.", "#ms.", "#ls.", "#ns.",
                                    "#4s.", "#3s.", "#2s.", "#1s.", "#0s.",
-                                   "#s.",
-                                   "#db.i"};
+                                   "#s."};
 
     std::vector<std::string> tos  {"fs_call", "hs_call", "ms_call", "ls_call", "ns_call",
                                    "fs_call", "hs_call", "ms_call", "ls_call", "ns_call",
-                                   "ns_call",
-                                   "db_insert"};
+                                   "ns_call"};
 
     for(int i=0; i < tos.size(); i++)
     {
@@ -194,8 +192,11 @@ bool expand(std::string_view& view, std::string& in, int& offset)
             return true;
     }
 
-    std::vector<std::string> froms_unchecked{"#D"};
-    std::vector<std::string> tos_unchecked{"hash_d"};
+    std::vector<std::string> froms_unchecked{"#D",
+                                             "#db.i", "#db.r", "#db.f", "#db.u", "#db.u1", "#db.us"};
+
+    std::vector<std::string> tos_unchecked  {"hash_d",
+                                             "db_insert", "db_remove", "db_find", "db_update", "db_update1", "db_upsert"};
 
     for(int i=0; i < tos_unchecked.size(); i++)
     {

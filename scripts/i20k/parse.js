@@ -15,6 +15,10 @@ function()
 	
 	#D(context.caller);
 	
+	#db.i({name:"SCRIPT_NAME"});
+	//#db.i({name2:"SCRIPT_NAME2"});
+	
+	
 	//return context.caller;
 		
 	return "hi"

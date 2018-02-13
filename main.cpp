@@ -69,6 +69,8 @@ std::string run_script_as(const std::string& script, const std::string& user)
     ///need to check we have permission
     std::string data = parse_script(get_script_from_name_string("./scripts", script));
 
+    //std::cout << data << std::endl;
+
     std::string ret = compile_and_call(sd, data, false, get_caller(sd.ctx));
 
     return ret;
@@ -76,7 +78,7 @@ std::string run_script_as(const std::string& script, const std::string& user)
 
 int main()
 {
-    mongo_tests("i20k_FDFDFDF_IMPOSSIBLE");
+    //mongo_tests("i20k_FDFDFDF_IMPOSSIBLE");
 
     bool is_bot = false;
 

@@ -28,7 +28,7 @@ struct mongo_context
         bson_error_t error;
 
         bool retval = mongoc_client_command_simple (
-                     client, "admin", command, NULL, &reply, &error);
+                          client, "admin", command, NULL, &reply, &error);
 
         if (!retval)
         {
@@ -43,6 +43,56 @@ struct mongo_context
         bson_destroy (&reply);
         bson_destroy (command);
         bson_free (str);
+    }
+
+    bson_t* make_bson_from_json(const std::string& json)
+    {
+        bson_error_t error;
+
+        bson_t* bson = bson_new_from_json ((const uint8_t *)json.c_str(), -1, &error);
+
+        if (!bson)
+        {
+            fprintf (stderr, "%s\n", error.message);
+            return nullptr;
+        }
+
+        //string = bson_as_canonical_extended_json (bson, NULL);
+        //printf ("%s\n", string);
+        //bson_free (string);
+
+        return bson;
+    }
+
+    void insert_json_1(const std::string& json)
+    {
+        bson_t* bs = make_bson_from_json(json);
+
+        if(bs == nullptr)
+            return;
+
+        bson_error_t error;
+
+        if (!mongoc_collection_insert_one (collection, bs, NULL, NULL, &error))
+        {
+            fprintf (stderr, "%s\n", error.message);
+        }
+
+        bson_destroy(bs);
+    }
+
+    void insert_test_data()
+    {
+        bson_error_t error;
+
+        bson_t* insert = BCON_NEW ("hello", BCON_UTF8 ("world"));
+
+        if (!mongoc_collection_insert_one (collection, insert, NULL, NULL, &error))
+        {
+            fprintf (stderr, "%s\n", error.message);
+        }
+
+        bson_destroy (insert);
     }
 
     ~mongo_context()
@@ -65,16 +115,10 @@ void mongo_tests(const std::string& coll)
     ///mongoc_client_t *client = mongoc_client_new ("mongodb://user:password@localhost/?authSource=mydb");
 
     mongo_context ctx(coll);
-    bson_error_t error;
 
-    bson_t* insert = BCON_NEW ("hello", BCON_UTF8 ("world"));
+    //ctx.insert_test_data();
 
-    if (!mongoc_collection_insert_one (ctx.collection, insert, NULL, NULL, &error))
-    {
-        fprintf (stderr, "%s\n", error.message);
-    }
-
-    bson_destroy (insert);
+    ctx.insert_json_1("{\"name\": {\"first\":\"bum\", \"last\":\"test\"}}");
 }
 
 #endif // MONGO_HPP_INCLUDED
