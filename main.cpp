@@ -18,7 +18,7 @@
 
 #include <algorithm>
 
-///i think something is brok
+///i think something is broken with 7.2s stringstream implementation
 std::vector<std::string> no_ss_split(const std::string& str, const std::string& delim)
 {
     std::vector<std::string> tokens;
