@@ -5,6 +5,13 @@
 #include "mongo.hpp"
 
 inline
+void quick_register(duk_context* ctx, const std::string& key, const std::string& value)
+{
+    duk_push_string(ctx, value.c_str());
+    duk_put_prop_string(ctx, -2, key.c_str());
+}
+
+inline
 std::string get_caller(duk_context* ctx)
 {
     duk_push_global_stash(ctx);
@@ -52,29 +59,43 @@ duk_ret_t db_insert(duk_context* ctx)
     return 1;
 }
 
-static
-duk_ret_t db_find(duk_context* ctx)
+void parse_push_json(duk_context* ctx, const std::vector<std::string>& jsons)
 {
-    int nargs = duk_get_top(ctx);
+    duk_idx_t arr_idx = duk_push_array(ctx);
+
+    for(int i=0; i < jsons.size(); i++)
+    {
+        duk_push_string(ctx, jsons[i].c_str());
+        duk_json_decode(ctx, -1);
+
+        duk_put_prop_index(ctx, arr_idx, i);
+    }
+}
+
+static
+duk_ret_t db_find_all(duk_context* ctx)
+{
+    printf("db find\n");
+
+    ///args will have to be pushed into heap, not top
+    /*int nargs = duk_get_top(ctx);
 
     if(nargs == 0)
         return 0;
 
     if(nargs > 2)
-        return 0;
+        return 0;*/
 
     mongo_context* mongo_ctx = get_global_mongo_context();
     mongo_ctx->change_collection(get_script_host(ctx));
 
-    std::string json = "";//duk_json_encode(ctx, -1);
+    //std::string json = "";//duk_json_encode(ctx, -1);
+    //std::string proj = "";
 
-    std::string proj = "";
-
-    if(nargs == 2)
+    /*if(nargs == 2)
     {
         json = duk_json_encode(ctx, 0);
         proj = std::string("{ \"projection\" : ") + duk_json_encode(ctx, 1) + " }";
-        //proj = duk_json_encode(ctx, 1);
     }
 
     if(nargs == 1)
@@ -83,17 +104,98 @@ duk_ret_t db_find(duk_context* ctx)
     }
 
     std::cout << "json " << json << std::endl;
-    std::cout << "proj " << proj << std::endl;
+    std::cout << "proj " << proj << std::endl;*/
 
-    mongo_ctx->find_json(json, proj);
+    duk_push_this(ctx);
+    duk_get_prop_string(ctx, -1, "DB_INFO");
+
+    int id = duk_get_int(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    duk_push_global_stash(ctx);
+
+    duk_get_prop_string(ctx, -1, ("DB_INFO" + std::to_string(id)).c_str());
+
+    duk_get_prop_string(ctx, -1, "JSON");
+    std::string json = duk_get_string(ctx, -1);
+    duk_pop(ctx);
+
+    duk_get_prop_string(ctx, -1, "PROJ");
+    std::string proj = duk_get_string(ctx, -1);
+    duk_pop(ctx);
+
+    ///remove get prop db info
+    duk_pop(ctx);
+    ///remove global stash
+    duk_pop(ctx);
+
+    std::vector<std::string> db_data = mongo_ctx->find_json(json, proj);
+
+    parse_push_json(ctx, db_data);
+
     return 1;
 }
 
-inline
-void quick_register(duk_context* ctx, const std::string& key, const std::string& value)
+///count, first, array
+static
+duk_ret_t db_find(duk_context* ctx)
 {
-    duk_push_string(ctx, value.c_str());
-    duk_put_prop_string(ctx, -2, key.c_str());
+    int nargs = duk_get_top(ctx);
+
+    std::string json = "";//duk_json_encode(ctx, -1);
+    std::string proj = "";
+
+    if(nargs == 2)
+    {
+        json = duk_json_encode(ctx, 0);
+        proj = std::string("{ \"projection\" : ") + duk_json_encode(ctx, 1) + " }";
+    }
+
+    if(nargs == 1)
+    {
+        json = duk_json_encode(ctx, 0);
+    }
+
+    duk_push_global_stash(ctx); // [glob]
+    duk_get_prop_string(ctx, -1, "DB_ID"); //[glob -> db_id]
+    int id = duk_get_int(ctx, -1); //[glob -> db_id]
+    int new_id = id + 1;
+    duk_pop(ctx); //[glob]
+
+    duk_push_int(ctx, new_id); //[glob -> int]
+    duk_put_prop_string(ctx, -2, "DB_ID"); //[glob]
+
+    ///global object on the stack
+
+    //duk_pop(ctx);
+
+    duk_push_object(ctx); //[glob -> object]
+
+    duk_push_int(ctx, id);
+    duk_put_prop_string(ctx, -2, "INTERNAL_DB_ID_GOOD_LUCK_EDITING_THIS");
+
+    duk_push_string(ctx, json.c_str());
+    duk_put_prop_string(ctx, -2, "JSON");
+
+    duk_push_string(ctx, proj.c_str());
+    duk_put_prop_string(ctx, -2, "PROJ");
+
+    duk_dup_top(ctx); //[glob -> object -> object]
+    duk_put_prop_string(ctx, -3, ("DB_INFO" + std::to_string(id)).c_str()); //[glob -> object]
+
+    duk_remove(ctx, -2);
+
+    //[object]
+    duk_push_c_function(ctx, db_find_all, 0);
+    duk_put_prop_string(ctx, -2, "array");
+
+    return 1;
+
+    //duk_push_object(ctx);
+
+
+    //duk_push_object()
 }
 
 inline
@@ -105,6 +207,9 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
     quick_register(ctx, "caller", caller.c_str());
     quick_register(ctx, "script_host", script_host.c_str());
     quick_register(ctx, "script_ending", script_ending.c_str());
+
+    duk_push_int(ctx, 0);
+    duk_put_prop_string(ctx, -2, "DB_ID");
 
     duk_pop_n(ctx, 1);
 }

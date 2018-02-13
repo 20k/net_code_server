@@ -111,7 +111,7 @@ struct mongo_context
                     "doot", BCON_BOOL (false),
                  "}");*/
 
-        std::cout << bson_as_json(ps, nullptr);
+        //std::cout << bson_as_json(ps, nullptr);
 
         if(bs == nullptr)
             return results;
@@ -121,14 +121,12 @@ struct mongo_context
         ///hmm. for .first() we should limit to one doc
         ///for .count we need to run a completely separate query
         ///for array, we need to do everythang
-        //mongoc_cursor_t* cursor = mongoc_collection_find(collection, MONGOC_QUERY_NONE, 0, 0, 0, bs, NULL, NULL);
-
         mongoc_cursor_t* cursor = mongoc_collection_find_with_opts(collection, bs, ps, nullptr);
 
         while(mongoc_cursor_more(cursor) && mongoc_cursor_next (cursor, &doc))
         {
             char* str = bson_as_json(doc, NULL);
-            printf ("found %s\n", str);
+            //printf ("found %s\n", str);
 
             results.push_back(str);
 

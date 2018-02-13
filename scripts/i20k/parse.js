@@ -11,14 +11,16 @@ function(context, args)
 	
 	result.debug();
 	
-	#D({test:"GLORIOUS_HASH_D"});
+	//#D({test:"GLORIOUS_HASH_D"});
 	
-	#D(context.caller);
+	//#D(context.caller);
 	
 	#db.i({name:"SCRIPT_NAME", doot:"doot"});
 	#db.i({name2:"SCRIPT_NAME2"});
 	
-	#db.f({name:"SCRIPT_NAME"}, {doot:0});
+	var res_cursor = #db.f({name:"SCRIPT_NAME"}, {doot:0});
+	
+	return res_cursor.array()[0].name;
 	
 	return context.caller;
 }
