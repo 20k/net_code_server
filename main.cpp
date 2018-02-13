@@ -32,7 +32,6 @@ void init_js_interop(stack_duk& sd, const std::string& js_data)
     sd.save_function_call_point();*/
 }
 
-
 void tests()
 {
     std::vector<std::string> strings = no_ss_split("test.hello", ".");
@@ -55,32 +54,6 @@ void tests()
     std::string parsed = parse_script(get_script_from_name_string(base, "i20k.parse"));
 
     std::cout << parsed << std::endl;
-}
-
-void test_compile(stack_duk& sd, const std::string& data)
-{
-    std::string prologue = "function INTERNAL_TEST()\n{'use strict'\nvar IVAR = ";
-    std::string endlogue = "\n\nreturn IVAR();\n\n}\n";
-
-    std::string wrapper = prologue + data + endlogue;
-
-    //std::cout << wrapper << std::endl;
-
-    duk_push_string(sd.ctx, wrapper.c_str());
-    duk_push_string(sd.ctx, "test-name");
-
-    //DUK_COMPILE_FUNCTION
-    if (duk_pcompile(sd.ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
-    {
-        printf("compile failed: %s\n", duk_safe_to_string(sd.ctx, -1));
-    }
-    else
-    {
-        duk_pcall(sd.ctx, 0);      /* [ func ] -> [ result ] */
-        printf("program result: %s\n", duk_safe_to_string(sd.ctx, -1));
-    }
-
-    duk_pop(sd.ctx);
 }
 
 int main()
@@ -107,11 +80,11 @@ int main()
 
     std::string data_2 = read_file("test.js");
 
-    test_compile(sd, data_2);
+    compile_and_call(sd, data_2);
 
     std::string data_3 = parse_script(get_script_from_name_string(base_scripts_directory, "i20k.parse"));
 
-    test_compile(sd, data_3);
+    compile_and_call(sd, data_3);
 
     //tests();
 

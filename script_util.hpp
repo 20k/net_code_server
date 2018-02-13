@@ -3,6 +3,9 @@
 
 #include <string_view>
 
+inline
+std::string base_scripts_string = "./scripts";
+
 ///i think something is broken with 7.2s stringstream implementation
 ///i dont know why the stringstream version crashes
 std::vector<std::string> no_ss_split(const std::string& str, const std::string& delim)
@@ -146,5 +149,31 @@ std::string parse_script(std::string in)
     return in;
 }
 
+
+void compile_and_call(stack_duk& sd, const std::string& data)
+{
+    std::string prologue = "function INTERNAL_TEST()\n{'use strict'\nvar IVAR = ";
+    std::string endlogue = "\n\nreturn IVAR();\n\n}\n";
+
+    std::string wrapper = prologue + data + endlogue;
+
+    //std::cout << wrapper << std::endl;
+
+    duk_push_string(sd.ctx, wrapper.c_str());
+    duk_push_string(sd.ctx, "test-name");
+
+    //DUK_COMPILE_FUNCTION
+    if (duk_pcompile(sd.ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
+    {
+        printf("compile failed: %s\n", duk_safe_to_string(sd.ctx, -1));
+    }
+    else
+    {
+        duk_pcall(sd.ctx, 0);      /* [ func ] -> [ result ] */
+        printf("program result: %s\n", duk_safe_to_string(sd.ctx, -1));
+    }
+
+    duk_pop(sd.ctx);
+}
 
 #endif // SCRIPT_UTIL_HPP_INCLUDED
