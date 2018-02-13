@@ -5,7 +5,13 @@
 
 struct mongo_context
 {
-    mongo_context(const std::string& coll)
+    mongoc_client_t* client = nullptr;
+    mongoc_database_t* database = nullptr;
+    mongoc_collection_t* collection = nullptr;
+
+    std::string last_collection = "";
+
+    mongo_context()
     {
         std::string uri_str = "mongodb://user_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
 
@@ -16,6 +22,19 @@ struct mongo_context
         mongoc_client_set_appname(client, "crapmud");
 
         database = mongoc_client_get_database (client, "user_dbs");
+    }
+
+    void change_collection(const std::string& coll)
+    {
+        if(coll == last_collection)
+            return;
+
+        if(collection)
+        {
+            mongoc_collection_destroy(collection);
+            collection = nullptr;
+        }
+
         collection = mongoc_client_get_collection (client, "user_dbs", coll.c_str());
     }
 
@@ -97,24 +116,53 @@ struct mongo_context
 
     ~mongo_context()
     {
-        mongoc_collection_destroy (collection);
+        if(collection)
+            mongoc_collection_destroy (collection);
+
         mongoc_database_destroy (database);
         mongoc_client_destroy (client);
 
         mongoc_cleanup();
     }
-
-    mongoc_client_t* client = nullptr;
-    mongoc_database_t* database = nullptr;
-    mongoc_collection_t* collection = nullptr;
 };
 
+static
+void cleanup_mongo();
+
+static mongo_context* get_global_mongo_context(bool destroy = false)
+{
+    static mongo_context* ctx = nullptr;
+
+    if(ctx == nullptr)
+    {
+        ctx = new mongo_context();
+
+        atexit(cleanup_mongo);
+    }
+
+    if(destroy)
+    {
+        if(ctx)
+            delete ctx;
+
+        ctx = nullptr;
+    }
+
+    return ctx;
+}
+
+static
+void cleanup_mongo()
+{
+    get_global_mongo_context(true);
+}
 
 void mongo_tests(const std::string& coll)
 {
     ///mongoc_client_t *client = mongoc_client_new ("mongodb://user:password@localhost/?authSource=mydb");
 
-    mongo_context ctx(coll);
+    mongo_context ctx;
+    ctx.change_collection(coll);
 
     //ctx.insert_test_data();
 

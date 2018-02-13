@@ -25,11 +25,12 @@ static
 duk_ret_t db_insert(duk_context* ctx)
 {
     ///FIX ME IMMEDIATELY
-    mongo_context mongo_ctx(get_caller(ctx));
+    mongo_context* mongo_ctx = get_global_mongo_context();
+    mongo_ctx->change_collection(get_caller(ctx));
 
     std::string json = duk_json_encode(ctx, -1);
 
-    mongo_ctx.insert_json_1(json);
+    mongo_ctx->insert_json_1(json);
 
     //mongo_ctx.insert_test_data();
 
