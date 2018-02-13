@@ -17,24 +17,35 @@ std::string get_caller(duk_context* ctx)
     return str;
 }
 
-///#db.i, r, f, u, u1, us,
+inline
+std::string get_global_string(duk_context* ctx, const std::string& name)
+{
+    duk_push_global_stash(ctx);
+    duk_get_prop_string(ctx, -1, name.c_str());
 
-///ALARM
-///NEED TO REGISTER SCRIPT OWNER AND USE THEIR DB
+    std::string str = duk_safe_to_string(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    return str;
+}
+
+inline
+std::string get_script_host(duk_context* ctx)
+{
+    return get_global_string(ctx, "script_host");
+}
+
+///#db.i, r, f, u, u1, us,
 static
 duk_ret_t db_insert(duk_context* ctx)
 {
-    ///FIX ME IMMEDIATELY
     mongo_context* mongo_ctx = get_global_mongo_context();
-    mongo_ctx->change_collection(get_caller(ctx));
+    mongo_ctx->change_collection(get_script_host(ctx));
 
     std::string json = duk_json_encode(ctx, -1);
 
     mongo_ctx->insert_json_1(json);
-
-    //mongo_ctx.insert_test_data();
-
-    //mongo_ctx.ping();
 
     std::cout << "json " << json << std::endl;
 
@@ -42,14 +53,21 @@ duk_ret_t db_insert(duk_context* ctx)
 }
 
 inline
-void startup_state(duk_context* ctx, const std::string& caller)
+void quick_register(duk_context* ctx, const std::string& key, const std::string& value)
+{
+    duk_push_string(ctx, value.c_str());
+    duk_put_prop_string(ctx, -2, key.c_str());
+}
+
+inline
+void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending)
 {
     duk_push_global_stash(ctx);
-    duk_push_string(ctx, "");
-    duk_put_prop_string(ctx, -2, "HASH_D");
 
-    duk_push_string(ctx, caller.c_str());
-    duk_put_prop_string(ctx, -2, "caller");
+    quick_register(ctx, "HASH_D", "");
+    quick_register(ctx, "caller", caller.c_str());
+    quick_register(ctx, "script_host", script_host.c_str());
+    quick_register(ctx, "script_ending", script_ending.c_str());
 
     duk_pop_n(ctx, 1);
 }
@@ -65,7 +83,7 @@ duk_ret_t hash_d(duk_context* ctx)
 
     std::string fstr = duk_safe_to_string(ctx, -1);
 
-    fstr += str;
+    fstr += str + "\n";
 
     duk_pop_n(ctx, 1);
 

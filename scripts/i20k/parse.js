@@ -1,4 +1,4 @@
-function()
+function(context, args)
 {
 	function debug()
 	{
@@ -9,7 +9,7 @@ function()
 	
 	var result = #fs.i20k.test();
 	
-	//result.debug();
+	result.debug();
 	
 	#D({test:"GLORIOUS_HASH_D"});
 	
@@ -18,10 +18,5 @@ function()
 	#db.i({name:"SCRIPT_NAME"});
 	#db.i({name2:"SCRIPT_NAME2"});
 	
-	
-	//return context.caller;
-		
-	return "hi"
-	
-	return {debug:debug}
+	return context.caller;
 }

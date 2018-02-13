@@ -64,12 +64,20 @@ std::string run_script_as(const std::string& script, const std::string& user)
     init_js_interop(sd, std::string());
     register_funcs(sd.ctx);
 
-    startup_state(sd.ctx, user);
 
     ///need to check we have permission
     std::string data = parse_script(get_script_from_name_string("./scripts", script));
 
     //std::cout << data << std::endl;
+
+    if(data == "")
+    {
+        return "Invalid Script";
+    }
+
+    std::vector<std::string> parts = no_ss_split(script, ".");
+
+    startup_state(sd.ctx, user, parts[0], parts[1]);
 
     std::string ret = compile_and_call(sd, data, false, get_caller(sd.ctx));
 
