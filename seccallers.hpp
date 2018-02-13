@@ -33,6 +33,8 @@ duk_ret_t db_insert(duk_context* ctx)
 
     //mongo_ctx.insert_test_data();
 
+    //mongo_ctx.ping();
+
     std::cout << "json " << json << std::endl;
 
     return 1;
