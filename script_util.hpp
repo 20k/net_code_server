@@ -54,13 +54,15 @@ bool is_valid_string(const std::string& to_parse)
 
 bool is_valid_full_name_string(const std::string& name)
 {
-    std::string to_parse = strip_whitespace(name);
+    //std::string to_parse = strip_whitespace(name);
+
+    std::string to_parse = name;
 
     int num_dots = std::count(to_parse.begin(), to_parse.end(), '.');
 
     if(num_dots != 1)
     {
-        return "";
+        return false;
     }
 
     std::vector<std::string> strings = no_ss_split(to_parse, ".");
@@ -68,16 +70,11 @@ bool is_valid_full_name_string(const std::string& name)
     if(strings.size() != 2)
         return false;
 
-    bool all_valid = true;
-
     for(auto& str : strings)
     {
         if(!is_valid_string(str))
-            all_valid = false;
+            return false;
     }
-
-    if(!all_valid)
-        return false;
 
     return true;
 }
@@ -126,6 +123,11 @@ bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& off
             break;
         }
     }
+
+    /*if(found_loc != -1)
+    {
+        std::cout << "fnd " << found << std::endl;
+    }*/
 
     bool valid = is_valid_full_name_string(found);
 
@@ -287,8 +289,8 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
 
             duk_pop_n(sd.ctx, 1);
 
-            duk_get_global_string(sd.ctx, "context");
-            duk_push_object(sd.ctx);
+            duk_get_global_string(sd.ctx, "context"); ///push context
+            duk_push_object(sd.ctx); ///push empty args, no forwarding
 
             duk_pcall(sd.ctx, 2);
         }

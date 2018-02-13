@@ -8,11 +8,11 @@ function(context, args)
 	print("Eyy");
 	
 	///hmm. Interesting idea
-	///detect #fs.i20k.test
+	///detect #fs. i20k.test
 	///convert to fs_i20k_test
 	///then register a native function with that name
+	///however... i dont'
 	///that way we can have no dynamic functions
-	///however... i don't exactly need to kill them, so
 	var result = #fs.i20k.test();
 	
 	result.debug();
