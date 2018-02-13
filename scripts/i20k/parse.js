@@ -12,6 +12,8 @@ function(context, args)
 	//result.debug();
 	
 	#D({test:"GLORIOUS_HASH_D"});
-		
+	
+	return "hi"
+	
 	return {debug:debug}
 }

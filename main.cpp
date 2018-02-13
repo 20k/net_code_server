@@ -56,6 +56,22 @@ void tests()
     std::cout << parsed << std::endl;
 }
 
+std::string run_script_as(const std::string& script, const std::string& user)
+{
+    stack_duk sd;
+    init_js_interop(sd, std::string());
+    register_funcs(sd.ctx);
+
+    startup_state(sd.ctx, user);
+
+    ///need to check we have permission
+    std::string data = parse_script(get_script_from_name_string("./scripts", script));
+
+    std::string ret = compile_and_call(sd, data, false, get_caller(sd.ctx));
+
+    return ret;
+}
+
 int main()
 {
     bool is_bot = false;
@@ -70,7 +86,7 @@ int main()
 
     tests();
 
-    std::string base_scripts_directory = "./scripts";
+    /*std::string base_scripts_directory = "./scripts";
 
     std::string data = read_file("test.js");
 
@@ -88,12 +104,16 @@ int main()
 
     std::string exec = compile_and_call(sd, data_3, false, get_caller(sd.ctx));
 
-    std::cout << exec << std::endl;
+    std::cout << exec << std::endl;*/
+
+    std::string ret = run_script_as("i20k.parse", "i20k");
+
+    std::cout << ret << std::endl;
 
     //tests();
 
 
-    arg_idx global_object = sd.push_global_object();
+    //arg_idx global_object = sd.push_global_object();
 
     //arg_idx gs_id = call_function_from_absolute(sd, "game_state_make");
     //arg_idx cm_id = call_function_from_absolute(sd, "card_manager_make");
