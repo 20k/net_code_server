@@ -5,15 +5,17 @@ function(context, args)
 		print("hi")
 	}
 	
+	print("args " + args);
+	
 	print("Eyy");
 	
 	///hmm. Interesting idea
-	///detect #fs. i20k.test
+	///detect #fs.i20k.test
 	///convert to fs_i20k_test
 	///then register a native function with that name
 	///however... i dont'
 	///that way we can have no dynamic functions
-	var result = #fs.i20k.test();
+	var result = #fs.i20k.test({hi:"yes"});
 	
 	result.debug();
 	

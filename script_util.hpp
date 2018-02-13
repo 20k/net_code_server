@@ -279,20 +279,40 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
         ///need to push caller, and then args
         if(is_conargs_function)
         {
-            duk_push_global_object(sd.ctx);
+            duk_push_global_object(sd.ctx); //[glob]
 
-            duk_idx_t id = duk_push_object(sd.ctx); ///context
-            duk_push_string(sd.ctx, caller.c_str()); ///caller
-            duk_put_prop_string(sd.ctx, id, "caller");
+            duk_idx_t id = duk_push_object(sd.ctx); ///context //[glob -> obj]
+            duk_push_string(sd.ctx, caller.c_str()); ///caller //[glob -> obj -> string]
+            duk_put_prop_string(sd.ctx, id, "caller"); //[glob -> obj]
 
-            duk_put_prop_string(sd.ctx, -2, "context");
+            duk_put_prop_string(sd.ctx, -2, "context"); //[glob]
 
-            duk_pop_n(sd.ctx, 1);
+            duk_pop_n(sd.ctx, 1); //empty stack, has function at -1
 
-            duk_get_global_string(sd.ctx, "context"); ///push context
-            duk_push_object(sd.ctx); ///push empty args, no forwarding
+            duk_get_global_string(sd.ctx, "context"); //[context]
+            //duk_push_object(sd.ctx); ///push empty args, no forwarding
 
-            duk_pcall(sd.ctx, 2);
+            int nargs = 2;
+
+            if(called_internally)
+            {
+                if(duk_is_undefined(sd.ctx, -3))
+                {
+                    nargs = 1;
+                }
+                else
+                {
+                    duk_dup(sd.ctx, -3); //[args]
+                }
+            }
+            else
+            {
+                duk_push_undefined(sd.ctx);
+
+                //duk_push_object(sd.ctx);
+            }
+
+            duk_pcall(sd.ctx, nargs);
         }
         else
         {
