@@ -18,8 +18,8 @@ function(context, args)
 	#db.i({name:"SCRIPT_NAME", doot:"doot"});
 	#db.i({name2:"SCRIPT_NAME2"});
 	
-	//#db.i({test:"hola"});
-	//#db.r({test:"hola"});
+	#db.i({test:"hola"});
+	#db.r({test:"hola"});
 	
 	var found = #db.f({test:"hola"}).array();
 	
@@ -29,7 +29,7 @@ function(context, args)
 	var res_cursor = #db.f({name:"SCRIPT_NAME"}, {doot:0});
 	
 	//
-	return res_cursor.array()[0].name;
+	return found;
 	
 	return context.caller;
 }

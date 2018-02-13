@@ -126,7 +126,7 @@ int main()
 
     std::string ret = run_script_as("i20k.parse", "i20k");
 
-    std::cout << "return val " << ret << std::endl;
+    std::cout << ret << std::endl;
 
     //tests();
 
