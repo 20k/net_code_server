@@ -52,6 +52,7 @@ duk_ret_t hash_d(duk_context* ctx)
     return 0;
 }
 
+///need to pass context object into function
 static
 duk_ret_t js_call(duk_context* ctx)
 {
@@ -69,6 +70,8 @@ duk_ret_t js_call(duk_context* ctx)
     stack_duk sd;
     sd.ctx = ctx;
 
+    ///so.
+    ///need to pass context and args along
     compile_and_call(sd, load, true, get_caller(ctx));
 
     ///oh boy

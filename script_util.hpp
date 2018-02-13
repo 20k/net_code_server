@@ -233,19 +233,19 @@ std::string get_hash_d(duk_context* ctx)
     return str;
 }
 
-std::string compile_and_call(stack_duk& sd, const std::string& data, bool called_internally, std::string caller)
+std::string compile_and_call(stack_duk& sd, const std::string& data, bool called_internally, std::string caller, bool is_conargs_function = true)
 {
     if(data.size() == 0)
     {
         return "Script not found";
     }
 
-    std::string prologue = "function INTERNAL_TEST()\n{'use strict'\nvar IVAR = ";
-    std::string endlogue = "\n\nreturn IVAR();\n\n}\n";
+    std::string prologue = "function INTERNAL_TEST(c, a)\n{'use strict'\nvar IVAR = ";
+    std::string endlogue = "\n\nreturn IVAR(c, a);\n\n}\n";
 
     if(!called_internally)
     {
-        endlogue = "\n\nreturn JSON.stringify(IVAR());\n\n}\n";
+        endlogue = "\n\nreturn JSON.stringify(IVAR(c, a));\n\n}\n";
     }
 
     std::string wrapper = prologue + data + endlogue;
@@ -268,7 +268,28 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
     }
     else
     {
-        duk_pcall(sd.ctx, 0);
+        ///need to push caller, and then args
+        if(is_conargs_function)
+        {
+            duk_push_global_object(sd.ctx);
+
+            duk_idx_t id = duk_push_object(sd.ctx); ///context
+            duk_push_string(sd.ctx, caller.c_str()); ///caller
+            duk_put_prop_string(sd.ctx, id, "caller");
+
+            duk_put_prop_string(sd.ctx, -2, "context");
+
+            duk_pop_n(sd.ctx, 1);
+
+            duk_get_global_string(sd.ctx, "context");
+            duk_push_object(sd.ctx);
+
+            duk_pcall(sd.ctx, 2);
+        }
+        else
+        {
+            duk_pcall(sd.ctx, 0);
+        }
 
         if(!called_internally)
         {

@@ -13,6 +13,10 @@ function(context, args)
 	
 	#D({test:"GLORIOUS_HASH_D"});
 	
+	#D(context.caller);
+	
+	//return context.caller;
+		
 	return "hi"
 	
 	return {debug:debug}
