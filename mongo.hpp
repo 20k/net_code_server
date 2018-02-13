@@ -74,13 +74,12 @@ struct mongo_context
 
         if (!bson)
         {
-            fprintf (stderr, "%s\n", error.message);
+            std::cout << "errd " << json << std::endl;
+
+            fprintf (stderr, "bson err: %s\n", error.message);
             return nullptr;
         }
 
-        //string = bson_as_canonical_extended_json (bson, NULL);
-        //printf ("%s\n", string);
-        //bson_free (string);
 
         return bson;
     }
@@ -99,7 +98,7 @@ struct mongo_context
 
         if(!mongoc_collection_insert_one(collection, bs, NULL, NULL, &error))
         {
-            fprintf (stderr, "%s\n", error.message);
+            fprintf (stderr, "err: %s\n", error.message);
         }
 
         bson_destroy(bs);

@@ -72,7 +72,7 @@ std::string run_script_as(const std::string& script, const std::string& user)
 
     std::cout << data << std::endl;
 
-    std::cout << data.size() << std::endl;
+    //std::cout << data.size() << std::endl;
 
     if(data == "")
     {
@@ -126,7 +126,7 @@ int main()
 
     std::string ret = run_script_as("i20k.parse", "i20k");
 
-    std::cout << ret << std::endl;
+    std::cout << "return val " << ret << std::endl;
 
     //tests();
 

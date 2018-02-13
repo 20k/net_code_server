@@ -82,9 +82,9 @@ duk_ret_t db_find_all(duk_context* ctx)
     mongo_ctx->change_collection(get_script_host(ctx));
 
     duk_push_this(ctx);
-    duk_get_prop_string(ctx, -1, "DB_INFO");
+    duk_get_prop_string(ctx, -1, "INTERNAL_DB_ID_GOOD_LUCK_EDITING_THIS");
 
-    int id = duk_get_int(ctx, -1);
+    int id = duk_require_int(ctx, -1);
 
     duk_pop_n(ctx, 2);
 
@@ -103,6 +103,8 @@ duk_ret_t db_find_all(duk_context* ctx)
     duk_get_prop_string(ctx, -1, "DB_CALLER");
     std::string caller = duk_get_string(ctx, -1);
     duk_pop(ctx);
+
+    std::cout << "json " << json << std::endl;
 
     ///remove get prop db info
     duk_pop(ctx);
