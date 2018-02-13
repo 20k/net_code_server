@@ -226,11 +226,14 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
     std::string prologue = "function INTERNAL_TEST()\n{'use strict'\nvar IVAR = ";
     std::string endlogue = "\n\nreturn IVAR();\n\n}\n";
 
+    if(!called_internally)
+    {
+        endlogue = "\n\nreturn JSON.stringify(IVAR());\n\n}\n";
+    }
+
     std::string wrapper = prologue + data + endlogue;
 
     std::string ret;
-
-    //std::cout << wrapper << std::endl;
 
     duk_push_string(sd.ctx, wrapper.c_str());
     duk_push_string(sd.ctx, "test-name");
@@ -240,8 +243,6 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
     //DUK_COMPILE_FUNCTION
     if(duk_pcompile(sd.ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
     {
-        //ret = duk_safe_to_string(sd.ctx, -1);
-
         ret = duk_safe_to_string(sd.ctx, -1);
 
         printf("compile failed: %s\n", ret.c_str());
@@ -263,7 +264,8 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
 
     std::string str = get_hash_d(sd.ctx);
 
-    if(!called_internally && str != "")
+    ///only should do this if the caller is owner of script
+    if(str != "")
     {
         ret = str;
     }

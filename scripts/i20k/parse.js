@@ -7,11 +7,11 @@ function(context, args)
 	
 	print("Eyy");
 	
-	var result = #fs.i20k.test();
+	//var result = #fs.i20k.test();
 	
-	result.debug();
+	//result.debug();
 	
-	#D("GLORIOUS_HASH_D");
+	#D({test:"GLORIOUS_HASH_D"});
 		
 	return {debug:debug}
 }

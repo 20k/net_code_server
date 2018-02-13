@@ -16,7 +16,8 @@ void startup_state(duk_context* ctx)
 static
 duk_ret_t hash_d(duk_context* ctx)
 {
-    std::string str = duk_safe_to_string(ctx, -1);
+    std::string str = duk_json_encode(ctx, -1);
+    //duk_pop(ctx);
 
     duk_push_heap_stash(ctx);
     duk_get_prop_string(ctx, -1, "HASH_D");

@@ -86,7 +86,9 @@ int main()
 
     std::string data_3 = parse_script(get_script_from_name_string(base_scripts_directory, "i20k.parse"));
 
-    compile_and_call(sd, data_3);
+    std::string exec = compile_and_call(sd, data_3);
+
+    std::cout << exec << std::endl;
 
     //tests();
 
