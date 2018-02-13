@@ -7,7 +7,7 @@ function(context, args)
 	
 	print("Eyy");
 	
-	//var result = #fs.i20k.test();
+	var result = #fs.i20k.test();
 	
 	//result.debug();
 	

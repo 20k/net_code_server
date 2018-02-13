@@ -103,7 +103,7 @@ bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& off
     if(view.substr(0, srch.size()) != srch)
         return false;
 
-    std::cout << "expand1\n";
+    //std::cout << "expand1\n";
 
     std::string found = "";
     int found_loc = -1;
@@ -142,7 +142,7 @@ bool expand_to_from_nochecks(std::string_view& view, std::string& in, int& offse
     if(view.substr(0, srch.size()) != srch)
         return false;
 
-    std::cout << "expand2\n";
+    //std::cout << "expand2\n";
 
     std::string found = "";
     int found_loc = -1;
@@ -213,7 +213,7 @@ std::string parse_script(std::string in)
 
 std::string get_hash_d(duk_context* ctx)
 {
-    duk_push_heap_stash(ctx);
+    duk_push_global_stash(ctx);
     duk_get_prop_string(ctx, -1, "HASH_D");
 
     std::string str = duk_safe_to_string(ctx, -1);
@@ -223,7 +223,7 @@ std::string get_hash_d(duk_context* ctx)
     return str;
 }
 
-std::string compile_and_call(stack_duk& sd, const std::string& data, bool called_internally = false)
+std::string compile_and_call(stack_duk& sd, const std::string& data, bool called_internally, std::string caller)
 {
     std::string prologue = "function INTERNAL_TEST()\n{'use strict'\nvar IVAR = ";
     std::string endlogue = "\n\nreturn IVAR();\n\n}\n";
@@ -253,7 +253,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
     }
     else
     {
-        duk_pcall(sd.ctx, 0);      /* [ func ] -> [ result ] */
+        duk_pcall(sd.ctx, 0);
 
         if(!called_internally)
         {

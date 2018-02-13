@@ -4,13 +4,29 @@
 #include "script_util.hpp"
 
 inline
-void startup_state(duk_context* ctx)
+void startup_state(duk_context* ctx, const std::string& caller)
 {
-    duk_push_heap_stash(ctx);
+    duk_push_global_stash(ctx);
     duk_push_string(ctx, "");
     duk_put_prop_string(ctx, -2, "HASH_D");
 
+    duk_push_string(ctx, caller.c_str());
+    duk_put_prop_string(ctx, -2, "caller");
+
     duk_pop_n(ctx, 1);
+}
+
+inline
+std::string get_caller(duk_context* ctx)
+{
+    duk_push_global_stash(ctx);
+    duk_get_prop_string(ctx, -1, "caller");
+
+    std::string str = duk_safe_to_string(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    return str;
 }
 
 static
@@ -19,7 +35,7 @@ duk_ret_t hash_d(duk_context* ctx)
     std::string str = duk_json_encode(ctx, -1);
     //duk_pop(ctx);
 
-    duk_push_heap_stash(ctx);
+    duk_push_global_stash(ctx);
     duk_get_prop_string(ctx, -1, "HASH_D");
 
     std::string fstr = duk_safe_to_string(ctx, -1);
@@ -39,7 +55,7 @@ duk_ret_t hash_d(duk_context* ctx)
 static
 duk_ret_t js_call(duk_context* ctx)
 {
-    duk_push_heap_stash(ctx);
+    duk_push_global_stash(ctx);
     duk_get_prop_string(ctx, -1, "TO_CALL_INTERNAL_XXX");
 
     std::string str = duk_require_string(ctx, -1);
@@ -53,7 +69,7 @@ duk_ret_t js_call(duk_context* ctx)
     stack_duk sd;
     sd.ctx = ctx;
 
-    compile_and_call(sd, load, true);
+    compile_and_call(sd, load, true, get_caller(ctx));
 
     ///oh boy
     ///ok, need to read in the file
@@ -69,7 +85,7 @@ duk_ret_t sl_call(duk_context* ctx, int sl)
 {
     std::string str = duk_require_string(ctx, -1);
 
-    duk_push_heap_stash(ctx);
+    duk_push_global_stash(ctx);
     duk_push_string(ctx, str.c_str());
     duk_put_prop_string(ctx, -2, "TO_CALL_INTERNAL_XXX");
 

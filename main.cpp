@@ -78,15 +78,15 @@ int main()
     init_js_interop(sd, data);
     register_funcs(sd.ctx);
 
-    startup_state(sd.ctx);
+    startup_state(sd.ctx, "i20k");
 
     std::string data_2 = read_file("test.js");
 
-    compile_and_call(sd, data_2);
+    compile_and_call(sd, data_2, false, get_caller(sd.ctx));
 
     std::string data_3 = parse_script(get_script_from_name_string(base_scripts_directory, "i20k.parse"));
 
-    std::string exec = compile_and_call(sd, data_3);
+    std::string exec = compile_and_call(sd, data_3, false, get_caller(sd.ctx));
 
     std::cout << exec << std::endl;
 
