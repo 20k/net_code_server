@@ -178,11 +178,13 @@ bool expand(std::string_view& view, std::string& in, int& offset)
 {
     std::vector<std::string> froms{"#fs.", "#hs.", "#ms.", "#ls.", "#ns.",
                                    "#4s.", "#3s.", "#2s.", "#1s.", "#0s.",
-                                   "#s."};
+                                   "#s.",
+                                   "#db.i"};
 
     std::vector<std::string> tos  {"fs_call", "hs_call", "ms_call", "ls_call", "ns_call",
                                    "fs_call", "hs_call", "ms_call", "ls_call", "ns_call",
-                                   "ns_call"};
+                                   "ns_call",
+                                   "db_insert"};
 
     for(int i=0; i < tos.size(); i++)
     {
@@ -232,6 +234,9 @@ std::string get_hash_d(duk_context* ctx)
 
     return str;
 }
+
+///#db.f({[col_key]: {$exists : true}});
+///$where and $query both need to be disabled, $inspect as well
 
 std::string compile_and_call(stack_duk& sd, const std::string& data, bool called_internally, std::string caller, bool is_conargs_function = true)
 {

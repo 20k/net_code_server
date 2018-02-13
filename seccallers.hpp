@@ -3,6 +3,15 @@
 
 #include "script_util.hpp"
 
+///#db.i, r, f, u, u1, us,
+static
+duk_ret_t db_insert(duk_context* ctx)
+{
+
+
+    return 1;
+}
+
 inline
 void startup_state(duk_context* ctx, const std::string& caller)
 {

@@ -21,6 +21,8 @@
 #include "seccallers.hpp"
 #include <string_view>
 
+#include "mongo.hpp"
+
 void init_js_interop(stack_duk& sd, const std::string& js_data)
 {
     sd.ctx = js_interop_startup();
@@ -74,6 +76,8 @@ std::string run_script_as(const std::string& script, const std::string& user)
 
 int main()
 {
+    //mongo_tests("i20k_FDFDFDF_IMPOSSIBLE");
+
     bool is_bot = false;
 
     /*if(is_bot)

@@ -1,4 +1,4 @@
-function(context, args)
+function()
 {
 	function debug()
 	{

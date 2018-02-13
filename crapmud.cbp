@@ -23,9 +23,6 @@
 				<Compiler>
 					<Add option="-O2" />
 				</Compiler>
-				<Linker>
-					<Add option="-s" />
-				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
@@ -48,12 +45,16 @@
 			<Add option="-lflac" />
 			<Add option="-lopenal32" />
 			<Add option="-logg" />
+			<Add option="-lmongoc-1.0.dll" />
 			<Add library="C:/Users/James/Desktop/projects/binmat_game/libduktape.so.202.20200" />
 		</Linker>
 		<Unit filename="main.cpp" />
+		<Unit filename="mongo.hpp" />
 		<Unit filename="sandbox.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="script_util.hpp" />
+		<Unit filename="seccallers.hpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
