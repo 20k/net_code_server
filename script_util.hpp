@@ -170,10 +170,12 @@ bool expand_to_from_nochecks(std::string_view& view, std::string& in, int& offse
 bool expand(std::string_view& view, std::string& in, int& offset)
 {
     std::vector<std::string> froms{"#fs.", "#hs.", "#ms.", "#ls.", "#ns.",
-                                   "#4s.", "#3s.", "#2s.", "#1s.", "#0s."};
+                                   "#4s.", "#3s.", "#2s.", "#1s.", "#0s.",
+                                   "#s."};
 
     std::vector<std::string> tos  {"fs_call", "hs_call", "ms_call", "ls_call", "ns_call",
-                                   "fs_call", "hs_call", "ms_call", "ls_call", "ns_call"};
+                                   "fs_call", "hs_call", "ms_call", "ls_call", "ns_call",
+                                   "ns_call"};
 
     for(int i=0; i < tos.size(); i++)
     {
@@ -256,7 +258,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
         if(!called_internally)
         {
             ret = duk_safe_to_string(sd.ctx, -1);
-            printf("program result: %s\n", ret.c_str());
+            //printf("program result: %s\n", ret.c_str());
         }
 
         success = true;
