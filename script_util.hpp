@@ -209,6 +209,18 @@ std::string parse_script(std::string in)
     return in;
 }
 
+std::string get_hash_d(duk_context* ctx)
+{
+    duk_push_heap_stash(ctx);
+    duk_get_prop_string(ctx, -1, "HASH_D");
+
+    std::string str = duk_safe_to_string(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    return str;
+}
+
 void compile_and_call(stack_duk& sd, const std::string& data, bool called_internally = false)
 {
     std::string prologue = "function INTERNAL_TEST()\n{'use strict'\nvar IVAR = ";
@@ -238,6 +250,13 @@ void compile_and_call(stack_duk& sd, const std::string& data, bool called_intern
             printf("program result: %s\n", duk_safe_to_string(sd.ctx, -1));
 
         success = true;
+    }
+
+    std::string str = get_hash_d(sd.ctx);
+
+    if(!called_internally && str != "")
+    {
+        std::cout << str << std::endl;
     }
 
     if(!called_internally || !success)

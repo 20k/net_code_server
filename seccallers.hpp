@@ -30,7 +30,7 @@ duk_ret_t hash_d(duk_context* ctx)
     duk_push_string(ctx, fstr.c_str());
     duk_put_prop_string(ctx, -2, "HASH_D");
 
-    duk_pop_n(ctx, 1);
+    duk_pop_n(ctx, 2);
 
     return 0;
 }
