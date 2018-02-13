@@ -19,6 +19,7 @@
 #include <algorithm>
 
 ///i think something is broken with 7.2s stringstream implementation
+///i dont know why the stringstream version crashes
 std::vector<std::string> no_ss_split(const std::string& str, const std::string& delim)
 {
     std::vector<std::string> tokens;
@@ -59,12 +60,7 @@ bool is_valid_string(const std::string& to_parse)
 
         check_digit = false;
 
-        /*if(c == '.')
-        {
-            check_digit = true;
-        }*/
-
-        if(!isalnum(c))// && c != '.')
+        if(!isalnum(c))
         {
             return false;
         }
