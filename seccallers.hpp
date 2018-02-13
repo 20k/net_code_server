@@ -186,6 +186,19 @@ duk_ret_t db_find(duk_context* ctx)
     //duk_push_object()
 }
 
+static
+duk_ret_t db_remove(duk_context* ctx)
+{
+    mongo_context* mongo_ctx = get_global_mongo_context();
+    mongo_ctx->change_collection(get_script_host(ctx));
+
+    std::string json = duk_json_encode(ctx, -1);
+
+    mongo_ctx->remove_json(get_script_host(ctx), json);
+
+    return 0;
+}
+
 inline
 void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending)
 {
@@ -309,6 +322,7 @@ void register_funcs(duk_context* ctx)
 
     inject_c_function(ctx, db_insert, "db_insert", 1);
     inject_c_function(ctx, db_find, "db_find", DUK_VARARGS);
+    inject_c_function(ctx, db_remove, "db_remove", 1);
     /*inject_c_function(ctx, hash_d, "hash_d", 1);
     inject_c_function(ctx, hash_d, "hash_d", 1);
     inject_c_function(ctx, hash_d, "hash_d", 1);

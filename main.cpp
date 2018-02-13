@@ -3,15 +3,15 @@
 
 #include <iostream>
 #include <SFML/Graphics.hpp>
-#include <imgui/imgui.h>
-#include <imgui/imgui-SFML.h>
-#include <imgui/imgui_internal.h>
+//#include <imgui/imgui.h>
+//#include <imgui/imgui-SFML.h>
+//#include <imgui/imgui_internal.h>
 #include <vec/vec.hpp>
 //#include <serialise/serialise.hpp>
 //#include <js/manager.hpp>
 #include <math.h>
 #include <js/font_renderer.hpp>
-#include <4space_server/networking.hpp>
+//#include <4space_server/networking.hpp>
 
 #include <js/js_interop.hpp>
 #include <js/ui_util.hpp>
@@ -22,6 +22,8 @@
 #include <string_view>
 
 #include "mongo.hpp"
+
+#include <assert.h>
 
 void init_js_interop(stack_duk& sd, const std::string& js_data)
 {
@@ -68,7 +70,9 @@ std::string run_script_as(const std::string& script, const std::string& user)
     ///need to check we have permission
     std::string data = parse_script(get_script_from_name_string("./scripts", script));
 
-    //std::cout << data << std::endl;
+    std::cout << data << std::endl;
+
+    std::cout << data.size() << std::endl;
 
     if(data == "")
     {

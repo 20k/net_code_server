@@ -29,11 +29,11 @@
 			<Add option="-Wall" />
 			<Add option="-std=c++1z" />
 			<Add option="-fexceptions" />
+			<Add option="-fno-devirtualize" />
 			<Add directory="deps" />
 		</Compiler>
 		<Linker>
 			<Add option="-lmingw32" />
-			<Add option="-limgui" />
 			<Add option="-lsfml-graphics" />
 			<Add option="-lsfml-audio" />
 			<Add option="-lsfml-network" />
@@ -46,13 +46,11 @@
 			<Add option="-lopenal32" />
 			<Add option="-logg" />
 			<Add option="-lmongoc-1.0.dll" />
-			<Add library="C:/Users/James/Desktop/projects/binmat_game/libduktape.so.202.20200" />
+			<Add option="-lbson-1.0.dll" />
+			<Add library="C:/duk_fun/libduktape.so.202.20200" />
 		</Linker>
 		<Unit filename="main.cpp" />
 		<Unit filename="mongo.hpp" />
-		<Unit filename="sandbox.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="script_util.hpp" />
 		<Unit filename="seccallers.hpp" />
 		<Extensions>
