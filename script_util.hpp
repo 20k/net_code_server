@@ -221,12 +221,14 @@ std::string get_hash_d(duk_context* ctx)
     return str;
 }
 
-void compile_and_call(stack_duk& sd, const std::string& data, bool called_internally = false)
+std::string compile_and_call(stack_duk& sd, const std::string& data, bool called_internally = false)
 {
     std::string prologue = "function INTERNAL_TEST()\n{'use strict'\nvar IVAR = ";
     std::string endlogue = "\n\nreturn IVAR();\n\n}\n";
 
     std::string wrapper = prologue + data + endlogue;
+
+    std::string ret;
 
     //std::cout << wrapper << std::endl;
 
@@ -238,7 +240,11 @@ void compile_and_call(stack_duk& sd, const std::string& data, bool called_intern
     //DUK_COMPILE_FUNCTION
     if(duk_pcompile(sd.ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
     {
-        printf("compile failed: %s\n", duk_safe_to_string(sd.ctx, -1));
+        //ret = duk_safe_to_string(sd.ctx, -1);
+
+        ret = duk_safe_to_string(sd.ctx, -1);
+
+        printf("compile failed: %s\n", ret.c_str());
 
         success = false;
     }
@@ -247,7 +253,10 @@ void compile_and_call(stack_duk& sd, const std::string& data, bool called_intern
         duk_pcall(sd.ctx, 0);      /* [ func ] -> [ result ] */
 
         if(!called_internally)
-            printf("program result: %s\n", duk_safe_to_string(sd.ctx, -1));
+        {
+            ret = duk_safe_to_string(sd.ctx, -1);
+            printf("program result: %s\n", ret.c_str());
+        }
 
         success = true;
     }
@@ -256,11 +265,13 @@ void compile_and_call(stack_duk& sd, const std::string& data, bool called_intern
 
     if(!called_internally && str != "")
     {
-        std::cout << str << std::endl;
+        ret = str;
     }
 
     if(!called_internally || !success)
         duk_pop(sd.ctx);
+
+    return ret;
 }
 
 #endif // SCRIPT_UTIL_HPP_INCLUDED
