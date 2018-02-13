@@ -10,6 +10,8 @@ function(context, args)
 	var result = #fs.i20k.test();
 	
 	result.debug();
+	
+	#D("testd");
 		
 	return {debug:debug}
 }

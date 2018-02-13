@@ -96,7 +96,7 @@ std::string get_script_from_name_string(const std::string& base_dir, const std::
     return read_file(base_dir + "/" + to_parse + ".js");
 }
 
-bool expand_to_from(std::string_view& view, std::string& in, int& offset, std::string from, std::string to)
+bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& offset, std::string from, std::string to)
 {
     std::string srch = from;
 
@@ -104,8 +104,6 @@ bool expand_to_from(std::string_view& view, std::string& in, int& offset, std::s
         return false;
 
     std::cout << "expand1\n";
-
-    bool second_half = false;
 
     std::string found = "";
     int found_loc = -1;
@@ -137,6 +135,38 @@ bool expand_to_from(std::string_view& view, std::string& in, int& offset, std::s
     return valid;
 }
 
+bool expand_to_from_nochecks(std::string_view& view, std::string& in, int& offset, std::string from, std::string to)
+{
+    std::string srch = from;
+
+    if(view.substr(0, srch.size()) != srch)
+        return false;
+
+    std::cout << "expand2\n";
+
+    std::string found = "";
+    int found_loc = -1;
+
+    for(int i=srch.length(); i < view.size(); i++)
+    {
+        char c = view[i];
+
+        if(c == '(')
+        {
+            found_loc = i;
+            found = std::string(view.begin() + srch.length(), view.begin() + i);
+            break;
+        }
+    }
+
+    int start = offset;
+    int finish = offset + found_loc;
+
+    in.replace(offset, finish - start, to);
+
+    return true;
+}
+
 bool expand(std::string_view& view, std::string& in, int& offset)
 {
     std::vector<std::string> froms{"#fs.", "#hs.", "#ms.", "#ls.", "#ns.",
@@ -147,7 +177,18 @@ bool expand(std::string_view& view, std::string& in, int& offset)
 
     for(int i=0; i < tos.size(); i++)
     {
-        bool success = expand_to_from(view, in, offset, froms[i], tos[i]);
+        bool success = expand_to_from_scriptname(view, in, offset, froms[i], tos[i]);
+
+        if(success)
+            return true;
+    }
+
+    std::vector<std::string> froms_unchecked{"#D"};
+    std::vector<std::string> tos_unchecked{"hash_d"};
+
+    for(int i=0; i < tos_unchecked.size(); i++)
+    {
+        bool success = expand_to_from_nochecks(view, in, offset, froms_unchecked[i], tos_unchecked[i]);
 
         if(success)
             return true;

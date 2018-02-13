@@ -78,6 +78,8 @@ int main()
     init_js_interop(sd, data);
     register_funcs(sd.ctx);
 
+    startup_state(sd.ctx);
+
     std::string data_2 = read_file("test.js");
 
     compile_and_call(sd, data_2);

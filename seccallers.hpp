@@ -3,6 +3,38 @@
 
 #include "script_util.hpp"
 
+inline
+void startup_state(duk_context* ctx)
+{
+    duk_push_heap_stash(ctx);
+    duk_push_string(ctx, "");
+    duk_put_prop_string(ctx, -2, "HASH_D");
+
+    duk_pop_n(ctx, 1);
+}
+
+static
+duk_ret_t hash_d(duk_context* ctx)
+{
+    std::string str = duk_safe_to_string(ctx, -1);
+
+    duk_push_heap_stash(ctx);
+    duk_get_prop_string(ctx, -1, "HASH_D");
+
+    std::string fstr = duk_safe_to_string(ctx, -1);
+
+    fstr += str;
+
+    duk_pop_n(ctx, 1);
+
+    duk_push_string(ctx, fstr.c_str());
+    duk_put_prop_string(ctx, -2, "HASH_D");
+
+    duk_pop_n(ctx, 1);
+
+    return 0;
+}
+
 static
 duk_ret_t js_call(duk_context* ctx)
 {
@@ -79,6 +111,8 @@ void register_funcs(duk_context* ctx)
     inject_c_function(ctx, ms_call, "ms_call", 1);
     inject_c_function(ctx, ls_call, "ls_call", 1);
     inject_c_function(ctx, ns_call, "ns_call", 1);
+
+    inject_c_function(ctx, hash_d, "hash_d", 1);
 }
 
 #endif // SECCALLERS_HPP_INCLUDED
