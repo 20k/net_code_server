@@ -77,34 +77,8 @@ duk_ret_t db_find_all(duk_context* ctx)
 {
     printf("db find\n");
 
-    ///args will have to be pushed into heap, not top
-    /*int nargs = duk_get_top(ctx);
-
-    if(nargs == 0)
-        return 0;
-
-    if(nargs > 2)
-        return 0;*/
-
     mongo_context* mongo_ctx = get_global_mongo_context();
     mongo_ctx->change_collection(get_script_host(ctx));
-
-    //std::string json = "";//duk_json_encode(ctx, -1);
-    //std::string proj = "";
-
-    /*if(nargs == 2)
-    {
-        json = duk_json_encode(ctx, 0);
-        proj = std::string("{ \"projection\" : ") + duk_json_encode(ctx, 1) + " }";
-    }
-
-    if(nargs == 1)
-    {
-        json = duk_json_encode(ctx, 0);
-    }
-
-    std::cout << "json " << json << std::endl;
-    std::cout << "proj " << proj << std::endl;*/
 
     duk_push_this(ctx);
     duk_get_prop_string(ctx, -1, "DB_INFO");
