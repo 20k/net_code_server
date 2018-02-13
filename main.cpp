@@ -17,6 +17,7 @@
 #include <js/ui_util.hpp>
 
 #include <algorithm>
+#include "seccallers.hpp"
 
 ///i think something is broken with 7.2s stringstream implementation
 ///i dont know why the stringstream version crashes
@@ -166,6 +167,7 @@ int main()
 
     stack_duk sd;
     init_js_interop(sd, data);
+    register_funcs(sd.ctx);
 
     std::string data_2 = read_file("test.js");
 
