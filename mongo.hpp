@@ -3,11 +3,55 @@
 
 #include <mongoc/mongoc.h>
 
+struct mongo_context
+{
+    mongo_context(const std::string& coll)
+    {
+        std::string uri_str = "mongodb://user_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
+
+        mongoc_init();
+
+        client = mongoc_client_new(uri_str.c_str());
+
+        mongoc_client_set_appname(client, "crapmud");
+
+        database = mongoc_client_get_database (client, "user_dbs");
+        collection = mongoc_client_get_collection (client, "user_dbs", coll.c_str());
+    }
+
+    ~mongo_context()
+    {
+        mongoc_collection_destroy (collection);
+        mongoc_database_destroy (database);
+        mongoc_client_destroy (client);
+
+        mongoc_cleanup();
+    }
+
+    mongoc_client_t* client = nullptr;
+    mongoc_database_t* database = nullptr;
+    mongoc_collection_t* collection = nullptr;
+};
+
+
 void mongo_tests(const std::string& coll)
 {
     ///mongoc_client_t *client = mongoc_client_new ("mongodb://user:password@localhost/?authSource=mydb");
 
+    mongo_context ctx(coll);
+    bson_error_t error;
 
+    bson_t* insert = BCON_NEW ("hello", BCON_UTF8 ("world"));
+
+    if (!mongoc_collection_insert_one (ctx.collection, insert, NULL, NULL, &error))
+    {
+        fprintf (stderr, "%s\n", error.message);
+    }
+
+    bson_destroy (insert);
+
+
+    #if 0
     std::string uri_str = "mongodb://user_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
 
 
@@ -76,6 +120,7 @@ void mongo_tests(const std::string& coll)
     mongoc_database_destroy (database);
     mongoc_client_destroy (client);
     mongoc_cleanup ();
+    #endif
 }
 
 #endif // MONGO_HPP_INCLUDED

@@ -76,7 +76,7 @@ std::string run_script_as(const std::string& script, const std::string& user)
 
 int main()
 {
-    //mongo_tests("i20k_FDFDFDF_IMPOSSIBLE");
+    mongo_tests("i20k_FDFDFDF_IMPOSSIBLE");
 
     bool is_bot = false;
 
