@@ -2,10 +2,10 @@ function(context, args)
 {
 	function debug()
 	{
-		print("hi")
+		print("test debug")
 	}
 	
-	print("Eyy");
+	print("testy");
 		
 	return {debug:debug}
 }

@@ -149,8 +149,7 @@ std::string parse_script(std::string in)
     return in;
 }
 
-
-void compile_and_call(stack_duk& sd, const std::string& data)
+void compile_and_call(stack_duk& sd, const std::string& data, bool called_internally = false)
 {
     std::string prologue = "function INTERNAL_TEST()\n{'use strict'\nvar IVAR = ";
     std::string endlogue = "\n\nreturn IVAR();\n\n}\n";
@@ -162,18 +161,27 @@ void compile_and_call(stack_duk& sd, const std::string& data)
     duk_push_string(sd.ctx, wrapper.c_str());
     duk_push_string(sd.ctx, "test-name");
 
+    bool success = false;
+
     //DUK_COMPILE_FUNCTION
-    if (duk_pcompile(sd.ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
+    if(duk_pcompile(sd.ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
     {
         printf("compile failed: %s\n", duk_safe_to_string(sd.ctx, -1));
+
+        success = false;
     }
     else
     {
         duk_pcall(sd.ctx, 0);      /* [ func ] -> [ result ] */
-        printf("program result: %s\n", duk_safe_to_string(sd.ctx, -1));
+
+        if(!called_internally)
+            printf("program result: %s\n", duk_safe_to_string(sd.ctx, -1));
+
+        success = true;
     }
 
-    duk_pop(sd.ctx);
+    if(!called_internally || !success)
+        duk_pop(sd.ctx);
 }
 
 #endif // SCRIPT_UTIL_HPP_INCLUDED

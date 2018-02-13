@@ -15,10 +15,12 @@ duk_ret_t js_call(duk_context* ctx)
 
     std::string load = parse_script(get_script_from_name_string(base_scripts_string, str));
 
+    //std::cout << load << std::endl;
+
     stack_duk sd;
     sd.ctx = ctx;
 
-    compile_and_call(sd, load);
+    compile_and_call(sd, load, true);
 
     ///oh boy
     ///ok, need to read in the file
