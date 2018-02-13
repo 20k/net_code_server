@@ -240,12 +240,12 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
         return "Script not found";
     }
 
-    std::string prologue = "function INTERNAL_TEST(c, a)\n{'use strict'\nvar IVAR = ";
-    std::string endlogue = "\n\nreturn IVAR(c, a);\n\n}\n";
+    std::string prologue = "function INTERNAL_TEST(context, args)\n{'use strict'\nvar IVAR = ";
+    std::string endlogue = "\n\nreturn IVAR(context, args);\n\n}\n";
 
     if(!called_internally)
     {
-        endlogue = "\n\nreturn JSON.stringify(IVAR(c, a));\n\n}\n";
+        endlogue = "\n\nreturn JSON.stringify(IVAR(context, args));\n\n}\n";
     }
 
     std::string wrapper = prologue + data + endlogue;
