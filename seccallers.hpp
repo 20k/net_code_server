@@ -52,13 +52,14 @@ duk_ret_t db_insert(duk_context* ctx)
 
     std::string json = duk_json_encode(ctx, -1);
 
-    mongo_ctx->insert_json_1(json);
+    mongo_ctx->insert_json_1(get_script_host(ctx), json);
 
     std::cout << "json " << json << std::endl;
 
     return 1;
 }
 
+inline
 void parse_push_json(duk_context* ctx, const std::vector<std::string>& jsons)
 {
     duk_idx_t arr_idx = duk_push_array(ctx);
@@ -111,7 +112,7 @@ duk_ret_t db_find_all(duk_context* ctx)
     if(caller != get_caller(ctx))
         return 0;
 
-    std::vector<std::string> db_data = mongo_ctx->find_json(json, proj);
+    std::vector<std::string> db_data = mongo_ctx->find_json(get_script_host(ctx), json, proj);
 
     parse_push_json(ctx, db_data);
 
@@ -137,6 +138,9 @@ duk_ret_t db_find(duk_context* ctx)
     {
         json = duk_json_encode(ctx, 0);
     }
+
+    if(nargs == 0 || nargs > 2)
+        return 0;
 
     duk_push_global_stash(ctx); // [glob]
     duk_get_prop_string(ctx, -1, "DB_ID"); //[glob -> db_id]

@@ -29,6 +29,8 @@ struct mongo_context
         if(coll == last_collection)
             return;
 
+        last_collection = coll;
+
         if(collection)
         {
             mongoc_collection_destroy(collection);
@@ -83,8 +85,11 @@ struct mongo_context
         return bson;
     }
 
-    void insert_json_1(const std::string& json)
+    void insert_json_1(const std::string& script_host, const std::string& json)
     {
+        if(script_host != last_collection)
+            return;
+
         bson_t* bs = make_bson_from_json(json);
 
         if(bs == nullptr)
@@ -100,9 +105,12 @@ struct mongo_context
         bson_destroy(bs);
     }
 
-    std::vector<std::string> find_json(const std::string& json, const std::string& proj)
+    std::vector<std::string> find_json(const std::string& script_host, const std::string& json, const std::string& proj)
     {
         std::vector<std::string> results;
+
+        if(script_host != last_collection)
+            return results;
 
         bson_t* bs = make_bson_from_json(json);
         bson_t* ps = make_bson_from_json(proj);
@@ -111,7 +119,7 @@ struct mongo_context
                     "doot", BCON_BOOL (false),
                  "}");*/
 
-        //std::cout << bson_as_json(ps, nullptr);
+        //std::cout << "hi " << bson_as_json(bs, nullptr);
 
         if(bs == nullptr)
             return results;
@@ -138,6 +146,18 @@ struct mongo_context
         bson_destroy(bs);
 
         return results;
+    }
+
+    void remove_json(const std::string& script_host, const std::string& json)
+    {
+        if(script_host != last_collection)
+            return;
+
+        bson_t* bs = make_bson_from_json(json);
+
+        mongoc_collection_delete_many(collection, bs, nullptr, nullptr, nullptr);
+
+        bson_destroy(bs);
     }
 
     void insert_test_data()
@@ -206,7 +226,7 @@ void mongo_tests(const std::string& coll)
 
     //ctx.insert_test_data();
 
-    ctx.insert_json_1("{\"name\": {\"first\":\"bum\", \"last\":\"test\"}}");
+    ctx.insert_json_1(coll, "{\"name\": {\"first\":\"bum\", \"last\":\"test\"}}");
 }
 
 #endif // MONGO_HPP_INCLUDED
