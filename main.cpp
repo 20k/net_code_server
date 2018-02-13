@@ -18,6 +18,23 @@
 
 #include <algorithm>
 
+///i think something is brok
+std::vector<std::string> no_ss_split(const std::string& str, const std::string& delim)
+{
+    std::vector<std::string> tokens;
+    size_t prev = 0, pos = 0;
+    do
+    {
+        pos = str.find(delim, prev);
+        if (pos == std::string::npos) pos = str.length();
+        std::string token = str.substr(prev, pos-prev);
+        if (!token.empty()) tokens.push_back(token);
+        prev = pos + delim.length();
+    }
+    while (pos < str.length() && prev < str.length());
+    return tokens;
+}
+
 void init_js_interop(stack_duk& sd, const std::string& js_data)
 {
     sd.ctx = js_interop_startup();
@@ -27,6 +44,33 @@ void init_js_interop(stack_duk& sd, const std::string& js_data)
     call_global_function(sd, "mainfunc");
 
     sd.save_function_call_point();*/
+}
+
+bool is_valid_string(const std::string& to_parse)
+{
+    bool check_digit = true;
+
+    for(char c : to_parse)
+    {
+        if(check_digit && isdigit(c))
+        {
+            return false;
+        }
+
+        check_digit = false;
+
+        /*if(c == '.')
+        {
+            check_digit = true;
+        }*/
+
+        if(!isalnum(c))// && c != '.')
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 std::string get_script_from_name_string(const std::string& base_dir, const std::string& name_string)
@@ -40,27 +84,21 @@ std::string get_script_from_name_string(const std::string& base_dir, const std::
         return "";
     }
 
-    bool check_digit = true;
+    std::vector<std::string> strings = no_ss_split(to_parse, ".");
 
-    for(char c : to_parse)
+    if(strings.size() != 2)
+        return "";
+
+    bool all_valid = true;
+
+    for(auto& str : strings)
     {
-        if(check_digit && isdigit(c))
-        {
-            return "";
-        }
-
-        check_digit = false;
-
-        if(c == '.')
-        {
-            check_digit = true;
-        }
-
-        if(!isalnum(c) && c != '.')
-        {
-            return "";
-        }
+        if(!is_valid_string(str))
+            all_valid = false;
     }
+
+    if(!all_valid)
+        return "";
 
     std::replace(to_parse.begin(), to_parse.end(), '.', '/');
 
@@ -69,6 +107,8 @@ std::string get_script_from_name_string(const std::string& base_dir, const std::
 
 void tests()
 {
+    std::vector<std::string> strings = no_ss_split("test.hello", ".");
+
     std::string base = "./scripts";
 
     std::string s1_data = get_script_from_name_string(base, "i20k.test");
@@ -122,6 +162,8 @@ int main()
         bot_id = call_global_function(sd, "botjs");
     }*/
 
+    tests();
+
     std::string base_scripts_directory = "./scripts";
 
     std::string data = read_file("test.js");
@@ -133,7 +175,7 @@ int main()
 
     test_compile(sd, data_2);
 
-    tests();
+    //tests();
 
 
     arg_idx global_object = sd.push_global_object();
