@@ -84,7 +84,7 @@ int main()
         bot_id = call_global_function(sd, "botjs");
     }*/
 
-    tests();
+    //tests();
 
     /*std::string base_scripts_directory = "./scripts";
 

@@ -93,7 +93,14 @@ std::string get_script_from_name_string(const std::string& base_dir, const std::
 
     std::replace(to_parse.begin(), to_parse.end(), '.', '/');
 
-    return read_file(base_dir + "/" + to_parse + ".js");
+    std::string file = base_dir + "/" + to_parse + ".js";
+
+    if(!file_exists(file))
+    {
+        return "";
+    }
+
+    return read_file(file);
 }
 
 bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& offset, std::string from, std::string to)
@@ -201,6 +208,9 @@ bool expand(std::string_view& view, std::string& in, int& offset)
 
 std::string parse_script(std::string in)
 {
+    if(in.size() == 0)
+        return "";
+
     for(int i=0; i < in.size(); i++)
     {
         std::string_view strview(&in[i]);
@@ -225,6 +235,11 @@ std::string get_hash_d(duk_context* ctx)
 
 std::string compile_and_call(stack_duk& sd, const std::string& data, bool called_internally, std::string caller)
 {
+    if(data.size() == 0)
+    {
+        return "Script not found";
+    }
+
     std::string prologue = "function INTERNAL_TEST()\n{'use strict'\nvar IVAR = ";
     std::string endlogue = "\n\nreturn IVAR();\n\n}\n";
 
