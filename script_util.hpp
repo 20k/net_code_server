@@ -6,8 +6,15 @@
 inline
 std::string base_scripts_string = "./scripts";
 
+inline
+bool is_valid_name_character(char c)
+{
+    return isalnum(c) || c == '_';
+}
+
 ///i think something is broken with 7.2s stringstream implementation
 ///i dont know why the stringstream version crashes
+inline
 std::vector<std::string> no_ss_split(const std::string& str, const std::string& delim)
 {
     std::vector<std::string> tokens;
@@ -24,6 +31,7 @@ std::vector<std::string> no_ss_split(const std::string& str, const std::string& 
     return tokens;
 }
 
+inline
 bool is_valid_string(const std::string& to_parse)
 {
     if(to_parse.size() >= 15)
@@ -43,7 +51,7 @@ bool is_valid_string(const std::string& to_parse)
 
         check_digit = false;
 
-        if(!isalnum(c))
+        if(!is_valid_name_character(c))
         {
             return false;
         }
@@ -52,6 +60,7 @@ bool is_valid_string(const std::string& to_parse)
     return true;
 }
 
+inline
 bool is_valid_full_name_string(const std::string& name)
 {
     //std::string to_parse = strip_whitespace(name);
@@ -79,6 +88,7 @@ bool is_valid_full_name_string(const std::string& name)
     return true;
 }
 
+inline
 std::string get_script_from_name_string(const std::string& base_dir, const std::string& name_string)
 {
     bool is_valid = is_valid_full_name_string(name_string);
@@ -100,6 +110,7 @@ std::string get_script_from_name_string(const std::string& base_dir, const std::
     return read_file(file);
 }
 
+inline
 bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& offset, std::string from, std::string to)
 {
     std::string srch = from;
@@ -146,6 +157,7 @@ bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& off
     return valid;
 }
 
+inline
 bool expand_to_from_nochecks(std::string_view& view, std::string& in, int& offset, std::string from, std::string to)
 {
     std::string srch = from;
@@ -178,6 +190,7 @@ bool expand_to_from_nochecks(std::string_view& view, std::string& in, int& offse
     return true;
 }
 
+inline
 bool expand(std::string_view& view, std::string& in, int& offset)
 {
     std::vector<std::string> froms{"#fs.", "#hs.", "#ms.", "#ls.", "#ns.",
@@ -213,6 +226,7 @@ bool expand(std::string_view& view, std::string& in, int& offset)
     return false;
 }
 
+inline
 std::string parse_script(std::string in)
 {
     if(in.size() == 0)
@@ -228,6 +242,7 @@ std::string parse_script(std::string in)
     return in;
 }
 
+inline
 std::string get_hash_d(duk_context* ctx)
 {
     duk_push_global_stash(ctx);
@@ -242,7 +257,7 @@ std::string get_hash_d(duk_context* ctx)
 
 ///#db.f({[col_key]: {$exists : true}});
 ///$where and $query both need to be disabled, $inspect as well
-
+inline
 std::string compile_and_call(stack_duk& sd, const std::string& data, bool called_internally, std::string caller, bool is_conargs_function = true)
 {
     if(data.size() == 0)
