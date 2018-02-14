@@ -162,6 +162,45 @@ struct item
         bson_destroy(to_insert);
     }
 
+    void load_from_db()
+    {
+        if(!has_id())
+            return;
+
+        std::string prop = get_prop("item_id");
+        bson_t* to_find = BCON_NEW("item_id", BCON_UTF8(prop.c_str()));
+
+        mongo_context* ctx = get_global_mongo_user_items_context();
+
+        std::vector<std::string> strs = ctx->find_bson("all_items", to_find, nullptr);
+
+        bson_destroy(to_find);
+
+        for(auto& i : strs)
+        {
+            bson_t* next = bson_new_from_json((const uint8_t*)i.c_str(), i.size(), nullptr);
+
+            bson_iter_t iter;
+            bson_iter_init(&iter, next);
+
+            while (bson_iter_next (&iter))
+            {
+                std::string key = bson_iter_key(&iter);
+
+                std::cout << "key " << key << std::endl;
+
+                if(!BSON_ITER_HOLDS_UTF8(&iter))
+                    continue;
+
+                uint32_t len = bson_iter_utf8_len_unsafe(&iter);
+
+                std::string value = bson_iter_utf8(&iter, &len);
+
+                set_prop(key, value);
+            }
+        }
+    }
+
     ///WARNING NOT THREAD SAFE AT ALL RACE CONDITION
     ///NEED TO USE SOME SORT OF MONGO LOCKING WHEN/IF WE HAVE MULTIPLE SERVERS (!!!)
     int32_t get_new_id()

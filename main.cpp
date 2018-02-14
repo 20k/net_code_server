@@ -121,6 +121,12 @@ void user_tests()
 
     update_item.update_in_db("test");
 
+    item test_load;
+    test_load.set_prop("item_id", 32);
+    test_load.load_from_db();
+
+    std::cout << test_load.get_prop("Potato") << std::endl;
+
     //std::cout << "found user " << t2_user.name << " cash " << t2_user.cash << std::endl;
 
     //test_user.cash = 1;
