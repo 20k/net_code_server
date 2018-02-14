@@ -100,6 +100,13 @@ void user_tests()
     user t2_user;
     t2_user.load_from_db("test_user");
 
+    for(int i=0; i < 10; i++)
+    {
+        item test_item;
+
+        std::cout << test_item.get_new_id() << std::endl;
+    }
+
     //std::cout << "found user " << t2_user.name << " cash " << t2_user.cash << std::endl;
 
     //test_user.cash = 1;

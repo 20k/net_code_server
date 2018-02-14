@@ -70,6 +70,11 @@ struct mongo_context
         last_db = db;
 
         database = mongoc_client_get_database(client, db.c_str());
+
+        if(type == mongo_database_type::GLOBAL_PROPERTIES)
+        {
+            change_collection("global_properties");
+        }
     }
 
     void change_collection(const std::string& coll)
