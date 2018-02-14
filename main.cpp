@@ -25,6 +25,7 @@
 #include "user.hpp"
 
 #include <assert.h>
+#include "item.hpp"
 
 void init_js_interop(stack_duk& sd, const std::string& js_data)
 {

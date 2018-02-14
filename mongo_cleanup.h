@@ -57,4 +57,10 @@ mongo_context* get_global_mongo_user_items_context(bool destroy = false)
     return get_global_mongo_context(mongo_database_type::USER_ITEMS);
 }
 
+inline
+mongo_context* get_global_mongo_global_properties_context(bool destroy = false)
+{
+    return get_global_mongo_context(mongo_database_type::GLOBAL_PROPERTIES);
+}
+
 #endif // MONGO_CLEANUP_H_INCLUDED

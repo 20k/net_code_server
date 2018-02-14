@@ -11,6 +11,7 @@ enum class mongo_database_type
     USER_ACCESSIBLE,
     USER_PROPERTIES,
     USER_ITEMS,
+    GLOBAL_PROPERTIES,
 };
 
 struct mongo_context
@@ -30,30 +31,31 @@ struct mongo_context
     ///if we ever have to add another db, make this fully data driven with structs and definitions and the like
     mongo_context(mongo_database_type type)
     {
-        std::string uri_str_accessible = "mongodb://user_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
-        std::string uri_str_properties = "mongodb://user_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
-        std::string uri_str_items      = "mongodb://user_items_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
-
         std::string uri_str = "Err";
         std::string db = "Err";
 
-
         if(type == mongo_database_type::USER_ACCESSIBLE)
         {
-            uri_str = uri_str_accessible;
+            uri_str = "mongodb://user_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";;
             db = "user_dbs";
         }
 
         if(type == mongo_database_type::USER_PROPERTIES)
         {
-            uri_str = uri_str_properties;
+            uri_str = "mongodb://user_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
             db = "user_properties";
         }
 
         if(type == mongo_database_type::USER_ITEMS)
         {
-            uri_str = uri_str_items;
+            uri_str = "mongodb://user_items_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
             db = "user_items";
+        }
+
+        if(type == mongo_database_type::GLOBAL_PROPERTIES)
+        {
+            uri_str = "mongodb://global_properties_database:james20kuserhandlermongofundiff@localhost:27017/?authSource=users";
+            db = "global_properties";
         }
 
         if(!mongo_is_init)

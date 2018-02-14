@@ -49,6 +49,7 @@
 			<Add option="-lbson-1.0.dll" />
 			<Add library="C:/duk_fun/libduktape.so.202.20200" />
 		</Linker>
+		<Unit filename="item.hpp" />
 		<Unit filename="main.cpp" />
 		<Unit filename="mongo.cpp" />
 		<Unit filename="mongo.hpp" />
