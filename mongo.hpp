@@ -234,10 +234,12 @@ struct mongo_context
         if(script_host != last_collection)
             return results;
 
+        printf("find\n");
+
         bson_t* bs = make_bson_from_json(json);
         bson_t* ps = make_bson_from_json(proj);
 
-        results = find_bson(script_host, ps, bs);
+        results = find_bson(script_host, bs, ps);
 
         if(ps)
             bson_destroy(ps);

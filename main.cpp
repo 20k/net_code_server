@@ -116,7 +116,6 @@ void user_tests()
 
     item update_item;
     update_item.set_prop("item_id", 32);
-
     update_item.set_prop("Potato", "ostrich");
 
     update_item.update_in_db("test");
@@ -136,6 +135,33 @@ void user_tests()
     //std::cout << test_user.exists("test_user2");
 }
 
+std::string run_in_user_context(user& usr, const std::string& command)
+{
+    stack_duk sd;
+    init_js_interop(sd, std::string());
+    register_funcs(sd.ctx);
+
+    std::string script = command;
+
+    ///need to check we have permission
+    std::string data = parse_script(get_script_from_name_string("./scripts", script));
+
+    std::cout << data << std::endl;
+
+    if(data == "")
+    {
+        return "Invalid Script";
+    }
+
+    std::vector<std::string> parts = no_ss_split(script, ".");
+
+    startup_state(sd.ctx, usr.name, parts[0], parts[1]);
+
+    std::string ret = compile_and_call(sd, data, false, get_caller(sd.ctx));
+
+    return ret;
+}
+
 int main()
 {
     //mongo_tests("i20k_FDFDFDF_IMPOSSIBLE");
@@ -149,6 +175,13 @@ int main()
         register_function(sd, jsfile, "botjs");
         bot_id = call_global_function(sd, "botjs");
     }*/
+
+    user to_run_as;
+    to_run_as.load_from_db("test_user");
+
+    std::string str = run_in_user_context(to_run_as, "i20k.parse");
+
+    std::cout << str << std::endl;
 
     //tests();
 
@@ -172,7 +205,7 @@ int main()
 
     std::cout << exec << std::endl;*/
 
-    user_tests();
+    //user_tests();
 
     //std::string ret = run_script_as("i20k.parse", "i20k");
     //std::cout << ret << std::endl;

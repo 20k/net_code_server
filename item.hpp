@@ -187,8 +187,6 @@ struct item
             {
                 std::string key = bson_iter_key(&iter);
 
-                std::cout << "key " << key << std::endl;
-
                 if(!BSON_ITER_HOLDS_UTF8(&iter))
                     continue;
 
