@@ -3,6 +3,12 @@
 
 #include <mongoc/mongoc.h>
 
+enum class mongo_database_type
+{
+    USER_ACCESSIBLE,
+    USER_PROPERTIES,
+};
+
 struct mongo_context
 {
     mongoc_client_t* client = nullptr;
