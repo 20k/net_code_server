@@ -218,6 +218,8 @@ struct mongo_context
         }
 
         mongoc_cursor_destroy(cursor);
+
+        return results;
     }
 
     std::vector<std::string> find_json(const std::string& script_host, const std::string& json, const std::string& proj)
