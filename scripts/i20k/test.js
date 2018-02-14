@@ -1,8 +1,13 @@
 function(context, args)
 {
-	function debug()
+	function debug(targs)
 	{
 		print("test debug")
+		
+		if(targs)
+		{
+			print("targs");
+		}
 	}
 	
 	print("testy");

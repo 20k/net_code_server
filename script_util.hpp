@@ -116,7 +116,7 @@ bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& off
     {
         char c = view[i];
 
-        if(c == '(')
+        if(c == '(' || c == ';')
         {
             found_loc = i;
             found = std::string(view.begin() + srch.length(), view.begin() + i);

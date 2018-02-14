@@ -17,7 +17,12 @@ function(context, args)
 	///that way we can have no dynamic functions
 	var result = #fs.i20k.test({hi:"yes"});
 	
-	result.debug();
+	result.debug(1);
+	
+	var function_object = #fs.i20k.funcobject;
+	
+	function_object();
+	function_object();
 	
 	//#D({test:"GLORIOUS_HASH_D"});
 	
@@ -37,6 +42,8 @@ function(context, args)
 	//print(found);
 	
 	var res_cursor = #db.f({name:"SCRIPT_NAME"}, {doot:0});
+	
+	//return JSON.stringify(res_cursor);
 	
 	//
 	return res_cursor.array();
