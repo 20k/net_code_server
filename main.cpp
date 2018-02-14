@@ -107,12 +107,19 @@ void user_tests()
         std::cout << test_item.get_new_id() << std::endl;
     }
 
-    item insert_item;
+    /*item insert_item;
     insert_item.generate_set_id();
 
     insert_item.set_prop("Test Key", 23);
 
-    insert_item.create_in_db("what");
+    insert_item.create_in_db("what");*/
+
+    item update_item;
+    update_item.set_prop("item_id", 32);
+
+    update_item.set_prop("Potato", "ostrich");
+
+    update_item.update_in_db("test");
 
     //std::cout << "found user " << t2_user.name << " cash " << t2_user.cash << std::endl;
 

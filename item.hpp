@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <utility>
 #include "mongo.hpp"
 
 namespace item_types
@@ -28,6 +29,21 @@ namespace item_types
         "Misc",
         "Error not found",
     };
+}
+
+//https://stackoverflow.com/questions/30166706/c-convert-simple-values-to-string
+template<typename T>
+inline
+typename std::enable_if<std::is_fundamental<T>::value, std::string>::type stringify_hack(const T& t)
+{
+    return std::to_string(t);
+}
+
+template<typename T>
+inline
+typename std::enable_if<!std::is_fundamental<T>::value, std::string>::type  stringify_hack(const T& t)
+{
+    return std::string(t);
 }
 
 struct item
@@ -63,7 +79,7 @@ struct item
     template<typename T>
     void set_prop(const std::string& key, const T& value)
     {
-        item_properties[key] = std::to_string(value);
+        item_properties[key] = stringify_hack(value);
     }
 
     void generate_set_id()
@@ -122,9 +138,17 @@ struct item
 
         bson_t* to_insert = bson_new();
 
-        for(auto& i : item_properties)
         {
-            BSON_APPEND_UTF8(to_insert, i.first.c_str(), i.second.c_str());
+            bson_t child;
+
+            BSON_APPEND_DOCUMENT_BEGIN(to_insert, "$set", &child);
+
+            for(auto& i : item_properties)
+            {
+                bson_append_utf8(&child, i.first.c_str(), i.first.size(), i.second.c_str(), i.second.size());
+            }
+
+            bson_append_document_end(to_insert, &child);
         }
 
         mongo_context* ctx = get_global_mongo_user_items_context();
@@ -200,21 +224,33 @@ struct item
     }
 };
 
-template<>
+/*template<>
 void item::set_prop<std::string>(const std::string& key, const std::string& value)
 {
     item_properties[key] = value;
 }
 
+template<>
+void item::set_prop<char const*>(const std::string& key, const char* const& value)
+{
+    item_properties[key] = value;
+}*/
+
+/*template<>
+void item::set_prop<char*>(const std::string& key, const (char*)& value)
+{
+    item_properties[key] = value;
+}*/
+
 namespace item_types
 {
-    /*item get_default_of(item_types::item_type type)
-    {
-        item new_item;
-        new_item.generate_set_id();
+/*item get_default_of(item_types::item_type type)
+{
+    item new_item;
+    new_item.generate_set_id();
 
 
-    }*/
+}*/
 }
 
 #endif // ITEMS_HPP_INCLUDED
