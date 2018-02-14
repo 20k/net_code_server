@@ -124,6 +124,33 @@ struct mongo_context
         bson_destroy(bs);
     }
 
+    void update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update)
+    {
+        if(selector == nullptr || update == nullptr)
+            return;
+
+        bson_error_t error;
+
+        if(!mongoc_collection_update_many(collection, selector, update, nullptr, nullptr, &error))
+        {
+            fprintf (stderr, "err: %s\n", error.message);
+        }
+    }
+
+    void update_json_many(const std::string& script_host, const std::string& selector, const std::string& update)
+    {
+        if(script_host != last_collection)
+            return;
+
+        bson_t* bs = make_bson_from_json(selector);
+        bson_t* us = make_bson_from_json(update);
+
+        update_bson_many(script_host, bs, us);
+
+        bson_destroy(bs);
+        bson_destroy(us);
+    }
+
     std::vector<std::string> find_json(const std::string& script_host, const std::string& json, const std::string& proj)
     {
         std::vector<std::string> results;
