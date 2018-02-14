@@ -94,6 +94,12 @@ void user_tests()
     user test_user;
 
     test_user.construct_new_user("test_user");
+
+    test_user.cash = 1;
+
+    test_user.overwrite_user_in_db();
+
+    //std::cout << test_user.exists("test_user2");
 }
 
 int main()

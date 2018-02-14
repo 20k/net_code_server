@@ -28,7 +28,6 @@ struct user
     void overwrite_user_in_db()
     {
         mongo_context* ctx = get_global_mongo_user_info_context();
-
         ctx->change_collection(name);
 
         bson_t* to_update = BCON_NEW(
@@ -41,8 +40,13 @@ struct user
                                      "}"
                                      );
 
-        //bson_t* to_update = get_bson_representation();
-        bson_t* selection = BCON_NEW("{}");
+        bson_t* selection = BCON_NEW(
+                                     "name",
+                                     "{",
+                                         "$exists",
+                                         BCON_BOOL(true),
+                                     "}"
+                                     );
 
         ctx->update_bson_many(name, selection, to_update);
 
@@ -50,11 +54,33 @@ struct user
         bson_destroy(to_update);
     }
 
+    bool exists(const std::string& name)
+    {
+        mongo_context* ctx = get_global_mongo_user_info_context();
+        ctx->change_collection(name);
+
+        bson_t* to_find = BCON_NEW("name", "{", "$exists", BCON_BOOL(true), "}");
+
+        std::vector<std::string> ret = ctx->find_bson(name, to_find, nullptr);
+
+        bson_destroy(to_find);
+
+        for(auto& i : ret)
+        {
+            std::cout << i << std::endl;
+        }
+
+        return ret.size() != 0;
+    }
+
     bool construct_new_user(const std::string& name_)
     {
         name = name_;
 
         if(!is_valid_string(name))
+            return false;
+
+        if(exists(name))
             return false;
 
         bson_t* user = get_bson_representation();

@@ -45,8 +45,6 @@ struct mongo_context
         {
             uri_str = uri_str_properties;
             db = "user_properties";
-
-            printf("user props\n");
         }
 
         if(!mongo_is_init)
@@ -119,7 +117,6 @@ struct mongo_context
             return nullptr;
         }
 
-
         return bson;
     }
 
@@ -178,21 +175,12 @@ struct mongo_context
         bson_destroy(us);
     }
 
-    std::vector<std::string> find_json(const std::string& script_host, const std::string& json, const std::string& proj)
+    std::vector<std::string> find_bson(const std::string& script_host, bson_t* bs, bson_t* ps)
     {
         std::vector<std::string> results;
 
         if(script_host != last_collection)
             return results;
-
-        bson_t* bs = make_bson_from_json(json);
-        bson_t* ps = make_bson_from_json(proj);
-
-        /*ps =  BCON_NEW ("projection", "{",
-                    "doot", BCON_BOOL (false),
-                 "}");*/
-
-        //std::cout << "hi " << bson_as_json(bs, nullptr);
 
         if(bs == nullptr)
             return results;
@@ -207,7 +195,6 @@ struct mongo_context
         while(mongoc_cursor_more(cursor) && mongoc_cursor_next (cursor, &doc))
         {
             char* str = bson_as_json(doc, NULL);
-            //printf ("found %s\n", str);
 
             results.push_back(str);
 
@@ -215,6 +202,22 @@ struct mongo_context
         }
 
         mongoc_cursor_destroy(cursor);
+    }
+
+    std::vector<std::string> find_json(const std::string& script_host, const std::string& json, const std::string& proj)
+    {
+        std::vector<std::string> results;
+
+        if(script_host != last_collection)
+            return results;
+
+        bson_t* bs = make_bson_from_json(json);
+        bson_t* ps = make_bson_from_json(proj);
+
+        results = find_bson(script_host, ps, bs);
+
+        if(ps)
+            bson_destroy(ps);
 
         bson_destroy(bs);
 
