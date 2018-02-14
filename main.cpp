@@ -92,12 +92,18 @@ std::string run_script_as(const std::string& script, const std::string& user)
 void user_tests()
 {
     user test_user;
-
     test_user.construct_new_user("test_user");
 
-    test_user.cash = 1;
+    //test_user.load_from_db("test_user");
 
-    test_user.overwrite_user_in_db();
+    user t2_user;
+    t2_user.load_from_db("test_user");
+
+    //std::cout << "found user " << t2_user.name << " cash " << t2_user.cash << std::endl;
+
+    //test_user.cash = 1;
+
+    //test_user.overwrite_user_in_db();
 
     //std::cout << test_user.exists("test_user2");
 }
