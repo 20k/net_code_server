@@ -10,6 +10,7 @@ enum class mongo_database_type
 {
     USER_ACCESSIBLE,
     USER_PROPERTIES,
+    USER_ITEMS,
 };
 
 struct mongo_context
@@ -30,6 +31,7 @@ struct mongo_context
     {
         std::string uri_str_accessible = "mongodb://user_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
         std::string uri_str_properties = "mongodb://user_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
+        std::string uri_str_items      = "mongodb://user_items_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
 
         std::string uri_str = "Err";
         std::string db = "Err";
@@ -45,6 +47,12 @@ struct mongo_context
         {
             uri_str = uri_str_properties;
             db = "user_properties";
+        }
+
+        if(type == mongo_database_type::USER_ITEMS)
+        {
+            uri_str = uri_str_items;
+            db = "user_items";
         }
 
         if(!mongo_is_init)
