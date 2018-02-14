@@ -118,9 +118,6 @@ struct item
         bson_destroy(to_update);
         bson_destroy(to_find);
 
-        if(next_id < 0)
-            return next_id;
-
         return next_id;
     }
 };
