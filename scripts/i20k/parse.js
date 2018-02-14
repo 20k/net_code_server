@@ -43,12 +43,22 @@ function(context, args)
 	//print("pf\n");
 	//print(found);
 	
+	#db.u({name:"SCRIPT_NAME"}, {$set:{name:"update_works"}});
+	
 	var res_cursor = #db.f({name:"SCRIPT_NAME"}, {doot:0});
+	
+	#db.u({doot:{$exists:true}}, {$set:{doot:"nope"}});
+	
+	print("Is zero " + res_cursor.array().length);
 	
 	//return JSON.stringify(res_cursor);
 	
 	//
-	return res_cursor.array();
+	//return res_cursor.array();
+	
+	var r2_curs = #db.f({name:"update_works"});
+	
+	return r2_curs.array();
 	
 	return context.caller;
 }

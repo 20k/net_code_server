@@ -59,6 +59,23 @@ duk_ret_t db_insert(duk_context* ctx)
     return 1;
 }
 
+static
+duk_ret_t db_update(duk_context* ctx)
+{
+    mongo_context* mongo_ctx = get_global_mongo_user_accessible_context();
+    mongo_ctx->change_collection(get_script_host(ctx));
+
+    std::string json_1 = duk_json_encode(ctx, 0);
+    std::string json_2 = duk_json_encode(ctx, 1);
+
+    mongo_ctx->update_json_many(get_script_host(ctx), json_1, json_2);
+
+    std::cout << "update " << json_1 << " with " << json_2 << std::endl;
+
+    return 0;
+}
+
+
 inline
 void parse_push_json(duk_context* ctx, const std::vector<std::string>& jsons)
 {
@@ -319,6 +336,7 @@ void register_funcs(duk_context* ctx)
     inject_c_function(ctx, db_insert, "db_insert", 1);
     inject_c_function(ctx, db_find, "db_find", DUK_VARARGS);
     inject_c_function(ctx, db_remove, "db_remove", 1);
+    inject_c_function(ctx, db_update, "db_update", 2);
     /*inject_c_function(ctx, hash_d, "hash_d", 1);
     inject_c_function(ctx, hash_d, "hash_d", 1);
     inject_c_function(ctx, hash_d, "hash_d", 1);
