@@ -60,6 +60,84 @@ struct item
         return val;
     }
 
+    template<typename T>
+    void set_prop(const std::string& key, const T& value)
+    {
+        item_properties[key] = std::to_string(value);
+    }
+
+    void generate_set_id()
+    {
+        int32_t id = get_new_id();
+
+        set_prop("item_id", id);
+    }
+
+    bool has_id()
+    {
+        return item_properties.find("item_id") != item_properties.end();
+    }
+
+    bool exists_in_db()
+    {
+        if(!has_id())
+            return true;
+
+        std::string prop = get_prop("item_id");
+        bson_t* to_find = BCON_NEW("item_id", BCON_UTF8(prop.c_str()));
+
+        mongo_context* ctx = get_global_mongo_user_items_context();
+
+        bool exists = ctx->find_bson("all_items", to_find, nullptr).size() > 0;
+
+        bson_destroy(to_find);
+
+        return exists;
+    }
+
+    ///kinda need to upsert this
+    void create_in_db(const std::string& user)
+    {
+        if(!has_id())
+            return;
+
+        bson_t* to_insert = bson_new();
+
+        for(auto& i : item_properties)
+        {
+            BSON_APPEND_UTF8(to_insert, i.first.c_str(), i.second.c_str());
+        }
+
+        mongo_context* ctx = get_global_mongo_user_items_context();
+
+        ctx->insert_bson_1("all_items", to_insert);
+
+        bson_destroy(to_insert);
+    }
+
+    void update_in_db(const std::string& user)
+    {
+        if(!has_id())
+            return;
+
+        bson_t* to_insert = bson_new();
+
+        for(auto& i : item_properties)
+        {
+            BSON_APPEND_UTF8(to_insert, i.first.c_str(), i.second.c_str());
+        }
+
+        mongo_context* ctx = get_global_mongo_user_items_context();
+
+        std::string prop = get_prop("item_id");
+        bson_t* to_find = BCON_NEW("item_id", BCON_UTF8(prop.c_str()));
+
+        ctx->update_bson_many("all_items", to_find, to_insert);
+
+        bson_destroy(to_find);
+        bson_destroy(to_insert);
+    }
+
     ///WARNING NOT THREAD SAFE AT ALL RACE CONDITION
     ///NEED TO USE SOME SORT OF MONGO LOCKING WHEN/IF WE HAVE MULTIPLE SERVERS (!!!)
     int32_t get_new_id()
@@ -122,9 +200,21 @@ struct item
     }
 };
 
+template<>
+void item::set_prop<std::string>(const std::string& key, const std::string& value)
+{
+    item_properties[key] = value;
+}
+
 namespace item_types
 {
-    //item get_default_of(item)
+    /*item get_default_of(item_types::item_type type)
+    {
+        item new_item;
+        new_item.generate_set_id();
+
+
+    }*/
 }
 
 #endif // ITEMS_HPP_INCLUDED

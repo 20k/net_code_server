@@ -71,6 +71,11 @@ struct mongo_context
 
         database = mongoc_client_get_database(client, db.c_str());
 
+        if(type == mongo_database_type::USER_ITEMS)
+        {
+            change_collection("all_items");
+        }
+
         if(type == mongo_database_type::GLOBAL_PROPERTIES)
         {
             change_collection("global_properties");

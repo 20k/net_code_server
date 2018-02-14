@@ -107,6 +107,13 @@ void user_tests()
         std::cout << test_item.get_new_id() << std::endl;
     }
 
+    item insert_item;
+    insert_item.generate_set_id();
+
+    insert_item.set_prop("Test Key", 23);
+
+    insert_item.create_in_db("what");
+
     //std::cout << "found user " << t2_user.name << " cash " << t2_user.cash << std::endl;
 
     //test_user.cash = 1;
