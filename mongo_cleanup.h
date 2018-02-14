@@ -14,7 +14,7 @@ mongo_context* get_global_mongo_context(mongo_database_type type, bool destroy =
         if(data.size() == 0)
             atexit(cleanup_mongo_all);
 
-        data[type] = new mongo_context;
+        data[type] = new mongo_context(type);
     }
 
     if(destroy)

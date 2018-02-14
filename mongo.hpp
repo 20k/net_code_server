@@ -17,9 +17,22 @@ struct mongo_context
 
     std::string last_collection = "";
 
-    mongo_context()
+    mongo_context(mongo_database_type type)
     {
-        std::string uri_str = "mongodb://user_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
+        std::string uri_str_accessible = "mongodb://user_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
+        std::string uri_str_properties = "mongodb://user_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
+
+        std::string uri_str = "Err";
+
+        if(type == mongo_database_type::USER_ACCESSIBLE)
+        {
+            uri_str = uri_str_accessible;
+        }
+
+        if(type == mongo_database_type::USER_PROPERTIES)
+        {
+            uri_str = uri_str_properties;
+        }
 
         mongoc_init();
 
@@ -197,7 +210,7 @@ void mongo_tests(const std::string& coll)
 {
     ///mongoc_client_t *client = mongoc_client_new ("mongodb://user:password@localhost/?authSource=mydb");
 
-    mongo_context ctx;
+    mongo_context ctx(mongo_database_type::USER_ACCESSIBLE);
     ctx.change_collection(coll);
 
     //ctx.insert_test_data();
