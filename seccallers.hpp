@@ -47,7 +47,7 @@ std::string get_script_host(duk_context* ctx)
 static
 duk_ret_t db_insert(duk_context* ctx)
 {
-    mongo_context* mongo_ctx = get_global_mongo_context();
+    mongo_context* mongo_ctx = get_global_mongo_user_accessible_context();
     mongo_ctx->change_collection(get_script_host(ctx));
 
     std::string json = duk_json_encode(ctx, -1);
@@ -64,7 +64,7 @@ void parse_push_json(duk_context* ctx, const std::vector<std::string>& jsons)
 {
     duk_idx_t arr_idx = duk_push_array(ctx);
 
-    for(int i=0; i < jsons.size(); i++)
+    for(int i=0; i < (int)jsons.size(); i++)
     {
         duk_push_string(ctx, jsons[i].c_str());
         duk_json_decode(ctx, -1);
@@ -78,7 +78,7 @@ duk_ret_t db_find_all(duk_context* ctx)
 {
     printf("db find\n");
 
-    mongo_context* mongo_ctx = get_global_mongo_context();
+    mongo_context* mongo_ctx = get_global_mongo_user_accessible_context();
     mongo_ctx->change_collection(get_script_host(ctx));
 
     duk_push_this(ctx);
@@ -191,7 +191,7 @@ duk_ret_t db_find(duk_context* ctx)
 static
 duk_ret_t db_remove(duk_context* ctx)
 {
-    mongo_context* mongo_ctx = get_global_mongo_context();
+    mongo_context* mongo_ctx = get_global_mongo_user_accessible_context();
     mongo_ctx->change_collection(get_script_host(ctx));
 
     std::string json = duk_json_encode(ctx, -1);

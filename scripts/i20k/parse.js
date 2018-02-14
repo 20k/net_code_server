@@ -24,6 +24,8 @@ function(context, args)
 	function_object();
 	function_object();
 	
+	function_object.call();
+	
 	//#D({test:"GLORIOUS_HASH_D"});
 	
 	//#D(context.caller);

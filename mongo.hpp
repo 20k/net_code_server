@@ -185,36 +185,7 @@ struct mongo_context
     }
 };
 
-static
-void cleanup_mongo();
-
-static mongo_context* get_global_mongo_context(bool destroy = false)
-{
-    static mongo_context* ctx = nullptr;
-
-    if(ctx == nullptr)
-    {
-        ctx = new mongo_context();
-
-        atexit(cleanup_mongo);
-    }
-
-    if(destroy)
-    {
-        if(ctx)
-            delete ctx;
-
-        ctx = nullptr;
-    }
-
-    return ctx;
-}
-
-static
-void cleanup_mongo()
-{
-    get_global_mongo_context(true);
-}
+#include "mongo_cleanup.h"
 
 void mongo_tests(const std::string& coll)
 {
