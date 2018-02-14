@@ -50,9 +50,12 @@
 			<Add library="C:/duk_fun/libduktape.so.202.20200" />
 		</Linker>
 		<Unit filename="main.cpp" />
+		<Unit filename="mongo.cpp" />
 		<Unit filename="mongo.hpp" />
+		<Unit filename="mongo_cleanup.h" />
 		<Unit filename="script_util.hpp" />
 		<Unit filename="seccallers.hpp" />
+		<Unit filename="user.hpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

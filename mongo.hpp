@@ -3,6 +3,8 @@
 
 #include <mongoc/mongoc.h>
 #include <string>
+#include <vector>
+#include <iostream>
 
 enum class mongo_database_type
 {
@@ -17,6 +19,12 @@ struct mongo_context
     mongoc_collection_t* collection = nullptr;
 
     std::string last_collection = "";
+    std::string last_db = "";
+
+    static bool mongo_is_init;
+
+    ///need to run everything through a blacklist
+    ///can probably just blacklist json
 
     mongo_context(mongo_database_type type)
     {
@@ -24,24 +32,35 @@ struct mongo_context
         std::string uri_str_properties = "mongodb://user_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
 
         std::string uri_str = "Err";
+        std::string db = "Err";
+
 
         if(type == mongo_database_type::USER_ACCESSIBLE)
         {
             uri_str = uri_str_accessible;
+            db = "user_dbs";
         }
 
         if(type == mongo_database_type::USER_PROPERTIES)
         {
             uri_str = uri_str_properties;
+            db = "user_properties";
+
+            printf("user props\n");
         }
 
-        mongoc_init();
+        if(!mongo_is_init)
+            mongoc_init();
+
+        mongo_is_init = true;
 
         client = mongoc_client_new(uri_str.c_str());
 
         mongoc_client_set_appname(client, "crapmud");
 
-        database = mongoc_client_get_database (client, "user_dbs");
+        last_db = db;
+
+        database = mongoc_client_get_database(client, db.c_str());
     }
 
     void change_collection(const std::string& coll)
@@ -57,7 +76,7 @@ struct mongo_context
             collection = nullptr;
         }
 
-        collection = mongoc_client_get_collection (client, "user_dbs", coll.c_str());
+        collection = mongoc_client_get_collection(client, last_db.c_str(), coll.c_str());
     }
 
     void ping()
@@ -104,6 +123,19 @@ struct mongo_context
         return bson;
     }
 
+    void insert_bson_1(const std::string& script_host, bson_t* bs)
+    {
+        if(script_host != last_collection)
+            return;
+
+        bson_error_t error;
+
+        if(!mongoc_collection_insert_one(collection, bs, NULL, NULL, &error))
+        {
+            fprintf (stderr, "err: %s\n", error.message);
+        }
+    }
+
     void insert_json_1(const std::string& script_host, const std::string& json)
     {
         if(script_host != last_collection)
@@ -114,12 +146,7 @@ struct mongo_context
         if(bs == nullptr)
             return;
 
-        bson_error_t error;
-
-        if(!mongoc_collection_insert_one(collection, bs, NULL, NULL, &error))
-        {
-            fprintf (stderr, "err: %s\n", error.message);
-        }
+        insert_bson_1(script_host, bs);
 
         bson_destroy(bs);
     }
@@ -228,7 +255,10 @@ struct mongo_context
         mongoc_database_destroy (database);
         mongoc_client_destroy (client);
 
-        mongoc_cleanup();
+        if(mongo_is_init)
+            mongoc_cleanup();
+
+        mongo_is_init = false;
     }
 };
 

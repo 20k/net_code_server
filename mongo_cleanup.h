@@ -1,6 +1,8 @@
 #ifndef MONGO_CLEANUP_H_INCLUDED
 #define MONGO_CLEANUP_H_INCLUDED
 
+#include <map>
+
 inline
 void cleanup_mongo_all();
 

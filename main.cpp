@@ -89,6 +89,13 @@ std::string run_script_as(const std::string& script, const std::string& user)
     return ret;
 }
 
+void user_tests()
+{
+    user test_user;
+
+    test_user.construct_new_user("test_user");
+}
+
 int main()
 {
     //mongo_tests("i20k_FDFDFDF_IMPOSSIBLE");
@@ -125,9 +132,10 @@ int main()
 
     std::cout << exec << std::endl;*/
 
-    std::string ret = run_script_as("i20k.parse", "i20k");
+    user_tests();
 
-    std::cout << ret << std::endl;
+    //std::string ret = run_script_as("i20k.parse", "i20k");
+    //std::cout << ret << std::endl;
 
     //tests();
 
