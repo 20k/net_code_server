@@ -27,6 +27,7 @@ struct mongo_context
     ///need to run everything through a blacklist
     ///can probably just blacklist json
 
+    ///if we ever have to add another db, make this fully data driven with structs and definitions and the like
     mongo_context(mongo_database_type type)
     {
         std::string uri_str_accessible = "mongodb://user_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
