@@ -112,7 +112,7 @@ bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& off
     std::string found = "";
     int found_loc = -1;
 
-    for(int i=srch.length(); i < view.size(); i++)
+    for(int i=srch.length(); i < (int)view.size(); i++)
     {
         char c = view[i];
 
@@ -158,7 +158,7 @@ bool expand_to_from_nochecks(std::string_view& view, std::string& in, int& offse
     std::string found = "";
     int found_loc = -1;
 
-    for(int i=srch.length(); i < view.size(); i++)
+    for(int i=srch.length(); i < (int)view.size(); i++)
     {
         char c = view[i];
 
@@ -188,7 +188,7 @@ bool expand(std::string_view& view, std::string& in, int& offset)
                                    "fs_call", "hs_call", "ms_call", "ls_call", "ns_call",
                                    "ns_call"};
 
-    for(int i=0; i < tos.size(); i++)
+    for(int i=0; i < (int)tos.size(); i++)
     {
         bool success = expand_to_from_scriptname(view, in, offset, froms[i], tos[i]);
 
@@ -202,7 +202,7 @@ bool expand(std::string_view& view, std::string& in, int& offset)
     std::vector<std::string> tos_unchecked  {"hash_d",
                                              "db_insert", "db_remove", "db_find", "db_update", "db_update1", "db_upsert"};
 
-    for(int i=0; i < tos_unchecked.size(); i++)
+    for(int i=0; i < (int)tos_unchecked.size(); i++)
     {
         bool success = expand_to_from_nochecks(view, in, offset, froms_unchecked[i], tos_unchecked[i]);
 
@@ -218,7 +218,7 @@ std::string parse_script(std::string in)
     if(in.size() == 0)
         return "";
 
-    for(int i=0; i < in.size(); i++)
+    for(int i=0; i < (int)in.size(); i++)
     {
         std::string_view strview(&in[i]);
 

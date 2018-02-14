@@ -2,6 +2,7 @@
 #define MONGO_HPP_INCLUDED
 
 #include <mongoc/mongoc.h>
+#include <string>
 
 enum class mongo_database_type
 {
@@ -206,6 +207,7 @@ struct mongo_context
 
 #include "mongo_cleanup.h"
 
+inline
 void mongo_tests(const std::string& coll)
 {
     ///mongoc_client_t *client = mongoc_client_new ("mongodb://user:password@localhost/?authSource=mydb");

@@ -22,6 +22,7 @@
 #include <string_view>
 
 #include "mongo.hpp"
+#include "user.hpp"
 
 #include <assert.h>
 
@@ -92,7 +93,7 @@ int main()
 {
     //mongo_tests("i20k_FDFDFDF_IMPOSSIBLE");
 
-    bool is_bot = false;
+    //bool is_bot = false;
 
     /*if(is_bot)
     {
