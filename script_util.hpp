@@ -116,6 +116,8 @@ bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& off
     {
         char c = view[i];
 
+        ///to disable extended syntax of
+        ///var x = #fs.i20k.whatever; x(), remove the semicolon
         if(c == '(' || c == ';')
         {
             found_loc = i;
