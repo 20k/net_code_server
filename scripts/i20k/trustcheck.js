@@ -12,7 +12,9 @@ function(context, args)
 	funcobject({to:"test_user2", amount:1});
 	var ret = funcobject({to:"test_user2", amount:1});
 	
-	return #hs.accts.balance();
+	//return #hs.accts.balance();
+	
+	return #fs.scripts.trust();
 	
 	//funcobject = funcobject.FUNC_ID;
 	

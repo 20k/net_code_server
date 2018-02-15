@@ -168,6 +168,21 @@ duk_ret_t accts__xfer_gc_to(duk_context* ctx, int sl)
 }
 
 inline
+duk_ret_t scripts__trust(duk_context* ctx, int sl)
+{
+    std::vector<std::string> ret;
+
+    for(auto& i : privileged_functions)
+    {
+        ret.push_back(i.first);
+    }
+
+    push_duk_val(ctx, ret);
+
+    return 1;
+}
+
+inline
 std::string parse_function_hack(std::string in)
 {
     int len = in.size();
@@ -180,8 +195,6 @@ std::string parse_function_hack(std::string in)
             in[i+1] = '$';
         }
     }
-
-    //std::replace(in.begin(), in.end(), '__', '');
 
     in.erase(std::remove(in.begin(), in.end(), '$'), in.end());
 
@@ -196,6 +209,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(accts__balance, 3),
     REGISTER_FUNCTION_PRIV(scripts__get_level, 4),
     REGISTER_FUNCTION_PRIV(accts__xfer_gc_to, 2),
+    REGISTER_FUNCTION_PRIV(scripts__trust, 4),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED

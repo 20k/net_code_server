@@ -43,6 +43,23 @@ void push_duk_val(duk_context* ctx, const std::string& t)
 
 template<typename T>
 inline
+void push_duk_val(duk_context* ctx, const std::vector<T>& t)
+{
+    duk_idx_t arr_idx = duk_push_array(ctx);
+
+    int index = 0;
+
+    for(const auto& i : t)
+    {
+        push_duk_val(ctx, i);
+        duk_put_prop_index(ctx, arr_idx, index);
+
+        index++;
+    }
+}
+
+template<typename T>
+inline
 T get_duk_val(duk_context* ctx)
 {
     //static_assert(false);

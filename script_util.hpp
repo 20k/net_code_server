@@ -314,7 +314,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
     duk_push_string(sd.ctx, wrapper.c_str());
     duk_push_string(sd.ctx, "test-name");
 
-    bool success = false;
+    //bool success = false;
 
     //DUK_COMPILE_FUNCTION
     if(duk_pcompile(sd.ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
@@ -323,7 +323,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
 
         printf("compile failed: %s\n", ret.c_str());
 
-        success = false;
+        //success = false;
     }
     else
     {
@@ -376,7 +376,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
             //printf("program result: %s\n", ret.c_str());
         }
 
-        success = true;
+        //success = true;
     }
 
     std::string str = get_hash_d(sd.ctx);
