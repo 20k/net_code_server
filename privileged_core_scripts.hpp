@@ -16,6 +16,8 @@ void push_error(duk_context* ctx, const std::string& msg)
     push_dukobject(ctx, "ok", false, "msg", msg);
 }
 
+///could potentially use __FUNCTION__ here
+///as it should work across msvc/gcc/clang... but... technically not portable
 #define SL_GUARD(x) if(!can_run(sl, x)){ push_error(ctx, "Security level guarantee failed"); return 1; }
 
 struct priv_func_info
