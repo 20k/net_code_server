@@ -21,6 +21,9 @@ void push_error(duk_context* ctx, const std::string& msg)
 ///so say this is midsec
 ///we can run if the sl is midsec or lower
 ///lower sls are less secure
+
+///hmm. Maybe we want to keep sls somewhere which is dynamically editable like global properties in the db
+///cache the calls, and like, refresh the cache every 100 calls or something
 inline
 duk_ret_t accts_balance(duk_context* ctx, int sl)
 {
@@ -29,7 +32,9 @@ duk_ret_t accts_balance(duk_context* ctx, int sl)
     user usr;
     usr.load_from_db(get_caller(ctx));
 
-    duk_push_number(ctx, usr.cash);
+    std::string cash_string = std::to_string((int64_t)usr.cash);
+
+    push_duk_val(ctx, cash_string);
 
     return 1;
 }
