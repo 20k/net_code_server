@@ -53,6 +53,8 @@ function(context, args)
 	
 	//return JSON.stringify(res_cursor);
 	
+	#ns.i20k.test();
+	
 	//
 	//return res_cursor.array();
 	

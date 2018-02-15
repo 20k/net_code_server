@@ -248,6 +248,8 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     script_info script = parse_script(get_script_from_name_string(base_scripts_string, str));
 
+    SL_GUARD(script.seclevel);
+
     std::string load = script.data;
 
     //std::cout << load << std::endl;
