@@ -94,6 +94,14 @@ duk_ret_t scripts__get_level(duk_context* ctx, int sl)
 }
 
 inline
+duk_ret_t scripts__user(duk_context* ctx, int sl)
+{
+    std::string usr = get_caller(ctx);
+
+
+}
+
+inline
 duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const std::string& to, double amount)
 {
     if(round(amount) != amount || amount < 0 || amount >= pow(2, 32))

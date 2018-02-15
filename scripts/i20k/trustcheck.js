@@ -8,14 +8,14 @@ function(context, args)
 	
 	var f2 = #ms.accts.xfer_gc_to({to:"test_user2", amount:1});
 	
-	var funcobject = #ms.accts.xfer_gc_to;
-	funcobject({to:"test_user2", amount:1});
-	var ret = funcobject({to:"test_user2", amount:1});
+	print(f2);
+	
+	print(#fs.scripts.trust);
 	
 	//return #hs.accts.balance();
 	
-	return #fs.scripts.trust();
 	
+		
 	//funcobject = funcobject.FUNC_ID;
 	
 	/*var ret = #ms.i20k.funcobject({f:funcobject});
