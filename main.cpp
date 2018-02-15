@@ -57,9 +57,9 @@ void tests()
     assert(s3_data == "" && s3_data != s4_data);
 
     script_info script;
-    script.load_from_disk("i20k.parse");
+    script.load_from_disk_with_db_metadata("i20k.parse");
 
-    std::cout << script.data << std::endl;
+    std::cout << script.parsed_source << std::endl;
 }
 
 std::string run_script_as(const std::string& script, const std::string& user)
@@ -69,10 +69,10 @@ std::string run_script_as(const std::string& script, const std::string& user)
     register_funcs(sd.ctx);
 
     script_info script_inf;
-    script_inf.load_from_disk(script);
+    script_inf.load_from_disk_with_db_metadata(script);
 
     ///need to check we have permission
-    std::string data = script_inf.data;
+    std::string data = script_inf.parsed_source;
 
     std::cout << data << std::endl;
 
@@ -146,10 +146,10 @@ std::string run_in_user_context(user& usr, const std::string& command)
     std::string script = command;
 
     script_info script_inf;
-    script_inf.load_from_disk(script);
+    script_inf.load_from_disk_with_db_metadata(script);
 
     ///need to check we have permission
-    std::string data = script_inf.data;
+    std::string data = script_inf.parsed_source;
 
     std::cout << data << std::endl;
 

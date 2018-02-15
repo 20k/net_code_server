@@ -248,11 +248,16 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
 
 struct script_info
 {
-    std::string data;
+    std::string name;
+    std::string unparsed_source;
+    std::string parsed_source;
+
     int seclevel = 0;
     bool valid = false;
 
-    void load_from_disk(const std::string& name);
+    void load_from_disk_with_db_metadata(const std::string& name);
+
+    void load_from_unparsed_source(const std::string& unparsed, const std::string& name);
 };
 
 inline

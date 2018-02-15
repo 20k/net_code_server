@@ -257,11 +257,11 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     }
 
     script_info script;
-    script.load_from_disk(str);
+    script.load_from_disk_with_db_metadata(str);
 
     SL_GUARD(script.seclevel);
 
-    std::string load = script.data;
+    std::string load = script.parsed_source;
 
     //std::cout << load << std::endl;
 
