@@ -156,18 +156,19 @@ std::string run_in_user_context(user& usr, const std::string& command)
     if(script_inf.exists_in_db())
         script_inf.load_from_db();
 
+    std::string data_source = get_script_from_name_string(base_scripts_string, script);
+
     ///#UP
-    script_inf.load_from_unparsed_source(read_file("./scripts/" + script), usr.name);
+    script_inf.load_from_unparsed_source(sd.ctx, data_source, script);
 
     ///#UP
     script_inf.overwrite_in_db();
 
-    //script_inf.load_from_disk_with_db_metadata(script);
 
     ///need to check we have permission
     std::string data = script_inf.parsed_source;
 
-    std::cout << data << std::endl;
+    std::cout << "data\n" << data << std::endl;
 
     if(data == "")
     {

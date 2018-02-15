@@ -41,7 +41,7 @@ script_data parse_script(std::string in)
 }
 
 ///WARNING NEED TO VALIDATE
-void script_info::load_from_unparsed_source(const std::string& source, const std::string& name_)
+void script_info::load_from_unparsed_source(duk_context* ctx, const std::string& source, const std::string& name_)
 {
     name = name_;
 
@@ -60,6 +60,13 @@ void script_info::load_from_unparsed_source(const std::string& source, const std
     parsed_source = sdata.parsed_source;
     seclevel = sdata.seclevel;
     valid = sdata.valid;
+
+    if(!script_compiles(ctx, *this))
+    {
+        valid = false;
+
+        printf("failed compilation in early stage\n");
+    }
 }
 
 void script_info::load_from_db()
@@ -96,6 +103,9 @@ void script_info::load_from_db()
 
 void script_info::overwrite_in_db()
 {
+    if(!valid)
+        return;
+
     item my_script;
 
     my_script.set_prop("item_id", name);

@@ -10,7 +10,7 @@
 #include <js/js_interop.hpp>
 
 inline
-std::string base_scripts_string = "./scripts";
+std::string base_scripts_string = "./scripts/";
 
 inline
 bool is_valid_name_character(char c)
@@ -259,7 +259,7 @@ struct script_info
 
     void load_from_disk_with_db_metadata(const std::string& name);
 
-    void load_from_unparsed_source(const std::string& unparsed, const std::string& name);
+    void load_from_unparsed_source(duk_context* ctx, const std::string& unparsed, const std::string& name);
 
     void load_from_db();
     void overwrite_in_db();
@@ -278,6 +278,35 @@ std::string get_hash_d(duk_context* ctx)
     duk_pop_n(ctx, 2);
 
     return str;
+}
+
+inline
+bool script_compiles(duk_context* ctx, script_info& script)
+{
+    std::string prologue = "function INTERNAL_TEST(context, args)\n{'use strict'\nvar IVAR = ";
+    std::string endlogue = "\n\nreturn IVAR(context, args);\n\n}\n";
+
+    std::string wrapper = prologue + script.parsed_source + endlogue;
+
+    duk_push_string(ctx, wrapper.c_str());
+    duk_push_string(ctx, "test-name");
+
+    if(duk_pcompile(ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
+    {
+        std::string ret = duk_safe_to_string(ctx, -1);
+
+        printf("compile failed: %s\n", ret.c_str());
+
+        duk_pop(ctx);
+
+        return false;
+    }
+    else
+    {
+        duk_pop(ctx);
+
+        return true;
+    }
 }
 
 ///#db.f({[col_key]: {$exists : true}});
