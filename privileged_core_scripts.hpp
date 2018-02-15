@@ -43,8 +43,6 @@ std::map<std::string, priv_func_info> privileged_functions;
 inline
 duk_ret_t accts__balance(duk_context* ctx, int sl)
 {
-    SL_GUARD(3);
-
     user usr;
     usr.load_from_db(get_caller(ctx));
 
@@ -58,8 +56,6 @@ duk_ret_t accts__balance(duk_context* ctx, int sl)
 inline
 duk_ret_t scripts__get_level(duk_context* ctx, int sl)
 {
-    SL_GUARD(4);
-
     ///so we have an object
     ///of the form name:whatever
     ///really need a way to parse these out from duktape
@@ -100,8 +96,6 @@ duk_ret_t scripts__get_level(duk_context* ctx, int sl)
 inline
 duk_ret_t accts__xfer_gc_to(duk_context* ctx, int sl)
 {
-    SL_GUARD(2);
-
     ///need a get either or
     ///so we can support to and name
     duk_get_prop_string(ctx, -1, "to");

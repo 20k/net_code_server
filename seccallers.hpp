@@ -229,18 +229,25 @@ duk_ret_t hash_d(duk_context* ctx)
 static
 duk_ret_t js_call(duk_context* ctx, int sl)
 {
-    duk_push_global_stash(ctx);
-    duk_get_prop_string(ctx, -1, "TO_CALL_INTERNAL_XXX");
+    std::string str;
 
-    std::string str = duk_require_string(ctx, -1);
+    duk_push_this(ctx);
 
-    duk_pop_n(ctx, 2);
+    if(!get_duk_keyvalue(ctx, "FUNC_ID", str))
+    {
+        duk_pop(ctx);
+
+        push_error(ctx, "Bad script name, this is the developer scolding you, you know what you did");
+        return 1;
+    }
 
     std::string conv = str;
 
     ///IF IS PRIVILEGED SCRIPT, RETURN THAT CFUNC
     if(privileged_functions.find(conv) != privileged_functions.end())
     {
+        SL_GUARD(privileged_functions[conv].sec_level);
+
         return privileged_functions[conv].func(ctx, sl);
     }
 
@@ -274,17 +281,41 @@ template<int N>
 inline
 duk_ret_t sl_call(duk_context* ctx)
 {
+    static_assert(N >= 0 && N <= 4);
+
     std::string str = duk_require_string(ctx, -1);
 
-    duk_push_global_stash(ctx);
+    /*duk_push_global_stash(ctx);
     duk_push_string(ctx, str.c_str());
     duk_put_prop_string(ctx, -2, "TO_CALL_INTERNAL_XXX");
 
     duk_pop_n(ctx, 2);
 
-    static_assert(N >= 0 && N <= 4);
+
+    ///oh bum
+    ///so we're setting a global property
+    ///TO_CALL_INTERNAL_XXX to be the string
+    ///but that's gunna break pretty bad :(
+
+
+
+    duk_push_c_function(ctx, &jxs_call<N>, 1);*/
+
+    /*int32_t id = get_global_int(ctx, get_caller(ctx) + "ID_STASH");
+    int32_t new_id = id + 1;
+    set_global_int(ctx, get_caller(ctx) + "ID_STASH", new_id);
+
+    set_global_string(ctx, "FUNC_STASH" + std::to_string(id), str);
 
     duk_push_c_function(ctx, &jxs_call<N>, 1);
+
+    put_duk_keyvalue(ctx, "FUNC_ID", id);*/
+
+    duk_push_c_function(ctx, &jxs_call<N>, 1);
+
+    put_duk_keyvalue(ctx, "FUNC_ID", str);
+
+    std::cout << str << std::endl;
 
     return 1;
 }
