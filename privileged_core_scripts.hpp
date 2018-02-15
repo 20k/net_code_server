@@ -46,9 +46,10 @@ duk_ret_t accts__balance(duk_context* ctx, int sl)
     user usr;
     usr.load_from_db(get_caller(ctx));
 
-    std::string cash_string = std::to_string((int64_t)usr.cash);
+    //std::string cash_string = std::to_string((int64_t)usr.cash);
 
-    push_duk_val(ctx, cash_string);
+    double cash_val = usr.cash;
+    push_duk_val(ctx, cash_val);
 
     return 1;
 }

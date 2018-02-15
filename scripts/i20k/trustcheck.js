@@ -12,11 +12,12 @@ function(context, args)
 	funcobject({to:"test_user2", amount:1});
 	var ret = funcobject({to:"test_user2", amount:1});
 	
+	return #hs.accts.balance();
+	
 	//funcobject = funcobject.FUNC_ID;
 	
-	var ret = #ms.i20k.funcobject({f:funcobject});
-	
-	return ret;
+	/*var ret = #ms.i20k.funcobject({f:funcobject});
+	return ret;*/
 	
 	//return JSON.stringify(#fs.i20k.funcobject({f:funcobject}));
 	
