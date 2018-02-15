@@ -179,7 +179,7 @@ int main()
     user to_run_as;
     to_run_as.load_from_db("test_user");
 
-    std::string str = run_in_user_context(to_run_as, "i20k.parse");
+    std::string str = run_in_user_context(to_run_as, "i20k.trustcheck");
 
     std::cout << str << std::endl;
 

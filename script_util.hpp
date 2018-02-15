@@ -359,4 +359,36 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
     return ret;
 }
 
+inline
+std::string get_global_string(duk_context* ctx, const std::string& name)
+{
+    duk_push_global_stash(ctx);
+    duk_get_prop_string(ctx, -1, name.c_str());
+
+    std::string str = duk_safe_to_string(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    return str;
+}
+
+inline
+std::string get_caller(duk_context* ctx)
+{
+    duk_push_global_stash(ctx);
+    duk_get_prop_string(ctx, -1, "caller");
+
+    std::string str = duk_safe_to_string(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    return str;
+}
+
+inline
+std::string get_script_host(duk_context* ctx)
+{
+    return get_global_string(ctx, "script_host");
+}
+
 #endif // SCRIPT_UTIL_HPP_INCLUDED
