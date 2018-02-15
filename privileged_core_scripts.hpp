@@ -16,12 +16,16 @@ void push_error(duk_context* ctx, const std::string& msg)
     push_dukobject(ctx, "ok", false, "msg", msg);
 }
 
+#define SL_GUARD(x) if(!can_run(sl, x)){ push_error(ctx, "Security level guarantee failed"); return 1; }
+
 ///so say this is midsec
 ///we can run if the sl is midsec or lower
 ///lower sls are less secure
 inline
 duk_ret_t accts_balance(duk_context* ctx, int sl)
 {
+    SL_GUARD(3);
+
     user usr;
     usr.load_from_db(get_caller(ctx));
 

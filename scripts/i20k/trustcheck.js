@@ -1,4 +1,4 @@
 function(context, args)
 {
-	return #fs.accts.balance();
+	return #hs.accts.balance();
 }
