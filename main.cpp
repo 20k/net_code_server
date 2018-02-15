@@ -143,6 +143,7 @@ std::string run_in_user_context(user& usr, const std::string& command)
     init_js_interop(sd, std::string());
     register_funcs(sd.ctx);
 
+    #if 0
     std::string script = command;
 
     script_info script_inf;
@@ -155,6 +156,7 @@ std::string run_in_user_context(user& usr, const std::string& command)
 
     if(script_inf.exists_in_db())
         script_inf.load_from_db();
+    #endif
 
     /*std::string data_source = get_script_from_name_string(base_scripts_string, script);
 
@@ -175,12 +177,13 @@ std::string run_in_user_context(user& usr, const std::string& command)
         return "Invalid Script";
     }*/
 
-    std::vector<std::string> parts = no_ss_split(script, ".");
+    //std::vector<std::string> parts = no_ss_split(script, ".");
 
-    startup_state(sd.ctx, usr.name, parts[0], parts[1]);
+    startup_state(sd.ctx, usr.name, usr.name, "invoke");
 
+    std::string ret = js_unified_force_call_data(sd.ctx, command, usr.name);
 
-    std::string ret = js_unified_force_call(sd.ctx, script);
+    //std::string ret = js_unified_force_call(sd.ctx, script);
 
     //std::string ret = compile_and_call(sd, data, false, get_caller(sd.ctx));
 

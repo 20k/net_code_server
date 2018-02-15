@@ -311,25 +311,43 @@ bool script_compiles(duk_context* ctx, script_info& script)
     }
 }
 
+inline
+std::string attach_wrapper(const std::string& data_in, bool stringify, bool direct)
+{
+    std::string prologue = "function INTERNAL_TEST(context, args)\n{'use strict'\nvar IVAR = ";
+    std::string endlogue = "\n\nreturn IVAR(context, args);\n\n}\n";
+
+    if(stringify)
+    {
+        endlogue = "\n\nreturn JSON.stringify(IVAR(context, args));\n\n}\n";
+    }
+
+    if(direct && stringify)
+    {
+        endlogue = "\n\nreturn JSON.stringify(IVAR);\n\n}\n";
+    }
+
+    if(direct && !stringify)
+    {
+        endlogue = "\n\n return IVAR }";
+    }
+
+    return prologue + data_in + endlogue;
+}
+
 ///#db.f({[col_key]: {$exists : true}});
 ///$where and $query both need to be disabled, $inspect as well
 inline
-std::string compile_and_call(stack_duk& sd, const std::string& data, bool called_internally, std::string caller, bool is_conargs_function = true)
+std::string compile_and_call(stack_duk& sd, const std::string& data, bool called_internally, std::string caller, bool is_conargs_function = true, bool stringify = false)
 {
     if(data.size() == 0)
     {
         return "Script not found";
     }
 
-    std::string prologue = "function INTERNAL_TEST(context, args)\n{'use strict'\nvar IVAR = ";
-    std::string endlogue = "\n\nreturn IVAR(context, args);\n\n}\n";
+    std::string wrapper = attach_wrapper(data, !called_internally || stringify, false);
 
-    if(!called_internally)
-    {
-        endlogue = "\n\nreturn JSON.stringify(IVAR(context, args));\n\n}\n";
-    }
-
-    std::string wrapper = prologue + data + endlogue;
+    //std::cout << wrapper << std::endl;
 
     std::string ret;
 
@@ -344,6 +362,9 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
         ret = duk_safe_to_string(sd.ctx, -1);
 
         printf("compile failed: %s\n", ret.c_str());
+
+        if(called_internally)
+            duk_push_undefined(sd.ctx);
 
         //success = false;
     }
@@ -480,6 +501,23 @@ inline
 std::string get_script_host(duk_context* ctx)
 {
     return get_global_string(ctx, "script_host");
+}
+
+inline
+std::string get_script_ending(duk_context* ctx)
+{
+    return get_global_string(ctx, "script_ending");
+}
+
+inline
+void set_script_info(duk_context* ctx, const std::string& full_script_name)
+{
+    std::vector<std::string> strings = no_ss_split(full_script_name, ".");
+
+    //assert(strings.size() == 2);
+
+    set_global_string(ctx, "script_host", strings[0]);
+    set_global_string(ctx, "script_ending", strings[1]);
 }
 
 #endif // SCRIPT_UTIL_HPP_INCLUDED

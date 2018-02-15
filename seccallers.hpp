@@ -246,6 +246,8 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     duk_pop(ctx);
 
+    std::string full_script = get_script_host(ctx) + "." + get_script_ending(ctx);
+
     std::string conv = str;
 
     ///IF IS PRIVILEGED SCRIPT, RETURN THAT CFUNC
@@ -253,11 +255,21 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     {
         SL_GUARD(privileged_functions[conv].sec_level);
 
-        return privileged_functions[conv].func(ctx, sl);
+        set_script_info(ctx, str);
+
+        privileged_functions[conv].func(ctx, sl);
+
+        //std::string to_return = duk_json_encode(ctx, -1);
+
+        set_script_info(ctx, full_script);
+
+        return 1;
     }
 
     script_info script;
-    script.load_from_disk_with_db_metadata(str);
+    //script.load_from_disk_with_db_metadata(str);
+    script.name = str;
+    script.load_from_db();
 
     SL_GUARD(script.seclevel);
 
@@ -268,17 +280,26 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     stack_duk sd;
     sd.ctx = ctx;
 
+    set_script_info(ctx, str);
+
     compile_and_call(sd, load, true, get_caller(ctx));
+
+    set_script_info(ctx, full_script);
 
     return 1;
 }
 
+#if 0
 inline
 std::string js_unified_force_call(duk_context* ctx, const std::string& scriptname)
 {
+    std::string full_script = get_script_host(ctx) + "." + get_script_ending(ctx);
+
     if(privileged_functions.find(scriptname) != privileged_functions.end())
     {
         //SL_GUARD(privileged_functions[scriptname].sec_level);
+
+        set_script_info(ctx, scriptname);
 
         privileged_functions[scriptname].func(ctx, 0);
 
@@ -296,6 +317,8 @@ std::string js_unified_force_call(duk_context* ctx, const std::string& scriptnam
     if(!script.valid)
         return "No such script";
 
+    set_script_info(ctx, scriptname);
+
     //SL_GUARD(script.seclevel);
 
     std::string load = script.parsed_source;
@@ -306,6 +329,37 @@ std::string js_unified_force_call(duk_context* ctx, const std::string& scriptnam
     duk_push_undefined(ctx);
 
     compile_and_call(sd, load, true, get_caller(ctx));
+
+
+
+    if(!duk_is_object_coercible(ctx, -1))
+        return "No return";
+
+    std::string ret = duk_json_encode(ctx, -1);
+
+    duk_pop(ctx);
+
+    return ret;
+}
+#endif // 0
+
+inline
+std::string js_unified_force_call_data(duk_context* ctx, const std::string& data, const std::string& host)
+{
+    set_script_info(ctx, host + ".invoke");
+
+    stack_duk sd;
+    sd.ctx = ctx;
+
+    script_info dummy;
+    dummy.load_from_unparsed_source(ctx, attach_wrapper(data, false, true), host + ".invoke");
+
+    if(!dummy.valid)
+        return "Invalid Command Line Syntax";
+
+    duk_push_undefined(ctx);
+
+    compile_and_call(sd, dummy.parsed_source, true, get_caller(ctx), true, false);
 
     if(!duk_is_object_coercible(ctx, -1))
         return "No return";
