@@ -146,7 +146,23 @@ std::string run_in_user_context(user& usr, const std::string& command)
     std::string script = command;
 
     script_info script_inf;
-    script_inf.load_from_disk_with_db_metadata(script);
+    script_inf.name = script; ///critical
+
+    ///these two lines would be for a regular run, and the else condition
+    ///would be "script doesn't exist"
+    /*if(script_inf.exists_in_db())
+        script_inf.load_from_db();*/
+
+    if(script_inf.exists_in_db())
+        script_inf.load_from_db();
+
+    ///#UP
+    script_inf.load_from_unparsed_source(read_file("./scripts/" + script), usr.name);
+
+    ///#UP
+    script_inf.overwrite_in_db();
+
+    //script_inf.load_from_disk_with_db_metadata(script);
 
     ///need to check we have permission
     std::string data = script_inf.parsed_source;

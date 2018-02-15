@@ -64,6 +64,9 @@ void script_info::load_from_unparsed_source(const std::string& source, const std
 
 void script_info::load_from_db()
 {
+    if(!exists_in_db())
+        return;
+
     item my_script;
 
     my_script.set_prop("item_id", name);
@@ -108,6 +111,15 @@ void script_info::overwrite_in_db()
         my_script.set_prop("trust", 0);
         my_script.create_in_db();
     }
+}
+
+bool script_info::exists_in_db()
+{
+    item my_script;
+
+    my_script.set_prop("item_id", name);
+
+    return my_script.exists_in_db();
 }
 
 void script_info::load_from_disk_with_db_metadata(const std::string& name_)
