@@ -276,8 +276,6 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 inline
 std::string js_unified_force_call(duk_context* ctx, const std::string& scriptname)
 {
-    std::cout << scriptname << std::endl;
-
     if(privileged_functions.find(scriptname) != privileged_functions.end())
     {
         //SL_GUARD(privileged_functions[scriptname].sec_level);
@@ -292,7 +290,11 @@ std::string js_unified_force_call(duk_context* ctx, const std::string& scriptnam
     }
 
     script_info script;
-    script.load_from_disk_with_db_metadata(scriptname);
+    script.name = scriptname;
+    script.load_from_db();
+
+    if(!script.valid)
+        return "No such script";
 
     //SL_GUARD(script.seclevel);
 
@@ -304,6 +306,9 @@ std::string js_unified_force_call(duk_context* ctx, const std::string& scriptnam
     duk_push_undefined(ctx);
 
     compile_and_call(sd, load, true, get_caller(ctx));
+
+    if(!duk_is_object_coercible(ctx, -1))
+        return "No return";
 
     std::string ret = duk_json_encode(ctx, -1);
 
