@@ -297,6 +297,8 @@ bool script_compiles(duk_context* ctx, script_info& script)
 
         printf("scompile failed: %s\n", ret.c_str());
 
+        std::cout << script.parsed_source << std::endl;
+
         duk_pop(ctx);
 
         return false;

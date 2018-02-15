@@ -206,6 +206,11 @@ struct mongo_context
         if(bs == nullptr)
             return results;
 
+        if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
+        {
+            return std::vector<std::string>();
+        }
+
         const bson_t *doc;
 
         ///hmm. for .first() we should limit to one doc

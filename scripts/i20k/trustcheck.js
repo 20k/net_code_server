@@ -10,13 +10,13 @@ function(context, args)
 	
 	print(f2);
 	
-	print(#fs.scripts.trust);
+	print(#fs.scripts.trust());
 	
-	print(#ns.scripts.user);
+	print(#ns.scripts.user());
 	
 	//return #hs.accts.balance();
 	
-	
+	return {ok:true}
 		
 	//funcobject = funcobject.FUNC_ID;
 	

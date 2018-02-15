@@ -77,7 +77,7 @@ void script_info::load_from_db()
     item my_script;
 
     my_script.set_prop("item_id", name);
-    my_script.set_prop("in_public", 1);
+    my_script.set_prop("in_public", 0);
     my_script.set_prop("trust", 0);
     my_script.set_prop("owner", owner);
     my_script.set_prop("is_script", 1);
@@ -157,7 +157,7 @@ void script_info::load_from_disk_with_db_metadata(const std::string& name_)
 
     item my_script;
     my_script.set_prop("item_id", name);
-    my_script.set_prop("in_public", 1);
+    my_script.set_prop("in_public", 0);
     my_script.set_prop("trust", 0);
     my_script.set_prop("owner", owner);
     my_script.set_prop("is_script", 1);

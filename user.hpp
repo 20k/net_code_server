@@ -57,14 +57,14 @@ struct user
         bson_destroy(to_update);
     }
 
-    bool exists(const std::string& name)
+    bool exists(const std::string& name_)
     {
         mongo_context* ctx = get_global_mongo_user_info_context();
-        ctx->change_collection(name);
+        ctx->change_collection(name_);
 
         bson_t* to_find = BCON_NEW("name", "{", "$exists", BCON_BOOL(true), "}");
 
-        std::vector<std::string> ret = ctx->find_bson(name, to_find, nullptr);
+        std::vector<std::string> ret = ctx->find_bson(name_, to_find, nullptr);
 
         bson_destroy(to_find);
 

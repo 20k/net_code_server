@@ -208,11 +208,16 @@ int main()
     test_user3.overwrite_user_in_db();
 
     user to_run_as;
-    to_run_as.load_from_db("test_user");
+    to_run_as.load_from_db("i20k");
 
-    //std::string str = run_in_user_context(to_run_as, "i20k.trustcheck");
+    if(!to_run_as.exists("i20k"))
+    {
+        to_run_as.construct_new_user("i20k");
+    }
 
-    std::string str = run_in_user_context(to_run_as, "test_user3.trustcheck");
+    std::string str = run_in_user_context(to_run_as, "i20k.trustcheck");
+
+    //std::string str = run_in_user_context(to_run_as, "test_user3.xfer_to_caller");
 
     std::cout << str << std::endl;
 
