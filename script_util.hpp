@@ -295,7 +295,7 @@ bool script_compiles(duk_context* ctx, script_info& script)
     {
         std::string ret = duk_safe_to_string(ctx, -1);
 
-        printf("compile failed: %s\n", ret.c_str());
+        printf("scompile failed: %s\n", ret.c_str());
 
         duk_pop(ctx);
 
