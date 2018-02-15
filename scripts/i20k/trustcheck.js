@@ -12,6 +12,8 @@ function(context, args)
 	
 	print(#fs.scripts.trust);
 	
+	print(#ns.scripts.user);
+	
 	//return #hs.accts.balance();
 	
 	

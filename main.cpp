@@ -212,7 +212,7 @@ int main()
 
     //std::string str = run_in_user_context(to_run_as, "i20k.trustcheck");
 
-    std::string str = run_in_user_context(to_run_as, "test_user3.xfer_to_caller");
+    std::string str = run_in_user_context(to_run_as, "test_user3.trustcheck");
 
     std::cout << str << std::endl;
 

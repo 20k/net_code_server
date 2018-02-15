@@ -98,7 +98,27 @@ duk_ret_t scripts__user(duk_context* ctx, int sl)
 {
     std::string usr = get_caller(ctx);
 
+    mongo_requester request;
+    request.set_prop("owner", usr);
+    request.set_prop("is_script", 1);
 
+    mongo_context* item_context = get_global_mongo_user_items_context();
+
+    std::vector<mongo_requester> results = request.fetch_from_db(item_context);
+
+    std::vector<std::string> names;
+
+    for(mongo_requester& req : results)
+    {
+        if(!req.has_prop("name"))
+            continue;
+
+        names.push_back(req.get_prop("name"));
+    }
+
+    push_duk_val(ctx, names);
+
+    return 1;
 }
 
 inline
@@ -252,6 +272,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(accts__xfer_gc_to, 2),
     REGISTER_FUNCTION_PRIV(accts__xfer_gc_to_caller, 4),
     REGISTER_FUNCTION_PRIV(scripts__trust, 4),
+    REGISTER_FUNCTION_PRIV(scripts__user, 2),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
