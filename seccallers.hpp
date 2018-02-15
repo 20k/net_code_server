@@ -238,8 +238,6 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     std::string conv = str;
 
-    std::replace(conv.begin(), conv.end(), '.', '_');
-
     ///IF IS PRIVILEGED SCRIPT, RETURN THAT CFUNC
     if(privileged_functions.find(conv) != privileged_functions.end())
     {
