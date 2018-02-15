@@ -246,7 +246,9 @@ duk_ret_t js_call(duk_context* ctx, int sl)
         return privileged_functions[conv](ctx, sl);
     }
 
-    std::string load = parse_script(get_script_from_name_string(base_scripts_string, str));
+    script_info script = parse_script(get_script_from_name_string(base_scripts_string, str));
+
+    std::string load = script.data;
 
     //std::cout << load << std::endl;
 

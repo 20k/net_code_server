@@ -57,9 +57,9 @@ void tests()
     assert(s3_data == "" && s3_data != s4_data);
 
 
-    std::string parsed = parse_script(get_script_from_name_string(base, "i20k.parse"));
+    script_info script = parse_script(get_script_from_name_string(base, "i20k.parse"));
 
-    std::cout << parsed << std::endl;
+    std::cout << script.data << std::endl;
 }
 
 std::string run_script_as(const std::string& script, const std::string& user)
@@ -69,8 +69,10 @@ std::string run_script_as(const std::string& script, const std::string& user)
     register_funcs(sd.ctx);
 
 
+    script_info script_inf = parse_script(get_script_from_name_string("./scripts", script));
+
     ///need to check we have permission
-    std::string data = parse_script(get_script_from_name_string("./scripts", script));
+    std::string data = script_inf.data;
 
     std::cout << data << std::endl;
 
@@ -143,8 +145,10 @@ std::string run_in_user_context(user& usr, const std::string& command)
 
     std::string script = command;
 
+    script_info script_inf = parse_script(get_script_from_name_string("./scripts", script));
+
     ///need to check we have permission
-    std::string data = parse_script(get_script_from_name_string("./scripts", script));
+    std::string data = script_inf.data;
 
     std::cout << data << std::endl;
 

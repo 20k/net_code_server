@@ -154,6 +154,8 @@ bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& off
         in.replace(offset, finish - start, to + "(\"" + found + "\")");
     }
 
+    ///increase offset?
+
     return valid;
 }
 
@@ -187,11 +189,13 @@ bool expand_to_from_nochecks(std::string_view& view, std::string& in, int& offse
 
     in.replace(offset, finish - start, to);
 
+    ///increase offset?
+
     return true;
 }
 
 inline
-bool expand(std::string_view& view, std::string& in, int& offset)
+bool expand(std::string_view& view, std::string& in, int& offset, int& found_seclevel)
 {
     std::vector<std::string> froms{"#fs.", "#hs.", "#ms.", "#ls.", "#ns.",
                                    "#4s.", "#3s.", "#2s.", "#1s.", "#0s.",
@@ -201,12 +205,20 @@ bool expand(std::string_view& view, std::string& in, int& offset)
                                    "fs_call", "hs_call", "ms_call", "ls_call", "ns_call",
                                    "ns_call"};
 
+    std::vector<int> sec_levels = {4, 3, 2, 1, 0,
+                                   4, 3, 2, 1, 0,
+                                   0};
+
     for(int i=0; i < (int)tos.size(); i++)
     {
         bool success = expand_to_from_scriptname(view, in, offset, froms[i], tos[i]);
 
         if(success)
+        {
+            found_seclevel = std::min(found_seclevel, sec_levels[i]);
+
             return true;
+        }
     }
 
     std::vector<std::string> froms_unchecked{"#D",
@@ -226,20 +238,33 @@ bool expand(std::string_view& view, std::string& in, int& offset)
     return false;
 }
 
+struct script_info
+{
+    std::string data;
+
+    int seclevel = 0;
+};
+
 inline
-std::string parse_script(std::string in)
+script_info parse_script(std::string in)
 {
     if(in.size() == 0)
-        return "";
+        return script_info();
+
+    int found_seclevel = 4;
 
     for(int i=0; i < (int)in.size(); i++)
     {
         std::string_view strview(&in[i]);
 
-        expand(strview, in, i);
+        expand(strview, in, i, found_seclevel);
     }
 
-    return in;
+    script_info script;
+    script.data = in;
+    script.seclevel = found_seclevel;
+
+    return script;
 }
 
 inline
