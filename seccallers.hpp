@@ -256,7 +256,8 @@ duk_ret_t js_call(duk_context* ctx, int sl)
         return privileged_functions[conv].func(ctx, sl);
     }
 
-    script_info script = parse_script(get_script_from_name_string(base_scripts_string, str));
+    script_info script;
+    script.load_from_disk(str);
 
     SL_GUARD(script.seclevel);
 

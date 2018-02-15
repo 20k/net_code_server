@@ -74,7 +74,7 @@ duk_ret_t scripts__get_level(duk_context* ctx, int sl)
     duk_pop(ctx);
 
     script_info script;
-    script.load(str);
+    script.load_from_disk(str);
 
     if(privileged_functions.find(str) != privileged_functions.end())
     {

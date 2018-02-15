@@ -252,31 +252,8 @@ struct script_info
     int seclevel = 0;
     bool valid = false;
 
-    void load(const std::string& name);
+    void load_from_disk(const std::string& name);
 };
-
-inline
-script_info parse_script(std::string in)
-{
-    if(in.size() == 0)
-        return script_info();
-
-    int found_seclevel = 4;
-
-    for(int i=0; i < (int)in.size(); i++)
-    {
-        std::string_view strview(&in[i]);
-
-        expand(strview, in, i, found_seclevel);
-    }
-
-    script_info script;
-    script.data = in;
-    script.seclevel = found_seclevel;
-    script.valid = true;
-
-    return script;
-}
 
 inline
 std::string get_hash_d(duk_context* ctx)
