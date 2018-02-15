@@ -6,15 +6,21 @@ function(context, args)
 	
 	return #hs.accts.balance();*/
 	
-	var funcobject = #hs.accts.xfer_gc_to({to:"test_user2", amount:1});
+	var f2 = #ms.accts.xfer_gc_to({to:"test_user2", amount:1});
 	
-	//var funcobject = #hs.accts.xfer_gc_to;
-	
-	//funcobject({to:"test_user2", amount:1});
+	var funcobject = #ms.accts.xfer_gc_to;
+	funcobject({to:"test_user2", amount:1});
+	var ret = funcobject({to:"test_user2", amount:1});
 	
 	//funcobject = funcobject.FUNC_ID;
 	
-	return JSON.stringify(funcobject);
+	var ret = #ms.i20k.funcobject({f:funcobject});
+	
+	return ret;
+	
+	//return JSON.stringify(#fs.i20k.funcobject({f:funcobject}));
+	
+	//return JSON.stringify(ret);
 	
 	//return #hs.accts.xfer_gc_to({to:"test_user2", amount:1});
 }

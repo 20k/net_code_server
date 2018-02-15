@@ -231,7 +231,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 {
     std::string str;
 
-    duk_push_this(ctx);
+    duk_push_current_function(ctx);
 
     if(!get_duk_keyvalue(ctx, "FUNC_ID", str))
     {
@@ -240,6 +240,10 @@ duk_ret_t js_call(duk_context* ctx, int sl)
         push_error(ctx, "Bad script name, this is the developer scolding you, you know what you did");
         return 1;
     }
+
+    duk_pop(ctx);
+
+    //std::cout << "fstr " << str << " " << str.length() << std::endl;
 
     std::string conv = str;
 
@@ -272,6 +276,13 @@ static
 duk_ret_t jxs_call(duk_context* ctx)
 {
     return js_call(ctx, N);
+}
+
+static
+duk_ret_t err(duk_context* ctx)
+{
+    push_error(ctx, "Scriptor syntax is the same as function call syntax, do not use .call");
+    return 1;
 }
 
 ///so ideally this would provide validation
@@ -314,8 +325,11 @@ duk_ret_t sl_call(duk_context* ctx)
     duk_push_c_function(ctx, &jxs_call<N>, 1);
 
     put_duk_keyvalue(ctx, "FUNC_ID", str);
+    put_duk_keyvalue(ctx, "call", err);
 
-    std::cout << str << std::endl;
+    /*duk_get_prop_string(ctx, -1, "call");
+    put_duk_keyvalue(ctx, "FUNC_ID", str);
+    duk_pop(ctx);*/
 
     return 1;
 }

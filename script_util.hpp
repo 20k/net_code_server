@@ -387,7 +387,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
         ret = str;
     }
 
-    if(!called_internally || !success)
+    if(!called_internally)
         duk_pop(sd.ctx);
 
     return ret;

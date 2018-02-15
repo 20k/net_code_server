@@ -5,7 +5,7 @@ using duk_func_t = duk_ret_t (*)(duk_context*);
 
 
 inline
-void push_duk_val(duk_context* ctx, duk_func_t& func)
+void push_duk_val(duk_context* ctx, const duk_func_t& func)
 {
     duk_push_c_function(ctx, func, 1);
 }
