@@ -199,6 +199,7 @@ void debug_terminal()
 
         std::string user_str = "user ";
         std::string exit_str = "exit ";
+        std::string up_str = "#up ";
 
         if(command.substr(0, user_str.length()) == user_str)
         {
@@ -226,6 +227,30 @@ void debug_terminal()
         else if(command.substr(0, exit_str.length()) == exit_str)
         {
             break;
+        }
+        else if(command.substr(0, up_str.length()) == up_str)
+        {
+            std::vector<std::string> found = no_ss_split(command, " ");
+
+            if(found.size() != 2)
+                continue;
+
+            std::string script = found[1];
+
+            script_info script_inf;
+
+            std::string data_source = get_script_from_name_string(base_scripts_string, script);
+
+            stack_duk csd;
+            init_js_interop(csd, std::string());
+            register_funcs(csd.ctx);
+
+            script_inf.load_from_unparsed_source(csd.ctx, data_source, script);
+            script_inf.overwrite_in_db();
+
+            js_interop_shutdown(csd.ctx);
+
+            std::cout << "uploaded " << script << std::endl;
         }
         else if(current_user.exists(current_user.name))
         {
