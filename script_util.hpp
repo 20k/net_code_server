@@ -2,6 +2,12 @@
 #define SCRIPT_UTIL_HPP_INCLUDED
 
 #include <string_view>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <iostream>
+#include <js/ui_util.hpp>
+#include <js/js_interop.hpp>
 
 inline
 std::string base_scripts_string = "./scripts";
@@ -243,6 +249,8 @@ struct script_info
     std::string data;
 
     int seclevel = 0;
+
+    void load(const std::string& name);
 };
 
 inline

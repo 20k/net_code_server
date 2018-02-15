@@ -39,8 +39,15 @@ duk_ret_t accts__balance(duk_context* ctx, int sl)
     return 1;
 }
 
-/*inline
-duk_ret_t scripts_get_level(duk_context)*/
+inline
+duk_ret_t scripts__get_level(duk_context* ctx, int sl)
+{
+    SL_GUARD(4);
+
+
+
+    return 1;
+}
 
 inline
 std::string parse_function_hack(std::string in)
