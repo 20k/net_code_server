@@ -93,6 +93,58 @@ duk_ret_t scripts__get_level(duk_context* ctx, int sl)
     return 1;
 }
 
+inline
+duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const std::string& to, double amount)
+{
+    if(round(amount) != amount || amount < 0 || amount >= pow(2, 32))
+    {
+        push_error(ctx, "Amount error");
+        return 1;
+    }
+
+    ///NEED TO LOCK MONGODB HERE
+
+    user destination_usr;
+
+    if(!destination_usr.load_from_db(to))
+    {
+        push_error(ctx, "User does not exist");
+        return 1;
+    }
+
+    user caller_usr;
+
+    if(!caller_usr.load_from_db(from))
+    {
+        push_error(ctx, "From user does not exist");
+        return 1;
+    }
+
+    double remaining = caller_usr.cash - amount;
+
+    if(remaining < 0)
+    {
+        push_error(ctx, "Can't send this amount");
+        return 1;
+    }
+
+    ///need to check destination usr can handle amount
+
+    caller_usr.cash -= amount;
+    destination_usr.cash += amount;
+
+    ///hmm so
+    ///we'll need to lock db when doing this
+    caller_usr.overwrite_user_in_db();
+    destination_usr.overwrite_user_in_db();
+
+    ///NEED TO END MONGODB LOCK HERE
+
+    push_success(ctx);
+
+    return 1;
+}
+
 ///TODO: TRANSACTION HISTORY
 inline
 duk_ret_t accts__xfer_gc_to(duk_context* ctx, int sl)
@@ -123,50 +175,10 @@ duk_ret_t accts__xfer_gc_to(duk_context* ctx, int sl)
     amount = duk_get_number(ctx, -1);
     duk_pop(ctx);
 
-    if(round(amount) != amount || amount < 0 || amount >= pow(2, 32))
-    {
-        push_error(ctx, "Amount error");
-        return 1;
-    }
-
-    ///NEED TO LOCK MONGODB HERE
-
-    user destination_usr;
-
-    if(!destination_usr.load_from_db(destination_name))
-    {
-        push_error(ctx, "User does not exist");
-        return 1;
-    }
-
-    user caller_usr;
-    caller_usr.load_from_db(get_caller(ctx));
-
-    double remaining = caller_usr.cash - amount;
-
-    if(remaining < 0)
-    {
-        push_error(ctx, "Can't send this amount");
-        return 1;
-    }
-
-    ///need to check destination usr can handle amount
-
-    caller_usr.cash -= amount;
-    destination_usr.cash += amount;
-
-    ///hmm so
-    ///we'll need to lock db when doing this
-    caller_usr.overwrite_user_in_db();
-    destination_usr.overwrite_user_in_db();
-
-    ///NEED TO END MONGODB LOCK HERE
-
-    push_success(ctx);
-
-    return 1;
+    return accts_internal_xfer(ctx, get_caller(ctx), destination_name, amount);
 }
 
+///this is only valid currently, will need to expand to hardcode in certain folders
 inline
 duk_ret_t scripts__trust(duk_context* ctx, int sl)
 {
