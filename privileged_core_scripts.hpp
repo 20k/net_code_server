@@ -178,6 +178,27 @@ duk_ret_t accts__xfer_gc_to(duk_context* ctx, int sl)
     return accts_internal_xfer(ctx, get_caller(ctx), destination_name, amount);
 }
 
+inline
+duk_ret_t accts__xfer_gc_to_caller(duk_context* ctx, int sl)
+{
+    std::string destination_name = get_caller(ctx);
+
+    duk_get_prop_string(ctx, -1, "amount");
+
+    double amount = 0;
+
+    if(!duk_is_number(ctx, -1))
+    {
+        push_error(ctx, "Only numbers supported atm");
+        return 1;
+    }
+
+    amount = duk_get_number(ctx, -1);
+    duk_pop(ctx);
+
+    return accts_internal_xfer(ctx, get_script_host(ctx), destination_name, amount);
+}
+
 ///this is only valid currently, will need to expand to hardcode in certain folders
 inline
 duk_ret_t scripts__trust(duk_context* ctx, int sl)
@@ -221,6 +242,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(accts__balance, 3),
     REGISTER_FUNCTION_PRIV(scripts__get_level, 4),
     REGISTER_FUNCTION_PRIV(accts__xfer_gc_to, 2),
+    REGISTER_FUNCTION_PRIV(accts__xfer_gc_to_caller, 4),
     REGISTER_FUNCTION_PRIV(scripts__trust, 4),
 };
 

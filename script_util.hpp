@@ -37,10 +37,12 @@ std::vector<std::string> no_ss_split(const std::string& str, const std::string& 
     return tokens;
 }
 
+#define MAX_ANY_NAME_LEN 19
+
 inline
 bool is_valid_string(const std::string& to_parse)
 {
-    if(to_parse.size() >= 15)
+    if(to_parse.size() >= MAX_ANY_NAME_LEN)
         return false;
 
     if(to_parse.size() == 0)
