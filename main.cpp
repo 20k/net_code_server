@@ -180,6 +180,10 @@ int main()
         bot_id = call_global_function(sd, "botjs");
     }*/
 
+    //user test_user;
+    //test_user.construct_new_user("test_user2");
+    //test_user.overwrite_user_in_db();
+
     user to_run_as;
     to_run_as.load_from_db("test_user");
 

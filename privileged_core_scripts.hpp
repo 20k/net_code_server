@@ -102,6 +102,8 @@ duk_ret_t accts__xfer_gc_to(duk_context* ctx, int sl)
 {
     SL_GUARD(2);
 
+    ///need a get either or
+    ///so we can support to and name
     duk_get_prop_string(ctx, -1, "to");
 
     if(!duk_is_string(ctx, -1))
@@ -135,9 +137,8 @@ duk_ret_t accts__xfer_gc_to(duk_context* ctx, int sl)
     ///NEED TO LOCK MONGODB HERE
 
     user destination_usr;
-    destination_usr.load_from_db(destination_name);
 
-    if(!destination_usr.load_from_db(caller_name))
+    if(!destination_usr.load_from_db(destination_name))
     {
         push_error(ctx, "User does not exist");
         return 1;
@@ -165,6 +166,10 @@ duk_ret_t accts__xfer_gc_to(duk_context* ctx, int sl)
     destination_usr.overwrite_user_in_db();
 
     ///NEED TO END MONGODB LOCK HERE
+
+    push_success(ctx);
+
+    return 1;
 }
 
 inline
