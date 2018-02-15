@@ -251,13 +251,21 @@ struct script_info
     std::string name;
     std::string unparsed_source;
     std::string parsed_source;
+    std::string owner;
 
     int seclevel = 0;
     bool valid = false;
+    bool in_public = false;
 
     void load_from_disk_with_db_metadata(const std::string& name);
 
     void load_from_unparsed_source(const std::string& unparsed, const std::string& name);
+
+    void load_from_db();
+    void overwrite_in_db();
+
+    bool exists_in_db();
+    void create_in_db();
 };
 
 inline

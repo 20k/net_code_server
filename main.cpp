@@ -120,7 +120,7 @@ void user_tests()
     update_item.set_prop("item_id", 32);
     update_item.set_prop("Potato", "ostrich");
 
-    update_item.update_in_db("test");
+    update_item.update_in_db();
 
     item test_load;
     test_load.set_prop("item_id", 32);

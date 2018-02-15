@@ -112,7 +112,7 @@ struct item
     }
 
     ///kinda need to upsert this
-    void create_in_db(const std::string& user)
+    void create_in_db()
     {
         if(!has_id())
             return;
@@ -131,7 +131,7 @@ struct item
         bson_destroy(to_insert);
     }
 
-    void update_in_db(const std::string& user)
+    void update_in_db()
     {
         if(!has_id())
             return;

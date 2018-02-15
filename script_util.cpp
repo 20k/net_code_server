@@ -40,6 +40,7 @@ script_data parse_script(std::string in)
     return script;
 }
 
+///WARNING NEED TO VALIDATE
 void script_info::load_from_unparsed_source(const std::string& source, const std::string& name_)
 {
     name = name_;
@@ -50,6 +51,8 @@ void script_info::load_from_unparsed_source(const std::string& source, const std
         return;
     }
 
+    owner = no_ss_split(name, ".")[0];
+
     unparsed_source = source;
 
     script_data sdata = parse_script(unparsed_source);
@@ -57,6 +60,37 @@ void script_info::load_from_unparsed_source(const std::string& source, const std
     parsed_source = sdata.parsed_source;
     seclevel = sdata.seclevel;
     valid = sdata.valid;
+}
+
+void script_info::load_from_db()
+{
+    item my_script;
+
+    my_script.set_prop("item_id", name);
+    my_script.set_prop("in_public", true);
+    my_script.set_prop("trust", false);
+    my_script.set_prop("owner", owner);
+    my_script.set_prop("is_script", true);
+
+    my_script.load_from_db();
+}
+
+void script_info::overwrite_in_db()
+{
+    item my_script;
+
+    my_script.set_prop("item_id", name);
+    my_script.set_prop("in_public", in_public);
+    my_script.set_prop("owner", owner);
+    my_script.set_prop("is_script", true);
+
+    if(my_script.exists_in_db())
+        my_script.update_in_db();
+    else
+    {
+        my_script.set_prop("trust", false);
+        my_script.create_in_db();
+    }
 }
 
 void script_info::load_from_disk_with_db_metadata(const std::string& name_)
@@ -89,7 +123,7 @@ void script_info::load_from_disk_with_db_metadata(const std::string& name_)
 
     if(!my_script.exists_in_db())
     {
-        my_script.create_in_db(owner);
+        my_script.create_in_db();
     }
 
     /*#define OVERWRITE
