@@ -62,7 +62,7 @@ void parse_push_json(duk_context* ctx, const std::vector<std::string>& jsons)
 static
 duk_ret_t db_find_all(duk_context* ctx)
 {
-    printf("db find\n");
+    //printf("db find\n");
 
     mongo_context* mongo_ctx = get_global_mongo_user_accessible_context();
     mongo_ctx->change_collection(get_script_host(ctx));
@@ -90,7 +90,7 @@ duk_ret_t db_find_all(duk_context* ctx)
     std::string caller = duk_get_string(ctx, -1);
     duk_pop(ctx);
 
-    std::cout << "json " << json << std::endl;
+    //std::cout << "json " << json << std::endl;
 
     ///remove get prop db info
     duk_pop(ctx);

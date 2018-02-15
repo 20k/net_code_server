@@ -297,7 +297,10 @@ bool script_compiles(duk_context* ctx, script_info& script)
 
         printf("scompile failed: %s\n", ret.c_str());
 
+        #ifdef DEBUG_SOURCE
         std::cout << script.parsed_source << std::endl;
+        #endif // DEBUG_SOURCE
+
 
         duk_pop(ctx);
 

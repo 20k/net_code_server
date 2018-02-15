@@ -132,9 +132,9 @@ struct mongo_context
 
         if (!bson)
         {
-            std::cout << "errd " << json << std::endl;
+            //std::cout << "errd " << json << std::endl;
 
-            fprintf (stderr, "bson err: %s\n", error.message);
+            //fprintf (stderr, "bson err: %s\n", error.message);
             return nullptr;
         }
 
@@ -239,7 +239,7 @@ struct mongo_context
         if(script_host != last_collection)
             return results;
 
-        printf("find\n");
+        //printf("find\n");
 
         bson_t* bs = make_bson_from_json(json);
         bson_t* ps = make_bson_from_json(proj);

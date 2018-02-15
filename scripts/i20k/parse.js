@@ -58,6 +58,10 @@ function(context, args)
 	//
 	//return res_cursor.array();
 	
+	print("find");
+	
+	//return #db.f({name:"test"});
+	
 	var r2_curs = #db.f({name:"update_works"});
 	
 	return r2_curs.array();
