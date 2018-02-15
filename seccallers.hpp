@@ -233,7 +233,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     duk_push_current_function(ctx);
 
-    if(!get_duk_keyvalue(ctx, "FUNC_ID", str))
+    if(!get_duk_keyvalue(ctx, "FUNCTION_NAME", str))
     {
         duk_pop(ctx);
 
@@ -242,8 +242,6 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     }
 
     duk_pop(ctx);
-
-    //std::cout << "fstr " << str << " " << str.length() << std::endl;
 
     std::string conv = str;
 
@@ -296,40 +294,10 @@ duk_ret_t sl_call(duk_context* ctx)
 
     std::string str = duk_require_string(ctx, -1);
 
-    /*duk_push_global_stash(ctx);
-    duk_push_string(ctx, str.c_str());
-    duk_put_prop_string(ctx, -2, "TO_CALL_INTERNAL_XXX");
-
-    duk_pop_n(ctx, 2);
-
-
-    ///oh bum
-    ///so we're setting a global property
-    ///TO_CALL_INTERNAL_XXX to be the string
-    ///but that's gunna break pretty bad :(
-
-
-
-    duk_push_c_function(ctx, &jxs_call<N>, 1);*/
-
-    /*int32_t id = get_global_int(ctx, get_caller(ctx) + "ID_STASH");
-    int32_t new_id = id + 1;
-    set_global_int(ctx, get_caller(ctx) + "ID_STASH", new_id);
-
-    set_global_string(ctx, "FUNC_STASH" + std::to_string(id), str);
-
     duk_push_c_function(ctx, &jxs_call<N>, 1);
 
-    put_duk_keyvalue(ctx, "FUNC_ID", id);*/
-
-    duk_push_c_function(ctx, &jxs_call<N>, 1);
-
-    put_duk_keyvalue(ctx, "FUNC_ID", str);
+    put_duk_keyvalue(ctx, "FUNCTION_NAME", str);
     put_duk_keyvalue(ctx, "call", err);
-
-    /*duk_get_prop_string(ctx, -1, "call");
-    put_duk_keyvalue(ctx, "FUNC_ID", str);
-    duk_pop(ctx);*/
 
     return 1;
 }
