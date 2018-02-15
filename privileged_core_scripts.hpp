@@ -16,6 +16,11 @@ void push_error(duk_context* ctx, const std::string& msg)
     push_dukobject(ctx, "ok", false, "msg", msg);
 }
 
+void push_success(duk_context* ctx)
+{
+    push_dukobject(ctx, "ok", true);
+}
+
 ///could potentially use __FUNCTION__ here
 ///as it should work across msvc/gcc/clang... but... technically not portable
 #define SL_GUARD(x) if(!can_run(sl, x)){ push_error(ctx, "Security level guarantee failed"); return 1; }
@@ -69,6 +74,8 @@ duk_ret_t scripts__get_level(duk_context* ctx, int sl)
 
     std::string str = duk_get_string(ctx, -1);
 
+    duk_pop(ctx);
+
     script_info script;
     script.load(str);
 
@@ -87,6 +94,77 @@ duk_ret_t scripts__get_level(duk_context* ctx, int sl)
     duk_push_int(ctx, script.seclevel);
 
     return 1;
+}
+
+///TODO: TRANSACTION HISTORY
+inline
+duk_ret_t accts__xfer_gc_to(duk_context* ctx, int sl)
+{
+    SL_GUARD(2);
+
+    duk_get_prop_string(ctx, -1, "to");
+
+    if(!duk_is_string(ctx, -1))
+    {
+        push_error(ctx, "Call with to:\"usr\"");
+        return 1;
+    }
+
+    std::string destination_name = duk_get_string(ctx, -1);
+    duk_pop(ctx);
+
+    duk_get_prop_string(ctx, -1, "amount");
+
+    double amount = 0;
+
+    if(!duk_is_number(ctx, -1))
+    {
+        push_error(ctx, "Only numbers supported atm");
+        return 1;
+    }
+
+    amount = duk_get_number(ctx, -1);
+    duk_pop(ctx);
+
+    if(round(amount) != amount || amount < 0 || amount >= pow(2, 32))
+    {
+        push_error(ctx, "Amount error");
+        return 1;
+    }
+
+    ///NEED TO LOCK MONGODB HERE
+
+    user destination_usr;
+    destination_usr.load_from_db(destination_name);
+
+    if(!destination_usr.load_from_db(caller_name))
+    {
+        push_error(ctx, "User does not exist");
+        return 1;
+    }
+
+    user caller_usr;
+    caller_usr.load_from_db(get_caller(ctx));
+
+    double remaining = caller_usr.cash - amount;
+
+    if(remaining < 0)
+    {
+        push_error(ctx, "Can't send this amount");
+        return 1;
+    }
+
+    ///need to check destination usr can handle amount
+
+    caller_usr.cash -= amount;
+    destination_usr.cash += amount;
+
+    ///hmm so
+    ///we'll need to lock db when doing this
+    caller_usr.overwrite_user_in_db();
+    destination_usr.overwrite_user_in_db();
+
+    ///NEED TO END MONGODB LOCK HERE
 }
 
 inline
@@ -117,6 +195,7 @@ std::map<std::string, priv_func_info> privileged_functions
 {
     REGISTER_FUNCTION_PRIV(accts__balance, 3),
     REGISTER_FUNCTION_PRIV(scripts__get_level, 4),
+    REGISTER_FUNCTION_PRIV(accts__xfer_gc_to, 2),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
