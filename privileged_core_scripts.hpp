@@ -24,7 +24,8 @@ struct priv_func_info
     int sec_level = 0;
 };
 
-extern std::map<std::string, priv_func_info> privileged_functions;
+extern
+std::map<std::string, priv_func_info> privileged_functions;
 
 ///so say this is midsec
 ///we can run if the sl is midsec or lower
