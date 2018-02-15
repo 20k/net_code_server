@@ -243,7 +243,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     ///IF IS PRIVILEGED SCRIPT, RETURN THAT CFUNC
     if(privileged_functions.find(conv) != privileged_functions.end())
     {
-        return privileged_functions[conv](ctx);
+        return privileged_functions[conv](ctx, sl);
     }
 
     std::string load = parse_script(get_script_from_name_string(base_scripts_string, str));

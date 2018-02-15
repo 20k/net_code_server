@@ -3,10 +3,10 @@
 
 #include "user.hpp"
 
-using function_priv_t = duk_ret_t (*)(duk_context*);
+using function_priv_t = duk_ret_t (*)(duk_context*, int);
 
 inline
-duk_ret_t accts_balance(duk_context* ctx)
+duk_ret_t accts_balance(duk_context* ctx, int sl)
 {
     //mongo_context* mongo_ctx = get_global_mongo_user_info_context();
     //mongo_ctx->change_collection(get_caller(ctx));
