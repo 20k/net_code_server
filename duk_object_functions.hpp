@@ -133,4 +133,9 @@ bool get_duk_keyvalue(duk_context* ctx, const std::string& key, T& value)
     return true;
 }
 
+void freeze_duk(duk_context* ctx)
+{
+    duk_freeze(ctx, -1);
+}
+
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED

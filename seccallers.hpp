@@ -108,6 +108,9 @@ duk_ret_t db_find_all(duk_context* ctx)
 }
 
 ///count, first, array
+
+///note to self: Attach ids to object
+///then simply freeze, none of this nonsense
 static
 duk_ret_t db_find(duk_context* ctx)
 {
@@ -298,6 +301,8 @@ duk_ret_t sl_call(duk_context* ctx)
 
     put_duk_keyvalue(ctx, "FUNCTION_NAME", str);
     put_duk_keyvalue(ctx, "call", err);
+
+    freeze_duk(ctx);
 
     return 1;
 }
