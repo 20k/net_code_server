@@ -156,7 +156,7 @@ std::string run_in_user_context(user& usr, const std::string& command)
     if(script_inf.exists_in_db())
         script_inf.load_from_db();
 
-    std::string data_source = get_script_from_name_string(base_scripts_string, script);
+    /*std::string data_source = get_script_from_name_string(base_scripts_string, script);
 
     ///#UP
     script_inf.load_from_unparsed_source(sd.ctx, data_source, script);
@@ -173,15 +173,67 @@ std::string run_in_user_context(user& usr, const std::string& command)
     if(data == "")
     {
         return "Invalid Script";
-    }
+    }*/
 
     std::vector<std::string> parts = no_ss_split(script, ".");
 
     startup_state(sd.ctx, usr.name, parts[0], parts[1]);
 
-    std::string ret = compile_and_call(sd, data, false, get_caller(sd.ctx));
+
+    std::string ret = js_unified_force_call(sd.ctx, script);
+
+    //std::string ret = compile_and_call(sd, data, false, get_caller(sd.ctx));
 
     return ret;
+}
+
+void debug_terminal()
+{
+    user current_user;
+
+    while(1)
+    {
+        std::string command;
+
+        std::getline(std::cin, command);
+
+        std::string user_str = "user ";
+        std::string exit_str = "exit ";
+
+        if(command.substr(0, user_str.length()) == user_str)
+        {
+            std::vector<std::string> found = no_ss_split(command, " ");
+
+            if(found.size() != 2)
+                continue;
+
+            std::string username = found[1];
+
+            if(current_user.exists(username))
+            {
+                current_user.load_from_db(username);
+
+                std::cout << "logged in as " << username << std::endl;
+            }
+            else
+            {
+                current_user.construct_new_user(username);
+                current_user.overwrite_user_in_db();
+
+                std::cout << "created new user " << username << std::endl;
+            }
+        }
+        else if(command.substr(0, exit_str.length()) == exit_str)
+        {
+            break;
+        }
+        else if(current_user.exists(current_user.name))
+        {
+            std::string ret = run_in_user_context(current_user, command);
+
+            std::cout << ret << std::endl;
+        }
+    }
 }
 
 int main()
@@ -197,6 +249,8 @@ int main()
         register_function(sd, jsfile, "botjs");
         bot_id = call_global_function(sd, "botjs");
     }*/
+
+    debug_terminal();
 
     //user test_user;
     //test_user.construct_new_user("test_user2");

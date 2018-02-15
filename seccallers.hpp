@@ -273,6 +273,45 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     return 1;
 }
 
+inline
+std::string js_unified_force_call(duk_context* ctx, const std::string& scriptname)
+{
+    std::cout << scriptname << std::endl;
+
+    if(privileged_functions.find(scriptname) != privileged_functions.end())
+    {
+        //SL_GUARD(privileged_functions[scriptname].sec_level);
+
+        privileged_functions[scriptname].func(ctx, 0);
+
+        std::string ret = duk_json_encode(ctx, -1);
+
+        duk_pop(ctx);
+
+        return ret;
+    }
+
+    script_info script;
+    script.load_from_disk_with_db_metadata(scriptname);
+
+    //SL_GUARD(script.seclevel);
+
+    std::string load = script.parsed_source;
+
+    stack_duk sd;
+    sd.ctx = ctx;
+
+    duk_push_undefined(ctx);
+
+    compile_and_call(sd, load, true, get_caller(ctx));
+
+    std::string ret = duk_json_encode(ctx, -1);
+
+    duk_pop(ctx);
+
+    return ret;
+}
+
 template<int N>
 static
 duk_ret_t jxs_call(duk_context* ctx)
