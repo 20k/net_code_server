@@ -67,12 +67,28 @@ void script_info::load_from_db()
     item my_script;
 
     my_script.set_prop("item_id", name);
-    my_script.set_prop("in_public", true);
-    my_script.set_prop("trust", false);
+    my_script.set_prop("in_public", 1);
+    my_script.set_prop("trust", 0);
     my_script.set_prop("owner", owner);
-    my_script.set_prop("is_script", true);
+    my_script.set_prop("is_script", 1);
 
     my_script.load_from_db();
+
+    name = my_script.get_prop("item_id");
+    in_public = my_script.get_prop_as_integer("in_public");
+    //name = my_script.get_prop("item_id");
+    owner = my_script.get_prop("owner");
+    //is_script = my_script.get_prop("is_script");
+
+    unparsed_source = my_script.get_prop("unparsed_source");
+
+    {
+        script_data sdata = parse_script(unparsed_source);
+
+        parsed_source = sdata.parsed_source;
+        seclevel = sdata.seclevel;
+        valid = sdata.valid;
+    }
 }
 
 void script_info::overwrite_in_db()
@@ -82,13 +98,14 @@ void script_info::overwrite_in_db()
     my_script.set_prop("item_id", name);
     my_script.set_prop("in_public", in_public);
     my_script.set_prop("owner", owner);
-    my_script.set_prop("is_script", true);
+    my_script.set_prop("is_script", 1);
+    my_script.set_prop("unparsed_source", unparsed_source);
 
     if(my_script.exists_in_db())
         my_script.update_in_db();
     else
     {
-        my_script.set_prop("trust", false);
+        my_script.set_prop("trust", 0);
         my_script.create_in_db();
     }
 }
@@ -97,7 +114,9 @@ void script_info::load_from_disk_with_db_metadata(const std::string& name_)
 {
     std::string base = base_scripts_string;
 
-    script_data sdata = parse_script(get_script_from_name_string(base, name_));
+    unparsed_source = get_script_from_name_string(base, name_);
+
+    script_data sdata = parse_script(unparsed_source);
 
     parsed_source = sdata.parsed_source;
     seclevel = sdata.seclevel;
@@ -116,23 +135,24 @@ void script_info::load_from_disk_with_db_metadata(const std::string& name_)
 
     item my_script;
     my_script.set_prop("item_id", name);
-    my_script.set_prop("in_public", true);
-    my_script.set_prop("trust", false);
+    my_script.set_prop("in_public", 1);
+    my_script.set_prop("trust", 0);
     my_script.set_prop("owner", owner);
-    my_script.set_prop("is_script", true);
+    my_script.set_prop("is_script", 1);
+    my_script.set_prop("unparsed_source", unparsed_source);
 
     if(!my_script.exists_in_db())
     {
         my_script.create_in_db();
     }
 
-    /*#define OVERWRITE
+    #define OVERWRITE
     #ifdef OVERWRITE
     else
     {
-        my_script.update_in_db(owner);
+        my_script.update_in_db();
     }
-    #endif // OVERWRITE*/
+    #endif // OVERWRITE
 
     my_script.load_from_db();
 }

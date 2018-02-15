@@ -265,7 +265,6 @@ struct script_info
     void overwrite_in_db();
 
     bool exists_in_db();
-    void create_in_db();
 };
 
 inline
