@@ -102,8 +102,6 @@ duk_ret_t scripts__user(duk_context* ctx, int sl)
     request.set_prop("owner", usr);
     request.set_prop("is_script", 1);
 
-    std::cout << "usr " << usr << std::endl;
-
     mongo_context* item_context = get_global_mongo_user_items_context();
 
     std::vector<mongo_requester> results = request.fetch_from_db(item_context);
@@ -112,10 +110,10 @@ duk_ret_t scripts__user(duk_context* ctx, int sl)
 
     for(mongo_requester& req : results)
     {
-        if(!req.has_prop("name"))
+        if(!req.has_prop("item_id"))
             continue;
 
-        names.push_back(req.get_prop("name"));
+        names.push_back(req.get_prop("item_id"));
     }
 
     push_duk_val(ctx, names);
