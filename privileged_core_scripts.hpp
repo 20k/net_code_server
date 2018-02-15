@@ -2,15 +2,26 @@
 #define PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
 
 #include "user.hpp"
+#include "duk_object_functions.hpp"
 
 using function_priv_t = duk_ret_t (*)(duk_context*, int);
 
+bool can_run(int csec_level, int maximum_sec)
+{
+    return csec_level <= maximum_sec;
+}
+
+void push_error(duk_context* ctx, const std::string& msg)
+{
+    push_dukobject(ctx, "ok", false, "msg", msg);
+}
+
+///so say this is midsec
+///we can run if the sl is midsec or lower
+///lower sls are less secure
 inline
 duk_ret_t accts_balance(duk_context* ctx, int sl)
 {
-    //mongo_context* mongo_ctx = get_global_mongo_user_info_context();
-    //mongo_ctx->change_collection(get_caller(ctx));
-
     user usr;
     usr.load_from_db(get_caller(ctx));
 
