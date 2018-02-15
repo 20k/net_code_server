@@ -18,6 +18,14 @@ void push_error(duk_context* ctx, const std::string& msg)
 
 #define SL_GUARD(x) if(!can_run(sl, x)){ push_error(ctx, "Security level guarantee failed"); return 1; }
 
+struct priv_func_info
+{
+    function_priv_t func;
+    int sec_level = 0;
+};
+
+extern std::map<std::string, priv_func_info> privileged_functions;
+
 ///so say this is midsec
 ///we can run if the sl is midsec or lower
 ///lower sls are less secure
@@ -44,7 +52,36 @@ duk_ret_t scripts__get_level(duk_context* ctx, int sl)
 {
     SL_GUARD(4);
 
+    ///so we have an object
+    ///of the form name:whatever
+    ///really need a way to parse these out from duktape
 
+    duk_get_prop_string(ctx, -1, "name");
+
+    if(!duk_is_string(ctx, -1))
+    {
+        push_error(ctx, "Call with name:\"scriptname\"");
+        return 1;
+    }
+
+    std::string str = duk_get_string(ctx, -1);
+
+    script_info script;
+    script.load(str);
+
+    if(privileged_functions.find(str) != privileged_functions.end())
+    {
+        duk_push_int(ctx, privileged_functions[str].sec_level);
+        return 1;
+    }
+
+    if(!script.valid)
+    {
+        push_error(ctx, "Invalid script name " + str);
+        return 1;
+    }
+
+    duk_push_int(ctx, script.seclevel);
 
     return 1;
 }
@@ -70,12 +107,13 @@ std::string parse_function_hack(std::string in)
     return in;
 }
 
-#define REGISTER_FUNCTION_PRIV(x) {parse_function_hack(#x), &x}
+#define REGISTER_FUNCTION_PRIV(x, y) {parse_function_hack(#x), {&x, y}}
 
-inline static
-std::map<std::string, function_priv_t> privileged_functions =
+inline
+std::map<std::string, priv_func_info> privileged_functions
 {
-    REGISTER_FUNCTION_PRIV(accts__balance),
+    REGISTER_FUNCTION_PRIV(accts__balance, 3),
+    REGISTER_FUNCTION_PRIV(scripts__get_level, 4),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED

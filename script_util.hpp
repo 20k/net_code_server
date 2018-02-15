@@ -247,8 +247,8 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
 struct script_info
 {
     std::string data;
-
     int seclevel = 0;
+    bool valid = false;
 
     void load(const std::string& name);
 };
@@ -271,6 +271,7 @@ script_info parse_script(std::string in)
     script_info script;
     script.data = in;
     script.seclevel = found_seclevel;
+    script.valid = true;
 
     return script;
 }
