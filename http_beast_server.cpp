@@ -11,28 +11,25 @@
 
 //------------------------------------------------------------------------------
 //
-// Example: HTTP server, asynchronous
+// Example: HTTP server, synchronous
 //
 //------------------------------------------------------------------------------
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
-#include <boost/asio/bind_executor.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/strand.hpp>
 #include <boost/config.hpp>
-#include <algorithm>
 #include <cstdlib>
-#include <functional>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <thread>
-#include <vector>
 
 using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 namespace http = boost::beast::http;    // from <boost/beast/http.hpp>
+
+//------------------------------------------------------------------------------
 
 // Return a reasonable mime type based on the extension of a file.
 boost::beast::string_view
@@ -213,277 +210,138 @@ fail(boost::system::error_code ec, char const* what)
     std::cerr << what << ": " << ec.message() << "\n";
 }
 
-// Handles an HTTP server connection
-class session : public std::enable_shared_from_this<session>
+// This is the C++11 equivalent of a generic lambda.
+// The function object is used to send an HTTP message.
+template<class Stream>
+struct send_lambda
 {
-    // This is the C++11 equivalent of a generic lambda.
-    // The function object is used to send an HTTP message.
-    struct send_lambda
-    {
-        session& self_;
+    Stream& stream_;
+    bool& close_;
+    boost::system::error_code& ec_;
 
-        explicit
-        send_lambda(session& self)
-            : self_(self)
-        {
-        }
-
-        template<bool isRequest, class Body, class Fields>
-        void
-        operator()(http::message<isRequest, Body, Fields>&& msg) const
-        {
-            // The lifetime of the message has to extend
-            // for the duration of the async operation so
-            // we use a shared_ptr to manage it.
-            auto sp = std::make_shared<
-                http::message<isRequest, Body, Fields>>(std::move(msg));
-
-            // Store a type-erased version of the shared
-            // pointer in the class to keep it alive.
-            self_.res_ = sp;
-
-            // Write the response
-            http::async_write(
-                self_.socket_,
-                *sp,
-                boost::asio::bind_executor(
-                    self_.strand_,
-                    std::bind(
-                        &session::on_write,
-                        self_.shared_from_this(),
-                        std::placeholders::_1,
-                        std::placeholders::_2,
-                        sp->need_eof())));
-        }
-    };
-
-    tcp::socket socket_;
-    boost::asio::strand<
-        boost::asio::io_context::executor_type> strand_;
-    boost::beast::flat_buffer buffer_;
-    std::string const& doc_root_;
-    http::request<http::string_body> req_;
-    std::shared_ptr<void> res_;
-    send_lambda lambda_;
-
-public:
-    // Take ownership of the socket
     explicit
-    session(
-        tcp::socket socket,
-        std::string const& doc_root)
-        : socket_(std::move(socket))
-        , strand_(socket_.get_executor())
-        , doc_root_(doc_root)
-        , lambda_(*this)
+    send_lambda(
+        Stream& stream,
+        bool& close,
+        boost::system::error_code& ec)
+        : stream_(stream)
+        , close_(close)
+        , ec_(ec)
     {
     }
 
-    // Start the asynchronous operation
+    template<bool isRequest, class Body, class Fields>
     void
-    run()
+    operator()(http::message<isRequest, Body, Fields>&& msg) const
     {
-        do_read();
-    }
+        // Determine if we should close the connection after
+        close_ = msg.need_eof();
 
-    void
-    do_read()
+        // We need the serializer here because the serializer requires
+        // a non-const file_body, and the message oriented version of
+        // http::write only works with const messages.
+        http::serializer<isRequest, Body, Fields> sr{msg};
+        http::write(stream_, sr, ec_);
+    }
+};
+
+// Handles an HTTP server connection
+
+///Ok so: This session is a proper hackmud worker thread thing
+///we should wait for requests
+void
+do_session(
+    tcp::socket& socket,
+    std::string const& doc_root)
+{
+    bool close = false;
+    boost::system::error_code ec;
+
+    // This buffer is required to persist across reads
+    boost::beast::flat_buffer buffer;
+
+    // This lambda is used to send messages
+    send_lambda<tcp::socket> lambda{socket, close, ec};
+
+    for(;;)
     {
         // Read a request
-        http::async_read(socket_, buffer_, req_,
-            boost::asio::bind_executor(
-                strand_,
-                std::bind(
-                    &session::on_read,
-                    shared_from_this(),
-                    std::placeholders::_1,
-                    std::placeholders::_2)));
-    }
-
-    void
-    on_read(
-        boost::system::error_code ec,
-        std::size_t bytes_transferred)
-    {
-        boost::ignore_unused(bytes_transferred);
-
-        // This means they closed the connection
+        http::request<http::string_body> req;
+        http::read(socket, buffer, req, ec);
         if(ec == http::error::end_of_stream)
-            return do_close();
-
+            break;
         if(ec)
             return fail(ec, "read");
 
         // Send the response
-        handle_request(doc_root_, std::move(req_), lambda_);
-    }
-
-    void
-    on_write(
-        boost::system::error_code ec,
-        std::size_t bytes_transferred,
-        bool close)
-    {
-        boost::ignore_unused(bytes_transferred);
-
+        handle_request(doc_root, std::move(req), lambda);
         if(ec)
             return fail(ec, "write");
-
         if(close)
         {
             // This means we should close the connection, usually because
             // the response indicated the "Connection: close" semantic.
-            return do_close();
-        }
-
-        // We're done with the response so delete it
-        res_ = nullptr;
-
-        // Read another request
-        do_read();
-    }
-
-    void
-    do_close()
-    {
-        // Send a TCP shutdown
-        boost::system::error_code ec;
-        socket_.shutdown(tcp::socket::shutdown_send, ec);
-
-        // At this point the connection is closed gracefully
-    }
-};
-
-//------------------------------------------------------------------------------
-
-// Accepts incoming connections and launches the sessions
-class listener : public std::enable_shared_from_this<listener>
-{
-    tcp::acceptor acceptor_;
-    tcp::socket socket_;
-    std::string const& doc_root_;
-
-public:
-    listener(
-        boost::asio::io_context& ioc,
-        tcp::endpoint endpoint,
-        std::string const& doc_root)
-        : acceptor_(ioc)
-        , socket_(ioc)
-        , doc_root_(doc_root)
-    {
-        boost::system::error_code ec;
-
-        // Open the acceptor
-        acceptor_.open(endpoint.protocol(), ec);
-        if(ec)
-        {
-            fail(ec, "open");
-            return;
-        }
-
-        // Bind to the server address
-        acceptor_.bind(endpoint, ec);
-        if(ec)
-        {
-            fail(ec, "bind");
-            return;
-        }
-
-        // Start listening for connections
-        acceptor_.listen(
-            boost::asio::socket_base::max_listen_connections, ec);
-        if(ec)
-        {
-            fail(ec, "listen");
-            return;
+            break;
         }
     }
 
-    // Start accepting incoming connections
-    void
-    run()
-    {
-        if(! acceptor_.is_open())
-            return;
-        do_accept();
-    }
+    // Send a TCP shutdown
+    socket.shutdown(tcp::socket::shutdown_send, ec);
 
-    void
-    do_accept()
-    {
-        acceptor_.async_accept(
-            socket_,
-            std::bind(
-                &listener::on_accept,
-                shared_from_this(),
-                std::placeholders::_1));
-    }
+    std::cout << "shutdown\n" << std::endl;
 
-    void
-    on_accept(boost::system::error_code ec)
-    {
-        if(ec)
-        {
-            fail(ec, "accept");
-        }
-        else
-        {
-            // Create the session and run it
-            std::make_shared<session>(
-                std::move(socket_),
-                doc_root_)->run();
-        }
-
-        // Accept another connection
-        do_accept();
-    }
-};
+    // At this point the connection is closed gracefully
+}
 
 //------------------------------------------------------------------------------
 
 #if 0
 int main(int argc, char* argv[])
 {
-    // Check command line arguments.
-    if (argc != 5)
+    try
     {
-        std::cerr <<
-            "Usage: http-server-async <address> <port> <doc_root> <threads>\n" <<
-            "Example:\n" <<
-            "    http-server-async 0.0.0.0 8080 . 1\n";
+        // Check command line arguments.
+        if (argc != 4)
+        {
+            std::cerr <<
+                "Usage: http-server-sync <address> <port> <doc_root>\n" <<
+                "Example:\n" <<
+                "    http-server-sync 0.0.0.0 8080 .\n";
+            return EXIT_FAILURE;
+        }
+        auto const address = boost::asio::ip::make_address(argv[1]);
+        auto const port = static_cast<unsigned short>(std::atoi(argv[2]));
+        std::string const doc_root = argv[3];
+
+        // The io_context is required for all I/O
+        boost::asio::io_context ioc{1};
+
+        // The acceptor receives incoming connections
+        tcp::acceptor acceptor{ioc, {address, port}};
+        for(;;)
+        {
+            // This will receive the new connection
+            tcp::socket socket{ioc};
+
+            // Block until we get a connection
+            acceptor.accept(socket);
+
+            // Launch the session, transferring ownership of the socket
+            std::thread{std::bind(
+                &do_session,
+                std::move(socket),
+                doc_root)}.detach();
+        }
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
-    auto const address = boost::asio::ip::make_address(argv[1]);
-    auto const port = static_cast<unsigned short>(std::atoi(argv[2]));
-    std::string const doc_root = argv[3];
-    auto const threads = std::max<int>(1, std::atoi(argv[4]));
-
-    // The io_context is required for all I/O
-    boost::asio::io_context ioc{threads};
-
-    // Create and launch a listening port
-    std::make_shared<listener>(
-        ioc,
-        tcp::endpoint{address, port},
-        doc_root)->run();
-
-    // Run the I/O service on the requested number of threads
-    std::vector<std::thread> v;
-    v.reserve(threads - 1);
-    for(auto i = threads - 1; i > 0; --i)
-        v.emplace_back(
-        [&ioc]
-        {
-            ioc.run();
-        });
-    ioc.run();
-
-    return EXIT_SUCCESS;
 }
 #endif
-
-void http_test_run()
+#if 0
+void http_test_run_async()
 {
     const auto address = boost::asio::ip::make_address("127.0.0.1");
     const auto port = static_cast<unsigned short>(6750);
@@ -509,4 +367,49 @@ void http_test_run()
 
 
     ioc.run();
+}
+#endif // 0
+
+void http_test_run()
+{
+    try
+    {
+        /*// Check command line arguments.
+        if (argc != 4)
+        {
+            std::cerr <<
+                "Usage: http-server-sync <address> <port> <doc_root>\n" <<
+                "Example:\n" <<
+                "    http-server-sync 0.0.0.0 8080 .\n";
+            return EXIT_FAILURE;
+        }*/
+        auto const address = boost::asio::ip::make_address("127.0.0.1");
+        auto const port = static_cast<unsigned short>(6750);
+        std::string const doc_root = "./doc_root";
+
+        // The io_context is required for all I/O
+        boost::asio::io_context ioc{1};
+
+        // The acceptor receives incoming connections
+        tcp::acceptor acceptor{ioc, {address, port}};
+        for(;;)
+        {
+            // This will receive the new connection
+            tcp::socket socket{ioc};
+
+            // Block until we get a connection
+            acceptor.accept(socket);
+
+            // Launch the session, transferring ownership of the socket
+            std::thread{std::bind(
+                &do_session,
+                std::move(socket),
+                doc_root)}.detach();
+        }
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+        //return EXIT_FAILURE;
+    }
 }
