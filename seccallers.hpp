@@ -23,7 +23,7 @@ duk_ret_t db_insert(duk_context* ctx)
 
     mongo_ctx->insert_json_1(get_script_host(ctx), json);
 
-    std::cout << "json " << json << std::endl;
+    //std::cout << "json " << json << std::endl;
 
     return 1;
 }
@@ -39,7 +39,7 @@ duk_ret_t db_update(duk_context* ctx)
 
     mongo_ctx->update_json_many(get_script_host(ctx), json_1, json_2);
 
-    std::cout << "update " << json_1 << " with " << json_2 << std::endl;
+    //std::cout << "update " << json_1 << " with " << json_2 << std::endl;
 
     return 0;
 }

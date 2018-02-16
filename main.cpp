@@ -27,6 +27,8 @@
 #include <assert.h>
 #include "item.hpp"
 
+#include "http_beast_server.hpp"
+
 void init_js_interop(stack_duk& sd, const std::string& js_data)
 {
     sd.ctx = js_interop_startup();
@@ -277,6 +279,10 @@ int main()
         register_function(sd, jsfile, "botjs");
         bot_id = call_global_function(sd, "botjs");
     }*/
+
+    http_test_run();
+
+    return 0;
 
     debug_terminal();
 

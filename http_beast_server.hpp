@@ -1,0 +1,6 @@
+#ifndef HTTP_BEAST_SERVER_HPP_INCLUDED
+#define HTTP_BEAST_SERVER_HPP_INCLUDED
+
+void http_test_run();
+
+#endif // HTTP_BEAST_SERVER_HPP_INCLUDED

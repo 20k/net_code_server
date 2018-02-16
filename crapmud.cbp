@@ -47,9 +47,13 @@
 			<Add option="-logg" />
 			<Add option="-lmongoc-1.0.dll" />
 			<Add option="-lbson-1.0.dll" />
+			<Add option="-lboost_system-mt" />
+			<Add option="-lmswsock" />
 			<Add library="C:/duk_fun/libduktape.so.202.20200" />
 		</Linker>
 		<Unit filename="duk_object_functions.hpp" />
+		<Unit filename="http_beast_server.cpp" />
+		<Unit filename="http_beast_server.hpp" />
 		<Unit filename="item.hpp" />
 		<Unit filename="main.cpp" />
 		<Unit filename="mongo.cpp" />
