@@ -7,6 +7,7 @@
 #include <map>
 #include <mutex>
 
+#if 0
 struct request
 {
     int64_t id = 0;
@@ -52,7 +53,8 @@ struct request_holder
         return to_process.size() > 0;
     }
 };
+#endif
 
-void http_test_run(request_holder& req);
+void http_test_run();
 
 #endif // HTTP_BEAST_SERVER_HPP_INCLUDED

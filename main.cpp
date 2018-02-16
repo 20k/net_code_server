@@ -280,13 +280,15 @@ int main()
         bot_id = call_global_function(sd, "botjs");
     }*/
 
-    request_holder req;
-
-    http_test_run(req);
+    http_test_run();
 
     printf("post\n");
 
-    while(1){}
+    while(1)
+    {
+
+
+    }
 
     return 0;
 

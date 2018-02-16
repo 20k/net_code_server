@@ -26,6 +26,8 @@
 #include <string>
 #include <thread>
 
+#include "command_handler.hpp"
+
 using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 namespace http = boost::beast::http;    // from <boost/beast/http.hpp>
 
@@ -105,7 +107,8 @@ void
 handle_request(
     boost::beast::string_view doc_root,
     http::request<Body, http::basic_fields<Allocator>>&& req,
-    Send&& send)
+    Send&& send,
+    const std::string& sbody)
 {
     // Returns a bad request response
     auto const bad_request =
@@ -190,14 +193,22 @@ handle_request(
     }
 
     // Respond to GET request
-    http::response<http::file_body> res{
+    http::response<http::string_body> res{
         std::piecewise_construct,
-        std::make_tuple(std::move(body)),
+        std::make_tuple(std::move(sbody)),
         std::make_tuple(http::status::ok, req.version())};
+
+    //http::response<http::string_body> res;
+
     res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-    res.set(http::field::content_type, mime_type(path));
-    res.content_length(size);
+    //res.set(http::field::content_type, mime_type(path));
+    //res.content_length(size);
     res.keep_alive(req.keep_alive());
+
+    res.set(http::field::content_type, "text/plain");
+    //res.body() = sbody;
+    res.prepare_payload();
+
     return send(std::move(res));
 }
 
@@ -252,8 +263,7 @@ struct send_lambda
 void
 do_session(
     tcp::socket& socket,
-    std::string const& doc_root,
-    request_holder* rholder)
+    std::string const& doc_root)
 {
     bool close = false;
     boost::system::error_code ec;
@@ -269,6 +279,9 @@ do_session(
         // Read a request
         http::request<http::string_body> req;
         http::read(socket, buffer, req, ec);
+
+        std::cout << "rq " << req.body() << std::endl;
+
         if(ec == http::error::end_of_stream)
         {
             printf("end of stream\n");
@@ -277,8 +290,10 @@ do_session(
         if(ec)
             return fail(ec, "read");
 
+        std::string to_pipe = handle_command(req.body());
+
         // Send the response
-        handle_request(doc_root, std::move(req), lambda);
+        handle_request(doc_root, std::move(req), lambda, to_pipe);
         if(ec)
             return fail(ec, "write");
         if(close)
@@ -374,7 +389,7 @@ void http_test_run_async()
 }
 #endif // 0
 
-void http_test_server(request_holder* req)
+void http_test_server()
 {
     try
     {
@@ -408,8 +423,7 @@ void http_test_server(request_holder* req)
             std::thread{std::bind(
                 &do_session,
                 std::move(socket),
-                doc_root,
-                req)}.detach();
+                doc_root)}.detach();
         }
     }
     catch (const std::exception& e)
@@ -419,7 +433,9 @@ void http_test_server(request_holder* req)
     }
 }
 
-void http_test_run(request_holder& req)
+void http_test_run()
 {
-    std::thread{std::bind(&http_test_server, &req)}.detach();
+    //std::thread{std::bind(&http_test_server, &req)}.detach();
+
+    http_test_server();
 }
