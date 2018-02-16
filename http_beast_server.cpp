@@ -252,7 +252,8 @@ struct send_lambda
 void
 do_session(
     tcp::socket& socket,
-    std::string const& doc_root)
+    std::string const& doc_root,
+    request_holder* rholder)
 {
     bool close = false;
     boost::system::error_code ec;
@@ -269,7 +270,10 @@ do_session(
         http::request<http::string_body> req;
         http::read(socket, buffer, req, ec);
         if(ec == http::error::end_of_stream)
+        {
+            printf("end of stream\n");
             break;
+        }
         if(ec)
             return fail(ec, "read");
 
@@ -370,7 +374,7 @@ void http_test_run_async()
 }
 #endif // 0
 
-void http_test_run()
+void http_test_server(request_holder* req)
 {
     try
     {
@@ -404,7 +408,8 @@ void http_test_run()
             std::thread{std::bind(
                 &do_session,
                 std::move(socket),
-                doc_root)}.detach();
+                doc_root,
+                req)}.detach();
         }
     }
     catch (const std::exception& e)
@@ -412,4 +417,9 @@ void http_test_run()
         std::cerr << "Error: " << e.what() << std::endl;
         //return EXIT_FAILURE;
     }
+}
+
+void http_test_run(request_holder& req)
+{
+    std::thread{std::bind(&http_test_server, &req)}.detach();
 }
