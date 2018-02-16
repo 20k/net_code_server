@@ -96,13 +96,15 @@ std::string run_script_as(const std::string& script, const std::string& user)
 
 void user_tests()
 {
+    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
+
     user test_user;
-    test_user.construct_new_user("test_user");
+    test_user.construct_new_user(mongo_user_info, "test_user");
 
     //test_user.load_from_db("test_user");
 
     user t2_user;
-    t2_user.load_from_db("test_user");
+    t2_user.load_from_db(mongo_user_info, "test_user");
 
     for(int i=0; i < 10; i++)
     {
@@ -213,18 +215,20 @@ void debug_terminal()
             if(found.size() != 2)
                 continue;
 
+            mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
+
             std::string username = found[1];
 
-            if(current_user.exists(username))
+            if(current_user.exists(mongo_user_info, username))
             {
-                current_user.load_from_db(username);
+                current_user.load_from_db(mongo_user_info, username);
 
                 std::cout << "logged in as " << username << std::endl;
             }
             else
             {
-                current_user.construct_new_user(username);
-                current_user.overwrite_user_in_db();
+                current_user.construct_new_user(mongo_user_info, username);
+                current_user.overwrite_user_in_db(mongo_user_info);
 
                 std::cout << "created new user " << username << std::endl;
             }
@@ -257,11 +261,16 @@ void debug_terminal()
 
             std::cout << "uploaded " << script << std::endl;
         }
-        else if(current_user.exists(current_user.name))
+        else
         {
-            std::string ret = run_in_user_context(current_user, command);
+            mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
 
-            std::cout << ret << std::endl;
+            if(current_user.exists(mongo_user_info, current_user.name))
+            {
+                std::string ret = run_in_user_context(current_user, command);
+
+                std::cout << ret << std::endl;
+            }
         }
     }
 }
@@ -298,6 +307,7 @@ int main()
     //test_user.construct_new_user("test_user2");
     //test_user.overwrite_user_in_db();
 
+    #if 0
     user test_user3;
     test_user3.construct_new_user("test_user3");
     test_user3.cash = 1000.;
@@ -316,6 +326,7 @@ int main()
     //std::string str = run_in_user_context(to_run_as, "test_user3.xfer_to_caller");
 
     std::cout << str << std::endl;
+    #endif // 0
 
     //tests();
 

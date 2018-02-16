@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <mutex>
 
 enum class mongo_database_type
 {
@@ -25,12 +26,17 @@ struct mongo_context
 
     static bool mongo_is_init;
 
+    std::mutex lock;
+    static std::mutex global_lock;
+
     ///need to run everything through a blacklist
     ///can probably just blacklist json
 
     ///if we ever have to add another db, make this fully data driven with structs and definitions and the like
     mongo_context(mongo_database_type type)
     {
+        std::lock_guard<std::mutex> lk(global_lock);
+
         std::string uri_str = "Err";
         std::string db = "Err";
 
@@ -80,6 +86,16 @@ struct mongo_context
         {
             change_collection("global_properties");
         }
+    }
+
+    void make_lock()
+    {
+        lock.lock();
+    }
+
+    void make_unlock()
+    {
+        lock.unlock();
     }
 
     void change_collection(const std::string& coll)
@@ -295,6 +311,34 @@ struct mongo_context
     }
 };
 
+struct mongo_lock_proxy
+{
+    mongo_context* ctx = nullptr;
+
+    mongo_lock_proxy(mongo_context* fctx)
+    {
+        ctx = fctx;
+
+        if(ctx == nullptr)
+            return;
+
+        ctx->make_lock();
+    }
+
+    ~mongo_lock_proxy()
+    {
+        if(ctx == nullptr)
+            return;
+
+        ctx->make_unlock();
+    }
+
+    mongo_context* operator->() const
+    {
+        return ctx;
+    }
+};
+
 #include "mongo_cleanup.h"
 
 //https://stackoverflow.com/questions/30166706/c-convert-simple-values-to-string
@@ -341,7 +385,7 @@ struct mongo_requester
         properties[key] = stringify_hack(value);
     }
 
-    std::vector<mongo_requester> fetch_from_db(mongo_context* ctx)
+    std::vector<mongo_requester> fetch_from_db(mongo_lock_proxy& ctx)
     {
         std::vector<mongo_requester> ret;
 

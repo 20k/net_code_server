@@ -43,8 +43,10 @@ std::map<std::string, priv_func_info> privileged_functions;
 inline
 duk_ret_t accts__balance(duk_context* ctx, int sl)
 {
+    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
+
     user usr;
-    usr.load_from_db(get_caller(ctx));
+    usr.load_from_db(mongo_user_info, get_caller(ctx));
 
     //std::string cash_string = std::to_string((int64_t)usr.cash);
 
@@ -102,7 +104,7 @@ duk_ret_t scripts__user(duk_context* ctx, int sl)
     request.set_prop("owner", usr);
     request.set_prop("is_script", 1);
 
-    mongo_context* item_context = get_global_mongo_user_items_context();
+    mongo_lock_proxy item_context = get_global_mongo_user_items_context();
 
     std::vector<mongo_requester> results = request.fetch_from_db(item_context);
 
@@ -132,9 +134,11 @@ duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const s
 
     ///NEED TO LOCK MONGODB HERE
 
+    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
+
     user destination_usr;
 
-    if(!destination_usr.load_from_db(to))
+    if(!destination_usr.load_from_db(mongo_user_info, to))
     {
         push_error(ctx, "User does not exist");
         return 1;
@@ -142,7 +146,7 @@ duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const s
 
     user caller_usr;
 
-    if(!caller_usr.load_from_db(from))
+    if(!caller_usr.load_from_db(mongo_user_info, from))
     {
         push_error(ctx, "From user does not exist");
         return 1;
@@ -163,8 +167,8 @@ duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const s
 
     ///hmm so
     ///we'll need to lock db when doing this
-    caller_usr.overwrite_user_in_db();
-    destination_usr.overwrite_user_in_db();
+    caller_usr.overwrite_user_in_db(mongo_user_info);
+    destination_usr.overwrite_user_in_db(mongo_user_info);
 
     ///NEED TO END MONGODB LOCK HERE
 

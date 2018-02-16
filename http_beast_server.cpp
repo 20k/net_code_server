@@ -274,6 +274,8 @@ do_session(
     // This lambda is used to send messages
     send_lambda<tcp::socket> lambda{socket, close, ec};
 
+    command_handler_state state;
+
     for(;;)
     {
         // Read a request
@@ -283,14 +285,11 @@ do_session(
         std::cout << "rq " << req.body() << std::endl;
 
         if(ec == http::error::end_of_stream)
-        {
-            printf("end of stream\n");
             break;
-        }
         if(ec)
             return fail(ec, "read");
 
-        std::string to_pipe = handle_command(req.body());
+        std::string to_pipe = handle_command(state, req.body());
 
         // Send the response
         handle_request(doc_root, std::move(req), lambda, to_pipe);

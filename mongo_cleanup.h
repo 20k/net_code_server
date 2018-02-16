@@ -7,8 +7,11 @@ inline
 void cleanup_mongo_all();
 
 inline
-mongo_context* get_global_mongo_context(mongo_database_type type, bool destroy = false)
+mongo_lock_proxy get_global_mongo_context(mongo_database_type type, bool destroy = false)
 {
+    static std::mutex no_race;
+    std::lock_guard<std::mutex> lk(no_race);
+
     static std::map<mongo_database_type, mongo_context*> data;
 
     if(data[type] == nullptr && !destroy)
@@ -26,10 +29,12 @@ mongo_context* get_global_mongo_context(mongo_database_type type, bool destroy =
 
         data.clear();
 
-        return nullptr;
+        return mongo_lock_proxy(nullptr);
+
+        //return nullptr;
     }
 
-    return data[type];
+    return mongo_lock_proxy(data[type]);
 }
 
 inline
@@ -40,25 +45,25 @@ void cleanup_mongo_all()
 }
 
 inline
-mongo_context* get_global_mongo_user_accessible_context(bool destroy = false)
+mongo_lock_proxy get_global_mongo_user_accessible_context()
 {
     return get_global_mongo_context(mongo_database_type::USER_ACCESSIBLE);
 }
 
 inline
-mongo_context* get_global_mongo_user_info_context(bool destroy = false)
+mongo_lock_proxy get_global_mongo_user_info_context()
 {
     return get_global_mongo_context(mongo_database_type::USER_PROPERTIES);
 }
 
 inline
-mongo_context* get_global_mongo_user_items_context(bool destroy = false)
+mongo_lock_proxy get_global_mongo_user_items_context()
 {
     return get_global_mongo_context(mongo_database_type::USER_ITEMS);
 }
 
 inline
-mongo_context* get_global_mongo_global_properties_context(bool destroy = false)
+mongo_lock_proxy get_global_mongo_global_properties_context()
 {
     return get_global_mongo_context(mongo_database_type::GLOBAL_PROPERTIES);
 }

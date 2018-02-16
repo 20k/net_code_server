@@ -87,7 +87,7 @@ struct item
         std::string prop = get_prop("item_id");
         bson_t* to_find = BCON_NEW("item_id", BCON_UTF8(prop.c_str()));
 
-        mongo_context* ctx = get_global_mongo_user_items_context();
+        mongo_lock_proxy ctx = get_global_mongo_user_items_context();
 
         bool exists = ctx->find_bson("all_items", to_find, nullptr).size() > 0;
 
@@ -109,7 +109,7 @@ struct item
             BSON_APPEND_UTF8(to_insert, i.first.c_str(), i.second.c_str());
         }
 
-        mongo_context* ctx = get_global_mongo_user_items_context();
+        mongo_lock_proxy ctx = get_global_mongo_user_items_context();
 
         ctx->insert_bson_1("all_items", to_insert);
 
@@ -136,7 +136,7 @@ struct item
             bson_append_document_end(to_insert, &child);
         }
 
-        mongo_context* ctx = get_global_mongo_user_items_context();
+        mongo_lock_proxy ctx = get_global_mongo_user_items_context();
 
         std::string prop = get_prop("item_id");
         bson_t* to_find = BCON_NEW("item_id", BCON_UTF8(prop.c_str()));
@@ -155,7 +155,7 @@ struct item
         std::string prop = get_prop("item_id");
         bson_t* to_find = BCON_NEW("item_id", BCON_UTF8(prop.c_str()));
 
-        mongo_context* ctx = get_global_mongo_user_items_context();
+        mongo_lock_proxy ctx = get_global_mongo_user_items_context();
 
         std::vector<std::string> strs = ctx->find_bson("all_items", to_find, nullptr);
 
@@ -188,7 +188,7 @@ struct item
     ///NEED TO USE SOME SORT OF MONGO LOCKING WHEN/IF WE HAVE MULTIPLE SERVERS (!!!)
     int32_t get_new_id()
     {
-        mongo_context* ctx = get_global_mongo_global_properties_context();
+        mongo_lock_proxy ctx = get_global_mongo_global_properties_context();
 
         bson_t* to_find = BCON_NEW("items_id", "{", "$exists", BCON_BOOL(true), "}");
 

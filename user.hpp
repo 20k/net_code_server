@@ -28,9 +28,8 @@ struct user
         return to_update;
     }
 
-    void overwrite_user_in_db()
+    void overwrite_user_in_db(mongo_lock_proxy& ctx)
     {
-        mongo_context* ctx = get_global_mongo_user_info_context();
         ctx->change_collection(name);
 
         bson_t* to_update = BCON_NEW(
@@ -57,9 +56,8 @@ struct user
         bson_destroy(to_update);
     }
 
-    bool exists(const std::string& name_)
+    bool exists(mongo_lock_proxy& ctx, const std::string& name_, bool no_lock = false)
     {
-        mongo_context* ctx = get_global_mongo_user_info_context();
         ctx->change_collection(name_);
 
         bson_t* to_find = BCON_NEW("name", "{", "$exists", BCON_BOOL(true), "}");
@@ -76,12 +74,13 @@ struct user
         return ret.size() != 0;
     }
 
-    bool load_from_db(const std::string& name_)
+    bool load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
     {
-        mongo_context* ctx = get_global_mongo_user_info_context();
         ctx->change_collection(name_);
 
-        if(!exists(name_))
+        std::cout << "load \n";
+
+        if(!exists(ctx, name_, true))
             return false;
 
         //bson_t* to_find = BCON_NEW("name", BCON_UTF8(name_.c_str()));
@@ -138,19 +137,18 @@ struct user
         return true;
     }
 
-    bool construct_new_user(const std::string& name_)
+    bool construct_new_user(mongo_lock_proxy& ctx, const std::string& name_)
     {
         name = name_;
 
         if(!is_valid_string(name))
             return false;
 
-        if(exists(name))
+        if(exists(ctx, name))
             return false;
 
         bson_t* user = get_bson_representation();
 
-        mongo_context* ctx = get_global_mongo_user_info_context();
         ctx->change_collection(name);
 
         ctx->insert_bson_1(name, user);
