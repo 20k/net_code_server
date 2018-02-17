@@ -1,12 +1,15 @@
 #include "command_handler.hpp"
 #include <js/js_interop.hpp>
 #include "seccallers.hpp"
+#include <thread>
+#include <chrono>
 
 struct unsafe_info
 {
     user* usr;
     std::string command;
     duk_context* ctx;
+    volatile int finished = 0;
 
     std::string ret;
 };
@@ -21,6 +24,18 @@ duk_ret_t unsafe_wrapper(duk_context* ctx, void* udata)
     info->ret = ret;
 
     return 0;
+}
+
+void managed_duktape_thread(unsafe_info* info)
+{
+    if(duk_safe_call(info->ctx, unsafe_wrapper, (void*)info, 0, 1) != 0)
+    {
+        printf("Err in safe wrapper %s\n", duk_safe_to_string(info->ctx, -1));
+    }
+
+    duk_pop(info->ctx);
+
+    info->finished = 1;
 }
 
 inline
@@ -38,12 +53,58 @@ std::string run_in_user_context(user& usr, const std::string& command)
     inf.command = command;
     inf.ctx = sd.ctx;
 
-    if(duk_safe_call(sd.ctx, unsafe_wrapper, (void*)&inf, 0, 1) != 0)
+    std::thread* launch = new std::thread(managed_duktape_thread, &inf);
+    //launch->detach();
+
+    bool terminated = false;
+
+    //sf::Clock clk;
+    float max_time_ms = 5000;
+
+    auto time_start = std::chrono::high_resolution_clock::now();
+
+    while(!inf.finished)
     {
-        printf("Err in safe wrapper %s\n", duk_safe_to_string(sd.ctx, -1));
+        auto time_current = std::chrono::high_resolution_clock::now();
+
+        auto diff = time_current - time_start;
+
+        auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
+
+        double elapsed = dur.count();
+
+        if(elapsed >= max_time_ms)
+        {
+            pthread_t thread = launch->native_handle();
+
+            void* native_handle = pthread_gethandle(thread);
+
+            ///this is obviously very unsafe, doubly so due to the whole mutex thing, which may leave them locked
+            ///going to need to have an intermittent sync point, where all threads block going in and we free all locks or something
+            SuspendThread(native_handle);
+            TerminateThread(native_handle, 1);
+            CloseHandle(native_handle);
+
+            inf.ret = "Ran for longer than " + std::to_string((int)max_time_ms) + "ms and was terminated";
+
+            terminated = true;
+
+            break;
+        }
+
+        Sleep(1);
     }
 
-    duk_pop(sd.ctx);
+    if(inf.finished && !terminated)
+    {
+        launch->join();
+        delete launch;
+    }
+
+    //managed_duktape_thread(&inf);
+
+    if(!terminated)
+        js_interop_shutdown(sd.ctx);
 
     std::string ret = inf.ret;
 

@@ -208,12 +208,12 @@ bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out
     }
     else
     {
+        err_out = "";
+
         duk_pop(ctx);
 
         return true;
     }
-
-    err_out = "";
 }
 
 inline
