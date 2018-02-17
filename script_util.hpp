@@ -241,9 +241,14 @@ std::string attach_wrapper(const std::string& data_in, bool stringify, bool dire
 }
 
 inline
-void remove_func(const std::string& name, std::string& script_accumulate)
+void remove_func(duk_context* ctx, const std::string& name)
 {
-    script_accumulate += " global." + name + " = undefined;\n";
+    duk_push_global_object(ctx);
+
+    duk_push_undefined(ctx);
+    duk_put_prop_string(ctx, -2, name.c_str());
+
+    duk_pop(ctx);
 }
 
 void register_funcs(duk_context* ctx, int seclevel);
@@ -260,24 +265,11 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
 
     std::string remove_script = "var global = new Function(\'return this;\')();\n";
 
-    remove_func("fs_call", remove_script);
-    remove_func("hs_call", remove_script);
-    remove_func("ms_call", remove_script);
-    remove_func("ls_call", remove_script);
-    remove_func("ns_call", remove_script);
-
-    duk_int_t res = duk_peval_string(sd.ctx, remove_script.c_str());
-
-    if(res != 0)
-    {
-        std::string err = duk_safe_to_string(sd.ctx, -1);
-
-        printf("remove eval failed: %s\n", err.c_str());
-    }
-    else
-    {
-        duk_pop(sd.ctx);
-    }
+    remove_func(sd.ctx, "fs_call");
+    remove_func(sd.ctx, "hs_call");
+    remove_func(sd.ctx, "ms_call");
+    remove_func(sd.ctx, "ls_call");
+    remove_func(sd.ctx, "ns_call");
 
     register_funcs(sd.ctx, seclevel);
 
