@@ -192,13 +192,21 @@ void debug_terminal()
 
             script_info script_inf;
 
-            std::string data_source = get_script_from_name_string(base_scripts_string, current_user.name + "." + script);
+            //std::string fullname = current_user.name + "." + script;
+
+            std::string fullname = script;
+
+            std::cout << "loading " << fullname << std::endl;
+
+            std::string data_source = get_script_from_name_string(base_scripts_string, strip_whitespace(fullname));
 
             stack_duk csd;
             init_js_interop(csd, std::string());
             register_funcs(csd.ctx);
 
             script_inf.load_from_unparsed_source(csd.ctx, data_source, script);
+
+            std::cout << script_inf.parsed_source << std::endl;
 
             mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
             script_inf.overwrite_in_db(mongo_ctx);
