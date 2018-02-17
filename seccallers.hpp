@@ -62,8 +62,6 @@ void parse_push_json(duk_context* ctx, const std::vector<std::string>& jsons)
 static
 duk_ret_t db_find_all(duk_context* ctx)
 {
-    printf("db find array\n");
-
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context();
     mongo_ctx->change_collection(get_script_host(ctx));
 
@@ -175,8 +173,6 @@ duk_ret_t db_find(duk_context* ctx)
 
     duk_push_string(ctx, get_caller(ctx).c_str());
     duk_put_prop_string(ctx, -2, "DB_CALLER");
-
-    printf("DB FIND\n");
 
     //[object]
     duk_push_c_function(ctx, db_find_all, 0);

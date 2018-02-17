@@ -139,13 +139,9 @@ duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const s
         return 1;
     }
 
-    printf("xferint\n");
-
     ///NEED TO LOCK MONGODB HERE
 
     mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
-
-    printf("postuserinfo\n");
 
     user destination_usr;
 
@@ -154,8 +150,6 @@ duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const s
         push_error(ctx, "User does not exist");
         return 1;
     }
-
-    printf("postdest\n");
 
     user caller_usr;
 
