@@ -260,6 +260,7 @@ struct send_lambda
 
 ///Ok so: This session is a proper hackmud worker thread thing
 ///we should wait for requests
+///need to ensure we never end up with two of the same user
 void
 do_session(
     tcp::socket& socket,
