@@ -22,11 +22,40 @@ void init_js_interop(stack_duk& sd, const std::string& js_data)
 }
 
 inline
+void do_freeze(duk_context* ctx, const std::string& name)
+{
+    duk_push_global_object(ctx);
+    duk_get_prop_string(ctx, -1, name.c_str());
+    duk_freeze(ctx, -1);
+    duk_pop(ctx);
+    duk_pop(ctx);
+}
+
+inline
 std::string run_in_user_context(user& usr, const std::string& command)
 {
     stack_duk sd;
     init_js_interop(sd, std::string());
     register_funcs(sd.ctx);
+
+    #if 0
+    ///not actually working
+    ///may need to do this from JS
+    printf("prefreeze\n");
+
+    do_freeze(sd.ctx, "JSON");
+    do_freeze(sd.ctx, "ARRAY");
+    do_freeze(sd.ctx, "Array");
+    do_freeze(sd.ctx, "parseInt");
+    do_freeze(sd.ctx, "parseFloat");
+    do_freeze(sd.ctx, "MATH");
+    do_freeze(sd.ctx, "Math");
+    do_freeze(sd.ctx, "DATE");
+    do_freeze(sd.ctx, "Date");
+    do_freeze(sd.ctx, "Error");
+    do_freeze(sd.ctx, "Number");
+
+    #endif // 0
 
     #if 0
     std::string script = command;
