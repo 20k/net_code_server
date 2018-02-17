@@ -27,7 +27,6 @@ struct mongo_context
     static bool mongo_is_init;
 
     std::mutex lock;
-    static std::mutex global_lock;
 
     ///need to run everything through a blacklist
     ///can probably just blacklist json
@@ -35,8 +34,6 @@ struct mongo_context
     ///if we ever have to add another db, make this fully data driven with structs and definitions and the like
     mongo_context(mongo_database_type type)
     {
-        std::lock_guard<std::mutex> lk(global_lock);
-
         std::string uri_str = "Err";
         std::string db = "Err";
 

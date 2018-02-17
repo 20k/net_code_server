@@ -220,8 +220,6 @@ duk_ret_t accts__xfer_gc_to(duk_context* ctx, int sl)
     amount = duk_get_number(ctx, -1);
     duk_pop(ctx);
 
-    printf("xfer\n");
-
     return accts_internal_xfer(ctx, get_caller(ctx), destination_name, amount);
 }
 

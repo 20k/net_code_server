@@ -9,8 +9,12 @@ void cleanup_mongo_all();
 inline
 mongo_lock_proxy get_global_mongo_context(mongo_database_type type, bool destroy = false)
 {
+    printf("get glob\n");
+
     static std::mutex no_race;
     std::lock_guard<std::mutex> lk(no_race);
+
+    printf("locked\n");
 
     static std::map<mongo_database_type, mongo_context*> data;
 
