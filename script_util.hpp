@@ -9,114 +9,11 @@
 #include <js/ui_util.hpp>
 #include <js/js_interop.hpp>
 
+#include "script_util_shared.hpp"
+
 inline
 std::string base_scripts_string = "./scripts/";
 
-inline
-bool is_valid_name_character(char c)
-{
-    return isalnum(c) || c == '_';
-}
-
-///i think something is broken with 7.2s stringstream implementation
-///i dont know why the stringstream version crashes
-inline
-std::vector<std::string> no_ss_split(const std::string& str, const std::string& delim)
-{
-    std::vector<std::string> tokens;
-    size_t prev = 0, pos = 0;
-    do
-    {
-        pos = str.find(delim, prev);
-        if (pos == std::string::npos) pos = str.length();
-        std::string token = str.substr(prev, pos-prev);
-        if (!token.empty()) tokens.push_back(token);
-        prev = pos + delim.length();
-    }
-    while (pos < str.length() && prev < str.length());
-    return tokens;
-}
-
-#define MAX_ANY_NAME_LEN 19
-
-inline
-bool is_valid_string(const std::string& to_parse)
-{
-    if(to_parse.size() >= MAX_ANY_NAME_LEN)
-        return false;
-
-    if(to_parse.size() == 0)
-        return false;
-
-    bool check_digit = true;
-
-    for(char c : to_parse)
-    {
-        if(check_digit && isdigit(c))
-        {
-            return false;
-        }
-
-        check_digit = false;
-
-        if(!is_valid_name_character(c))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-inline
-bool is_valid_full_name_string(const std::string& name)
-{
-    //std::string to_parse = strip_whitespace(name);
-
-    std::string to_parse = name;
-
-    int num_dots = std::count(to_parse.begin(), to_parse.end(), '.');
-
-    if(num_dots != 1)
-    {
-        return false;
-    }
-
-    std::vector<std::string> strings = no_ss_split(to_parse, ".");
-
-    if(strings.size() != 2)
-        return false;
-
-    for(auto& str : strings)
-    {
-        if(!is_valid_string(str))
-            return false;
-    }
-
-    return true;
-}
-
-inline
-std::string get_script_from_name_string(const std::string& base_dir, const std::string& name_string)
-{
-    bool is_valid = is_valid_full_name_string(name_string);
-
-    if(!is_valid)
-        return "";
-
-    std::string to_parse = strip_whitespace(name_string);
-
-    std::replace(to_parse.begin(), to_parse.end(), '.', '/');
-
-    std::string file = base_dir + "/" + to_parse + ".js";
-
-    if(!file_exists(file))
-    {
-        return "";
-    }
-
-    return read_file(file);
-}
 
 inline
 bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& offset, std::string from, std::string to)
