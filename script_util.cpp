@@ -75,9 +75,9 @@ std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::
     return err;
 }
 
-void script_info::load_from_db()
+void script_info::load_from_db(mongo_lock_proxy& ctx)
 {
-    if(!exists_in_db())
+    if(!exists_in_db(ctx))
         return;
 
     item my_script;
@@ -88,7 +88,9 @@ void script_info::load_from_db()
     my_script.set_prop("owner", owner);
     my_script.set_prop("is_script", 1);
 
-    my_script.load_from_db();
+    //mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
+
+    my_script.load_from_db(ctx);
 
     name = my_script.get_prop("item_id");
     in_public = my_script.get_prop_as_integer("in_public");
@@ -107,7 +109,7 @@ void script_info::load_from_db()
     }
 }
 
-void script_info::overwrite_in_db()
+void script_info::overwrite_in_db(mongo_lock_proxy& ctx)
 {
     if(!valid)
         return;
@@ -120,24 +122,29 @@ void script_info::overwrite_in_db()
     my_script.set_prop("is_script", 1);
     my_script.set_prop("unparsed_source", unparsed_source);
 
-    if(my_script.exists_in_db())
-        my_script.update_in_db();
+    //mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
+
+    if(my_script.exists_in_db(ctx))
+        my_script.update_in_db(ctx);
     else
     {
         my_script.set_prop("trust", 0);
-        my_script.create_in_db();
+        my_script.create_in_db(ctx);
     }
 }
 
-bool script_info::exists_in_db()
+bool script_info::exists_in_db(mongo_lock_proxy& ctx)
 {
     item my_script;
 
     my_script.set_prop("item_id", name);
 
-    return my_script.exists_in_db();
+    //mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
+
+    return my_script.exists_in_db(ctx);
 }
 
+#if 0
 void script_info::load_from_disk_with_db_metadata(const std::string& name_)
 {
     std::string base = base_scripts_string;
@@ -169,18 +176,21 @@ void script_info::load_from_disk_with_db_metadata(const std::string& name_)
     my_script.set_prop("is_script", 1);
     my_script.set_prop("unparsed_source", unparsed_source);
 
-    if(!my_script.exists_in_db())
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
+
+    if(!my_script.exists_in_db(mongo_ctx))
     {
-        my_script.create_in_db();
+        my_script.create_in_db(mongo_ctx);
     }
 
     #define OVERWRITE
     #ifdef OVERWRITE
     else
     {
-        my_script.update_in_db();
+        my_script.update_in_db(mongo_ctx);
     }
     #endif // OVERWRITE
 
-    my_script.load_from_db();
+    my_script.load_from_db(mongo_ctx);
 }
+#endif

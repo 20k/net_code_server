@@ -78,8 +78,12 @@ duk_ret_t scripts__get_level(duk_context* ctx, int sl)
 
     duk_pop(ctx);
 
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
+
     script_info script;
-    script.load_from_disk_with_db_metadata(str);
+    //script.load_from_disk_with_db_metadata(str);
+    script.name = str;
+    script.load_from_db(mongo_ctx);
 
     if(privileged_functions.find(str) != privileged_functions.end())
     {
@@ -135,9 +139,13 @@ duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const s
         return 1;
     }
 
+    printf("xferint\n");
+
     ///NEED TO LOCK MONGODB HERE
 
     mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
+
+    printf("postuserinfo\n");
 
     user destination_usr;
 
@@ -146,6 +154,8 @@ duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const s
         push_error(ctx, "User does not exist");
         return 1;
     }
+
+    printf("postdest\n");
 
     user caller_usr;
 
@@ -209,6 +219,8 @@ duk_ret_t accts__xfer_gc_to(duk_context* ctx, int sl)
 
     amount = duk_get_number(ctx, -1);
     duk_pop(ctx);
+
+    printf("xfer\n");
 
     return accts_internal_xfer(ctx, get_caller(ctx), destination_name, amount);
 }

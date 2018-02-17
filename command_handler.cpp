@@ -83,7 +83,10 @@ std::string handle_command(command_handler_state& state, const std::string& str)
 
             script_info script_inf;
             std::string compile_error = script_inf.load_from_unparsed_source(csd.ctx, data_source, fullname);
-            script_inf.overwrite_in_db();
+
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
+
+            script_inf.overwrite_in_db(mongo_ctx);
 
             js_interop_shutdown(csd.ctx);
 

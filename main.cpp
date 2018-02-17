@@ -29,7 +29,7 @@
 #include "http_beast_server.hpp"
 #include "command_handler.hpp"
 
-
+#if 0
 void tests()
 {
     std::vector<std::string> strings = no_ss_split("test.hello", ".");
@@ -53,7 +53,9 @@ void tests()
 
     std::cout << script.parsed_source << std::endl;
 }
+#endif
 
+#if 0
 std::string run_script_as(const std::string& script, const std::string& user)
 {
     stack_duk sd;
@@ -83,6 +85,7 @@ std::string run_script_as(const std::string& script, const std::string& user)
 
     return ret;
 }
+#endif // 0
 
 void user_tests()
 {
@@ -98,9 +101,11 @@ void user_tests()
 
     for(int i=0; i < 10; i++)
     {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context();
+
         item test_item;
 
-        std::cout << test_item.get_new_id() << std::endl;
+        std::cout << test_item.get_new_id(mongo_ctx) << std::endl;
     }
 
     /*item insert_item;
@@ -110,15 +115,17 @@ void user_tests()
 
     insert_item.create_in_db("what");*/
 
+    mongo_lock_proxy mongo_user_items = get_global_mongo_user_items_context();
+
     item update_item;
     update_item.set_prop("item_id", 32);
     update_item.set_prop("Potato", "ostrich");
 
-    update_item.update_in_db();
+    update_item.update_in_db(mongo_user_items);
 
     item test_load;
     test_load.set_prop("item_id", 32);
-    test_load.load_from_db();
+    test_load.load_from_db(mongo_user_items);
 
     std::cout << test_load.get_prop("Potato") << std::endl;
 
@@ -192,7 +199,9 @@ void debug_terminal()
             register_funcs(csd.ctx);
 
             script_inf.load_from_unparsed_source(csd.ctx, data_source, script);
-            script_inf.overwrite_in_db();
+
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
+            script_inf.overwrite_in_db(mongo_ctx);
 
             js_interop_shutdown(csd.ctx);
 
@@ -226,6 +235,7 @@ int main()
         bot_id = call_global_function(sd, "botjs");
     }*/
 
+    #if 0
     http_test_run();
 
     printf("post\n");
@@ -237,6 +247,7 @@ int main()
     }
 
     return 0;
+    #endif
 
     debug_terminal();
 

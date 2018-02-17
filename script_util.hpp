@@ -142,6 +142,8 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
     return false;
 }
 
+struct mongo_lock_proxy;
+
 struct script_info
 {
     std::string name;
@@ -153,14 +155,14 @@ struct script_info
     bool valid = false;
     bool in_public = false;
 
-    void load_from_disk_with_db_metadata(const std::string& name);
+    //void load_from_disk_with_db_metadata(const std::string& name);
 
     std::string load_from_unparsed_source(duk_context* ctx, const std::string& unparsed, const std::string& name);
 
-    void load_from_db();
-    void overwrite_in_db();
+    void load_from_db(mongo_lock_proxy& ctx);
+    void overwrite_in_db(mongo_lock_proxy& ctx);
 
-    bool exists_in_db();
+    bool exists_in_db(mongo_lock_proxy& ctx);
 };
 
 inline
@@ -287,7 +289,12 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
             duk_pop_n(sd.ctx, 1); //empty stack, has function at -1
 
             duk_get_global_string(sd.ctx, "context"); //[context]
-            //duk_push_object(sd.ctx); ///push empty args, no forwarding
+            //duk_push_object(sd.ctx); ///push empty args, no forwarding*/
+
+            /*duk_push_object(sd.ctx); ///context object
+
+            duk_push_string(sd.ctx, caller.c_str());
+            duk_put_prop_string(sd.ctx, -2, "caller");*/
 
             int nargs = 2;
 

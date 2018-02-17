@@ -67,9 +67,9 @@ struct item
         item_properties[key] = stringify_hack(value);
     }
 
-    void generate_set_id()
+    void generate_set_id(mongo_lock_proxy& global_props_context)
     {
-        int32_t id = get_new_id();
+        int32_t id = get_new_id(global_props_context);
 
         set_prop("item_id", id);
     }
@@ -79,15 +79,13 @@ struct item
         return item_properties.find("item_id") != item_properties.end();
     }
 
-    bool exists_in_db()
+    bool exists_in_db(mongo_lock_proxy& ctx)
     {
         if(!has_id())
             return true;
 
         std::string prop = get_prop("item_id");
         bson_t* to_find = BCON_NEW("item_id", BCON_UTF8(prop.c_str()));
-
-        mongo_lock_proxy ctx = get_global_mongo_user_items_context();
 
         bool exists = ctx->find_bson("all_items", to_find, nullptr).size() > 0;
 
@@ -97,7 +95,7 @@ struct item
     }
 
     ///kinda need to upsert this
-    void create_in_db()
+    void create_in_db(mongo_lock_proxy& ctx)
     {
         if(!has_id())
             return;
@@ -109,14 +107,12 @@ struct item
             BSON_APPEND_UTF8(to_insert, i.first.c_str(), i.second.c_str());
         }
 
-        mongo_lock_proxy ctx = get_global_mongo_user_items_context();
-
         ctx->insert_bson_1("all_items", to_insert);
 
         bson_destroy(to_insert);
     }
 
-    void update_in_db()
+    void update_in_db(mongo_lock_proxy& ctx)
     {
         if(!has_id())
             return;
@@ -136,8 +132,6 @@ struct item
             bson_append_document_end(to_insert, &child);
         }
 
-        mongo_lock_proxy ctx = get_global_mongo_user_items_context();
-
         std::string prop = get_prop("item_id");
         bson_t* to_find = BCON_NEW("item_id", BCON_UTF8(prop.c_str()));
 
@@ -147,15 +141,13 @@ struct item
         bson_destroy(to_insert);
     }
 
-    void load_from_db()
+    void load_from_db(mongo_lock_proxy& ctx)
     {
         if(!has_id())
             return;
 
         std::string prop = get_prop("item_id");
         bson_t* to_find = BCON_NEW("item_id", BCON_UTF8(prop.c_str()));
-
-        mongo_lock_proxy ctx = get_global_mongo_user_items_context();
 
         std::vector<std::string> strs = ctx->find_bson("all_items", to_find, nullptr);
 
@@ -186,13 +178,11 @@ struct item
 
     ///WARNING NOT THREAD SAFE AT ALL RACE CONDITION
     ///NEED TO USE SOME SORT OF MONGO LOCKING WHEN/IF WE HAVE MULTIPLE SERVERS (!!!)
-    int32_t get_new_id()
+    int32_t get_new_id(mongo_lock_proxy& global_props_ctx)
     {
-        mongo_lock_proxy ctx = get_global_mongo_global_properties_context();
-
         bson_t* to_find = BCON_NEW("items_id", "{", "$exists", BCON_BOOL(true), "}");
 
-        std::vector<std::string> ret = ctx->find_bson("global_properties", to_find, nullptr);
+        std::vector<std::string> ret = global_props_ctx->find_bson("global_properties", to_find, nullptr);
 
         int32_t next_id = -1;
 
@@ -201,7 +191,7 @@ struct item
             ///insert items_id into db
             bson_t* to_insert = BCON_NEW("items_id", BCON_INT32(0));
 
-            ctx->insert_bson_1("global_properties", to_insert);
+            global_props_ctx->insert_bson_1("global_properties", to_insert);
 
             bson_destroy(to_insert);
 
@@ -237,7 +227,7 @@ struct item
 
         bson_t* to_update = BCON_NEW("$set", "{", "items_id", BCON_INT32(next_id), "}");
 
-        ctx->update_bson_many("global_properties", to_find, to_update);
+        global_props_ctx->update_bson_many("global_properties", to_find, to_update);
 
         bson_destroy(to_update);
         bson_destroy(to_find);

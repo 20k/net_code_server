@@ -266,10 +266,12 @@ duk_ret_t js_call(duk_context* ctx, int sl)
         return 1;
     }
 
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
+
     script_info script;
     //script.load_from_disk_with_db_metadata(str);
     script.name = str;
-    script.load_from_db();
+    script.load_from_db(mongo_ctx);
 
     SL_GUARD(script.seclevel);
 
