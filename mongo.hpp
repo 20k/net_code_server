@@ -95,20 +95,19 @@ struct mongo_context
 
     void make_unlock()
     {
-        lock.unlock();
-
         locked_by = -1;
+
+        lock.unlock();
     }
 
     void unlock_if(int who)
     {
         if(who == locked_by)
         {
+            locked_by = -1;
             lock.unlock();
             printf("Salvaged db\n");
         }
-
-        locked_by = -1;
     }
 
     void change_collection(const std::string& coll)
