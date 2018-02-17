@@ -79,7 +79,7 @@ std::string handle_command(command_handler_state& state, const std::string& str)
 
             stack_duk csd;
             csd.ctx = js_interop_startup();
-            register_funcs(csd.ctx);
+            register_funcs(csd.ctx, 0);
 
             script_info script_inf;
             std::string compile_error = script_inf.load_from_unparsed_source(csd.ctx, data_source, fullname);

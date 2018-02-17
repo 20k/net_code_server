@@ -59,7 +59,7 @@ std::string run_in_user_context(user& usr, const std::string& command)
           "});\n"
 
          "return o;\n"
-        "};\n";
+        "};\n\n";
 
     do_freeze(sd.ctx, "JSON", freeze_script);
     do_freeze(sd.ctx, "Array", freeze_script);
@@ -83,7 +83,7 @@ std::string run_in_user_context(user& usr, const std::string& command)
         duk_pop(sd.ctx);
     }
 
-    register_funcs(sd.ctx);
+    //register_funcs(sd.ctx, 0);
 
     startup_state(sd.ctx, usr.name, usr.name, "invoke");
 

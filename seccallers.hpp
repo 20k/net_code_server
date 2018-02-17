@@ -298,7 +298,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     set_script_info(ctx, str);
 
-    compile_and_call(sd, load, true, get_caller(ctx));
+    compile_and_call(sd, load, true, get_caller(ctx), true, false, script.seclevel);
 
     set_script_info(ctx, full_script);
 
@@ -375,7 +375,7 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
 
     duk_push_undefined(ctx);
 
-    compile_and_call(sd, dummy.parsed_source, true, get_caller(ctx), true, false);
+    compile_and_call(sd, dummy.parsed_source, true, get_caller(ctx), true, false, dummy.seclevel);
 
     if(!duk_is_object_coercible(ctx, -1))
         return "No return";
@@ -423,13 +423,22 @@ duk_ret_t sl_call(duk_context* ctx)
 }
 
 inline
-void register_funcs(duk_context* ctx)
+void register_funcs(duk_context* ctx, int seclevel)
 {
-    inject_c_function(ctx, sl_call<4>, "fs_call", 1);
-    inject_c_function(ctx, sl_call<3>, "hs_call", 1);
-    inject_c_function(ctx, sl_call<2>, "ms_call", 1);
-    inject_c_function(ctx, sl_call<1>, "ls_call", 1);
-    inject_c_function(ctx, sl_call<0>, "ns_call", 1);
+    if(seclevel <= 4)
+        inject_c_function(ctx, sl_call<4>, "fs_call", 1);
+
+    if(seclevel <= 3)
+        inject_c_function(ctx, sl_call<3>, "hs_call", 1);
+
+    if(seclevel <= 2)
+        inject_c_function(ctx, sl_call<2>, "ms_call", 1);
+
+    if(seclevel <= 1)
+        inject_c_function(ctx, sl_call<1>, "ls_call", 1);
+
+    if(seclevel <= 0)
+        inject_c_function(ctx, sl_call<0>, "ns_call", 1);
 
     inject_c_function(ctx, hash_d, "hash_d", 1);
 

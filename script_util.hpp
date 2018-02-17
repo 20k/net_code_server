@@ -240,15 +240,46 @@ std::string attach_wrapper(const std::string& data_in, bool stringify, bool dire
     return prologue + data_in + endlogue;
 }
 
+inline
+void remove_func(const std::string& name, std::string& script_accumulate)
+{
+    script_accumulate += " global." + name + " = undefined;\n";
+}
+
+void register_funcs(duk_context* ctx, int seclevel);
+
 ///#db.f({[col_key]: {$exists : true}});
 ///$where and $query both need to be disabled, $inspect as well
 inline
-std::string compile_and_call(stack_duk& sd, const std::string& data, bool called_internally, std::string caller, bool is_conargs_function = true, bool stringify = false)
+std::string compile_and_call(stack_duk& sd, const std::string& data, bool called_internally, std::string caller, bool is_conargs_function, bool stringify, int seclevel)
 {
     if(data.size() == 0)
     {
         return "Script not found";
     }
+
+    std::string remove_script = "var global = new Function(\'return this;\')();\n";
+
+    remove_func("fs_call", remove_script);
+    remove_func("hs_call", remove_script);
+    remove_func("ms_call", remove_script);
+    remove_func("ls_call", remove_script);
+    remove_func("ns_call", remove_script);
+
+    duk_int_t res = duk_peval_string(sd.ctx, remove_script.c_str());
+
+    if(res != 0)
+    {
+        std::string err = duk_safe_to_string(sd.ctx, -1);
+
+        printf("remove eval failed: %s\n", err.c_str());
+    }
+    else
+    {
+        duk_pop(sd.ctx);
+    }
+
+    register_funcs(sd.ctx, seclevel);
 
     std::string wrapper = attach_wrapper(data, !called_internally || stringify, false);
 
