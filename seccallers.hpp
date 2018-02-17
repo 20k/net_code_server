@@ -62,13 +62,13 @@ void parse_push_json(duk_context* ctx, const std::vector<std::string>& jsons)
 static
 duk_ret_t db_find_all(duk_context* ctx)
 {
-    //printf("db find\n");
+    printf("db find array\n");
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context();
     mongo_ctx->change_collection(get_script_host(ctx));
 
     duk_push_this(ctx);
-    duk_get_prop_string(ctx, -1, "INTERNAL_DB_ID_GOOD_LUCK_EDITING_THIS");
+    /*duk_get_prop_string(ctx, -1, "INTERNAL_DB_ID_GOOD_LUCK_EDITING_THIS");
 
     int id = duk_require_int(ctx, -1);
 
@@ -76,7 +76,7 @@ duk_ret_t db_find_all(duk_context* ctx)
 
     duk_push_global_stash(ctx);
 
-    duk_get_prop_string(ctx, -1, (get_caller(ctx) + "DB_INFO" + std::to_string(id)).c_str());
+    duk_get_prop_string(ctx, -1, (get_caller(ctx) + "DB_INFO" + std::to_string(id)).c_str());*/
 
     duk_get_prop_string(ctx, -1, "JSON");
     std::string json = duk_get_string(ctx, -1);
@@ -95,7 +95,7 @@ duk_ret_t db_find_all(duk_context* ctx)
     ///remove get prop db info
     duk_pop(ctx);
     ///remove global stash
-    duk_pop(ctx);
+    //duk_pop(ctx);
 
     if(caller != get_caller(ctx))
         return 0;
@@ -133,7 +133,7 @@ duk_ret_t db_find(duk_context* ctx)
     if(nargs == 0 || nargs > 2)
         return 0;
 
-    duk_push_global_stash(ctx); // [glob]
+    /*duk_push_global_stash(ctx); // [glob]
     duk_get_prop_string(ctx, -1, "DB_ID"); //[glob -> db_id]
     int id = duk_get_int(ctx, -1); //[glob -> db_id]
     int new_id = id + 1;
@@ -163,11 +163,26 @@ duk_ret_t db_find(duk_context* ctx)
     duk_dup_top(ctx); //[glob -> object -> object]
     duk_put_prop_string(ctx, -3, (get_caller(ctx) + "DB_INFO" + std::to_string(id)).c_str()); //[glob -> object]
 
-    duk_remove(ctx, -2);
+    duk_remove(ctx, -2);*/
+
+    duk_push_object(ctx);
+
+    duk_push_string(ctx, json.c_str());
+    duk_put_prop_string(ctx, -2, "JSON");
+
+    duk_push_string(ctx, proj.c_str());
+    duk_put_prop_string(ctx, -2, "PROJ");
+
+    duk_push_string(ctx, get_caller(ctx).c_str());
+    duk_put_prop_string(ctx, -2, "DB_CALLER");
+
+    printf("DB FIND\n");
 
     //[object]
     duk_push_c_function(ctx, db_find_all, 0);
     duk_put_prop_string(ctx, -2, "array");
+
+    duk_freeze(ctx, -1);
 
     return 1;
 
