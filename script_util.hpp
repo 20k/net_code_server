@@ -263,8 +263,6 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
     duk_push_string(sd.ctx, wrapper.c_str());
     duk_push_string(sd.ctx, "test-name");
 
-    //bool success = false;
-
     //DUK_COMPILE_FUNCTION
     if(duk_pcompile(sd.ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
     {
@@ -274,8 +272,6 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
 
         if(called_internally)
             duk_push_undefined(sd.ctx);
-
-        //success = false;
     }
     else
     {
@@ -298,12 +294,6 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
             duk_pop_n(sd.ctx, 1); //empty stack, has function at -1
 
             duk_get_global_string(sd.ctx, "context"); //[context]
-            //duk_push_object(sd.ctx); ///push empty args, no forwarding*/
-
-            /*duk_push_object(sd.ctx); ///context object
-
-            duk_push_string(sd.ctx, caller.c_str());
-            duk_put_prop_string(sd.ctx, -2, "caller");*/
 
             int nargs = 2;
 
@@ -321,8 +311,6 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
             else
             {
                 duk_push_undefined(sd.ctx);
-
-                //duk_push_object(sd.ctx);
             }
 
             duk_pcall(sd.ctx, nargs);
@@ -337,8 +325,6 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
             ret = duk_safe_to_string(sd.ctx, -1);
             //printf("program result: %s\n", ret.c_str());
         }
-
-        //success = true;
     }
 
     std::string str = get_hash_d(sd.ctx);
