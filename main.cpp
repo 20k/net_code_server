@@ -209,14 +209,16 @@ void debug_terminal()
         }
         else
         {
-            mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
-
-            if(current_user.exists(mongo_user_info, current_user.name))
             {
-                std::string ret = run_in_user_context(current_user, command);
+                mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
 
-                std::cout << ret << std::endl;
+                if(!current_user.exists(mongo_user_info, current_user.name))
+                    continue;
             }
+
+            std::string ret = run_in_user_context(current_user, command);
+
+            std::cout << ret << std::endl;
         }
     }
 }
