@@ -238,17 +238,6 @@ std::string handle_command(command_handler_state& state, const std::string& str)
         }
 
         return run_in_user_context(state.current_user, str);
-
-        /*if(state.current_user.exists(mongo_user_info, state.current_user.name))
-        {
-            std::string ret = run_in_user_context(state.current_user, str);
-
-            return ret;
-        }
-        else
-        {
-            return "No account or not logged in";
-        }*/
     }
 
     return "Command Not Found or Unimplemented";
