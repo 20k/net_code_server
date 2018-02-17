@@ -14,7 +14,6 @@
 //#include <4space_server/networking.hpp>
 
 #include <js/js_interop.hpp>
-#include <js/ui_util.hpp>
 
 #include <algorithm>
 #include "script_util.hpp"

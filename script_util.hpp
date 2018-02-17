@@ -6,7 +6,6 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
-#include <js/ui_util.hpp>
 #include <js/js_interop.hpp>
 
 #include "script_util_shared.hpp"
