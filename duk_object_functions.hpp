@@ -128,6 +128,7 @@ void push_dukobject(duk_context* ctx, T&&... args)
 }
 
 template<typename T>
+inline
 void put_duk_keyvalue(duk_context* ctx, const std::string& key, const T& value)
 {
     push_duk_val(ctx, value);
@@ -135,6 +136,7 @@ void put_duk_keyvalue(duk_context* ctx, const std::string& key, const T& value)
 }
 
 template<typename T>
+inline
 bool get_duk_keyvalue(duk_context* ctx, const std::string& key, T& value)
 {
     if(!duk_has_prop_string(ctx, -1, key.c_str()))
@@ -150,6 +152,7 @@ bool get_duk_keyvalue(duk_context* ctx, const std::string& key, T& value)
     return true;
 }
 
+inline
 void freeze_duk(duk_context* ctx)
 {
     duk_freeze(ctx, -1);

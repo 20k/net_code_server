@@ -259,7 +259,7 @@ struct script_info
 
     void load_from_disk_with_db_metadata(const std::string& name);
 
-    void load_from_unparsed_source(duk_context* ctx, const std::string& unparsed, const std::string& name);
+    std::string load_from_unparsed_source(duk_context* ctx, const std::string& unparsed, const std::string& name);
 
     void load_from_db();
     void overwrite_in_db();
@@ -281,7 +281,7 @@ std::string get_hash_d(duk_context* ctx)
 }
 
 inline
-bool script_compiles(duk_context* ctx, script_info& script)
+bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out)
 {
     std::string prologue = "function INTERNAL_TEST(context, args)\n{'use strict'\nvar IVAR = ";
     std::string endlogue = "\n\nreturn IVAR(context, args);\n\n}\n";
@@ -294,6 +294,8 @@ bool script_compiles(duk_context* ctx, script_info& script)
     if(duk_pcompile(ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
     {
         std::string ret = duk_safe_to_string(ctx, -1);
+
+        err_out = ret;
 
         printf("scompile failed: %s\n", ret.c_str());
 
@@ -312,6 +314,8 @@ bool script_compiles(duk_context* ctx, script_info& script)
 
         return true;
     }
+
+    err_out = "";
 }
 
 inline

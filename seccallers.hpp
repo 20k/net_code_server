@@ -406,6 +406,7 @@ duk_ret_t sl_call(duk_context* ctx)
     return 1;
 }
 
+inline
 void register_funcs(duk_context* ctx)
 {
     inject_c_function(ctx, sl_call<4>, "fs_call", 1);

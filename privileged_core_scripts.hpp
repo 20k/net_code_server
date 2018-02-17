@@ -6,16 +6,19 @@
 
 using function_priv_t = duk_ret_t (*)(duk_context*, int);
 
+inline
 bool can_run(int csec_level, int maximum_sec)
 {
     return csec_level <= maximum_sec;
 }
 
+inline
 void push_error(duk_context* ctx, const std::string& msg)
 {
     push_dukobject(ctx, "ok", false, "msg", msg);
 }
 
+inline
 void push_success(duk_context* ctx)
 {
     push_dukobject(ctx, "ok", true);

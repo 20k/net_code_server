@@ -41,14 +41,14 @@ script_data parse_script(std::string in)
 }
 
 ///WARNING NEED TO VALIDATE
-void script_info::load_from_unparsed_source(duk_context* ctx, const std::string& source, const std::string& name_)
+std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::string& source, const std::string& name_)
 {
     name = name_;
 
     if(!is_valid_full_name_string(name))
     {
         valid = false;
-        return;
+        return "Invalid Name " + name;
     }
 
     owner = no_ss_split(name, ".")[0];
@@ -61,12 +61,18 @@ void script_info::load_from_unparsed_source(duk_context* ctx, const std::string&
     seclevel = sdata.seclevel;
     valid = sdata.valid;
 
-    if(!script_compiles(ctx, *this))
+    std::string err;
+
+    if(!script_compiles(ctx, *this, err))
     {
         valid = false;
 
-        printf("failed compilation in early stage\n");
+        return err;
+
+        //printf("failed compilation in early stage\n");
     }
+
+    return err;
 }
 
 void script_info::load_from_db()
