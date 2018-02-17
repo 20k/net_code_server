@@ -240,17 +240,6 @@ std::string attach_wrapper(const std::string& data_in, bool stringify, bool dire
     return prologue + data_in + endlogue;
 }
 
-inline
-void remove_func(duk_context* ctx, const std::string& name)
-{
-    duk_push_global_object(ctx);
-
-    duk_push_undefined(ctx);
-    duk_put_prop_string(ctx, -2, name.c_str());
-
-    duk_pop(ctx);
-}
-
 void register_funcs(duk_context* ctx, int seclevel);
 
 ///#db.f({[col_key]: {$exists : true}});
@@ -262,14 +251,6 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
     {
         return "Script not found";
     }
-
-    std::string remove_script = "var global = new Function(\'return this;\')();\n";
-
-    remove_func(sd.ctx, "fs_call");
-    remove_func(sd.ctx, "hs_call");
-    remove_func(sd.ctx, "ms_call");
-    remove_func(sd.ctx, "ls_call");
-    remove_func(sd.ctx, "ns_call");
 
     register_funcs(sd.ctx, seclevel);
 
@@ -301,6 +282,11 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
         ///need to push caller, and then args
         if(is_conargs_function)
         {
+            duk_push_global_stash(sd.ctx);
+            duk_push_int(sd.ctx, seclevel);
+            duk_put_prop_string(sd.ctx, -2, "last_seclevel");
+            duk_pop_n(sd.ctx, 1);
+
             duk_push_global_object(sd.ctx); //[glob]
 
             duk_idx_t id = duk_push_object(sd.ctx); ///context //[glob -> obj]

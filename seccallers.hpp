@@ -302,6 +302,9 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     set_script_info(ctx, full_script);
 
+    ///NEED TO RESTORE OLD SEC LEVEL
+    //register_funcs(ctx, script.seclevel);
+
     return 1;
 }
 
@@ -373,6 +376,8 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
     if(!dummy.valid)
         return "Invalid Command Line Syntax";
 
+    set_global_int(ctx, "last_seclevel", dummy.seclevel);
+
     duk_push_undefined(ctx);
 
     compile_and_call(sd, dummy.parsed_source, true, get_caller(ctx), true, false, dummy.seclevel);
@@ -391,7 +396,15 @@ template<int N>
 static
 duk_ret_t jxs_call(duk_context* ctx)
 {
-    return js_call(ctx, N);
+    int current_seclevel = get_global_int(ctx, "last_seclevel");
+
+    duk_ret_t ret = js_call(ctx, N);
+
+    set_global_int(ctx, "last_seclevel", current_seclevel);
+
+    register_funcs(ctx, current_seclevel);
+
+    return ret;
 }
 
 static
@@ -423,21 +436,110 @@ duk_ret_t sl_call(duk_context* ctx)
 }
 
 inline
+std::string add_freeze(const std::string& name)
+{
+    return " global." + name + " = deepFreeze(global." + name + ");\n";
+}
+
+inline
+void do_freeze(duk_context* ctx, const std::string& name, std::string& script_accumulate)
+{
+    duk_push_global_object(ctx);
+
+    duk_push_string(ctx, name.c_str());
+
+    duk_def_prop(ctx, -2,
+             DUK_DEFPROP_HAVE_WRITABLE |
+             DUK_DEFPROP_HAVE_ENUMERABLE | DUK_DEFPROP_ENUMERABLE |
+             DUK_DEFPROP_HAVE_CONFIGURABLE);
+
+    duk_pop(ctx);
+
+    script_accumulate += add_freeze(name);
+}
+
+inline
+void fully_freeze_recurse(duk_context* ctx, std::string& accum){}
+
+template<typename U, typename... T>
+inline
+void fully_freeze_recurse(duk_context* ctx, std::string& accum, const U& arg, T&&... args)
+{
+    do_freeze(ctx, arg, accum);
+
+    fully_freeze_recurse(ctx, accum, args...);
+}
+
+template<typename... T>
+inline
+void fully_freeze(duk_context* ctx, T&&... args)
+{
+    std::string get_global = "var global = new Function(\'return this;\')();";
+
+    std::string freeze_script = get_global + "\nfunction deepFreeze(o) {\n"
+          "Object.freeze(o);\n"
+
+          "Object.getOwnPropertyNames(o).forEach(function(prop) {\n"
+            "if (o.hasOwnProperty(prop)\n"
+            "&& o[prop] !== null\n"
+            "&& (typeof o[prop] === \"object\" || typeof o[prop] === \"function\")\n"
+            "&& !Object.isFrozen(o[prop])) {\n"
+                "deepFreeze(o[prop]);\n"
+              "}\n"
+          "});\n"
+
+         "return o;\n"
+        "};\n\n";
+
+    fully_freeze_recurse(ctx, freeze_script, args...);
+
+    duk_int_t res = duk_peval_string(ctx, freeze_script.c_str());
+
+    if(res != 0)
+    {
+        std::string err = duk_safe_to_string(ctx, -1);
+
+        printf("freeze eval failed: %s\n", err.c_str());
+    }
+    else
+    {
+        duk_pop(ctx);
+    }
+}
+
+inline
+void remove_func(duk_context* ctx, const std::string& name)
+{
+    duk_push_global_object(ctx);
+
+    duk_push_undefined(ctx);
+    duk_put_prop_string(ctx, -2, name.c_str());
+
+    duk_pop(ctx);
+}
+
+inline
 void register_funcs(duk_context* ctx, int seclevel)
 {
-    if(seclevel <= 4)
+    remove_func(ctx, "fs_call");
+    remove_func(ctx, "hs_call");
+    remove_func(ctx, "ms_call");
+    remove_func(ctx, "ls_call");
+    remove_func(ctx, "ns_call");
+
+    //if(seclevel <= 4)
         inject_c_function(ctx, sl_call<4>, "fs_call", 1);
 
-    if(seclevel <= 3)
+    //if(seclevel <= 3)
         inject_c_function(ctx, sl_call<3>, "hs_call", 1);
 
-    if(seclevel <= 2)
+    //if(seclevel <= 2)
         inject_c_function(ctx, sl_call<2>, "ms_call", 1);
 
-    if(seclevel <= 1)
+    //if(seclevel <= 1)
         inject_c_function(ctx, sl_call<1>, "ls_call", 1);
 
-    if(seclevel <= 0)
+    //if(seclevel <= 0)
         inject_c_function(ctx, sl_call<0>, "ns_call", 1);
 
     inject_c_function(ctx, hash_d, "hash_d", 1);
@@ -451,6 +553,8 @@ void register_funcs(duk_context* ctx, int seclevel)
     inject_c_function(ctx, hash_d, "hash_d", 1);
     inject_c_function(ctx, hash_d, "hash_d", 1);
     inject_c_function(ctx, hash_d, "hash_d", 1);*/
+
+    //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }
 
 #endif // SECCALLERS_HPP_INCLUDED
