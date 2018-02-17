@@ -46,7 +46,7 @@ std::map<std::string, priv_func_info> privileged_functions;
 inline
 duk_ret_t accts__balance(duk_context* ctx, int sl)
 {
-    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
+    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
 
     user usr;
     usr.load_from_db(mongo_user_info, get_caller(ctx));
@@ -78,7 +78,7 @@ duk_ret_t scripts__get_level(duk_context* ctx, int sl)
 
     duk_pop(ctx);
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
     script_info script;
     //script.load_from_disk_with_db_metadata(str);
@@ -111,7 +111,7 @@ duk_ret_t scripts__user(duk_context* ctx, int sl)
     request.set_prop("owner", usr);
     request.set_prop("is_script", 1);
 
-    mongo_lock_proxy item_context = get_global_mongo_user_items_context();
+    mongo_lock_proxy item_context = get_global_mongo_user_items_context(get_thread_id(ctx));
 
     std::vector<mongo_requester> results = request.fetch_from_db(item_context);
 
@@ -141,7 +141,7 @@ duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const s
 
     ///NEED TO LOCK MONGODB HERE
 
-    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
+    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
 
     user destination_usr;
 

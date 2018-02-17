@@ -41,12 +41,25 @@ void managed_duktape_thread(unsafe_info* info)
 inline
 std::string run_in_user_context(user& usr, const std::string& command)
 {
+    static std::mutex id_mut;
+
+    static int32_t gthread_id = 0;
+    int32_t local_thread_id;
+
+    {
+        std::lock_guard<std::mutex> lk(id_mut);
+
+        local_thread_id = gthread_id++;
+    }
+
     stack_duk sd;
     init_js_interop(sd, std::string());
 
     fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number");
 
     startup_state(sd.ctx, usr.name, usr.name, "invoke");
+
+    set_global_int(sd.ctx, "thread_id", local_thread_id);
 
     unsafe_info inf;
     inf.usr = &usr;
@@ -101,6 +114,16 @@ std::string run_in_user_context(user& usr, const std::string& command)
         delete launch;
     }
 
+    if(terminated)
+    {
+        std::lock_guard<std::mutex> lk(mongo_databases_lock);
+
+        for(auto& i : mongo_databases)
+        {
+            i.second->unlock_if(local_thread_id);
+        }
+    }
+
     //managed_duktape_thread(&inf);
 
     if(!terminated)
@@ -132,7 +155,7 @@ std::string handle_command(command_handler_state& state, const std::string& str)
 
         std::string user = split_string[1];
 
-        mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
+        mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
         if(state.current_user.exists(mongo_user_info, user))
         {
@@ -193,7 +216,7 @@ std::string handle_command(command_handler_state& state, const std::string& str)
             script_info script_inf;
             std::string compile_error = script_inf.load_from_unparsed_source(csd.ctx, data_source, fullname);
 
-            mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
             script_inf.overwrite_in_db(mongo_ctx);
 
@@ -207,9 +230,16 @@ std::string handle_command(command_handler_state& state, const std::string& str)
     }
     else
     {
-        mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
+        {
+            mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-        if(state.current_user.exists(mongo_user_info, state.current_user.name))
+            if(!state.current_user.exists(mongo_user_info, state.current_user.name))
+                return "No account or not logged in";
+        }
+
+        return run_in_user_context(state.current_user, str);
+
+        /*if(state.current_user.exists(mongo_user_info, state.current_user.name))
         {
             std::string ret = run_in_user_context(state.current_user, str);
 
@@ -218,7 +248,7 @@ std::string handle_command(command_handler_state& state, const std::string& str)
         else
         {
             return "No account or not logged in";
-        }
+        }*/
     }
 
     return "Command Not Found or Unimplemented";

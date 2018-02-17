@@ -16,7 +16,7 @@ void quick_register(duk_context* ctx, const std::string& key, const std::string&
 static
 duk_ret_t db_insert(duk_context* ctx)
 {
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context();
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
     std::string json = duk_json_encode(ctx, -1);
@@ -31,7 +31,7 @@ duk_ret_t db_insert(duk_context* ctx)
 static
 duk_ret_t db_update(duk_context* ctx)
 {
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context();
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
     std::string json_1 = duk_json_encode(ctx, 0);
@@ -62,7 +62,7 @@ void parse_push_json(duk_context* ctx, const std::vector<std::string>& jsons)
 static
 duk_ret_t db_find_all(duk_context* ctx)
 {
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context();
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
     duk_push_this(ctx);
@@ -191,7 +191,7 @@ duk_ret_t db_find(duk_context* ctx)
 static
 duk_ret_t db_remove(duk_context* ctx)
 {
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context();
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
     std::string json = duk_json_encode(ctx, -1);
@@ -280,7 +280,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     script_info script;
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
         //script.load_from_disk_with_db_metadata(str);
         script.name = str;

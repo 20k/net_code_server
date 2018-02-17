@@ -27,6 +27,7 @@ struct mongo_context
     static bool mongo_is_init;
 
     std::mutex lock;
+    int locked_by = -1;
 
     ///need to run everything through a blacklist
     ///can probably just blacklist json
@@ -85,14 +86,29 @@ struct mongo_context
         }
     }
 
-    void make_lock()
+    void make_lock(int who)
     {
         lock.lock();
+
+        locked_by = who;
     }
 
     void make_unlock()
     {
         lock.unlock();
+
+        locked_by = -1;
+    }
+
+    void unlock_if(int who)
+    {
+        if(who == locked_by)
+        {
+            lock.unlock();
+            printf("Salvaged db\n");
+        }
+
+        locked_by = -1;
     }
 
     void change_collection(const std::string& coll)
@@ -312,14 +328,14 @@ struct mongo_lock_proxy
 {
     mongo_context* ctx = nullptr;
 
-    mongo_lock_proxy(mongo_context* fctx)
+    mongo_lock_proxy(mongo_context* fctx, int lock_id)
     {
         ctx = fctx;
 
         if(ctx == nullptr)
             return;
 
-        ctx->make_lock();
+        ctx->make_lock(lock_id);
     }
 
     ~mongo_lock_proxy()

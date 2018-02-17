@@ -89,7 +89,7 @@ std::string run_script_as(const std::string& script, const std::string& user)
 
 void user_tests()
 {
-    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
+    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
     user test_user;
     test_user.construct_new_user(mongo_user_info, "test_user");
@@ -101,7 +101,7 @@ void user_tests()
 
     for(int i=0; i < 10; i++)
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context();
+        mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
 
         item test_item;
 
@@ -115,7 +115,7 @@ void user_tests()
 
     insert_item.create_in_db("what");*/
 
-    mongo_lock_proxy mongo_user_items = get_global_mongo_user_items_context();
+    mongo_lock_proxy mongo_user_items = get_global_mongo_user_items_context(-2);
 
     item update_item;
     update_item.set_prop("item_id", 32);
@@ -159,7 +159,7 @@ void debug_terminal()
             if(found.size() != 2)
                 continue;
 
-            mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
+            mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
             std::string username = found[1];
 
@@ -208,7 +208,7 @@ void debug_terminal()
 
             std::cout << script_inf.parsed_source << std::endl;
 
-            mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
             script_inf.overwrite_in_db(mongo_ctx);
 
             js_interop_shutdown(csd.ctx);
@@ -218,7 +218,7 @@ void debug_terminal()
         else
         {
             {
-                mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
+                mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
                 if(!current_user.exists(mongo_user_info, current_user.name))
                     continue;
