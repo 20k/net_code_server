@@ -192,7 +192,7 @@ void debug_terminal()
 
             script_info script_inf;
 
-            std::string data_source = get_script_from_name_string(base_scripts_string, script);
+            std::string data_source = get_script_from_name_string(base_scripts_string, current_user.name + "." + script);
 
             stack_duk csd;
             init_js_interop(csd, std::string());

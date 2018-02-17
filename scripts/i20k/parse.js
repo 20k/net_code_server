@@ -60,9 +60,13 @@ function(context, args)
 	
 	print("find");
 	
+	print("testset\n");
+	
 	//return #db.f({name:"test"});
 	
 	var r2_curs = #db.f({name:"update_works"});
+	
+	print(r2_curs.array());
 	
 	return r2_curs.array();
 	
