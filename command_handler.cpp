@@ -153,7 +153,7 @@ std::string handle_command(command_handler_state& state, const std::string& str)
         if(split_string.size() != 2)
             return "Invalid Command Error";
 
-        std::string user = split_string[1];
+        std::string user = strip_whitespace(split_string[1]);
 
         mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
@@ -182,7 +182,7 @@ std::string handle_command(command_handler_state& state, const std::string& str)
             return "Syntax is #up scriptname";
         }
 
-        std::string scriptname = split_string[1];
+        std::string scriptname = strip_whitespace(split_string[1]);
 
         std::string fullname = state.current_user.name + "." + scriptname;
 
