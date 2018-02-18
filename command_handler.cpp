@@ -155,6 +155,11 @@ std::string handle_command(command_handler_state& state, const std::string& str)
 
         std::string user = strip_whitespace(split_string[1]);
 
+        if(!is_valid_string(user))
+        {
+            return "Invalid username";
+        }
+
         mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
         if(state.current_user.exists(mongo_user_info, user))
