@@ -15,6 +15,8 @@ enum class mongo_database_type
     GLOBAL_PROPERTIES,
 };
 
+std::string strip_whitespace(std::string);
+
 struct mongo_context
 {
     mongoc_client_t* client = nullptr;
@@ -84,6 +86,39 @@ struct mongo_context
         {
             change_collection("global_properties");
         }
+    }
+
+    bool contains_banned_query(bson_t* bs)
+    {
+        if(bs == nullptr)
+            return false;
+
+        std::vector<std::string> banned
+        {
+            "$where",
+            "$expr",
+            "$maxTimeMS",
+            "$query",
+            "$showDiskLoc"
+        };
+
+        bson_iter_t iter;
+
+        if(bson_iter_init(&iter, bs))
+        {
+            while(bson_iter_next(&iter))
+            {
+                std::string key = bson_iter_key(&iter);
+
+                for(auto& i : banned)
+                {
+                    if(strip_whitespace(key) == i)
+                        return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     void make_lock(int who)
@@ -174,6 +209,12 @@ struct mongo_context
         if(script_host != last_collection)
             return;
 
+        if(contains_banned_query(bs))
+        {
+            printf("banned\n");
+            return;
+        }
+
         bson_error_t error;
 
         if(!mongoc_collection_insert_one(collection, bs, NULL, NULL, &error))
@@ -201,6 +242,12 @@ struct mongo_context
     {
         if(selector == nullptr || update == nullptr)
             return;
+
+        if(contains_banned_query(selector) || contains_banned_query(update))
+        {
+            printf("banned\n");
+            return;
+        }
 
         bson_error_t error;
 
@@ -233,6 +280,12 @@ struct mongo_context
 
         if(bs == nullptr)
             return results;
+
+        if(contains_banned_query(bs) || contains_banned_query(ps))
+        {
+            printf("banned\n");
+            return {"Banned query"};
+        }
 
         if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
         {
@@ -286,6 +339,11 @@ struct mongo_context
     {
         if(script_host != last_collection)
             return;
+
+        if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
+        {
+            return;
+        }
 
         bson_t* bs = make_bson_from_json(json);
 
