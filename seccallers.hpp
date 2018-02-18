@@ -131,38 +131,6 @@ duk_ret_t db_find(duk_context* ctx)
     if(nargs == 0 || nargs > 2)
         return 0;
 
-    /*duk_push_global_stash(ctx); // [glob]
-    duk_get_prop_string(ctx, -1, "DB_ID"); //[glob -> db_id]
-    int id = duk_get_int(ctx, -1); //[glob -> db_id]
-    int new_id = id + 1;
-    duk_pop(ctx); //[glob]
-
-    duk_push_int(ctx, new_id); //[glob -> int]
-    duk_put_prop_string(ctx, -2, "DB_ID"); //[glob]
-
-    ///global object on the stack
-
-    //duk_pop(ctx);
-
-    duk_push_object(ctx); //[glob -> object]
-
-    duk_push_int(ctx, id);
-    duk_put_prop_string(ctx, -2, "INTERNAL_DB_ID_GOOD_LUCK_EDITING_THIS");
-
-    duk_push_string(ctx, json.c_str());
-    duk_put_prop_string(ctx, -2, "JSON");
-
-    duk_push_string(ctx, proj.c_str());
-    duk_put_prop_string(ctx, -2, "PROJ");
-
-    duk_push_string(ctx, get_caller(ctx).c_str());
-    duk_put_prop_string(ctx, -2, "DB_CALLER");
-
-    duk_dup_top(ctx); //[glob -> object -> object]
-    duk_put_prop_string(ctx, -3, (get_caller(ctx) + "DB_INFO" + std::to_string(id)).c_str()); //[glob -> object]
-
-    duk_remove(ctx, -2);*/
-
     duk_push_object(ctx);
 
     duk_push_string(ctx, json.c_str());
@@ -181,11 +149,6 @@ duk_ret_t db_find(duk_context* ctx)
     duk_freeze(ctx, -1);
 
     return 1;
-
-    //duk_push_object(ctx);
-
-
-    //duk_push_object()
 }
 
 static
@@ -221,7 +184,6 @@ static
 duk_ret_t hash_d(duk_context* ctx)
 {
     std::string str = duk_json_encode(ctx, -1);
-    //duk_pop(ctx);
 
     duk_push_global_stash(ctx);
     duk_get_prop_string(ctx, -1, "HASH_D");
@@ -238,6 +200,117 @@ duk_ret_t hash_d(duk_context* ctx)
     duk_pop_n(ctx, 2);
 
     return 0;
+}
+
+///needs to be moved somewhere better
+inline
+std::string get_hash_d(duk_context* ctx)
+{
+    duk_push_global_stash(ctx);
+    duk_get_prop_string(ctx, -1, "HASH_D");
+
+    std::string str = duk_safe_to_string(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    return str;
+}
+
+inline
+std::string compile_and_call(stack_duk& sd, const std::string& data, bool called_internally, std::string caller, bool is_conargs_function, bool stringify, int seclevel)
+{
+    if(data.size() == 0)
+    {
+        return "Script not found";
+    }
+
+    register_funcs(sd.ctx, seclevel);
+
+    std::string wrapper = attach_wrapper(data, !called_internally || stringify, false);
+
+    //std::cout << wrapper << std::endl;
+
+    std::string ret;
+
+    duk_push_string(sd.ctx, wrapper.c_str());
+    duk_push_string(sd.ctx, "test-name");
+
+    //DUK_COMPILE_FUNCTION
+    if(duk_pcompile(sd.ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
+    {
+        ret = duk_safe_to_string(sd.ctx, -1);
+
+        printf("compile failed: %s\n", ret.c_str());
+
+        if(called_internally)
+            duk_push_undefined(sd.ctx);
+    }
+    else
+    {
+        ///need to push caller, and then args
+        if(is_conargs_function)
+        {
+            duk_push_global_stash(sd.ctx);
+            duk_push_int(sd.ctx, seclevel);
+            duk_put_prop_string(sd.ctx, -2, "last_seclevel");
+            duk_pop_n(sd.ctx, 1);
+
+            duk_push_global_object(sd.ctx); //[glob]
+
+            duk_idx_t id = duk_push_object(sd.ctx); ///context //[glob -> obj]
+            duk_push_string(sd.ctx, caller.c_str()); ///caller //[glob -> obj -> string]
+            duk_put_prop_string(sd.ctx, id, "caller"); //[glob -> obj]
+
+            duk_put_prop_string(sd.ctx, -2, "context"); //[glob]
+
+            duk_pop_n(sd.ctx, 1); //empty stack, has function at -1
+
+            duk_get_global_string(sd.ctx, "context"); //[context]
+
+            int nargs = 2;
+
+            if(called_internally)
+            {
+                if(duk_is_undefined(sd.ctx, -3))
+                {
+                    nargs = 1;
+                }
+                else
+                {
+                    duk_dup(sd.ctx, -3); //[args]
+                }
+            }
+            else
+            {
+                duk_push_undefined(sd.ctx);
+            }
+
+            duk_pcall(sd.ctx, nargs);
+        }
+        else
+        {
+            duk_pcall(sd.ctx, 0);
+        }
+
+        if(!called_internally)
+        {
+            ret = duk_safe_to_string(sd.ctx, -1);
+            //printf("program result: %s\n", ret.c_str());
+        }
+    }
+
+    std::string str = get_hash_d(sd.ctx);
+
+    ///only should do this if the caller is owner of script
+    if(str != "")
+    {
+        ret = str;
+    }
+
+    if(!called_internally)
+        duk_pop(sd.ctx);
+
+    return ret;
 }
 
 static
@@ -307,60 +380,6 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     return 1;
 }
-
-#if 0
-inline
-std::string js_unified_force_call(duk_context* ctx, const std::string& scriptname)
-{
-    std::string full_script = get_script_host(ctx) + "." + get_script_ending(ctx);
-
-    if(privileged_functions.find(scriptname) != privileged_functions.end())
-    {
-        //SL_GUARD(privileged_functions[scriptname].sec_level);
-
-        set_script_info(ctx, scriptname);
-
-        privileged_functions[scriptname].func(ctx, 0);
-
-        std::string ret = duk_json_encode(ctx, -1);
-
-        duk_pop(ctx);
-
-        return ret;
-    }
-
-    script_info script;
-    script.name = scriptname;
-    script.load_from_db();
-
-    if(!script.valid)
-        return "No such script";
-
-    set_script_info(ctx, scriptname);
-
-    //SL_GUARD(script.seclevel);
-
-    std::string load = script.parsed_source;
-
-    stack_duk sd;
-    sd.ctx = ctx;
-
-    duk_push_undefined(ctx);
-
-    compile_and_call(sd, load, true, get_caller(ctx));
-
-
-
-    if(!duk_is_object_coercible(ctx, -1))
-        return "No return";
-
-    std::string ret = duk_json_encode(ctx, -1);
-
-    duk_pop(ctx);
-
-    return ret;
-}
-#endif // 0
 
 inline
 std::string js_unified_force_call_data(duk_context* ctx, const std::string& data, const std::string& host)
