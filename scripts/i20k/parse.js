@@ -4,11 +4,11 @@ function(context, args)
 	{
 		print("hi")
 	}
-	
+		
 	print("args " + args);
 	
 	print("Eyy");
-	
+		
 	///hmm. Interesting idea
 	///detect #fs.i20k.test
 	///convert to fs_i20k_test
@@ -24,7 +24,9 @@ function(context, args)
 	function_object();
 	function_object();
 	
-	function_object.call();
+	//function_object.call();
+	
+	print("post call\n");
 	
 	//#D({test:"GLORIOUS_HASH_D"});
 	
@@ -53,16 +55,20 @@ function(context, args)
 	
 	//return JSON.stringify(res_cursor);
 	
-	#ns.i20k.test();
+	#ms.i20k.test();
 	
 	//
 	//return res_cursor.array();
 	
 	print("find");
 	
+	print("testset\n");
+	
 	//return #db.f({name:"test"});
 	
 	var r2_curs = #db.f({name:"update_works"});
+	
+	print(r2_curs.array());
 	
 	return r2_curs.array();
 	

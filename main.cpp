@@ -29,7 +29,7 @@
 #include "http_beast_server.hpp"
 #include "command_handler.hpp"
 
-
+#if 0
 void tests()
 {
     std::vector<std::string> strings = no_ss_split("test.hello", ".");
@@ -53,7 +53,9 @@ void tests()
 
     std::cout << script.parsed_source << std::endl;
 }
+#endif
 
+#if 0
 std::string run_script_as(const std::string& script, const std::string& user)
 {
     stack_duk sd;
@@ -83,10 +85,11 @@ std::string run_script_as(const std::string& script, const std::string& user)
 
     return ret;
 }
+#endif // 0
 
 void user_tests()
 {
-    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
+    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
     user test_user;
     test_user.construct_new_user(mongo_user_info, "test_user");
@@ -98,9 +101,11 @@ void user_tests()
 
     for(int i=0; i < 10; i++)
     {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
+
         item test_item;
 
-        std::cout << test_item.get_new_id() << std::endl;
+        std::cout << test_item.get_new_id(mongo_ctx) << std::endl;
     }
 
     /*item insert_item;
@@ -110,15 +115,17 @@ void user_tests()
 
     insert_item.create_in_db("what");*/
 
+    mongo_lock_proxy mongo_user_items = get_global_mongo_user_items_context(-2);
+
     item update_item;
     update_item.set_prop("item_id", 32);
     update_item.set_prop("Potato", "ostrich");
 
-    update_item.update_in_db();
+    update_item.update_in_db(mongo_user_items);
 
     item test_load;
     test_load.set_prop("item_id", 32);
-    test_load.load_from_db();
+    test_load.load_from_db(mongo_user_items);
 
     std::cout << test_load.get_prop("Potato") << std::endl;
 
@@ -152,7 +159,7 @@ void debug_terminal()
             if(found.size() != 2)
                 continue;
 
-            mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
+            mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
             std::string username = found[1];
 
@@ -185,14 +192,24 @@ void debug_terminal()
 
             script_info script_inf;
 
-            std::string data_source = get_script_from_name_string(base_scripts_string, script);
+            //std::string fullname = current_user.name + "." + script;
+
+            std::string fullname = script;
+
+            std::cout << "loading " << fullname << std::endl;
+
+            std::string data_source = get_script_from_name_string(base_scripts_string, strip_whitespace(fullname));
 
             stack_duk csd;
             init_js_interop(csd, std::string());
-            register_funcs(csd.ctx);
+            register_funcs(csd.ctx, 0);
 
             script_inf.load_from_unparsed_source(csd.ctx, data_source, script);
-            script_inf.overwrite_in_db();
+
+            std::cout << script_inf.parsed_source << std::endl;
+
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
+            script_inf.overwrite_in_db(mongo_ctx);
 
             js_interop_shutdown(csd.ctx);
 
@@ -200,14 +217,16 @@ void debug_terminal()
         }
         else
         {
-            mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context();
-
-            if(current_user.exists(mongo_user_info, current_user.name))
             {
-                std::string ret = run_in_user_context(current_user, command);
+                mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-                std::cout << ret << std::endl;
+                if(!current_user.exists(mongo_user_info, current_user.name))
+                    continue;
             }
+
+            std::string ret = run_in_user_context(current_user, command);
+
+            std::cout << ret << std::endl;
         }
     }
 }
@@ -226,6 +245,7 @@ int main()
         bot_id = call_global_function(sd, "botjs");
     }*/
 
+    #if 1
     http_test_run();
 
     printf("post\n");
@@ -237,6 +257,7 @@ int main()
     }
 
     return 0;
+    #endif
 
     debug_terminal();
 

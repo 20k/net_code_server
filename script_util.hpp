@@ -142,6 +142,8 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
     return false;
 }
 
+struct mongo_lock_proxy;
+
 struct script_info
 {
     std::string name;
@@ -153,14 +155,14 @@ struct script_info
     bool valid = false;
     bool in_public = false;
 
-    void load_from_disk_with_db_metadata(const std::string& name);
+    //void load_from_disk_with_db_metadata(const std::string& name);
 
     std::string load_from_unparsed_source(duk_context* ctx, const std::string& unparsed, const std::string& name);
 
-    void load_from_db();
-    void overwrite_in_db();
+    void load_from_db(mongo_lock_proxy& ctx);
+    void overwrite_in_db(mongo_lock_proxy& ctx);
 
-    bool exists_in_db();
+    bool exists_in_db(mongo_lock_proxy& ctx);
 };
 
 inline
@@ -206,12 +208,12 @@ bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out
     }
     else
     {
+        err_out = "";
+
         duk_pop(ctx);
 
         return true;
     }
-
-    err_out = "";
 }
 
 inline
@@ -238,15 +240,19 @@ std::string attach_wrapper(const std::string& data_in, bool stringify, bool dire
     return prologue + data_in + endlogue;
 }
 
+void register_funcs(duk_context* ctx, int seclevel);
+
 ///#db.f({[col_key]: {$exists : true}});
 ///$where and $query both need to be disabled, $inspect as well
 inline
-std::string compile_and_call(stack_duk& sd, const std::string& data, bool called_internally, std::string caller, bool is_conargs_function = true, bool stringify = false)
+std::string compile_and_call(stack_duk& sd, const std::string& data, bool called_internally, std::string caller, bool is_conargs_function, bool stringify, int seclevel)
 {
     if(data.size() == 0)
     {
         return "Script not found";
     }
+
+    register_funcs(sd.ctx, seclevel);
 
     std::string wrapper = attach_wrapper(data, !called_internally || stringify, false);
 
@@ -257,8 +263,6 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
     duk_push_string(sd.ctx, wrapper.c_str());
     duk_push_string(sd.ctx, "test-name");
 
-    //bool success = false;
-
     //DUK_COMPILE_FUNCTION
     if(duk_pcompile(sd.ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
     {
@@ -268,14 +272,17 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
 
         if(called_internally)
             duk_push_undefined(sd.ctx);
-
-        //success = false;
     }
     else
     {
         ///need to push caller, and then args
         if(is_conargs_function)
         {
+            duk_push_global_stash(sd.ctx);
+            duk_push_int(sd.ctx, seclevel);
+            duk_put_prop_string(sd.ctx, -2, "last_seclevel");
+            duk_pop_n(sd.ctx, 1);
+
             duk_push_global_object(sd.ctx); //[glob]
 
             duk_idx_t id = duk_push_object(sd.ctx); ///context //[glob -> obj]
@@ -287,7 +294,6 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
             duk_pop_n(sd.ctx, 1); //empty stack, has function at -1
 
             duk_get_global_string(sd.ctx, "context"); //[context]
-            //duk_push_object(sd.ctx); ///push empty args, no forwarding
 
             int nargs = 2;
 
@@ -305,8 +311,6 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
             else
             {
                 duk_push_undefined(sd.ctx);
-
-                //duk_push_object(sd.ctx);
             }
 
             duk_pcall(sd.ctx, nargs);
@@ -321,8 +325,6 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, bool called
             ret = duk_safe_to_string(sd.ctx, -1);
             //printf("program result: %s\n", ret.c_str());
         }
-
-        //success = true;
     }
 
     std::string str = get_hash_d(sd.ctx);

@@ -158,4 +158,10 @@ void freeze_duk(duk_context* ctx)
     duk_freeze(ctx, -1);
 }
 
+inline
+int32_t get_thread_id(duk_context* ctx)
+{
+    return get_global_int(ctx, "thread_id");
+}
+
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED

@@ -6,35 +6,37 @@
 inline
 void cleanup_mongo_all();
 
+inline std::map<mongo_database_type, mongo_context*> mongo_databases;
+inline std::mutex mongo_databases_lock;
+
 inline
-mongo_lock_proxy get_global_mongo_context(mongo_database_type type, bool destroy = false)
+mongo_lock_proxy get_global_mongo_context(mongo_database_type type, int lock_id, bool destroy = false)
 {
-    static std::mutex no_race;
-    std::lock_guard<std::mutex> lk(no_race);
+    std::lock_guard<std::mutex> lk(mongo_databases_lock);
 
-    static std::map<mongo_database_type, mongo_context*> data;
-
-    if(data[type] == nullptr && !destroy)
+    if(mongo_databases[type] == nullptr && !destroy)
     {
-        if(data.size() == 0)
+        if(mongo_databases.size() == 0)
             atexit(cleanup_mongo_all);
 
-        data[type] = new mongo_context(type);
+        mongo_databases[type] = new mongo_context(type);
     }
 
     if(destroy)
     {
-        for(auto& i : data)
+        for(auto& i : mongo_databases)
+        {
             delete i.second;
+        }
 
-        data.clear();
+        mongo_databases.clear();
 
-        return mongo_lock_proxy(nullptr);
+        return mongo_lock_proxy(nullptr, lock_id);
 
         //return nullptr;
     }
 
-    return mongo_lock_proxy(data[type]);
+    return mongo_lock_proxy(mongo_databases[type], lock_id);
 }
 
 inline
@@ -45,27 +47,27 @@ void cleanup_mongo_all()
 }
 
 inline
-mongo_lock_proxy get_global_mongo_user_accessible_context()
+mongo_lock_proxy get_global_mongo_user_accessible_context(int lock_id)
 {
-    return get_global_mongo_context(mongo_database_type::USER_ACCESSIBLE);
+    return get_global_mongo_context(mongo_database_type::USER_ACCESSIBLE, lock_id);
 }
 
 inline
-mongo_lock_proxy get_global_mongo_user_info_context()
+mongo_lock_proxy get_global_mongo_user_info_context(int lock_id)
 {
-    return get_global_mongo_context(mongo_database_type::USER_PROPERTIES);
+    return get_global_mongo_context(mongo_database_type::USER_PROPERTIES, lock_id);
 }
 
 inline
-mongo_lock_proxy get_global_mongo_user_items_context()
+mongo_lock_proxy get_global_mongo_user_items_context(int lock_id)
 {
-    return get_global_mongo_context(mongo_database_type::USER_ITEMS);
+    return get_global_mongo_context(mongo_database_type::USER_ITEMS, lock_id);
 }
 
 inline
-mongo_lock_proxy get_global_mongo_global_properties_context()
+mongo_lock_proxy get_global_mongo_global_properties_context(int lock_id)
 {
-    return get_global_mongo_context(mongo_database_type::GLOBAL_PROPERTIES);
+    return get_global_mongo_context(mongo_database_type::GLOBAL_PROPERTIES, lock_id);
 }
 
 #endif // MONGO_CLEANUP_H_INCLUDED

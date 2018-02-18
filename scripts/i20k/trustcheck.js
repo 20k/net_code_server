@@ -10,9 +10,11 @@ function(context, args)
 	
 	print(f2);
 	
-	print(#fs.scripts.trust());
+	//print(#fs.scripts.trust());
 	
-	print(#ns.scripts.user());
+	//print(#ns.scripts.user());
+	
+	//return #fs.i20k.test_context();
 	
 	//return #hs.accts.balance();
 	

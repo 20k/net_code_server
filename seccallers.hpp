@@ -16,7 +16,7 @@ void quick_register(duk_context* ctx, const std::string& key, const std::string&
 static
 duk_ret_t db_insert(duk_context* ctx)
 {
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context();
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
     std::string json = duk_json_encode(ctx, -1);
@@ -31,7 +31,7 @@ duk_ret_t db_insert(duk_context* ctx)
 static
 duk_ret_t db_update(duk_context* ctx)
 {
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context();
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
     std::string json_1 = duk_json_encode(ctx, 0);
@@ -62,13 +62,11 @@ void parse_push_json(duk_context* ctx, const std::vector<std::string>& jsons)
 static
 duk_ret_t db_find_all(duk_context* ctx)
 {
-    //printf("db find\n");
-
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context();
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
     duk_push_this(ctx);
-    duk_get_prop_string(ctx, -1, "INTERNAL_DB_ID_GOOD_LUCK_EDITING_THIS");
+    /*duk_get_prop_string(ctx, -1, "INTERNAL_DB_ID_GOOD_LUCK_EDITING_THIS");
 
     int id = duk_require_int(ctx, -1);
 
@@ -76,7 +74,7 @@ duk_ret_t db_find_all(duk_context* ctx)
 
     duk_push_global_stash(ctx);
 
-    duk_get_prop_string(ctx, -1, (get_caller(ctx) + "DB_INFO" + std::to_string(id)).c_str());
+    duk_get_prop_string(ctx, -1, (get_caller(ctx) + "DB_INFO" + std::to_string(id)).c_str());*/
 
     duk_get_prop_string(ctx, -1, "JSON");
     std::string json = duk_get_string(ctx, -1);
@@ -95,7 +93,7 @@ duk_ret_t db_find_all(duk_context* ctx)
     ///remove get prop db info
     duk_pop(ctx);
     ///remove global stash
-    duk_pop(ctx);
+    //duk_pop(ctx);
 
     if(caller != get_caller(ctx))
         return 0;
@@ -133,7 +131,7 @@ duk_ret_t db_find(duk_context* ctx)
     if(nargs == 0 || nargs > 2)
         return 0;
 
-    duk_push_global_stash(ctx); // [glob]
+    /*duk_push_global_stash(ctx); // [glob]
     duk_get_prop_string(ctx, -1, "DB_ID"); //[glob -> db_id]
     int id = duk_get_int(ctx, -1); //[glob -> db_id]
     int new_id = id + 1;
@@ -163,11 +161,24 @@ duk_ret_t db_find(duk_context* ctx)
     duk_dup_top(ctx); //[glob -> object -> object]
     duk_put_prop_string(ctx, -3, (get_caller(ctx) + "DB_INFO" + std::to_string(id)).c_str()); //[glob -> object]
 
-    duk_remove(ctx, -2);
+    duk_remove(ctx, -2);*/
+
+    duk_push_object(ctx);
+
+    duk_push_string(ctx, json.c_str());
+    duk_put_prop_string(ctx, -2, "JSON");
+
+    duk_push_string(ctx, proj.c_str());
+    duk_put_prop_string(ctx, -2, "PROJ");
+
+    duk_push_string(ctx, get_caller(ctx).c_str());
+    duk_put_prop_string(ctx, -2, "DB_CALLER");
 
     //[object]
     duk_push_c_function(ctx, db_find_all, 0);
     duk_put_prop_string(ctx, -2, "array");
+
+    duk_freeze(ctx, -1);
 
     return 1;
 
@@ -180,7 +191,7 @@ duk_ret_t db_find(duk_context* ctx)
 static
 duk_ret_t db_remove(duk_context* ctx)
 {
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context();
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
     std::string json = duk_json_encode(ctx, -1);
@@ -267,9 +278,14 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     }
 
     script_info script;
-    //script.load_from_disk_with_db_metadata(str);
-    script.name = str;
-    script.load_from_db();
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+        //script.load_from_disk_with_db_metadata(str);
+        script.name = str;
+        script.load_from_db(mongo_ctx);
+    }
 
     SL_GUARD(script.seclevel);
 
@@ -282,9 +298,12 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     set_script_info(ctx, str);
 
-    compile_and_call(sd, load, true, get_caller(ctx));
+    compile_and_call(sd, load, true, get_caller(ctx), true, false, script.seclevel);
 
     set_script_info(ctx, full_script);
+
+    ///NEED TO RESTORE OLD SEC LEVEL
+    //register_funcs(ctx, script.seclevel);
 
     return 1;
 }
@@ -357,9 +376,11 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
     if(!dummy.valid)
         return "Invalid Command Line Syntax";
 
+    set_global_int(ctx, "last_seclevel", dummy.seclevel);
+
     duk_push_undefined(ctx);
 
-    compile_and_call(sd, dummy.parsed_source, true, get_caller(ctx), true, false);
+    compile_and_call(sd, dummy.parsed_source, true, get_caller(ctx), true, false, dummy.seclevel);
 
     if(!duk_is_object_coercible(ctx, -1))
         return "No return";
@@ -375,7 +396,15 @@ template<int N>
 static
 duk_ret_t jxs_call(duk_context* ctx)
 {
-    return js_call(ctx, N);
+    int current_seclevel = get_global_int(ctx, "last_seclevel");
+
+    duk_ret_t ret = js_call(ctx, N);
+
+    set_global_int(ctx, "last_seclevel", current_seclevel);
+
+    register_funcs(ctx, current_seclevel);
+
+    return ret;
 }
 
 static
@@ -407,13 +436,111 @@ duk_ret_t sl_call(duk_context* ctx)
 }
 
 inline
-void register_funcs(duk_context* ctx)
+std::string add_freeze(const std::string& name)
 {
-    inject_c_function(ctx, sl_call<4>, "fs_call", 1);
-    inject_c_function(ctx, sl_call<3>, "hs_call", 1);
-    inject_c_function(ctx, sl_call<2>, "ms_call", 1);
-    inject_c_function(ctx, sl_call<1>, "ls_call", 1);
-    inject_c_function(ctx, sl_call<0>, "ns_call", 1);
+    return " global." + name + " = deepFreeze(global." + name + ");\n";
+}
+
+inline
+void do_freeze(duk_context* ctx, const std::string& name, std::string& script_accumulate)
+{
+    duk_push_global_object(ctx);
+
+    duk_push_string(ctx, name.c_str());
+
+    duk_def_prop(ctx, -2,
+             DUK_DEFPROP_HAVE_WRITABLE |
+             DUK_DEFPROP_HAVE_ENUMERABLE | DUK_DEFPROP_ENUMERABLE |
+             DUK_DEFPROP_HAVE_CONFIGURABLE);
+
+    duk_pop(ctx);
+
+    script_accumulate += add_freeze(name);
+}
+
+inline
+void fully_freeze_recurse(duk_context* ctx, std::string& accum){}
+
+template<typename U, typename... T>
+inline
+void fully_freeze_recurse(duk_context* ctx, std::string& accum, const U& arg, T&&... args)
+{
+    do_freeze(ctx, arg, accum);
+
+    fully_freeze_recurse(ctx, accum, args...);
+}
+
+template<typename... T>
+inline
+void fully_freeze(duk_context* ctx, T&&... args)
+{
+    std::string get_global = "var global = new Function(\'return this;\')();";
+
+    std::string freeze_script = get_global + "\nfunction deepFreeze(o) {\n"
+          "Object.freeze(o);\n"
+
+          "Object.getOwnPropertyNames(o).forEach(function(prop) {\n"
+            "if (o.hasOwnProperty(prop)\n"
+            "&& o[prop] !== null\n"
+            "&& (typeof o[prop] === \"object\" || typeof o[prop] === \"function\")\n"
+            "&& !Object.isFrozen(o[prop])) {\n"
+                "deepFreeze(o[prop]);\n"
+              "}\n"
+          "});\n"
+
+         "return o;\n"
+        "};\n\n";
+
+    fully_freeze_recurse(ctx, freeze_script, args...);
+
+    duk_int_t res = duk_peval_string(ctx, freeze_script.c_str());
+
+    if(res != 0)
+    {
+        std::string err = duk_safe_to_string(ctx, -1);
+
+        printf("freeze eval failed: %s\n", err.c_str());
+    }
+    else
+    {
+        duk_pop(ctx);
+    }
+}
+
+inline
+void remove_func(duk_context* ctx, const std::string& name)
+{
+    duk_push_global_object(ctx);
+
+    duk_push_undefined(ctx);
+    duk_put_prop_string(ctx, -2, name.c_str());
+
+    duk_pop(ctx);
+}
+
+inline
+void register_funcs(duk_context* ctx, int seclevel)
+{
+    remove_func(ctx, "fs_call");
+    remove_func(ctx, "hs_call");
+    remove_func(ctx, "ms_call");
+    remove_func(ctx, "ls_call");
+    remove_func(ctx, "ns_call");
+
+    //if(seclevel <= 4)
+        inject_c_function(ctx, sl_call<4>, "fs_call", 1);
+
+    //if(seclevel <= 3)
+        inject_c_function(ctx, sl_call<3>, "hs_call", 1);
+
+    //if(seclevel <= 2)
+        inject_c_function(ctx, sl_call<2>, "ms_call", 1);
+
+    //if(seclevel <= 1)
+        inject_c_function(ctx, sl_call<1>, "ls_call", 1);
+
+    //if(seclevel <= 0)
+        inject_c_function(ctx, sl_call<0>, "ns_call", 1);
 
     inject_c_function(ctx, hash_d, "hash_d", 1);
 
@@ -426,6 +553,8 @@ void register_funcs(duk_context* ctx)
     inject_c_function(ctx, hash_d, "hash_d", 1);
     inject_c_function(ctx, hash_d, "hash_d", 1);
     inject_c_function(ctx, hash_d, "hash_d", 1);*/
+
+    //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }
 
 #endif // SECCALLERS_HPP_INCLUDED
