@@ -212,4 +212,29 @@ int32_t get_thread_id(duk_context* ctx)
     return get_global_int(ctx, "thread_id");
 }
 
+inline
+std::string get_caller(duk_context* ctx)
+{
+    duk_push_global_stash(ctx);
+    duk_get_prop_string(ctx, -1, "caller");
+
+    std::string str = duk_safe_to_string(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    return str;
+}
+
+inline
+std::string get_script_host(duk_context* ctx)
+{
+    return get_global_string(ctx, "script_host");
+}
+
+inline
+std::string get_script_ending(duk_context* ctx)
+{
+    return get_global_string(ctx, "script_ending");
+}
+
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED
