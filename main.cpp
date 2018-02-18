@@ -245,7 +245,7 @@ int main()
         bot_id = call_global_function(sd, "botjs");
     }*/
 
-    #if 0
+    #if 1
     http_test_run();
 
     printf("post\n");

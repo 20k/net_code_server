@@ -409,7 +409,7 @@ struct mongo_lock_proxy
     }
 };
 
-#include "mongo_cleanup.h"
+#include "mongo_cleanup.hpp"
 
 //https://stackoverflow.com/questions/30166706/c-convert-simple-values-to-string
 template<typename T>
