@@ -20,6 +20,8 @@ std::string run_in_user_context(user& usr, const std::string& command);
 struct command_handler_state
 {
     user current_user;
+
+    std::string auth;
 };
 
 ///context?

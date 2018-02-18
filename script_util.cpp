@@ -230,6 +230,14 @@ std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::
 {
     name = name_;
 
+    int max_size = 32 * 1024;
+
+    if(source.size() >= max_size)
+    {
+        valid = false;
+        return "Script " + name + " too large";
+    }
+
     if(!is_valid_full_name_string(name))
     {
         valid = false;

@@ -13,6 +13,9 @@ enum class mongo_database_type
     USER_PROPERTIES,
     USER_ITEMS,
     GLOBAL_PROPERTIES,
+    #if 0
+    USER_AUTH,
+    #endif // 0
 };
 
 std::string strip_whitespace(std::string);
@@ -63,6 +66,14 @@ struct mongo_context
             uri_str = "mongodb://global_properties_database:james20kuserhandlermongofundiff@localhost:27017/?authSource=users";
             db = "global_properties";
         }
+
+        #if 0
+        if(type == mongo_database_type::USER_AUTH)
+        {
+            uri_str = "mongodb://user_auth_database:james20kuserhandlermongofunuserauth@localhost:27017/?authSource=users";
+            db = "user_auth";
+        }
+        #endif // 0
 
         if(!mongo_is_init)
             mongoc_init();
@@ -271,6 +282,38 @@ struct mongo_context
         bson_destroy(us);
     }
 
+    #if 0
+    std::vector<bson_t*> find_bson_raw(const std::string& script_host, bson_t* bs, bson_t* ps)
+    {
+        std::vector<bson_t*> results;
+
+        if(script_host != last_collection)
+            return results;
+
+        if(bs == nullptr)
+            return results;
+
+        if(contains_banned_query(bs) || contains_banned_query(ps))
+        {
+            printf("banned\n");
+            return {"Banned query"};
+        }
+
+        if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
+            return results;
+
+        while(mongoc_cursor_more(cursor) && mongoc_cursor_next (cursor, &doc))
+        {
+
+
+            results.push_back()
+
+        }
+
+        mongoc_cursor_destroy(cursor);
+    }
+    #endif // 0
+
     std::vector<std::string> find_bson(const std::string& script_host, bson_t* bs, bson_t* ps)
     {
         std::vector<std::string> results;
@@ -302,6 +345,9 @@ struct mongo_context
         while(mongoc_cursor_more(cursor) && mongoc_cursor_next (cursor, &doc))
         {
             char* str = bson_as_json(doc, NULL);
+
+            if(str == nullptr)
+                continue;
 
             results.push_back(str);
 
@@ -481,11 +527,16 @@ struct mongo_requester
             {
                 std::string key = bson_iter_key(&iter);
 
-                if(!BSON_ITER_HOLDS_UTF8(&iter))
+                if(!BSON_ITER_HOLDS_BINARY(&iter))
                     continue;
 
-                uint32_t len = bson_iter_utf8_len_unsafe(&iter);
-                std::string value = bson_iter_utf8(&iter, &len);
+                uint32_t len = 0;
+                const uint8_t* binary = nullptr;
+                bson_subtype_t subtype = BSON_SUBTYPE_BINARY;
+
+                bson_iter_binary(&iter, &subtype, &len, &binary);
+
+                std::string value((const char*)binary, len);
 
                 found.set_prop(key, value);
             }
@@ -495,7 +546,23 @@ struct mongo_requester
             ret.push_back(found);
         }
 
+        bson_destroy(to_find);
+
         return ret;
+    }
+
+    void insert_in_db(mongo_lock_proxy& ctx)
+    {
+        bson_t* to_insert = bson_new();
+
+        for(auto& i : properties)
+        {
+            bson_append_binary(to_insert, i.first.c_str(), i.first.size(), BSON_SUBTYPE_BINARY, (const uint8_t*)i.second.c_str(), i.second.size());
+        }
+
+        ctx->insert_bson_1(ctx->last_collection, to_insert);
+
+        bson_destroy(to_insert);
     }
 };
 

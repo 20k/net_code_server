@@ -29,6 +29,7 @@
 #include "http_beast_server.hpp"
 #include "command_handler.hpp"
 
+#if 0
 void user_tests()
 {
     mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
@@ -79,6 +80,7 @@ void user_tests()
 
     //std::cout << test_user.exists("test_user2");
 }
+#endif // 0
 
 void debug_terminal()
 {
@@ -113,7 +115,7 @@ void debug_terminal()
             }
             else
             {
-                current_user.construct_new_user(mongo_user_info, username);
+                current_user.construct_new_user(mongo_user_info, username, "DUMMY_AUTH");
                 current_user.overwrite_user_in_db(mongo_user_info);
 
                 std::cout << "created new user " << username << std::endl;
