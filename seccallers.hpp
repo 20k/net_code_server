@@ -527,19 +527,19 @@ void register_funcs(duk_context* ctx, int seclevel)
     remove_func(ctx, "ls_call");
     remove_func(ctx, "ns_call");
 
-    //if(seclevel <= 4)
+    if(seclevel <= 4)
         inject_c_function(ctx, sl_call<4>, "fs_call", 1);
 
-    //if(seclevel <= 3)
+    if(seclevel <= 3)
         inject_c_function(ctx, sl_call<3>, "hs_call", 1);
 
-    //if(seclevel <= 2)
+    if(seclevel <= 2)
         inject_c_function(ctx, sl_call<2>, "ms_call", 1);
 
-    //if(seclevel <= 1)
+    if(seclevel <= 1)
         inject_c_function(ctx, sl_call<1>, "ls_call", 1);
 
-    //if(seclevel <= 0)
+    if(seclevel <= 0)
         inject_c_function(ctx, sl_call<0>, "ns_call", 1);
 
     inject_c_function(ctx, hash_d, "hash_d", 1);
