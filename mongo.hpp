@@ -540,7 +540,10 @@ struct mongo_requester
 
         for(auto& i : properties)
         {
-            bson_append_utf8(to_find, i.first.c_str(), i.first.size(), i.second.c_str(), i.second.size());
+            if(is_binary[i.first])
+                bson_append_binary(to_find, i.first.c_str(), i.first.size(), BSON_SUBTYPE_BINARY, (const uint8_t*)i.second.c_str(), i.second.size());
+            else
+                bson_append_utf8(to_find, i.first.c_str(), i.first.size(), i.second.c_str(), i.second.size());
         }
 
         std::vector<std::string> json_found = ctx->find_bson(ctx->last_collection, to_find, nullptr);

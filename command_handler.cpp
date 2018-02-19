@@ -240,6 +240,8 @@ std::string handle_command(command_handler_state& state, const std::string& str)
             return "Uploaded Successfully";
         }
     }
+    #define ALLOW_SELF_AUTH
+    #ifdef ALLOW_SELF_AUTH
     else if(starts_with(str, "register client"))
     {
         unsigned char random_bytes[128] = {0};
@@ -263,7 +265,7 @@ std::string handle_command(command_handler_state& state, const std::string& str)
         }
 
         mongo_requester request;
-        request.set_prop("account_token", to_ret);
+        request.set_prop_bin("account_token", to_ret);
 
         mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
         request.insert_in_db(ctx);
@@ -272,13 +274,24 @@ std::string handle_command(command_handler_state& state, const std::string& str)
 
         return "####registered secret " + to_ret;
     }
+    #endif // ALLOW_SELF_AUTH
     else if(starts_with(str, "auth client "))
     {
         printf("auth client\n");
-        std::cout << str << std::endl;
+        //std::cout << str << std::endl;
 
         auto pos = str.begin() + strlen("auth client ");
         std::string auth = std::string(pos, str.end());
+
+        mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
+
+        mongo_requester request;
+        request.set_prop_bin("account_token", auth);
+
+        std::cout << "auth len " << auth.size() << std::endl;
+
+        if(request.fetch_from_db(ctx).size() == 0)
+            return "Auth Failed";
 
         state.auth = auth;
 
