@@ -3,6 +3,14 @@
 
 #include "user.hpp"
 #include "duk_object_functions.hpp"
+#include "memory_sandbox.hpp"
+
+#define COOPERATE_KILL() duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk); \
+                         sandbox_data* sand_data = (sandbox_data*)mem_funcs_duk.udata; \
+                         if(sand_data->terminate_semi_gracefully) \
+                         { printf("Cooperating with kill\n");\
+                             while(1){Sleep(10);}\
+                         }
 
 struct priv_context
 {
@@ -63,6 +71,8 @@ std::map<std::string, priv_func_info> privileged_functions;
 inline
 duk_ret_t accts__balance(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
 
     user usr;
@@ -79,6 +89,8 @@ duk_ret_t accts__balance(priv_context& priv_ctx, duk_context* ctx, int sl)
 inline
 duk_ret_t scripts__get_level(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     ///so we have an object
     ///of the form name:whatever
     ///really need a way to parse these out from duktape
@@ -122,6 +134,8 @@ duk_ret_t scripts__get_level(priv_context& priv_ctx, duk_context* ctx, int sl)
 inline
 duk_ret_t scripts__user(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     std::string usr = get_caller(ctx);
 
     mongo_requester request;
@@ -150,6 +164,8 @@ duk_ret_t scripts__user(priv_context& priv_ctx, duk_context* ctx, int sl)
 inline
 duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const std::string& to, double amount)
 {
+    COOPERATE_KILL();
+
     if(round(amount) != amount || amount < 0 || amount >= pow(2, 32))
     {
         push_error(ctx, "Amount error");
@@ -211,6 +227,8 @@ duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const s
 inline
 duk_ret_t accts__xfer_gc_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     ///need a get either or
     ///so we can support to and name
     duk_get_prop_string(ctx, -1, "to");
@@ -243,6 +261,8 @@ duk_ret_t accts__xfer_gc_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 inline
 duk_ret_t accts__xfer_gc_to_caller(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     std::string destination_name = get_caller(ctx);
 
     duk_get_prop_string(ctx, -1, "amount");
@@ -265,6 +285,8 @@ duk_ret_t accts__xfer_gc_to_caller(priv_context& priv_ctx, duk_context* ctx, int
 inline
 duk_ret_t scripts__trust(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     std::vector<std::string> ret;
 
     for(auto& i : privileged_functions)

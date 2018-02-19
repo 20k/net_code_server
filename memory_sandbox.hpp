@@ -30,7 +30,7 @@ static void sandbox_dump_memstate(void)
 struct sandbox_data
 {
     size_t total_allocated = 0;
-    volatile bool db_locked = false;
+    volatile bool terminate_semi_gracefully = false;
 };
 
 static void *sandbox_alloc(void *udata, duk_size_t size)
@@ -171,7 +171,7 @@ static void sandbox_fatal(void *udata, const char *msg)
     //exit(1);  /* must not return */
 }
 
-static duk_context* create_sandbox_heap()
+inline duk_context* create_sandbox_heap()
 {
     ///its easier to simply leak this
     sandbox_data* leaked_data = new sandbox_data;

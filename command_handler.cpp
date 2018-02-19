@@ -60,6 +60,11 @@ std::string run_in_user_context(user& usr, const std::string& command)
     sd.ctx = create_sandbox_heap();
     native_register(sd.ctx);
 
+    duk_memory_functions funcs;
+    duk_get_memory_functions(sd.ctx, &funcs);
+
+    sandbox_data* sand_data = (sandbox_data*)funcs.udata;
+
     fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number", "print", "sleep");
 
     startup_state(sd.ctx, usr.name, usr.name, "invoke");
@@ -78,6 +83,7 @@ std::string run_in_user_context(user& usr, const std::string& command)
 
     //sf::Clock clk;
     float max_time_ms = 5000;
+    float db_grace_time_ms = 1000;
 
     auto time_start = std::chrono::high_resolution_clock::now();
 
@@ -109,7 +115,7 @@ std::string run_in_user_context(user& usr, const std::string& command)
 
         double elapsed = dur.count();
 
-        if(elapsed >= max_time_ms)
+        if(elapsed >= max_time_ms + db_grace_time_ms)
         {
             pthread_t thread = launch->native_handle();
 
@@ -126,6 +132,11 @@ std::string run_in_user_context(user& usr, const std::string& command)
             terminated = true;
 
             break;
+        }
+
+        if(elapsed >= max_time_ms)
+        {
+            sand_data->terminate_semi_gracefully = true;
         }
 
         Sleep(1);

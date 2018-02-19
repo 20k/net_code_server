@@ -16,6 +16,8 @@ void quick_register(duk_context* ctx, const std::string& key, const std::string&
 static
 duk_ret_t db_insert(duk_context* ctx)
 {
+    COOPERATE_KILL();
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
@@ -31,6 +33,8 @@ duk_ret_t db_insert(duk_context* ctx)
 static
 duk_ret_t db_update(duk_context* ctx)
 {
+    COOPERATE_KILL();
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
@@ -61,6 +65,8 @@ void parse_push_json(duk_context* ctx, const std::vector<std::string>& jsons)
 static
 duk_ret_t db_find_all(duk_context* ctx)
 {
+    COOPERATE_KILL();
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
@@ -100,6 +106,8 @@ duk_ret_t db_find_all(duk_context* ctx)
 static
 duk_ret_t db_find(duk_context* ctx)
 {
+    COOPERATE_KILL();
+
     int nargs = duk_get_top(ctx);
 
     std::string json = "";//duk_json_encode(ctx, -1);
@@ -142,6 +150,8 @@ duk_ret_t db_find(duk_context* ctx)
 static
 duk_ret_t db_remove(duk_context* ctx)
 {
+    COOPERATE_KILL();
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
@@ -171,6 +181,8 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
 static
 duk_ret_t hash_d(duk_context* ctx)
 {
+    COOPERATE_KILL();
+
     std::string str = duk_json_encode(ctx, -1);
 
     duk_push_global_stash(ctx);
@@ -194,6 +206,8 @@ duk_ret_t hash_d(duk_context* ctx)
 inline
 std::string get_hash_d(duk_context* ctx)
 {
+    COOPERATE_KILL();
+
     duk_push_global_stash(ctx);
     duk_get_prop_string(ctx, -1, "HASH_D");
 
@@ -281,6 +295,8 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
 static
 duk_ret_t js_call(duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     std::string str;
 
     duk_push_current_function(ctx);
