@@ -17,7 +17,7 @@ typedef struct
 } alloc_hdr;
 
 //static size_t total_allocated = 0;
-static size_t max_allocated = 256 * 1024;  /* 256kB sandbox */
+static size_t max_allocated = 64 * 1024 * 1024;  /* 64MB sandbox */
 
 static void sandbox_dump_memstate(void)
 {
