@@ -145,8 +145,18 @@ std::string run_in_user_context(user& usr, const std::string& command)
 
     //managed_duktape_thread(&inf);
 
-    if(!terminated)
+    //if(!terminated)
+    try
+    {
+        if(terminated)
+            printf("Attempting unsafe resource cleanup\n");
+
         js_interop_shutdown(sd.ctx);
+    }
+    catch(...)
+    {
+        printf("Failed to cleanup resources\n");
+    }
 
     std::string ret = inf.ret;
 
