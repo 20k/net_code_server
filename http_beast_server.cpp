@@ -26,7 +26,14 @@
 #define HOST_IP "0.0.0.0"
 #endif // EXTERN_IP
 
+#ifdef EXTERN_IP
 #define HOST_PORT 6750
+#endif // EXTERN_IP
+
+#ifdef LOCAL_IP
+#define HOST_PORT 6751
+#endif // LOCAL_IP
+
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
