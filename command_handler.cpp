@@ -4,6 +4,7 @@
 #include <thread>
 #include <chrono>
 #include <Wincrypt.h>
+#include "http_beast_server.hpp"
 
 struct unsafe_info
 {
@@ -143,7 +144,7 @@ bool starts_with(const std::string& in, const std::string& test)
     return false;
 }
 
-std::string handle_command(command_handler_state& state, const std::string& str)
+std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
 {
     printf("yay command\n");
 
@@ -185,6 +186,9 @@ std::string handle_command(command_handler_state& state, const std::string& str)
     }
     else if(starts_with(str, "#up "))
     {
+        if(state.auth == "")
+            return make_error_col("No auth");
+
         std::vector<std::string> split_string = no_ss_split(str, " ");
 
         if(split_string.size() < 3)
@@ -291,7 +295,16 @@ std::string handle_command(command_handler_state& state, const std::string& str)
         if(request.fetch_from_db(ctx).size() == 0)
             return make_error_col("Auth Failed");
 
+        std::lock_guard<std::mutex> lk(glob.auth_lock);
+
+        ///so if we reauth but on the same thread that's fine
+        ///or if we auth and we haven't authed on any thread before
+        if(glob.auth_locks[auth] != my_id && glob.auth_locks[auth] != 0)
+            return make_error_col("Oh boy this better be a random error otherwise ur getting banned.\nThis is a joke but seriously don't do this");
+
         state.auth = auth;
+
+        glob.auth_locks[state.auth] = my_id;
 
         return make_success_col("Auth Success");
     }

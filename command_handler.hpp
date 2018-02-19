@@ -24,7 +24,9 @@ struct command_handler_state
     std::string auth;
 };
 
+struct global_state;
+
 ///context?
-std::string handle_command(command_handler_state& state, const std::string& str);
+std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id);
 
 #endif // COMMAND_HANDLER_HPP_INCLUDED

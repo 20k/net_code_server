@@ -31,12 +31,6 @@
 using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 namespace http = boost::beast::http;    // from <boost/beast/http.hpp>
 
-struct global_state
-{
-    std::map<std::string, int> auth_locks;
-    std::mutex auth_lock;
-};
-
 //------------------------------------------------------------------------------
 
 // Return a reasonable mime type based on the extension of a file.
@@ -273,7 +267,8 @@ do_session(
     tcp::socket&& socket,
     std::string const& doc_root,
     global_state& glob,
-    command_handler_state& state)
+    command_handler_state& state,
+    int64_t my_id)
 {
     bool close = false;
     boost::system::error_code ec;
@@ -297,7 +292,7 @@ do_session(
         if(ec)
             return fail(ec, "read");
 
-        std::string to_pipe = handle_command(state, req.body());
+        std::string to_pipe = handle_command(state, req.body(), glob, my_id);
 
         // Send the response
         handle_request(doc_root, std::move(req), lambda, to_pipe);
@@ -321,13 +316,14 @@ do_session(
 
 void session_wrapper(tcp::socket&& socket,
                      std::string const& doc_root,
-                     global_state& glob)
+                     global_state& glob,
+                     int64_t my_id)
 {
     command_handler_state state;
 
     try
     {
-        do_session(socket, doc_root, glob, state);
+        do_session(std::move(socket), doc_root, glob, state, my_id);
     }
     catch(...)
     {
@@ -448,12 +444,15 @@ void http_test_server()
             // Block until we get a connection
             acceptor.accept(socket);
 
+            int id = glob.global_id++;
+
             // Launch the session, transferring ownership of the socket
             std::thread(
                 session_wrapper,
                 std::move(socket),
                 doc_root,
-                std::ref(glob)).detach();
+                std::ref(glob),
+                id).detach();
         }
     }
     catch (const std::exception& e)
