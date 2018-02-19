@@ -78,8 +78,25 @@ std::string run_in_user_context(user& usr, const std::string& command)
 
     auto time_start = std::chrono::high_resolution_clock::now();
 
+    #ifdef ACTIVE_TIME_MANAGEMENT
+    int active_time_slice_ms = 1;
+    int sleeping_time_slice_ms = 1;
+    #endif // ACTIVE_TIME_MANAGEMENT
+
     while(!inf.finished)
     {
+        #ifdef ACTIVE_TIME_MANAGEMENT
+        {
+            Sleep(active_time_slice_ms);
+
+            pthread_t thread = launch->native_handle();
+            void* native_handle = pthread_gethandle(thread);
+            SuspendThread(native_handle);
+            Sleep(sleeping_time_slice_ms);
+            ResumeThread(native_handle);
+        }
+        #endif // ACTIVE_TIME_MANAGEMENT
+
         auto time_current = std::chrono::high_resolution_clock::now();
 
         auto diff = time_current - time_start;
