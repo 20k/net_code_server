@@ -35,6 +35,12 @@ void push_success(duk_context* ctx)
     push_dukobject(ctx, "ok", true);
 }
 
+inline
+void push_success(duk_context* ctx, const std::string& msg)
+{
+    push_dukobject(ctx, "ok", true, "msg", msg);
+}
+
 ///could potentially use __FUNCTION__ here
 ///as it should work across msvc/gcc/clang... but... technically not portable
 #define SL_GUARD(x) if(!can_run(sl, x)){ push_error(ctx, "Security level guarantee failed"); return 1; }
@@ -150,7 +156,11 @@ duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const s
         return 1;
     }
 
-    std::cout << "from " << from << " to " << to << std::endl;
+    if(from == to)
+    {
+        push_error(ctx, "Money definitely shifted hands");
+        return 1;
+    }
 
     ///NEED TO LOCK MONGODB HERE
 
