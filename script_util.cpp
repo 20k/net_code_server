@@ -10,6 +10,191 @@
 
 ///then, when we want to load, we look from the db
 
+bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out)
+{
+    std::string prologue = "function INTERNAL_TEST(context, args)\n{'use strict'\nvar IVAR = ";
+    std::string endlogue = "\n\nreturn IVAR(context, args);\n\n}\n";
+
+    std::string wrapper = prologue + script.parsed_source + endlogue;
+
+    duk_push_string(ctx, wrapper.c_str());
+    duk_push_string(ctx, "test-name");
+
+    if(duk_pcompile(ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
+    {
+        std::string ret = duk_safe_to_string(ctx, -1);
+
+        err_out = ret;
+
+        printf("scompile failed: %s\n", ret.c_str());
+
+        #ifdef DEBUG_SOURCE
+        std::cout << script.parsed_source << std::endl;
+        #endif // DEBUG_SOURCE
+
+
+        duk_pop(ctx);
+
+        return false;
+    }
+    else
+    {
+        err_out = "";
+
+        duk_pop(ctx);
+
+        return true;
+    }
+}
+
+std::string attach_wrapper(const std::string& data_in, bool stringify, bool direct)
+{
+    std::string prologue = "function INTERNAL_TEST(context, args)\n{'use strict'\nvar IVAR = ";
+    std::string endlogue = "\n\nreturn IVAR(context, args);\n\n}\n";
+
+    if(stringify)
+    {
+        endlogue = "\n\nreturn JSON.stringify(IVAR(context, args));\n\n}\n";
+    }
+
+    if(direct && stringify)
+    {
+        endlogue = "\n\nreturn JSON.stringify(IVAR);\n\n}\n";
+    }
+
+    if(direct && !stringify)
+    {
+        endlogue = "\n\n return IVAR }";
+    }
+
+    return prologue + data_in + endlogue;
+}
+
+bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& offset, std::string from, std::string to)
+{
+    std::string srch = from;
+
+    if(view.substr(0, srch.size()) != srch)
+        return false;
+
+    //std::cout << "expand1\n";
+
+    std::string found = "";
+    int found_loc = -1;
+
+    for(int i=srch.length(); i < (int)view.size(); i++)
+    {
+        char c = view[i];
+
+        ///to disable extended syntax of
+        ///var x = #fs.i20k.whatever; x(), remove the semicolon
+        if(c == '(' || c == ';')
+        {
+            found_loc = i;
+            found = std::string(view.begin() + srch.length(), view.begin() + i);
+            break;
+        }
+    }
+
+    /*if(found_loc != -1)
+    {
+        std::cout << "fnd " << found << std::endl;
+    }*/
+
+    bool valid = is_valid_full_name_string(found);
+
+    //std::cout << found << "\n fnd\n";
+
+    if(valid)
+    {
+        int start = offset;
+        int finish = offset + found_loc;
+
+        in.replace(offset, finish - start, to + "(\"" + found + "\")");
+    }
+
+    ///increase offset?
+
+    return valid;
+}
+
+bool expand_to_from_nochecks(std::string_view& view, std::string& in, int& offset, std::string from, std::string to)
+{
+    std::string srch = from;
+
+    if(view.substr(0, srch.size()) != srch)
+        return false;
+
+    //std::cout << "expand2\n";
+
+    std::string found = "";
+    int found_loc = -1;
+
+    for(int i=srch.length(); i < (int)view.size(); i++)
+    {
+        char c = view[i];
+
+        if(c == '(')
+        {
+            found_loc = i;
+            found = std::string(view.begin() + srch.length(), view.begin() + i);
+            break;
+        }
+    }
+
+    int start = offset;
+    int finish = offset + found_loc;
+
+    in.replace(offset, finish - start, to);
+
+    ///increase offset?
+
+    return true;
+}
+
+bool expand(std::string_view& view, std::string& in, int& offset, int& found_seclevel)
+{
+    std::vector<std::string> froms{"#fs.", "#hs.", "#ms.", "#ls.", "#ns.",
+                                   "#4s.", "#3s.", "#2s.", "#1s.", "#0s.",
+                                   "#s."};
+
+    std::vector<std::string> tos  {"fs_call", "hs_call", "ms_call", "ls_call", "ns_call",
+                                   "fs_call", "hs_call", "ms_call", "ls_call", "ns_call",
+                                   "ns_call"};
+
+    std::vector<int> sec_levels = {4, 3, 2, 1, 0,
+                                   4, 3, 2, 1, 0,
+                                   0};
+
+    for(int i=0; i < (int)tos.size(); i++)
+    {
+        bool success = expand_to_from_scriptname(view, in, offset, froms[i], tos[i]);
+
+        if(success)
+        {
+            found_seclevel = std::min(found_seclevel, sec_levels[i]);
+
+            return true;
+        }
+    }
+
+    std::vector<std::string> froms_unchecked{"#D",
+                                             "#db.i", "#db.r", "#db.f", "#db.u", "#db.u1", "#db.us"};
+
+    std::vector<std::string> tos_unchecked  {"hash_d",
+                                             "db_insert", "db_remove", "db_find", "db_update", "db_update1", "db_upsert"};
+
+    for(int i=0; i < (int)tos_unchecked.size(); i++)
+    {
+        bool success = expand_to_from_nochecks(view, in, offset, froms_unchecked[i], tos_unchecked[i]);
+
+        if(success)
+            return true;
+    }
+
+    return false;
+}
+
 struct script_data
 {
     std::string parsed_source;
@@ -44,6 +229,14 @@ script_data parse_script(std::string in)
 std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::string& source, const std::string& name_)
 {
     name = name_;
+
+    int max_size = 32 * 1024;
+
+    if(source.size() >= max_size)
+    {
+        valid = false;
+        return "Script " + name + " too large";
+    }
 
     if(!is_valid_full_name_string(name))
     {

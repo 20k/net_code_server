@@ -49,8 +49,10 @@
 			<Add option="-lbson-1.0.dll" />
 			<Add option="-lboost_system-mt" />
 			<Add option="-lmswsock" />
-			<Add library="C:/duk_fun/libduktape.so.202.20200" />
+			<Add library="C:/Users/James/Desktop/projects/crapmud/libduktape.so.202.20200" />
 		</Linker>
+		<Unit filename="command_handler.cpp" />
+		<Unit filename="command_handler.hpp" />
 		<Unit filename="duk_object_functions.hpp" />
 		<Unit filename="http_beast_server.cpp" />
 		<Unit filename="http_beast_server.hpp" />
@@ -58,10 +60,10 @@
 		<Unit filename="main.cpp" />
 		<Unit filename="mongo.cpp" />
 		<Unit filename="mongo.hpp" />
-		<Unit filename="mongo_cleanup.h" />
 		<Unit filename="privileged_core_scripts.hpp" />
 		<Unit filename="script_util.cpp" />
 		<Unit filename="script_util.hpp" />
+		<Unit filename="script_util_shared.hpp" />
 		<Unit filename="seccallers.hpp" />
 		<Unit filename="user.hpp" />
 		<Extensions>

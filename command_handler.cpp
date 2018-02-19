@@ -3,6 +3,7 @@
 #include "seccallers.hpp"
 #include <thread>
 #include <chrono>
+#include <Wincrypt.h>
 
 struct unsafe_info
 {
@@ -146,8 +147,13 @@ std::string handle_command(command_handler_state& state, const std::string& str)
 {
     printf("yay command\n");
 
+    std::cout << str << std::endl;
+
     if(starts_with(str, "user "))
     {
+        if(state.auth == "")
+            return "Please create account with \"register client\"";
+
         std::vector<std::string> split_string = no_ss_split(str, " ");
 
         if(split_string.size() != 2)
@@ -155,19 +161,25 @@ std::string handle_command(command_handler_state& state, const std::string& str)
 
         std::string user = strip_whitespace(split_string[1]);
 
+        if(!is_valid_string(user))
+        {
+            return "Invalid username";
+        }
+
         mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
         if(state.current_user.exists(mongo_user_info, user))
         {
-            std::cout << "exist\n";
-
             state.current_user.load_from_db(mongo_user_info, user);
+
+            if(state.current_user.auth != state.auth)
+                return "Incorrect Auth";
 
             return "Switched to User";
         }
         else
         {
-            state.current_user.construct_new_user(mongo_user_info, user);
+            state.current_user.construct_new_user(mongo_user_info, user, state.auth);
             state.current_user.overwrite_user_in_db(mongo_user_info);
 
             return "Constructed new User";
@@ -227,6 +239,54 @@ std::string handle_command(command_handler_state& state, const std::string& str)
 
             return "Uploaded Successfully";
         }
+    }
+    else if(starts_with(str, "register client"))
+    {
+        unsigned char random_bytes[128] = {0};
+
+        HCRYPTPROV provider = 0;
+
+        if(!CryptAcquireContext(&provider, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
+            return "Nope";
+
+        if(!CryptGenRandom(provider, 128, random_bytes))
+            return "Nope";
+
+        CryptReleaseContext(provider, 0);
+
+        std::string to_ret;
+        to_ret.resize(128);
+
+        for(int i=0; i < 128; i++)
+        {
+            to_ret[i] = random_bytes[i];
+        }
+
+        mongo_requester request;
+        request.set_prop("account_token", to_ret);
+
+        mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
+        request.insert_in_db(ctx);
+
+        state.auth = to_ret;
+
+        return "####registered secret " + to_ret;
+    }
+    else if(starts_with(str, "auth client "))
+    {
+        printf("auth client\n");
+        std::cout << str << std::endl;
+
+        auto pos = str.begin() + strlen("auth client ");
+        std::string auth = std::string(pos, str.end());
+
+        state.auth = auth;
+
+        return "Auth Success";
+    }
+    else if(starts_with(str, "auth client"))
+    {
+        return "No Auth, send \"register client\"";
     }
     else
     {

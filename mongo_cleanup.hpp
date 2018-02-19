@@ -70,4 +70,12 @@ mongo_lock_proxy get_global_mongo_global_properties_context(int lock_id)
     return get_global_mongo_context(mongo_database_type::GLOBAL_PROPERTIES, lock_id);
 }
 
+#if 0
+inline
+mongo_lock_proxy get_global_mongo_user_auth_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::USER_AUTH, lock_id);
+}
+#endif // 0
+
 #endif // MONGO_CLEANUP_H_INCLUDED

@@ -159,9 +159,82 @@ void freeze_duk(duk_context* ctx)
 }
 
 inline
+std::string get_global_string(duk_context* ctx, const std::string& name)
+{
+    duk_push_global_stash(ctx);
+    duk_get_prop_string(ctx, -1, name.c_str());
+
+    std::string str = duk_safe_to_string(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    return str;
+}
+
+inline
+int32_t get_global_int(duk_context* ctx, const std::string& name)
+{
+    duk_push_global_stash(ctx);
+    duk_get_prop_string(ctx, -1, name.c_str());
+
+    int32_t ret = duk_get_int(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    return ret;
+}
+
+inline
+void set_global_int(duk_context* ctx, const std::string& name, int32_t val)
+{
+    duk_push_global_stash(ctx);
+
+    duk_push_int(ctx, val);
+    duk_put_prop_string(ctx, -2, name.c_str());
+
+    duk_pop_n(ctx, 1);
+}
+
+inline
+void set_global_string(duk_context* ctx, const std::string& name, const std::string& val)
+{
+    duk_push_global_stash(ctx);
+
+    duk_push_string(ctx, val.c_str());
+    duk_put_prop_string(ctx, -2, name.c_str());
+
+    duk_pop_n(ctx, 1);
+}
+
+inline
 int32_t get_thread_id(duk_context* ctx)
 {
     return get_global_int(ctx, "thread_id");
+}
+
+inline
+std::string get_caller(duk_context* ctx)
+{
+    duk_push_global_stash(ctx);
+    duk_get_prop_string(ctx, -1, "caller");
+
+    std::string str = duk_safe_to_string(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    return str;
+}
+
+inline
+std::string get_script_host(duk_context* ctx)
+{
+    return get_global_string(ctx, "script_host");
+}
+
+inline
+std::string get_script_ending(duk_context* ctx)
+{
+    return get_global_string(ctx, "script_ending");
 }
 
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED

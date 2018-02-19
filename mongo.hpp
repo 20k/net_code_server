@@ -13,7 +13,12 @@ enum class mongo_database_type
     USER_PROPERTIES,
     USER_ITEMS,
     GLOBAL_PROPERTIES,
+    #if 0
+    USER_AUTH,
+    #endif // 0
 };
+
+std::string strip_whitespace(std::string);
 
 struct mongo_context
 {
@@ -62,6 +67,14 @@ struct mongo_context
             db = "global_properties";
         }
 
+        #if 0
+        if(type == mongo_database_type::USER_AUTH)
+        {
+            uri_str = "mongodb://user_auth_database:james20kuserhandlermongofunuserauth@localhost:27017/?authSource=users";
+            db = "user_auth";
+        }
+        #endif // 0
+
         if(!mongo_is_init)
             mongoc_init();
 
@@ -84,6 +97,39 @@ struct mongo_context
         {
             change_collection("global_properties");
         }
+    }
+
+    bool contains_banned_query(bson_t* bs)
+    {
+        if(bs == nullptr)
+            return false;
+
+        std::vector<std::string> banned
+        {
+            "$where",
+            "$expr",
+            "$maxTimeMS",
+            "$query",
+            "$showDiskLoc"
+        };
+
+        bson_iter_t iter;
+
+        if(bson_iter_init(&iter, bs))
+        {
+            while(bson_iter_next(&iter))
+            {
+                std::string key = bson_iter_key(&iter);
+
+                for(auto& i : banned)
+                {
+                    if(strip_whitespace(key) == i)
+                        return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     void make_lock(int who)
@@ -174,6 +220,12 @@ struct mongo_context
         if(script_host != last_collection)
             return;
 
+        if(contains_banned_query(bs))
+        {
+            printf("banned\n");
+            return;
+        }
+
         bson_error_t error;
 
         if(!mongoc_collection_insert_one(collection, bs, NULL, NULL, &error))
@@ -202,6 +254,12 @@ struct mongo_context
         if(selector == nullptr || update == nullptr)
             return;
 
+        if(contains_banned_query(selector) || contains_banned_query(update))
+        {
+            printf("banned\n");
+            return;
+        }
+
         bson_error_t error;
 
         if(!mongoc_collection_update_many(collection, selector, update, nullptr, nullptr, &error))
@@ -224,6 +282,38 @@ struct mongo_context
         bson_destroy(us);
     }
 
+    #if 0
+    std::vector<bson_t*> find_bson_raw(const std::string& script_host, bson_t* bs, bson_t* ps)
+    {
+        std::vector<bson_t*> results;
+
+        if(script_host != last_collection)
+            return results;
+
+        if(bs == nullptr)
+            return results;
+
+        if(contains_banned_query(bs) || contains_banned_query(ps))
+        {
+            printf("banned\n");
+            return {"Banned query"};
+        }
+
+        if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
+            return results;
+
+        while(mongoc_cursor_more(cursor) && mongoc_cursor_next (cursor, &doc))
+        {
+
+
+            results.push_back()
+
+        }
+
+        mongoc_cursor_destroy(cursor);
+    }
+    #endif // 0
+
     std::vector<std::string> find_bson(const std::string& script_host, bson_t* bs, bson_t* ps)
     {
         std::vector<std::string> results;
@@ -233,6 +323,12 @@ struct mongo_context
 
         if(bs == nullptr)
             return results;
+
+        if(contains_banned_query(bs) || contains_banned_query(ps))
+        {
+            printf("banned\n");
+            return {"Banned query"};
+        }
 
         if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
         {
@@ -249,6 +345,9 @@ struct mongo_context
         while(mongoc_cursor_more(cursor) && mongoc_cursor_next (cursor, &doc))
         {
             char* str = bson_as_json(doc, NULL);
+
+            if(str == nullptr)
+                continue;
 
             results.push_back(str);
 
@@ -286,6 +385,11 @@ struct mongo_context
     {
         if(script_host != last_collection)
             return;
+
+        if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
+        {
+            return;
+        }
 
         bson_t* bs = make_bson_from_json(json);
 
@@ -351,7 +455,7 @@ struct mongo_lock_proxy
     }
 };
 
-#include "mongo_cleanup.h"
+#include "mongo_cleanup.hpp"
 
 //https://stackoverflow.com/questions/30166706/c-convert-simple-values-to-string
 template<typename T>
@@ -368,9 +472,33 @@ typename std::enable_if<!std::is_fundamental<T>::value, std::string>::type  stri
     return std::string(t);
 }
 
+inline
+std::string bson_iter_binary_std_string(bson_iter_t* iter)
+{
+    uint32_t len = 0;
+    const uint8_t* binary = nullptr;
+    bson_subtype_t subtype = BSON_SUBTYPE_BINARY;
+
+    bson_iter_binary(iter, &subtype, &len, &binary);
+
+    std::string value((const char*)binary, len);
+
+    return value;
+}
+
+inline
+std::string bson_iter_utf8_easy(bson_iter_t* iter)
+{
+    uint32_t len = bson_iter_utf8_len_unsafe(iter);
+    const char* k = bson_iter_utf8(iter, &len);
+
+    return std::string(k, len);
+}
+
 struct mongo_requester
 {
     std::map<std::string, std::string> properties;
+    std::map<std::string, int> is_binary;
 
     bool has_prop(const std::string& str)
     {
@@ -395,6 +523,13 @@ struct mongo_requester
     void set_prop(const std::string& key, const T& value)
     {
         properties[key] = stringify_hack(value);
+    }
+
+    template<typename T>
+    void set_prop_bin(const std::string& key, const T& value)
+    {
+        properties[key] = stringify_hack(value);
+        is_binary[key] = 1;
     }
 
     std::vector<mongo_requester> fetch_from_db(mongo_lock_proxy& ctx)
@@ -423,13 +558,17 @@ struct mongo_requester
             {
                 std::string key = bson_iter_key(&iter);
 
-                if(!BSON_ITER_HOLDS_UTF8(&iter))
+                if(BSON_ITER_HOLDS_BINARY(&iter))
+                {
+                    found.set_prop_bin(key, bson_iter_binary_std_string(&iter));
                     continue;
+                }
 
-                uint32_t len = bson_iter_utf8_len_unsafe(&iter);
-                std::string value = bson_iter_utf8(&iter, &len);
-
-                found.set_prop(key, value);
+                if(BSON_ITER_HOLDS_UTF8(&iter))
+                {
+                    found.set_prop(key, bson_iter_utf8_easy(&iter));
+                    continue;
+                }
             }
 
             bson_destroy(next);
@@ -437,7 +576,26 @@ struct mongo_requester
             ret.push_back(found);
         }
 
+        bson_destroy(to_find);
+
         return ret;
+    }
+
+    void insert_in_db(mongo_lock_proxy& ctx)
+    {
+        bson_t* to_insert = bson_new();
+
+        for(auto& i : properties)
+        {
+            if(is_binary[i.first])
+                bson_append_binary(to_insert, i.first.c_str(), i.first.size(), BSON_SUBTYPE_BINARY, (const uint8_t*)i.second.c_str(), i.second.size());
+            else
+                bson_append_utf8(to_insert, i.first.c_str(), i.first.size(), i.second.c_str(), i.second.size());
+        }
+
+        ctx->insert_bson_1(ctx->last_collection, to_insert);
+
+        bson_destroy(to_insert);
     }
 };
 
