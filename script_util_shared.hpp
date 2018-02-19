@@ -13,6 +13,13 @@ void write_all(const std::string& fname, const std::string& str)
 }
 
 inline
+void write_all_bin(const std::string& fname, const std::string& str)
+{
+    std::ofstream out(fname, std::ios::binary);
+    out << str;
+}
+
+inline
 bool file_exists (const std::string& name)
 {
     std::ifstream f(name.c_str());
