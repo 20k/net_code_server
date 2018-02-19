@@ -15,6 +15,10 @@
 //
 //------------------------------------------------------------------------------
 
+//#define HOST_IP "77.96.132.101"
+#define HOST_IP "0.0.0.0"
+#define HOST_PORT 6750
+
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
@@ -428,12 +432,12 @@ void http_test_server()
                 "    http-server-sync 0.0.0.0 8080 .\n";
             return EXIT_FAILURE;
         }*/
-        auto const address = boost::asio::ip::make_address("127.0.0.1");
-        auto const port = static_cast<unsigned short>(6750);
+        auto const address = boost::asio::ip::make_address(HOST_IP);
+        auto const port = static_cast<unsigned short>(HOST_PORT);
         std::string const doc_root = "./doc_root";
 
         // The io_context is required for all I/O
-        boost::asio::io_context ioc{1};
+        boost::asio::io_context ioc{2};
 
         global_state glob;
 
