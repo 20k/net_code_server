@@ -147,24 +147,22 @@ std::string handle_command(command_handler_state& state, const std::string& str)
 {
     printf("yay command\n");
 
-    std::cout << str << std::endl;
+    //std::cout << str << std::endl;
 
     if(starts_with(str, "user "))
     {
         if(state.auth == "")
-            return "Please create account with \"register client\"";
+            return make_error_col("Please create account with \"register client\"");
 
         std::vector<std::string> split_string = no_ss_split(str, " ");
 
         if(split_string.size() != 2)
-            return "Invalid Command Error";
+            return make_error_col("Invalid Command Error");
 
         std::string user = strip_whitespace(split_string[1]);
 
         if(!is_valid_string(user))
-        {
-            return "Invalid username";
-        }
+            return make_error_col("Invalid username");
 
         mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
@@ -173,7 +171,7 @@ std::string handle_command(command_handler_state& state, const std::string& str)
             state.current_user.load_from_db(mongo_user_info, user);
 
             if(state.current_user.auth != state.auth)
-                return "Incorrect Auth";
+                return make_error_col("Incorrect Auth");
 
             return "Switched to User";
         }
@@ -182,7 +180,7 @@ std::string handle_command(command_handler_state& state, const std::string& str)
             state.current_user.construct_new_user(mongo_user_info, user, state.auth);
             state.current_user.overwrite_user_in_db(mongo_user_info);
 
-            return "Constructed new User";
+            return make_success_col("Constructed new User");
         }
     }
     else if(starts_with(str, "#up "))
@@ -200,7 +198,7 @@ std::string handle_command(command_handler_state& state, const std::string& str)
 
         if(!is_valid_full_name_string(fullname))
         {
-            return "Invalid script name " + fullname;
+            return make_error_col("Invalid script name " + fullname);
         }
 
         auto begin_it = str.begin();
@@ -237,7 +235,7 @@ std::string handle_command(command_handler_state& state, const std::string& str)
             if(compile_error != "")
                 return compile_error;
 
-            return "Uploaded Successfully";
+            return make_success_col("Uploaded Successfully");
         }
     }
     #define ALLOW_SELF_AUTH
@@ -291,11 +289,11 @@ std::string handle_command(command_handler_state& state, const std::string& str)
         std::cout << "auth len " << auth.size() << std::endl;
 
         if(request.fetch_from_db(ctx).size() == 0)
-            return "Auth Failed";
+            return make_error_col("Auth Failed");
 
         state.auth = auth;
 
-        return "Auth Success";
+        return make_success_col("Auth Success");
     }
     else if(starts_with(str, "auth client"))
     {
@@ -313,5 +311,5 @@ std::string handle_command(command_handler_state& state, const std::string& str)
         return run_in_user_context(state.current_user, str);
     }
 
-    return "Command Not Found or Unimplemented";
+    return make_error_col("Command Not Found or Unimplemented");
 }

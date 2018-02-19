@@ -283,7 +283,7 @@ do_session(
         http::request<http::string_body> req;
         http::read(socket, buffer, req, ec);
 
-        std::cout << "rq " << req.body() << std::endl;
+        //std::cout << "rq " << req.body() << std::endl;
 
         if(ec == http::error::end_of_stream)
             break;
