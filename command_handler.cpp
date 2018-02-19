@@ -5,6 +5,7 @@
 #include <chrono>
 #include <Wincrypt.h>
 #include "http_beast_server.hpp"
+#include "memory_sandbox.hpp"
 
 struct unsafe_info
 {
@@ -55,7 +56,9 @@ std::string run_in_user_context(user& usr, const std::string& command)
     }
 
     stack_duk sd;
-    init_js_interop(sd, std::string());
+    //init_js_interop(sd, std::string());
+    sd.ctx = create_sandbox_heap();
+    native_register(sd.ctx);
 
     fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number");
 

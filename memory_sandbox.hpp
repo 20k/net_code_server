@@ -45,8 +45,8 @@ static void *sandbox_alloc(void *udata, duk_size_t size)
 
     if(data->total_allocated + size > max_allocated)
     {
-        fprintf(stderr, "Sandbox maximum allocation size reached, %ld requested in sandbox_alloc\n",
-                (long) size);
+        //fprintf(stderr, "Sandbox maximum allocation size reached, %ld requested in sandbox_alloc\n",
+        //        (long) size);
         fflush(stderr);
         return NULL;
     }
@@ -91,8 +91,8 @@ static void *sandbox_realloc(void *udata, void *ptr, duk_size_t size)
         {
             if (data->total_allocated - old_size + size > max_allocated)
             {
-                fprintf(stderr, "Sandbox maximum allocation size reached, %ld requested in sandbox_realloc\n",
-                        (long) size);
+                //fprintf(stderr, "Sandbox maximum allocation size reached, %ld requested in sandbox_realloc\n",
+                //        (long) size);
                 fflush(stderr);
                 return NULL;
             }
@@ -120,8 +120,8 @@ static void *sandbox_realloc(void *udata, void *ptr, duk_size_t size)
         {
             if (data->total_allocated + size > max_allocated)
             {
-                fprintf(stderr, "Sandbox maximum allocation size reached, %ld requested in sandbox_realloc\n",
-                        (long) size);
+                //fprintf(stderr, "Sandbox maximum allocation size reached, %ld requested in sandbox_realloc\n",
+                //        (long) size);
                 fflush(stderr);
                 return NULL;
             }
@@ -155,12 +155,27 @@ static void sandbox_free(void *udata, void *ptr)
     sandbox_dump_memstate();
 }
 
+///so. What we really want to do is terminate the thread we're running in here
 static void sandbox_fatal(void *udata, const char *msg)
 {
     (void) udata;  /* Suppress warning. */
     fprintf(stderr, "FATAL: %s\n", (msg ? msg : "no message"));
     fflush(stderr);
-    exit(1);  /* must not return */
+
+    ///yeah um. So sleep in a spinlock until we get terminated by the watchdog
+    ///great idea james
+    ///this seems the best thing i can think to do as this function cannot return
+    while(1){Sleep(10);}
+
+    //exit(1);  /* must not return */
+}
+
+static duk_context* create_sandbox_heap()
+{
+    ///its easier to simply leak this
+    sandbox_data* leaked_data = new sandbox_data;
+
+    return duk_create_heap(sandbox_alloc, sandbox_realloc, sandbox_free, leaked_data, sandbox_fatal);
 }
 
 #endif // MEMORY_SANDBOX_HPP_INCLUDED
