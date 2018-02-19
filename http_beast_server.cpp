@@ -264,6 +264,7 @@ struct send_lambda
 
 // Handles an HTTP server connection
 
+
 ///Ok so: This session is a proper hackmud worker thread thing
 ///we should wait for requests
 ///need to ensure we never end up with two of the same user
@@ -271,7 +272,8 @@ void
 do_session(
     tcp::socket&& socket,
     std::string const& doc_root,
-    global_state& glob)
+    global_state& glob,
+    command_handler_state& state)
 {
     bool close = false;
     boost::system::error_code ec;
@@ -281,8 +283,6 @@ do_session(
 
     // This lambda is used to send messages
     send_lambda<tcp::socket> lambda{socket, close, ec};
-
-    command_handler_state state;
 
     for(;;)
     {
@@ -316,9 +316,27 @@ do_session(
 
     std::cout << "shutdown\n" << std::endl;
 
-
-
     // At this point the connection is closed gracefully
+}
+
+void session_wrapper(tcp::socket&& socket,
+                     std::string const& doc_root,
+                     global_state& glob)
+{
+    command_handler_state state;
+
+    try
+    {
+        do_session(socket, doc_root, glob, state);
+    }
+    catch(...)
+    {
+
+    }
+
+    std::lock_guard<std::mutex> lk(glob.auth_lock);
+
+    glob.auth_locks[state.auth] = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -432,7 +450,7 @@ void http_test_server()
 
             // Launch the session, transferring ownership of the socket
             std::thread(
-                do_session,
+                session_wrapper,
                 std::move(socket),
                 doc_root,
                 std::ref(glob)).detach();
