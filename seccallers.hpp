@@ -289,6 +289,8 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     {
         duk_pop(ctx);
 
+        duk_push_undefined(ctx);
+
         push_error(ctx, "Bad script name, this is the developer scolding you, you know what you did");
         return 1;
     }
@@ -306,13 +308,13 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
         set_script_info(ctx, str);
 
-        privileged_functions[conv].func(ctx, sl);
+        duk_ret_t result = privileged_functions[conv].func(ctx, sl);
 
         //std::string to_return = duk_json_encode(ctx, -1);
 
         set_script_info(ctx, full_script);
 
-        return 1;
+        return result;
     }
 
     script_info script;
@@ -323,6 +325,12 @@ duk_ret_t js_call(duk_context* ctx, int sl)
         //script.load_from_disk_with_db_metadata(str);
         script.name = str;
         script.load_from_db(mongo_ctx);
+    }
+
+    if(!script.valid)
+    {
+        push_error(ctx, "Script not found");
+        return 1;
     }
 
     SL_GUARD(script.seclevel);

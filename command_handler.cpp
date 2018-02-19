@@ -81,6 +81,7 @@ std::string run_in_user_context(user& usr, const std::string& command)
 
     auto time_start = std::chrono::high_resolution_clock::now();
 
+    #define ACTIVE_TIME_MANAGEMENT
     #ifdef ACTIVE_TIME_MANAGEMENT
     int active_time_slice_ms = 1;
     int sleeping_time_slice_ms = 1;
