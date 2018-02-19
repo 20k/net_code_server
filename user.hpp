@@ -14,7 +14,7 @@ struct user
     double cash = 0;
     std::string auth;
 
-    bson_t* get_bson_representation()
+    /*bson_t* get_bson_representation()
     {
         bson_t* to_update = BCON_NEW(
                                      //"$set",
@@ -26,7 +26,7 @@ struct user
                                      //"}"
                                      );
         return to_update;
-    }
+    }*/
 
     void overwrite_user_in_db(mongo_lock_proxy& ctx)
     {
@@ -118,11 +118,7 @@ struct user
 
                 if(key == "name")
                 {
-                    uint32_t nlen = bson_iter_utf8_len_unsafe(&iter);
-
-                    const char* ptr = bson_iter_utf8(&iter, &nlen);
-
-                    name = std::string(ptr, nlen);
+                    name = bson_iter_utf8_easy(&iter);
                 }
 
                 if(key == "cash")
@@ -132,11 +128,7 @@ struct user
 
                 if(key == "auth")
                 {
-                    uint32_t nlen = bson_iter_utf8_len_unsafe(&iter);
-
-                    const char* ptr = bson_iter_utf8(&iter, &nlen);
-
-                    auth = std::string(ptr, nlen);
+                    auth = bson_iter_binary_std_string(&iter);
                 }
             }
 
@@ -156,23 +148,11 @@ struct user
         if(exists(ctx, name))
             return false;
 
-        /*bson_t* user = bson_new();
-
-        bson_append_utf8    (user, "name", strlen("name"), name.c_str(), name.size());
-        bson_append_double  (user, "cash", strlen("cash"), cash);
-        bson_append_utf8    (user, "auth", strlen("auth"), auth.c_str(), auth.size());
-
-        ctx->change_collection(name);
-
-        ctx->insert_bson_1(name, user);
-
-        bson_destroy(user);*/
-
         ctx->change_collection(name);
 
         mongo_requester request;
         request.set_prop("name", name);
-        request.set_prop("auth", auth);
+        request.set_prop_bin("auth", auth);
 
         request.insert_in_db(ctx);
 

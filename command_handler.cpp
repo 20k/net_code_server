@@ -170,12 +170,7 @@ std::string handle_command(command_handler_state& state, const std::string& str)
 
         if(state.current_user.exists(mongo_user_info, user))
         {
-            std::cout << "exist\n";
-
             state.current_user.load_from_db(mongo_user_info, user);
-
-            std::cout << "AUTH " << state.current_user.auth.size() << std::endl;
-            std::cout << "FAUTH " << state.auth.size() << std::endl;
 
             if(state.current_user.auth != state.auth)
                 return "Incorrect Auth";

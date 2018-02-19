@@ -472,9 +472,33 @@ typename std::enable_if<!std::is_fundamental<T>::value, std::string>::type  stri
     return std::string(t);
 }
 
+inline
+std::string bson_iter_binary_std_string(bson_iter_t* iter)
+{
+    uint32_t len = 0;
+    const uint8_t* binary = nullptr;
+    bson_subtype_t subtype = BSON_SUBTYPE_BINARY;
+
+    bson_iter_binary(iter, &subtype, &len, &binary);
+
+    std::string value((const char*)binary, len);
+
+    return value;
+}
+
+inline
+std::string bson_iter_utf8_easy(bson_iter_t* iter)
+{
+    uint32_t len = bson_iter_utf8_len_unsafe(iter);
+    const char* k = bson_iter_utf8(iter, &len);
+
+    return std::string(k, len);
+}
+
 struct mongo_requester
 {
     std::map<std::string, std::string> properties;
+    std::map<std::string, int> is_binary;
 
     bool has_prop(const std::string& str)
     {
@@ -499,6 +523,13 @@ struct mongo_requester
     void set_prop(const std::string& key, const T& value)
     {
         properties[key] = stringify_hack(value);
+    }
+
+    template<typename T>
+    void set_prop_bin(const std::string& key, const T& value)
+    {
+        properties[key] = stringify_hack(value);
+        is_binary[key] = 1;
     }
 
     std::vector<mongo_requester> fetch_from_db(mongo_lock_proxy& ctx)
@@ -527,18 +558,17 @@ struct mongo_requester
             {
                 std::string key = bson_iter_key(&iter);
 
-                if(!BSON_ITER_HOLDS_BINARY(&iter))
+                if(BSON_ITER_HOLDS_BINARY(&iter))
+                {
+                    found.set_prop_bin(key, bson_iter_binary_std_string(&iter));
                     continue;
+                }
 
-                uint32_t len = 0;
-                const uint8_t* binary = nullptr;
-                bson_subtype_t subtype = BSON_SUBTYPE_BINARY;
-
-                bson_iter_binary(&iter, &subtype, &len, &binary);
-
-                std::string value((const char*)binary, len);
-
-                found.set_prop(key, value);
+                if(BSON_ITER_HOLDS_UTF8(&iter))
+                {
+                    found.set_prop(key, bson_iter_utf8_easy(&iter));
+                    continue;
+                }
             }
 
             bson_destroy(next);
@@ -557,7 +587,10 @@ struct mongo_requester
 
         for(auto& i : properties)
         {
-            bson_append_binary(to_insert, i.first.c_str(), i.first.size(), BSON_SUBTYPE_BINARY, (const uint8_t*)i.second.c_str(), i.second.size());
+            if(is_binary[i.first])
+                bson_append_binary(to_insert, i.first.c_str(), i.first.size(), BSON_SUBTYPE_BINARY, (const uint8_t*)i.second.c_str(), i.second.size());
+            else
+                bson_append_utf8(to_insert, i.first.c_str(), i.first.size(), i.second.c_str(), i.second.size());
         }
 
         ctx->insert_bson_1(ctx->last_collection, to_insert);
