@@ -332,6 +332,9 @@ void session_wrapper(tcp::socket&& socket,
 
     std::lock_guard<std::mutex> lk(glob.auth_lock);
 
+    ///oh crap
+    ///we actually have to use the db for auth locks long term
+    ///otherwise you could connect to a different server
     glob.auth_locks[state.auth] = 0;
 }
 
