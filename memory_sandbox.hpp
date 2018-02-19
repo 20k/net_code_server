@@ -30,6 +30,7 @@ static void sandbox_dump_memstate(void)
 struct sandbox_data
 {
     size_t total_allocated = 0;
+    volatile bool db_locked = false;
 };
 
 static void *sandbox_alloc(void *udata, duk_size_t size)

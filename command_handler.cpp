@@ -60,7 +60,7 @@ std::string run_in_user_context(user& usr, const std::string& command)
     sd.ctx = create_sandbox_heap();
     native_register(sd.ctx);
 
-    fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number");
+    fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number", "print", "sleep");
 
     startup_state(sd.ctx, usr.name, usr.name, "invoke");
 
@@ -328,10 +328,12 @@ std::string handle_command(command_handler_state& state, const std::string& str,
 
         std::lock_guard<std::mutex> lk(glob.auth_lock);
 
+        #if 0
         ///so if we reauth but on the same thread that's fine
         ///or if we auth and we haven't authed on any thread before
         if(glob.auth_locks[auth] != my_id && glob.auth_locks[auth] != 0)
             return make_error_col("Oh boy this better be a random error otherwise ur getting banned.\nThis is a joke but seriously don't do this");
+        #endif // 0
 
         state.auth = auth;
 

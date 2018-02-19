@@ -78,7 +78,7 @@ struct user
     {
         ctx->change_collection(name_);
 
-        std::cout << "load \n";
+        //std::cout << "load \n";
 
         if(!exists(ctx, name_, true))
             return false;
