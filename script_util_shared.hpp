@@ -6,6 +6,13 @@
 #include <sstream>
 
 inline
+void write_all(const std::string& fname, const std::string& str)
+{
+    std::ofstream out(fname);
+    out << str;
+}
+
+inline
 bool file_exists (const std::string& name)
 {
     std::ifstream f(name.c_str());
@@ -155,6 +162,18 @@ std::string get_script_from_name_string(const std::string& base_dir, const std::
     }
 
     return read_file(file);
+}
+
+inline
+std::string make_error_col(const std::string& in)
+{
+    return "`D" + in + "`";
+}
+
+inline
+std::string make_success_col(const std::string& in)
+{
+    return "`L" + in + "`";
 }
 
 #endif // SCRIPT_UTIL_SHARED_HPP_INCLUDED
