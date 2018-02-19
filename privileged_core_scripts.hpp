@@ -4,7 +4,18 @@
 #include "user.hpp"
 #include "duk_object_functions.hpp"
 
-using function_priv_t = duk_ret_t (*)(duk_context*, int);
+struct priv_context
+{
+    ///if we execute accts.balance from i20k.hello, this is i20k not accts.balance
+    std::string original_host;
+
+    priv_context(const std::string& ohost) : original_host(ohost)
+    {
+
+    }
+};
+
+using function_priv_t = duk_ret_t (*)(priv_context&, duk_context*, int);
 
 inline
 bool can_run(int csec_level, int maximum_sec)
@@ -44,7 +55,7 @@ std::map<std::string, priv_func_info> privileged_functions;
 ///hmm. Maybe we want to keep sls somewhere which is dynamically editable like global properties in the db
 ///cache the calls, and like, refresh the cache every 100 calls or something
 inline
-duk_ret_t accts__balance(duk_context* ctx, int sl)
+duk_ret_t accts__balance(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
 
@@ -60,7 +71,7 @@ duk_ret_t accts__balance(duk_context* ctx, int sl)
 }
 
 inline
-duk_ret_t scripts__get_level(duk_context* ctx, int sl)
+duk_ret_t scripts__get_level(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     ///so we have an object
     ///of the form name:whatever
@@ -103,7 +114,7 @@ duk_ret_t scripts__get_level(duk_context* ctx, int sl)
 }
 
 inline
-duk_ret_t scripts__user(duk_context* ctx, int sl)
+duk_ret_t scripts__user(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     std::string usr = get_caller(ctx);
 
@@ -138,6 +149,8 @@ duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const s
         push_error(ctx, "Amount error");
         return 1;
     }
+
+    std::cout << "from " << from << " to " << to << std::endl;
 
     ///NEED TO LOCK MONGODB HERE
 
@@ -186,7 +199,7 @@ duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const s
 
 ///TODO: TRANSACTION HISTORY
 inline
-duk_ret_t accts__xfer_gc_to(duk_context* ctx, int sl)
+duk_ret_t accts__xfer_gc_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     ///need a get either or
     ///so we can support to and name
@@ -218,7 +231,7 @@ duk_ret_t accts__xfer_gc_to(duk_context* ctx, int sl)
 }
 
 inline
-duk_ret_t accts__xfer_gc_to_caller(duk_context* ctx, int sl)
+duk_ret_t accts__xfer_gc_to_caller(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     std::string destination_name = get_caller(ctx);
 
@@ -235,12 +248,12 @@ duk_ret_t accts__xfer_gc_to_caller(duk_context* ctx, int sl)
     amount = duk_get_number(ctx, -1);
     duk_pop(ctx);
 
-    return accts_internal_xfer(ctx, get_script_host(ctx), destination_name, amount);
+    return accts_internal_xfer(ctx, priv_ctx.original_host, destination_name, amount);
 }
 
 ///this is only valid currently, will need to expand to hardcode in certain folders
 inline
-duk_ret_t scripts__trust(duk_context* ctx, int sl)
+duk_ret_t scripts__trust(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     std::vector<std::string> ret;
 

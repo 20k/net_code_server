@@ -306,9 +306,12 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     {
         SL_GUARD(privileged_functions[conv].sec_level);
 
+        ///use ORIGINAL script host
+        priv_context priv_ctx(get_script_host(ctx));
+
         set_script_info(ctx, str);
 
-        duk_ret_t result = privileged_functions[conv].func(ctx, sl);
+        duk_ret_t result = privileged_functions[conv].func(priv_ctx, ctx, sl);
 
         //std::string to_return = duk_json_encode(ctx, -1);
 
