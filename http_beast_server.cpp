@@ -31,6 +31,12 @@
 using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 namespace http = boost::beast::http;    // from <boost/beast/http.hpp>
 
+struct global_state
+{
+    std::map<std::string, int> auth_locks;
+    std::mutex auth_lock;
+};
+
 //------------------------------------------------------------------------------
 
 // Return a reasonable mime type based on the extension of a file.
@@ -263,8 +269,9 @@ struct send_lambda
 ///need to ensure we never end up with two of the same user
 void
 do_session(
-    tcp::socket& socket,
-    std::string const& doc_root)
+    tcp::socket&& socket,
+    std::string const& doc_root,
+    global_state& glob)
 {
     bool close = false;
     boost::system::error_code ec;
@@ -308,6 +315,8 @@ do_session(
     socket.shutdown(tcp::socket::shutdown_send, ec);
 
     std::cout << "shutdown\n" << std::endl;
+
+
 
     // At this point the connection is closed gracefully
 }
@@ -409,6 +418,8 @@ void http_test_server()
         // The io_context is required for all I/O
         boost::asio::io_context ioc{1};
 
+        global_state glob;
+
         // The acceptor receives incoming connections
         tcp::acceptor acceptor{ioc, {address, port}};
         for(;;)
@@ -420,10 +431,11 @@ void http_test_server()
             acceptor.accept(socket);
 
             // Launch the session, transferring ownership of the socket
-            std::thread{std::bind(
-                &do_session,
+            std::thread(
+                do_session,
                 std::move(socket),
-                doc_root)}.detach();
+                doc_root,
+                std::ref(glob)).detach();
         }
     }
     catch (const std::exception& e)
