@@ -3,8 +3,27 @@
 
 #include "user.hpp"
 #include "duk_object_functions.hpp"
+#include "memory_sandbox.hpp"
 
-using function_priv_t = duk_ret_t (*)(duk_context*, int);
+#define COOPERATE_KILL() duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk); \
+                         sandbox_data* sand_data = (sandbox_data*)mem_funcs_duk.udata; \
+                         if(sand_data->terminate_semi_gracefully) \
+                         { printf("Cooperating with kill\n");\
+                             while(1){Sleep(10);}\
+                         }
+
+struct priv_context
+{
+    ///if we execute accts.balance from i20k.hello, this is i20k not accts.balance
+    std::string original_host;
+
+    priv_context(const std::string& ohost) : original_host(ohost)
+    {
+
+    }
+};
+
+using function_priv_t = duk_ret_t (*)(priv_context&, duk_context*, int);
 
 inline
 bool can_run(int csec_level, int maximum_sec)
@@ -22,6 +41,12 @@ inline
 void push_success(duk_context* ctx)
 {
     push_dukobject(ctx, "ok", true);
+}
+
+inline
+void push_success(duk_context* ctx, const std::string& msg)
+{
+    push_dukobject(ctx, "ok", true, "msg", msg);
 }
 
 ///could potentially use __FUNCTION__ here
@@ -44,8 +69,10 @@ std::map<std::string, priv_func_info> privileged_functions;
 ///hmm. Maybe we want to keep sls somewhere which is dynamically editable like global properties in the db
 ///cache the calls, and like, refresh the cache every 100 calls or something
 inline
-duk_ret_t accts__balance(duk_context* ctx, int sl)
+duk_ret_t accts__balance(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
 
     user usr;
@@ -60,8 +87,10 @@ duk_ret_t accts__balance(duk_context* ctx, int sl)
 }
 
 inline
-duk_ret_t scripts__get_level(duk_context* ctx, int sl)
+duk_ret_t scripts__get_level(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     ///so we have an object
     ///of the form name:whatever
     ///really need a way to parse these out from duktape
@@ -103,8 +132,10 @@ duk_ret_t scripts__get_level(duk_context* ctx, int sl)
 }
 
 inline
-duk_ret_t scripts__user(duk_context* ctx, int sl)
+duk_ret_t scripts__user(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     std::string usr = get_caller(ctx);
 
     mongo_requester request;
@@ -133,9 +164,17 @@ duk_ret_t scripts__user(duk_context* ctx, int sl)
 inline
 duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const std::string& to, double amount)
 {
+    COOPERATE_KILL();
+
     if(round(amount) != amount || amount < 0 || amount >= pow(2, 32))
     {
         push_error(ctx, "Amount error");
+        return 1;
+    }
+
+    if(from == to)
+    {
+        push_error(ctx, "Money definitely shifted hands");
         return 1;
     }
 
@@ -186,8 +225,10 @@ duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const s
 
 ///TODO: TRANSACTION HISTORY
 inline
-duk_ret_t accts__xfer_gc_to(duk_context* ctx, int sl)
+duk_ret_t accts__xfer_gc_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     ///need a get either or
     ///so we can support to and name
     duk_get_prop_string(ctx, -1, "to");
@@ -218,8 +259,10 @@ duk_ret_t accts__xfer_gc_to(duk_context* ctx, int sl)
 }
 
 inline
-duk_ret_t accts__xfer_gc_to_caller(duk_context* ctx, int sl)
+duk_ret_t accts__xfer_gc_to_caller(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     std::string destination_name = get_caller(ctx);
 
     duk_get_prop_string(ctx, -1, "amount");
@@ -235,13 +278,15 @@ duk_ret_t accts__xfer_gc_to_caller(duk_context* ctx, int sl)
     amount = duk_get_number(ctx, -1);
     duk_pop(ctx);
 
-    return accts_internal_xfer(ctx, get_script_host(ctx), destination_name, amount);
+    return accts_internal_xfer(ctx, priv_ctx.original_host, destination_name, amount);
 }
 
 ///this is only valid currently, will need to expand to hardcode in certain folders
 inline
-duk_ret_t scripts__trust(duk_context* ctx, int sl)
+duk_ret_t scripts__trust(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     std::vector<std::string> ret;
 
     for(auto& i : privileged_functions)
@@ -250,6 +295,124 @@ duk_ret_t scripts__trust(duk_context* ctx, int sl)
     }
 
     push_duk_val(ctx, ret);
+
+    return 1;
+}
+
+inline
+duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
+    std::string msg = duk_safe_get_prop_string(ctx, -1, "msg");
+
+    if(channel == "" || msg == "" || channel.size() >= 10)
+    {
+        push_error(ctx, "Usage: #hs.chats.send({channel:\"<name>\", msg:\"msg\"})");
+        return 1;
+    }
+
+    ///ALARM: ALARM: NEED TO RATE LIMIT URGENTLY
+
+    mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(get_thread_id(ctx));
+    mongo_ctx->change_collection(channel);
+
+    auto now = std::chrono::high_resolution_clock::now();
+    auto duration = now.time_since_epoch();
+    size_t real_time = duration.count();
+
+    mongo_requester request;
+    request.set_prop("channel", channel);
+    request.set_prop("msg", msg);
+    request.set_prop("time_ms", real_time);
+    request.set_prop("from", get_caller(ctx));
+
+    request.insert_in_db(mongo_ctx);
+
+    push_success(ctx);
+
+    return 1;
+}
+
+inline
+duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
+    int num = duk_get_prop_string_as_int(ctx, -1, "count");
+    bool pretty = duk_get_prop_string_as_int(ctx, -1, "pretty");
+
+    /*int offset = 0;
+
+    if(duk_has_prop_string(ctx, -1, "offset"))
+    {
+        offset = duk_get_prop_string_as_int(ctx, -1, "offset");
+    }*/
+
+    if(num <= 0)
+        num = 10;
+
+    if(channel.size() == 0)
+        channel = "0000";
+
+    std::cout << "fchannel " << channel << std::endl;
+
+    if(channel == "" || num >= 100 || channel.size() >= 10 )
+    {
+        push_error(ctx, "Usage: #ms.chats.recent({channel:\"<name>\", count:num, pretty:1})");
+        return 1;
+    }
+
+    mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(get_thread_id(ctx));
+    mongo_ctx->change_collection(channel);
+
+    ///ALARM: ALARM: RATE LIMIT
+
+    mongo_requester request;
+    request.set_prop("channel", channel);
+    request.set_prop_sort_on("time_ms", -1);
+
+    request.set_limit(num);
+
+    std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
+
+    if(!pretty)
+    {
+        duk_push_array(ctx);
+
+        int cur_count = 0;
+        for(mongo_requester& i : found)
+        {
+            duk_push_object(ctx);
+
+            for(auto& kk : i.properties)
+            {
+                std::string key = kk.first;
+                std::string value = kk.second;
+
+                put_duk_keyvalue(ctx, key, value);
+            }
+
+            duk_put_prop_index(ctx, -2, cur_count);
+
+            cur_count++;
+        }
+    }
+    else
+    {
+        std::string str;
+
+        for(mongo_requester& i : found)
+        {
+            std::string msg = i.get_prop("channel") + " " + i.get_prop("from") + " "  + i.get_prop("msg");
+
+            str = msg + "\n" + str;
+        }
+
+        push_duk_val(ctx, str);
+    }
 
     return 1;
 }
@@ -284,6 +447,8 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(accts__xfer_gc_to_caller, 4),
     REGISTER_FUNCTION_PRIV(scripts__trust, 4),
     REGISTER_FUNCTION_PRIV(scripts__user, 2),
+    REGISTER_FUNCTION_PRIV(chats__send, 3),
+    REGISTER_FUNCTION_PRIV(chats__recent, 2),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED

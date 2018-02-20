@@ -22,6 +22,17 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-DLOCAL_IP" />
+				</Compiler>
+			</Target>
+			<Target title="Deploy">
+				<Option output="bin/Deploy/crapmud" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Deploy/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-DEXTERN_IP" />
 				</Compiler>
 			</Target>
 		</Build>
@@ -58,8 +69,12 @@
 		<Unit filename="http_beast_server.hpp" />
 		<Unit filename="item.hpp" />
 		<Unit filename="main.cpp" />
+		<Unit filename="memory_sandbox.hpp" />
 		<Unit filename="mongo.cpp" />
 		<Unit filename="mongo.hpp" />
+		<Unit filename="mongo_cleanup.hpp" />
+		<Unit filename="non_user_task_thread.cpp" />
+		<Unit filename="non_user_task_thread.hpp" />
 		<Unit filename="privileged_core_scripts.hpp" />
 		<Unit filename="script_util.cpp" />
 		<Unit filename="script_util.hpp" />

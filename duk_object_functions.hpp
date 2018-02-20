@@ -237,4 +237,43 @@ std::string get_script_ending(duk_context* ctx)
     return get_global_string(ctx, "script_ending");
 }
 
+inline
+std::string duk_safe_to_std_string(duk_context* ctx, duk_idx_t idx)
+{
+    duk_size_t out = 0;
+    const char* ptr = duk_safe_to_lstring(ctx, idx, &out);
+
+    if(ptr == nullptr || out == 0)
+        return std::string();
+
+    return std::string(ptr, out);
+}
+
+inline
+std::string duk_safe_get_prop_string(duk_context* ctx, duk_idx_t idx, const std::string& key)
+{
+    if(!duk_has_prop_string(ctx, idx, key.c_str()))
+        return std::string();
+
+    duk_get_prop_string(ctx, idx, key.c_str());
+
+    auto ret = duk_safe_to_std_string(ctx, -1);
+
+    duk_pop(ctx);
+
+    return ret;
+}
+
+inline
+int duk_get_prop_string_as_int(duk_context* ctx, duk_idx_t idx, const std::string& key)
+{
+    duk_get_prop_string(ctx, idx, key.c_str());
+
+    auto ret = duk_get_int(ctx, -1);
+
+    duk_pop(ctx);
+
+    return ret;
+}
+
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED

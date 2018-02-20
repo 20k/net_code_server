@@ -1,4 +1,5 @@
 #include "http_beast_server.hpp"
+#include "non_user_task_thread.hpp"
 
 //
 // Copyright (c) 2016-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
@@ -14,6 +15,26 @@
 // Example: HTTP server, synchronous
 //
 //------------------------------------------------------------------------------
+
+//#define HOST_IP "77.96.132.101"
+//#define HOST_IP "0.0.0.0"
+
+#ifdef LOCAL_IP
+#define HOST_IP "127.0.0.1"
+#endif // LOCAL_IP
+
+#ifdef EXTERN_IP
+#define HOST_IP "0.0.0.0"
+#endif // EXTERN_IP
+
+#ifdef EXTERN_IP
+#define HOST_PORT 6750
+#endif // EXTERN_IP
+
+#ifdef LOCAL_IP
+#define HOST_PORT 6751
+#endif // LOCAL_IP
+
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -258,13 +279,17 @@ struct send_lambda
 
 // Handles an HTTP server connection
 
+
 ///Ok so: This session is a proper hackmud worker thread thing
 ///we should wait for requests
 ///need to ensure we never end up with two of the same user
 void
 do_session(
-    tcp::socket& socket,
-    std::string const& doc_root)
+    tcp::socket&& socket,
+    std::string const& doc_root,
+    global_state& glob,
+    command_handler_state& state,
+    int64_t my_id)
 {
     bool close = false;
     boost::system::error_code ec;
@@ -275,22 +300,20 @@ do_session(
     // This lambda is used to send messages
     send_lambda<tcp::socket> lambda{socket, close, ec};
 
-    command_handler_state state;
-
     for(;;)
     {
         // Read a request
         http::request<http::string_body> req;
         http::read(socket, buffer, req, ec);
 
-        std::cout << "rq " << req.body() << std::endl;
+        //std::cout << "rq " << req.body() << std::endl;
 
         if(ec == http::error::end_of_stream)
             break;
         if(ec)
             return fail(ec, "read");
 
-        std::string to_pipe = handle_command(state, req.body());
+        std::string to_pipe = handle_command(state, req.body(), glob, my_id);
 
         // Send the response
         handle_request(doc_root, std::move(req), lambda, to_pipe);
@@ -310,6 +333,30 @@ do_session(
     std::cout << "shutdown\n" << std::endl;
 
     // At this point the connection is closed gracefully
+}
+
+void session_wrapper(tcp::socket&& socket,
+                     std::string const& doc_root,
+                     global_state& glob,
+                     int64_t my_id)
+{
+    command_handler_state state;
+
+    try
+    {
+        do_session(std::move(socket), doc_root, glob, state, my_id);
+    }
+    catch(...)
+    {
+
+    }
+
+    std::lock_guard<std::mutex> lk(glob.auth_lock);
+
+    ///oh crap
+    ///we actually have to use the db for auth locks long term
+    ///otherwise you could connect to a different server
+    glob.auth_locks[state.auth] = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -402,12 +449,14 @@ void http_test_server()
                 "    http-server-sync 0.0.0.0 8080 .\n";
             return EXIT_FAILURE;
         }*/
-        auto const address = boost::asio::ip::make_address("127.0.0.1");
-        auto const port = static_cast<unsigned short>(6750);
+        auto const address = boost::asio::ip::make_address(HOST_IP);
+        auto const port = static_cast<unsigned short>(HOST_PORT);
         std::string const doc_root = "./doc_root";
 
         // The io_context is required for all I/O
-        boost::asio::io_context ioc{1};
+        boost::asio::io_context ioc{2};
+
+        global_state glob;
 
         // The acceptor receives incoming connections
         tcp::acceptor acceptor{ioc, {address, port}};
@@ -419,11 +468,15 @@ void http_test_server()
             // Block until we get a connection
             acceptor.accept(socket);
 
+            int id = glob.global_id++;
+
             // Launch the session, transferring ownership of the socket
-            std::thread{std::bind(
-                &do_session,
+            std::thread(
+                session_wrapper,
                 std::move(socket),
-                doc_root)}.detach();
+                doc_root,
+                std::ref(glob),
+                id).detach();
         }
     }
     catch (const std::exception& e)
@@ -438,4 +491,5 @@ void http_test_run()
     //std::thread{std::bind(&http_test_server, &req)}.detach();
 
     http_test_server();
+    start_non_user_task_thread();
 }

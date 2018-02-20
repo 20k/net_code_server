@@ -4,6 +4,8 @@
 #include <thread>
 #include <chrono>
 #include <Wincrypt.h>
+#include "http_beast_server.hpp"
+#include "memory_sandbox.hpp"
 
 struct unsafe_info
 {
@@ -39,11 +41,28 @@ void managed_duktape_thread(unsafe_info* info)
     info->finished = 1;
 }
 
+struct cleanup_auth_at_exit
+{
+    std::mutex& to_lock;
+    std::map<std::string, int>& to_cleanup;
+    std::string& auth;
+
+    cleanup_auth_at_exit(std::mutex& lk, std::map<std::string, int>& cleanup, std::string& ath) : to_lock(lk), to_cleanup(cleanup), auth(ath) {}
+
+    ~cleanup_auth_at_exit()
+    {
+        std::lock_guard<std::mutex> lk(to_lock);
+
+        to_cleanup[auth] = 0;
+    }
+};
+
 inline
 std::string run_in_user_context(user& usr, const std::string& command)
 {
     static std::mutex id_mut;
 
+    static std::map<std::string, int> auth_guard;
     static int32_t gthread_id = 0;
     int32_t local_thread_id;
 
@@ -51,12 +70,26 @@ std::string run_in_user_context(user& usr, const std::string& command)
         std::lock_guard<std::mutex> lk(id_mut);
 
         local_thread_id = gthread_id++;
+
+        if(auth_guard[usr.auth] == 1)
+            return make_error_col("Cannot run two scripts at once in different contexts!");
+
+        auth_guard[usr.auth] = 1;
     }
 
-    stack_duk sd;
-    init_js_interop(sd, std::string());
+    cleanup_auth_at_exit cleanup(id_mut, auth_guard, usr.auth);
 
-    fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number");
+    stack_duk sd;
+    //init_js_interop(sd, std::string());
+    sd.ctx = create_sandbox_heap();
+    native_register(sd.ctx);
+
+    duk_memory_functions funcs;
+    duk_get_memory_functions(sd.ctx, &funcs);
+
+    sandbox_data* sand_data = (sandbox_data*)funcs.udata;
+
+    fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number", "print", "sleep");
 
     startup_state(sd.ctx, usr.name, usr.name, "invoke");
 
@@ -74,11 +107,30 @@ std::string run_in_user_context(user& usr, const std::string& command)
 
     //sf::Clock clk;
     float max_time_ms = 5000;
+    float db_grace_time_ms = 1000;
 
     auto time_start = std::chrono::high_resolution_clock::now();
 
+    #define ACTIVE_TIME_MANAGEMENT
+    #ifdef ACTIVE_TIME_MANAGEMENT
+    int active_time_slice_ms = 1;
+    int sleeping_time_slice_ms = 1;
+    #endif // ACTIVE_TIME_MANAGEMENT
+
     while(!inf.finished)
     {
+        #ifdef ACTIVE_TIME_MANAGEMENT
+        {
+            Sleep(active_time_slice_ms);
+
+            pthread_t thread = launch->native_handle();
+            void* native_handle = pthread_gethandle(thread);
+            SuspendThread(native_handle);
+            Sleep(sleeping_time_slice_ms);
+            ResumeThread(native_handle);
+        }
+        #endif // ACTIVE_TIME_MANAGEMENT
+
         auto time_current = std::chrono::high_resolution_clock::now();
 
         auto diff = time_current - time_start;
@@ -87,11 +139,13 @@ std::string run_in_user_context(user& usr, const std::string& command)
 
         double elapsed = dur.count();
 
-        if(elapsed >= max_time_ms)
+        if(elapsed >= max_time_ms + db_grace_time_ms)
         {
             pthread_t thread = launch->native_handle();
 
             void* native_handle = pthread_gethandle(thread);
+
+            printf("UNSAFE THREAD TERMINATION\n");
 
             ///this is obviously very unsafe, doubly so due to the whole mutex thing, which may leave them locked
             ///going to need to have an intermittent sync point, where all threads block going in and we free all locks or something
@@ -104,6 +158,11 @@ std::string run_in_user_context(user& usr, const std::string& command)
             terminated = true;
 
             break;
+        }
+
+        if(elapsed >= max_time_ms)
+        {
+            sand_data->terminate_semi_gracefully = true;
         }
 
         Sleep(1);
@@ -127,8 +186,18 @@ std::string run_in_user_context(user& usr, const std::string& command)
 
     //managed_duktape_thread(&inf);
 
-    if(!terminated)
+    //if(!terminated)
+    try
+    {
+        if(terminated)
+            printf("Attempting unsafe resource cleanup\n");
+
         js_interop_shutdown(sd.ctx);
+    }
+    catch(...)
+    {
+        printf("Failed to cleanup resources\n");
+    }
 
     std::string ret = inf.ret;
 
@@ -143,28 +212,26 @@ bool starts_with(const std::string& in, const std::string& test)
     return false;
 }
 
-std::string handle_command(command_handler_state& state, const std::string& str)
+std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
 {
     printf("yay command\n");
 
-    std::cout << str << std::endl;
+    //std::cout << str << std::endl;
 
     if(starts_with(str, "user "))
     {
         if(state.auth == "")
-            return "Please create account with \"register client\"";
+            return make_error_col("Please create account with \"register client\"");
 
         std::vector<std::string> split_string = no_ss_split(str, " ");
 
         if(split_string.size() != 2)
-            return "Invalid Command Error";
+            return make_error_col("Invalid Command Error");
 
         std::string user = strip_whitespace(split_string[1]);
 
         if(!is_valid_string(user))
-        {
-            return "Invalid username";
-        }
+            return make_error_col("Invalid username");
 
         mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
@@ -173,7 +240,7 @@ std::string handle_command(command_handler_state& state, const std::string& str)
             state.current_user.load_from_db(mongo_user_info, user);
 
             if(state.current_user.auth != state.auth)
-                return "Incorrect Auth";
+                return make_error_col("Incorrect Auth");
 
             return "Switched to User";
         }
@@ -182,11 +249,14 @@ std::string handle_command(command_handler_state& state, const std::string& str)
             state.current_user.construct_new_user(mongo_user_info, user, state.auth);
             state.current_user.overwrite_user_in_db(mongo_user_info);
 
-            return "Constructed new User";
+            return make_success_col("Constructed new User");
         }
     }
     else if(starts_with(str, "#up "))
     {
+        if(state.auth == "")
+            return make_error_col("No auth");
+
         std::vector<std::string> split_string = no_ss_split(str, " ");
 
         if(split_string.size() < 3)
@@ -200,7 +270,7 @@ std::string handle_command(command_handler_state& state, const std::string& str)
 
         if(!is_valid_full_name_string(fullname))
         {
-            return "Invalid script name " + fullname;
+            return make_error_col("Invalid script name " + fullname);
         }
 
         auto begin_it = str.begin();
@@ -237,7 +307,7 @@ std::string handle_command(command_handler_state& state, const std::string& str)
             if(compile_error != "")
                 return compile_error;
 
-            return "Uploaded Successfully";
+            return make_success_col("Uploaded Successfully");
         }
     }
     #define ALLOW_SELF_AUTH
@@ -291,11 +361,22 @@ std::string handle_command(command_handler_state& state, const std::string& str)
         std::cout << "auth len " << auth.size() << std::endl;
 
         if(request.fetch_from_db(ctx).size() == 0)
-            return "Auth Failed";
+            return make_error_col("Auth Failed");
+
+        std::lock_guard<std::mutex> lk(glob.auth_lock);
+
+        #if 0
+        ///so if we reauth but on the same thread that's fine
+        ///or if we auth and we haven't authed on any thread before
+        if(glob.auth_locks[auth] != my_id && glob.auth_locks[auth] != 0)
+            return make_error_col("Oh boy this better be a random error otherwise ur getting banned.\nThis is a joke but seriously don't do this");
+        #endif // 0
 
         state.auth = auth;
 
-        return "Auth Success";
+        glob.auth_locks[state.auth] = my_id;
+
+        return make_success_col("Auth Success");
     }
     else if(starts_with(str, "auth client"))
     {
@@ -313,5 +394,5 @@ std::string handle_command(command_handler_state& state, const std::string& str)
         return run_in_user_context(state.current_user, str);
     }
 
-    return "Command Not Found or Unimplemented";
+    return make_error_col("Command Not Found or Unimplemented");
 }

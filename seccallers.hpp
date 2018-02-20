@@ -16,6 +16,8 @@ void quick_register(duk_context* ctx, const std::string& key, const std::string&
 static
 duk_ret_t db_insert(duk_context* ctx)
 {
+    COOPERATE_KILL();
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
@@ -31,6 +33,8 @@ duk_ret_t db_insert(duk_context* ctx)
 static
 duk_ret_t db_update(duk_context* ctx)
 {
+    COOPERATE_KILL();
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
@@ -61,6 +65,8 @@ void parse_push_json(duk_context* ctx, const std::vector<std::string>& jsons)
 static
 duk_ret_t db_find_all(duk_context* ctx)
 {
+    COOPERATE_KILL();
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
@@ -100,6 +106,8 @@ duk_ret_t db_find_all(duk_context* ctx)
 static
 duk_ret_t db_find(duk_context* ctx)
 {
+    COOPERATE_KILL();
+
     int nargs = duk_get_top(ctx);
 
     std::string json = "";//duk_json_encode(ctx, -1);
@@ -142,6 +150,8 @@ duk_ret_t db_find(duk_context* ctx)
 static
 duk_ret_t db_remove(duk_context* ctx)
 {
+    COOPERATE_KILL();
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx->change_collection(get_script_host(ctx));
 
@@ -171,6 +181,8 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
 static
 duk_ret_t hash_d(duk_context* ctx)
 {
+    COOPERATE_KILL();
+
     std::string str = duk_json_encode(ctx, -1);
 
     duk_push_global_stash(ctx);
@@ -194,6 +206,8 @@ duk_ret_t hash_d(duk_context* ctx)
 inline
 std::string get_hash_d(duk_context* ctx)
 {
+    COOPERATE_KILL();
+
     duk_push_global_stash(ctx);
     duk_get_prop_string(ctx, -1, "HASH_D");
 
@@ -281,6 +295,8 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
 static
 duk_ret_t js_call(duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     std::string str;
 
     duk_push_current_function(ctx);
@@ -288,6 +304,8 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     if(!get_duk_keyvalue(ctx, "FUNCTION_NAME", str))
     {
         duk_pop(ctx);
+
+        duk_push_undefined(ctx);
 
         push_error(ctx, "Bad script name, this is the developer scolding you, you know what you did");
         return 1;
@@ -304,15 +322,18 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     {
         SL_GUARD(privileged_functions[conv].sec_level);
 
+        ///use ORIGINAL script host
+        priv_context priv_ctx(get_script_host(ctx));
+
         set_script_info(ctx, str);
 
-        privileged_functions[conv].func(ctx, sl);
+        duk_ret_t result = privileged_functions[conv].func(priv_ctx, ctx, sl);
 
         //std::string to_return = duk_json_encode(ctx, -1);
 
         set_script_info(ctx, full_script);
 
-        return 1;
+        return result;
     }
 
     script_info script;
@@ -323,6 +344,12 @@ duk_ret_t js_call(duk_context* ctx, int sl)
         //script.load_from_disk_with_db_metadata(str);
         script.name = str;
         script.load_from_db(mongo_ctx);
+    }
+
+    if(!script.valid)
+    {
+        push_error(ctx, "Script not found");
+        return 1;
     }
 
     SL_GUARD(script.seclevel);
@@ -369,7 +396,21 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
     if(!duk_is_object_coercible(ctx, -1))
         return "No return";
 
-    std::string ret = duk_json_encode(ctx, -1);
+    //std::string ret = duk_json_encode(ctx, -1);
+
+    std::string ret;
+
+    if(duk_is_string(ctx, -1))
+        ret = duk_safe_to_std_string(ctx, -1);
+    else
+    {
+        const char* fnd = duk_json_encode(ctx, -1);
+
+        if(fnd != nullptr)
+            ret = std::string(fnd);
+        else
+            ret = "Bad Output, could not be JSON'd";
+    }
 
     duk_pop(ctx);
 

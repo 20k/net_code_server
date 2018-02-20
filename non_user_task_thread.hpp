@@ -1,0 +1,6 @@
+#ifndef NON_USER_TASK_THREAD_HPP_INCLUDED
+#define NON_USER_TASK_THREAD_HPP_INCLUDED
+
+void start_non_user_task_thread();
+
+#endif // NON_USER_TASK_THREAD_HPP_INCLUDED
