@@ -481,6 +481,12 @@ std::string bson_iter_binary_std_string(bson_iter_t* iter)
 
     bson_iter_binary(iter, &subtype, &len, &binary);
 
+    if(binary == nullptr)
+    {
+        printf("warning invalid bson_iter_binary_std_string\n");
+        return std::string();
+    }
+
     std::string value((const char*)binary, len);
 
     return value;
@@ -491,6 +497,13 @@ std::string bson_iter_utf8_easy(bson_iter_t* iter)
 {
     uint32_t len = bson_iter_utf8_len_unsafe(iter);
     const char* k = bson_iter_utf8(iter, &len);
+
+    if(k == nullptr)
+    {
+        printf("warning invalid bson_iter_utf8_easy\n");
+
+        return std::string();
+    }
 
     return std::string(k, len);
 }
