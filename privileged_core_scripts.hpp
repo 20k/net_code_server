@@ -344,7 +344,22 @@ duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
     int num = duk_get_prop_string_as_int(ctx, -1, "count");
     bool pretty = duk_get_prop_string_as_int(ctx, -1, "pretty");
 
-    if(channel == "" || num <= 0 || num >= 100 || channel.size() >= 10)
+    /*int offset = 0;
+
+    if(duk_has_prop_string(ctx, -1, "offset"))
+    {
+        offset = duk_get_prop_string_as_int(ctx, -1, "offset");
+    }*/
+
+    if(num <= 0)
+        num = 10;
+
+    if(channel.size() == 0)
+        channel = "0000";
+
+    std::cout << "fchannel " << channel << std::endl;
+
+    if(channel == "" || num >= 100 || channel.size() >= 10 )
     {
         push_error(ctx, "Usage: #ms.chats.recent({channel:\"<name>\", count:num, pretty:1})");
         return 1;
