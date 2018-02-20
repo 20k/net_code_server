@@ -41,11 +41,28 @@ void managed_duktape_thread(unsafe_info* info)
     info->finished = 1;
 }
 
+struct cleanup_auth_at_exit
+{
+    std::mutex& to_lock;
+    std::map<std::string, int>& to_cleanup;
+    std::string& auth;
+
+    cleanup_auth_at_exit(std::mutex& lk, std::map<std::string, int>& cleanup, std::string& ath) : to_lock(lk), to_cleanup(cleanup), auth(ath) {}
+
+    ~cleanup_auth_at_exit()
+    {
+        std::lock_guard<std::mutex> lk(to_lock);
+
+        to_cleanup[auth] = 0;
+    }
+};
+
 inline
 std::string run_in_user_context(user& usr, const std::string& command)
 {
     static std::mutex id_mut;
 
+    static std::map<std::string, int> auth_guard;
     static int32_t gthread_id = 0;
     int32_t local_thread_id;
 
@@ -53,7 +70,14 @@ std::string run_in_user_context(user& usr, const std::string& command)
         std::lock_guard<std::mutex> lk(id_mut);
 
         local_thread_id = gthread_id++;
+
+        if(auth_guard[usr.auth] == 1)
+            return make_error_col("Cannot run two scripts at once in different contexts!");
+
+        auth_guard[usr.auth] = 1;
     }
+
+    cleanup_auth_at_exit cleanup(id_mut, auth_guard, usr.auth);
 
     stack_duk sd;
     //init_js_interop(sd, std::string());
