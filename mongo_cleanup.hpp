@@ -9,6 +9,8 @@ void cleanup_mongo_all();
 inline std::map<mongo_database_type, mongo_context*> mongo_databases;
 inline std::mutex mongo_databases_lock;
 
+///if a script were terminated while fetching the global mongo context, everything would break
+///ALARM: ALARM:
 inline
 mongo_lock_proxy get_global_mongo_context(mongo_database_type type, int lock_id, bool destroy = false)
 {
@@ -68,6 +70,12 @@ inline
 mongo_lock_proxy get_global_mongo_global_properties_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::GLOBAL_PROPERTIES, lock_id);
+}
+
+inline
+mongo_lock_proxy get_global_mongo_chat_channels_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::CHAT_CHANNELS, lock_id);
 }
 
 #if 0

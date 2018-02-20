@@ -72,6 +72,7 @@
 		<Unit filename="memory_sandbox.hpp" />
 		<Unit filename="mongo.cpp" />
 		<Unit filename="mongo.hpp" />
+		<Unit filename="mongo_cleanup.hpp" />
 		<Unit filename="privileged_core_scripts.hpp" />
 		<Unit filename="script_util.cpp" />
 		<Unit filename="script_util.hpp" />

@@ -145,6 +145,8 @@ std::string run_in_user_context(user& usr, const std::string& command)
 
             void* native_handle = pthread_gethandle(thread);
 
+            printf("UNSAFE THREAD TERMINATION\n");
+
             ///this is obviously very unsafe, doubly so due to the whole mutex thing, which may leave them locked
             ///going to need to have an intermittent sync point, where all threads block going in and we free all locks or something
             SuspendThread(native_handle);

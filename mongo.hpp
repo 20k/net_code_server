@@ -16,6 +16,7 @@ enum class mongo_database_type
     #if 0
     USER_AUTH,
     #endif // 0
+    CHAT_CHANNELS,
 };
 
 std::string strip_whitespace(std::string);
@@ -65,6 +66,12 @@ struct mongo_context
         {
             uri_str = "mongodb://global_properties_database:james20kuserhandlermongofundiff@localhost:27017/?authSource=users";
             db = "global_properties";
+        }
+
+        if(type == mongo_database_type::CHAT_CHANNELS)
+        {
+            uri_str = "mongodb://chat_channels_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
+            db = "chat_channels";
         }
 
         #if 0
