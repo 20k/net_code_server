@@ -307,7 +307,7 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
     std::string msg = duk_safe_get_prop_string(ctx, -1, "msg");
 
-    if(channel == "" || msg == "" || channel.size() >= 10)
+    if(channel == "" || msg == "" || channel.size() >= 10 || msg.size() >= 10000)
     {
         push_error(ctx, "Usage: #hs.chats.send({channel:\"<name>\", msg:\"msg\"})");
         return 1;
