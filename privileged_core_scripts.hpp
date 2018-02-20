@@ -326,6 +326,7 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
     request.set_prop("channel", channel);
     request.set_prop("msg", msg);
     request.set_prop("time_ms", real_time);
+    request.set_prop("from", get_caller(ctx));
 
     request.insert_in_db(mongo_ctx);
 
@@ -341,10 +342,11 @@ duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
     int num = duk_get_prop_string_as_int(ctx, -1, "count");
+    bool pretty = duk_get_prop_string_as_int(ctx, -1, "pretty");
 
     if(channel == "" || num <= 0 || num >= 100 || channel.size() >= 10)
     {
-        push_error(ctx, "Usage: #ms.chats.recent({channel:\"<name>\", count:num})");
+        push_error(ctx, "Usage: #ms.chats.recent({channel:\"<name>\", count:num, pretty:1})");
         return 1;
     }
 
@@ -361,24 +363,40 @@ duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
 
-    duk_push_array(ctx);
-
-    int cur_count = 0;
-    for(mongo_requester& i : found)
+    if(!pretty)
     {
-        duk_push_object(ctx);
+        duk_push_array(ctx);
 
-        for(auto& kk : i.properties)
+        int cur_count = 0;
+        for(mongo_requester& i : found)
         {
-            std::string key = kk.first;
-            std::string value = kk.second;
+            duk_push_object(ctx);
 
-            put_duk_keyvalue(ctx, key, value);
+            for(auto& kk : i.properties)
+            {
+                std::string key = kk.first;
+                std::string value = kk.second;
+
+                put_duk_keyvalue(ctx, key, value);
+            }
+
+            duk_put_prop_index(ctx, -2, cur_count);
+
+            cur_count++;
+        }
+    }
+    else
+    {
+        std::string str;
+
+        for(mongo_requester& i : found)
+        {
+            std::string msg = i.get_prop("channel") + " " + i.get_prop("from") + " "  + i.get_prop("msg");
+
+            str += msg + "\n";
         }
 
-        duk_put_prop_index(ctx, -2, cur_count);
-
-        cur_count++;
+        push_duk_val(ctx, str);
     }
 
     return 1;

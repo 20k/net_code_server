@@ -396,7 +396,21 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
     if(!duk_is_object_coercible(ctx, -1))
         return "No return";
 
-    std::string ret = duk_json_encode(ctx, -1);
+    //std::string ret = duk_json_encode(ctx, -1);
+
+    std::string ret;
+
+    if(duk_is_string(ctx, -1))
+        ret = duk_safe_to_std_string(ctx, -1);
+    else
+    {
+        const char* fnd = duk_json_encode(ctx, -1);
+
+        if(fnd != nullptr)
+            ret = std::string(fnd);
+        else
+            ret = "Bad Output, could not be JSON'd";
+    }
 
     duk_pop(ctx);
 
