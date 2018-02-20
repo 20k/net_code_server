@@ -300,6 +300,25 @@ duk_ret_t scripts__trust(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
+    std::string msg = duk_safe_get_prop_string(ctx, -1, "msg");
+
+    if(channel == "" || msg == "")
+    {
+        push_error(ctx, "Usage: #hs.chats.send({channel:\"<name>\", msg:\"msg\"})");
+        return 1;
+    }
+
+    mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(get_thread_id(ctx));
+
+    mongo_requester request;
+}
+
+inline
 std::string parse_function_hack(std::string in)
 {
     int len = in.size();
@@ -329,6 +348,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(accts__xfer_gc_to_caller, 4),
     REGISTER_FUNCTION_PRIV(scripts__trust, 4),
     REGISTER_FUNCTION_PRIV(scripts__user, 2),
+    REGISTER_FUNCTION_PRIV(chats__send, 3),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
