@@ -34,6 +34,10 @@
 					<Add option="-O2" />
 					<Add option="-DEXTERN_IP" />
 				</Compiler>
+				<ExtraCommands>
+					<Add after="deploy.bat" />
+					<Mode after="always" />
+				</ExtraCommands>
 			</Target>
 		</Build>
 		<Compiler>

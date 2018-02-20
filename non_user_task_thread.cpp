@@ -33,19 +33,39 @@ void run_non_user_tasks()
             found = request.fetch_from_db(mongo_ctx);
         }
 
-        std::string to_send = prettify_chat_strings(found);
+        //std::string to_send = prettify_chat_strings(found);
+
+        std::map<std::string, std::vector<mongo_requester>> channel_map;
+        std::map<std::string, std::string> channel_to_string;
+
+        for(auto& i : found)
+        {
+            channel_map[i.get_prop("channel")].push_back(i);
+        }
+
+        for(auto& i : channel_map)
+        {
+            channel_to_string[i.first] = prettify_chat_strings(i.second);
+        }
 
         global_shared_data* store = fetch_global_shared_data();
 
         //std::cout << found.size() << std::endl;
 
-        if(to_send != "")
+        if(channel_to_string.size() != 0)
         {
             std::lock_guard guard(store->lock);
 
             for(shared_data* data : store->data)
             {
-                data->add_back_write(to_send);
+                for(auto& cdata : channel_to_string)
+                {
+                    std::string to_send = "chat_api " + cdata.first + " " + cdata.second;
+
+                    data->add_back_write(to_send);
+                }
+
+                //data->add_back_write(to_send);
             }
         }
 

@@ -314,7 +314,7 @@ void read_queue(tcp::socket& socket,
                 printf("got test read\n");
 
                 ///got a request
-                std::string to_pipe = handle_command(state, req.body(), glob, my_id);
+                std::string to_pipe = "command " + handle_command(state, req.body(), glob, my_id);
 
                 shared.add_back_write(to_pipe);
             }
