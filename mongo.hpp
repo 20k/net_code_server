@@ -519,6 +519,8 @@ struct mongo_requester
 {
     std::map<std::string, std::string> properties;
     std::map<std::string, int> is_binary;
+    std::map<std::string, int> sort_on;
+    int64_t limit = -1;
 
     bool has_prop(const std::string& str)
     {
@@ -552,6 +554,16 @@ struct mongo_requester
         is_binary[key] = 1;
     }
 
+    void set_prop_sort_on(const std::string& key, int dir)
+    {
+        sort_on[key] = dir;
+    }
+
+    void set_limit(int64_t limit_)
+    {
+        limit = limit_;
+    }
+
     std::vector<mongo_requester> fetch_from_db(mongo_lock_proxy& ctx)
     {
         std::vector<mongo_requester> ret;
@@ -566,7 +578,34 @@ struct mongo_requester
                 bson_append_utf8(to_find, i.first.c_str(), i.first.size(), i.second.c_str(), i.second.size());
         }
 
-        std::vector<std::string> json_found = ctx->find_bson(ctx->last_collection, to_find, nullptr);
+        bson_t* to_opt = nullptr;
+
+        if(limit >= 0)
+        {
+            if(to_opt == nullptr)
+                to_opt = bson_new();
+
+            BSON_APPEND_INT64(to_opt, "limit", limit);
+        }
+
+        if(sort_on.size() != 0)
+        {
+            if(to_opt == nullptr)
+                to_opt = bson_new();
+
+            bson_t child;
+
+            bson_append_document_begin(to_opt, "sort", 4, &child);
+
+            for(auto& i : sort_on)
+            {
+                BSON_APPEND_INT64(&child, i.first.c_str(), i.second);
+            }
+
+            bson_append_document_end(to_opt, &child);
+        }
+
+        std::vector<std::string> json_found = ctx->find_bson(ctx->last_collection, to_find, to_opt);
 
         for(auto& i : json_found)
         {
@@ -598,6 +637,9 @@ struct mongo_requester
 
             ret.push_back(found);
         }
+
+        if(to_opt != nullptr)
+            bson_destroy(to_opt);
 
         bson_destroy(to_find);
 

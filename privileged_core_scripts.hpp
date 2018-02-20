@@ -334,6 +334,26 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
+    int num = duk_get_prop_string_as_int(ctx, -1, "count");
+
+    if(channel == "" || num == 0)
+    {
+        push_error(ctx, "Usage: #ms.chats.recent({channel:\"<name>\", count:num})");
+        return 1;
+    }
+
+    mongo_requester request;
+    request.set_prop("channel", channel);
+
+
+}
+
+inline
 std::string parse_function_hack(std::string in)
 {
     int len = in.size();
