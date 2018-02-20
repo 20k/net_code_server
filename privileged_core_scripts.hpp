@@ -357,7 +357,7 @@ duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     mongo_requester request;
     request.set_prop("channel", channel);
-    request.set_prop_sort_on("msg", -1);
+    request.set_prop_sort_on("time_ms", -1);
 
     request.set_limit(num);
 
@@ -393,7 +393,7 @@ duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
         {
             std::string msg = i.get_prop("channel") + " " + i.get_prop("from") + " "  + i.get_prop("msg");
 
-            str += msg + "\n";
+            str = msg + "\n" + str;
         }
 
         push_duk_val(ctx, str);
