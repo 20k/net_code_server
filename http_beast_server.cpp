@@ -413,12 +413,28 @@ void thread_session(
 {
     shared_data shared;
 
+    global_shared_data* store = fetch_global_shared_data();
+    store->add(&shared);
+
     std::thread(read_queue, std::ref(socket), doc_root, std::ref(glob), std::ref(state), my_id, std::ref(shared)).detach();
     std::thread(write_queue, std::ref(socket), doc_root, std::ref(glob), std::ref(state), my_id, std::ref(shared)).detach();
 
     while(shared.termination_count != 2)
     {
         Sleep(500);
+    }
+
+    {
+        std::lock_guard guard(store->lock);
+
+        for(int i=0; i < (int)store->data.size(); i++)
+        {
+            if(store->data[i] == &shared)
+            {
+                store->data.erase(store->data.begin() + i);
+                break;
+            }
+        }
     }
 
     Sleep(50);
@@ -636,6 +652,6 @@ void http_test_run()
 {
     //std::thread{std::bind(&http_test_server, &req)}.detach();
 
-    http_test_server();
     start_non_user_task_thread();
+    http_test_server();
 }

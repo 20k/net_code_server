@@ -336,6 +336,21 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+std::string prettify_chat_strings(std::vector<mongo_requester>& found)
+{
+    std::string str;
+
+    for(mongo_requester& i : found)
+    {
+        std::string msg = i.get_prop("channel") + " " + i.get_prop("from") + " "  + i.get_prop("msg");
+
+        str = msg + "\n" + str;
+    }
+
+    return str;
+}
+
+inline
 duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -402,14 +417,7 @@ duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
     else
     {
-        std::string str;
-
-        for(mongo_requester& i : found)
-        {
-            std::string msg = i.get_prop("channel") + " " + i.get_prop("from") + " "  + i.get_prop("msg");
-
-            str = msg + "\n" + str;
-        }
+        std::string str = prettify_chat_strings(found);
 
         push_duk_val(ctx, str);
     }

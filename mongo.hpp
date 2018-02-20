@@ -601,6 +601,8 @@ struct mongo_requester
                 BSON_APPEND_UTF8(&child, "$gt", gt_val.c_str());
                 BSON_APPEND_UTF8(&child, "$lt", lt_val.c_str());
 
+                //std::cout << "$gt " << gt_val << " $lt " << lt_val << std::endl;
+
                 bson_append_document_end(to_find, &child);
             }
         }
