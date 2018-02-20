@@ -6,6 +6,16 @@
 #include <sstream>
 
 inline
+std::string read_file(const std::string& file)
+{
+    std::ifstream t(file);
+    std::string str((std::istreambuf_iterator<char>(t)),
+                     std::istreambuf_iterator<char>());
+
+    return str;
+}
+
+inline
 void write_all(const std::string& fname, const std::string& str)
 {
     std::ofstream out(fname);
