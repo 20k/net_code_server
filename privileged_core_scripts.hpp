@@ -307,7 +307,7 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
     std::string msg = duk_safe_get_prop_string(ctx, -1, "msg");
 
-    if(channel == "" || msg == "")
+    if(channel == "" || msg == "" || channel.size() >= 10)
     {
         push_error(ctx, "Usage: #hs.chats.send({channel:\"<name>\", msg:\"msg\"})");
         return 1;
@@ -316,6 +316,7 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///ALARM: ALARM: NEED TO RATE LIMIT URGENTLY
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(get_thread_id(ctx));
+    mongo_ctx->change_collection(channel);
 
     auto now = std::chrono::high_resolution_clock::now();
     auto duration = now.time_since_epoch();
@@ -341,16 +342,46 @@ duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
     int num = duk_get_prop_string_as_int(ctx, -1, "count");
 
-    if(channel == "" || num == 0)
+    if(channel == "" || num <= 0 || num >= 100 || channel.size() >= 10)
     {
         push_error(ctx, "Usage: #ms.chats.recent({channel:\"<name>\", count:num})");
         return 1;
     }
 
+    mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(get_thread_id(ctx));
+    mongo_ctx->change_collection(channel);
+
+    ///ALARM: ALARM: RATE LIMIT
+
     mongo_requester request;
     request.set_prop("channel", channel);
+    request.set_prop_sort_on("msg", -1);
 
+    request.set_limit(num);
 
+    std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
+
+    duk_push_array(ctx);
+
+    int cur_count = 0;
+    for(mongo_requester& i : found)
+    {
+        duk_push_object(ctx);
+
+        for(auto& kk : i.properties)
+        {
+            std::string key = kk.first;
+            std::string value = kk.second;
+
+            put_duk_keyvalue(ctx, key, value);
+        }
+
+        duk_put_prop_index(ctx, -2, cur_count);
+
+        cur_count++;
+    }
+
+    return 1;
 }
 
 inline
@@ -384,6 +415,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(scripts__trust, 4),
     REGISTER_FUNCTION_PRIV(scripts__user, 2),
     REGISTER_FUNCTION_PRIV(chats__send, 3),
+    REGISTER_FUNCTION_PRIV(chats__recent, 2),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
