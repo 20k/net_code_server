@@ -313,9 +313,24 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
     }
 
+    ///ALARM: ALARM: NEED TO RATE LIMIT URGENTLY
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(get_thread_id(ctx));
 
+    auto now = std::chrono::high_resolution_clock::now();
+    auto duration = now.time_since_epoch();
+    size_t real_time = duration.count();
+
     mongo_requester request;
+    request.set_prop("channel", channel);
+    request.set_prop("msg", msg);
+    request.set_prop("time_ms", real_time);
+
+    request.insert_in_db(mongo_ctx);
+
+    push_success(ctx);
+
+    return 1;
 }
 
 inline
