@@ -104,6 +104,11 @@ struct mongo_context
         {
             change_collection("global_properties");
         }
+
+        if(type == mongo_database_type::CHAT_CHANNELS)
+        {
+            change_collection("all_channels");
+        }
     }
 
     bool contains_banned_query(bson_t* bs)
@@ -520,6 +525,9 @@ struct mongo_requester
     std::map<std::string, std::string> properties;
     std::map<std::string, int> is_binary;
     std::map<std::string, int> sort_on;
+    std::map<std::string, std::string> gt_than;
+    std::map<std::string, std::string> lt_than;
+
     int64_t limit = -1;
 
     bool has_prop(const std::string& str)
@@ -577,6 +585,26 @@ struct mongo_requester
             else
                 bson_append_utf8(to_find, i.first.c_str(), i.first.size(), i.second.c_str(), i.second.size());
         }
+
+        if(lt_than.size() != 0 && gt_than.size() != 0)
+        {
+            bson_t child;
+
+            for(auto& i : lt_than)
+            {
+                std::string key = i.first;
+                std::string lt_val = i.second;
+                std::string gt_val = gt_than[key];
+
+                bson_append_document_begin(to_find, key.c_str(), key.size(), &child);
+
+                BSON_APPEND_UTF8(&child, "$gt", gt_val.c_str());
+                BSON_APPEND_UTF8(&child, "$lt", lt_val.c_str());
+
+                bson_append_document_end(to_find, &child);
+            }
+        }
+
 
         bson_t* to_opt = nullptr;
 

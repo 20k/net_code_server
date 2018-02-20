@@ -316,7 +316,7 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///ALARM: ALARM: NEED TO RATE LIMIT URGENTLY
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(get_thread_id(ctx));
-    mongo_ctx->change_collection(channel);
+    //mongo_ctx->change_collection(channel);
 
     auto now = std::chrono::high_resolution_clock::now();
     auto duration = now.time_since_epoch();
@@ -366,7 +366,7 @@ duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(get_thread_id(ctx));
-    mongo_ctx->change_collection(channel);
+    //mongo_ctx->change_collection(channel);
 
     ///ALARM: ALARM: RATE LIMIT
 
