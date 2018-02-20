@@ -1,4 +1,5 @@
 #include "http_beast_server.hpp"
+#include "non_user_task_thread.hpp"
 
 //
 // Copyright (c) 2016-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
@@ -490,4 +491,5 @@ void http_test_run()
     //std::thread{std::bind(&http_test_server, &req)}.detach();
 
     http_test_server();
+    start_non_user_task_thread();
 }

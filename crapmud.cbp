@@ -73,6 +73,8 @@
 		<Unit filename="mongo.cpp" />
 		<Unit filename="mongo.hpp" />
 		<Unit filename="mongo_cleanup.hpp" />
+		<Unit filename="non_user_task_thread.cpp" />
+		<Unit filename="non_user_task_thread.hpp" />
 		<Unit filename="privileged_core_scripts.hpp" />
 		<Unit filename="script_util.cpp" />
 		<Unit filename="script_util.hpp" />
