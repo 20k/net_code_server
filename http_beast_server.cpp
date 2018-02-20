@@ -279,7 +279,118 @@ struct send_lambda
 };
 
 // Handles an HTTP server connection
+void read_queue(tcp::socket& socket,
+                std::string const& doc_root,
+                global_state& glob,
+                command_handler_state& state,
+                int64_t my_id,
+                shared_data& shared)
+{
+    boost::system::error_code ec;
 
+    while(1)
+    {
+        if(shared.should_terminate)
+            break;
+
+        Sleep(50);
+
+        boost::beast::flat_buffer buffer;
+        http::request<http::string_body> req;
+        http::read(socket, buffer, req, ec);
+
+        if(ec == http::error::end_of_stream)
+            break;
+        if(ec)
+            return fail(ec, "read");
+
+        printf("got test read\n");
+
+        ///got a request
+        std::string to_pipe = handle_command(state, req.body(), glob, my_id);
+
+        shared.add_back_write(to_pipe);
+    }
+
+    socket.shutdown(tcp::socket::shutdown_send, ec);
+
+    std::cout << "shutdown" << std::endl;
+}
+
+void write_queue(tcp::socket& socket,
+                std::string const& doc_root,
+                global_state& glob,
+                command_handler_state& state,
+                int64_t my_id,
+                shared_data& shared)
+{
+    bool close = false;
+    boost::system::error_code ec;
+
+    send_lambda<tcp::socket> lambda{socket, close, ec};
+
+    while(1)
+    {
+        if(shared.should_terminate)
+            return;
+
+        Sleep(50);
+
+        if(shared.has_front_write())
+        {
+            printf("sending test write\n");
+
+            std::string next_command = shared.get_front_write();
+
+            /*http::request<http::string_body> req{http::verb::get, "./test.txt", 11};
+            req.set(http::field::host, HOST_IP);
+            req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+
+            req.set(http::field::content_type, "text/plain");
+            req.body() = next_command;
+
+            req.prepare_payload();
+
+            http::write(*socket, req);*/
+
+            http::response<http::string_body> res{
+                std::piecewise_construct,
+                std::make_tuple(std::move(next_command)),
+                std::make_tuple(http::status::ok, 11)};
+
+            //http::response<http::string_body> res;
+
+            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+            res.keep_alive(true);
+
+            res.set(http::field::content_type, "text/plain");
+            res.prepare_payload();
+
+            lambda(std::move(res));
+        }
+
+        if(!socket.is_open())
+            return;
+    }
+}
+
+void thread_session(
+    tcp::socket&& socket,
+    std::string const& doc_root,
+    global_state& glob,
+    command_handler_state& state,
+    int64_t my_id)
+{
+    shared_data shared;
+
+    std::thread(read_queue, std::ref(socket), doc_root, std::ref(glob), std::ref(state), my_id, std::ref(shared)).detach();
+    std::thread(write_queue, std::ref(socket), doc_root, std::ref(glob), std::ref(state), my_id, std::ref(shared)).detach();
+
+    while(!shared.should_terminate)
+    {
+        Sleep(500);
+    }
+}
 
 ///Ok so: This session is a proper hackmud worker thread thing
 ///we should wait for requests
@@ -345,7 +456,7 @@ void session_wrapper(tcp::socket&& socket,
 
     try
     {
-        do_session(std::move(socket), doc_root, glob, state, my_id);
+        thread_session(std::move(socket), doc_root, glob, state, my_id);
     }
     catch(...)
     {
