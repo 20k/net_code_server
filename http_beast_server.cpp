@@ -278,9 +278,41 @@ struct send_lambda
     }
 };
 
-void async_command_handler(shared_data& shared, command_handler_state& state)
+void async_command_handler(shared_data& shared, command_handler_state& state, std::deque<std::string>& shared_queue, std::mutex& shared_lock,
+                           global_state& glob, int64_t my_id)
 {
+    while(1)
+    {
+        if(shared.should_terminate)
+            break;
 
+        std::string to_exec = "";
+
+        {
+            std::lock_guard lg(shared_lock);
+
+            if(shared_queue.size() > 0)
+            {
+                to_exec = shared_queue.front();
+                shared_queue.pop_front();
+            }
+        }
+
+        if(to_exec == "")
+        {
+            Sleep(5);
+            continue;
+        }
+
+        std::string to_pipe = handle_command(state, to_exec, glob, my_id);
+        shared.add_back_write(to_pipe);
+
+        Sleep(5);
+    }
+
+    std::cout << "shutdown async" << std::endl;
+
+    shared.termination_count++;
 }
 
 // Handles an HTTP server connection
@@ -290,7 +322,12 @@ void read_queue(tcp::socket& socket,
                 int64_t my_id,
                 shared_data& shared)
 {
+    std::deque<std::string> shared_queue;
+    std::mutex shared_lock;
     command_handler_state state;
+
+    std::thread(async_command_handler, std::ref(shared), std::ref(state), std::ref(shared_queue), std::ref(shared_lock),
+                std::ref(glob), my_id).detach();
 
     boost::system::error_code ec;
 
@@ -317,12 +354,18 @@ void read_queue(tcp::socket& socket,
                     break;
                 }
 
+                {
+                    std::lock_guard lg(shared_lock);
+
+                    shared_queue.push_back(req.body());
+                }
+
                 //printf("got test read\n");
 
                 ///got a request
-                std::string to_pipe = handle_command(state, req.body(), glob, my_id);
+                //std::string to_pipe = handle_command(state, req.body(), glob, my_id);
 
-                shared.add_back_write(to_pipe);
+                //shared.add_back_write(to_pipe);
             }
         }
     }
@@ -426,7 +469,8 @@ void thread_session(
     std::thread(read_queue, std::ref(socket), doc_root, std::ref(glob), my_id, std::ref(shared)).detach();
     std::thread(write_queue, std::ref(socket), doc_root, std::ref(glob), my_id, std::ref(shared)).detach();
 
-    while(shared.termination_count != 2)
+    ///3rd thread is the js exec context
+    while(shared.termination_count != 3)
     {
         Sleep(500);
     }
