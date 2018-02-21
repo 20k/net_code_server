@@ -692,6 +692,61 @@ struct mongo_requester
 
         bson_destroy(to_insert);
     }
+
+    void append_property_to(bson_t* bson, const std::string& key)
+    {
+        std::string val = properties[key];
+
+        if(is_binary[key])
+            bson_append_binary(bson, key.c_str(), key.size(), BSON_SUBTYPE_BINARY, (const uint8_t*)val.c_str(), val.size());
+        else
+            bson_append_utf8(bson, key.c_str(), key.size(), val.c_str(), val.size());
+    }
+
+    /*bson_t child;
+
+    BSON_APPEND_DOCUMENT_BEGIN(to_insert, "$set", &child);
+
+    for(auto& i : item_properties)
+    {
+        bson_append_utf8(&child, i.first.c_str(), i.first.size(), i.second.c_str(), i.second.size());
+    }
+
+    bson_append_document_end(to_insert, &child);*/
+
+    void update_in_db(mongo_lock_proxy& ctx, mongo_requester& set_to)
+    {
+        bson_t* to_select = bson_new();
+
+        bson_t child;
+
+        for(auto& i : properties)
+        {
+            bson_append_document_begin(to_select, i.first.c_str(), i.first.size(), &child);
+
+            BSON_APPEND_BOOL(&child, "$exists", true);
+
+            bson_append_document_end(to_select, &child);
+        }
+
+        bson_t* to_update = bson_new();
+
+        BSON_APPEND_DOCUMENT_BEGIN(to_update, "$set", &child);
+
+        for(auto& i : set_to.properties)
+        {
+            set_to.append_property_to(&child, i.first);
+        }
+
+        bson_append_document_end(to_update, &child);
+
+        std::cout << "JSON " << bson_as_json(to_select, nullptr) << " selector " << bson_as_json(to_update, nullptr) << std::endl;
+
+        ctx->update_bson_many(ctx->last_collection, to_select, to_update);
+
+        bson_destroy(to_update);
+        bson_destroy(to_select);
+    }
 };
 
 inline

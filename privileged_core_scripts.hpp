@@ -313,6 +313,42 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
     }
 
+    int64_t global_id = 0;
+
+    {
+        mongo_lock_proxy global_prop_ctx = get_global_mongo_global_properties_context(get_thread_id(ctx));
+
+        mongo_requester request;
+        request.set_prop("chats_send_is_gid", 1);
+
+        std::vector<mongo_requester> found = request.fetch_from_db(global_prop_ctx);
+
+        if(found.size() == 0)
+        {
+            mongo_requester gid;
+            gid.set_prop("chats_send_is_gid", 1);
+            gid.set_prop("chats_send_gid", 1);
+
+            gid.insert_in_db(global_prop_ctx);
+        }
+        else
+        {
+            mongo_requester& cur = found[0];
+
+            global_id = cur.get_prop_as_integer("chats_send_gid");
+
+            //std::cout << "gid " << global_id << std::endl;
+
+            mongo_requester query;
+            query.set_prop("chats_send_is_gid", 1);
+
+            mongo_requester update;
+            update.set_prop("chats_send_gid", global_id + 1);
+
+            query.update_in_db(global_prop_ctx, update);
+        }
+    }
+
     ///ALARM: ALARM: NEED TO RATE LIMIT URGENTLY
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(get_thread_id(ctx));
@@ -327,6 +363,7 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
     request.set_prop("msg", msg);
     request.set_prop("time_ms", real_time);
     request.set_prop("from", get_caller(ctx));
+    request.set_prop("uid", global_id);
 
     request.insert_in_db(mongo_ctx);
 

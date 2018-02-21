@@ -45,6 +45,11 @@ void run_non_user_tasks()
 
         for(auto& i : channel_map)
         {
+            std::sort(i.second.begin(), i.second.end(), [](auto& i1, auto& i2){return i1.get_prop("uid") < i2.get_prop("uid");});
+        }
+
+        for(auto& i : channel_map)
+        {
             channel_to_string[i.first] = prettify_chat_strings(i.second);
         }
 
