@@ -4,6 +4,7 @@
 #include "user.hpp"
 #include "duk_object_functions.hpp"
 #include "memory_sandbox.hpp"
+#include <ratio>
 
 #define COOPERATE_KILL() duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk); \
                          sandbox_data* sand_data = (sandbox_data*)mem_funcs_duk.udata; \
@@ -354,8 +355,8 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
     mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(get_thread_id(ctx));
     //mongo_ctx->change_collection(channel);
 
-    auto now = std::chrono::high_resolution_clock::now();
-    auto duration = now.time_since_epoch();
+    auto now = std::chrono::system_clock::now();
+    std::chrono::duration<double, std::milli> duration = now.time_since_epoch();
     size_t real_time = duration.count();
 
     mongo_requester request;
@@ -373,13 +374,47 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+std::string format_tim(const std::string& in)
+{
+    if(in.size() == 1)
+        return "0" + in;
+
+    if(in.size() == 0)
+        return "00";
+
+    return in;
+}
+
+inline
 std::string prettify_chat_strings(std::vector<mongo_requester>& found)
 {
     std::string str;
 
+    ///STD::CHRONO PLS
     for(mongo_requester& i : found)
     {
-        std::string msg = i.get_prop("channel") + " " + i.get_prop("from") + " "  + i.get_prop("msg");
+        int64_t time_code_ms = i.get_prop_as_integer("time_ms");
+
+        std::chrono::system_clock::time_point chron(std::chrono::seconds(time_code_ms / 1000));
+
+        typedef std::chrono::duration<int, std::ratio_multiply<std::chrono::hours::period, std::ratio<24> >::type> days;
+
+        std::chrono::system_clock::duration tp = chron.time_since_epoch();
+        days d = std::chrono::duration_cast<days>(tp);
+        tp -= d;
+        std::chrono::hours h = std::chrono::duration_cast<std::chrono::hours>(tp);
+        tp -= h;
+        std::chrono::minutes m = std::chrono::duration_cast<std::chrono::minutes>(tp);
+        tp -= m;
+        std::chrono::seconds s = std::chrono::duration_cast<std::chrono::seconds>(tp);
+        tp -= s;
+
+        int hour = h.count() % 24;
+        int minute = m.count() % 60;
+
+        std::string tstr = "`b" + format_tim(std::to_string(hour)) + format_tim(std::to_string(minute)) + "`";
+
+        std::string msg = tstr + " " + i.get_prop("channel") + " " + i.get_prop("from") + " "  + i.get_prop("msg");
 
         str = msg + "\n" + str;
     }

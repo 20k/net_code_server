@@ -540,7 +540,7 @@ struct mongo_requester
         return properties[str];
     }
 
-    int32_t get_prop_as_integer(const std::string& str)
+    int64_t get_prop_as_integer(const std::string& str)
     {
         std::string prop = properties[str];
 
