@@ -357,7 +357,10 @@ void read_queue(tcp::socket& socket,
                 {
                     std::lock_guard lg(shared_lock);
 
-                    shared_queue.push_back(req.body());
+                    if(shared_queue.size() <= 5)
+                        shared_queue.push_back(req.body());
+                    else
+                        shared.add_back_write("command Hit rate limit");
                 }
 
                 //printf("got test read\n");
