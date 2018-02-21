@@ -278,6 +278,11 @@ struct send_lambda
     }
 };
 
+void async_command_handler(shared_data& shared, command_handler_state& state)
+{
+
+}
+
 // Handles an HTTP server connection
 void read_queue(tcp::socket& socket,
                 std::string const& doc_root,

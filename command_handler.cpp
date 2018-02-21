@@ -458,29 +458,14 @@ std::string handle_client_poll(user& usr)
         channel_to_string[i.first] = prettify_chat_strings(i.second);
     }
 
-    //global_shared_data* store = fetch_global_shared_data();
-
-    //std::cout << found.size() << std::endl;
-
     std::string to_send = "";
 
     if(channel_to_string.size() != 0)
     {
-        //std::lock_guard guard(store->lock);
-
-        //for(shared_data* data : store->data)
-        //{
-            for(auto& cdata : channel_to_string)
-            {
-                //std::string to_send = "chat_api " + cdata.first + " " + cdata.second;
-
-                to_send += cdata.first + " " + cdata.second;
-
-                //data->add_back_write(to_send);
-            }
-
-            //data->add_back_write(to_send);
-        //}
+        for(auto& cdata : channel_to_string)
+        {
+            to_send += cdata.first + " " + cdata.second;
+        }
     }
 
     if(to_send.size() == 0)
