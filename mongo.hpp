@@ -525,9 +525,15 @@ struct mongo_requester
 {
     std::map<std::string, std::string> properties;
     std::map<std::string, int> is_binary;
+    std::map<std::string, int> is_integer;
+
     std::map<std::string, int> sort_on;
+
     std::map<std::string, std::string> gt_than;
     std::map<std::string, std::string> lt_than;
+
+    std::map<std::string, int32_t> gt_than_i;
+    std::map<std::string, int32_t> lt_than_i;
 
     int64_t limit = -1;
 
@@ -563,6 +569,13 @@ struct mongo_requester
         is_binary[key] = 1;
     }
 
+    template<typename T>
+    void set_prop_int(const std::string& key, const T& value)
+    {
+        properties[key] = stringify_hack(value);
+        is_integer[key] = 1;
+    }
+
     void set_prop_sort_on(const std::string& key, int dir)
     {
         sort_on[key] = dir;
@@ -581,10 +594,7 @@ struct mongo_requester
 
         for(auto& i : properties)
         {
-            if(is_binary[i.first])
-                bson_append_binary(to_find, i.first.c_str(), i.first.size(), BSON_SUBTYPE_BINARY, (const uint8_t*)i.second.c_str(), i.second.size());
-            else
-                bson_append_utf8(to_find, i.first.c_str(), i.first.size(), i.second.c_str(), i.second.size());
+            append_property_to(to_find, i.first);
         }
 
         //if(lt_than.size() != 0 && gt_than.size() != 0)
@@ -597,6 +607,12 @@ struct mongo_requester
                 keys_check.insert(i.first);
 
             for(auto& i : gt_than)
+                keys_check.insert(i.first);
+
+            for(auto& i : lt_than_i)
+                keys_check.insert(i.first);
+
+            for(auto& i : gt_than_i)
                 keys_check.insert(i.first);
 
             for(auto& i : keys_check)
@@ -616,6 +632,12 @@ struct mongo_requester
 
                 if(lt_val != "")
                     BSON_APPEND_UTF8(&child, "$lt", lt_val.c_str());
+
+                if(lt_than_i.find(key) != lt_than_i.end())
+                    BSON_APPEND_INT32(&child, "$lt", lt_than_i[key]);
+
+                if(gt_than_i.find(key) != gt_than_i.end())
+                    BSON_APPEND_INT32(&child, "$gt", gt_than_i[key]);
 
                 //std::cout << "$gt " << gt_val << " $lt " << lt_val << std::endl;
 
@@ -677,6 +699,12 @@ struct mongo_requester
                     found.set_prop(key, bson_iter_utf8_easy(&iter));
                     continue;
                 }
+
+                if(BSON_ITER_HOLDS_INT32(&iter))
+                {
+                    found.set_prop_int(key, bson_iter_int32(&iter));
+                    continue;
+                }
             }
 
             bson_destroy(next);
@@ -698,10 +726,7 @@ struct mongo_requester
 
         for(auto& i : properties)
         {
-            if(is_binary[i.first])
-                bson_append_binary(to_insert, i.first.c_str(), i.first.size(), BSON_SUBTYPE_BINARY, (const uint8_t*)i.second.c_str(), i.second.size());
-            else
-                bson_append_utf8(to_insert, i.first.c_str(), i.first.size(), i.second.c_str(), i.second.size());
+            append_property_to(to_insert, i.first);
         }
 
         ctx->insert_bson_1(ctx->last_collection, to_insert);
@@ -715,6 +740,8 @@ struct mongo_requester
 
         if(is_binary[key])
             bson_append_binary(bson, key.c_str(), key.size(), BSON_SUBTYPE_BINARY, (const uint8_t*)val.c_str(), val.size());
+        if(is_integer[key])
+            BSON_APPEND_INT32(bson, key.c_str(), get_prop_as_integer(key));
         else
             bson_append_utf8(bson, key.c_str(), key.size(), val.c_str(), val.size());
     }

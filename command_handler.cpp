@@ -405,14 +405,18 @@ std::string handle_client_poll(user& usr)
         mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(-2);
 
         mongo_requester request;
-        request.gt_than["uid"] = stringify_hack(start_from - 1);
+        request.gt_than_i["uid"] = start_from;
         //request.lt_than["uid"] = stringify_hack(999);
 
         found = request.fetch_from_db(mongo_ctx);
     }
 
+    std::cout << "poll\n";
+
     if(found.size() == 0)
         return "";
+
+    std::cout << "found num " << found.size() << std::endl;
 
     int64_t last_uid = start_from;
 
@@ -435,6 +439,8 @@ std::string handle_client_poll(user& usr)
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(-2);
 
         usr.overwrite_user_in_db(mongo_ctx);
+
+        std::cout << "started @ " << start_from << " ended at " << last_uid << std::endl;
     }
 
     for(auto& i : channel_map)
@@ -493,14 +499,14 @@ std::string handle_command(command_handler_state& state, const std::string& str,
     {
         std::string to_exec(str.begin() + client_command.size(), str.end());
 
-        return "command " + handle_command_impl(state, to_exec, glob,my_id);
+        return "command " + handle_command_impl(state, to_exec, glob, my_id);
     }
 
     if(starts_with(str, client_chat))
     {
         std::string to_exec(str.begin() + client_chat.size(), str.end());
 
-        handle_command_impl(state, to_exec, glob,my_id);
+        handle_command_impl(state, to_exec, glob, my_id);
 
         return "";
     }

@@ -364,7 +364,7 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
     request.set_prop("msg", msg);
     request.set_prop("time_ms", real_time);
     request.set_prop("from", get_caller(ctx));
-    request.set_prop("uid", global_id);
+    request.set_prop_int("uid", global_id);
 
     request.insert_in_db(mongo_ctx);
 
