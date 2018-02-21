@@ -740,7 +740,7 @@ struct mongo_requester
 
         bson_append_document_end(to_update, &child);
 
-        std::cout << "JSON " << bson_as_json(to_select, nullptr) << " selector " << bson_as_json(to_update, nullptr) << std::endl;
+        //std::cout << "JSON " << bson_as_json(to_select, nullptr) << " selector " << bson_as_json(to_update, nullptr) << std::endl;
 
         ctx->update_bson_many(ctx->last_collection, to_select, to_update);
 

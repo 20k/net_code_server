@@ -424,7 +424,7 @@ duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     mongo_requester request;
     request.set_prop("channel", channel);
-    request.set_prop_sort_on("time_ms", -1);
+    request.set_prop_sort_on("uid", -1);
 
     request.set_limit(num);
 
