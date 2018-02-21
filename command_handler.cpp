@@ -414,12 +414,27 @@ std::string handle_client_poll(user& usr)
     if(found.size() == 0)
         return "";
 
+    int64_t last_uid = start_from;
+
     std::map<std::string, std::vector<mongo_requester>> channel_map;
     std::map<std::string, std::string> channel_to_string;
 
     for(auto& i : found)
     {
         channel_map[i.get_prop("channel")].push_back(i);
+
+        if(i.get_prop_as_integer("uid") > last_uid)
+        {
+            last_uid = i.get_prop_as_integer("uid");
+        }
+    }
+
+    usr.last_message_uid = last_uid;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(-2);
+
+        usr.overwrite_user_in_db(mongo_ctx);
     }
 
     for(auto& i : channel_map)
@@ -427,8 +442,13 @@ std::string handle_client_poll(user& usr)
         std::sort(i.second.begin(), i.second.end(), [](mongo_requester& i1, mongo_requester& i2){return i1.get_prop("uid") > i2.get_prop("uid");});
     }
 
+    int max_chat_dump = 1000;
+
     for(auto& i : channel_map)
     {
+        if(i.second.size() > max_chat_dump)
+            i.second.resize(max_chat_dump);
+
         channel_to_string[i.first] = prettify_chat_strings(i.second);
     }
 
@@ -487,12 +507,14 @@ std::string handle_command(command_handler_state& state, const std::string& str,
 
     if(starts_with(str, client_poll) && state.auth != "" && state.current_user.name != "")
     {
-        mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
+        {
+            mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-        if(!state.current_user.exists(mongo_user_info, state.current_user.name))
-            return "";
+            if(!state.current_user.exists(mongo_user_info, state.current_user.name))
+                return "";
 
-        state.current_user.load_from_db(mongo_user_info, state.current_user.name);
+            state.current_user.load_from_db(mongo_user_info, state.current_user.name);
+        }
 
         return handle_client_poll(state.current_user);
 
