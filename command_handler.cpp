@@ -395,6 +395,74 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
     return make_error_col("Command Not Found or Unimplemented");
 }
 
+std::string handle_client_poll(user& usr)
+{
+    std::vector<mongo_requester> found;
+
+    int32_t start_from = usr.last_message_uid;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(-2);
+
+        mongo_requester request;
+        request.gt_than["uid"] = stringify_hack(start_from - 1);
+        //request.lt_than["uid"] = stringify_hack(999);
+
+        found = request.fetch_from_db(mongo_ctx);
+    }
+
+    if(found.size() == 0)
+        return "";
+
+    std::map<std::string, std::vector<mongo_requester>> channel_map;
+    std::map<std::string, std::string> channel_to_string;
+
+    for(auto& i : found)
+    {
+        channel_map[i.get_prop("channel")].push_back(i);
+    }
+
+    for(auto& i : channel_map)
+    {
+        std::sort(i.second.begin(), i.second.end(), [](mongo_requester& i1, mongo_requester& i2){return i1.get_prop("uid") > i2.get_prop("uid");});
+    }
+
+    for(auto& i : channel_map)
+    {
+        channel_to_string[i.first] = prettify_chat_strings(i.second);
+    }
+
+    //global_shared_data* store = fetch_global_shared_data();
+
+    //std::cout << found.size() << std::endl;
+
+    std::string to_send = "";
+
+    if(channel_to_string.size() != 0)
+    {
+        //std::lock_guard guard(store->lock);
+
+        //for(shared_data* data : store->data)
+        //{
+            for(auto& cdata : channel_to_string)
+            {
+                //std::string to_send = "chat_api " + cdata.first + " " + cdata.second;
+
+                to_send += cdata.first + " " + cdata.second;
+
+                //data->add_back_write(to_send);
+            }
+
+            //data->add_back_write(to_send);
+        //}
+    }
+
+    if(to_send.size() == 0)
+        return "";
+
+    return "chat_api " + to_send;
+}
+
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
 {
     std::string client_command = "client_command ";
@@ -417,9 +485,18 @@ std::string handle_command(command_handler_state& state, const std::string& str,
         return "";
     }
 
-    if(starts_with(str, client_poll) && state.auth != "")
+    if(starts_with(str, client_poll) && state.auth != "" && state.current_user.name != "")
     {
-        //state.current_user.load_from_db()
+        mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
+
+        if(!state.current_user.exists(mongo_user_info, state.current_user.name))
+            return "";
+
+        state.current_user.load_from_db(mongo_user_info, state.current_user.name);
+
+        return handle_client_poll(state.current_user);
+
+        //int uid =
     }
 
     return "Command not understood";

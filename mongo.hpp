@@ -6,6 +6,7 @@
 #include <vector>
 #include <iostream>
 #include <mutex>
+#include <set>
 
 enum class mongo_database_type
 {
@@ -586,20 +587,35 @@ struct mongo_requester
                 bson_append_utf8(to_find, i.first.c_str(), i.first.size(), i.second.c_str(), i.second.size());
         }
 
-        if(lt_than.size() != 0 && gt_than.size() != 0)
+        //if(lt_than.size() != 0 && gt_than.size() != 0)
         {
             bson_t child;
 
+            std::set<std::string> keys_check;
+
             for(auto& i : lt_than)
+                keys_check.insert(i.first);
+
+            for(auto& i : gt_than)
+                keys_check.insert(i.first);
+
+            for(auto& i : keys_check)
             {
-                std::string key = i.first;
-                std::string lt_val = i.second;
-                std::string gt_val = gt_than[key];
+                std::string key = i;
+
+                bool has_lt_than = lt_than.find(key) != lt_than.end();
+                bool has_gt_than = gt_than.find(key) != gt_than.end();
+
+                std::string lt_val = has_lt_than ? lt_than[key] : "";
+                std::string gt_val = has_gt_than ? gt_than[key] : "";
 
                 bson_append_document_begin(to_find, key.c_str(), key.size(), &child);
 
-                BSON_APPEND_UTF8(&child, "$gt", gt_val.c_str());
-                BSON_APPEND_UTF8(&child, "$lt", lt_val.c_str());
+                if(gt_val != "")
+                    BSON_APPEND_UTF8(&child, "$gt", gt_val.c_str());
+
+                if(lt_val != "")
+                    BSON_APPEND_UTF8(&child, "$lt", lt_val.c_str());
 
                 //std::cout << "$gt " << gt_val << " $lt " << lt_val << std::endl;
 

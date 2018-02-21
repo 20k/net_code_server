@@ -17,6 +17,7 @@ void run_non_user_tasks()
     {
         Sleep(500);
 
+        #if 0
         auto next_now = std::chrono::high_resolution_clock::now();
         auto next_duration = next_now.time_since_epoch();
         size_t next_real_time = next_duration.count();
@@ -45,7 +46,7 @@ void run_non_user_tasks()
 
         for(auto& i : channel_map)
         {
-            std::sort(i.second.begin(), i.second.end(), [](auto& i1, auto& i2){return i1.get_prop("uid") >= i2.get_prop("uid");});
+            std::sort(i.second.begin(), i.second.end(), [](auto& i1, auto& i2){return i1.get_prop("uid") > i2.get_prop("uid");});
         }
 
         for(auto& i : channel_map)
@@ -75,6 +76,7 @@ void run_non_user_tasks()
         }
 
         real_time = next_real_time;
+        #endif // 0
     }
 }
 
