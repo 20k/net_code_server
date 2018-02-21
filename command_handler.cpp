@@ -530,5 +530,5 @@ std::string handle_command(command_handler_state& state, const std::string& str,
         //int uid =
     }
 
-    return "Command not understood";
+    return "command Command not understood";
 }
