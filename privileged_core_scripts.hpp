@@ -411,7 +411,7 @@ duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::cout << "fchannel " << channel << std::endl;
 
-    if(channel == "" || num >= 100 || channel.size() >= 10 )
+    if(channel == "" || num >= 100 || channel.size() >= 10)
     {
         push_error(ctx, "Usage: #ms.chats.recent({channel:\"<name>\", count:num, pretty:1})");
         return 1;
