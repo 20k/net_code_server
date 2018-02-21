@@ -681,6 +681,12 @@ struct mongo_requester
 
             bson_t* next = bson_new_from_json((const uint8_t*)i.c_str(), i.size(), nullptr);
 
+            if(next == nullptr)
+            {
+                printf("invalid json in find\n");
+                continue;
+            }
+
             bson_iter_t iter;
             bson_iter_init(&iter, next);
 
@@ -740,7 +746,7 @@ struct mongo_requester
 
         if(is_binary[key])
             bson_append_binary(bson, key.c_str(), key.size(), BSON_SUBTYPE_BINARY, (const uint8_t*)val.c_str(), val.size());
-        if(is_integer[key])
+        else if(is_integer[key])
             BSON_APPEND_INT32(bson, key.c_str(), get_prop_as_integer(key));
         else
             bson_append_utf8(bson, key.c_str(), key.size(), val.c_str(), val.size());
