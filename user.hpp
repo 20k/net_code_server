@@ -13,6 +13,7 @@ struct user
     std::string name;
     double cash = 0;
     std::string auth;
+    int32_t last_message_uid = 0;
 
     /*bson_t* get_bson_representation()
     {
@@ -39,6 +40,8 @@ struct user
                                          BCON_UTF8(name.c_str()),
                                          "cash",
                                          BCON_DOUBLE(cash),
+                                         "last_message_uid",
+                                         BCON_INT32(last_message_uid),
                                      "}"
                                      );
 
@@ -129,6 +132,11 @@ struct user
                 if(key == "auth")
                 {
                     auth = bson_iter_binary_std_string(&iter);
+                }
+
+                if(key == "last_message_uid")
+                {
+                    last_message_uid = bson_iter_int32(&iter);
                 }
             }
 

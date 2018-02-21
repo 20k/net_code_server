@@ -282,10 +282,11 @@ struct send_lambda
 void read_queue(tcp::socket& socket,
                 std::string const& doc_root,
                 global_state& glob,
-                command_handler_state& state,
                 int64_t my_id,
                 shared_data& shared)
 {
+    command_handler_state state;
+
     boost::system::error_code ec;
 
     try
@@ -337,7 +338,6 @@ void read_queue(tcp::socket& socket,
 void write_queue(tcp::socket& socket,
                 std::string const& doc_root,
                 global_state& glob,
-                command_handler_state& state,
                 int64_t my_id,
                 shared_data& shared)
 {
@@ -360,6 +360,12 @@ void write_queue(tcp::socket& socket,
                 printf("sending test write\n");
 
                 std::string next_command = shared.get_front_write();
+
+                if(next_command == "")
+                {
+                    printf("skipping\n");
+                    continue;
+                }
 
                 /*http::request<http::string_body> req{http::verb::get, "./test.txt", 11};
                 req.set(http::field::host, HOST_IP);
@@ -408,7 +414,6 @@ void thread_session(
     tcp::socket&& socket,
     std::string const& doc_root,
     global_state& glob,
-    command_handler_state& state,
     int64_t my_id)
 {
     shared_data shared;
@@ -416,8 +421,8 @@ void thread_session(
     global_shared_data* store = fetch_global_shared_data();
     store->add(&shared);
 
-    std::thread(read_queue, std::ref(socket), doc_root, std::ref(glob), std::ref(state), my_id, std::ref(shared)).detach();
-    std::thread(write_queue, std::ref(socket), doc_root, std::ref(glob), std::ref(state), my_id, std::ref(shared)).detach();
+    std::thread(read_queue, std::ref(socket), doc_root, std::ref(glob), my_id, std::ref(shared)).detach();
+    std::thread(write_queue, std::ref(socket), doc_root, std::ref(glob), my_id, std::ref(shared)).detach();
 
     while(shared.termination_count != 2)
     {
@@ -502,23 +507,21 @@ void session_wrapper(tcp::socket&& socket,
                      global_state& glob,
                      int64_t my_id)
 {
-    command_handler_state state;
-
     try
     {
-        thread_session(std::move(socket), doc_root, glob, state, my_id);
+        thread_session(std::move(socket), doc_root, glob, my_id);
     }
     catch(...)
     {
 
     }
 
-    std::lock_guard<std::mutex> lk(glob.auth_lock);
+    /*std::lock_guard<std::mutex> lk(glob.auth_lock);
 
     ///oh crap
     ///we actually have to use the db for auth locks long term
     ///otherwise you could connect to a different server
-    glob.auth_locks[state.auth] = 0;
+    glob.auth_locks[state.auth] = 0;*/
 }
 
 //------------------------------------------------------------------------------

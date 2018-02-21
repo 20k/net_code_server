@@ -361,7 +361,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         if(request.fetch_from_db(ctx).size() == 0)
             return make_error_col("Auth Failed");
 
-        std::lock_guard<std::mutex> lk(glob.auth_lock);
+        //std::lock_guard<std::mutex> lk(glob.auth_lock);
 
         #if 0
         ///so if we reauth but on the same thread that's fine
@@ -372,7 +372,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
 
         state.auth = auth;
 
-        glob.auth_locks[state.auth] = my_id;
+        //glob.auth_locks[state.auth] = my_id;
 
         return make_success_col("Auth Success");
     }
@@ -399,6 +399,7 @@ std::string handle_command(command_handler_state& state, const std::string& str,
 {
     std::string client_command = "client_command ";
     std::string client_chat = "client_chat ";
+    std::string client_poll = "client_poll";
 
     if(starts_with(str, client_command))
     {
@@ -416,5 +417,10 @@ std::string handle_command(command_handler_state& state, const std::string& str,
         return "";
     }
 
-    return "";
+    if(starts_with(str, client_poll) && state.auth != "")
+    {
+        //state.current_user.load_from_db()
+    }
+
+    return "Command not understood";
 }
