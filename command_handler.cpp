@@ -411,7 +411,7 @@ std::string handle_client_poll(user& usr)
         found = request.fetch_from_db(mongo_ctx);
     }
 
-    std::cout << "poll\n";
+    //std::cout << "poll\n";
 
     if(found.size() == 0)
         return "";
@@ -511,8 +511,11 @@ std::string handle_command(command_handler_state& state, const std::string& str,
         return "";
     }
 
-    if(starts_with(str, client_poll) && state.auth != "" && state.current_user.name != "")
+    if(starts_with(str, client_poll))
     {
+        if(state.auth == "" || state.current_user.name == "")
+            return "";
+
         {
             mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 

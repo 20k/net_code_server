@@ -312,7 +312,7 @@ void read_queue(tcp::socket& socket,
                     break;
                 }
 
-                printf("got test read\n");
+                //printf("got test read\n");
 
                 ///got a request
                 std::string to_pipe = handle_command(state, req.body(), glob, my_id);
@@ -357,15 +357,12 @@ void write_queue(tcp::socket& socket,
 
             if(shared.has_front_write())
             {
-                printf("sending test write\n");
-
                 std::string next_command = shared.get_front_write();
 
                 if(next_command == "")
-                {
-                    printf("skipping\n");
                     continue;
-                }
+
+                printf("sending test write\n");
 
                 /*http::request<http::string_body> req{http::verb::get, "./test.txt", 11};
                 req.set(http::field::host, HOST_IP);
