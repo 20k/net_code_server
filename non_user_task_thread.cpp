@@ -15,7 +15,7 @@ void run_non_user_tasks()
 
     while(1)
     {
-        Sleep(1000);
+        Sleep(500);
 
         auto next_now = std::chrono::high_resolution_clock::now();
         auto next_duration = next_now.time_since_epoch();
