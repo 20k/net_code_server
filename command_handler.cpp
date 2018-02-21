@@ -212,11 +212,9 @@ bool starts_with(const std::string& in, const std::string& test)
     return false;
 }
 
-std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
+std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
 {
     printf("yay command\n");
-
-    //std::cout << str << std::endl;
 
     if(starts_with(str, "user "))
     {
@@ -395,4 +393,28 @@ std::string handle_command(command_handler_state& state, const std::string& str,
     }
 
     return make_error_col("Command Not Found or Unimplemented");
+}
+
+std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
+{
+    std::string client_command = "client_command ";
+    std::string client_chat = "client_chat ";
+
+    if(starts_with(str, client_command))
+    {
+        std::string to_exec(str.begin() + client_command.size(), str.end());
+
+        return "command " + handle_command_impl(state, to_exec, glob,my_id);
+    }
+
+    if(starts_with(str, client_chat))
+    {
+        std::string to_exec(str.begin() + client_chat.size(), str.end());
+
+        handle_command_impl(state, to_exec, glob,my_id);
+
+        return "";
+    }
+
+    return "";
 }
