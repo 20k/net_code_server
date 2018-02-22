@@ -38,7 +38,7 @@ struct rate_limit
 
         double& num_remaining = time_budget_remaining[usr_name][type];
 
-        if(num_remaining <= 0)
+        if(num_remaining - budget_deplete[type] <= 0)
             return false;
 
         num_remaining -= budget_deplete[type];
