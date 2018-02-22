@@ -394,19 +394,28 @@ struct mongo_context
         return results;
     }
 
+    void remove_bson(const std::string& script_host, bson_t* bs)
+    {
+        if(script_host != last_collection)
+            return;
+
+        if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
+            return;
+
+        mongoc_collection_delete_many(collection, bs, nullptr, nullptr, nullptr);
+    }
+
     void remove_json(const std::string& script_host, const std::string& json)
     {
         if(script_host != last_collection)
             return;
 
         if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
-        {
             return;
-        }
 
         bson_t* bs = make_bson_from_json(json);
 
-        mongoc_collection_delete_many(collection, bs, nullptr, nullptr, nullptr);
+        remove_bson(script_host, bs);
 
         bson_destroy(bs);
     }
@@ -795,6 +804,20 @@ struct mongo_requester
 
         bson_destroy(to_update);
         bson_destroy(to_select);
+    }
+
+    void remove_all_from_db(mongo_lock_proxy& ctx)
+    {
+        bson_t* to_remove = bson_new();
+
+        for(auto& i : properties)
+        {
+            append_property_to(to_remove, i.first);
+        }
+
+        ctx->remove_bson(ctx->last_collection, to_remove);
+
+        bson_destroy(to_remove);
     }
 };
 
