@@ -99,6 +99,51 @@ duk_ret_t db_find_all(duk_context* ctx)
     return 1;
 }
 
+static
+duk_ret_t db_find_one(duk_context* ctx)
+{
+    COOPERATE_KILL();
+
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+    mongo_ctx->change_collection(get_script_host(ctx));
+
+    duk_push_this(ctx);
+
+    duk_get_prop_string(ctx, -1, "JSON");
+    std::string json = duk_get_string(ctx, -1);
+    duk_pop(ctx);
+
+    duk_get_prop_string(ctx, -1, "PROJ");
+    std::string proj = duk_get_string(ctx, -1);
+    duk_pop(ctx);
+
+    duk_get_prop_string(ctx, -1, "DB_CALLER");
+    std::string caller = duk_get_string(ctx, -1);
+    duk_pop(ctx);
+
+    //std::cout << "json " << json << std::endl;
+
+    ///remove get prop db info
+    duk_pop(ctx);
+
+    if(caller != get_caller(ctx))
+        return 0;
+
+    std::vector<std::string> db_data = mongo_ctx->find_json(get_script_host(ctx), json, proj);
+
+    if(db_data.size() == 0)
+    {
+        duk_push_undefined(ctx);
+    }
+    else
+    {
+        duk_push_string(ctx, db_data[0].c_str());
+        duk_json_decode(ctx, -1);
+    }
+
+    return 1;
+}
+
 ///count, first, array
 
 ///note to self: Attach ids to object
@@ -141,6 +186,9 @@ duk_ret_t db_find(duk_context* ctx)
     //[object]
     duk_push_c_function(ctx, db_find_all, 0);
     duk_put_prop_string(ctx, -2, "array");
+
+    duk_push_c_function(ctx, db_find_one, 0);
+    duk_put_prop_string(ctx, -2, "first");
 
     duk_freeze(ctx, -1);
 
