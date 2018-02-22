@@ -4,6 +4,7 @@
 #include "user.hpp"
 #include "duk_object_functions.hpp"
 #include "memory_sandbox.hpp"
+#include "rate_limiting.hpp"
 #include <ratio>
 
 #define COOPERATE_KILL() duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk); \
@@ -230,6 +231,8 @@ duk_ret_t accts__xfer_gc_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
+    RATELIMIT_DUK(CASH);
+
     ///need a get either or
     ///so we can support to and name
     duk_get_prop_string(ctx, -1, "to");
@@ -304,6 +307,8 @@ inline
 duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
+
+    RATELIMIT_DUK(CHAT);
 
     std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
     std::string msg = duk_safe_get_prop_string(ctx, -1, "msg");

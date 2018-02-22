@@ -351,6 +351,9 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         auto pos = str.begin() + strlen("auth client ");
         std::string auth = std::string(pos, str.end());
 
+        if(auth.length() > 140)
+            return make_error_col("Auth too long");
+
         mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
 
         mongo_requester request;
@@ -452,7 +455,7 @@ std::string handle_client_poll(user& usr)
 
     for(auto& i : channel_map)
     {
-        if(i.second.size() > max_chat_dump)
+        if((int)i.second.size() > max_chat_dump)
             i.second.resize(max_chat_dump);
 
         channel_to_string[i.first] = prettify_chat_strings(i.second);
@@ -511,8 +514,6 @@ std::string handle_command(command_handler_state& state, const std::string& str,
         }
 
         return handle_client_poll(state.current_user);
-
-        //int uid =
     }
 
     return "command Command not understood";

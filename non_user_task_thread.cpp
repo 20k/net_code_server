@@ -6,6 +6,7 @@
 #include <windows.h>
 #include "../crapmud_client/http_beast_client.hpp"
 #include "privileged_core_scripts.hpp"
+#include "rate_limiting.hpp"
 
 void run_non_user_tasks()
 {
@@ -16,6 +17,8 @@ void run_non_user_tasks()
     while(1)
     {
         Sleep(500);
+
+        get_global_rate_limit()->donate_time_budget(0.5f);
 
         #if 0
         auto next_now = std::chrono::high_resolution_clock::now();
