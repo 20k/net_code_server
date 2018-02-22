@@ -2,6 +2,10 @@
 #define RATE_LIMITING_HPP_INCLUDED
 
 #include <mutex>
+#include <string>
+#include <map>
+#include <vector>
+#include <iostream>
 
 namespace rate
 {
@@ -61,9 +65,9 @@ struct rate_limit
     }
 };
 
-#define RATELIMIT_DUK(type) if(get_global_rate_limit()->try_call(get_caller(ctx), rate::type)) {push_error(ctx, "Rate Limit"); return 1;}
+#define RATELIMIT_DUK(type) if(!get_global_rate_limit()->try_call(get_caller(ctx), rate::type)) {push_error(ctx, "Rate Limit"); return 1;}
 
-static inline rate_limit global_rate_limit;
+extern rate_limit global_rate_limit;
 
 inline
 rate_limit* get_global_rate_limit()
