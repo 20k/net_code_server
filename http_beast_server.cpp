@@ -1,6 +1,6 @@
 #include "http_beast_server.hpp"
 #include "non_user_task_thread.hpp"
-#include "../crapmud_client/http_beast_client.hpp"
+#include "shared_data.hpp"
 
 //
 // Copyright (c) 2016-2017 Vinnie Falco (vinnie dot falco at gmail dot com)

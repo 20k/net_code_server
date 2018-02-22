@@ -4,7 +4,7 @@
 #include "mongo.hpp"
 #include <thread>
 #include <windows.h>
-#include "../crapmud_client/http_beast_client.hpp"
+#include "shared_data.hpp"
 #include "privileged_core_scripts.hpp"
 #include "rate_limiting.hpp"
 
