@@ -164,6 +164,61 @@ duk_ret_t scripts__user(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+std::string format_script_names(const std::vector<std::string>& names)
+{
+    std::string ret;
+
+    for(auto& i : names)
+    {
+        ret.append(i);
+        ret += "\n";
+    }
+
+    return ret;
+}
+
+///should take a pretty:1 argument
+inline
+duk_ret_t scripts__all(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    int pretty = duk_get_prop_string_as_int(ctx, -1, "pretty");
+
+    mongo_requester request;
+    request.set_prop("is_script", 1);
+
+    request.set_prop_sort_on("item_id", 1);
+
+    ///seclevel
+    //request.set_prop("seclevel", num);
+    //request.set_prop("in_public", "1"); ///TODO: FOR WHEN YOU CAN UP PUBLIC
+
+    mongo_lock_proxy item_context = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+    std::vector<mongo_requester> results = request.fetch_from_db(item_context);
+
+    std::vector<std::string> names;
+
+    for(mongo_requester& req : results)
+    {
+        names.push_back(req.get_prop("item_id"));
+    }
+
+    if(pretty)
+    {
+        std::string str = format_script_names(names);
+
+        duk_push_string(ctx, str.c_str());
+    }
+    else
+    {
+        push_duk_val(ctx, names);
+    }
+
+    return 1;
+}
+
+
+inline
 duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const std::string& to, double amount)
 {
     COOPERATE_KILL();
@@ -532,6 +587,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(accts__xfer_gc_to_caller, 4),
     REGISTER_FUNCTION_PRIV(scripts__trust, 4),
     REGISTER_FUNCTION_PRIV(scripts__user, 2),
+    REGISTER_FUNCTION_PRIV(scripts__all, 4),
     REGISTER_FUNCTION_PRIV(chats__send, 3),
     REGISTER_FUNCTION_PRIV(chats__recent, 2),
 };

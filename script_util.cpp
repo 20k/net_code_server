@@ -314,6 +314,7 @@ void script_info::overwrite_in_db(mongo_lock_proxy& ctx)
     my_script.set_prop("owner", owner);
     my_script.set_prop("is_script", 1);
     my_script.set_prop("unparsed_source", unparsed_source);
+    my_script.set_prop("seclevel", seclevel);
 
     //mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
 
