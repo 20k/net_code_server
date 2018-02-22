@@ -183,8 +183,13 @@ duk_ret_t scripts__all(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     int pretty = duk_get_prop_string_as_int(ctx, -1, "pretty");
 
+    int seclevel = duk_get_prop_string_as_int(ctx, -1, "sec", -1);
+
     mongo_requester request;
     request.set_prop("is_script", 1);
+
+    if(seclevel >= 0 && seclevel <= 4)
+        request.set_prop("seclevel", seclevel);
 
     request.set_prop_sort_on("item_id", 1);
 

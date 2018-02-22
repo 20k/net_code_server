@@ -265,8 +265,11 @@ std::string duk_safe_get_prop_string(duk_context* ctx, duk_idx_t idx, const std:
 }
 
 inline
-int duk_get_prop_string_as_int(duk_context* ctx, duk_idx_t idx, const std::string& key)
+int duk_get_prop_string_as_int(duk_context* ctx, duk_idx_t idx, const std::string& key, int def = 0)
 {
+    if(!duk_has_prop_string(ctx, idx, key.c_str()))
+        return def;
+
     duk_get_prop_string(ctx, idx, key.c_str());
 
     auto ret = duk_get_int(ctx, -1);
