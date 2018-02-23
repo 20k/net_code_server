@@ -252,6 +252,12 @@ std::string duk_safe_to_std_string(duk_context* ctx, duk_idx_t idx)
 inline
 std::string duk_safe_get_prop_string(duk_context* ctx, duk_idx_t idx, const std::string& key)
 {
+    if(duk_get_top(ctx) <= 0)
+        return std::string();;
+
+    if(duk_is_undefined(ctx, idx))
+        return std::string();
+
     if(!duk_has_prop_string(ctx, idx, key.c_str()))
         return std::string();
 
@@ -267,6 +273,12 @@ std::string duk_safe_get_prop_string(duk_context* ctx, duk_idx_t idx, const std:
 inline
 int duk_get_prop_string_as_int(duk_context* ctx, duk_idx_t idx, const std::string& key, int def = 0)
 {
+    if(duk_get_top(ctx) <= 0)
+        return def;
+
+    if(duk_is_undefined(ctx, idx))
+        return def;
+
     if(!duk_has_prop_string(ctx, idx, key.c_str()))
         return def;
 
