@@ -17,6 +17,7 @@ namespace item_types
         CHAR_COUNT,
         SCRIPT_SLOT,
         PUBLIC_SCRIPT_SLOT,
+        EMPTY_SCRIPT_BUNDLE,
         MISC,
         ERR,
     };
@@ -70,13 +71,48 @@ struct item
 
 namespace item_types
 {
-/*item get_default_of(item_types::item_type type)
-{
-    item new_item;
-    new_item.generate_set_id();
+    inline
+    item get_default_of(item_types::item_type type)
+    {
+        using namespace item_types;
 
+        item new_item;
+        new_item.set_prop("item_type", (int)type);
+        new_item.set_prop("rarity", 0);
 
-}*/
+        if(type == CHAR_COUNT)
+        {
+            new_item.set_prop("char_count", 500);
+            new_item.set_prop("desc", "Increases the max number of chars you can have in a script");
+        }
+
+        if(type == SCRIPT_SLOT)
+        {
+            new_item.set_prop("script_slots", 1);
+            new_item.set_prop("desc", "Increases the number of scripts you can have uploaded");
+        }
+
+        if(type == PUBLIC_SCRIPT_SLOT)
+        {
+            new_item.set_prop("public_script_slots", 1);
+            new_item.set_prop("desc", "Increases the number of public scripts you can have uploaded");
+        }
+
+        if(type == EMPTY_SCRIPT_BUNDLE)
+        {
+            new_item.set_prop("max_script_size", 500);
+            new_item.set_prop("open_source", 0);
+            new_item.set_prop("desc", "Container for a tradeable script");
+        }
+
+        if(type == MISC)
+        {
+            new_item.set_prop("misc", 1);
+            new_item.set_prop("desc", "???");
+        }
+
+        return new_item;
+    }
 }
 
 #endif // ITEMS_HPP_INCLUDED
