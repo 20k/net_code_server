@@ -677,6 +677,34 @@ duk_ret_t sys__disown_upg(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+duk_ret_t sys__xfer_upgrade_uid(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    item test_item;
+
+    int item_id = duk_get_prop_string_as_int(ctx, -1, "uid", -1);
+
+    if(item_id < 0)
+    {
+        push_error(ctx, "Invalid");
+        return 1;
+    }
+
+    std::string from = get_caller(ctx);
+    std::string to = duk_safe_get_prop_string(ctx, -1, "to");
+
+    test_item.set_prop("item_id", item_id);
+
+    if(test_item.transfer_from_to(from, to, get_thread_id(ctx)))
+        duk_push_int(ctx, test_item.get_prop_as_integer("item_id"));
+     else
+        push_error(ctx, "Could not xfer");
+
+    return 1;
+}
+
+inline
 std::string parse_function_hack(std::string in)
 {
     int len = in.size();
@@ -712,6 +740,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(users__me, 0),
     REGISTER_FUNCTION_PRIV(sys__create_upg, 0),
     REGISTER_FUNCTION_PRIV(sys__disown_upg, 0),
+    REGISTER_FUNCTION_PRIV(sys__xfer_upgrade_uid, 0),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
