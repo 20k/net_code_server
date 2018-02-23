@@ -650,6 +650,7 @@ duk_ret_t sys__create_upg(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+#if 0
 ///pretty tired when i wrote this check it for mistakes
 inline
 duk_ret_t sys__disown_upg(priv_context& priv_ctx, duk_context* ctx, int sl)
@@ -700,6 +701,39 @@ duk_ret_t sys__xfer_upgrade_uid(priv_context& priv_ctx, duk_context* ctx, int sl
         duk_push_int(ctx, test_item.get_prop_as_integer("item_id"));
      else
         push_error(ctx, "Could not xfer");
+
+    return 1;
+}
+#endif // 0
+
+inline
+duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    mongo_requester player;
+
+    {
+        mongo_requester request;
+        request.set_prop("name", get_caller(ctx));
+
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_ctx->change_collection(get_caller(ctx));
+
+        auto requests = request.fetch_from_db(mongo_ctx);
+
+        if(requests.size() == 0)
+        {
+            push_error(ctx, "Yup I don't know what you did here");
+            return 1;
+        }
+
+        player = requests[0];
+    }
+
+    std::vector<std::string> to_ret = str_to_array(player.get_prop("upgr_idx"));
+
+    push_duk_val(ctx, to_ret);
 
     return 1;
 }
@@ -765,9 +799,10 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(chats__recent, 2),
     REGISTER_FUNCTION_PRIV(users__me, 0),
     REGISTER_FUNCTION_PRIV(sys__create_upg, 0),
-    REGISTER_FUNCTION_PRIV(sys__disown_upg, 0),
-    REGISTER_FUNCTION_PRIV(sys__xfer_upgrade_uid, 0),
+    //REGISTER_FUNCTION_PRIV(sys__disown_upg, 0),
+    //REGISTER_FUNCTION_PRIV(sys__xfer_upgrade_uid, 0),
     REGISTER_FUNCTION_PRIV(sys__xfer_upgrade_to, 1),
+    REGISTER_FUNCTION_PRIV(sys__upgrades, 2),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED

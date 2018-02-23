@@ -284,10 +284,6 @@ bool item::transfer_from_to(const std::string& from, const std::string& to, int 
 
 bool item::transfer_from_to_by_index(int index, const std::string& from, const std::string& to, int thread_id)
 {
-    /*mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
-
-    load_from_db(item_ctx, properties["item_id"]);*/
-
     mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
 
     mongo_requester to_r;

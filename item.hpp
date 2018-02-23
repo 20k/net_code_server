@@ -34,6 +34,9 @@ namespace item_types
     };
 }
 
+std::vector<std::string> str_to_array(const std::string& str);
+std::string array_to_str(const std::vector<std::string>& arr);
+
 struct item
 {
     std::map<std::string, std::string> properties;
