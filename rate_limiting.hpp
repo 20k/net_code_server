@@ -13,6 +13,7 @@ namespace rate
     {
         CHAT,
         CASH,
+        UPG_CHEAT,
     };
 }
 
@@ -22,8 +23,8 @@ struct rate_limit
 {
     ///maps username to a type of rate limit
     std::map<std::string, std::map<rate_limit_t, double>> time_budget_remaining;
-    std::map<rate_limit_t, double> max_reserve = {{rate::CHAT, 30}, {rate::CASH, 30}};
-    std::map<rate_limit_t, double> budget_deplete = {{rate::CHAT, 1}, {rate::CASH, 1}};
+    std::map<rate_limit_t, double> max_reserve = {{rate::CHAT, 30}, {rate::CASH, 30}, {rate::UPG_CHEAT, 10}};
+    std::map<rate_limit_t, double> budget_deplete = {{rate::CHAT, 1}, {rate::CASH, 1}, {rate::UPG_CHEAT, 9}};
 
     std::mutex lock;
 

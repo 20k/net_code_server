@@ -73,6 +73,7 @@
 		<Unit filename="duk_object_functions.hpp" />
 		<Unit filename="http_beast_server.cpp" />
 		<Unit filename="http_beast_server.hpp" />
+		<Unit filename="item.cpp" />
 		<Unit filename="item.hpp" />
 		<Unit filename="main.cpp" />
 		<Unit filename="memory_sandbox.hpp" />
@@ -83,6 +84,7 @@
 		<Unit filename="non_user_task_thread.hpp" />
 		<Unit filename="privileged_core_scripts.hpp" />
 		<Unit filename="rate_limiting.cpp" />
+		<Unit filename="rate_limiting.hpp" />
 		<Unit filename="script_util.cpp" />
 		<Unit filename="script_util.hpp" />
 		<Unit filename="script_util_shared.hpp" />

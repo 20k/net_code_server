@@ -306,7 +306,7 @@ void script_info::load_from_db(mongo_lock_proxy& ctx)
 
     //mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
 
-    my_script.load_from_db(ctx);
+    my_script.load_from_db(ctx, name);
 
     name = my_script.get_prop("item_id");
     in_public = my_script.get_prop_as_integer("in_public");
@@ -341,8 +341,8 @@ void script_info::overwrite_in_db(mongo_lock_proxy& ctx)
 
     //mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
 
-    if(my_script.exists_in_db(ctx))
-        my_script.update_in_db(ctx);
+    if(my_script.exists_in_db(ctx, name))
+        my_script.overwrite_in_db(ctx);
     else
     {
         my_script.set_prop("trust", 0);
@@ -358,7 +358,7 @@ bool script_info::exists_in_db(mongo_lock_proxy& ctx)
 
     //mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
 
-    return my_script.exists_in_db(ctx);
+    return my_script.exists_in_db(ctx, name);
 }
 
 #if 0

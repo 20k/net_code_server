@@ -617,6 +617,18 @@ duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+duk_ret_t sys__create_upg(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+    RATELIMIT_DUK(UPG_CHEAT);
+
+    //item test_item;
+
+
+    return 1;
+}
+
+inline
 std::string parse_function_hack(std::string in)
 {
     int len = in.size();
