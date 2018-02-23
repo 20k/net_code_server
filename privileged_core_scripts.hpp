@@ -7,6 +7,7 @@
 #include "rate_limiting.hpp"
 #include <ratio>
 #include "auth.hpp"
+#include "item.hpp"
 
 #define COOPERATE_KILL() duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk); \
                          sandbox_data* sand_data = (sandbox_data*)mem_funcs_duk.udata; \
@@ -622,8 +623,13 @@ duk_ret_t sys__create_upg(priv_context& priv_ctx, duk_context* ctx, int sl)
     COOPERATE_KILL();
     RATELIMIT_DUK(UPG_CHEAT);
 
-    //item test_item;
+    mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(get_thread_id(ctx));
 
+    item test_item;
+    test_item.generate_set_id(mongo_ctx);
+    test_item.overwrite_in_db(mongo_ctx);
+
+    duk_push_int(ctx, test_item.get_prop_as_integer("item_id"));
 
     return 1;
 }
@@ -662,6 +668,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(chats__send, 3),
     REGISTER_FUNCTION_PRIV(chats__recent, 2),
     REGISTER_FUNCTION_PRIV(users__me, 0),
+    REGISTER_FUNCTION_PRIV(sys__create_upg, 0),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
