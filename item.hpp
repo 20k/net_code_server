@@ -68,24 +68,6 @@ struct item
     void load_from_db(mongo_lock_proxy&, const std::string& item_id);
 };
 
-/*template<>
-void item::set_prop<std::string>(const std::string& key, const std::string& value)
-{
-    item_properties[key] = value;
-}
-
-template<>
-void item::set_prop<char const*>(const std::string& key, const char* const& value)
-{
-    item_properties[key] = value;
-}*/
-
-/*template<>
-void item::set_prop<char*>(const std::string& key, const (char*)& value)
-{
-    item_properties[key] = value;
-}*/
-
 namespace item_types
 {
 /*item get_default_of(item_types::item_type type)

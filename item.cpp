@@ -23,6 +23,14 @@ int32_t item::get_new_id(mongo_lock_proxy& global_props_ctx)
 
         int32_t id = fid.get_prop_as_integer("items_id_gid");
 
+        mongo_requester to_find;
+        to_find.set_prop("items_id_is_gid", 1);
+
+        mongo_requester to_set;
+        to_set.set_prop("items_id_gid", id+1);
+
+        to_find.update_in_db_if_exact(global_props_ctx, to_set);
+
         return id;
     }
 }
@@ -55,6 +63,8 @@ void item::create_in_db(mongo_lock_proxy& ctx)
     to_store.properties = properties;
 
     to_store.insert_in_db(ctx);
+
+    std::cout << "CREATE ITEM " << std::endl;
 }
 
 void item::load_from_db(mongo_lock_proxy& ctx, const std::string& item_id)

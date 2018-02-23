@@ -623,11 +623,16 @@ duk_ret_t sys__create_upg(priv_context& priv_ctx, duk_context* ctx, int sl)
     COOPERATE_KILL();
     RATELIMIT_DUK(UPG_CHEAT);
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(get_thread_id(ctx));
-
     item test_item;
-    test_item.generate_set_id(mongo_ctx);
-    test_item.overwrite_in_db(mongo_ctx);
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(get_thread_id(ctx));
+        test_item.generate_set_id(mongo_ctx);
+    }
+
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+    test_item.create_in_db(mongo_ctx);
 
     duk_push_int(ctx, test_item.get_prop_as_integer("item_id"));
 
