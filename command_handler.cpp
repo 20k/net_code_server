@@ -246,16 +246,6 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                 start_from = found[0].get_prop_as_integer("chats_send_gid");
             else
                 printf("warning, no chats gid\n");
-
-
-            auth to_check;
-            to_check.load_from_db(mongo_ctx, state.auth);
-
-            if(!to_check.valid)
-                return make_error_col("Trying something sneaky eh?");
-
-            to_check.insert_user_exclusive(user_name);
-            to_check.overwrite_in_db(mongo_ctx);
         }
 
         mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
@@ -268,6 +258,21 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             {
                 state.current_user = user();
                 return make_error_col("Incorrect Auth");
+            }
+
+
+            ///WARNING NESTED LOCKS
+            {
+                mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
+
+                auth to_check;
+                to_check.load_from_db(mongo_ctx, state.auth);
+
+                if(!to_check.valid)
+                    return make_error_col("Trying something sneaky eh?");
+
+                to_check.insert_user_exclusive(user_name);
+                to_check.overwrite_in_db(mongo_ctx);
             }
 
             return "Switched to User";
