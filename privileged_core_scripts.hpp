@@ -6,6 +6,7 @@
 #include "memory_sandbox.hpp"
 #include "rate_limiting.hpp"
 #include <ratio>
+#include "auth.hpp"
 
 #define COOPERATE_KILL() duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk); \
                          sandbox_data* sand_data = (sandbox_data*)mem_funcs_duk.udata; \
@@ -585,24 +586,18 @@ duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl)
         current_user.load_from_db(mongo_ctx, caller);
     }
 
-    std::string auth = current_user.auth;
+    mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(get_thread_id(ctx));
+
+    std::string auth_token = current_user.auth;
+
+    auth user_auth;
+    user_auth.load_from_db(mongo_ctx, auth_token);
+
+    std::vector names = user_auth.users;
 
     ///users in user db don't know about the other users
     ///and we can't perform a query across multiple collections, quite rightly
     ///so have to revisit updating auth
-    #if 0
-    mongo_requester request;
-    request.set_prop_bin("auth", auth);
-
-    std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
-
-    std::vector<std::string> names;
-
-    for(auto& i : found)
-    {
-        names.push_back(i.get_prop("name"));
-    }
-
     if(pretty)
     {
         std::string str = format_pretty_names(names);
@@ -617,7 +612,6 @@ duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         return 1;
     }
-    #endif // 0
 
     return 1;
 }
