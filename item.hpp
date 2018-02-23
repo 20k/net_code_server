@@ -67,6 +67,9 @@ struct item
     void overwrite_in_db(mongo_lock_proxy&);
     void create_in_db(mongo_lock_proxy&);
     void load_from_db(mongo_lock_proxy&, const std::string& item_id);
+
+    ///manages lock proxies internally
+    bool transfer_to_user(const std::string& name, int thread_id);
 };
 
 namespace item_types
@@ -79,6 +82,10 @@ namespace item_types
         item new_item;
         new_item.set_prop("item_type", (int)type);
         new_item.set_prop("rarity", 0);
+        new_item.set_prop("native_item", 1); ///identifies this class of item, separates it from built in scripts
+
+        if(type < quick_names.size() && type >= 0)
+            new_item.set_prop("short_name", quick_names[(int)type]);
 
         if(type == CHAR_COUNT)
         {

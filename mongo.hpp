@@ -535,6 +535,7 @@ struct mongo_requester
     std::map<std::string, std::string> properties;
     std::map<std::string, int> is_binary;
     std::map<std::string, int> is_integer;
+    std::map<std::string, int> is_double;
 
     std::map<std::string, int> sort_on;
 
@@ -565,6 +566,15 @@ struct mongo_requester
         return val;
     }
 
+    double get_prop_as_double(const std::string& str)
+    {
+        std::string prop = properties[str];
+
+        auto val = atof(prop.c_str());
+
+        return val;
+    }
+
     template<typename T>
     void set_prop(const std::string& key, const T& value)
     {
@@ -583,6 +593,13 @@ struct mongo_requester
     {
         properties[key] = stringify_hack(value);
         is_integer[key] = 1;
+    }
+
+    template<typename T>
+    void set_prop_double(const std::string& key, const T& value)
+    {
+        properties[key] = stringify_hack(value);
+        is_double[key] = 1;
     }
 
     void set_prop_sort_on(const std::string& key, int dir)
@@ -720,6 +737,12 @@ struct mongo_requester
                     found.set_prop_int(key, bson_iter_int32(&iter));
                     continue;
                 }
+
+                if(BSON_ITER_HOLDS_DOUBLE(&iter))
+                {
+                    found.set_prop_double(key, bson_iter_double(&iter));
+                    continue;
+                }
             }
 
             bson_destroy(next);
@@ -757,6 +780,8 @@ struct mongo_requester
             bson_append_binary(bson, key.c_str(), key.size(), BSON_SUBTYPE_BINARY, (const uint8_t*)val.c_str(), val.size());
         else if(is_integer[key])
             BSON_APPEND_INT32(bson, key.c_str(), get_prop_as_integer(key));
+        else if(is_double[key])
+            BSON_APPEND_DOUBLE(bson, key.c_str(), get_prop_as_double(key));
         else
             bson_append_utf8(bson, key.c_str(), key.size(), val.c_str(), val.size());
     }

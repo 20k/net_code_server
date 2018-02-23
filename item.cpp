@@ -1,4 +1,5 @@
 #include "item.hpp"
+#include "user.hpp"
 
 int32_t item::get_new_id(mongo_lock_proxy& global_props_ctx)
 {
@@ -79,3 +80,62 @@ void item::load_from_db(mongo_lock_proxy& ctx, const std::string& item_id)
         properties = i.properties;
     }
 }
+
+bool item::transfer_to_user(const std::string& username, int thread_id)
+{
+    {
+        mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
+        user_ctx->change_collection(username);
+
+        mongo_requester request;
+        request.set_prop("name", username);
+
+        std::vector<mongo_requester> found = request.fetch_from_db(user_ctx);
+
+        if(found.size() == 0)
+            return false;
+
+        mongo_requester req = found[0];
+
+        std::string upg_str = req.get_prop("upgr_idx");
+
+        ///uids
+        std::vector<std::string> upgrades = no_ss_split(upg_str, " ");
+
+        ///MAX UPGRADES TODO ALARM:
+        if(upgrades.size() >= 128)
+        {
+            return false;
+        }
+
+        std::string my_id = get_prop("item_id");
+
+        upgrades.push_back(my_id);
+
+        std::string accum;
+
+        for(auto& i : upgrades)
+        {
+            accum += i + " ";
+        }
+
+        mongo_requester to_store_user;
+        to_store_user.set_prop("name", username);
+
+        mongo_requester to_update_user;
+        to_update_user.set_prop("upgr_idx", accum);
+
+        to_store_user.update_in_db_if_exact(user_ctx, to_update_user);
+    }
+
+    {
+        set_prop("owner", username);
+        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
+
+        overwrite_in_db(item_ctx);
+    }
+
+    return true;
+}
+
+///need a remove from user... and then maybe pull out all the lock proxies?

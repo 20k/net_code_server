@@ -417,8 +417,6 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
-    ///ALARM: ALARM: NEED TO RATE LIMIT URGENTLY
-
     mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(get_thread_id(ctx));
     //mongo_ctx->change_collection(channel);
 
@@ -625,16 +623,29 @@ duk_ret_t sys__create_upg(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     item test_item;
 
+    int item_type = duk_get_prop_string_as_int(ctx, -1, "type", 2);
+
+    test_item = item_types::get_default_of((item_types::item_type)item_type);
+
+    ///this isn't adequate
+    ///we need a give item to user, and remove item from user primitive
+    ///which sorts out indices
+    //test_item.set_prop("owner", get_caller(ctx));
+
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(get_thread_id(ctx));
         test_item.generate_set_id(mongo_ctx);
     }
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+        test_item.create_in_db(mongo_ctx);
+    }
 
-    test_item.create_in_db(mongo_ctx);
-
-    duk_push_int(ctx, test_item.get_prop_as_integer("item_id"));
+    if(test_item.transfer_to_user(get_caller(ctx), get_thread_id(ctx)))
+        duk_push_int(ctx, test_item.get_prop_as_integer("item_id"));
+    else
+        push_error(ctx, "Could not transfer item to caller");
 
     return 1;
 }
