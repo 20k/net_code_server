@@ -53,11 +53,38 @@ struct item
         return atoll(properties[str].c_str());
     }
 
+    void generate_set_id(mongo_lock_proxy& global_props_context)
+    {
+        int32_t id = get_new_id(global_props_context);
+
+        set_prop("item_id", id);
+    }
+
+    int32_t get_new_id(mongo_lock_proxy& global_props_context);
+
     bool exists_in_db(mongo_lock_proxy&, const std::string& item_id);
     void overwrite_in_db(mongo_lock_proxy&);
     void create_in_db(mongo_lock_proxy&);
     void load_from_db(mongo_lock_proxy&, const std::string& item_id);
 };
+
+/*template<>
+void item::set_prop<std::string>(const std::string& key, const std::string& value)
+{
+    item_properties[key] = value;
+}
+
+template<>
+void item::set_prop<char const*>(const std::string& key, const char* const& value)
+{
+    item_properties[key] = value;
+}*/
+
+/*template<>
+void item::set_prop<char*>(const std::string& key, const (char*)& value)
+{
+    item_properties[key] = value;
+}*/
 
 namespace item_types
 {
