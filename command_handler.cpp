@@ -279,6 +279,8 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         }
         else
         {
+            state.current_user = user();
+
             state.current_user.construct_new_user(mongo_user_info, user_name, state.auth, start_from);
             state.current_user.overwrite_user_in_db(mongo_user_info);
 
