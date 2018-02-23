@@ -49,11 +49,17 @@ struct item
 
     std::string get_prop(const std::string& str)
     {
+        if(properties.find(str) == properties.end())
+            return "";
+
         return properties[str];
     }
 
     int32_t get_prop_as_integer(const std::string& str)
     {
+        if(properties.find(str) == properties.end())
+            return 0;
+
         return atoll(properties[str].c_str());
     }
 

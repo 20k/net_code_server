@@ -707,6 +707,24 @@ duk_ret_t sys__xfer_upgrade_uid(priv_context& priv_ctx, duk_context* ctx, int sl
 #endif // 0
 
 inline
+std::string format_item(item& i)
+{
+    std::string ret = "{\n";
+
+    bool is_open_source = i.get_prop_as_integer("open_source");
+
+    for(auto& p : i.properties)
+    {
+        if(!is_open_source && p.first == "unparsed_source")
+            continue;
+
+        ret += "    " + p.first + ": " + p.second + ",\n";
+    }
+
+    return ret + "}";
+}
+
+inline
 duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -731,9 +749,25 @@ duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
         player = requests[0];
     }
 
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
     std::vector<std::string> to_ret = str_to_array(player.get_prop("upgr_idx"));
 
-    push_duk_val(ctx, to_ret);
+    std::string formatted = "[\n";
+
+    for(std::string& item_id : to_ret)
+    {
+        item next;
+        next.load_from_db(mongo_ctx, item_id);
+
+        formatted += format_item(next) + "\n";
+    }
+
+    formatted += "]";
+
+    push_duk_val(ctx, formatted);
+
+    //push_duk_val(ctx, to_ret);
 
     return 1;
 }
