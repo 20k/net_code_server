@@ -231,6 +231,22 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         if(!is_valid_string(user))
             return make_error_col("Invalid username");
 
+        int32_t start_from = 0;
+
+        {
+            mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
+
+            mongo_requester request;
+            request.set_prop("chats_send_is_gid", 1);
+
+            std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
+
+            if(found.size() >= 1)
+                start_from = found[0].get_prop_as_integer("chats_send_gid");
+            else
+                printf("warning, no chats gid\n");
+        }
+
         mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
         if(state.current_user.exists(mongo_user_info, user))
@@ -244,7 +260,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         }
         else
         {
-            state.current_user.construct_new_user(mongo_user_info, user, state.auth);
+            state.current_user.construct_new_user(mongo_user_info, user, state.auth, start_from);
             state.current_user.overwrite_user_in_db(mongo_user_info);
 
             return make_success_col("Constructed new User");

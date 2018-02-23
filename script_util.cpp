@@ -111,8 +111,6 @@ bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& off
                 break;
             }
 
-            std::cout << found << " fnd " << std::endl;
-
             break;
         }
     }

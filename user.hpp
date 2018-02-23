@@ -146,9 +146,10 @@ struct user
         return true;
     }
 
-    bool construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, const std::string& auth)
+    bool construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, const std::string& auth, int last_message_uid_)
     {
         name = name_;
+        last_message_uid = last_message_uid_;
 
         if(!is_valid_string(name))
             return false;
@@ -161,6 +162,7 @@ struct user
         mongo_requester request;
         request.set_prop("name", name);
         request.set_prop_bin("auth", auth);
+        request.set_prop_int("last_message_uid", last_message_uid);
 
         request.insert_in_db(ctx);
 

@@ -115,7 +115,7 @@ void debug_terminal()
             }
             else
             {
-                current_user.construct_new_user(mongo_user_info, username, "DUMMY_AUTH");
+                current_user.construct_new_user(mongo_user_info, username, "DUMMY_AUTH", 0);
                 current_user.overwrite_user_in_db(mongo_user_info);
 
                 std::cout << "created new user " << username << std::endl;
