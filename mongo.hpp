@@ -761,17 +761,6 @@ struct mongo_requester
             bson_append_utf8(bson, key.c_str(), key.size(), val.c_str(), val.size());
     }
 
-    /*bson_t child;
-
-    BSON_APPEND_DOCUMENT_BEGIN(to_insert, "$set", &child);
-
-    for(auto& i : item_properties)
-    {
-        bson_append_utf8(&child, i.first.c_str(), i.first.size(), i.second.c_str(), i.second.size());
-    }
-
-    bson_append_document_end(to_insert, &child);*/
-
     void update_in_db_if_exists(mongo_lock_proxy& ctx, mongo_requester& set_to)
     {
         bson_t* to_select = bson_new();
