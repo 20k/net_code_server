@@ -207,6 +207,80 @@ bool item::remove_from_user(const std::string& username, int thread_id)
     return true;
 }
 
+bool item::transfer_from_to(const std::string& from, const std::string& to, int thread_id)
+{
+    ///we need to keep the item context locked to ensure that nothing else modifies the item while we're gone
+    ///this involves double locking so be careful
+    mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
+
+    load_from_db(item_ctx, properties["item_id"]);
+
+    mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
+
+    mongo_requester to_r;
+    to_r.set_prop("name", to);
+
+    mongo_requester from_r;
+    from_r.set_prop("name", from);
+
+    user_ctx->change_collection(to);
+    auto to_found = to_r.fetch_from_db(user_ctx);
+
+    user_ctx->change_collection(from);
+    auto from_found = from_r.fetch_from_db(user_ctx);
+
+    if(to_found.size() == 0 || from_found.size() == 0)
+        return false;
+
+    mongo_requester to_req = to_found[0];
+    mongo_requester from_req = from_found[0];
+
+    std::vector<std::string> to_upgrades = str_to_array(to_req.get_prop("upgr_idx"));
+    std::vector<std::string> from_upgrades = str_to_array(from_req.get_prop("upgr_idx"));
+
+    std::string item_id = properties["item_id"];
+
+    if(item_id == "")
+        return false;
+
+    auto upgrade_it = std::find(from_upgrades.begin(), from_upgrades.end(), item_id);
+
+    if(upgrade_it == from_upgrades.end())
+        return false;
+
+    int MAX_STORED_UPGRADES = 128;
+
+    if((int)to_upgrades.size() >= MAX_STORED_UPGRADES)
+        return false;
+
+    from_upgrades.erase(upgrade_it);
+    to_upgrades.push_back(item_id);
+
+    set_prop("owner", to);
+
+    mongo_requester to_select;
+    to_select.set_prop("name", to);
+
+    mongo_requester from_select;
+    from_select.set_prop("name", from);
+
+    mongo_requester to_update;
+    to_update.set_prop("upgr_idx", array_to_str(to_upgrades));
+
+    mongo_requester from_update;
+    from_update.set_prop("upgr_idx", array_to_str(from_upgrades));
+
+    user_ctx->change_collection(to);
+    to_select.update_in_db_if_exact(user_ctx, to_update);
+
+    user_ctx->change_collection(from);
+    from_select.update_in_db_if_exact(user_ctx, from_update);
+
+    overwrite_in_db(item_ctx);
+
+    return true;
+}
+
 ///need a remove from user... and then maybe pull out all the lock proxies?
 ///implement remove from user
 
