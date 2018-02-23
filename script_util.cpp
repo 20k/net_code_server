@@ -70,7 +70,18 @@ std::string attach_wrapper(const std::string& data_in, bool stringify, bool dire
     return prologue + data_in + endlogue;
 }
 
-bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& offset, std::string from, std::string to)
+bool string_is_in(const std::string& str, const std::vector<std::string>& in)
+{
+    for(auto& i : in)
+    {
+        if(i == str)
+            return true;
+    }
+
+    return false;
+}
+
+bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& offset, const std::string& from, const std::string& to, const std::vector<std::string>& parse_exclusion)
 {
     std::string srch = from;
 
@@ -92,6 +103,16 @@ bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& off
         {
             found_loc = i;
             found = std::string(view.begin() + srch.length(), view.begin() + i);
+
+            if(string_is_in(found, parse_exclusion))
+            {
+                found = "";
+                found_loc = -1;
+                continue;
+            }
+
+            std::cout << found << " fnd " << std::endl;
+
             break;
         }
     }
@@ -118,7 +139,7 @@ bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& off
     return valid;
 }
 
-bool expand_to_from_nochecks(std::string_view& view, std::string& in, int& offset, std::string from, std::string to)
+bool expand_to_from_nochecks(std::string_view& view, std::string& in, int& offset, const std::string& from, const std::string& to)
 {
     std::string srch = from;
 
@@ -156,19 +177,23 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
 {
     std::vector<std::string> froms{"#fs.", "#hs.", "#ms.", "#ls.", "#ns.",
                                    "#4s.", "#3s.", "#2s.", "#1s.", "#0s.",
-                                   "#s."};
+                                   "#s.", "#"};
 
     std::vector<std::string> tos  {"fs_call", "hs_call", "ms_call", "ls_call", "ns_call",
                                    "fs_call", "hs_call", "ms_call", "ls_call", "ns_call",
-                                   "ns_call"};
+                                   "ns_call", "ns_call"};
 
     std::vector<int> sec_levels = {4, 3, 2, 1, 0,
                                    4, 3, 2, 1, 0,
-                                   0};
+                                   0, 0};
+
+    ///won't find D, but seems prudent to exclude it anyway
+    std::vector<std::string> parse_exclusion{"D",
+                                             "db.i", "db.r", "db.f", "db.u", "db.u1", "db.us"};
 
     for(int i=0; i < (int)tos.size(); i++)
     {
-        bool success = expand_to_from_scriptname(view, in, offset, froms[i], tos[i]);
+        bool success = expand_to_from_scriptname(view, in, offset, froms[i], tos[i], parse_exclusion);
 
         if(success)
         {
