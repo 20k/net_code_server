@@ -772,7 +772,7 @@ struct mongo_requester
 
     bson_append_document_end(to_insert, &child);*/
 
-    void update_in_db(mongo_lock_proxy& ctx, mongo_requester& set_to)
+    void update_in_db_if_exists(mongo_lock_proxy& ctx, mongo_requester& set_to)
     {
         bson_t* to_select = bson_new();
 
@@ -799,6 +799,34 @@ struct mongo_requester
         bson_append_document_end(to_update, &child);
 
         //std::cout << "JSON " << bson_as_json(to_select, nullptr) << " selector " << bson_as_json(to_update, nullptr) << std::endl;
+
+        ctx->update_bson_many(ctx->last_collection, to_select, to_update);
+
+        bson_destroy(to_update);
+        bson_destroy(to_select);
+    }
+
+    void update_in_db_if_exact(mongo_lock_proxy& ctx, mongo_requester& set_to)
+    {
+        bson_t* to_select = bson_new();
+
+        for(auto& i : properties)
+        {
+            append_property_to(to_select, i.first);
+        }
+
+        bson_t* to_update = bson_new();
+
+        bson_t child;
+
+        BSON_APPEND_DOCUMENT_BEGIN(to_update, "$set", &child);
+
+        for(auto& i : set_to.properties)
+        {
+            set_to.append_property_to(&child, i.first);
+        }
+
+        bson_append_document_end(to_update, &child);
 
         ctx->update_bson_many(ctx->last_collection, to_select, to_update);
 

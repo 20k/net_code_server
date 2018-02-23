@@ -186,6 +186,7 @@ duk_ret_t scripts__all(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     mongo_requester request;
     request.set_prop("is_script", 1);
+    request.set_prop("in_public", 1);
 
     if(seclevel >= 0 && seclevel <= 4)
         request.set_prop("seclevel", seclevel);
@@ -410,7 +411,7 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
             mongo_requester update;
             update.set_prop("chats_send_gid", global_id + 1);
 
-            query.update_in_db(global_prop_ctx, update);
+            query.update_in_db_if_exists(global_prop_ctx, update);
         }
     }
 

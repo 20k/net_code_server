@@ -325,9 +325,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         std::string fullname = state.current_user.name + "." + scriptname;
 
         if(!is_valid_full_name_string(fullname))
-        {
             return make_error_col("Invalid script name " + fullname);
-        }
 
         {
             mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
@@ -345,6 +343,47 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         }
 
         return make_success_col("Script removed from server");
+    }
+    else if(starts_with(str, "#public ") || starts_with(str, "#private "))
+    {
+        if(state.auth == "")
+            return make_error_col("No Auth");
+
+        int in_public_state = starts_with(str, "#public ");
+
+        std::vector<std::string> split_string = no_ss_split(str, " ");
+
+        if(split_string.size() < 2)
+        {
+            return "Syntax is #public scriptname or #private scriptname";
+        }
+
+        std::string scriptname = strip_whitespace(split_string[1]);
+
+        std::string fullname = state.current_user.name + "." + scriptname;
+
+        if(!is_valid_full_name_string(fullname))
+            return make_error_col("Invalid script name " + fullname);
+
+        {
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
+
+            script_info script_inf;
+            script_inf.name = state.current_user.name + "." + scriptname;
+
+            if(!script_inf.exists_in_db(mongo_ctx))
+                return make_error_col("Script not found");
+
+            mongo_requester request;
+            request.set_prop("item_id", script_inf.name);
+
+            mongo_requester to_set;
+            to_set.set_prop("in_public", in_public_state);
+
+            request.update_in_db_if_exact(mongo_ctx, to_set);
+        }
+
+        return make_success_col("Success");
     }
     #define ALLOW_SELF_AUTH
     #ifdef ALLOW_SELF_AUTH
