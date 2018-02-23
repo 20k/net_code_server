@@ -70,6 +70,7 @@ struct item
 
     ///manages lock proxies internally
     bool transfer_to_user(const std::string& name, int thread_id);
+    bool remove_from_user(const std::string& name, int thread_id);
 };
 
 namespace item_types
