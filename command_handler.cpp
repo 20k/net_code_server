@@ -227,9 +227,9 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         if(split_string.size() != 2)
             return make_error_col("Invalid Command Error");
 
-        std::string user = strip_whitespace(split_string[1]);
+        std::string user_name = strip_whitespace(split_string[1]);
 
-        if(!is_valid_string(user))
+        if(!is_valid_string(user_name))
             return make_error_col("Invalid username");
 
         int32_t start_from = 0;
@@ -254,24 +254,27 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             if(!to_check.valid)
                 return make_error_col("Trying something sneaky eh?");
 
-            to_check.insert_user_exclusive(user);
+            to_check.insert_user_exclusive(user_name);
             to_check.overwrite_in_db(mongo_ctx);
         }
 
         mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-        if(state.current_user.exists(mongo_user_info, user))
+        if(state.current_user.exists(mongo_user_info, user_name))
         {
-            state.current_user.load_from_db(mongo_user_info, user);
+            state.current_user.load_from_db(mongo_user_info, user_name);
 
             if(state.current_user.auth != state.auth)
+            {
+                state.current_user = user();
                 return make_error_col("Incorrect Auth");
+            }
 
             return "Switched to User";
         }
         else
         {
-            state.current_user.construct_new_user(mongo_user_info, user, state.auth, start_from);
+            state.current_user.construct_new_user(mongo_user_info, user_name, state.auth, start_from);
             state.current_user.overwrite_user_in_db(mongo_user_info);
 
             return make_success_col("Constructed new User");
