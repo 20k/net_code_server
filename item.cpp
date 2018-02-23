@@ -81,6 +81,23 @@ void item::load_from_db(mongo_lock_proxy& ctx, const std::string& item_id)
     }
 }
 
+std::vector<std::string> str_to_array(const std::string& str)
+{
+    return no_ss_split(str, " ");
+}
+
+std::string array_to_str(const std::vector<std::string>& arr)
+{
+    std::string accum;
+
+    for(auto& i : arr)
+    {
+        accum += i + " ";
+    }
+
+    return accum;
+}
+
 bool item::transfer_to_user(const std::string& username, int thread_id)
 {
     {
@@ -100,7 +117,7 @@ bool item::transfer_to_user(const std::string& username, int thread_id)
         std::string upg_str = req.get_prop("upgr_idx");
 
         ///uids
-        std::vector<std::string> upgrades = no_ss_split(upg_str, " ");
+        std::vector<std::string> upgrades = str_to_array(upg_str);
 
         ///MAX UPGRADES TODO ALARM:
         if(upgrades.size() >= 128)
@@ -112,12 +129,7 @@ bool item::transfer_to_user(const std::string& username, int thread_id)
 
         upgrades.push_back(my_id);
 
-        std::string accum;
-
-        for(auto& i : upgrades)
-        {
-            accum += i + " ";
-        }
+        std::string accum = array_to_str(upgrades);
 
         mongo_requester to_store_user;
         to_store_user.set_prop("name", username);
@@ -158,36 +170,23 @@ bool item::remove_from_user(const std::string& username, int thread_id)
         if(found.size() == 0)
             return false;
 
-        std::cout << "post one\n";
-
         mongo_requester req = found[0];
 
         std::string upg_str = req.get_prop("upgr_idx");
 
-        std::cout << "upg str " << upg_str << std::endl;
-
         ///uids
-        std::vector<std::string> upgrades = no_ss_split(upg_str, " ");
+        std::vector<std::string> upgrades = str_to_array(upg_str);
 
         std::string my_id = get_prop("item_id");
-
-        std::cout << "my id " << my_id << std::endl;
 
         auto fupgrade = std::find(upgrades.begin(), upgrades.end(), my_id);
 
         if(fupgrade == upgrades.end())
             return false;
 
-        std::cout << "post 2\n";
-
         upgrades.erase(fupgrade);
 
-        std::string accum;
-
-        for(auto& i : upgrades)
-        {
-            accum += i + " ";
-        }
+        std::string accum = array_to_str(upgrades);
 
         mongo_requester to_store_user;
         to_store_user.set_prop("name", username);
