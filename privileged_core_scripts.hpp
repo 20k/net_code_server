@@ -164,7 +164,7 @@ duk_ret_t scripts__user(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
-std::string format_script_names(const std::vector<std::string>& names)
+std::string format_pretty_names(const std::vector<std::string>& names)
 {
     std::string ret;
 
@@ -210,7 +210,7 @@ duk_ret_t scripts__all(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(pretty)
     {
-        std::string str = format_script_names(names);
+        std::string str = format_pretty_names(names);
 
         duk_push_string(ctx, str.c_str());
     }
@@ -563,6 +563,64 @@ duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    int pretty = duk_get_prop_string_as_int(ctx, -1, "pretty", 0);
+
+    std::string caller = get_caller(ctx);
+
+    user current_user;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        if(!current_user.exists(mongo_ctx, caller))
+        {
+            push_error(ctx, "Yeah you really broke something here");
+            return 1;
+        }
+
+        current_user.load_from_db(mongo_ctx, caller);
+    }
+
+    std::string auth = current_user.auth;
+
+    ///users in user db don't know about the other users
+    ///and we can't perform a query across multiple collections, quite rightly
+    ///so have to revisit updating auth
+    #if 0
+    mongo_requester request;
+    request.set_prop_bin("auth", auth);
+
+    std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
+
+    std::vector<std::string> names;
+
+    for(auto& i : found)
+    {
+        names.push_back(i.get_prop("name"));
+    }
+
+    if(pretty)
+    {
+        std::string str = format_pretty_names(names);
+
+        push_duk_val(ctx, str);
+
+        return 1;
+    }
+    else
+    {
+        push_duk_val(ctx, names);
+
+        return 1;
+    }
+    #endif // 0
+}
+
+inline
 std::string parse_function_hack(std::string in)
 {
     int len = in.size();
@@ -595,6 +653,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(scripts__all, 4),
     REGISTER_FUNCTION_PRIV(chats__send, 3),
     REGISTER_FUNCTION_PRIV(chats__recent, 2),
+    REGISTER_FUNCTION_PRIV(users__me, 0),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED

@@ -66,6 +66,8 @@
 			<Add option="-lmswsock" />
 			<Add library="C:/Users/James/Desktop/projects/crapmud/libduktape.so.202.20200" />
 		</Linker>
+		<Unit filename="auth.cpp" />
+		<Unit filename="auth.hpp" />
 		<Unit filename="command_handler.cpp" />
 		<Unit filename="command_handler.hpp" />
 		<Unit filename="duk_object_functions.hpp" />
@@ -80,6 +82,7 @@
 		<Unit filename="non_user_task_thread.cpp" />
 		<Unit filename="non_user_task_thread.hpp" />
 		<Unit filename="privileged_core_scripts.hpp" />
+		<Unit filename="rate_limiting.cpp" />
 		<Unit filename="script_util.cpp" />
 		<Unit filename="script_util.hpp" />
 		<Unit filename="script_util_shared.hpp" />

@@ -59,7 +59,7 @@ struct user
         bson_destroy(to_update);
     }
 
-    bool exists(mongo_lock_proxy& ctx, const std::string& name_, bool no_lock = false)
+    bool exists(mongo_lock_proxy& ctx, const std::string& name_)
     {
         ctx->change_collection(name_);
 
@@ -83,7 +83,7 @@ struct user
 
         //std::cout << "load \n";
 
-        if(!exists(ctx, name_, true))
+        if(!exists(ctx, name_))
             return false;
 
         //bson_t* to_find = BCON_NEW("name", BCON_UTF8(name_.c_str()));
