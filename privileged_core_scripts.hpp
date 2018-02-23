@@ -618,6 +618,8 @@ duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
     }
     #endif // 0
+
+    return 1;
 }
 
 inline
