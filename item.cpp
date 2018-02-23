@@ -230,8 +230,6 @@ bool item::transfer_from_to(const std::string& from, const std::string& to, int 
     user_ctx->change_collection(from);
     auto from_found = from_r.fetch_from_db(user_ctx);
 
-    std::cout << "prefound\n";
-
     if(to_found.size() == 0 || from_found.size() == 0)
         return false;
 
@@ -243,33 +241,18 @@ bool item::transfer_from_to(const std::string& from, const std::string& to, int 
 
     std::string item_id = properties["item_id"];
 
-    std::cout << "preitem\n";
-
     if(item_id == "")
         return false;
-
-    std::cout << "upgraedeid\n";
-
-    std::cout << "found id of " << item_id << std::endl;
-
-    for(auto& i : from_upgrades)
-    {
-        std::cout << "i " << i << std::endl;
-    }
 
     auto upgrade_it = std::find(from_upgrades.begin(), from_upgrades.end(), item_id);
 
     if(upgrade_it == from_upgrades.end())
         return false;
 
-    std::cout << "toupgr\n";
-
     int MAX_STORED_UPGRADES = 128;
 
     if((int)to_upgrades.size() >= MAX_STORED_UPGRADES)
         return false;
-
-    std::cout << "reerer\n";
 
     from_upgrades.erase(upgrade_it);
     to_upgrades.push_back(item_id);
