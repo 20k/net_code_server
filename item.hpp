@@ -73,6 +73,8 @@ struct item
     bool remove_from_user(const std::string& name, int thread_id);
 
     bool transfer_from_to(const std::string& from, const std::string& to, int thread_id);
+
+    bool transfer_from_to_by_index(int index, const std::string& from, const std::string& to, int thread_id);
 };
 
 namespace item_types

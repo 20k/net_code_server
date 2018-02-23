@@ -705,6 +705,32 @@ duk_ret_t sys__xfer_upgrade_uid(priv_context& priv_ctx, duk_context* ctx, int sl
 }
 
 inline
+duk_ret_t sys__xfer_upgrade_to(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    int item_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
+
+    if(item_idx < 0)
+    {
+        push_error(ctx, "Invalid index");
+        return 1;
+    }
+
+    std::string from = get_caller(ctx);
+    std::string to = duk_safe_get_prop_string(ctx, -1, "to");
+
+    item placeholder;
+
+    if(placeholder.transfer_from_to_by_index(item_idx, from, to, get_thread_id(ctx)))
+        duk_push_int(ctx, placeholder.get_prop_as_integer("item_id"));
+     else
+        push_error(ctx, "Could not xfer");
+
+    return 1;
+}
+
+inline
 std::string parse_function_hack(std::string in)
 {
     int len = in.size();
@@ -741,6 +767,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(sys__create_upg, 0),
     REGISTER_FUNCTION_PRIV(sys__disown_upg, 0),
     REGISTER_FUNCTION_PRIV(sys__xfer_upgrade_uid, 0),
+    REGISTER_FUNCTION_PRIV(sys__xfer_upgrade_to, 1),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
