@@ -141,6 +141,12 @@ bool item::transfer_to_user(const std::string& username, int thread_id)
 bool item::remove_from_user(const std::string& username, int thread_id)
 {
     {
+        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
+
+        load_from_db(item_ctx, properties["item_id"]);
+    }
+
+    {
         mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
         user_ctx->change_collection(username);
 
@@ -152,19 +158,27 @@ bool item::remove_from_user(const std::string& username, int thread_id)
         if(found.size() == 0)
             return false;
 
+        std::cout << "post one\n";
+
         mongo_requester req = found[0];
 
         std::string upg_str = req.get_prop("upgr_idx");
+
+        std::cout << "upg str " << upg_str << std::endl;
 
         ///uids
         std::vector<std::string> upgrades = no_ss_split(upg_str, " ");
 
         std::string my_id = get_prop("item_id");
 
+        std::cout << "my id " << my_id << std::endl;
+
         auto fupgrade = std::find(upgrades.begin(), upgrades.end(), my_id);
 
         if(fupgrade == upgrades.end())
             return false;
+
+        std::cout << "post 2\n";
 
         upgrades.erase(fupgrade);
 
