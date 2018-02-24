@@ -147,6 +147,8 @@ struct user
             return;
 
         items.erase(it);
+
+        upgr_idx = array_to_str(items);
     }
 
     int num_items()
