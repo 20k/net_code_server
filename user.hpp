@@ -254,6 +254,18 @@ struct user
 
         return results.size();
     }
+
+    int find_num_public_scripts(mongo_lock_proxy& ctx)
+    {
+        mongo_requester request;
+        request.set_prop("owner", name);
+        request.set_prop("is_script", 1);
+        request.set_prop("in_public", 1);
+
+        std::vector<mongo_requester> results = request.fetch_from_db(ctx);
+
+        return results.size();
+    }
 };
 
 #endif // USER_HPP_INCLUDED
