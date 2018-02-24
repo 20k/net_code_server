@@ -333,16 +333,36 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             script_info script_inf;
             std::string compile_error = script_inf.load_from_unparsed_source(csd.ctx, data_source, fullname);
 
-            mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
-
-            script_inf.overwrite_in_db(mongo_ctx);
-
             js_interop_shutdown(csd.ctx);
 
             if(compile_error != "")
                 return compile_error;
 
-            return make_success_col("Upload Successful");
+            user cur;
+
+            {
+                mongo_lock_proxy user_locks = get_global_mongo_user_info_context(-2);
+
+                cur.load_from_db(user_locks, state.current_user.name);
+            }
+
+            std::map<std::string, double> user_details;
+
+            {
+                mongo_lock_proxy items_lock = get_global_mongo_user_items_context(-2);
+                user_details = cur.get_total_user_properties(items_lock);
+            }
+
+            int num_chars = script_inf.unparsed_source.size();
+            int max_chars = user_details["char_count"];
+
+            {
+                mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
+
+                script_inf.overwrite_in_db(mongo_ctx);
+            }
+
+            return make_success_col("Upload Successful " + std::to_string(num_chars) + "/" + std::to_string(max_chars));
         }
     }
     else if(starts_with(str, "#remove "))
