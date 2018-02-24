@@ -741,9 +741,13 @@ duk_object_t get_item_raw(item& i, bool is_short, user& usr)
 {
     duk_object_t obj;
 
+    if(usr.has_loaded_item(i.get_prop("item_id")))
+        obj["loaded"] = true;
+
     if(is_short)
     {
         obj["short_name"] = i.get_prop("short_name");
+
         return obj;
     }
 
@@ -760,9 +764,6 @@ duk_object_t get_item_raw(item& i, bool is_short, user& usr)
         obj[p.first] = p.second;
     }
 
-    if(usr.has_loaded_item(i.get_prop("item_id")))
-        obj["loaded"] = true;
-
     return obj;
 }
 
@@ -772,8 +773,10 @@ duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
     COOPERATE_KILL();
 
     int pretty = duk_get_prop_string_as_int(ctx, -1, "pretty", 0);
-
     int full = duk_get_prop_string_as_int(ctx, -1, "full", 0);
+
+    int load_idx = duk_get_prop_string_as_int(ctx, -1, "load", -1);
+    int unload_idx = duk_get_prop_string_as_int(ctx, -1, "unload", -1);
 
     user found_user;
 
@@ -786,6 +789,22 @@ duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(!found_user.valid)
         {
             push_error(ctx, "No such user/really catastrophic error");
+            return 1;
+        }
+
+        if(load_idx >= 0 || unload_idx >= 0)
+        {
+            std::string tl = found_user.index_to_item(load_idx);
+            std::string tul = found_user.index_to_item(unload_idx);
+
+            ///NEED TO CHECK CONSTRAINTS HERE ALARM
+            found_user.load_item(tl);
+            found_user.unload_item(tul);
+
+            found_user.overwrite_user_in_db(mongo_ctx);
+
+            push_success(ctx);
+
             return 1;
         }
     }

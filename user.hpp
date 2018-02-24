@@ -125,6 +125,9 @@ struct user
 
     void load_item(const std::string& id)
     {
+        if(id == "")
+            return;
+
         if(has_loaded_item(id))
             return;
 
@@ -137,6 +140,9 @@ struct user
 
     void unload_item(const std::string& id)
     {
+        if(id == "")
+            return;
+
         if(!has_loaded_item(id))
             return;
 
