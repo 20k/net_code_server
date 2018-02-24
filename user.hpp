@@ -14,6 +14,7 @@ struct user
     double cash = 0;
     std::string auth;
     int32_t last_message_uid = 0;
+    std::string upgr_idx;
 
     void overwrite_user_in_db(mongo_lock_proxy& ctx)
     {
@@ -26,6 +27,7 @@ struct user
         to_set.set_prop("name", name);
         to_set.set_prop_double("cash", cash);
         to_set.set_prop_int("last_message_uid", last_message_uid);
+        to_set.set_prop("upgr_idx", upgr_idx);
 
         filter.update_in_db_if_exists(ctx, to_set);
     }
@@ -65,6 +67,8 @@ struct user
                 auth = req.get_prop("auth");
             if(req.has_prop("last_message_uid"))
                 last_message_uid = req.get_prop_as_integer("last_message_uid");
+            if(req.has_prop("upgr_idx"))
+                upgr_idx = req.get_prop("upgr_idx");
         }
 
         return true;
@@ -87,6 +91,7 @@ struct user
         request.set_prop("name", name);
         request.set_prop_bin("auth", auth);
         request.set_prop_int("last_message_uid", last_message_uid);
+        request.set_prop("upgr_idx", "");
 
         request.insert_in_db(ctx);
 
