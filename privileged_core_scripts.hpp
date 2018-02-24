@@ -625,6 +625,12 @@ duk_ret_t sys__create_upg(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     int item_type = duk_get_prop_string_as_int(ctx, -1, "type", 2);
 
+    if(item_type < 0 || item_type >= item_types::ERR)
+    {
+        push_error(ctx, "type: 0 to 7");
+        return 1;
+    }
+
     test_item = item_types::get_default_of((item_types::item_type)item_type);
 
     ///this isn't adequate

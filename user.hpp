@@ -15,48 +15,19 @@ struct user
     std::string auth;
     int32_t last_message_uid = 0;
 
-    /*bson_t* get_bson_representation()
-    {
-        bson_t* to_update = BCON_NEW(
-                                     //"$set",
-                                     //"{",
-                                         "name",
-                                         BCON_UTF8(name.c_str()),
-                                         "cash",
-                                         BCON_DOUBLE(cash)
-                                     //"}"
-                                     );
-        return to_update;
-    }*/
-
     void overwrite_user_in_db(mongo_lock_proxy& ctx)
     {
         ctx->change_collection(name);
 
-        bson_t* to_update = BCON_NEW(
-                                     "$set",
-                                     "{",
-                                         "name",
-                                         BCON_UTF8(name.c_str()),
-                                         "cash",
-                                         BCON_DOUBLE(cash),
-                                         "last_message_uid",
-                                         BCON_INT32(last_message_uid),
-                                     "}"
-                                     );
+        mongo_requester filter;
+        filter.set_prop("name", name);
 
-        bson_t* selection = BCON_NEW(
-                                     "name",
-                                     "{",
-                                         "$exists",
-                                         BCON_BOOL(true),
-                                     "}"
-                                     );
+        mongo_requester to_set;
+        to_set.set_prop("name", name);
+        to_set.set_prop_double("cash", cash);
+        to_set.set_prop_int("last_message_uid", last_message_uid);
 
-        ctx->update_bson_many(name, selection, to_update);
-
-        bson_destroy(selection);
-        bson_destroy(to_update);
+        filter.update_in_db_if_exists(ctx, to_set);
     }
 
     bool exists(mongo_lock_proxy& ctx, const std::string& name_)
@@ -69,78 +40,31 @@ struct user
 
         bson_destroy(to_find);
 
-        /*for(auto& i : ret)
-        {
-            std::cout << i << std::endl;
-        }*/
-
-        return ret.size() != 0;
+         return ret.size() != 0;
     }
 
     bool load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
     {
         ctx->change_collection(name_);
 
-        //std::cout << "load \n";
-
         if(!exists(ctx, name_))
             return false;
 
-        //bson_t* to_find = BCON_NEW("name", BCON_UTF8(name_.c_str()));
+        mongo_requester request;
+        request.set_prop("name", name_);
 
-        bson_t* to_find = BCON_NEW("name", "{", "$exists", BCON_BOOL(true), "}");
+        auto found = request.fetch_from_db(ctx);
 
-        std::vector<std::string> json = ctx->find_bson(name_, to_find, nullptr);
-
-        bson_destroy(to_find);
-
-        for(auto& i : json)
+        for(mongo_requester& req : found)
         {
-            if(i.size() == 0)
-                continue;
-
-            bson_t* next = bson_new_from_json((const uint8_t*)i.c_str(), i.size(), nullptr);
-
-            size_t offset = 0;
-
-            if(!bson_validate(next, (bson_validate_flags_t)(BSON_VALIDATE_UTF8 | BSON_VALIDATE_UTF8_ALLOW_NULL), &offset))
-            {
-                std::cout << "bson invalid in load from db\n";
-
-                bson_destroy(next);
-                continue;
-            }
-
-            bson_iter_t iter;
-
-            bson_iter_init(&iter, next);
-
-            while (bson_iter_next (&iter))
-            {
-                std::string key = bson_iter_key(&iter);
-
-                if(key == "name")
-                {
-                    name = bson_iter_utf8_easy(&iter);
-                }
-
-                if(key == "cash")
-                {
-                    cash = bson_iter_double(&iter);
-                }
-
-                if(key == "auth")
-                {
-                    auth = bson_iter_binary_std_string(&iter);
-                }
-
-                if(key == "last_message_uid")
-                {
-                    last_message_uid = bson_iter_int32(&iter);
-                }
-            }
-
-            bson_destroy(next);
+            if(req.has_prop("name"))
+                name = req.get_prop("name");
+            if(req.has_prop("cash"))
+                cash = req.get_prop_as_double("cash");
+            if(req.has_prop("auth"))
+                auth = req.get_prop("auth");
+            if(req.has_prop("last_message_uid"))
+                last_message_uid = req.get_prop_as_integer("last_message_uid");
         }
 
         return true;
