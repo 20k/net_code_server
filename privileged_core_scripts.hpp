@@ -713,7 +713,7 @@ duk_ret_t sys__xfer_upgrade_uid(priv_context& priv_ctx, duk_context* ctx, int sl
 #endif // 0
 
 inline
-std::string format_item(item& i, bool is_short)
+std::string format_item(item& i, bool is_short, user& usr)
 {
     if(is_short)
         return i.get_prop("short_name");
@@ -730,11 +730,14 @@ std::string format_item(item& i, bool is_short)
         ret += "    " + p.first + ": " + p.second + ",\n";
     }
 
+    if(usr.has_loaded_item(i.get_prop("item_id")))
+        ret += "    loaded: true\n";
+
     return ret + "}";
 }
 
 inline
-duk_object_t get_item_raw(item& i, bool is_short)
+duk_object_t get_item_raw(item& i, bool is_short, user& usr)
 {
     duk_object_t obj;
 
@@ -756,6 +759,9 @@ duk_object_t get_item_raw(item& i, bool is_short)
 
         obj[p.first] = p.second;
     }
+
+    if(usr.has_loaded_item(i.get_prop("item_id")))
+        obj["loaded"] = true;
 
     return obj;
 }
@@ -803,9 +809,14 @@ duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
             next.load_from_db(mongo_ctx, item_id);
 
             if(!full)
-                formatted += std::to_string(idx) + ": ";
+            {
+                if(found_user.has_loaded_item(next.get_prop("item_id")))
+                    formatted += "`D" + std::to_string(idx) + "`: ";
+                else
+                    formatted += std::to_string(idx) + ": ";
+            }
 
-            formatted += format_item(next, !full);// + ",\n";
+            formatted += format_item(next, !full, found_user);// + ",\n";
 
             if(full)
             {
@@ -837,7 +848,7 @@ duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
             item next;
             next.load_from_db(mongo_ctx, item_id);
 
-            objs.push_back(get_item_raw(next, !full));
+            objs.push_back(get_item_raw(next, !full, found_user));
         }
 
         push_duk_val(ctx, objs);
