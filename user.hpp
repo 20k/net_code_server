@@ -158,6 +158,11 @@ struct user
         loaded_upgr_idx = array_to_str(items);
     }
 
+    std::vector<std::string> all_loaded_items()
+    {
+        return str_to_array(loaded_upgr_idx);
+    }
+
     std::string index_to_item(int index)
     {
         std::vector<std::string> items = str_to_array(upgr_idx);
