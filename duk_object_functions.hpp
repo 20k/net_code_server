@@ -3,9 +3,12 @@
 
 #include <utility>
 #include <variant>
+#include <map>
+#include <string>
 
 using duk_func_t = duk_ret_t (*)(duk_context*);
 using duk_variant_t = std::variant<bool, int, double, std::string>;
+using duk_object_t = std::map<std::string, duk_variant_t>;
 
 inline
 void push_duk_val(duk_context* ctx, const duk_func_t& func)
@@ -58,6 +61,19 @@ void push_duk_val(duk_context* ctx, const duk_variant_t& t)
 
     if(std::holds_alternative<std::string>(t))
         return push_duk_val(ctx, std::get<std::string>(t));
+}
+
+template<typename T>
+inline
+void push_duk_val(duk_context* ctx, const duk_object_t& obj)
+{
+    duk_push_object(ctx);
+
+    for(auto& prop : obj)
+    {
+        push_duk_val(ctx, prop.second);
+        duk_put_prop_string(ctx, -2, prop.first.c_str());
+    }
 }
 
 template<typename T>
