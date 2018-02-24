@@ -707,7 +707,7 @@ duk_ret_t sys__xfer_upgrade_uid(priv_context& priv_ctx, duk_context* ctx, int sl
 #endif // 0
 
 inline
-std::string format_item(item& i)
+std::string format_item(duk_context* ctx, item& i)
 {
     std::string ret = "{\n";
 
@@ -725,9 +725,29 @@ std::string format_item(item& i)
 }
 
 inline
+duk_object_t get_item_raw(item& i)
+{
+    duk_object_t obj;
+
+    bool is_open_source = i.get_prop_as_integer("open_source");
+
+    for(auto& p : i.properties)
+    {
+        if(!is_open_source && p.first == "unparsed_source")
+            continue;
+
+        obj[p.first] = p.second;
+    }
+
+    return obj;
+}
+
+inline
 duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
+
+    int pretty = duk_get_prop_string_as_int(ctx, -1, "pretty", 0);
 
     mongo_requester player;
 
@@ -753,21 +773,36 @@ duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<std::string> to_ret = str_to_array(player.get_prop("upgr_idx"));
 
-    std::string formatted = "[\n";
-
-    for(std::string& item_id : to_ret)
+    if(pretty)
     {
-        item next;
-        next.load_from_db(mongo_ctx, item_id);
+        std::string formatted = "[\n";
 
-        formatted += format_item(next) + "\n";
+        for(std::string& item_id : to_ret)
+        {
+            item next;
+            next.load_from_db(mongo_ctx, item_id);
+
+            formatted += format_item(ctx, next) + ",\n";
+        }
+
+        formatted += "]";
+
+        push_duk_val(ctx, formatted);
     }
+    else
+    {
+        std::vector<duk_object_t> objs;
 
-    formatted += "]";
+        for(std::string& item_id : to_ret)
+        {
+            item next;
+            next.load_from_db(mongo_ctx, item_id);
 
-    push_duk_val(ctx, formatted);
+            objs.push_back(get_item_raw(next));
+        }
 
-    //push_duk_val(ctx, to_ret);
+        push_duk_val(ctx, objs);
+    }
 
     return 1;
 }

@@ -63,7 +63,6 @@ void push_duk_val(duk_context* ctx, const duk_variant_t& t)
         return push_duk_val(ctx, std::get<std::string>(t));
 }
 
-template<typename T>
 inline
 void push_duk_val(duk_context* ctx, const duk_object_t& obj)
 {
