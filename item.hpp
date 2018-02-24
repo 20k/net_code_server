@@ -24,13 +24,13 @@ namespace item_types
 
     static std::vector<std::string> quick_names
     {
-        "Script",
-        "Lock",
-        "Char Count",
-        "Script Slot",
-        "Public Script Slot",
-        "Misc",
-        "Error not found",
+        "script",
+        "lock",
+        "char_count",
+        "script_slot",
+        "public_script_slot",
+        "misc",
+        "error_vnf",
     };
 }
 
@@ -97,6 +97,7 @@ namespace item_types
         new_item.set_prop("item_type", (int)type);
         new_item.set_prop("rarity", 0);
         new_item.set_prop("native_item", 1); ///identifies this class of item, separates it from built in scripts
+        new_item.set_prop("tier", "0");
 
         if(type < quick_names.size() && type >= 0)
             new_item.set_prop("short_name", quick_names[(int)type]);

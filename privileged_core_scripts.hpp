@@ -707,8 +707,11 @@ duk_ret_t sys__xfer_upgrade_uid(priv_context& priv_ctx, duk_context* ctx, int sl
 #endif // 0
 
 inline
-std::string format_item(duk_context* ctx, item& i)
+std::string format_item(item& i, bool is_short)
 {
+    if(is_short)
+        return i.get_prop("short_name");
+
     std::string ret = "{\n";
 
     bool is_open_source = i.get_prop_as_integer("open_source");
@@ -725,15 +728,24 @@ std::string format_item(duk_context* ctx, item& i)
 }
 
 inline
-duk_object_t get_item_raw(item& i)
+duk_object_t get_item_raw(item& i, bool is_short)
 {
     duk_object_t obj;
+
+    if(is_short)
+    {
+        obj["short_name"] = i.get_prop("short_name");
+        return obj;
+    }
 
     bool is_open_source = i.get_prop_as_integer("open_source");
 
     for(auto& p : i.properties)
     {
         if(!is_open_source && p.first == "unparsed_source")
+            continue;
+
+        if(is_short && p.first != "short_name")
             continue;
 
         obj[p.first] = p.second;
@@ -748,6 +760,8 @@ duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
     COOPERATE_KILL();
 
     int pretty = duk_get_prop_string_as_int(ctx, -1, "pretty", 0);
+
+    int full = duk_get_prop_string_as_int(ctx, -1, "full", 0);
 
     mongo_requester player;
 
@@ -775,17 +789,41 @@ duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(pretty)
     {
-        std::string formatted = "[\n";
+        std::string formatted;
+
+        if(full)
+           formatted = "[\n";
+
+        int idx = 0;
 
         for(std::string& item_id : to_ret)
         {
             item next;
             next.load_from_db(mongo_ctx, item_id);
 
-            formatted += format_item(ctx, next) + ",\n";
+            if(!full)
+                formatted += std::to_string(idx) + ": ";
+
+            formatted += format_item(next, !full);// + ",\n";
+
+            if(full)
+            {
+                if(idx != (int)to_ret.size() - 1)
+                    formatted += ",\n";
+                else
+                    formatted += "\n";
+            }
+            else
+            {
+                if(idx != (int)to_ret.size() - 1)
+                    formatted += "\n";
+            }
+
+            idx++;
         }
 
-        formatted += "]";
+        if(full)
+            formatted += "]";
 
         push_duk_val(ctx, formatted);
     }
@@ -798,7 +836,7 @@ duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
             item next;
             next.load_from_db(mongo_ctx, item_id);
 
-            objs.push_back(get_item_raw(next));
+            objs.push_back(get_item_raw(next, !full));
         }
 
         push_duk_val(ctx, objs);
