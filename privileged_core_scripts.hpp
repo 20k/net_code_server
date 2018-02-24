@@ -183,7 +183,7 @@ std::string format_pretty_names(const std::vector<std::string>& names)
 inline
 duk_ret_t scripts__all(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
-    int pretty = duk_get_prop_string_as_int(ctx, -1, "pretty");
+    int pretty = !duk_get_prop_string_as_int(ctx, -1, "array");
     int seclevel = duk_get_prop_string_as_int(ctx, -1, "sec", -1);
 
     mongo_requester request;
@@ -494,7 +494,7 @@ duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
     int num = duk_get_prop_string_as_int(ctx, -1, "count");
-    bool pretty = duk_get_prop_string_as_int(ctx, -1, "pretty");
+    bool pretty = !duk_get_prop_string_as_int(ctx, -1, "array");
 
     /*int offset = 0;
 
@@ -567,7 +567,7 @@ duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    int pretty = duk_get_prop_string_as_int(ctx, -1, "pretty", 0);
+    int pretty = !duk_get_prop_string_as_int(ctx, -1, "array", 0);
 
     std::string caller = get_caller(ctx);
 
@@ -772,7 +772,7 @@ duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    int pretty = duk_get_prop_string_as_int(ctx, -1, "pretty", 0);
+    int pretty = !duk_get_prop_string_as_int(ctx, -1, "array", 0);
     int full = duk_get_prop_string_as_int(ctx, -1, "full", 0);
 
     int load_idx = duk_get_prop_string_as_int(ctx, -1, "load", -1);
