@@ -1,8 +1,11 @@
 #ifndef DUK_OBJECT_FUNCTIONS_HPP_INCLUDED
 #define DUK_OBJECT_FUNCTIONS_HPP_INCLUDED
 
-using duk_func_t = duk_ret_t (*)(duk_context*);
+#include <utility>
+#include <variant>
 
+using duk_func_t = duk_ret_t (*)(duk_context*);
+using duk_variant_t = std::variant<bool, int, double, std::string>;
 
 inline
 void push_duk_val(duk_context* ctx, const duk_func_t& func)
@@ -39,6 +42,22 @@ inline
 void push_duk_val(duk_context* ctx, const std::string& t)
 {
     duk_push_string(ctx, t.c_str());
+}
+
+inline
+void push_duk_val(duk_context* ctx, const duk_variant_t& t)
+{
+    if(std::holds_alternative<bool>(t))
+        return push_duk_val(ctx, std::get<bool>(t));
+
+    if(std::holds_alternative<int>(t))
+        return push_duk_val(ctx, std::get<int>(t));
+
+    if(std::holds_alternative<double>(t))
+        return push_duk_val(ctx, std::get<double>(t));
+
+    if(std::holds_alternative<std::string>(t))
+        return push_duk_val(ctx, std::get<std::string>(t));
 }
 
 template<typename T>
