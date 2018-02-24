@@ -129,6 +129,17 @@ struct user
         return ret;
     }
 
+    std::map<std::string, double> get_total_user_properties(mongo_lock_proxy& ctx)
+    {
+         std::map<std::string, double> found = get_properties_from_loaded_items(ctx);
+
+         found["char_count"] += 500;
+         found["script_slots"] += 2;
+         found["public_script_slots"] += 1;
+
+         return found;
+    }
+
     bool has_loaded_item(const std::string& id)
     {
         std::vector<std::string> items = str_to_array(loaded_upgr_idx);
