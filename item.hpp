@@ -63,6 +63,14 @@ struct item
         return atoll(properties[str].c_str());
     }
 
+    double get_prop_as_double(const std::string& str)
+    {
+        if(properties.find(str) == properties.end())
+            return 0;
+
+        return atof(properties[str].c_str());
+    }
+
     void generate_set_id(mongo_lock_proxy& global_props_context)
     {
         int32_t id = get_new_id(global_props_context);

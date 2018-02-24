@@ -110,6 +110,25 @@ struct user
         return true;
     }
 
+    std::map<std::string, double> get_properties_from_loaded_items(mongo_lock_proxy& ctx)
+    {
+        std::map<std::string, double> ret;
+
+        std::vector<std::string> all_items = all_loaded_items();
+
+        for(std::string& id : all_items)
+        {
+            item item_id;
+            item_id.load_from_db(ctx, id);
+
+            ret["char_count"] += item_id.get_prop_as_double("char_count");
+            ret["script_slots"] += item_id.get_prop_as_double("script_slots");
+            ret["public_script_slots"] += item_id.get_prop_as_double("public_script_slots");
+        }
+
+        return ret;
+    }
+
     bool has_loaded_item(const std::string& id)
     {
         std::vector<std::string> items = str_to_array(loaded_upgr_idx);
