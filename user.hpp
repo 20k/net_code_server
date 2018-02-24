@@ -3,6 +3,7 @@
 
 #include "mongo.hpp"
 #include "script_util.hpp"
+#include "item.hpp"
 
 ///how do handle upgrades
 ///vector of ids?
@@ -96,6 +97,40 @@ struct user
         request.insert_in_db(ctx);
 
         return true;
+    }
+
+    void append_item(const std::string& id)
+    {
+        std::vector<std::string> items = str_to_array(upgr_idx);
+
+        items.push_back(id);
+
+        upgr_idx = array_to_str(items);
+    }
+
+    bool has_item(const std::string& id)
+    {
+        std::vector<std::string> items = str_to_array(upgr_idx);
+
+        for(auto& i : items)
+        {
+            if(i == id)
+                return true;
+        }
+
+        return false;
+    }
+
+    void remove_item(const std::string& id)
+    {
+        std::vector<std::string> items = str_to_array(upgr_idx);
+
+        auto it = std::find(items.begin(), items.end(), id);
+
+        if(it == items.end())
+            return;
+
+        items.erase(it);
     }
 };
 
