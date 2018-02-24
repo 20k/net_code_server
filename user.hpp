@@ -16,6 +16,7 @@ struct user
     std::string auth;
     int32_t last_message_uid = 0;
     std::string upgr_idx;
+    std::string loaded_upgr_idx;
 
     bool valid = false;
 
@@ -31,6 +32,7 @@ struct user
         to_set.set_prop_double("cash", cash);
         to_set.set_prop_int("last_message_uid", last_message_uid);
         to_set.set_prop("upgr_idx", upgr_idx);
+        to_set.set_prop("loaded_upgr_idx", loaded_upgr_idx);
 
         filter.update_in_db_if_exists(ctx, to_set);
     }
@@ -74,6 +76,8 @@ struct user
                 last_message_uid = req.get_prop_as_integer("last_message_uid");
             if(req.has_prop("upgr_idx"))
                 upgr_idx = req.get_prop("upgr_idx");
+            if(req.has_prop("loaded_upgr_idx"))
+                loaded_upgr_idx = req.get_prop("loaded_upgr_idx");
         }
 
         return true;
@@ -99,17 +103,60 @@ struct user
         request.set_prop_bin("auth", auth);
         request.set_prop_int("last_message_uid", last_message_uid);
         request.set_prop("upgr_idx", "");
+        request.set_prop("loaded_upgr_idx", "");
 
         request.insert_in_db(ctx);
 
         return true;
     }
 
+    bool has_loaded_item(const std::string& id)
+    {
+        std::vector<std::string> items = str_to_array(loaded_upgr_idx);
+
+        for(auto& i : items)
+        {
+            if(i == id)
+                return true;
+        }
+
+        return false;
+    }
+
+    void load_item(const std::string& id)
+    {
+        if(has_loaded_item(id))
+            return;
+
+        std::vector<std::string> items = str_to_array(loaded_upgr_idx);
+
+        items.push_back(id);
+
+        loaded_upgr_idx = array_to_str(items);
+    }
+
+    void unload_item(const std::string& id)
+    {
+        if(!has_loaded_item(id))
+            return;
+
+        std::vector<std::string> items = str_to_array(loaded_upgr_idx);
+
+        auto it = std::find(items.begin(), items.end(), id);
+
+        if(it == items.end())
+            return;
+
+        items.erase(it);
+
+        loaded_upgr_idx = array_to_str(items);
+    }
+
     std::string index_to_item(int index)
     {
         std::vector<std::string> items = str_to_array(upgr_idx);
 
-        if(index < 0 || index >= items.size())
+        if(index < 0 || index >= (int)items.size())
             return "";
 
         return items[index];
