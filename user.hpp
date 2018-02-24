@@ -243,6 +243,17 @@ struct user
     {
         return str_to_array(upgr_idx).size();
     }
+
+    int find_num_scripts(mongo_lock_proxy& ctx)
+    {
+        mongo_requester request;
+        request.set_prop("owner", name);
+        request.set_prop("is_script", 1);
+
+        std::vector<mongo_requester> results = request.fetch_from_db(ctx);
+
+        return results.size();
+    }
 };
 
 #endif // USER_HPP_INCLUDED
