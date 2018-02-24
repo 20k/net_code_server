@@ -12,14 +12,14 @@ namespace item_types
 {
     enum item_type
     {
-        SCRIPT, ///expose access logs
-        LOCK,
-        CHAR_COUNT,
-        SCRIPT_SLOT,
-        PUBLIC_SCRIPT_SLOT,
-        EMPTY_SCRIPT_BUNDLE,
-        MISC,
-        ERR,
+        SCRIPT = 0, ///expose access logs
+        LOCK = 1,
+        CHAR_COUNT = 2,
+        SCRIPT_SLOT = 3,
+        PUBLIC_SCRIPT_SLOT = 4,
+        EMPTY_SCRIPT_BUNDLE = 5,
+        MISC = 6,
+        ERR = 7,
     };
 
     static std::vector<std::string> quick_names
