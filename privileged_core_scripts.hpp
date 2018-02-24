@@ -769,29 +769,24 @@ duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     int full = duk_get_prop_string_as_int(ctx, -1, "full", 0);
 
-    mongo_requester player;
+    user found_user;
 
     {
-        mongo_requester request;
-        request.set_prop("name", get_caller(ctx));
-
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
         mongo_ctx->change_collection(get_caller(ctx));
 
-        auto requests = request.fetch_from_db(mongo_ctx);
+        found_user.load_from_db(mongo_ctx, get_caller(ctx));
 
-        if(requests.size() == 0)
+        if(!found_user.valid)
         {
-            push_error(ctx, "Yup I don't know what you did here");
+            push_error(ctx, "No such user/really catastrophic error");
             return 1;
         }
-
-        player = requests[0];
     }
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
-    std::vector<std::string> to_ret = str_to_array(player.get_prop("upgr_idx"));
+    std::vector<std::string> to_ret = str_to_array(found_user.upgr_idx);
 
     if(pretty)
     {
