@@ -17,6 +17,8 @@ struct user
     int32_t last_message_uid = 0;
     std::string upgr_idx;
 
+    bool valid = false;
+
     void overwrite_user_in_db(mongo_lock_proxy& ctx)
     {
         ctx->change_collection(name);
@@ -43,7 +45,7 @@ struct user
 
         bson_destroy(to_find);
 
-         return ret.size() != 0;
+        return ret.size() != 0;
     }
 
     bool load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
@@ -52,6 +54,8 @@ struct user
 
         if(!exists(ctx, name_))
             return false;
+
+        valid = true;
 
         mongo_requester request;
         request.set_prop("name", name_);
@@ -86,6 +90,8 @@ struct user
         if(exists(ctx, name))
             return false;
 
+        valid = true;
+
         ctx->change_collection(name);
 
         mongo_requester request;
@@ -97,6 +103,16 @@ struct user
         request.insert_in_db(ctx);
 
         return true;
+    }
+
+    std::string index_to_item(int index)
+    {
+        std::vector<std::string> items = str_to_array(upgr_idx);
+
+        if(index < 0 || index >= items.size())
+            return "";
+
+        return items[index];
     }
 
     void append_item(const std::string& id)
@@ -131,6 +147,11 @@ struct user
             return;
 
         items.erase(it);
+    }
+
+    int num_items()
+    {
+        return str_to_array(upgr_idx).size();
     }
 };
 

@@ -98,46 +98,28 @@ std::string array_to_str(const std::vector<std::string>& arr)
     return accum;
 }
 
+#define MAX_ITEMS 128
+
 bool item::transfer_to_user(const std::string& username, int thread_id)
 {
     {
         mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
         user_ctx->change_collection(username);
 
-        mongo_requester request;
-        request.set_prop("name", username);
+        user temp;
+        temp.load_from_db(user_ctx, username);
 
-        std::vector<mongo_requester> found = request.fetch_from_db(user_ctx);
-
-        if(found.size() == 0)
+        if(!temp.valid)
             return false;
 
-        mongo_requester req = found[0];
-
-        std::string upg_str = req.get_prop("upgr_idx");
-
-        ///uids
-        std::vector<std::string> upgrades = str_to_array(upg_str);
-
-        ///MAX UPGRADES TODO ALARM:
-        if(upgrades.size() >= 128)
-        {
+        if(temp.num_items() >= MAX_ITEMS)
             return false;
-        }
 
         std::string my_id = get_prop("item_id");
 
-        upgrades.push_back(my_id);
+        temp.append_item(my_id);
 
-        std::string accum = array_to_str(upgrades);
-
-        mongo_requester to_store_user;
-        to_store_user.set_prop("name", username);
-
-        mongo_requester to_update_user;
-        to_update_user.set_prop("upgr_idx", accum);
-
-        to_store_user.update_in_db_if_exact(user_ctx, to_update_user);
+        temp.overwrite_user_in_db(user_ctx);
     }
 
     {
@@ -150,6 +132,7 @@ bool item::transfer_to_user(const std::string& username, int thread_id)
     return true;
 }
 
+#if 0
 bool item::remove_from_user(const std::string& username, int thread_id)
 {
     {
@@ -281,9 +264,44 @@ bool item::transfer_from_to(const std::string& from, const std::string& to, int 
 
     return true;
 }
+#endif // 0
 
 bool item::transfer_from_to_by_index(int index, const std::string& from, const std::string& to, int thread_id)
 {
+    mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
+
+    user u1, u2;
+    u1.load_from_db(user_ctx, from);
+    u2.load_from_db(user_ctx, to);
+
+    if(!u1.valid || !u2.valid)
+        return false;
+
+    std::string item_id = u1.index_to_item(index);
+
+    if(item_id == "")
+        return false;
+
+    if(u2.num_items() >= MAX_ITEMS)
+        return false;
+
+    u1.remove_item(item_id);
+    u2.append_item(item_id);
+
+    mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
+
+    load_from_db(item_ctx, item_id);
+    set_prop("owner", to);
+    set_prop("item_id", item_id);
+
+    overwrite_in_db(item_ctx);
+
+    u1.overwrite_user_in_db(user_ctx);
+    u2.overwrite_user_in_db(user_ctx);
+
+    return true;
+
+    #if 0
     mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
 
     mongo_requester to_r;
@@ -352,6 +370,7 @@ bool item::transfer_from_to_by_index(int index, const std::string& from, const s
     }
 
     return true;
+    #endif // 0
 }
 
 ///need a remove from user... and then maybe pull out all the lock proxies?
