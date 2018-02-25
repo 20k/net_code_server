@@ -134,6 +134,7 @@ namespace item_types
             new_item.set_prop("max_script_size", 500);
             new_item.set_prop("open_source", 0);
             new_item.set_prop("desc", "Container for a tradeable script");
+            new_item.set_prop("full", 0);
         }
 
         if(type == MISC)
