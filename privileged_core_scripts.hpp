@@ -73,7 +73,7 @@ std::map<std::string, priv_func_info> privileged_functions;
 ///hmm. Maybe we want to keep sls somewhere which is dynamically editable like global properties in the db
 ///cache the calls, and like, refresh the cache every 100 calls or something
 inline
-duk_ret_t accts__balance(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t cash__balance(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -136,7 +136,7 @@ duk_ret_t scripts__get_level(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
-duk_ret_t scripts__user(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -226,7 +226,7 @@ duk_ret_t scripts__all(priv_context& priv_ctx, duk_context* ctx, int sl)
 
 
 inline
-duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const std::string& to, double amount)
+duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const std::string& to, double amount)
 {
     COOPERATE_KILL();
 
@@ -289,7 +289,7 @@ duk_ret_t accts_internal_xfer(duk_context* ctx, const std::string& from, const s
 
 ///TODO: TRANSACTION HISTORY
 inline
-duk_ret_t accts__xfer_gc_to(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t cash__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -321,11 +321,11 @@ duk_ret_t accts__xfer_gc_to(priv_context& priv_ctx, duk_context* ctx, int sl)
     amount = duk_get_number(ctx, -1);
     duk_pop(ctx);
 
-    return accts_internal_xfer(ctx, get_caller(ctx), destination_name, amount);
+    return cash_internal_xfer(ctx, get_caller(ctx), destination_name, amount);
 }
 
 inline
-duk_ret_t accts__xfer_gc_to_caller(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t cash__xfer_to_caller(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -344,12 +344,12 @@ duk_ret_t accts__xfer_gc_to_caller(priv_context& priv_ctx, duk_context* ctx, int
     amount = duk_get_number(ctx, -1);
     duk_pop(ctx);
 
-    return accts_internal_xfer(ctx, priv_ctx.original_host, destination_name, amount);
+    return cash_internal_xfer(ctx, priv_ctx.original_host, destination_name, amount);
 }
 
 ///this is only valid currently, will need to expand to hardcode in certain folders
 inline
-duk_ret_t scripts__trust(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t scripts__core(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -366,7 +366,7 @@ duk_ret_t scripts__trust(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
-duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t msgs__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -377,7 +377,7 @@ duk_ret_t chats__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(channel == "" || msg == "" || channel.size() >= 10 || msg.size() >= 10000)
     {
-        push_error(ctx, "Usage: #hs.chats.send({channel:\"<name>\", msg:\"msg\"})");
+        push_error(ctx, "Usage: #hs.msg.send({channel:\"<name>\", msg:\"msg\"})");
         return 1;
     }
 
@@ -488,7 +488,7 @@ std::string prettify_chat_strings(std::vector<mongo_requester>& found)
 }
 
 inline
-duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t msgs__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -513,7 +513,7 @@ duk_ret_t chats__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(channel == "" || num >= 100 || channel.size() >= 10)
     {
-        push_error(ctx, "Usage: #ms.chats.recent({channel:\"<name>\", count:num, pretty:1})");
+        push_error(ctx, "Usage: #ms.msg.recent({channel:\"<name>\", count:num, pretty:1})");
         return 1;
     }
 
@@ -616,7 +616,7 @@ duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
-duk_ret_t sys__create_upg(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t items__create(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
     RATELIMIT_DUK(UPG_CHEAT);
@@ -768,7 +768,7 @@ duk_object_t get_item_raw(item& i, bool is_short, user& usr)
 }
 
 inline
-duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -877,7 +877,7 @@ duk_ret_t sys__upgrades(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
-duk_ret_t sys__xfer_upgrade_to(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t items__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -926,21 +926,21 @@ std::string parse_function_hack(std::string in)
 inline
 std::map<std::string, priv_func_info> privileged_functions
 {
-    REGISTER_FUNCTION_PRIV(accts__balance, 3),
+    REGISTER_FUNCTION_PRIV(cash__balance, 3),
+    REGISTER_FUNCTION_PRIV(cash__xfer_to, 2),
+    REGISTER_FUNCTION_PRIV(cash__xfer_to_caller, 4),
     REGISTER_FUNCTION_PRIV(scripts__get_level, 4),
-    REGISTER_FUNCTION_PRIV(accts__xfer_gc_to, 2),
-    REGISTER_FUNCTION_PRIV(accts__xfer_gc_to_caller, 4),
-    REGISTER_FUNCTION_PRIV(scripts__trust, 4),
-    REGISTER_FUNCTION_PRIV(scripts__user, 2),
+    REGISTER_FUNCTION_PRIV(scripts__core, 4),
+    REGISTER_FUNCTION_PRIV(scripts__me, 2),
     REGISTER_FUNCTION_PRIV(scripts__all, 4),
-    REGISTER_FUNCTION_PRIV(chats__send, 3),
-    REGISTER_FUNCTION_PRIV(chats__recent, 2),
+    REGISTER_FUNCTION_PRIV(msgs__send, 3),
+    REGISTER_FUNCTION_PRIV(msgs__recent, 2),
     REGISTER_FUNCTION_PRIV(users__me, 0),
-    REGISTER_FUNCTION_PRIV(sys__create_upg, 0),
+    REGISTER_FUNCTION_PRIV(items__create, 0),
     //REGISTER_FUNCTION_PRIV(sys__disown_upg, 0),
     //REGISTER_FUNCTION_PRIV(sys__xfer_upgrade_uid, 0),
-    REGISTER_FUNCTION_PRIV(sys__xfer_upgrade_to, 1),
-    REGISTER_FUNCTION_PRIV(sys__upgrades, 2),
+    REGISTER_FUNCTION_PRIV(items__xfer_to, 1),
+    REGISTER_FUNCTION_PRIV(items__manage, 2),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
