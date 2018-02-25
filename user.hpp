@@ -8,6 +8,8 @@
 ///how do handle upgrades
 ///vector of ids?
 
+#define MAX_ITEMS 128
+
 ///ok. Need to fetch users out of the db
 struct user
 {
@@ -153,19 +155,24 @@ struct user
         return false;
     }
 
-    void load_item(const std::string& id)
+    bool load_item(const std::string& id)
     {
         if(id == "")
-            return;
+            return false;
 
         if(has_loaded_item(id))
-            return;
+            return false;
 
         std::vector<std::string> items = str_to_array(loaded_upgr_idx);
+
+        if(items.size() >= MAX_ITEMS)
+            return false;
 
         items.push_back(id);
 
         loaded_upgr_idx = array_to_str(items);
+
+        return true;
     }
 
     void unload_item(const std::string& id)

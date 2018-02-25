@@ -218,14 +218,6 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
     return false;
 }
 
-struct script_data
-{
-    std::string parsed_source;
-    int seclevel = 0;
-    bool valid = false;
-};
-
-inline
 script_data parse_script(std::string in)
 {
     if(in.size() == 0)
@@ -291,10 +283,10 @@ std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::
     return err;
 }
 
-void script_info::load_from_db(mongo_lock_proxy& ctx)
+bool script_info::load_from_db(mongo_lock_proxy& ctx)
 {
     if(!exists_in_db(ctx))
-        return;
+        return false;
 
     item my_script;
 
@@ -323,6 +315,8 @@ void script_info::load_from_db(mongo_lock_proxy& ctx)
         seclevel = sdata.seclevel;
         valid = sdata.valid;
     }
+
+    return true;
 }
 
 void script_info::overwrite_in_db(mongo_lock_proxy& ctx)

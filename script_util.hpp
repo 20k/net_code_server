@@ -31,7 +31,7 @@ struct script_info
 
     std::string load_from_unparsed_source(duk_context* ctx, const std::string& unparsed, const std::string& name);
 
-    void load_from_db(mongo_lock_proxy& ctx);
+    bool load_from_db(mongo_lock_proxy& ctx);
     void overwrite_in_db(mongo_lock_proxy& ctx);
 
     bool exists_in_db(mongo_lock_proxy& ctx);
@@ -41,6 +41,15 @@ bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out
 std::string attach_wrapper(const std::string& data_in, bool stringify, bool direct);
 
 void register_funcs(duk_context* ctx, int seclevel);
+
+struct script_data
+{
+    std::string parsed_source;
+    int seclevel = 0;
+    bool valid = false;
+};
+
+script_data parse_script(std::string in);
 
 ///#db.f({[col_key]: {$exists : true}});
 ///$where and $query both need to be disabled, $inspect as well
