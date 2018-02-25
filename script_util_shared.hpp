@@ -205,7 +205,13 @@ std::string make_success_col(const std::string& in)
 inline
 std::string string_to_colour(const std::string& in)
 {
-    std::string valid_cols = "ABCDEFGHIJKLNOPSTVWXYdefghijlnpqsvw";
+    if(in == "core")
+        return "L";
+
+    if(in == "extern")
+        return "H";
+
+    std::string valid_cols = "ABCDEFGHIJKLNOPSTVWXYdefghijlnpqsw";
 
     size_t hsh = std::hash<std::string>{}(in);
 
