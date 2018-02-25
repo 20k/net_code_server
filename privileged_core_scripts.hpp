@@ -181,7 +181,7 @@ std::string format_pretty_names(const std::vector<std::string>& names)
 
 ///should take a pretty:1 argument
 inline
-duk_ret_t scripts__all(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     int pretty = !duk_get_prop_string_as_int(ctx, -1, "array");
     int seclevel = duk_get_prop_string_as_int(ctx, -1, "sec", -1);
@@ -932,7 +932,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(scripts__get_level, 4),
     REGISTER_FUNCTION_PRIV(scripts__core, 4),
     REGISTER_FUNCTION_PRIV(scripts__me, 2),
-    REGISTER_FUNCTION_PRIV(scripts__all, 4),
+    REGISTER_FUNCTION_PRIV(scripts__public, 4),
     REGISTER_FUNCTION_PRIV(msgs__send, 3),
     REGISTER_FUNCTION_PRIV(msgs__recent, 2),
     REGISTER_FUNCTION_PRIV(users__me, 0),
