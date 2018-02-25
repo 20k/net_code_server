@@ -29,6 +29,7 @@ namespace item_types
         "char_count",
         "script_slot",
         "public_script_slot",
+        "script_bundle",
         "misc",
         "error_vnf",
     };
