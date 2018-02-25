@@ -914,16 +914,67 @@ duk_ret_t items__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string scriptname = duk_safe_get_prop_string(ctx, -1, "name");
 
     if(scriptname == "")
-    {
-        push_error(ctx, "Invalid name");
-        return 1;
-    }
+        return push_error(ctx, "Invalid name");
+
+    std::string full_script_name = get_caller(ctx) + "." + scriptname;
+
+    if(!is_valid_full_name_string(full_script_name))
+        return push_error(ctx, "Invalid name");
 
     if(item_idx < 0)
+        return push_error(ctx, "Invalid index");
+
+    user current_user;
+
+    ///hmm. I really need a generic double locking system
+    ///ALARM: NOT SAFE WITHOUT DOUBLE LOCKING DOUBLE LOCKIGN ISNT SAFE YET
     {
-        push_error(ctx, "Invalid index");
-        return 1;
+        mongo_lock_proxy user_lock = get_global_mongo_user_info_context(get_thread_id(ctx));
+        user_lock->change_collection(get_caller(ctx));
+
+        current_user.load_from_db(user_lock, get_caller(ctx));
     }
+
+    std::string item_id = current_user.index_to_item(item_idx);
+
+    if(item_id == "")
+        return push_error(ctx, "Invalid index");
+
+    {
+        mongo_lock_proxy item_lock = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+        item found_bundle;
+
+        if(!found_bundle.exists_in_db(item_lock, item_id))
+            return push_error(ctx, "No such item");
+
+        found_bundle.load_from_db(item_lock, item_id);
+
+        if(found_bundle.get_prop("item_type") != std::to_string(item_types::EMPTY_SCRIPT_BUNDLE))
+            return push_error(ctx, "Not a script bundle");
+
+        if(found_bundle.get_prop("full") != "0")
+            return push_error(ctx, "Not an empty script bundle");
+
+        item found_script;
+
+        if(!found_bundle.exists_in_db(item_lock, full_script_name))
+            return push_error(ctx, "No such script");
+
+        found_script.load_from_db(item_lock, full_script_name);
+
+        int max_storage = found_bundle.get_prop_as_integer("max_script_size");
+
+        if((int)found_script.get_prop("unparsed_source").size() > max_storage)
+            return push_error(ctx, "Empty bundle does not contain enough space");
+
+        found_bundle.set_prop("unparsed_source", found_script.get_prop("unparsed_source"));
+        found_bundle.set_prop("full", 1);
+
+        found_bundle.overwrite_in_db(item_lock);
+    }
+
+    return push_success(ctx);
 }
 
 inline
@@ -965,6 +1016,7 @@ std::map<std::string, priv_func_info> privileged_functions
     //REGISTER_FUNCTION_PRIV(sys__xfer_upgrade_uid, 0),
     REGISTER_FUNCTION_PRIV(items__xfer_to, 1),
     REGISTER_FUNCTION_PRIV(items__manage, 2),
+    REGISTER_FUNCTION_PRIV(items__bundle_script, 1),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
