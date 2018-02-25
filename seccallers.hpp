@@ -361,6 +361,10 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     duk_pop(ctx);
 
+    if(!is_valid_full_name_string(str))
+        return push_error(ctx, "Bad script name, don't do this :)");
+
+    ///current script
     std::string full_script = get_script_host(ctx) + "." + get_script_ending(ctx);
 
     std::string conv = str;
@@ -396,8 +400,42 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     if(!script.valid)
     {
-        push_error(ctx, "Script not found");
-        return 1;
+
+        {
+            user current_user;
+
+            {
+                mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+                current_user.load_from_db(mongo_ctx, get_caller(ctx));
+            }
+
+            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+            std::string unparsed_source = current_user.get_loaded_callable_scriptname_source(item_ctx, str);
+
+            if(unparsed_source == "")
+                return push_error(ctx, "Script not found");
+
+            duk_context* temp_context = js_interop_startup();
+            register_funcs(temp_context, 0);
+
+            script_info script_2;
+            std::string compile_err = script_2.load_from_unparsed_source(temp_context, unparsed_source, str);
+
+            js_interop_shutdown(temp_context);
+
+            if(compile_err != "")
+                return push_error(ctx, "Script Bundle Error: " + compile_err);
+
+            script = script_2;
+        }
+
+        if(!script.valid)
+            return push_error(ctx, "Script not found");
+
+        //push_error(ctx, "Script not found");
+        //return 1;
     }
 
     SL_GUARD(script.seclevel);
@@ -414,9 +452,6 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     compile_and_call(sd, load, get_caller(ctx), false, script.seclevel);
 
     set_script_info(ctx, full_script);
-
-    ///NEED TO RESTORE OLD SEC LEVEL
-    //register_funcs(ctx, script.seclevel);
 
     return 1;
 }

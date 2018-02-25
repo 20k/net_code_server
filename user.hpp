@@ -200,6 +200,22 @@ struct user
         return str_to_array(loaded_upgr_idx);
     }
 
+    std::string get_loaded_callable_scriptname_source(mongo_lock_proxy& ctx, const std::string& full_name)
+    {
+        std::vector<std::string> loaded = all_loaded_items();
+
+        for(auto& id : loaded)
+        {
+            item next;
+            next.load_from_db(ctx, id);
+
+            if(name + "." + next.get_prop("registered_as") == full_name)
+                return next.get_prop("unparsed_source");
+        }
+
+        return "";
+    }
+
     std::string index_to_item(int index)
     {
         std::vector<std::string> items = str_to_array(upgr_idx);
