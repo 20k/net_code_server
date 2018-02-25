@@ -294,6 +294,10 @@ bool item::transfer_from_to_by_index(int index, const std::string& from, const s
     set_prop("owner", to);
     set_prop("item_id", item_id);
 
+    ///unregister script bundle
+    if(get_prop("item_type") == std::to_string(item_types::EMPTY_SCRIPT_BUNDLE))
+        set_prop("registered_as", "");
+
     overwrite_in_db(item_ctx);
 
     u1.overwrite_user_in_db(user_ctx);

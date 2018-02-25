@@ -135,6 +135,7 @@ namespace item_types
             new_item.set_prop("open_source", 0);
             new_item.set_prop("desc", "Container for a tradeable script");
             new_item.set_prop("full", 0);
+            new_item.set_prop("registered_as", "");
         }
 
         if(type == MISC)
