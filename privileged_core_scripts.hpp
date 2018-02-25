@@ -36,21 +36,24 @@ bool can_run(int csec_level, int maximum_sec)
 }
 
 inline
-void push_error(duk_context* ctx, const std::string& msg)
+duk_ret_t push_error(duk_context* ctx, const std::string& msg)
 {
     push_dukobject(ctx, "ok", false, "msg", msg);
+    return 1;
 }
 
 inline
-void push_success(duk_context* ctx)
+duk_ret_t push_success(duk_context* ctx)
 {
     push_dukobject(ctx, "ok", true);
+    return 1;
 }
 
 inline
-void push_success(duk_context* ctx, const std::string& msg)
+duk_ret_t push_success(duk_context* ctx, const std::string& msg)
 {
     push_dukobject(ctx, "ok", true, "msg", msg);
+    return 1;
 }
 
 ///could potentially use __FUNCTION__ here
@@ -900,6 +903,27 @@ duk_ret_t items__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
         push_error(ctx, "Could not xfer");
 
     return 1;
+}
+
+inline
+duk_ret_t items__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    int item_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
+    std::string scriptname = duk_safe_get_prop_string(ctx, -1, "name");
+
+    if(scriptname == "")
+    {
+        push_error(ctx, "Invalid name");
+        return 1;
+    }
+
+    if(item_idx < 0)
+    {
+        push_error(ctx, "Invalid index");
+        return 1;
+    }
 }
 
 inline
