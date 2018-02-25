@@ -202,4 +202,22 @@ std::string make_success_col(const std::string& in)
     return "`L" + in + "`";
 }
 
+inline
+std::string string_to_colour(const std::string& in)
+{
+    std::string valid_cols = "ABCDEFGHIJKLNOPSTVWXYdefghijlnpqsvw";
+
+    size_t hsh = std::hash<std::string>{}(in);
+
+    return std::string(1, valid_cols[(hsh % valid_cols.size())]);
+}
+
+inline
+std::string colour_string(const std::string& in)
+{
+    std::string c = string_to_colour(in);
+
+    return "`" + c + in + "`";
+}
+
 #endif // SCRIPT_UTIL_SHARED_HPP_INCLUDED

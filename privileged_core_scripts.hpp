@@ -482,7 +482,7 @@ std::string prettify_chat_strings(std::vector<mongo_requester>& found)
 
         std::string tstr = "`b" + format_tim(std::to_string(hour)) + format_tim(std::to_string(minute)) + "`";
 
-        std::string msg = tstr + " `N" + i.get_prop("channel") + "`" + " " + i.get_prop("from") + " "  + i.get_prop("msg");
+        std::string msg = tstr + " `P" + i.get_prop("channel") + "`" + " " + colour_string(i.get_prop("from")) + " "  + i.get_prop("msg");
 
         str = msg + "\n" + str;
     }
