@@ -19,7 +19,8 @@ namespace item_types
         PUBLIC_SCRIPT_SLOT = 4,
         EMPTY_SCRIPT_BUNDLE = 5,
         MISC = 6,
-        ERR = 7,
+        AUTO_SCRIPT_RUNNER = 7,
+        ERR = 8,
     };
 
     static std::vector<std::string> quick_names
@@ -31,6 +32,7 @@ namespace item_types
         "public_script_slot",
         "script_bundle",
         "misc",
+        "auto_script_runner",
         "error_vnf",
     };
 }
@@ -142,6 +144,12 @@ namespace item_types
         {
             new_item.set_prop("misc", 1);
             new_item.set_prop("desc", "???");
+        }
+
+        if(type == AUTO_SCRIPT_RUNNER)
+        {
+            new_item.set_prop("run_every_s", 120);
+            new_item.set_prop("last_run", 0);
         }
 
         return new_item;

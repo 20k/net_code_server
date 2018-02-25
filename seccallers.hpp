@@ -388,6 +388,8 @@ duk_ret_t js_call(duk_context* ctx, int sl)
         return result;
     }
 
+    ///so, this indent and everything under if(!script.valid)
+    ///needs to be chained into one general "get_script" method
     script_info script;
 
     {
