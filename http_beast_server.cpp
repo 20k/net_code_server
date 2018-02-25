@@ -320,12 +320,11 @@ void read_queue(tcp::socket& socket,
                 std::string const& doc_root,
                 global_state& glob,
                 int64_t my_id,
-                shared_data& shared)
+                shared_data& shared,
+                std::deque<std::string>& shared_queue,
+                std::mutex& shared_lock,
+                command_handler_state& state)
 {
-    std::deque<std::string> shared_queue;
-    std::mutex shared_lock;
-    command_handler_state state;
-
     std::thread(async_command_handler, std::ref(shared), std::ref(state), std::ref(shared_queue), std::ref(shared_lock),
                 std::ref(glob), my_id).detach();
 
@@ -354,14 +353,27 @@ void read_queue(tcp::socket& socket,
                     break;
                 }
 
+
+                int len;
+
+                bool rate_hit = true;
+
                 {
                     std::lock_guard lg(shared_lock);
 
-                    if(shared_queue.size() <= 5)
+                    len = shared_queue.size();
+
+                    std::string str = req.body();
+
+                    if(len <= 5 || starts_with(str, "client_poll"))
+                    {
                         shared_queue.push_back(req.body());
-                    else
-                        shared.add_back_write("command Hit rate limit");
+                        rate_hit = false;
+                    }
                 }
+
+                if(rate_hit)
+                    shared.add_back_write("command Hit rate limit (read_queue)");
 
                 //printf("got test read\n");
 
@@ -404,8 +416,6 @@ void write_queue(tcp::socket& socket,
             if(shared.should_terminate)
                 break;
 
-            Sleep(50);
-
             if(shared.has_front_write())
             {
                 std::string next_command = shared.get_front_write();
@@ -441,6 +451,10 @@ void write_queue(tcp::socket& socket,
 
                 lambda(std::move(res));
             }
+            else
+            {
+                Sleep(50);
+            }
 
             if(!socket.is_open())
                 break;
@@ -466,10 +480,16 @@ void thread_session(
 {
     shared_data shared;
 
+    std::deque<std::string> shared_queue;
+    std::mutex shared_lock;
+    command_handler_state state;
+
+
     global_shared_data* store = fetch_global_shared_data();
     store->add(&shared);
 
-    std::thread(read_queue, std::ref(socket), doc_root, std::ref(glob), my_id, std::ref(shared)).detach();
+    std::thread(read_queue, std::ref(socket), doc_root, std::ref(glob), my_id, std::ref(shared),
+                std::ref(shared_queue), std::ref(shared_lock), std::ref(state)).detach();
     std::thread(write_queue, std::ref(socket), doc_root, std::ref(glob), my_id, std::ref(shared)).detach();
 
     ///3rd thread is the js exec context

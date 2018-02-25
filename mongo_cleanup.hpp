@@ -78,6 +78,17 @@ mongo_lock_proxy get_global_mongo_chat_channels_context(int lock_id)
     return get_global_mongo_context(mongo_database_type::CHAT_CHANNELS, lock_id);
 }
 
+/*inline
+std::vector<int> any_mongo_locks()
+{
+    std::lock_guard<std::mutex> lk(mongo_databases_lock);
+
+    for(auto& i : mongo_databases)
+    {
+
+    }
+}*/
+
 #if 0
 inline
 mongo_lock_proxy get_global_mongo_user_auth_context(int lock_id)

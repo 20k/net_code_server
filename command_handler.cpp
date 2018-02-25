@@ -90,7 +90,7 @@ std::string run_in_user_context(user& usr, const std::string& command)
 
     sandbox_data* sand_data = (sandbox_data*)funcs.udata;
 
-    fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number", "print", "sleep");
+    fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number");
 
     startup_state(sd.ctx, usr.name, usr.name, "invoke");
 
@@ -199,6 +199,8 @@ std::string run_in_user_context(user& usr, const std::string& command)
     {
         printf("Failed to cleanup resources\n");
     }
+
+    printf("cleaned up unsafe\n");
 
     std::string ret = inf.ret;
 
@@ -606,14 +608,16 @@ std::string handle_client_poll(user& usr)
     {
         for(auto& cdata : channel_to_string)
         {
-            to_send += cdata.first + " " + cdata.second;
+            std::string full_str = cdata.first + " " + cdata.second;
+
+            to_send += "chat_api " + std::to_string(full_str.size()) + " " + full_str;
         }
     }
 
     if(to_send.size() == 0)
         return "";
 
-    return "chat_api " + to_send;
+    return to_send;
 }
 
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
