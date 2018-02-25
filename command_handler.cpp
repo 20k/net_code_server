@@ -276,6 +276,19 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             state.current_user.construct_new_user(mongo_user_info, user_name, state.auth, start_from);
             state.current_user.overwrite_user_in_db(mongo_user_info);
 
+            {
+                mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
+
+                auth to_check;
+                to_check.load_from_db(mongo_ctx, state.auth);
+
+                if(!to_check.valid)
+                    return make_error_col("Trying something sneaky eh 2?");
+
+                to_check.insert_user_exclusive(user_name);
+                to_check.overwrite_in_db(mongo_ctx);
+            }
+
             return make_success_col("Constructed new User");
         }
     }
