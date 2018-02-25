@@ -205,14 +205,6 @@ std::string run_in_user_context(user& usr, const std::string& command)
     return ret;
 }
 
-bool starts_with(const std::string& in, const std::string& test)
-{
-    if(in.substr(0, test.length()) == test)
-        return true;
-
-    return false;
-}
-
 std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
 {
     printf("yay command\n");

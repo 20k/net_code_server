@@ -75,6 +75,14 @@ std::string strip_whitespace(std::string in)
     return in;
 }
 
+inline
+bool starts_with(const std::string& in, const std::string& test)
+{
+    if(in.substr(0, test.length()) == test)
+        return true;
+
+    return false;
+}
 
 inline
 bool is_valid_name_character(char c)
