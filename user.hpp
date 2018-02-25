@@ -227,6 +227,8 @@ struct user
 
     void remove_item(const std::string& id)
     {
+        unload_item(id);
+
         std::vector<std::string> items = str_to_array(upgr_idx);
 
         auto it = std::find(items.begin(), items.end(), id);
