@@ -168,7 +168,7 @@ void debug_terminal()
                     continue;
             }
 
-            std::string ret = run_in_user_context(current_user, command);
+            std::string ret = run_in_user_context(current_user.name, command);
 
             std::cout << ret << std::endl;
         }

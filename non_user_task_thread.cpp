@@ -7,12 +7,16 @@
 #include "shared_data.hpp"
 #include "privileged_core_scripts.hpp"
 #include "rate_limiting.hpp"
+#include "command_handler.hpp"
 
 void bot_thread()
 {
     while(1)
     {
         Sleep(1000);
+
+        ///milliseconds
+        size_t current_time = get_wall_time();
 
         std::vector<mongo_requester> found;
 
@@ -25,7 +29,65 @@ void bot_thread()
             found = to_find.fetch_from_db(all_users);
         }
 
-        std::cout << found.size() << std::endl;
+        for(mongo_requester& found_auth : found)
+        {
+            std::vector<std::string> users = str_to_array(found_auth.get_prop("users"));
+
+            for(std::string& username : users)
+            {
+                user found_user;
+
+                {
+                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(-2);
+
+                    found_user.load_from_db(mongo_ctx, username);
+                }
+
+                std::vector<std::string> loaded = found_user.all_loaded_items();
+
+                for(std::string& item_id : loaded)
+                {
+                    item next_item;
+
+                    {
+                        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
+
+                        next_item.load_from_db(mongo_ctx, item_id);
+                    }
+
+                    std::string type = next_item.get_prop("item_type");
+
+                    if(type != std::to_string(item_types::AUTO_SCRIPT_RUNNER))
+                        continue;
+
+                    size_t found_time_ms = next_item.get_prop_as_long("last_run");
+                    double run_s = next_item.get_prop_as_double("run_every_s");
+
+                    size_t next_time = found_time_ms + run_s * 1000;
+
+                    if(next_time >= current_time)
+                    {
+                        ///WE'RE A VALID BOT BRAIN SCRIPT
+                        ///RUN AND THEN BREAK
+
+                        next_item.set_prop("last_run", next_time);
+
+                        {
+                            mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
+                            next_item.overwrite_in_db(mongo_ctx);
+                        }
+
+                        std::cout << "running user " << found_user.name << std::endl;
+
+                        throwaway_user_thread(found_user.name, "#" + found_user.name + ".autorun()");
+
+                        Sleep(100);
+
+                        break;
+                    }
+                }
+            }
+        }
     }
 }
 

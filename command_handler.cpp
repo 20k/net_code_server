@@ -58,9 +58,17 @@ struct cleanup_auth_at_exit
     }
 };
 
-inline
-std::string run_in_user_context(user& usr, const std::string& command)
+std::string run_in_user_context(const std::string& username, const std::string& command)
 {
+    user usr;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(-2);
+        mongo_ctx->change_collection(username);
+
+        usr.load_from_db(mongo_ctx, username);
+    }
+
     static std::mutex id_mut;
 
     static std::map<std::string, int> auth_guard;
@@ -205,6 +213,11 @@ std::string run_in_user_context(user& usr, const std::string& command)
     std::string ret = inf.ret;
 
     return ret;
+}
+
+void throwaway_user_thread(const std::string& username, const std::string& command)
+{
+    std::thread(run_in_user_context, username, command);
 }
 
 std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
@@ -546,7 +559,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                 return "No account or not logged in";
         }
 
-        return run_in_user_context(state.current_user, str);
+        return run_in_user_context(state.current_user.name, str);
     }
 
     return make_error_col("Command Not Found or Unimplemented");

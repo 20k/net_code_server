@@ -404,6 +404,16 @@ duk_ret_t scripts__core(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+size_t get_wall_time()
+{
+    auto now = std::chrono::system_clock::now();
+    std::chrono::duration<double, std::milli> duration = now.time_since_epoch();
+    size_t real_time = duration.count();
+
+    return real_time;
+}
+
+inline
 duk_ret_t msgs__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -458,9 +468,7 @@ duk_ret_t msgs__send(priv_context& priv_ctx, duk_context* ctx, int sl)
     mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(get_thread_id(ctx));
     //mongo_ctx->change_collection(channel);
 
-    auto now = std::chrono::system_clock::now();
-    std::chrono::duration<double, std::milli> duration = now.time_since_epoch();
-    size_t real_time = duration.count();
+    size_t real_time = get_wall_time();
 
     mongo_requester request;
     request.set_prop("channel", channel);
