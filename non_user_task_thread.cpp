@@ -83,7 +83,7 @@ void bot_thread()
                             next_item.overwrite_in_db(mongo_ctx);
                         }
 
-                        //std::cout << "running user " << found_user.name << std::endl;
+                        std::cout << "running script autorun " << found_user.name << std::endl;
 
                         throwaway_user_thread(found_user.name, "#" + found_user.name + ".autorun()");
 
