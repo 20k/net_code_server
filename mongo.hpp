@@ -539,6 +539,7 @@ struct mongo_requester
 
     std::map<std::string, int> sort_on;
 
+    std::map<std::string, int> exists_check;
     std::map<std::string, std::string> gt_than;
     std::map<std::string, std::string> lt_than;
 
@@ -621,6 +622,20 @@ struct mongo_requester
         for(auto& i : properties)
         {
             append_property_to(to_find, i.first);
+        }
+
+        for(auto& i : exists_check)
+        {
+            if(!i.second)
+                continue;
+
+            bson_t child;
+
+            bson_append_document_begin(to_find, i.first.c_str(), strlen(i.first.c_str()), &child);
+
+            BSON_APPEND_INT32(&child, "$exists", 1);
+
+            bson_append_document_end(to_find, &child);
         }
 
         //if(lt_than.size() != 0 && gt_than.size() != 0)

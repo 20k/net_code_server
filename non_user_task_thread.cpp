@@ -8,6 +8,27 @@
 #include "privileged_core_scripts.hpp"
 #include "rate_limiting.hpp"
 
+void bot_thread()
+{
+    while(1)
+    {
+        Sleep(1000);
+
+        std::vector<mongo_requester> found;
+
+        {
+            mongo_lock_proxy all_users = get_global_mongo_global_properties_context(-2);
+
+            mongo_requester to_find;
+            to_find.exists_check["users"] = 1;
+
+            found = to_find.fetch_from_db(all_users);
+        }
+
+        std::cout << found.size() << std::endl;
+    }
+}
+
 void run_non_user_tasks()
 {
     auto now = std::chrono::high_resolution_clock::now();
@@ -86,4 +107,5 @@ void run_non_user_tasks()
 void start_non_user_task_thread()
 {
     std::thread(run_non_user_tasks).detach();
+    std::thread(bot_thread).detach();
 }
