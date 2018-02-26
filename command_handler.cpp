@@ -496,35 +496,42 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         //std::cout << str << std::endl;
 
         auto pos = str.begin() + strlen("auth client ");
-        std::string auth = std::string(pos, str.end());
+        std::string auth_token = std::string(pos, str.end());
 
-        if(auth.length() > 140)
+        if(auth_token.length() > 140)
             return make_error_col("Auth too long");
 
         mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
 
         mongo_requester request;
-        request.set_prop_bin("account_token", auth);
+        request.set_prop_bin("account_token", auth_token);
 
-        std::cout << "auth len " << auth.size() << std::endl;
+        std::cout << "auth len " << auth_token.size() << std::endl;
 
         if(request.fetch_from_db(ctx).size() == 0)
             return make_error_col("Auth Failed");
 
-        //std::lock_guard<std::mutex> lk(glob.auth_lock);
+        state.auth = auth_token;
 
-        #if 0
-        ///so if we reauth but on the same thread that's fine
-        ///or if we auth and we haven't authed on any thread before
-        if(glob.auth_locks[auth] != my_id && glob.auth_locks[auth] != 0)
-            return make_error_col("Oh boy this better be a random error otherwise ur getting banned.\nThis is a joke but seriously don't do this");
-        #endif // 0
+        auth user_auth;
 
-        state.auth = auth;
+        user_auth.load_from_db(ctx, auth_token);
 
-        //glob.auth_locks[state.auth] = my_id;
+        std::vector<std::string> users = user_auth.users;
 
-        return make_success_col("Auth Success");
+        std::string auth_string;
+
+        for(auto& i : users)
+        {
+            auth_string += " " + colour_string(i);
+        }
+
+        std::string full_string = "Users Found:";
+
+        if(auth_string == "")
+            full_string = "No Users Found. Type user <username> to register";
+
+        return make_success_col("Auth Success\n") + full_string + auth_string;
     }
     else if(starts_with(str, "auth client"))
     {
