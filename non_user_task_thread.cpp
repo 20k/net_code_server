@@ -43,6 +43,8 @@ void bot_thread()
                     found_user.load_from_db(mongo_ctx, username);
                 }
 
+                //std::cout << "checking user " << found_user.name << std::endl;
+
                 std::vector<std::string> loaded = found_user.all_loaded_items();
 
                 for(std::string& item_id : loaded)
@@ -60,24 +62,28 @@ void bot_thread()
                     if(type != std::to_string(item_types::AUTO_SCRIPT_RUNNER))
                         continue;
 
+                    //std::cout << "of type bot brain" << std::endl;
+
                     size_t found_time_ms = next_item.get_prop_as_long("last_run");
                     double run_s = next_item.get_prop_as_double("run_every_s");
 
                     size_t next_time = found_time_ms + run_s * 1000;
 
-                    if(next_time >= current_time)
+                    //std::cout << "cur " << current_time << " next " << next_time << " run " << run_s << std::endl;
+
+                    if(current_time >= next_time)
                     {
                         ///WE'RE A VALID BOT BRAIN SCRIPT
                         ///RUN AND THEN BREAK
 
-                        next_item.set_prop("last_run", next_time);
+                        next_item.set_prop("last_run", current_time);
 
                         {
                             mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
                             next_item.overwrite_in_db(mongo_ctx);
                         }
 
-                        std::cout << "running user " << found_user.name << std::endl;
+                        //std::cout << "running user " << found_user.name << std::endl;
 
                         throwaway_user_thread(found_user.name, "#" + found_user.name + ".autorun()");
 

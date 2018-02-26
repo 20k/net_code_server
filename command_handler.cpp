@@ -217,7 +217,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
 void throwaway_user_thread(const std::string& username, const std::string& command)
 {
-    std::thread(run_in_user_context, username, command);
+    std::thread(run_in_user_context, username, command).detach();
 }
 
 std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
