@@ -340,6 +340,69 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
     return ret;
 }
 
+inline
+script_info unified_script_loading(duk_context* ctx, const std::string& full_scriptname, std::string& err)
+{
+    script_info script;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+        //script.load_from_disk_with_db_metadata(str);
+        script.name = full_scriptname;
+        script.load_from_db(mongo_ctx);
+    }
+
+    if(!script.valid)
+    {
+        {
+            user current_user;
+
+            {
+                mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+                current_user.load_from_db(mongo_ctx, get_caller(ctx));
+            }
+
+            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+            std::string unparsed_source = current_user.get_loaded_callable_scriptname_source(item_ctx, full_scriptname);
+
+            if(unparsed_source == "")
+            {
+                err = "Script not found";
+
+                return script_info();
+            }
+
+            duk_context* temp_context = js_interop_startup();
+            register_funcs(temp_context, 0);
+
+            script_info script_2;
+            std::string compile_err = script_2.load_from_unparsed_source(temp_context, unparsed_source, full_scriptname);
+
+            js_interop_shutdown(temp_context);
+
+            if(compile_err != "")
+            {
+                err = "Script Bundle Error: " + compile_err;
+                return script_info();
+            }
+
+            script = script_2;
+        }
+
+        if(!script.valid)
+        {
+            err = "Script not found";
+            return script_info();
+        }
+    }
+
+
+    return script;
+}
+
 static
 duk_ret_t js_call(duk_context* ctx, int sl)
 {
@@ -390,55 +453,13 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     ///so, this indent and everything under if(!script.valid)
     ///needs to be chained into one general "get_script" method
-    script_info script;
 
-    {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+    std::string script_err;
 
-        //script.load_from_disk_with_db_metadata(str);
-        script.name = str;
-        script.load_from_db(mongo_ctx);
-    }
+    script_info script = unified_script_loading(ctx, str, script_err);
 
     if(!script.valid)
-    {
-
-        {
-            user current_user;
-
-            {
-                mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-
-                current_user.load_from_db(mongo_ctx, get_caller(ctx));
-            }
-
-            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
-
-            std::string unparsed_source = current_user.get_loaded_callable_scriptname_source(item_ctx, str);
-
-            if(unparsed_source == "")
-                return push_error(ctx, "Script not found");
-
-            duk_context* temp_context = js_interop_startup();
-            register_funcs(temp_context, 0);
-
-            script_info script_2;
-            std::string compile_err = script_2.load_from_unparsed_source(temp_context, unparsed_source, str);
-
-            js_interop_shutdown(temp_context);
-
-            if(compile_err != "")
-                return push_error(ctx, "Script Bundle Error: " + compile_err);
-
-            script = script_2;
-        }
-
-        if(!script.valid)
-            return push_error(ctx, "Script not found");
-
-        //push_error(ctx, "Script not found");
-        //return 1;
-    }
+        return push_error(ctx, script_err);
 
     SL_GUARD(script.seclevel);
 
