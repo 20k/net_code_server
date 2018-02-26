@@ -145,22 +145,57 @@ duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string usr = get_caller(ctx);
 
-    mongo_requester request;
-    request.set_prop("owner", usr);
-    request.set_prop("is_script", 1);
+    user loaded_user;
 
-    mongo_lock_proxy item_context = get_global_mongo_user_items_context(get_thread_id(ctx));
+    {
+        mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        user_ctx->change_collection(get_caller(ctx));
 
-    std::vector<mongo_requester> results = request.fetch_from_db(item_context);
+        loaded_user.load_from_db(user_ctx, usr);
+    }
 
     std::vector<std::string> names;
+    mongo_lock_proxy item_context = get_global_mongo_user_items_context(get_thread_id(ctx));
 
-    for(mongo_requester& req : results)
+    ///regular scripts
     {
-        if(!req.has_prop("item_id"))
-            continue;
+        mongo_requester request;
+        request.set_prop("owner", usr);
+        request.set_prop("is_script", 1);
 
-        names.push_back(req.get_prop("item_id"));
+        std::vector<mongo_requester> results = request.fetch_from_db(item_context);
+
+        for(mongo_requester& req : results)
+        {
+            if(!req.has_prop("item_id"))
+                continue;
+
+            names.push_back(req.get_prop("item_id"));
+        }
+    }
+
+    {
+        mongo_requester request;
+        request.set_prop("owner", usr);
+        request.set_prop("full", "1");
+        request.set_prop("item_type", (int)item_types::EMPTY_SCRIPT_BUNDLE);
+
+        std::vector<mongo_requester> results = request.fetch_from_db(item_context);
+
+        for(mongo_requester& req : results)
+        {
+            if(req.get_prop("registered_as") == "")
+                continue;
+
+            std::string item_id = req.get_prop("item_id");
+
+            if(!loaded_user.has_loaded_item(item_id))
+                continue;
+
+            std::string name = usr + "." + req.get_prop("registered_as") + " `D[bundle]`";
+
+            names.push_back(name);
+        }
     }
 
     push_duk_val(ctx, names);

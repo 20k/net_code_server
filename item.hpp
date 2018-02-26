@@ -138,6 +138,7 @@ namespace item_types
             new_item.set_prop("desc", "Container for a tradeable script");
             new_item.set_prop("full", 0);
             new_item.set_prop("registered_as", "");
+            new_item.set_prop("in_public", "0");
         }
 
         if(type == MISC)
