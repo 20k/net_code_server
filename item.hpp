@@ -157,7 +157,7 @@ namespace item_types
 
         if(type == AUTO_SCRIPT_RUNNER)
         {
-            new_item.set_prop("run_every_s", 120);
+            new_item.set_prop("run_every_s", 60*10);
             new_item.set_prop("last_run", 0);
         }
 
