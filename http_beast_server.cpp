@@ -305,9 +305,11 @@ void thread_session(
     global_shared_data* store = fetch_global_shared_data();
     store->add(&shared);
 
-    std::thread(read_queue, std::ref(socket), doc_root, std::ref(glob), my_id, std::ref(shared),
+    tcp::socket claimed_sock = std::move(socket);
+
+    std::thread(read_queue, std::ref(claimed_sock), doc_root, std::ref(glob), my_id, std::ref(shared),
                 std::ref(shared_queue), std::ref(shared_lock), std::ref(state)).detach();
-    std::thread(write_queue, std::ref(socket), doc_root, std::ref(glob), my_id, std::ref(shared)).detach();
+    std::thread(write_queue, std::ref(claimed_sock), doc_root, std::ref(glob), my_id, std::ref(shared)).detach();
 
     ///3rd thread is the js exec context
     while(shared.termination_count != 3)
