@@ -544,7 +544,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         if(auth_string == "")
             full_string = "No Users Found. Type user <username> to register";
 
-        return make_success_col("Auth Success\n") + full_string + auth_string;
+        return make_success_col("Auth Success") + "\n" + full_string + auth_string;
     }
     else if(starts_with(str, "auth client"))
     {
