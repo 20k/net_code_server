@@ -425,7 +425,7 @@ duk_ret_t msgs__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(channel == "" || msg == "" || channel.size() >= 10 || msg.size() >= 10000)
     {
-        push_error(ctx, "Usage: #hs.msg.send({channel:\"<name>\", msg:\"msg\"})");
+        push_error(ctx, "Usage: #hs.msgs.send({channel:\"<name>\", msg:\"msg\"})");
         return 1;
     }
 
