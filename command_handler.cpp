@@ -509,7 +509,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         std::cout << "auth len " << auth_token.size() << std::endl;
 
         if(request.fetch_from_db(ctx).size() == 0)
-            return make_error_col("Auth Failed");
+            return make_error_col("Auth Failed, have you run \"register client\" at least once?");
 
         state.auth = auth_token;
 
