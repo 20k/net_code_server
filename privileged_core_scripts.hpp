@@ -414,6 +414,22 @@ size_t get_wall_time()
 }
 
 inline
+bool user_in_channel(mongo_lock_proxy& mongo_ctx, duk_context* ctx, const std::string& username, const std::string& channel)
+{
+    mongo_requester request;
+    request.set_prop("channel_name", channel);
+
+    auto found = request.fetch_from_db(mongo_ctx);
+
+    if(found.size() != 1)
+        return false;
+
+    auto channel_users = str_to_array(found[0].get_prop("user_list"));
+
+    return array_contains(channel_users, username);
+}
+
+inline
 duk_ret_t msgs__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -435,7 +451,6 @@ duk_ret_t msgs__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(num_set != 1)
         return push_error(ctx, "Only one leave/join/create parameter may be specified");
-
 
     if(to_join.size() >= 10 || to_leave.size() >= 10 || to_create.size() >= 10)
         return push_error(ctx, "Invalid Leave/Join/Create arguments");
@@ -515,7 +530,6 @@ inline
 duk_ret_t msgs__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
-
     RATELIMIT_DUK(CHAT);
 
     std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
@@ -527,6 +541,44 @@ duk_ret_t msgs__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
     }
 
+    std::vector<std::string> users;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+
+        if(!user_in_channel(mongo_ctx, ctx, get_caller(ctx), channel))
+            return push_error(ctx, "User not in channel or doesn't exist");
+
+        mongo_requester request;
+        request.set_prop("channel_name", channel);
+
+        auto found = request.fetch_from_db(mongo_ctx);
+
+        if(found.size() != 1)
+            return push_error(ctx, "Something real weird happened: Orange Canary");
+
+        mongo_requester& chan = found[0];
+
+        users = str_to_array(chan.get_prop("user_list"));
+    }
+
+    {
+        ///TODO: LIMIT
+        mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
+
+        mongo_requester to_insert;
+        to_insert.set_prop("user", get_caller(ctx));
+        to_insert.set_prop("is_chat", 1);
+        to_insert.set_prop("msg", msg);
+        to_insert.set_prop("channel", channel);
+
+        to_insert.insert_in_db(mongo_ctx);
+    }
+
+    return push_success(ctx);
+
+
+    #if 0
     int64_t global_id = 0;
 
     {
@@ -580,6 +632,7 @@ duk_ret_t msgs__send(priv_context& priv_ctx, duk_context* ctx, int sl)
     push_success(ctx);
 
     return 1;
+    #endif // 0
 }
 
 inline
