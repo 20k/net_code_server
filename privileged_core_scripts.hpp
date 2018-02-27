@@ -430,6 +430,18 @@ bool user_in_channel(mongo_lock_proxy& mongo_ctx, duk_context* ctx, const std::s
 }
 
 inline
+bool valid_channel_name(const std::string& in)
+{
+    for(auto& i : in)
+    {
+        if(!isalnum(i))
+            return false;
+    }
+
+    return true;
+}
+
+inline
 duk_ret_t msgs__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -441,13 +453,28 @@ duk_ret_t msgs__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     int num_set = 0;
 
     if(to_join.size() > 0)
+    {
+        if(!valid_channel_name(to_join))
+            return push_error(ctx, "Invalid Name");
+
         num_set++;
+    }
 
     if(to_leave.size() > 0)
+    {
+        if(!valid_channel_name(to_leave))
+            return push_error(ctx, "Invalid Name");
+
         num_set++;
+    }
 
     if(to_create.size() > 0)
+    {
+        if(!valid_channel_name(to_create))
+            return push_error(ctx, "Invalid Name");
+
         num_set++;
+    }
 
     if(num_set != 1)
         return push_error(ctx, "Only one leave/join/create parameter may be specified");
@@ -505,6 +532,40 @@ duk_ret_t msgs__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         to_set.set_prop("user_list", array_to_str(users));
 
         to_find.update_in_db_if_exact(mongo_ctx, to_set);
+    }
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_ctx->change_collection(get_caller(ctx));
+
+        mongo_requester request;
+        request.set_prop("name", get_caller(ctx));
+
+        auto found = request.fetch_from_db(mongo_ctx);
+
+        if(found.size() != 1)
+            return push_error(ctx, "Catastrophic error: Red camel");
+
+        mongo_requester& fuser = found[0];
+
+        std::vector<std::string> chans = str_to_array(fuser.get_prop("joined_channels"));
+
+        if(to_join != "" && !array_contains(chans, to_join))
+        {
+            chans.push_back(to_join);
+        }
+
+        if(to_leave != "" && array_contains(chans, to_leave))
+        {
+            auto it = std::find(chans.begin(), chans.end(), to_leave);
+
+            chans.erase(it);
+        }
+
+        mongo_requester to_set;
+        to_set.set_prop("joined_channels", array_to_str(chans));
+
+        request.update_in_db_if_exact(mongo_ctx, to_set);
     }
 
     if(to_create.size() > 0)
