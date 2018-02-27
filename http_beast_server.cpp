@@ -113,7 +113,7 @@ using connection_t = connection_type::connection_type;
 
 struct socket_interface
 {
-    virtual void write(const std::string& msg);
+    virtual bool write(const std::string& msg);
     virtual bool read(boost::system::error_code& ec);
 
     virtual std::string get_read();
@@ -162,7 +162,7 @@ struct http_socket : socket_interface
         return req.body();
     }
 
-    virtual void write(const std::string& msg) override
+    virtual bool write(const std::string& msg) override
     {
         http::response<http::string_body> res{
                     std::piecewise_construct,
@@ -176,6 +176,8 @@ struct http_socket : socket_interface
         res.prepare_payload();
 
         lambda(std::move(res));
+
+        return false;
     }
 
     virtual void shutdown() override
@@ -220,11 +222,19 @@ struct websock_socket : socket_interface
         return os.str();
     }
 
-    virtual void write(const std::string& msg) override
+    virtual bool write(const std::string& msg) override
     {
         ws.text(true);
 
-        ws.write(boost::asio::buffer(msg));
+        ws.write(boost::asio::buffer(msg), lec);
+
+        if(lec)
+        {
+            fail(lec, "write");
+            return true;
+        }
+
+        return false;
     }
 
     virtual void shutdown() override
@@ -365,7 +375,8 @@ void write_queue(socket_interface& socket,
                 if(next_command != "")
                     printf("sending test write\n");
 
-                socket.write(next_command);
+                if(socket.write(next_command))
+                    break;
             }
             else
             {
