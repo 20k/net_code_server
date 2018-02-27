@@ -214,8 +214,10 @@ struct websock_socket : socket_interface
 
     std::string get_read() override
     {
-        auto bufs = mbuffer.data();
-        return std::string(boost::beast::buffers_to_string(bufs), mbuffer.size());
+        std::ostringstream os;
+        os << boost::beast::buffers(mbuffer.data());
+
+        return os.str();
     }
 
     virtual void write(const std::string& msg) override

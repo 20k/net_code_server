@@ -755,6 +755,8 @@ std::string handle_client_poll(user& usr)
 
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
 {
+    lg::log("Log Command " + str);
+
     std::string client_command = "client_command ";
     std::string client_chat = "client_chat ";
     std::string client_poll = "client_poll";
