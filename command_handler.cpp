@@ -717,19 +717,26 @@ std::string handle_client_poll(user& usr)
         mongo_requester request;
         request.set_prop("name", usr.name);
 
-        auto found = request.fetch_from_db(ctx);
+        auto mfound = request.fetch_from_db(ctx);
 
-        if(found.size() != 1)
+        if(mfound.size() != 1)
             return "";
 
-        mongo_requester& cur_user = found[0];
+        mongo_requester& cur_user = mfound[0];
 
         channels = str_to_array(cur_user.get_prop("joined_channels"));
     }
 
     std::string to_send = "";
 
-    to_send = std::to_string(channels.size()) + " " + array_to_str(channels) + " ";
+    std::string prologue_str = std::to_string(channels.size()) + " " + array_to_str(channels) + " ";
+
+    while(prologue_str.size() > 0 && prologue_str.back() == ' ')
+        prologue_str.pop_back();
+
+    prologue_str = prologue_str + " ";
+
+    to_send = std::to_string(prologue_str.size()) + " " + prologue_str;
 
     for(mongo_requester& req : found)
     {
