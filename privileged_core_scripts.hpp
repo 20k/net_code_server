@@ -414,6 +414,104 @@ size_t get_wall_time()
 }
 
 inline
+duk_ret_t msgs__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string to_join = duk_safe_get_prop_string(ctx, -1, "join");
+    std::string to_leave = duk_safe_get_prop_string(ctx, -1, "leave");
+    std::string to_create = duk_safe_get_prop_string(ctx, -1, "create");
+
+    int num_set = 0;
+
+    if(to_join.size() > 0)
+        num_set++;
+
+    if(to_leave.size() > 0)
+        num_set++;
+
+    if(to_create.size() > 0)
+        num_set++;
+
+    if(num_set != 1)
+        return push_error(ctx, "Only one leave/join/create parameter may be specified");
+
+
+    if(to_join.size() >= 10 || to_leave.size() >= 10 || to_create.size() >= 10)
+        return push_error(ctx, "Invalid Leave/Join/Create arguments");
+
+    std::string username = get_caller(ctx);
+
+    bool joining = to_join != "";
+
+    if(to_join.size() > 0 || to_leave.size() > 0)
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+
+        mongo_requester request;
+
+        if(to_join != "")
+            request.set_prop("channel_name", to_join);
+        if(to_leave != "")
+            request.set_prop("channel_name", to_leave);
+
+        std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
+
+        if(found.size() == 0)
+            return push_error(ctx, "Channel does not exist");
+
+        if(found.size() > 1)
+            return push_error(ctx, "Some kind of catastrophic error: Yellow Sparrow");
+
+        mongo_requester& chan = found[0];
+
+        std::vector<std::string> users = str_to_array(chan.get_prop("user_list"));
+
+        if(joining && array_contains(users, username))
+            return push_error(ctx, "In channel");
+
+        if(!joining && !array_contains(users, username))
+            return push_error(ctx, "Not in Channel");
+
+        if(joining)
+        {
+            users.push_back(username);
+        }
+
+        if(!joining)
+        {
+            auto it = std::find(users.begin(), users.end(), username);
+            users.erase(it);
+        }
+
+        mongo_requester to_find = request;
+
+        mongo_requester to_set;
+        to_set.set_prop("user_list", array_to_str(users));
+
+        to_find.update_in_db_if_exact(mongo_ctx, to_set);
+    }
+
+    if(to_create.size() > 0)
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+
+        mongo_requester request;
+        request.set_prop("channel_name", to_create);
+
+        if(request.fetch_from_db(mongo_ctx).size() > 0)
+            return push_error(ctx, "Channel already exists");
+
+        mongo_requester to_insert;
+        to_insert.set_prop("channel_name", to_create);
+
+        to_insert.insert_in_db(mongo_ctx);
+    }
+
+    return push_success(ctx);
+}
+
+inline
 duk_ret_t msgs__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -1120,6 +1218,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(scripts__core, 4),
     REGISTER_FUNCTION_PRIV(scripts__me, 2),
     REGISTER_FUNCTION_PRIV(scripts__public, 4),
+    REGISTER_FUNCTION_PRIV(msgs__manage, 3),
     REGISTER_FUNCTION_PRIV(msgs__send, 3),
     REGISTER_FUNCTION_PRIV(msgs__recent, 2),
     REGISTER_FUNCTION_PRIV(users__me, 0),

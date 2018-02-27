@@ -81,6 +81,17 @@ void item::load_from_db(mongo_lock_proxy& ctx, const std::string& item_id)
     }
 }
 
+bool array_contains(const std::vector<std::string>& arr, const std::string& str)
+{
+    for(auto& i : arr)
+    {
+        if(i == str)
+            return true;
+    }
+
+    return false;
+}
+
 std::vector<std::string> str_to_array(const std::string& str)
 {
     return no_ss_split(str, " ");
