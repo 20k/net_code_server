@@ -40,9 +40,11 @@
 
 
 #include <boost/beast/core.hpp>
+#include <boost/beast/websocket.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio.hpp>
 #include <boost/config.hpp>
 #include <cstdlib>
 #include <iostream>
@@ -54,6 +56,7 @@
 
 using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 namespace http = boost::beast::http;    // from <boost/beast/http.hpp>
+namespace websocket = boost::beast::websocket;
 
 // Report a failure
 void
@@ -118,6 +121,8 @@ struct socket_interface
     virtual void shutdown();
 
     virtual bool is_open();
+
+    virtual ~socket_interface(){}
 };
 
 struct http_socket : socket_interface
@@ -173,14 +178,63 @@ struct http_socket : socket_interface
         lambda(std::move(res));
     }
 
-    virtual void shutdown()
+    virtual void shutdown() override
     {
         socket.shutdown(tcp::socket::shutdown_send, lec);
     }
 
-    virtual bool is_open()
+    virtual bool is_open() override
     {
         return socket.is_open();
+    }
+};
+
+struct websock_socket : socket_interface
+{
+    boost::beast::websocket::stream<tcp::socket> ws;
+    boost::beast::multi_buffer mbuffer;
+    boost::system::error_code lec;
+
+    websock_socket(tcp::socket&& sock) : ws(std::move(sock)) {ws.accept();}
+
+    virtual bool read(boost::system::error_code& ec) override
+    {
+        mbuffer = decltype(mbuffer)();
+
+        ws.read(mbuffer, ec);
+
+        if(ec)
+        {
+            fail(ec, "read");
+            return true;
+        }
+
+        return false;
+    }
+
+    std::string get_read() override
+    {
+        auto bufs = mbuffer.data();
+        std::string s(boost::beast::buffers_to_string(bufs), mbuffer.size());
+
+        return s;
+    }
+
+    virtual void write(const std::string& msg) override
+    {
+        ws.text(true);
+
+        ws.write(boost::asio::buffer(msg));
+    }
+
+    virtual void shutdown() override
+    {
+        ws.close(boost::beast::websocket::close_code::normal, lec);
+    }
+
+    virtual bool is_open() override
+    {
+        return ws.is_open();
     }
 };
 
@@ -358,7 +412,7 @@ void thread_session(
     }
     if(conn_type == connection_type::WEBSOCKET)
     {
-
+        msock = new websock_socket(std::move(socket));
     }
 
     std::thread(read_queue, std::ref(*msock), std::ref(glob), my_id, std::ref(shared),
