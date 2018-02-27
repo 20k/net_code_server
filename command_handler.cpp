@@ -704,11 +704,7 @@ std::string handle_client_poll(user& usr)
 
     for(mongo_requester& req : found)
     {
-        //if(!req.get_prop_as_integer("is_chat"))
-        //    continue;
-
         std::string chan = req.get_prop("channel");
-        //std::string msg = req.get_prop("msg");
 
         std::vector<mongo_requester> to_col{req};
 
@@ -718,86 +714,6 @@ std::string handle_client_poll(user& usr)
     }
 
     return to_send;
-
-    #if 0
-    std::vector<mongo_requester> found;
-
-    int32_t start_from = usr.last_message_uid;
-
-    {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(-2);
-
-        mongo_requester request;
-        request.gt_than_i["uid"] = start_from;
-        //request.lt_than["uid"] = stringify_hack(999);
-
-        found = request.fetch_from_db(mongo_ctx);
-    }
-
-    //std::cout << "poll\n";
-
-    if(found.size() == 0)
-        return "";
-
-    std::cout << "found num " << found.size() << std::endl;
-
-    int64_t last_uid = start_from;
-
-    std::map<std::string, std::vector<mongo_requester>> channel_map;
-    std::map<std::string, std::string> channel_to_string;
-
-    for(auto& i : found)
-    {
-        channel_map[i.get_prop("channel")].push_back(i);
-
-        if(i.get_prop_as_integer("uid") > last_uid)
-        {
-            last_uid = i.get_prop_as_integer("uid");
-        }
-    }
-
-    usr.last_message_uid = last_uid;
-
-    {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(-2);
-
-        usr.overwrite_user_in_db(mongo_ctx);
-
-        std::cout << "started @ " << start_from << " ended at " << last_uid << std::endl;
-    }
-
-    for(auto& i : channel_map)
-    {
-        std::sort(i.second.begin(), i.second.end(), [](mongo_requester& i1, mongo_requester& i2){return i1.get_prop("uid") > i2.get_prop("uid");});
-    }
-
-    int max_chat_dump = 1000;
-
-    for(auto& i : channel_map)
-    {
-        if((int)i.second.size() > max_chat_dump)
-            i.second.resize(max_chat_dump);
-
-        channel_to_string[i.first] = prettify_chat_strings(i.second);
-    }
-
-    std::string to_send = "";
-
-    if(channel_to_string.size() != 0)
-    {
-        for(auto& cdata : channel_to_string)
-        {
-            std::string full_str = cdata.first + " " + cdata.second;
-
-            to_send += "chat_api " + std::to_string(full_str.size()) + " " + full_str;
-        }
-    }
-
-    if(to_send.size() == 0)
-        return "";
-
-    return to_send;
-    #endif // 0
 }
 
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
