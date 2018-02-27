@@ -109,6 +109,18 @@ void run_non_user_tasks()
 
         get_global_rate_limit()->donate_time_budget(0.5f);
 
+        /*global_shared_data* store = fetch_global_shared_data();
+
+        {
+            mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
+            std::lock_guard guard(store->lock);
+
+            for(shared_data* data : store->data)
+            {
+
+            }
+        }*/
+
         #if 0
         auto next_now = std::chrono::high_resolution_clock::now();
         auto next_duration = next_now.time_since_epoch();

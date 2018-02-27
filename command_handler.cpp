@@ -402,7 +402,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             return make_success_col("Constructed new User");
         }
     }
-    else if(starts_with(str, "#up "))
+    else if(starts_with(str, "#up ") || starts_with(str, "#dry "))
     {
         if(state.auth == "")
             return make_error_col("No Auth");
@@ -411,7 +411,10 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
 
         if(split_string.size() < 3)
         {
-            return "Syntax is #up scriptname";
+            if(starts_with(str, "#up "))
+                return "Syntax is #up scriptname";
+            if(starts_with(str, "#dry "))
+                return "Syntax is #dry scriptname";
         }
 
         std::string scriptname = strip_whitespace(split_string[1]);
@@ -471,13 +474,19 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             int num_chars = script_inf.unparsed_source.size();
             int max_chars = user_details["char_count"];
 
+            if(!starts_with(str, "#dry "))
             {
                 mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
                 script_inf.overwrite_in_db(mongo_ctx);
             }
 
-            return make_success_col("Upload Successful " + std::to_string(num_chars) + "/" + std::to_string(max_chars));
+            std::string rstr = "Upload Successful ";
+
+            if(starts_with(str, "#dry "))
+                rstr = "Dry Upload Successful ";
+
+            return make_success_col(rstr + std::to_string(num_chars) + "/" + std::to_string(max_chars));
         }
     }
     else if(starts_with(str, "#remove "))
@@ -676,6 +685,40 @@ std::string handle_client_poll(user& usr)
 {
     std::vector<mongo_requester> found;
 
+    {
+        mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
+
+        mongo_requester to_send;
+        to_send.set_prop("user", usr.name);
+
+        found = to_send.fetch_from_db(ctx);
+    }
+
+    if(found.size() > 1000)
+        found.resize(1000);
+
+    std::string to_send = "";
+
+    for(mongo_requester& req : found)
+    {
+        if(!req.get_prop_as_integer("is_chat"))
+            continue;
+
+        std::string chan = req.get_prop("channel");
+        //std::string msg = req.get_prop("msg");
+
+        std::vector<mongo_requester> to_col{req};
+
+        std::string full_str = chan + " " + prettify_chat_strings(to_col);
+
+        to_send += "chat_api " + std::to_string(full_str.size()) + " " + full_str;
+    }
+
+    return to_send;
+
+    #if 0
+    std::vector<mongo_requester> found;
+
     int32_t start_from = usr.last_message_uid;
 
     {
@@ -751,6 +794,7 @@ std::string handle_client_poll(user& usr)
         return "";
 
     return to_send;
+    #endif // 0
 }
 
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)

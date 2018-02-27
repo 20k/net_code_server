@@ -566,11 +566,14 @@ duk_ret_t msgs__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         ///TODO: LIMIT
         mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
 
+        size_t real_time = get_wall_time();
+
         mongo_requester to_insert;
         to_insert.set_prop("user", get_caller(ctx));
         to_insert.set_prop("is_chat", 1);
         to_insert.set_prop("msg", msg);
         to_insert.set_prop("channel", channel);
+        to_insert.set_prop("time_ms", real_time);
 
         to_insert.insert_in_db(mongo_ctx);
     }
@@ -676,7 +679,7 @@ std::string prettify_chat_strings(std::vector<mongo_requester>& found)
 
         std::string tstr = "`b" + format_tim(std::to_string(hour)) + format_tim(std::to_string(minute)) + "`";
 
-        std::string msg = tstr + " `P" + i.get_prop("channel") + "`" + " " + colour_string(i.get_prop("from")) + " "  + i.get_prop("msg");
+        std::string msg = tstr + " `P" + i.get_prop("channel") + "`" + " " + colour_string(i.get_prop("user")) + " "  + i.get_prop("msg");
 
         str = msg + "\n" + str;
     }
