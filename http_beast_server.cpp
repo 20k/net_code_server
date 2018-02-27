@@ -30,10 +30,12 @@
 
 #ifdef EXTERN_IP
 #define HOST_PORT 6750
+#define HOST_WEBSOCKET_PORT 6760
 #endif // EXTERN_IP
 
 #ifdef LOCAL_IP
 #define HOST_PORT 6751
+#define HOST_WEBSOCKET_PORT 6761
 #endif // LOCAL_IP
 
 
@@ -95,6 +97,93 @@ struct send_lambda
     }
 };
 
+namespace connection_type
+{
+    enum connection_type
+    {
+        WEBSOCKET,
+        HTTP
+    };
+}
+
+using connection_t = connection_type::connection_type;
+
+struct socket_interface
+{
+    virtual void write(const std::string& msg);
+    virtual bool read(boost::system::error_code& ec);
+
+    virtual std::string get_read();
+
+    virtual void shutdown();
+
+    virtual bool is_open();
+};
+
+struct http_socket : socket_interface
+{
+    tcp::socket socket;
+
+    boost::beast::flat_buffer buffer;
+    http::request<http::string_body> req;
+
+    send_lambda<tcp::socket> lambda;//{socket, close, ec};
+
+    boost::system::error_code lec;
+    bool close = false;
+
+    http_socket(tcp::socket&& sock) : socket(std::move(sock)), lambda{socket, close, lec} {}
+
+    virtual bool read(boost::system::error_code& ec) override
+    {
+        req = http::request<http::string_body>();
+        buffer = boost::beast::flat_buffer();
+
+        http::read(socket, buffer, req, ec);
+
+        if(ec == http::error::end_of_stream)
+            return true;
+        if(ec)
+        {
+            fail(ec, "read");
+            return true;
+        }
+
+        return false;
+    }
+
+    virtual std::string get_read() override
+    {
+        return req.body();
+    }
+
+    virtual void write(const std::string& msg) override
+    {
+        http::response<http::string_body> res{
+                    std::piecewise_construct,
+                    std::make_tuple(std::move(msg)),
+                    std::make_tuple(http::status::ok, 11)};
+
+        res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+        res.keep_alive(true);
+
+        res.set(http::field::content_type, "text/plain");
+        res.prepare_payload();
+
+        lambda(std::move(res));
+    }
+
+    virtual void shutdown()
+    {
+        socket.shutdown(tcp::socket::shutdown_send, lec);
+    }
+
+    virtual bool is_open()
+    {
+        return socket.is_open();
+    }
+};
+
 void async_command_handler(shared_data& shared, command_handler_state& state, std::deque<std::string>& shared_queue, std::mutex& shared_lock,
                            global_state& glob, int64_t my_id)
 {
@@ -135,14 +224,14 @@ void async_command_handler(shared_data& shared, command_handler_state& state, st
 }
 
 // Handles an HTTP server connection
-void read_queue(tcp::socket& socket,
-                std::string const& doc_root,
+void read_queue(socket_interface& socket,
                 global_state& glob,
                 int64_t my_id,
                 shared_data& shared,
                 std::deque<std::string>& shared_queue,
                 std::mutex& shared_lock,
-                command_handler_state& state)
+                command_handler_state& state,
+                connection_t conn_type)
 {
     std::thread(async_command_handler, std::ref(shared), std::ref(state), std::ref(shared_queue), std::ref(shared_lock),
                 std::ref(glob), my_id).detach();
@@ -160,18 +249,10 @@ void read_queue(tcp::socket& socket,
 
             //if(socket.available() > 0)
             {
-                boost::beast::flat_buffer buffer;
-                http::request<http::string_body> req;
-                http::read(socket, buffer, req, ec);
-
-                if(ec == http::error::end_of_stream)
+                if(socket.read(ec))
                     break;
-                if(ec)
-                {
-                    fail(ec, "read");
-                    break;
-                }
 
+                std::string next_command = socket.get_read();
 
                 int len;
 
@@ -182,24 +263,17 @@ void read_queue(tcp::socket& socket,
 
                     len = shared_queue.size();
 
-                    std::string str = req.body();
+                    std::string str = next_command;
 
                     if(len <= 10 || starts_with(str, "client_poll"))
                     {
-                        shared_queue.push_back(req.body());
+                        shared_queue.push_back(next_command);
                         rate_hit = false;
                     }
                 }
 
                 if(rate_hit)
                     shared.add_back_write("command Hit rate limit (read_queue)");
-
-                //printf("got test read\n");
-
-                ///got a request
-                //std::string to_pipe = handle_command(state, req.body(), glob, my_id);
-
-                //shared.add_back_write(to_pipe);
             }
         }
     }
@@ -210,26 +284,21 @@ void read_queue(tcp::socket& socket,
 
     shared.should_terminate = true;
 
-    socket.shutdown(tcp::socket::shutdown_send, ec);
+    socket.shutdown();
 
     std::cout << "shutdown read" << std::endl;
 
     shared.termination_count++;
 }
 
-void write_queue(tcp::socket& socket,
-                std::string const& doc_root,
+void write_queue(socket_interface& socket,
                 global_state& glob,
                 int64_t my_id,
-                shared_data& shared)
+                shared_data& shared,
+                connection_t conn_type)
 {
     try
     {
-        bool close = false;
-        boost::system::error_code ec;
-
-        send_lambda<tcp::socket> lambda{socket, close, ec};
-
         while(1)
         {
             if(shared.should_terminate)
@@ -239,37 +308,10 @@ void write_queue(tcp::socket& socket,
             {
                 std::string next_command = shared.get_front_write();
 
-                //if(next_command == "")
-                //    continue;
-
                 if(next_command != "")
                     printf("sending test write\n");
 
-                /*http::request<http::string_body> req{http::verb::get, "./test.txt", 11};
-                req.set(http::field::host, HOST_IP);
-                req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-
-                req.set(http::field::content_type, "text/plain");
-                req.body() = next_command;
-
-                req.prepare_payload();
-
-                http::write(*socket, req);*/
-
-                http::response<http::string_body> res{
-                    std::piecewise_construct,
-                    std::make_tuple(std::move(next_command)),
-                    std::make_tuple(http::status::ok, 11)};
-
-                //http::response<http::string_body> res;
-
-                res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-                res.keep_alive(true);
-
-                res.set(http::field::content_type, "text/plain");
-                res.prepare_payload();
-
-                lambda(std::move(res));
+                socket.write(next_command);
             }
             else
             {
@@ -294,9 +336,9 @@ void write_queue(tcp::socket& socket,
 
 void thread_session(
     tcp::socket&& socket,
-    std::string const& doc_root,
     global_state& glob,
-    int64_t my_id)
+    int64_t my_id,
+    connection_t conn_type)
 {
     shared_data shared;
 
@@ -308,11 +350,20 @@ void thread_session(
     global_shared_data* store = fetch_global_shared_data();
     store->add(&shared);
 
-    tcp::socket claimed_sock = std::move(socket);
+    socket_interface* msock = nullptr;
 
-    std::thread(read_queue, std::ref(claimed_sock), doc_root, std::ref(glob), my_id, std::ref(shared),
-                std::ref(shared_queue), std::ref(shared_lock), std::ref(state)).detach();
-    std::thread(write_queue, std::ref(claimed_sock), doc_root, std::ref(glob), my_id, std::ref(shared)).detach();
+    if(conn_type == connection_type::HTTP)
+    {
+        msock = new http_socket(std::move(socket));
+    }
+    if(conn_type == connection_type::WEBSOCKET)
+    {
+
+    }
+
+    std::thread(read_queue, std::ref(*msock), std::ref(glob), my_id, std::ref(shared),
+                std::ref(shared_queue), std::ref(shared_lock), std::ref(state), conn_type).detach();
+    std::thread(write_queue, std::ref(*msock), std::ref(glob), my_id, std::ref(shared), conn_type).detach();
 
     ///3rd thread is the js exec context
     while(shared.termination_count != 3)
@@ -335,17 +386,20 @@ void thread_session(
 
     Sleep(50);
 
+    delete msock;
+
     std::cout << "shutdown session" << std::endl;
 }
 
 void session_wrapper(tcp::socket&& socket,
                      std::string const& doc_root,
                      global_state& glob,
-                     int64_t my_id)
+                     int64_t my_id,
+                     connection_t conn_type)
 {
     try
     {
-        thread_session(std::move(socket), doc_root, glob, my_id);
+        thread_session(std::move(socket), glob, my_id, conn_type);
     }
     catch(...)
     {
@@ -384,12 +438,55 @@ void http_test_server()
                 std::move(socket),
                 doc_root,
                 std::ref(glob),
-                id).detach();
+                id,
+                connection_type::HTTP).detach();
         }
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "HTTP Error: " << e.what() << std::endl;
+        //return EXIT_FAILURE;
+    }
+}
+
+void websocket_test_server()
+{
+    try
+    {
+        auto const address = boost::asio::ip::make_address(HOST_IP);
+        auto const port = static_cast<unsigned short>(HOST_WEBSOCKET_PORT);
+        std::string const doc_root = "./doc_root";
+
+        // The io_context is required for all I/O
+        boost::asio::io_context ioc{2};
+
+        global_state glob;
+
+        // The acceptor receives incoming connections
+        tcp::acceptor acceptor{ioc, {address, port}};
+        for(;;)
+        {
+            // This will receive the new connection
+            tcp::socket socket{ioc};
+
+            // Block until we get a connection
+            acceptor.accept(socket);
+
+            int id = glob.global_id++;
+
+            // Launch the session, transferring ownership of the socket
+            std::thread(
+                session_wrapper,
+                std::move(socket),
+                doc_root,
+                std::ref(glob),
+                id,
+                connection_type::WEBSOCKET).detach();
+        }
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Websocket Error: " << e.what() << std::endl;
         //return EXIT_FAILURE;
     }
 }
@@ -398,6 +495,11 @@ void http_test_run()
 {
     //std::thread{std::bind(&http_test_server, &req)}.detach();
 
-    start_non_user_task_thread();
-    http_test_server();
+    std::thread(http_test_server).detach();
+    //std::thread(websocket_test_server).detach();
+
+    websocket_test_server();
+
+    //start_non_user_task_thread();
+    //http_test_server();
 }
