@@ -8,6 +8,7 @@
 #include "memory_sandbox.hpp"
 #include "auth.hpp"
 #include "logging.hpp"
+#include <iomanip>
 
 struct unsafe_info
 {
@@ -217,6 +218,82 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 void throwaway_user_thread(const std::string& username, const std::string& command)
 {
     std::thread(run_in_user_context, username, command).detach();
+}
+
+std::string binary_to_hex(const std::string& in)
+{
+    std::string ret;
+
+    const char* LUT = "0123456789ABCDEF";
+
+    for(auto& i : in)
+    {
+        int lower_bits = ((int)i) & 0xF;
+        int upper_bits = (((int)i) >> 4) & 0xF;
+
+        ret += std::string(1, LUT[lower_bits]) + std::string(1, LUT[upper_bits]);
+    }
+
+    return ret;
+}
+
+int char_to_val(uint8_t c)
+{
+    if(c == '0')
+        return 0;
+    if(c == '1')
+        return 1;
+    if(c == '2')
+        return 2;
+    if(c == '3')
+        return 3;
+    if(c == '4')
+        return 4;
+    if(c == '5')
+        return 5;
+    if(c == '6')
+        return 6;
+    if(c == '7')
+        return 7;
+    if(c == '8')
+        return 8;
+    if(c == '9')
+        return 9;
+    if(c == 'A')
+        return 10;
+    if(c == 'B')
+        return 11;
+    if(c == 'C')
+        return 12;
+    if(c == 'D')
+        return 13;
+    if(c == 'E')
+        return 14;
+    if(c == 'F')
+        return 15;
+
+    return 0;
+}
+
+std::string hex_to_binary(const std::string& in)
+{
+    std::string ret;
+
+    int len = in.size();
+
+    for(int i=0; i < len; i+=2)
+    {
+        int next = i + 1;
+
+        char cchar = in[i];
+        char nchar = next < len ? in[next] : '0';
+
+        int lower = char_to_val(cchar) + (char_to_val(nchar) << 4);
+
+        ret.push_back(lower);
+    }
+
+    return ret;
 }
 
 std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
@@ -500,6 +577,11 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         request.insert_in_db(ctx);
 
         state.auth = to_ret;
+
+        if(starts_with(str, "register client_hex"))
+        {
+            return "####registered secret " + binary_to_hex(to_ret);
+        }
 
         return "####registered secret " + to_ret;
     }

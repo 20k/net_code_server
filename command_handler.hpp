@@ -32,4 +32,7 @@ struct global_state;
 ///context?
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id);
 
+std::string binary_to_hex(const std::string& in);
+std::string hex_to_binary(const std::string& in);
+
 #endif // COMMAND_HANDLER_HPP_INCLUDED

@@ -176,8 +176,19 @@ void debug_terminal()
     }
 }
 
+void test_hexbin()
+{
+    std::string test_string = "012344981pioamj;slj;00\0dfdf\n";
+
+    std::string hex = binary_to_hex(test_string);
+
+    assert(hex_to_binary(hex) == test_string);
+}
+
 int main()
 {
+    test_hexbin();
+
     initialse_mongo_all();
 
     lg::set_logfile("./log.txt");
