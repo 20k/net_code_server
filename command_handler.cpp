@@ -296,6 +296,13 @@ std::string hex_to_binary(const std::string& in)
     return ret;
 }
 
+void on_create_user(user& usr)
+{
+    throwaway_user_thread(usr.name, "#msgs.manage({join:\"0000\"})");
+    throwaway_user_thread(usr.name, "#msgs.manage({join:\"7001\"})");
+    throwaway_user_thread(usr.name, "#msgs.manage({join:\"memes\"})");
+}
+
 std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
 {
     printf("yay command\n");
@@ -398,6 +405,8 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                 state.current_user.construct_new_user(mongo_user_info, user_name, state.auth, start_from);
                 state.current_user.overwrite_user_in_db(mongo_user_info);
             }
+
+            on_create_user(state.current_user);
 
             return make_success_col("Constructed new User");
         }
