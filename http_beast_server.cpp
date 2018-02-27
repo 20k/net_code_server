@@ -104,6 +104,7 @@ void async_command_handler(shared_data& shared, command_handler_state& state, st
             break;
 
         std::string to_exec = "";
+        bool found_command = false;
 
         {
             std::lock_guard lg(shared_lock);
@@ -112,10 +113,11 @@ void async_command_handler(shared_data& shared, command_handler_state& state, st
             {
                 to_exec = shared_queue.front();
                 shared_queue.pop_front();
+                found_command = true;
             }
         }
 
-        if(to_exec == "")
+        if(to_exec == "" && !found_command)
         {
             Sleep(5);
             continue;
@@ -237,10 +239,11 @@ void write_queue(tcp::socket& socket,
             {
                 std::string next_command = shared.get_front_write();
 
-                if(next_command == "")
-                    continue;
+                //if(next_command == "")
+                //    continue;
 
-                printf("sending test write\n");
+                if(next_command != "")
+                    printf("sending test write\n");
 
                 /*http::request<http::string_body> req{http::verb::get, "./test.txt", 11};
                 req.set(http::field::host, HOST_IP);
