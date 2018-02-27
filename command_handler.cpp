@@ -259,17 +259,17 @@ int char_to_val(uint8_t c)
         return 8;
     if(c == '9')
         return 9;
-    if(c == 'A')
+    if(c == 'A' || c == 'a')
         return 10;
-    if(c == 'B')
+    if(c == 'B' || c == 'b')
         return 11;
-    if(c == 'C')
+    if(c == 'C' || c == 'c')
         return 12;
-    if(c == 'D')
+    if(c == 'D' || c == 'd')
         return 13;
-    if(c == 'E')
+    if(c == 'E' || c == 'e')
         return 14;
-    if(c == 'F')
+    if(c == 'F' || c == 'f')
         return 15;
 
     return 0;
@@ -586,13 +586,24 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         return "####registered secret " + to_ret;
     }
     #endif // ALLOW_SELF_AUTH
-    else if(starts_with(str, "auth client "))
+    else if(starts_with(str, "auth client ") || starts_with(str, "auth client_hex "))
     {
         printf("auth client\n");
-        //std::cout << str << std::endl;
 
-        auto pos = str.begin() + strlen("auth client ");
+        std::string which_str = "auth client ";
+
+        if(starts_with(str, "auth client_hex "))
+            which_str = "auth client_hex ";
+
+        auto pos = str.begin() + which_str.size();;
         std::string auth_token = std::string(pos, str.end());
+
+        if(starts_with(str, "auth client_hex "))
+        {
+            auth_token = hex_to_binary(auth_token);
+
+            std::cout << "detected hex" << std::endl;
+        }
 
         if(auth_token.length() > 140)
             return make_error_col("Auth too long");
@@ -631,7 +642,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
 
         return make_success_col("Auth Success") + "\n" + full_string + auth_string;
     }
-    else if(starts_with(str, "auth client"))
+    else if(starts_with(str, "auth client") || starts_with(str, "auth client_hex"))
     {
         return "No Auth, send \"register client\"";
     }
