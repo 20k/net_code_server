@@ -78,6 +78,18 @@ mongo_lock_proxy get_global_mongo_chat_channels_context(int lock_id)
     return get_global_mongo_context(mongo_database_type::CHAT_CHANNELS, lock_id);
 }
 
+inline
+mongo_lock_proxy get_global_mongo_pending_notifs_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::PENDING_NOTIFS, lock_id);
+}
+
+inline
+mongo_lock_proxy get_global_mongo_chat_channel_propeties_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::CHAT_CHANNEL_PROPERTIES, lock_id);
+}
+
 /*inline
 std::vector<int> any_mongo_locks()
 {
