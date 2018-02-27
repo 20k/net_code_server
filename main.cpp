@@ -28,6 +28,7 @@
 
 #include "http_beast_server.hpp"
 #include "command_handler.hpp"
+#include "logging.hpp"
 
 #if 0
 void user_tests()
@@ -177,6 +178,10 @@ void debug_terminal()
 
 int main()
 {
+    initialse_mongo_all();
+
+    lg::set_logfile("./log.txt");
+
     #if 1
     http_test_run();
 

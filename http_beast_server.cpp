@@ -182,7 +182,7 @@ void read_queue(tcp::socket& socket,
 
                     std::string str = req.body();
 
-                    if(len <= 5 || starts_with(str, "client_poll"))
+                    if(len <= 10 || starts_with(str, "client_poll"))
                     {
                         shared_queue.push_back(req.body());
                         rate_hit = false;

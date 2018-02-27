@@ -7,6 +7,7 @@
 #include "http_beast_server.hpp"
 #include "memory_sandbox.hpp"
 #include "auth.hpp"
+#include "logging.hpp"
 
 struct unsafe_info
 {
@@ -185,11 +186,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
     if(terminated)
     {
-        std::lock_guard<std::mutex> lk(mongo_databases_lock);
-
         for(auto& i : mongo_databases)
         {
-            i.second->unlock_if(local_thread_id);
+            i->unlock_if(local_thread_id);
         }
     }
 
@@ -223,6 +222,8 @@ void throwaway_user_thread(const std::string& username, const std::string& comma
 std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
 {
     printf("yay command\n");
+
+    lg::log(str);
 
     if(starts_with(str, "user "))
     {

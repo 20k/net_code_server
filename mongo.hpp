@@ -18,6 +18,7 @@ enum class mongo_database_type
     USER_AUTH,
     #endif // 0
     CHAT_CHANNELS,
+    MONGO_COUNT
 };
 
 std::string strip_whitespace(std::string);
@@ -30,8 +31,6 @@ struct mongo_context
 
     std::string last_collection = "";
     std::string last_db = "";
-
-    static bool mongo_is_init;
 
     std::mutex lock;
     int locked_by = -1;
@@ -82,11 +81,6 @@ struct mongo_context
             db = "user_auth";
         }
         #endif // 0
-
-        if(!mongo_is_init)
-            mongoc_init();
-
-        mongo_is_init = true;
 
         client = mongoc_client_new(uri_str.c_str());
 
@@ -441,11 +435,6 @@ struct mongo_context
 
         mongoc_database_destroy (database);
         mongoc_client_destroy (client);
-
-        if(mongo_is_init)
-            mongoc_cleanup();
-
-        mongo_is_init = false;
     }
 };
 
