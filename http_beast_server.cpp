@@ -375,6 +375,9 @@ void write_queue(socket_interface& socket,
                 if(next_command != "")
                     printf("sending test write\n");
 
+                if(next_command == "" && conn_type == connection_type::WEBSOCKET)
+                    continue;
+
                 if(socket.write(next_command))
                     break;
             }
