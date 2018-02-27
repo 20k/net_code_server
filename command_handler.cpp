@@ -333,21 +333,28 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                 printf("warning, no chats gid\n");
         }
 
-        mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-        if(state.current_user.exists(mongo_user_info, user_name))
+        bool user_exists = false;
+
         {
-            state.current_user.load_from_db(mongo_user_info, user_name);
+            mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-            if(state.current_user.auth != state.auth)
+            if(state.current_user.exists(mongo_user_info, user_name))
             {
-                state.current_user = user();
-                return make_error_col("Incorrect Auth");
-            }
+                user_exists = true;
 
-            ///WARNING NESTED LOCKS
-            ///this is actually a fallback case
-            ///in case a user was created under the old system
+                state.current_user.load_from_db(mongo_user_info, user_name);
+
+                if(state.current_user.auth != state.auth)
+                {
+                    state.current_user = user();
+                    return make_error_col("Incorrect Auth");
+                }
+            }
+        }
+
+        if(user_exists)
+        {
             {
                 mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
 
@@ -385,8 +392,12 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                 to_check.overwrite_in_db(mongo_ctx);
             }
 
-            state.current_user.construct_new_user(mongo_user_info, user_name, state.auth, start_from);
-            state.current_user.overwrite_user_in_db(mongo_user_info);
+            {
+                mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
+
+                state.current_user.construct_new_user(mongo_user_info, user_name, state.auth, start_from);
+                state.current_user.overwrite_user_in_db(mongo_user_info);
+            }
 
             return make_success_col("Constructed new User");
         }
@@ -580,7 +591,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
 
         if(starts_with(str, "register client_hex"))
         {
-            return "####registered secret " + binary_to_hex(to_ret);
+            return "####registered secret_hex " + binary_to_hex(to_ret);
         }
 
         return "####registered secret " + to_ret;

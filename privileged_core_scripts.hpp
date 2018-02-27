@@ -969,8 +969,6 @@ duk_ret_t items__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     user current_user;
 
-    ///hmm. I really need a generic double locking system
-    ///ALARM: NOT SAFE WITHOUT DOUBLE LOCKING DOUBLE LOCKIGN ISNT SAFE YET
     {
         mongo_lock_proxy user_lock = get_global_mongo_user_info_context(get_thread_id(ctx));
         user_lock->change_collection(get_caller(ctx));
