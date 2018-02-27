@@ -709,7 +709,27 @@ std::string handle_client_poll(user& usr)
     if(found.size() > 1000)
         found.resize(1000);
 
+    std::vector<std::string> channels;
+
+    {
+        mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+        mongo_requester request;
+        request.set_prop("name", usr.name);
+
+        auto found = request.fetch_from_db(ctx);
+
+        if(found.size() != 1)
+            return "";
+
+        mongo_requester& cur_user = found[0];
+
+        channels = str_to_array(cur_user.get_prop("joined_channels"));
+    }
+
     std::string to_send = "";
+
+    to_send = std::to_string(channels.size()) + " " + array_to_str(channels) + " ";
 
     for(mongo_requester& req : found)
     {
@@ -719,10 +739,15 @@ std::string handle_client_poll(user& usr)
 
         std::string full_str = chan + " " + prettify_chat_strings(to_col);
 
-        to_send += "chat_api " + std::to_string(full_str.size()) + " " + full_str;
+        to_send += std::to_string(full_str.size()) + " " + full_str;
+
+        //to_send += "chat_api " + std::to_string(full_str.size()) + " " + full_str;
     }
 
-    return to_send;
+    if(to_send == "")
+        return "";
+
+    return "chat_api " + to_send;
 }
 
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
