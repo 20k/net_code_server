@@ -689,9 +689,12 @@ std::string handle_client_poll(user& usr)
         mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
 
         mongo_requester to_send;
-        to_send.set_prop("user", usr.name);
+        to_send.set_prop("to_user", usr.name);
+        to_send.set_prop("is_chat", 1);
 
         found = to_send.fetch_from_db(ctx);
+
+        to_send.remove_all_from_db(ctx);
     }
 
     if(found.size() > 1000)
@@ -701,8 +704,8 @@ std::string handle_client_poll(user& usr)
 
     for(mongo_requester& req : found)
     {
-        if(!req.get_prop_as_integer("is_chat"))
-            continue;
+        //if(!req.get_prop_as_integer("is_chat"))
+        //    continue;
 
         std::string chan = req.get_prop("channel");
         //std::string msg = req.get_prop("msg");

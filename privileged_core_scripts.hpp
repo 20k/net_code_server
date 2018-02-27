@@ -564,18 +564,22 @@ duk_ret_t msgs__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     {
         ///TODO: LIMIT
-        mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
+        for(auto& current_user : users)
+        {
+            mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
 
-        size_t real_time = get_wall_time();
+            size_t real_time = get_wall_time();
 
-        mongo_requester to_insert;
-        to_insert.set_prop("user", get_caller(ctx));
-        to_insert.set_prop("is_chat", 1);
-        to_insert.set_prop("msg", msg);
-        to_insert.set_prop("channel", channel);
-        to_insert.set_prop("time_ms", real_time);
+            mongo_requester to_insert;
+            to_insert.set_prop("user", get_caller(ctx));
+            to_insert.set_prop("is_chat", 1);
+            to_insert.set_prop("msg", msg);
+            to_insert.set_prop("channel", channel);
+            to_insert.set_prop("time_ms", real_time);
+            to_insert.set_prop("to_user", current_user);
 
-        to_insert.insert_in_db(mongo_ctx);
+            to_insert.insert_in_db(mongo_ctx);
+        }
     }
 
     return push_success(ctx);
