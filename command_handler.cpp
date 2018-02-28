@@ -729,7 +729,7 @@ std::string handle_client_poll(user& usr)
 
     std::string to_send = "";
 
-    std::string prologue_str = std::to_string(channels.size()) + " " + array_to_str(channels) + " ";
+    std::string prologue_str = std::to_string(channels.size()) + " " + array_to_str(channels);
 
     while(prologue_str.size() > 0 && prologue_str.back() == ' ')
         prologue_str.pop_back();
@@ -750,6 +750,8 @@ std::string handle_client_poll(user& usr)
 
         //to_send += "chat_api " + std::to_string(full_str.size()) + " " + full_str;
     }
+
+    //std::cout << to_send << std::endl;
 
     if(to_send == "")
         return "";
