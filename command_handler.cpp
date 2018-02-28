@@ -695,7 +695,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
     return make_error_col("Command Not Found or Unimplemented");
 }
 
-std::string handle_client_poll(user& usr)
+std::vector<mongo_requester> get_and_update_notifs_for_user(user& usr)
 {
     std::vector<mongo_requester> found;
 
@@ -721,23 +721,31 @@ std::string handle_client_poll(user& usr)
     if(found.size() > 1000)
         found.resize(1000);
 
-    std::vector<std::string> channels;
+    return found;
+}
 
-    {
-        mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+std::vector<std::string> get_channels_for_user(user& usr)
+{
+    mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
 
-        mongo_requester request;
-        request.set_prop("name", usr.name);
+    mongo_requester request;
+    request.set_prop("name", usr.name);
 
-        auto mfound = request.fetch_from_db(ctx);
+    auto mfound = request.fetch_from_db(ctx);
 
-        if(mfound.size() != 1)
-            return "";
+    if(mfound.size() != 1)
+        return {};
 
-        mongo_requester& cur_user = mfound[0];
+    mongo_requester& cur_user = mfound[0];
 
-        channels = str_to_array(cur_user.get_prop("joined_channels"));
-    }
+    return str_to_array(cur_user.get_prop("joined_channels"));
+}
+
+std::string handle_client_poll(user& usr)
+{
+    std::vector<mongo_requester> found = get_and_update_notifs_for_user(usr);
+
+    std::vector<std::string> channels = get_channels_for_user(usr);
 
     std::string to_send = "";
 
@@ -771,6 +779,52 @@ std::string handle_client_poll(user& usr)
     return "chat_api " + to_send;
 }
 
+std::string handle_client_poll_json(user& usr)
+{
+    std::vector<mongo_requester> found = get_and_update_notifs_for_user(usr);
+
+    duk_context* ctx = js_interop_startup();
+
+    duk_object_t to_encode;
+
+    std::vector<std::string> channels = get_channels_for_user(usr);
+
+    to_encode["channels"] = channels;
+
+    std::vector<duk_placeholder_t> objects;
+
+    for(mongo_requester& req : found)
+    {
+        duk_object_t obj;
+
+        std::string chan = req.get_prop("channel");
+        std::vector<mongo_requester> to_col{req};
+        std::string pretty = prettify_chat_strings(to_col);
+
+        ///so, wanna encode {channel:"chan", pretty:"pretty"}
+
+        obj["channel"] = chan;
+        obj["text"] = pretty;
+
+        objects.push_back(new duk_object_t(obj));
+    }
+
+    to_encode["data"] = objects;
+
+    push_duk_val(ctx, to_encode);
+
+    std::string str = duk_json_encode(ctx, -1);
+
+    duk_pop(ctx);
+
+    js_interop_shutdown(ctx);
+
+    for(auto& i : objects)
+        delete (duk_object_t*)i;
+
+    return str;
+}
+
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
 {
     //lg::log("Log Command " + str);
@@ -778,6 +832,7 @@ std::string handle_command(command_handler_state& state, const std::string& str,
     std::string client_command = "client_command ";
     std::string client_chat = "client_chat ";
     std::string client_poll = "client_poll";
+    std::string client_poll_json = "client_poll_json";
 
     if(starts_with(str, client_command))
     {
@@ -795,7 +850,7 @@ std::string handle_command(command_handler_state& state, const std::string& str,
         return "";
     }
 
-    if(starts_with(str, client_poll))
+    if(starts_with(str, client_poll) || starts_with(str, client_poll_json))
     {
         if(state.auth == "" || state.current_user.name == "")
             return "";
@@ -809,7 +864,10 @@ std::string handle_command(command_handler_state& state, const std::string& str,
             state.current_user.load_from_db(mongo_user_info, state.current_user.name);
         }
 
-        return handle_client_poll(state.current_user);
+        if(starts_with(str, client_poll))
+            return handle_client_poll(state.current_user);
+        if(starts_with(str, client_poll_json))
+            return handle_client_poll_json(state.current_user);
     }
 
     return "command Command not understood";

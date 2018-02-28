@@ -185,11 +185,27 @@ void test_hexbin()
     assert(hex_to_binary(hex) == test_string);
 }
 
+extern std::string handle_client_poll_json(user& usr);
+
+void test_json()
+{
+    user usr;
+
+    {
+        mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+        ctx->change_collection("i20k");
+
+        usr.load_from_db(ctx, "i20k");
+    }
+
+    handle_client_poll_json(usr);
+}
+
 int main()
 {
     test_hexbin();
-
     initialse_mongo_all();
+    test_json();
 
     lg::set_logfile("./log.txt");
 

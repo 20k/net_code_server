@@ -113,14 +113,14 @@ using connection_t = connection_type::connection_type;
 
 struct socket_interface
 {
-    virtual bool write(const std::string& msg);
-    virtual bool read(boost::system::error_code& ec);
+    virtual bool write(const std::string& msg) {return false;};
+    virtual bool read(boost::system::error_code& ec){return false;};
 
-    virtual std::string get_read();
+    virtual std::string get_read(){return std::string();};
 
-    virtual void shutdown();
+    virtual void shutdown(){};
 
-    virtual bool is_open();
+    virtual bool is_open(){return false;};
 
     virtual ~socket_interface(){}
 };

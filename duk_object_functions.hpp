@@ -7,8 +7,18 @@
 #include <string>
 
 using duk_func_t = duk_ret_t (*)(duk_context*);
-using duk_variant_t = std::variant<bool, int, double, std::string>;
+using duk_placeholder_t = void*;
+using duk_variant_t = std::variant<bool, int, double, std::string, std::vector<std::string>, duk_placeholder_t, std::vector<duk_placeholder_t>>;
 using duk_object_t = std::map<std::string, duk_variant_t>;
+
+void push_duk_val(duk_context* ctx, const duk_func_t& func);
+void push_duk_val(duk_context* ctx, const bool& t);
+void push_duk_val(duk_context* ctx, const int& t);
+void push_duk_val(duk_context* ctx, const double& t);
+void push_duk_val(duk_context* ctx, const std::string& t);
+void push_duk_val(duk_context* ctx, const duk_variant_t& t);
+void push_duk_val(duk_context* ctx, const duk_object_t& obj);
+void push_duk_val(duk_context* ctx, const duk_placeholder_t& t);
 
 inline
 void push_duk_val(duk_context* ctx, const duk_func_t& func)
@@ -47,33 +57,6 @@ void push_duk_val(duk_context* ctx, const std::string& t)
     duk_push_string(ctx, t.c_str());
 }
 
-inline
-void push_duk_val(duk_context* ctx, const duk_variant_t& t)
-{
-    if(std::holds_alternative<bool>(t))
-        return push_duk_val(ctx, std::get<bool>(t));
-
-    if(std::holds_alternative<int>(t))
-        return push_duk_val(ctx, std::get<int>(t));
-
-    if(std::holds_alternative<double>(t))
-        return push_duk_val(ctx, std::get<double>(t));
-
-    if(std::holds_alternative<std::string>(t))
-        return push_duk_val(ctx, std::get<std::string>(t));
-}
-
-inline
-void push_duk_val(duk_context* ctx, const duk_object_t& obj)
-{
-    duk_push_object(ctx);
-
-    for(auto& prop : obj)
-    {
-        push_duk_val(ctx, prop.second);
-        duk_put_prop_string(ctx, -2, prop.first.c_str());
-    }
-}
 
 template<typename T>
 inline
@@ -90,6 +73,53 @@ void push_duk_val(duk_context* ctx, const std::vector<T>& t)
 
         index++;
     }
+}
+
+inline
+void push_duk_val(duk_context* ctx, const duk_variant_t& t)
+{
+    if(std::holds_alternative<bool>(t))
+        return push_duk_val(ctx, std::get<bool>(t));
+
+    if(std::holds_alternative<int>(t))
+        return push_duk_val(ctx, std::get<int>(t));
+
+    if(std::holds_alternative<double>(t))
+        return push_duk_val(ctx, std::get<double>(t));
+
+    if(std::holds_alternative<std::string>(t))
+        return push_duk_val(ctx, std::get<std::string>(t));
+
+    if(std::holds_alternative<std::vector<std::string>>(t))
+        return push_duk_val(ctx, std::get<std::vector<std::string>>(t));
+
+    if(std::holds_alternative<duk_placeholder_t>(t))
+        return push_duk_val(ctx, std::get<duk_placeholder_t>(t));
+
+    if(std::holds_alternative<std::vector<duk_placeholder_t>>(t))
+        return push_duk_val(ctx, std::get<std::vector<duk_placeholder_t>>(t));
+}
+
+inline
+void push_duk_val(duk_context* ctx, const duk_object_t& obj)
+{
+    duk_push_object(ctx);
+
+    for(auto& prop : obj)
+    {
+        push_duk_val(ctx, prop.second);
+        duk_put_prop_string(ctx, -2, prop.first.c_str());
+    }
+}
+
+inline
+void push_duk_val(duk_context* ctx, const duk_placeholder_t& t)
+{
+    ///found an object
+
+    duk_object_t* obj = (duk_object_t*)t;
+
+    push_duk_val(ctx, *obj);
 }
 
 template<typename T>
