@@ -193,6 +193,36 @@ int main()
 
     lg::set_logfile("./log.txt");
 
+    /*{
+        std::vector<mongo_requester> all;
+
+        {
+            mongo_lock_proxy all_auth = get_global_mongo_global_properties_context(-2);
+
+            mongo_requester request;
+
+            request.exists_check["account_token"] = 1;
+
+            all = request.fetch_from_db(all_auth);
+        }
+
+        for(auto& i : all)
+        {
+            auto users = str_to_array(i.get_prop("users"));
+
+            for(std::string& usrname : users)
+            {
+                ///throwaway doesn't work here due to
+                ///multi auth protection
+                run_in_user_context(usrname, "#msg.manage({join:\"0000\"})");
+                run_in_user_context(usrname, "#msg.manage({join:\"7001\"})");
+                run_in_user_context(usrname, "#msg.manage({join:\"memes\"})");
+
+                std::cout << "proc username " << usrname << std::endl;
+            }
+        }
+    }*/
+
     #if 1
     http_test_run();
 

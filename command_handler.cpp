@@ -305,7 +305,7 @@ void on_create_user(user& usr)
 
 std::string get_update_message()
 {
-    return "Warning, chat was updated, you must manually join channels to see chat on old users";
+    return "Warning, chat was updated, you must manually join channels with #msg.manage({join:\"0000\"}) now";
 }
 
 std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
