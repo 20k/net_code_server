@@ -442,7 +442,7 @@ bool valid_channel_name(const std::string& in)
 }
 
 inline
-duk_ret_t msgs__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -588,7 +588,7 @@ duk_ret_t msgs__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
-duk_ret_t msgs__send(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
     RATELIMIT_DUK(CHAT);
@@ -598,7 +598,7 @@ duk_ret_t msgs__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(channel == "" || msg == "" || channel.size() >= 10 || msg.size() >= 10000)
     {
-        push_error(ctx, "Usage: #hs.msgs.send({channel:\"<name>\", msg:\"msg\"})");
+        push_error(ctx, "Usage: #hs.msg.send({channel:\"<name>\", msg:\"msg\"})");
         return 1;
     }
 
@@ -753,7 +753,7 @@ std::string prettify_chat_strings(std::vector<mongo_requester>& found)
 }
 
 inline
-duk_ret_t msgs__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -1339,9 +1339,9 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(scripts__core, 4),
     REGISTER_FUNCTION_PRIV(scripts__me, 2),
     REGISTER_FUNCTION_PRIV(scripts__public, 4),
-    REGISTER_FUNCTION_PRIV(msgs__manage, 3),
-    REGISTER_FUNCTION_PRIV(msgs__send, 3),
-    REGISTER_FUNCTION_PRIV(msgs__recent, 2),
+    REGISTER_FUNCTION_PRIV(msg__manage, 3),
+    REGISTER_FUNCTION_PRIV(msg__send, 3),
+    REGISTER_FUNCTION_PRIV(msg__recent, 2),
     REGISTER_FUNCTION_PRIV(users__me, 0),
     REGISTER_FUNCTION_PRIV(items__create, 0),
     //REGISTER_FUNCTION_PRIV(sys__disown_upg, 0),

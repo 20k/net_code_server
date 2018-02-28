@@ -298,9 +298,9 @@ std::string hex_to_binary(const std::string& in)
 
 void on_create_user(user& usr)
 {
-    throwaway_user_thread(usr.name, "#msgs.manage({join:\"0000\"})");
-    throwaway_user_thread(usr.name, "#msgs.manage({join:\"7001\"})");
-    throwaway_user_thread(usr.name, "#msgs.manage({join:\"memes\"})");
+    throwaway_user_thread(usr.name, "#msg.manage({join:\"0000\"})");
+    throwaway_user_thread(usr.name, "#msg.manage({join:\"7001\"})");
+    throwaway_user_thread(usr.name, "#msg.manage({join:\"memes\"})");
 }
 
 std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
