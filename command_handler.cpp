@@ -303,6 +303,11 @@ void on_create_user(user& usr)
     throwaway_user_thread(usr.name, "#msg.manage({join:\"memes\"})");
 }
 
+std::string get_update_message()
+{
+    return "Warning, chat was updated, you must manually join channels to see chat on old users";
+}
+
 std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
 {
     printf("yay command\n");
@@ -669,7 +674,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
 
         std::cout << auth_string << std::endl;
 
-        return make_success_col("Auth Success") + "\n" + full_string + auth_string;
+        return make_success_col("Auth Success") + "\n" + full_string + auth_string + "\n" + get_update_message();
     }
     else if(starts_with(str, "auth client") || starts_with(str, "auth client_hex"))
     {
