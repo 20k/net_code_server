@@ -205,7 +205,7 @@ int main()
 {
     test_hexbin();
     initialse_mongo_all();
-    test_json();
+    //test_json();
 
     lg::set_logfile("./log.txt");
 

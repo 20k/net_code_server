@@ -822,7 +822,7 @@ std::string handle_client_poll_json(user& usr)
     for(auto& i : objects)
         delete (duk_object_t*)i;
 
-    return str;
+    return "chat_api_json " + str;
 }
 
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
@@ -850,7 +850,8 @@ std::string handle_command(command_handler_state& state, const std::string& str,
         return "";
     }
 
-    if(starts_with(str, client_poll) || starts_with(str, client_poll_json))
+    ///matches both client poll and json
+    if(starts_with(str, client_poll))
     {
         if(state.auth == "" || state.current_user.name == "")
             return "";
@@ -864,10 +865,10 @@ std::string handle_command(command_handler_state& state, const std::string& str,
             state.current_user.load_from_db(mongo_user_info, state.current_user.name);
         }
 
-        if(starts_with(str, client_poll))
-            return handle_client_poll(state.current_user);
         if(starts_with(str, client_poll_json))
             return handle_client_poll_json(state.current_user);
+        if(starts_with(str, client_poll))
+            return handle_client_poll(state.current_user);
     }
 
     return "command Command not understood";
