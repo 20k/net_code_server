@@ -198,7 +198,7 @@ void test_json()
         usr.load_from_db(ctx, "i20k");
     }
 
-    handle_client_poll_json(usr);
+    std::cout << handle_client_poll_json(usr) << std::endl;
 }
 
 int main()

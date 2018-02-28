@@ -345,7 +345,6 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                 printf("warning, no chats gid\n");
         }
 
-
         bool user_exists = false;
 
         {
@@ -360,7 +359,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                 if(state.current_user.auth != state.auth)
                 {
                     state.current_user = user();
-                    return make_error_col("Incorrect Auth");
+                    return make_error_col("Incorrect Auth, someone else has registered this account or you are using a different pc and key.key file");
                 }
             }
         }
@@ -813,7 +812,14 @@ std::string handle_client_poll_json(user& usr)
 
     push_duk_val(ctx, to_encode);
 
-    std::string str = duk_json_encode(ctx, -1);
+    const char* ptr = duk_json_encode(ctx, -1);
+
+    std::string str;
+
+    if(ptr != nullptr)
+    {
+        str = std::string(ptr);
+    }
 
     duk_pop(ctx);
 
