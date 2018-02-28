@@ -638,6 +638,7 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
             to_insert.set_prop("channel", channel);
             to_insert.set_prop("time_ms", real_time);
             to_insert.set_prop("to_user", current_user);
+            to_insert.set_prop("processed", 0);
 
             to_insert.insert_in_db(mongo_ctx);
         }

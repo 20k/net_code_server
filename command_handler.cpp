@@ -705,10 +705,17 @@ std::string handle_client_poll(user& usr)
         mongo_requester to_send;
         to_send.set_prop("to_user", usr.name);
         to_send.set_prop("is_chat", 1);
+        to_send.set_prop("processed", 0);
 
         found = to_send.fetch_from_db(ctx);
 
-        to_send.remove_all_from_db(ctx);
+        mongo_requester old_search = to_send;
+
+        to_send.set_prop("processed", 1);
+
+        old_search.update_in_db_if_exact(ctx, to_send);
+
+        //to_send.remove_all_from_db(ctx);
     }
 
     if(found.size() > 1000)
