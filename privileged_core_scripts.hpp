@@ -1388,14 +1388,79 @@ duk_ret_t items__register_bundle(priv_context& priv_ctx, duk_context* ctx, int s
     return push_success(ctx);
 }
 
+
+#define USE_SECRET_CONTENT
+#ifdef USE_SECRET_CONTENT
+#include <secret/secret.hpp>
+#endif // USE_SECRET_CONTENT
+
 ///bear in mind that this function is kind of weird
 inline
 duk_ret_t loc__handler(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    duk_push_string(ctx, "Test user port");
+    //duk_push_string(ctx, "Test user port");
 
+    /*std::string msg;
+
+    if(!test_lock(priv_ctx, ctx, msg))
+    {
+        duk_push_string(ctx, msg.c_str());
+        return 1;
+    }*/
+
+    std::string name_of_person_being_attacked = get_host_from_fullname(priv_ctx.called_as);
+
+    user usr;
+
+    {
+        mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
+        user_info->change_collection(name_of_person_being_attacked);
+
+        usr.load_from_db(user_info, name_of_person_being_attacked);
+    }
+
+    std::vector<std::string> loaded_items = usr.all_loaded_items();
+
+    std::vector<item> all_loaded_attackables;
+
+    {
+        mongo_lock_proxy item_info = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+        for(auto& id : loaded_items)
+        {
+            item next;
+            next.load_from_db(item_info, id);
+
+            if(next.get_prop_as_integer("item_type") != item_types::LOCK)
+                continue;
+
+            all_loaded_attackables.push_back(next);
+        }
+    }
+
+    std::string msg;
+
+    for(item& i : all_loaded_attackables)
+    {
+        std::string func = i.get_prop("lock_type");
+
+        auto it = secret_map.find(func);
+
+        if(it != secret_map.end())
+        {
+            if(!it->second(priv_ctx, ctx, msg))
+            {
+                break;
+            }
+        }
+    }
+
+    if(all_loaded_attackables.size() == 0)
+        msg = "Congrats I guess";
+
+    duk_push_string(ctx, msg.c_str());
     return 1;
 }
 

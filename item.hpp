@@ -122,6 +122,12 @@ namespace item_types
         if(type < quick_names.size() && type >= 0)
             new_item.set_prop("short_name", quick_names[(int)type]);
 
+        if(type == LOCK)
+        {
+            new_item.set_prop("lock_type", "test_lock");
+            new_item.set_prop("short_name", "test_lock");
+        }
+
         if(type == CHAR_COUNT)
         {
             new_item.set_prop("char_count", 500);

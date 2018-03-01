@@ -357,7 +357,7 @@ int duk_get_prop_string_as_int(duk_context* ctx, duk_idx_t idx, const std::strin
 
 template<typename T, typename U>
 inline
-T duk_get_safe_func(const U& func, duk_context* ctx, duk_idx_t idx, const std::string& key, const T& def = T())
+T duk_safe_get_generic(const U& func, duk_context* ctx, duk_idx_t idx, const std::string& key, const T& def = T())
 {
     if(duk_get_top(ctx) <= 0)
         return def;
