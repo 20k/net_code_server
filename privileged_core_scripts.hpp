@@ -64,6 +64,7 @@ struct priv_func_info
 {
     function_priv_t func;
     int sec_level = 0;
+    bool is_privileged = false; ///can only be called by something privileged
 };
 
 extern
@@ -1385,6 +1386,16 @@ duk_ret_t items__register_bundle(priv_context& priv_ctx, duk_context* ctx, int s
 }
 
 inline
+duk_ret_t loc__handler(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    duk_push_string(ctx, "Test loc");
+
+    return 1;
+}
+
+inline
 std::string parse_function_hack(std::string in)
 {
     int len = in.size();
@@ -1404,6 +1415,7 @@ std::string parse_function_hack(std::string in)
 }
 
 #define REGISTER_FUNCTION_PRIV(x, y) {parse_function_hack(#x), {&x, y}}
+#define REGISTER_FUNCTION_PRIV_3(x, y, z) {parse_function_hack(#x), {&x, y, z}}
 
 inline
 std::map<std::string, priv_func_info> privileged_functions

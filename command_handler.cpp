@@ -3,12 +3,12 @@
 #include "seccallers.hpp"
 #include <thread>
 #include <chrono>
-#include <Wincrypt.h>
 #include "http_beast_server.hpp"
 #include "memory_sandbox.hpp"
 #include "auth.hpp"
 #include "logging.hpp"
 #include <iomanip>
+#include "rng.hpp"
 
 struct unsafe_info
 {
@@ -583,25 +583,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
     #ifdef ALLOW_SELF_AUTH
     else if(starts_with(str, "register client"))
     {
-        unsigned char random_bytes[128] = {0};
-
-        HCRYPTPROV provider = 0;
-
-        if(!CryptAcquireContext(&provider, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
-            return "Nope";
-
-        if(!CryptGenRandom(provider, 128, random_bytes))
-            return "Nope2.0";
-
-        CryptReleaseContext(provider, 0);
-
-        std::string to_ret;
-        to_ret.resize(128);
-
-        for(int i=0; i < 128; i++)
-        {
-            to_ret[i] = random_bytes[i];
-        }
+        std::string to_ret = random_binary_string(128);
 
         mongo_requester request;
         request.set_prop_bin("account_token", to_ret);

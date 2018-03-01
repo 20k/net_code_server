@@ -543,6 +543,7 @@ std::string bson_iter_utf8_easy(bson_iter_t* iter)
     return std::string(k, len);
 }
 
+///ok, support for arrays is now non negotiable
 struct mongo_requester
 {
     std::map<std::string, std::string> properties;
