@@ -24,7 +24,7 @@ struct priv_context
     ///otherwise its eg i20k.c_f_pi3232 or whatever
     std::string called_as;
 
-    priv_context(const std::string& ohost, const std::string& called_as) : original_host(ohost)
+    priv_context(const std::string& ohost, const std::string& called_as) : original_host(ohost), called_as(called_as)
     {
 
     }
@@ -1412,6 +1412,8 @@ duk_ret_t loc__handler(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string name_of_person_being_attacked = get_host_from_fullname(priv_ctx.called_as);
 
+    std::cout << "user_name " << name_of_person_being_attacked << std::endl;
+
     user usr;
 
     {
@@ -1423,6 +1425,8 @@ duk_ret_t loc__handler(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<std::string> loaded_items = usr.all_loaded_items();
 
+    std::cout << "lsize " << loaded_items.size() << std::endl;
+
     std::vector<item> all_loaded_attackables;
 
     {
@@ -1433,12 +1437,18 @@ duk_ret_t loc__handler(priv_context& priv_ctx, duk_context* ctx, int sl)
             item next;
             next.load_from_db(item_info, id);
 
+            std::cout << "fid " << id << std::endl;
+
+            std::cout << "ftype " << next.get_prop("item_type") << std::endl;
+
             if(next.get_prop_as_integer("item_type") != item_types::LOCK)
                 continue;
 
             all_loaded_attackables.push_back(next);
         }
     }
+
+    std::cout << "in loc\n";
 
     std::string msg;
 

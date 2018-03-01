@@ -430,12 +430,15 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     std::string full_script = get_script_host(ctx) + "." + get_script_ending(ctx);
 
     {
-        mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
-        user_info->change_collection(get_host_from_fullname(to_call_fullname));
-
         user usr;
-        ///so eg, we do #i20k.user_port, we need to load their db and check their user_port
-        usr.load_from_db(user_info, get_host_from_fullname(to_call_fullname));
+
+        {
+            mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
+            user_info->change_collection(get_host_from_fullname(to_call_fullname));
+
+            ///so eg, we do #i20k.user_port, we need to load their db and check their user_port
+            usr.load_from_db(user_info, get_host_from_fullname(to_call_fullname));
+        }
 
         std::string user_port = usr.user_port;
 
