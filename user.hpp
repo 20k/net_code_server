@@ -19,6 +19,7 @@ struct user
     int32_t last_message_uid = 0;
     std::string upgr_idx;
     std::string loaded_upgr_idx;
+    std::string user_port;
 
     bool valid = false;
 

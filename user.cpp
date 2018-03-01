@@ -13,6 +13,7 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     to_set.set_prop_int("last_message_uid", last_message_uid);
     to_set.set_prop("upgr_idx", upgr_idx);
     to_set.set_prop("loaded_upgr_idx", loaded_upgr_idx);
+    to_set.set_prop("user_port", user_port);
 
     filter.update_in_db_if_exists(ctx, to_set);
 }
@@ -58,6 +59,13 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
             upgr_idx = req.get_prop("upgr_idx");
         if(req.has_prop("loaded_upgr_idx"))
             loaded_upgr_idx = req.get_prop("loaded_upgr_idx");
+        if(req.has_prop("user_port"))
+            user_port = req.get_prop("user_port");
+    }
+
+    if(user_port == "")
+    {
+        user_port = generate_user_port();
     }
 
     return true;
@@ -84,6 +92,7 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
     request.set_prop_int("last_message_uid", last_message_uid);
     request.set_prop("upgr_idx", "");
     request.set_prop("loaded_upgr_idx", "");
+    request.set_prop("user_port", generate_user_port());
 
     request.insert_in_db(ctx);
 
