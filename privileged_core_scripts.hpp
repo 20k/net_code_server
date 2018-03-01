@@ -1402,17 +1402,10 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     //duk_push_string(ctx, "Test user port");
 
-    /*std::string msg;
-
-    if(!test_lock(priv_ctx, ctx, msg))
-    {
-        duk_push_string(ctx, msg.c_str());
-        return 1;
-    }*/
 
     std::string name_of_person_being_attacked = get_host_from_fullname(priv_ctx.called_as);
 
-    std::cout << "user_name " << name_of_person_being_attacked << std::endl;
+    //std::cout << "user_name " << name_of_person_being_attacked << std::endl;
 
     user usr;
 
@@ -1425,9 +1418,11 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<std::string> loaded_items = usr.all_loaded_items();
 
-    std::cout << "lsize " << loaded_items.size() << std::endl;
+    //std::cout << "lsize " << loaded_items.size() << std::endl;
 
     std::vector<item> all_loaded_attackables;
+
+    std::map<std::string, int> seen_attackables;
 
     {
         mongo_lock_proxy item_info = get_global_mongo_user_items_context(get_thread_id(ctx));
@@ -1437,18 +1432,21 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
             item next;
             next.load_from_db(item_info, id);
 
-            std::cout << "fid " << id << std::endl;
+            //std::cout << "fid " << id << std::endl;
 
-            std::cout << "ftype " << next.get_prop("item_type") << std::endl;
+            //std::cout << "ftype " << next.get_prop("item_type") << std::endl;
+
+            if(seen_attackables[next.get_prop("lock_type")])
+                continue;
 
             if(next.get_prop_as_integer("item_type") != item_types::LOCK)
                 continue;
 
             all_loaded_attackables.push_back(next);
+
+            seen_attackables[next.get_prop("lock_type")] = 1;
         }
     }
-
-    std::cout << "in loc\n";
 
     std::string msg;
 
