@@ -71,6 +71,8 @@
 		<Unit filename="auth.hpp" />
 		<Unit filename="command_handler.cpp" />
 		<Unit filename="command_handler.hpp" />
+		<Unit filename="deps/secret/secret.cpp" />
+		<Unit filename="deps/secret/secret.hpp" />
 		<Unit filename="duk_object_functions.hpp" />
 		<Unit filename="http_beast_server.cpp" />
 		<Unit filename="http_beast_server.hpp" />
