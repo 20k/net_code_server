@@ -355,4 +355,26 @@ int duk_get_prop_string_as_int(duk_context* ctx, duk_idx_t idx, const std::strin
     return ret;
 }
 
+template<typename T, typename U>
+inline
+T duk_get_safe_func(const U& func, duk_context* ctx, duk_idx_t idx, const std::string& key, const T& def = T())
+{
+    if(duk_get_top(ctx) <= 0)
+        return def;
+
+    if(duk_is_undefined(ctx, idx))
+        return def;
+
+    if(!duk_has_prop_string(ctx, idx, key.c_str()))
+        return def;
+
+    duk_get_prop_string(ctx, idx, key.c_str());
+
+    auto ret = func(ctx, -1);
+
+    duk_pop(ctx);
+
+    return ret;
+}
+
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED
