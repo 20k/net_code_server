@@ -1396,7 +1396,7 @@ duk_ret_t items__register_bundle(priv_context& priv_ctx, duk_context* ctx, int s
 
 ///bear in mind that this function is kind of weird
 inline
-duk_ret_t loc__handler(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -1517,7 +1517,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(items__manage, 2),
     REGISTER_FUNCTION_PRIV(items__bundle_script, 1),
     REGISTER_FUNCTION_PRIV(items__register_bundle, 0),
-    REGISTER_FUNCTION_PRIV(loc__handler, 1),
+    REGISTER_FUNCTION_PRIV(user__port, 1),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
