@@ -1448,6 +1448,8 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
+    bool all_success = true;
+
     std::string msg;
 
     for(item& i : all_loaded_attackables)
@@ -1460,13 +1462,17 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
         {
             if(!it->second(priv_ctx, ctx, msg))
             {
+                all_success = false;
+
                 break;
             }
         }
     }
 
-    if(all_loaded_attackables.size() == 0)
-        msg = "Congrats I guess";
+    finalise_info(msg, all_success);
+
+    if(msg.size() > 0 && msg.back() == '\n')
+        msg.pop_back();
 
     duk_push_string(ctx, msg.c_str());
     return 1;
