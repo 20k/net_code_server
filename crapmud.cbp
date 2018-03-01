@@ -13,6 +13,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
+					<Add option="-DLOCAL_IP" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -75,6 +76,8 @@
 		<Unit filename="http_beast_server.hpp" />
 		<Unit filename="item.cpp" />
 		<Unit filename="item.hpp" />
+		<Unit filename="logging.cpp" />
+		<Unit filename="logging.hpp" />
 		<Unit filename="main.cpp" />
 		<Unit filename="memory_sandbox.hpp" />
 		<Unit filename="mongo.cpp" />
@@ -85,10 +88,13 @@
 		<Unit filename="privileged_core_scripts.hpp" />
 		<Unit filename="rate_limiting.cpp" />
 		<Unit filename="rate_limiting.hpp" />
+		<Unit filename="rng.cpp" />
+		<Unit filename="rng.hpp" />
 		<Unit filename="script_util.cpp" />
 		<Unit filename="script_util.hpp" />
 		<Unit filename="script_util_shared.hpp" />
 		<Unit filename="seccallers.hpp" />
+		<Unit filename="user.cpp" />
 		<Unit filename="user.hpp" />
 		<Extensions>
 			<code_completion />
