@@ -1394,7 +1394,7 @@ duk_ret_t loc__handler(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    duk_push_string(ctx, "Test loc");
+    duk_push_string(ctx, "Test user port");
 
     return 1;
 }
