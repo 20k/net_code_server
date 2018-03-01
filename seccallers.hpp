@@ -399,7 +399,6 @@ script_info unified_script_loading(duk_context* ctx, const std::string& full_scr
         }
     }
 
-
     return script;
 }
 
@@ -408,11 +407,11 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    std::string str;
+    std::string to_call_fullname;
 
     duk_push_current_function(ctx);
 
-    if(!get_duk_keyvalue(ctx, "FUNCTION_NAME", str))
+    if(!get_duk_keyvalue(ctx, "FUNCTION_NAME", to_call_fullname))
     {
         duk_pop(ctx);
 
@@ -424,27 +423,50 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     duk_pop(ctx);
 
-    if(!is_valid_full_name_string(str))
+    if(!is_valid_full_name_string(to_call_fullname))
         return push_error(ctx, "Bad script name, don't do this :)");
 
     ///current script
     std::string full_script = get_script_host(ctx) + "." + get_script_ending(ctx);
 
-    std::string conv = str;
+    {
+        mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
+        user_info->change_collection(get_host_from_fullname(to_call_fullname));
+
+        user usr;
+        ///so eg, we do #i20k.user_port, we need to load their db and check their user_port
+        usr.load_from_db(user_info, get_host_from_fullname(to_call_fullname));
+
+        std::string user_port = usr.user_port;
+
+        if(get_host_from_fullname(to_call_fullname) + "." + user_port == to_call_fullname)
+        {
+            SL_GUARD(privileged_functions["loc.handler"].sec_level);
+
+            ///use ORIGINAL script host
+            priv_context priv_ctx(get_script_host(ctx), to_call_fullname);
+
+            set_script_info(ctx, to_call_fullname);
+
+            duk_ret_t result = privileged_functions["loc.handler"].func(priv_ctx, ctx, sl);
+
+            set_script_info(ctx, full_script);
+
+            return result;
+        }
+    }
 
     ///IF IS PRIVILEGED SCRIPT, RETURN THAT CFUNC
-    if(privileged_functions.find(conv) != privileged_functions.end())
+    if(privileged_functions.find(to_call_fullname) != privileged_functions.end())
     {
-        SL_GUARD(privileged_functions[conv].sec_level);
+        SL_GUARD(privileged_functions[to_call_fullname].sec_level);
 
         ///use ORIGINAL script host
-        priv_context priv_ctx(get_script_host(ctx));
+        priv_context priv_ctx(get_script_host(ctx), to_call_fullname);
 
-        set_script_info(ctx, str);
+        set_script_info(ctx, to_call_fullname);
 
-        duk_ret_t result = privileged_functions[conv].func(priv_ctx, ctx, sl);
-
-        //std::string to_return = duk_json_encode(ctx, -1);
+        duk_ret_t result = privileged_functions[to_call_fullname].func(priv_ctx, ctx, sl);
 
         set_script_info(ctx, full_script);
 
@@ -456,7 +478,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     std::string script_err;
 
-    script_info script = unified_script_loading(ctx, str, script_err);
+    script_info script = unified_script_loading(ctx, to_call_fullname, script_err);
 
     if(!script.valid)
         return push_error(ctx, script_err);
@@ -470,7 +492,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     stack_duk sd;
     sd.ctx = ctx;
 
-    set_script_info(ctx, str);
+    set_script_info(ctx, to_call_fullname);
 
     compile_and_call(sd, load, get_caller(ctx), false, script.seclevel);
 

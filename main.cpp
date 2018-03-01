@@ -230,14 +230,24 @@ int main()
             {
                 ///throwaway doesn't work here due to
                 ///multi auth protection
-                run_in_user_context(usrname, "#msg.manage({join:\"0000\"})");
-                run_in_user_context(usrname, "#msg.manage({join:\"7001\"})");
-                run_in_user_context(usrname, "#msg.manage({join:\"memes\"})");
+                //run_in_user_context(usrname, "#msg.manage({join:\"0000\"})");
+                //run_in_user_context(usrname, "#msg.manage({join:\"7001\"})");
+                //run_in_user_context(usrname, "#msg.manage({join:\"memes\"})");
 
-                std::cout << "proc username " << usrname << std::endl;
+                {
+                    mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+                    user usr;
+                    usr.load_from_db(ctx, usrname);
+
+                    usr.overwrite_user_in_db(ctx);
+                }
+
+                //std::cout << "proc username " << usrname << std::endl;
             }
         }
     }*/
+
 
     #if 1
     http_test_run();

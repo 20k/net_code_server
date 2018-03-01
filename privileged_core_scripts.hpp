@@ -20,8 +20,11 @@ struct priv_context
 {
     ///if we execute accts.balance from i20k.hello, this is i20k not accts.balance
     std::string original_host;
+    ///for every script other than a loc, this will just be the name of the current function
+    ///otherwise its eg i20k.c_f_pi3232 or whatever
+    std::string called_as;
 
-    priv_context(const std::string& ohost) : original_host(ohost)
+    priv_context(const std::string& ohost, const std::string& called_as) : original_host(ohost)
     {
 
     }
@@ -1385,6 +1388,7 @@ duk_ret_t items__register_bundle(priv_context& priv_ctx, duk_context* ctx, int s
     return push_success(ctx);
 }
 
+///bear in mind that this function is kind of weird
 inline
 duk_ret_t loc__handler(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
@@ -1438,6 +1442,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(items__manage, 2),
     REGISTER_FUNCTION_PRIV(items__bundle_script, 1),
     REGISTER_FUNCTION_PRIV(items__register_bundle, 0),
+    REGISTER_FUNCTION_PRIV(loc__handler, 1),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED

@@ -1,4 +1,5 @@
 #include "user.hpp"
+#include "rng.hpp"
 
 void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
 {
@@ -66,6 +67,8 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
     if(user_port == "")
     {
         user_port = generate_user_port();
+
+        overwrite_user_in_db(ctx);
     }
 
     return true;

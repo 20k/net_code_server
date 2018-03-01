@@ -109,7 +109,7 @@ std::vector<std::string> no_ss_split(const std::string& str, const std::string& 
     return tokens;
 }
 
-#define MAX_ANY_NAME_LEN 19
+#define MAX_ANY_NAME_LEN 24
 
 inline
 bool is_valid_string(const std::string& to_parse)
@@ -224,6 +224,17 @@ std::string colour_string(const std::string& in)
     std::string c = string_to_colour(in);
 
     return "`" + c + in + "`";
+}
+
+inline
+std::string get_host_from_fullname(const std::string& in)
+{
+    auto found = no_ss_split(in, ".");
+
+    if(found.size() < 1)
+        return "";
+
+    return found[0];
 }
 
 #endif // SCRIPT_UTIL_SHARED_HPP_INCLUDED
