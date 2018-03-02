@@ -1143,6 +1143,7 @@ duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
             std::string tul = found_user.index_to_item(unload_idx);
 
             ///NEED TO CHECK CONSTRAINTS HERE ALARM
+            ///ALARM ALARM NEED TO PREVENT UNLOADABLE ITEMS FROM BEING LOADED!!!
             found_user.load_item(tl);
             found_user.unload_item(tul);
 
@@ -1392,6 +1393,7 @@ duk_ret_t items__register_bundle(priv_context& priv_ctx, duk_context* ctx, int s
 #define USE_SECRET_CONTENT
 #ifdef USE_SECRET_CONTENT
 #include <secret/secret.hpp>
+#include <secret/node.hpp>
 #endif // USE_SECRET_CONTENT
 
 ///bear in mind that this function is kind of weird
@@ -1416,9 +1418,6 @@ inline
 duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
-
-    //duk_push_string(ctx, "Test user port");
-
 
     std::string name_of_person_being_attacked = get_host_from_fullname(priv_ctx.called_as);
 
@@ -1496,6 +1495,41 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    user_nodes nodes;
+
+    {
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+        ///yeah this isn't good enough, need to do what we did for locs?
+        ///or just do it in loc handler i guess
+        nodes.ensure_exists(node_ctx, get_caller(ctx));
+
+        nodes.load_from_db(node_ctx, get_caller(ctx));
+    }
+
+    std::string accum;
+
+    {
+        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+        std::cout << "nnum " << nodes.nodes.size() << std::endl;
+
+        for(user_node& node : nodes.nodes)
+        {
+            accum += node.get_pretty(item_ctx);
+        }
+    }
+
+    duk_push_string(ctx, accum.c_str());
+
+    return 1;
+}
+
+inline
 std::string parse_function_hack(std::string in)
 {
     int len = in.size();
@@ -1539,6 +1573,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(items__bundle_script, 1),
     REGISTER_FUNCTION_PRIV(items__register_bundle, 0),
     REGISTER_FUNCTION_PRIV(user__port, 1),
+    REGISTER_FUNCTION_PRIV(nodes__manage, 0),
 };
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
