@@ -40,6 +40,7 @@ struct user
     std::string get_loaded_callable_scriptname_source(mongo_lock_proxy& ctx, const std::string& full_name);
 
     std::string index_to_item(int index);
+    int item_to_index(const std::string& item);
 
     void append_item(const std::string& id);
     bool has_item(const std::string& id);

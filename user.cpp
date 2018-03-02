@@ -216,6 +216,20 @@ std::string user::index_to_item(int index)
     return items[index];
 }
 
+int user::item_to_index(const std::string& item)
+{
+    auto items = str_to_array(upgr_idx);
+
+    for(int i=0; i < (int)items.size(); i++)
+    {
+        if(items[i] == item)
+            return i;
+    }
+
+    return -1;
+}
+
+
 void user::append_item(const std::string& id)
 {
     std::vector<std::string> items = str_to_array(upgr_idx);

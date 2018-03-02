@@ -1511,6 +1511,15 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         nodes.load_from_db(node_ctx, get_caller(ctx));
     }
 
+    user usr;
+
+    {
+        mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        usr.load_from_db(user_ctx, get_caller(ctx));
+    }
+
+
     std::string accum = "Node Key: ";
 
     for(int i=0; i < (int)user_node_info::TYPE_COUNT; i++)
@@ -1521,16 +1530,7 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
             accum += ", ";
     }
 
-    accum += "\nArgs:\nload/unload : <lock_index>, node : <node_index>\n";
-
-    {
-        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
-
-        for(user_node& node : nodes.nodes)
-        {
-            accum += node.get_pretty(item_ctx);
-        }
-    }
+    accum += "\nload/unload:<lock_index>, node:<node_index>\n";
 
     int load_idx = duk_get_prop_string_as_int(ctx, -1, "load", -1);
     int unload_idx = duk_get_prop_string_as_int(ctx, -1, "unload", -1);
@@ -1541,14 +1541,6 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(load_idx >= 0 || unload_idx >= 0)
     {
-        user usr;
-
-        {
-            mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-
-            usr.load_from_db(user_ctx, get_caller(ctx));
-        }
-
         std::string to_load = usr.index_to_item(load_idx);
         std::string to_unload = usr.index_to_item(unload_idx);
 
@@ -1601,6 +1593,17 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         {
             mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
             nodes.overwrite_in_db(node_ctx);
+        }
+    }
+
+    {
+        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+        ///this needs to take a user as well
+        ///so that we can display the indices of the items for easy load/unload
+        for(user_node& node : nodes.nodes)
+        {
+            accum += node.get_pretty(item_ctx, usr);
         }
     }
 
