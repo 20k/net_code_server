@@ -1511,12 +1511,20 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         nodes.load_from_db(node_ctx, get_caller(ctx));
     }
 
-    std::string accum;
+    std::string accum = "Node Key: ";
+
+    for(int i=0; i < (int)user_node_info::TYPE_COUNT; i++)
+    {
+        accum += user_node_info::short_name[i] + ": " + user_node_info::long_names[i];
+
+        if(i != user_node_info::TYPE_COUNT-1)
+            accum += ", ";
+    }
+
+    accum += "\n";
 
     {
         mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
-
-        std::cout << "nnum " << nodes.nodes.size() << std::endl;
 
         for(user_node& node : nodes.nodes)
         {
