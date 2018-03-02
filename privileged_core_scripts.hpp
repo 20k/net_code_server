@@ -1395,6 +1395,23 @@ duk_ret_t items__register_bundle(priv_context& priv_ctx, duk_context* ctx, int s
 #endif // USE_SECRET_CONTENT
 
 ///bear in mind that this function is kind of weird
+///ok so: going for standard lock stack initially, and will use standard breached state
+///will initially have two easy locks
+///after this, swap to node based system, where the user port takes to you
+///a frontal node, which then reveals a netted internal structure
+///initially lets have: GC transactions, item transactions, and a breach node
+///which would breach a system in the traditional sense
+///once a node has been breached, it will enter a breached state
+///aka if the breach node is breached, you can do cool stuff with it (aka i don't have them implemented as nodes yet)
+
+///Maybe initially I should actually create a breach node as that initial entry node, check its breach state, and then
+///use that to determine breach status, so I don't end up hardcoding down lock stack too much
+///will need a separate db for nodes?
+
+///alright, i'm going to pump for sooner vs later
+///so: We need a node based api
+///we need a node to have an id, and a type
+///nodes need to store which user they belong to, probably as part of their name (eg node_i20k_32) or (node i20k 32)
 inline
 duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 {

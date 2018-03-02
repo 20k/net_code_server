@@ -90,6 +90,12 @@ mongo_lock_proxy get_global_mongo_chat_channel_propeties_context(int lock_id)
     return get_global_mongo_context(mongo_database_type::CHAT_CHANNEL_PROPERTIES, lock_id);
 }
 
+inline
+mongo_lock_proxy get_global_mongo_node_properties_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::NODE_PROPERTIES, lock_id);
+}
+
 /*inline
 std::vector<int> any_mongo_locks()
 {
