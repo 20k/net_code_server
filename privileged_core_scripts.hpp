@@ -1414,6 +1414,8 @@ duk_ret_t items__register_bundle(priv_context& priv_ctx, duk_context* ctx, int s
 ///so: We need a node based api
 ///we need a node to have an id, and a type
 ///nodes need to store which user they belong to, probably as part of their name (eg node_i20k_32) or (node i20k 32)
+
+#if 0
 inline
 duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
@@ -1491,6 +1493,77 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
         msg.pop_back();
 
     duk_push_string(ctx, msg.c_str());
+    return 1;
+}
+#endif // 0
+
+inline
+duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string name_of_person_being_attacked = get_host_from_fullname(priv_ctx.called_as);
+
+    //std::cout << "user_name " << name_of_person_being_attacked << std::endl;
+
+    user usr;
+
+    {
+        mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
+        user_info->change_collection(name_of_person_being_attacked);
+
+        usr.load_from_db(user_info, name_of_person_being_attacked);
+    }
+
+    user_nodes nodes;
+
+    {
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+        nodes.ensure_exists(node_ctx, name_of_person_being_attacked);
+        nodes.load_from_db(node_ctx, name_of_person_being_attacked);
+    }
+
+    std::string node_fullname = duk_safe_get_prop_string(ctx, -1, "node");
+
+    std::vector<item> attackables;
+
+    if(node_fullname == "")
+    {
+        user_node frnt = nodes.get_front_node();
+
+        {
+            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+            attackables = frnt.get_locks(item_ctx);
+        }
+    }
+
+    bool all_success = true;
+
+    std::string msg;
+
+    for(item& i : attackables)
+    {
+        std::string func = i.get_prop("lock_type");
+
+        auto it = secret_map.find(func);
+
+        if(it != secret_map.end())
+        {
+            if(!it->second(priv_ctx, ctx, msg))
+            {
+                all_success = false;
+
+                break;
+            }
+        }
+    }
+
+    finalise_info(msg, all_success);
+
+    duk_push_string(ctx, msg.c_str());
+
     return 1;
 }
 
