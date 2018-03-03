@@ -1528,16 +1528,26 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<item> attackables;
 
+    user_node* current_node = nullptr;
+
     if(node_fullname == "")
     {
-        user_node frnt = nodes.get_front_node();
+        //user_node frnt = nodes.get_front_node();
+
+        current_node = nodes.get_front_node();
 
         {
             mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
-            attackables = frnt.get_locks(item_ctx);
+            attackables = current_node->get_locks(item_ctx);
         }
     }
+
+    if(current_node == nullptr)
+        return push_error(ctx, "Misc error: Black Tiger");
+
+    ///if(current_node.breached)
+    ///do display adjacents, node type, what we can do here
 
     bool all_success = true;
 
@@ -1559,6 +1569,8 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
             }
         }
     }
+
+    ///if(all_success), breach node
 
     finalise_info(msg, all_success);
 
