@@ -1508,26 +1508,36 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string msg;
 
-    for(item& i : attackables)
+    if(!current_node->is_breached())
     {
-        std::string func = i.get_prop("lock_type");
-
-        auto it = secret_map.find(func);
-
-        if(it != secret_map.end())
+        for(item& i : attackables)
         {
-            if(!it->second(priv_ctx, ctx, msg))
-            {
-                all_success = false;
+            std::string func = i.get_prop("lock_type");
 
-                break;
+            auto it = secret_map.find(func);
+
+            if(it != secret_map.end())
+            {
+                if(!it->second(priv_ctx, ctx, msg))
+                {
+                    all_success = false;
+
+                    break;
+                }
             }
         }
     }
 
-    ///if(all_success), breach node
+    if(all_success)
+    {
+        current_node->breach();
 
-    finalise_info(msg, all_success);
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+        nodes.overwrite_in_db(node_ctx);
+    }
+
+    finalise_info(msg, all_success || current_node->is_breached());
 
     duk_push_string(ctx, msg.c_str());
 
