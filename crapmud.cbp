@@ -89,6 +89,7 @@
 		<Unit filename="mongo_cleanup.hpp" />
 		<Unit filename="non_user_task_thread.cpp" />
 		<Unit filename="non_user_task_thread.hpp" />
+		<Unit filename="privileged_core_scripts.cpp" />
 		<Unit filename="privileged_core_scripts.hpp" />
 		<Unit filename="rate_limiting.cpp" />
 		<Unit filename="rate_limiting.hpp" />
