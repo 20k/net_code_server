@@ -1528,6 +1528,9 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
+    ///do info here first, then display the breach message the next time round
+    finalise_info(msg, all_success, current_node->is_breached());
+
     if(all_success)
     {
         current_node->breach();
@@ -1536,8 +1539,6 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         nodes.overwrite_in_db(node_ctx);
     }
-
-    finalise_info(msg, all_success || current_node->is_breached());
 
     duk_push_string(ctx, msg.c_str());
 
