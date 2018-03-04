@@ -444,14 +444,14 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
         if(get_host_from_fullname(to_call_fullname) + "." + user_port == to_call_fullname)
         {
-            SL_GUARD(privileged_functions["user.port"].sec_level);
+            SL_GUARD(user_port_descriptor.sec_level);
 
             ///use ORIGINAL script host
             priv_context priv_ctx(get_script_host(ctx), to_call_fullname);
 
             set_script_info(ctx, to_call_fullname);
 
-            duk_ret_t result = privileged_functions["user.port"].func(priv_ctx, ctx, sl);
+            duk_ret_t result = user_port_descriptor.func(priv_ctx, ctx, sl);
 
             set_script_info(ctx, full_script);
 

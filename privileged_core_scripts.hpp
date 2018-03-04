@@ -1682,7 +1682,25 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     duk_push_string(ctx, accum.c_str());
+    return 1;
+}
 
+inline
+duk_ret_t nodes__port(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    user usr;
+
+    {
+        mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        usr.load_from_db(user_ctx, get_caller(ctx));
+    }
+
+    std::string ret = usr.name + "." + usr.user_port;
+
+    duk_push_string(ctx, ret.c_str());
     return 1;
 }
 
@@ -1729,8 +1747,12 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(items__manage, 2),
     REGISTER_FUNCTION_PRIV(items__bundle_script, 1),
     REGISTER_FUNCTION_PRIV(items__register_bundle, 0),
-    REGISTER_FUNCTION_PRIV(user__port, 1),
-    REGISTER_FUNCTION_PRIV(nodes__manage, 0),
+    //REGISTER_FUNCTION_PRIV(user__port, 0), ///should this exist? It has to currently for dumb reasons ///nope, it needs special setup
+    REGISTER_FUNCTION_PRIV(nodes__manage, 1),
+    REGISTER_FUNCTION_PRIV(nodes__port, 1),
 };
+
+inline
+priv_func_info user_port_descriptor = {&user__port, 0};
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
