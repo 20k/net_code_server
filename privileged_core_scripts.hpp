@@ -1481,15 +1481,17 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
         nodes.load_from_db(node_ctx, name_of_person_being_attacked);
     }
 
-    std::string node_fullname = duk_safe_get_prop_string(ctx, -1, "node");
+    std::string node_fullname = duk_safe_get_prop_string(ctx, -1, "NID");
 
     std::vector<item> attackables;
 
     user_node* current_node = nullptr;
 
-    if(node_fullname == "")
+    //if(node_fullname == "")
     {
-        current_node = nodes.get_front_node();
+        //current_node = nodes.get_front_node();
+
+        current_node = nodes.name_to_node(name_of_person_being_attacked + "_" + node_fullname);
 
         {
             mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
@@ -1528,8 +1530,18 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
+    if(current_node->is_breached())
+    {
+        msg += current_node->get_breach_message();
+    }
+
     ///do info here first, then display the breach message the next time round
     finalise_info(msg, all_success, current_node->is_breached());
+
+    if(all_success && !current_node->is_breached())
+    {
+        msg += current_node->get_breach_message();
+    }
 
     if(all_success)
     {
