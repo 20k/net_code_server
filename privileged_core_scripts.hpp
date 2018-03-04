@@ -1634,7 +1634,10 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(nodes.any_contains_lock(to_load))
                 return push_error(ctx, "Already loaded");
 
-            nodes.load_lock_to_any(to_load);
+            {
+                mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+                nodes.load_lock_to_any(item_ctx, to_load);
+            }
 
             accum += "Loaded\n";
         }
