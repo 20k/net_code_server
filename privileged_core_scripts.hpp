@@ -1503,6 +1503,14 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(current_node == nullptr)
         return push_error(ctx, "Misc error: Black Tiger");
 
+    if(!nodes.node_accessible(*current_node))
+    {
+        duk_push_string(ctx, nodes.get_lockdown_message().c_str());
+        return 1;
+
+        //return push_error(ctx, nodes.get_lockdown_message());
+    }
+
     ///if(current_node.breached)
     ///do display adjacents, node type, what we can do here
 
