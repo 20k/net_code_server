@@ -1540,7 +1540,7 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(current_node->is_breached())
     {
-        msg += current_node->get_breach_message();
+        msg += current_node->get_breach_message(nodes);
     }
 
     ///do info here first, then display the breach message the next time round
@@ -1548,7 +1548,7 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(all_success && !current_node->is_breached())
     {
-        msg += current_node->get_breach_message();
+        msg += current_node->get_breach_message(nodes);
     }
 
     if(all_success)
