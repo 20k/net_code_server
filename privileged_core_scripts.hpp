@@ -1395,7 +1395,7 @@ duk_ret_t cash__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
     else
     {
-        return push_error(ctx, "Target breach node unbreached");
+        return push_error(ctx, "System Breach Node Secured");
     }
 }
 
