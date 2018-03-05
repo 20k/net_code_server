@@ -201,6 +201,7 @@ void test_json()
     std::cout << handle_client_poll_json(usr) << std::endl;
 }
 
+///making sure this ends up in the right repo
 int main()
 {
     test_hexbin();
