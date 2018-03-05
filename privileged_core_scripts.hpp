@@ -1353,6 +1353,53 @@ duk_ret_t items__register_bundle(priv_context& priv_ctx, duk_context* ctx, int s
 #include <secret/node.hpp>
 #endif // USE_SECRET_CONTENT
 
+inline
+duk_ret_t cash__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string from = duk_safe_get_prop_string(ctx, -1, "from");
+
+    if(from == "")
+        return push_error(ctx, "Args: from:<username>, amount:<number>");
+
+    double amount = duk_safe_get_generic(duk_get_number, ctx, -1, "amount", 0);
+
+    if(amount == 0)
+        return push_error(ctx, "amount is not a number, or 0");
+
+    user target;
+
+    {
+        mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        user_ctx->change_collection(from);
+
+        if(!target.load_from_db(user_ctx, from))
+            return push_error(ctx, "Target does not exist");
+    }
+
+    user_nodes nodes;
+
+    {
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+        nodes.ensure_exists(node_ctx, from);
+        nodes.load_from_db(node_ctx, from);
+    }
+
+    auto hostile = nodes.valid_hostile_actions();
+
+    if((hostile & user_node_info::XFER_GC_FROM) > 0)
+    {
+        return cash_internal_xfer(ctx, from, get_caller(ctx), amount);
+    }
+    else
+    {
+        return push_error(ctx, "Target breach node unbreached");
+    }
+}
+
+
 ///bear in mind that this function is kind of weird
 ///ok so: going for standard lock stack initially, and will use standard breached state
 ///will initially have two easy locks
@@ -1732,6 +1779,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(cash__balance, 3),
     REGISTER_FUNCTION_PRIV(cash__xfer_to, 2),
     REGISTER_FUNCTION_PRIV(cash__xfer_to_caller, 4),
+    REGISTER_FUNCTION_PRIV(cash__steal, 4),
     REGISTER_FUNCTION_PRIV(scripts__get_level, 4),
     REGISTER_FUNCTION_PRIV(scripts__core, 4),
     REGISTER_FUNCTION_PRIV(scripts__me, 2),
