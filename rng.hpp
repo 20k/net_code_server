@@ -49,6 +49,20 @@ std::string random_select_of(int len, const std::string& of)
     return ret;
 }
 
+template<typename T>
+inline
+std::string random_select_of_det(int len, const std::string& of, T& t)
+{
+    std::string ret;
+
+    for(int i=0; i < len; i++)
+    {
+        ret.push_back(of[t() % of.size()]);
+    }
+
+    return ret;
+}
+
 inline
 std::string random_lowercase_ascii_string(int len)
 {
