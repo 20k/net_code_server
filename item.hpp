@@ -6,6 +6,8 @@
 #include <utility>
 #include "mongo.hpp"
 
+#include "rng.hpp"
+
 struct mongo_lock_proxy;
 
 namespace item_types
@@ -106,6 +108,9 @@ struct item
     bool transfer_from_to_by_index(int index, const std::string& from, const std::string& to, int thread_id);
 };
 
+extern
+double get_wall_time_s();
+
 namespace item_types
 {
     inline
@@ -126,6 +131,8 @@ namespace item_types
         {
             new_item.set_prop("lock_type", "test_lock");
             new_item.set_prop("short_name", "test_lock");
+            new_item.set_prop("lock_state", get_random_uint32_t());
+            new_item.set_prop("lock_last_rotate_s", get_wall_time_s());
         }
 
         if(type == CHAR_COUNT)

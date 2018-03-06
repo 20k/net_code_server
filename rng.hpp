@@ -6,6 +6,18 @@
 
 std::string random_binary_string(int len);
 
+inline
+uint32_t get_random_uint32_t()
+{
+    std::string str = random_binary_string(4);
+
+    uint32_t ret;
+
+    memcpy((char*)&ret, str.c_str(), sizeof(uint32_t));
+
+    return ret;
+}
+
 template<typename T>
 inline
 std::vector<T> random_select_of(int len, const std::vector<T>& of)
