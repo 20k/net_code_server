@@ -1583,7 +1583,7 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             if(it != secret_map.end())
             {
-                if(!it->second(priv_ctx, ctx, msg, {(uint32_t)i.get_prop_as_double("lock_state")}))
+                if(!it->second(priv_ctx, ctx, msg, i))
                 {
                     all_success = false;
 

@@ -372,8 +372,8 @@ void write_queue(socket_interface& socket,
             {
                 std::string next_command = shared.get_front_write();
 
-                if(next_command != "")
-                    printf("sending test write\n");
+                //if(next_command != "")
+                //    printf("sending test write\n");
 
                 if(next_command == "" && conn_type == connection_type::WEBSOCKET)
                     continue;
