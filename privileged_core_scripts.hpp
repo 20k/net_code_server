@@ -1569,13 +1569,21 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         for(item& i : attackables)
         {
+            if(i.should_rotate())
+            {
+                i.handle_rotate();
+
+                mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+                i.overwrite_in_db(item_ctx);
+            }
+
             std::string func = i.get_prop("lock_type");
 
             auto it = secret_map.find(func);
 
             if(it != secret_map.end())
             {
-                if(!it->second(priv_ctx, ctx, msg))
+                if(!it->second(priv_ctx, ctx, msg, {(uint32_t)i.get_prop_as_double("lock_state")}))
                 {
                     all_success = false;
 
