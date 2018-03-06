@@ -317,6 +317,29 @@ bool item::transfer_from_to_by_index(int index, const std::string& from, const s
     return true;
 }
 
+bool item::should_rotate()
+{
+    if(get_prop_as_integer("item_type") != (int)item_types::LOCK)
+        return false;
+
+    double time_s = get_wall_time_s();
+    double internal_time_s = get_prop_as_double("lock_last_rotate_s");
+
+    if(time_s >= internal_time_s + item_types::rotation_time_s)
+        return true;
+
+    return false;
+}
+
+void item::handle_rotate()
+{
+    if(!should_rotate())
+        return;
+
+    set_prop("lock_last_rotate_s", get_wall_time_s());
+    set_prop("lock_state", get_random_uint32_t());
+}
+
 ///need a remove from user... and then maybe pull out all the lock proxies?
 ///implement remove from user
 

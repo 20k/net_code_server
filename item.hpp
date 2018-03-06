@@ -37,6 +37,9 @@ namespace item_types
         "auto_script_runner",
         "error_vnf",
     };
+
+    inline
+    double rotation_time_s = 30;
 }
 
 bool array_contains(const std::vector<std::string>& arr, const std::string& str);
@@ -106,6 +109,9 @@ struct item
     bool transfer_from_to(const std::string& from, const std::string& to, int thread_id);
 
     bool transfer_from_to_by_index(int index, const std::string& from, const std::string& to, int thread_id);
+
+    bool should_rotate();
+    void handle_rotate();
 };
 
 extern
