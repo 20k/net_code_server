@@ -46,6 +46,7 @@
 			<Add option="-std=c++1z" />
 			<Add option="-fexceptions" />
 			<Add option="-fno-devirtualize" />
+			<Add option="-Wno-narrowing" />
 			<Add directory="deps" />
 		</Compiler>
 		<Linker>

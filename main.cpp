@@ -204,6 +204,10 @@ void test_json()
 ///making sure this ends up in the right repo
 int main()
 {
+    #ifdef TESTING
+    system("start test_launch.bat");
+    #endif // TESTING
+
     test_hexbin();
     initialse_mongo_all();
     //test_json();

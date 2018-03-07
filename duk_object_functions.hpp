@@ -377,4 +377,31 @@ T duk_safe_get_generic(const U& func, duk_context* ctx, duk_idx_t idx, const std
     return ret;
 }
 
+template<typename T, typename U, typename V>
+T duk_safe_get_generic_with_guard(const U& func, const V& guard, duk_context* ctx, duk_idx_t idx, const std::string& key, const T& def = T())
+{
+    if(duk_get_top(ctx) <= 0)
+        return def;
+
+    if(duk_is_undefined(ctx, idx))
+        return def;
+
+    if(!duk_has_prop_string(ctx, idx, key.c_str()))
+        return def;
+
+    duk_get_prop_string(ctx, idx, key.c_str());
+
+    if(!guard(ctx, -1))
+    {
+        duk_pop(ctx);
+        return def;
+    }
+
+    auto ret = func(ctx, -1);
+
+    duk_pop(ctx);
+
+    return ret;
+}
+
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED
