@@ -708,6 +708,7 @@ std::vector<mongo_requester> get_and_update_notifs_for_user(user& usr)
 std::vector<std::string> get_channels_for_user(user& usr)
 {
     mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+    ctx->change_collection(usr.name);
 
     mongo_requester request;
     request.set_prop("name", usr.name);
