@@ -101,6 +101,9 @@ bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& off
         ///var x = #fs.i20k.whatever; x(), remove the semicolon
         if(c == '(' || c == ';')
         {
+            if(in[i + offset] == ';')
+                in[i + offset] = ' ';
+
             found_loc = i;
             found = std::string(view.begin() + srch.length(), view.begin() + i);
 
@@ -214,6 +217,8 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
         if(success)
             return true;
     }
+
+    //std::cout << in << std::endl;
 
     return false;
 }
