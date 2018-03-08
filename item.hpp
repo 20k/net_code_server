@@ -39,7 +39,7 @@ namespace item_types
     };
 
     inline
-    double rotation_time_s = 30;
+    double rotation_time_s = 60 * 5;
 }
 
 bool array_contains(const std::vector<std::string>& arr, const std::string& str);
@@ -120,7 +120,7 @@ double get_wall_time_s();
 namespace item_types
 {
     inline
-    item get_default_of(item_types::item_type type)
+    item get_default_of(item_types::item_type type, const std::string& lock_name)
     {
         using namespace item_types;
 
@@ -135,8 +135,8 @@ namespace item_types
 
         if(type == LOCK)
         {
-            new_item.set_prop("lock_type", "test_lock");
-            new_item.set_prop("short_name", "test_lock");
+            new_item.set_prop("lock_type", lock_name);
+            new_item.set_prop("short_name", lock_name);
             new_item.set_prop("lock_state", get_random_uint32_t());
             new_item.set_prop("lock_last_rotate_s", get_wall_time_s());
         }
