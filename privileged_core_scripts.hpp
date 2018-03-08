@@ -8,6 +8,12 @@
 #include "auth.hpp"
 #include "item.hpp"
 
+#define USE_SECRET_CONTENT
+#ifdef USE_SECRET_CONTENT
+#include <secret/secret.hpp>
+#include <secret/node.hpp>
+#endif // USE_SECRET_CONTENT
+
 #define COOPERATE_KILL() duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk); \
                          sandbox_data* sand_data = (sandbox_data*)mem_funcs_duk.udata; \
                          if(sand_data->terminate_semi_gracefully) \
@@ -974,10 +980,19 @@ duk_ret_t sys__xfer_upgrade_uid(priv_context& priv_ctx, duk_context* ctx, int sl
 #endif // 0
 
 inline
-std::string format_item(item& i, bool is_short, user& usr)
+std::string format_item(item& i, bool is_short, user& usr, user_nodes& nodes)
 {
     if(is_short)
-        return i.get_prop("short_name");
+    {
+        std::string str = i.get_prop("short_name");
+
+        if(nodes.any_contains_lock(i.get_prop("item_id")))
+        {
+            str += " [on_node]";
+        }
+
+        return str;
+    }
 
     std::string ret = "{\n";
 
@@ -994,16 +1009,22 @@ std::string format_item(item& i, bool is_short, user& usr)
     if(usr.has_loaded_item(i.get_prop("item_id")))
         ret += "    loaded: true\n";
 
+    if(nodes.any_contains_lock(i.get_prop("item_id")))
+        ret += "    on_node: true";
+
     return ret + "}";
 }
 
 inline
-duk_object_t get_item_raw(item& i, bool is_short, user& usr)
+duk_object_t get_item_raw(item& i, bool is_short, user& usr, user_nodes& nodes)
 {
     duk_object_t obj;
 
     if(usr.has_loaded_item(i.get_prop("item_id")))
         obj["loaded"] = true;
+
+    if(nodes.any_contains_lock(i.get_prop("item_id")))
+        obj["on_node"] = true;
 
     if(is_short)
     {
@@ -1071,6 +1092,15 @@ duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
+    user_nodes nodes;
+
+    {
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+        nodes.ensure_exists(node_ctx, get_caller(ctx));
+        nodes.load_from_db(node_ctx, get_caller(ctx));
+    }
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
     std::vector<std::string> to_ret = str_to_array(found_user.upgr_idx);
@@ -1093,11 +1123,13 @@ duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
             {
                 if(found_user.has_loaded_item(next.get_prop("item_id")))
                     formatted += "`D" + std::to_string(idx) + "`: ";
+                else if(nodes.any_contains_lock(item_id))
+                    formatted += "`L" + std::to_string(idx) + "`: ";
                 else
                     formatted += std::to_string(idx) + ": ";
             }
 
-            formatted += format_item(next, !full, found_user);// + ",\n";
+            formatted += format_item(next, !full, found_user, nodes);// + ",\n";
 
             if(full)
             {
@@ -1129,7 +1161,7 @@ duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
             item next;
             next.load_from_db(mongo_ctx, item_id);
 
-            objs.push_back(get_item_raw(next, !full, found_user));
+            objs.push_back(get_item_raw(next, !full, found_user, nodes));
         }
 
         push_duk_val(ctx, objs);
@@ -1304,13 +1336,6 @@ duk_ret_t items__register_bundle(priv_context& priv_ctx, duk_context* ctx, int s
 
     return push_success(ctx);
 }
-
-
-#define USE_SECRET_CONTENT
-#ifdef USE_SECRET_CONTENT
-#include <secret/secret.hpp>
-#include <secret/node.hpp>
-#endif // USE_SECRET_CONTENT
 
 inline
 duk_ret_t items__create(priv_context& priv_ctx, duk_context* ctx, int sl)
