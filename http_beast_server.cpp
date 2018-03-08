@@ -563,11 +563,12 @@ void http_test_run()
 {
     //std::thread{std::bind(&http_test_server, &req)}.detach();
 
+    start_non_user_task_thread();
+
     std::thread(http_test_server).detach();
     //std::thread(websocket_test_server).detach();
 
     websocket_test_server();
 
-    //start_non_user_task_thread();
     //http_test_server();
 }
