@@ -996,9 +996,9 @@ std::string format_item(item& i, bool is_short, user& usr, user_nodes& nodes)
 
     std::string ret = "{\n";
 
-    bool is_open_source = i.get_prop_as_integer("open_source");
+    bool is_open_source = i.props.get_prop_as_integer("open_source");
 
-    for(auto& p : i.properties)
+    for(auto& p : i.props.properties)
     {
         if(!is_open_source && p.first == "unparsed_source")
             continue;
@@ -1035,7 +1035,7 @@ duk_object_t get_item_raw(item& i, bool is_short, user& usr, user_nodes& nodes)
 
     bool is_open_source = i.get_prop_as_integer("open_source");
 
-    for(auto& p : i.properties)
+    for(auto& p : i.props.properties)
     {
         if(!is_open_source && p.first == "unparsed_source")
             continue;

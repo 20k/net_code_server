@@ -48,44 +48,32 @@ std::string array_to_str(const std::vector<std::string>& arr);
 
 struct item
 {
-    std::map<std::string, std::string> properties;
+    mongo_requester props;
 
     template<typename T>
     void set_prop(const std::string& str, const T& t)
     {
-        properties[str] = stringify_hack(t);
+        props.set_prop(str, t);
     }
 
     std::string get_prop(const std::string& str)
     {
-        if(properties.find(str) == properties.end())
-            return "";
-
-        return properties[str];
+        return props.get_prop(str);
     }
 
     int32_t get_prop_as_integer(const std::string& str)
     {
-        if(properties.find(str) == properties.end())
-            return 0;
-
-        return atoll(properties[str].c_str());
+        return props.get_prop_as_integer(str);
     }
 
     int64_t get_prop_as_long(const std::string& str)
     {
-        if(properties.find(str) == properties.end())
-            return 0;
-
-        return atoll(properties[str].c_str());
+        return props.get_prop_as_integer(str);
     }
 
     double get_prop_as_double(const std::string& str)
     {
-        if(properties.find(str) == properties.end())
-            return 0;
-
-        return atof(properties[str].c_str());
+        return props.get_prop_as_double(str);
     }
 
     void generate_set_id(mongo_lock_proxy& global_props_context)

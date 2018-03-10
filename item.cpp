@@ -47,21 +47,19 @@ bool item::exists_in_db(mongo_lock_proxy& ctx, const std::string& item_id)
 void item::overwrite_in_db(mongo_lock_proxy& ctx)
 {
     mongo_requester request;
-    request.set_prop("item_id", properties["item_id"]);
+    request.set_prop("item_id", props.get_prop("item_id"));
 
-    mongo_requester to_update;
-    to_update.properties = properties;
+    mongo_requester to_update = props;
 
     request.update_in_db_if_exact(ctx, to_update);
 }
 
 void item::create_in_db(mongo_lock_proxy& ctx)
 {
-    if(exists_in_db(ctx, properties["item_id"]))
+    if(exists_in_db(ctx, props.get_prop("item_id")))
         return;
 
-    mongo_requester to_store;
-    to_store.properties = properties;
+    mongo_requester to_store = props;
 
     to_store.insert_in_db(ctx);
 
@@ -77,7 +75,7 @@ void item::load_from_db(mongo_lock_proxy& ctx, const std::string& item_id)
 
     for(auto& i : found)
     {
-        properties = i.properties;
+        props = i;
     }
 }
 

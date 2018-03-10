@@ -855,7 +855,9 @@ struct mongo_requester
 
             for(int i=0; i < (int)arr_props[key].size(); i++)
             {
-                bson_append_utf8(&child, key.c_str(), key.size(), arr_props[key][i].c_str(), arr_props[key][i].size());
+                std::string arr_key = std::to_string(i);
+
+                bson_append_utf8(&child, arr_key.c_str(), arr_key.size(), arr_props[key][i].c_str(), arr_props[key][i].size());
             }
 
             bson_append_array_end(bson, &child);
