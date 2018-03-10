@@ -212,7 +212,27 @@ void get_autocompletes(std::string_view& view, std::string& in, int& offset, aut
         in[i] = ' ';
     }
 
-    std::cout << "fnd " << found << std::endl;
+    //std::cout << "fnd " << found << std::endl;
+
+    std::vector<std::string> strings = no_ss_split(found, ",");
+
+    for(auto& i : strings)
+    {
+        i = strip_whitespace(i);
+    }
+
+    for(std::string& str : strings)
+    {
+        std::vector<std::string> strs = no_ss_split(str, ":");
+
+        if(strs.size() != 2)
+            continue;
+
+        std::string arg = strs[0];
+        std::string param = strs[1];
+
+        autos.push_back({arg, param});
+    }
 }
 
 bool expand(std::string_view& view, std::string& in, int& offset, int& found_seclevel)
@@ -252,11 +272,11 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
 
     std::vector<std::string> froms_unchecked{"#D",
                                              "#db.i", "#db.r", "#db.f", "#db.u", "#db.u1", "#db.us",
-                                             "#autos"};
+                                             };
 
     std::vector<std::string> tos_unchecked  {"hash_d",
                                              "db_insert", "db_remove", "db_find", "db_update", "db_update1", "db_upsert",
-                                             ""};
+                                             };
 
     for(int i=0; i < (int)tos_unchecked.size(); i++)
     {
