@@ -814,6 +814,13 @@ std::string handle_client_poll_json(user& usr)
     return "chat_api_json " + str;
 }
 
+std::string handle_autocompletes(user& usr, const std::string& in)
+{
+
+
+    return "server_autocomplete ";
+}
+
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
 {
     //lg::log("Log Command " + str);
@@ -822,6 +829,8 @@ std::string handle_command(command_handler_state& state, const std::string& str,
     std::string client_chat = "client_chat ";
     std::string client_poll = "client_poll";
     std::string client_poll_json = "client_poll_json";
+
+    std::string client_autocomplete = "client_autocomplete ";
 
     if(starts_with(str, client_command))
     {
@@ -858,6 +867,11 @@ std::string handle_command(command_handler_state& state, const std::string& str,
             return handle_client_poll_json(state.current_user);
         if(starts_with(str, client_poll))
             return handle_client_poll(state.current_user);
+    }
+
+    if(starts_with(str, client_autocomplete))
+    {
+        //return handle_autocompletes()
     }
 
     return "command Command not understood";

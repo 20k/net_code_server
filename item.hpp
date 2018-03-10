@@ -39,7 +39,7 @@ namespace item_types
     };
 
     inline
-    double rotation_time_s = 60 * 5;
+    double rotation_time_s = 60 * 15;
 }
 
 bool array_contains(const std::vector<std::string>& arr, const std::string& str);
