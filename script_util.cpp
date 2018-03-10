@@ -192,7 +192,7 @@ void get_autocompletes(std::string_view& view, std::string& in, int& offset, aut
     int cur_idx = offset;
     cur_idx += srch.size();
 
-    while(cur_idx < in.size() && in[cur_idx] == ' ')
+    while(cur_idx < (int)in.size() && in[cur_idx] == ' ')
         cur_idx++;
 
     auto fit = in.find(");");
@@ -202,7 +202,7 @@ void get_autocompletes(std::string_view& view, std::string& in, int& offset, aut
 
     std::string found;
 
-    for(; cur_idx != fit; cur_idx++)
+    for(; cur_idx != (int)fit; cur_idx++)
     {
         found += in[cur_idx];
     }
@@ -235,7 +235,7 @@ void get_autocompletes(std::string_view& view, std::string& in, int& offset, aut
     }
 }
 
-bool expand(std::string_view& view, std::string& in, int& offset, int& found_seclevel)
+bool expand(std::string_view& view, std::string& in, int& offset, int& found_seclevel, autos_t& autocompletes)
 {
     std::vector<std::string> froms{"#fs.", "#hs.", "#ms.", "#ls.", "#ns.",
                                    "#4s.", "#3s.", "#2s.", "#1s.", "#0s.",
@@ -265,8 +265,6 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
             return true;
         }
     }
-
-    std::vector<std::pair<std::string, std::string>> autocompletes;
 
     get_autocompletes(view, in, offset, autocompletes);
 
@@ -298,14 +296,17 @@ script_data parse_script(std::string in)
 
     int found_seclevel = 4;
 
+    autos_t autocompletes;
+
     for(int i=0; i < (int)in.size(); i++)
     {
         std::string_view strview(&in[i]);
 
-        expand(strview, in, i, found_seclevel);
+        expand(strview, in, i, found_seclevel, autocompletes);
     }
 
     script_data script;
+    script.autocompletes = autocompletes;
     script.parsed_source = in;
     script.seclevel = found_seclevel;
     script.valid = true;
@@ -338,6 +339,7 @@ std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::
 
     script_data sdata = parse_script(unparsed_source);
 
+    autocompletes = sdata.autocompletes;
     parsed_source = sdata.parsed_source;
     seclevel = sdata.seclevel;
     valid = sdata.valid;

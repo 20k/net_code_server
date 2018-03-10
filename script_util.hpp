@@ -24,6 +24,7 @@ struct script_info
     std::string unparsed_source;
     std::string parsed_source;
     std::string owner;
+    autos_t autocompletes;
 
     int seclevel = 0;
     bool valid = false;
@@ -46,6 +47,7 @@ void register_funcs(duk_context* ctx, int seclevel);
 
 struct script_data
 {
+    autos_t autocompletes;
     std::string parsed_source;
     int seclevel = 0;
     bool valid = false;

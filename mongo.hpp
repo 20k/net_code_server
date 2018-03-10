@@ -562,6 +562,9 @@ struct mongo_requester
     std::map<std::string, int> is_binary;
     std::map<std::string, int> is_integer;
     std::map<std::string, int> is_double;
+    std::map<std::string, int> is_arr;
+
+    std::map<std::string, std::vector<std::string>> arr_props;
 
     std::map<std::string, int> sort_on;
 
@@ -634,6 +637,12 @@ struct mongo_requester
         sort_on[key] = dir;
     }
 
+    void set_prop_array(const std::string& key, const std::vector<std::string>& vals)
+    {
+        arr_props[key] = vals;
+        is_arr[key] = 1;
+    }
+
     void set_limit(int64_t limit_)
     {
         limit = limit_;
@@ -645,10 +654,7 @@ struct mongo_requester
 
         bson_t* to_find = bson_new();
 
-        for(auto& i : properties)
-        {
-            append_property_to(to_find, i.first);
-        }
+        append_properties_all_to(to_find);
 
         for(auto& i : exists_check)
         {
@@ -784,6 +790,28 @@ struct mongo_requester
                     found.set_prop_double(key, bson_iter_double(&iter));
                     continue;
                 }
+
+                ///if we'd done this right, this would compose
+                ///sadly it is not done right
+                if(BSON_ITER_HOLDS_ARRAY(&iter))
+                {
+                    std::vector<std::string> arr;
+
+                    bson_iter_t child;
+
+                    bson_iter_recurse(&iter, &child);
+
+                    while(bson_iter_next(&child))
+                    {
+                        if(BSON_ITER_HOLDS_UTF8(&child))
+                        {
+                            arr.push_back(bson_iter_utf8_easy(&child));
+                        }
+                    }
+
+                    found.set_prop_array(key, arr);
+                    continue;
+                }
             }
 
             bson_destroy(next);
@@ -803,10 +831,7 @@ struct mongo_requester
     {
         bson_t* to_insert = bson_new();
 
-        for(auto& i : properties)
-        {
-            append_property_to(to_insert, i.first);
-        }
+        append_properties_all_to(to_insert);
 
         ctx->insert_bson_1(ctx->last_collection, to_insert);
 
@@ -823,8 +848,33 @@ struct mongo_requester
             BSON_APPEND_INT32(bson, key.c_str(), get_prop_as_integer(key));
         else if(is_double[key])
             BSON_APPEND_DOUBLE(bson, key.c_str(), get_prop_as_double(key));
+        else if(is_arr[key])
+        {
+            bson_t child;
+            bson_append_array_begin(bson, key.c_str(), key.size(), &child);
+
+            for(int i=0; i < (int)arr_props[key].size(); i++)
+            {
+                bson_append_utf8(&child, key.c_str(), key.size(), arr_props[key][i].c_str(), arr_props[key][i].size());
+            }
+
+            bson_append_array_end(bson, &child);
+        }
         else
             bson_append_utf8(bson, key.c_str(), key.size(), val.c_str(), val.size());
+    }
+
+    void append_properties_all_to(bson_t* bson)
+    {
+        for(auto& i : properties)
+        {
+            append_property_to(bson, i.first);
+        }
+
+        for(auto& i : arr_props)
+        {
+            append_property_to(bson, i.first);
+        }
     }
 
     void update_in_db_if_exists(mongo_lock_proxy& ctx, mongo_requester& set_to)
@@ -842,14 +892,20 @@ struct mongo_requester
             bson_append_document_end(to_select, &child);
         }
 
+        for(auto& i : arr_props)
+        {
+            bson_append_document_begin(to_select, i.first.c_str(), i.first.size(), &child);
+
+            BSON_APPEND_BOOL(&child, "$exists", true);
+
+            bson_append_document_end(to_select, &child);
+        }
+
         bson_t* to_update = bson_new();
 
         BSON_APPEND_DOCUMENT_BEGIN(to_update, "$set", &child);
 
-        for(auto& i : set_to.properties)
-        {
-            set_to.append_property_to(&child, i.first);
-        }
+        set_to.append_properties_all_to(&child);
 
         bson_append_document_end(to_update, &child);
 
@@ -865,10 +921,7 @@ struct mongo_requester
     {
         bson_t* to_select = bson_new();
 
-        for(auto& i : properties)
-        {
-            append_property_to(to_select, i.first);
-        }
+        append_properties_all_to(to_select);
 
         bson_t* to_update = bson_new();
 
@@ -876,10 +929,7 @@ struct mongo_requester
 
         BSON_APPEND_DOCUMENT_BEGIN(to_update, "$set", &child);
 
-        for(auto& i : set_to.properties)
-        {
-            set_to.append_property_to(&child, i.first);
-        }
+        set_to.append_properties_all_to(&child);
 
         bson_append_document_end(to_update, &child);
 
@@ -893,10 +943,7 @@ struct mongo_requester
     {
         bson_t* to_remove = bson_new();
 
-        for(auto& i : properties)
-        {
-            append_property_to(to_remove, i.first);
-        }
+        append_properties_all_to(to_remove);
 
         ctx->remove_bson(ctx->last_collection, to_remove);
 
