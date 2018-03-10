@@ -16,6 +16,8 @@ std::string base_scripts_string = "./scripts/";
 
 struct mongo_lock_proxy;
 
+using autos_t = std::vector<std::pair<std::string, std::string>>;
+
 struct script_info
 {
     std::string name;

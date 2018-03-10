@@ -75,9 +75,13 @@ std::string strip_whitespace(std::string in)
     return in;
 }
 
+template<typename T>
 inline
-bool starts_with(const std::string& in, const std::string& test)
+bool starts_with(const T& in, const std::string& test)
 {
+    if(in.size() < test.size())
+        return false;
+
     if(in.substr(0, test.length()) == test)
         return true;
 

@@ -85,6 +85,9 @@ bool expand_to_from_scriptname(std::string_view& view, std::string& in, int& off
 {
     std::string srch = from;
 
+    if(view.size() < srch.size())
+        return false;
+
     if(view.substr(0, srch.size()) != srch)
         return false;
 
@@ -144,6 +147,9 @@ bool expand_to_from_nochecks(std::string_view& view, std::string& in, int& offse
 {
     std::string srch = from;
 
+    if(view.size() < srch.size())
+        return false;
+
     if(view.substr(0, srch.size()) != srch)
         return false;
 
@@ -174,6 +180,41 @@ bool expand_to_from_nochecks(std::string_view& view, std::string& in, int& offse
     return true;
 }
 
+void get_autocompletes(std::string_view& view, std::string& in, int& offset, autos_t& autos)
+{
+    std::string srch = "#autos(";
+
+    if(!starts_with(view, "#autos("))
+        return;
+
+    int start = offset;
+
+    int cur_idx = offset;
+    cur_idx += srch.size();
+
+    while(cur_idx < in.size() && in[cur_idx] == ' ')
+        cur_idx++;
+
+    auto fit = in.find(");");
+
+    if(fit == std::string::npos)
+        return;
+
+    std::string found;
+
+    for(; cur_idx != fit; cur_idx++)
+    {
+        found += in[cur_idx];
+    }
+
+    for(int i = start; i < cur_idx + 2; i++)
+    {
+        in[i] = ' ';
+    }
+
+    std::cout << "fnd " << found << std::endl;
+}
+
 bool expand(std::string_view& view, std::string& in, int& offset, int& found_seclevel)
 {
     std::vector<std::string> froms{"#fs.", "#hs.", "#ms.", "#ls.", "#ns.",
@@ -190,7 +231,8 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
 
     ///won't find D, but seems prudent to exclude it anyway
     std::vector<std::string> parse_exclusion{"D",
-                                             "db.i", "db.r", "db.f", "db.u", "db.u1", "db.us"};
+                                             "db.i", "db.r", "db.f", "db.u", "db.u1", "db.us",
+                                             "autos"};
 
     for(int i=0; i < (int)tos.size(); i++)
     {
@@ -204,11 +246,17 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
         }
     }
 
+    std::vector<std::pair<std::string, std::string>> autocompletes;
+
+    get_autocompletes(view, in, offset, autocompletes);
+
     std::vector<std::string> froms_unchecked{"#D",
-                                             "#db.i", "#db.r", "#db.f", "#db.u", "#db.u1", "#db.us"};
+                                             "#db.i", "#db.r", "#db.f", "#db.u", "#db.u1", "#db.us",
+                                             "#autos"};
 
     std::vector<std::string> tos_unchecked  {"hash_d",
-                                             "db_insert", "db_remove", "db_find", "db_update", "db_update1", "db_upsert"};
+                                             "db_insert", "db_remove", "db_find", "db_update", "db_update1", "db_upsert",
+                                             ""};
 
     for(int i=0; i < (int)tos_unchecked.size(); i++)
     {

@@ -871,7 +871,7 @@ std::string handle_command(command_handler_state& state, const std::string& str,
 
     if(starts_with(str, client_autocomplete))
     {
-        //return handle_autocompletes()
+        return handle_autocompletes(state.current_user, client_autocomplete);
     }
 
     return "command Command not understood";
