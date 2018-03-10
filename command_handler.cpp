@@ -305,7 +305,7 @@ void on_create_user(user& usr)
 
 std::string get_update_message()
 {
-    return "Warning, chat was updated, you must manually join channels with #msg.manage({join:\"0000\"}) now";
+    return "If you cannot login, a bad update deleted key.key files. PM me (20k) on discord with a username that you owned and I will recover it";
 }
 
 std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
