@@ -568,7 +568,7 @@ void http_test_run()
     std::thread(http_test_server).detach();
     //std::thread(websocket_test_server).detach();
 
-    websocket_test_server();
+    std::thread(websocket_test_server).detach();
 
     //http_test_server();
 }

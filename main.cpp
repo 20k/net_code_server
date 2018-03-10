@@ -261,8 +261,30 @@ int main()
 
     while(1)
     {
+        std::string command;
 
+        std::getline(std::cin, command);
 
+        mongo_lock_proxy lock = get_global_mongo_user_info_context(-2);
+        lock->change_collection(command);
+
+        mongo_requester req;
+        req.set_prop("name", command);
+
+        auto res = req.fetch_from_db(lock);
+
+        if(res.size() == 1)
+        {
+            mongo_requester found = res[0];
+
+            std::string key = found.get_prop("auth");
+
+            write_all_bin(command + ".key", key);
+
+            std::cout << "found" << std::endl;
+        }
+
+        Sleep(50);
     }
 
     return 0;
