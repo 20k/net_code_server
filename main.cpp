@@ -265,6 +265,15 @@ int main()
 
         std::getline(std::cin, command);
 
+        std::cout << "Are you sure? y/n" << std::endl;
+
+        std::string sure;
+
+        std::getline(std::cin, sure);
+
+        if(!starts_with(sure, "y"))
+            continue;
+
         mongo_lock_proxy lock = get_global_mongo_user_info_context(-2);
         lock->change_collection(command);
 
