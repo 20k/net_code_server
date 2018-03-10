@@ -24,7 +24,8 @@ struct script_info
     std::string unparsed_source;
     std::string parsed_source;
     std::string owner;
-    autos_t autocompletes;
+    std::vector<std::string> args;
+    std::vector<std::string> params;
 
     int seclevel = 0;
     bool valid = false;

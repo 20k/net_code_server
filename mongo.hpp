@@ -579,16 +579,30 @@ struct mongo_requester
 
     bool has_prop(const std::string& str)
     {
-        return properties.find(str) != properties.end();
+        return (properties.find(str) != properties.end()) || (arr_props.find(str) != arr_props.end());
     }
 
     std::string get_prop(const std::string& str)
     {
+        if(!has_prop(str))
+            return std::string();
+
         return properties[str];
+    }
+
+    std::vector<std::string> get_prop_as_array(const std::string& str)
+    {
+        if(!has_prop(str))
+            return std::vector<std::string>();
+
+        return arr_props[str];
     }
 
     int64_t get_prop_as_integer(const std::string& str)
     {
+        if(!has_prop(str))
+            return int64_t();
+
         std::string prop = properties[str];
 
         long long val = atoll(prop.c_str());
@@ -598,6 +612,9 @@ struct mongo_requester
 
     double get_prop_as_double(const std::string& str)
     {
+        if(!has_prop(str))
+            return double();
+
         std::string prop = properties[str];
 
         auto val = atof(prop.c_str());

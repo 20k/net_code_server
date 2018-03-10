@@ -339,7 +339,15 @@ std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::
 
     script_data sdata = parse_script(unparsed_source);
 
-    autocompletes = sdata.autocompletes;
+    args = decltype(args)();
+    params = decltype(params)();
+
+    for(auto& i : sdata.autocompletes)
+    {
+        args.push_back(i.first);
+        params.push_back(i.second);
+    }
+
     parsed_source = sdata.parsed_source;
     seclevel = sdata.seclevel;
     valid = sdata.valid;
@@ -371,8 +379,6 @@ bool script_info::load_from_db(mongo_lock_proxy& ctx)
     my_script.set_prop("owner", owner);
     my_script.set_prop("is_script", 1);
 
-    //mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
-
     my_script.load_from_db(ctx, name);
 
     name = my_script.get_prop("item_id");
@@ -383,8 +389,17 @@ bool script_info::load_from_db(mongo_lock_proxy& ctx)
 
     unparsed_source = my_script.get_prop("unparsed_source");
 
+    args = decltype(args)();
+    params = decltype(params)();
+
     {
         script_data sdata = parse_script(unparsed_source);
+
+        for(auto& i : sdata.autocompletes)
+        {
+            args.push_back(i.first);
+            params.push_back(i.second);
+        }
 
         parsed_source = sdata.parsed_source;
         seclevel = sdata.seclevel;

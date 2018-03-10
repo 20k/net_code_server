@@ -61,6 +61,11 @@ struct item
         return props.get_prop(str);
     }
 
+    std::vector<std::string> get_prop_as_array(const std::string& str)
+    {
+        return props.get_prop_as_array(str);
+    }
+
     int32_t get_prop_as_integer(const std::string& str)
     {
         return props.get_prop_as_integer(str);
@@ -74,6 +79,11 @@ struct item
     double get_prop_as_double(const std::string& str)
     {
         return props.get_prop_as_double(str);
+    }
+
+    void set_prop_array(const std::string& key, const std::vector<std::string>& vals)
+    {
+        props.set_prop_array(key, vals);
     }
 
     void generate_set_id(mongo_lock_proxy& global_props_context)
