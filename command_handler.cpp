@@ -848,14 +848,10 @@ std::string handle_autocompletes(user& usr, const std::string& in)
 
     std::string ret;
 
-    for(auto& i : script_inf.args)
+    for(int i=0; i < (int)script_inf.args.size(); i++)
     {
-        ret += std::to_string(i.size()) + " " + i + " " ;
-    }
-
-    for(auto& i : script_inf.params)
-    {
-        ret += std::to_string(i.size()) + " " + i + " ";
+        ret += std::to_string(script_inf.args[i].size()) + " " + script_inf.args[i] + " ";
+        ret += std::to_string(script_inf.params[i].size()) + " " + script_inf.params[i] + " ";
     }
 
     ///if!public && not owned by me
