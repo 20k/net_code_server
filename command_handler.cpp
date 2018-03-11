@@ -816,9 +816,50 @@ std::string handle_client_poll_json(user& usr)
 
 std::string handle_autocompletes(user& usr, const std::string& in)
 {
+    std::vector<std::string> dat = no_ss_split(in, " ");
 
+    std::cout << "got auto req\n";
 
-    return "server_autocomplete ";
+    if(dat.size() < 2)
+        return "";
+
+    std::string script;
+
+    if(!is_valid_full_name_string(script))
+        return "";
+
+    script_info script_inf;
+
+    {
+        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(-2);
+
+        script_inf.name = script;
+
+        script_inf.load_from_db(item_ctx);
+    }
+
+    if(!script_inf.valid)
+        return "";
+
+    if(script_inf.args.size() != script_inf.params.size())
+        return "";
+
+    std::string ret;
+
+    for(auto& i : script_inf.args)
+    {
+        ret += std::to_string(i.size()) + " " + i + " " ;
+    }
+
+    for(auto& i : script_inf.params)
+    {
+        ret += std::to_string(i.size()) + " " + i + " ";
+    }
+
+    ///if!public && not owned by me
+    ///return nothing
+
+    return "server_scriptargs " + ret;
 }
 
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
@@ -830,7 +871,7 @@ std::string handle_command(command_handler_state& state, const std::string& str,
     std::string client_poll = "client_poll";
     std::string client_poll_json = "client_poll_json";
 
-    std::string client_autocomplete = "client_autocomplete ";
+    std::string client_scriptargs = "client_scriptargs ";
 
     if(starts_with(str, client_command))
     {
@@ -869,9 +910,12 @@ std::string handle_command(command_handler_state& state, const std::string& str,
             return handle_client_poll(state.current_user);
     }
 
-    if(starts_with(str, client_autocomplete))
+    if(starts_with(str, client_scriptargs))
     {
-        return handle_autocompletes(state.current_user, client_autocomplete);
+        if(state.auth == "" || state.current_user.name == "")
+            return "";
+
+        return handle_autocompletes(state.current_user, str);
     }
 
     return "command Command not understood";
