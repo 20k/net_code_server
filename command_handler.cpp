@@ -821,12 +821,12 @@ std::string handle_autocompletes(user& usr, const std::string& in)
     //std::cout << "got auto req\n";
 
     if(dat.size() < 2)
-        return "server_scriptargs ";
+        return "server_scriptargs_invalid";
 
     std::string script = dat[1];
 
     if(!is_valid_full_name_string(script))
-        return "server_scriptargs ";
+        return "server_scriptargs_invalid";
 
     std::string intro = "server_scriptargs " + std::to_string(script.size()) + " " + script + " ";
 
