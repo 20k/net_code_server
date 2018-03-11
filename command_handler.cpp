@@ -818,15 +818,17 @@ std::string handle_autocompletes(user& usr, const std::string& in)
 {
     std::vector<std::string> dat = no_ss_split(in, " ");
 
-    std::cout << "got auto req\n";
+    //std::cout << "got auto req\n";
 
     if(dat.size() < 2)
-        return "";
+        return "server_scriptargs ";
 
-    std::string script;
+    std::string script = dat[1];
 
     if(!is_valid_full_name_string(script))
-        return "";
+        return "server_scriptargs ";
+
+    std::string intro = "server_scriptargs " + std::to_string(script.size()) + " " + script + " ";
 
     script_info script_inf;
 
@@ -839,10 +841,10 @@ std::string handle_autocompletes(user& usr, const std::string& in)
     }
 
     if(!script_inf.valid)
-        return "";
+        return intro;
 
     if(script_inf.args.size() != script_inf.params.size())
-        return "";
+        return intro;
 
     std::string ret;
 
@@ -859,7 +861,7 @@ std::string handle_autocompletes(user& usr, const std::string& in)
     ///if!public && not owned by me
     ///return nothing
 
-    return "server_scriptargs " + ret;
+    return intro + ret;
 }
 
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
