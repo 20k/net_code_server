@@ -418,14 +418,25 @@ duk_ret_t scripts__core(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    std::vector<std::string> ret;
+    int make_array = duk_get_prop_string_as_int(ctx, -1, "array");
+
+    std::vector<std::string> names;
 
     for(auto& i : privileged_functions)
     {
-        ret.push_back("#" + i.first);
+        names.push_back("#" + i.first);
     }
 
-    push_duk_val(ctx, ret);
+    if(make_array)
+    {
+        push_duk_val(ctx, names);
+    }
+    else
+    {
+        std::string str = format_pretty_names(names);
+
+        duk_push_string(ctx, str.c_str());
+    }
 
     return 1;
 }
@@ -928,14 +939,10 @@ duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl)
         std::string str = format_pretty_names(names);
 
         push_duk_val(ctx, str);
-
-        return 1;
     }
     else
     {
         push_duk_val(ctx, names);
-
-        return 1;
     }
 
     return 1;
