@@ -143,13 +143,6 @@ struct websock_socket : socket_interface
 
     websock_socket(tcp::socket&& sock, bool is_client) : ws(std::move(sock)){}
 
-    template<typename T>
-    void client_connect(const std::string& host, const T& results)
-    {
-        boost::asio::connect(ws.next_layer(), results.begin(), results.end());
-        ws.handshake(host, "/");
-    }
-
     virtual bool read(boost::system::error_code& ec) override
     {
         mbuffer = decltype(mbuffer)();
