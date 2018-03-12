@@ -326,7 +326,14 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
             duk_dup(sd.ctx, -3); //[args]
         }
 
-        duk_pcall(sd.ctx, nargs);
+        duk_int_t ret_val = duk_pcall(sd.ctx, nargs);
+
+        if(ret_val != DUK_EXEC_SUCCESS)
+        {
+            std::string err = duk_safe_to_std_string(sd.ctx, -1);
+
+            duk_push_string(sd.ctx, err.c_str());
+        }
     }
 
     std::string str = get_hash_d(sd.ctx);
