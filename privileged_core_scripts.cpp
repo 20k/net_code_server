@@ -32,7 +32,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     std::map<std::string, std::vector<script_arg>> ret;
 
     ret["cash.balance"] = make_cary();
-    ret["scripts.get_level"] = make_cary("name", "\"scriptname\"");
+    ret["scripts.get_level"] = make_cary("name", "\"\"");
     ret["scripts.me"] = make_cary();
     ret["scripts.public"] = make_cary();
     ret["cash.xfer_to"] = make_cary("to", "\"username\"", "amount", "0");
