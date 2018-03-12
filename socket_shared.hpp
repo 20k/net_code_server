@@ -141,7 +141,7 @@ struct websock_socket : socket_interface
 
     websock_socket(tcp::socket&& sock) : ws(std::move(sock)) {ws.accept();}
 
-    websock_socket(tcp::socket&& sock, bool is_client) : ws(std::move(sock)){}
+    websock_socket(boost::asio::io_context& ioc) : ws{ioc} {}
 
     virtual bool read(boost::system::error_code& ec) override
     {
@@ -190,7 +190,15 @@ struct websock_socket : socket_interface
     {
         return ws.is_open();
     }
+
+    virtual ~websock_socket(){}
 };
 
+struct websock_socket_client : websock_socket
+{
+    tcp::resolver resolver;
+
+    websock_socket_client(boost::asio::io_context& ioc) : websock_socket(ioc), resolver{ioc} {}
+};
 
 #endif // SOCKET_SHARED_HPP_INCLUDED
