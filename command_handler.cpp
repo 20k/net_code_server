@@ -814,6 +814,40 @@ std::string handle_client_poll_json(user& usr)
     return "chat_api_json " + str;
 }
 
+std::optional<std::vector<script_arg>> get_uniform_script_args(user& usr, const std::string& script)
+{
+    if(privileged_args.find(script) != privileged_args.end())
+    {
+        return privileged_args[script];
+    }
+
+    script_info script_inf;
+
+    {
+        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(-2);
+
+        script_inf.name = script;
+
+        script_inf.load_from_db(item_ctx);
+    }
+
+    if(!script_inf.valid)
+        return std::nullopt;
+
+    if(script_inf.args.size() != script_inf.params.size())
+        return std::nullopt;
+
+
+    std::vector<script_arg> args;
+
+    for(int i=0; i < script_inf.args.size(); i++)
+    {
+        args.push_back({script_inf.args[i], script_inf.params[i]});
+    }
+
+    return args;
+}
+
 std::string handle_autocompletes(user& usr, const std::string& in)
 {
     std::vector<std::string> dat = no_ss_split(in, " ");
@@ -828,31 +862,30 @@ std::string handle_autocompletes(user& usr, const std::string& in)
     if(!is_valid_full_name_string(script))
         return "server_scriptargs_invalid";
 
+    auto opt_arg = get_uniform_script_args(usr, script);
+
+    if(!opt_arg.has_value())
+        return "server_scriptargs_invalid";
+
+    auto args = *opt_arg;
+
     std::string intro = "server_scriptargs " + std::to_string(script.size()) + " " + script + " ";
 
-    script_info script_inf;
+    std::string ret;
 
+    for(script_arg& arg : args)
     {
-        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(-2);
-
-        script_inf.name = script;
-
-        script_inf.load_from_db(item_ctx);
+        ret += std::to_string(arg.key.size()) + " " + arg.key + " ";
+        ret += std::to_string(arg.val.size()) + " " + arg.val + " ";
     }
 
-    if(!script_inf.valid)
-        return intro;
-
-    if(script_inf.args.size() != script_inf.params.size())
-        return intro;
-
-    std::string ret;
+    /*std::string ret;
 
     for(int i=0; i < (int)script_inf.args.size(); i++)
     {
         ret += std::to_string(script_inf.args[i].size()) + " " + script_inf.args[i] + " ";
         ret += std::to_string(script_inf.params[i].size()) + " " + script_inf.params[i] + " ";
-    }
+    }*/
 
     ///if!public && not owned by me
     ///return nothing

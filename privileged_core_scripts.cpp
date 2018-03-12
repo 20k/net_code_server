@@ -2,6 +2,58 @@
 
 #include <ratio>
 
+std::map<std::string, std::vector<script_arg>> privileged_args = construct_core_args();
+
+std::vector<script_arg> make_cary()
+{
+    return std::vector<script_arg>();
+}
+
+template<typename V, typename W, typename... T>
+std::vector<script_arg> make_cary(V&& v, W&& w, T&&... t)
+{
+    std::vector<script_arg> args{{v, w}};
+
+    auto next = make_cary(t...);
+
+    args.insert(args.end(), next.begin(), next.end());
+
+    return args;
+}
+
+template<typename... T>
+std::vector<script_arg> make_carg(T&&... t)
+{
+    return make_cary(t...);
+}
+
+std::map<std::string, std::vector<script_arg>> construct_core_args()
+{
+    std::map<std::string, std::vector<script_arg>> ret;
+
+    ret["cash.balance"] = make_cary();
+    ret["scripts.get_level"] = make_cary("name", "\"scriptname\"");
+    ret["scripts.me"] = make_cary();
+    ret["scripts.public"] = make_cary();
+    ret["cash.xfer_to"] = make_cary("to", "\"username\"", "amount", "0");
+    ret["cash.xfer_to_caller"] = make_cary();
+    ret["scripts.core"] = make_cary();
+    ret["msg.manage"] = make_cary("join", "\"channel\"");
+    ret["msg.send"] = make_cary("channel", "\"0000\"", "msg", "\"\"");
+    ret["msg.recent"] = make_cary("channel", "\"0000\"", "count", "99");
+    ret["users.me"] = make_cary();
+    ret["items.manage"] = make_cary();
+    ret["items.xfer_to"] = make_cary("idx", "0", "to", "\"\"");
+    ret["items.bundle_script"] = make_cary("idx", "0", "name", "\"\"");
+    ret["items.register_bundle"] = make_cary("idx", "0", "name", "\"\"");
+    ret["cash.steal"] = make_cary("from", "\"\"", "amount", "0");
+    //ret["user.port"] = make_cary();
+    ret["nodes.manage"] = make_cary();
+    ret["nodes.port"] = make_cary();
+
+    return ret;
+}
+
 std::string prettify_chat_strings(std::vector<mongo_requester>& found)
 {
     std::string str;

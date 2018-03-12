@@ -79,6 +79,12 @@ struct priv_func_info
 extern
 std::map<std::string, priv_func_info> privileged_functions;
 
+struct script_arg
+{
+    std::string key;
+    std::string val;
+};
+
 ///so say this is midsec
 ///we can run if the sl is midsec or lower
 ///lower sls are less secure
@@ -180,7 +186,7 @@ duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(!req.has_prop("item_id"))
                 continue;
 
-            names.push_back(req.get_prop("item_id"));
+            names.push_back("#" + req.get_prop("item_id"));
         }
     }
 
@@ -255,7 +261,7 @@ duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     for(mongo_requester& req : results)
     {
-        names.push_back(req.get_prop("item_id"));
+        names.push_back("#" + req.get_prop("item_id"));
     }
 
     if(pretty)
@@ -405,7 +411,7 @@ duk_ret_t scripts__core(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     for(auto& i : privileged_functions)
     {
-        ret.push_back(i.first);
+        ret.push_back("#" + i.first);
     }
 
     push_duk_val(ctx, ret);
@@ -1853,6 +1859,11 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(nodes__manage, 1),
     REGISTER_FUNCTION_PRIV(nodes__port, 1),
 };
+
+std::map<std::string, std::vector<script_arg>> construct_core_args();
+
+extern
+std::map<std::string, std::vector<script_arg>> privileged_args;
 
 inline
 priv_func_info user_port_descriptor = {&user__port, 0};
