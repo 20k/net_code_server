@@ -378,6 +378,7 @@ T duk_safe_get_generic(const U& func, duk_context* ctx, duk_idx_t idx, const std
 }
 
 template<typename T, typename U, typename V>
+inline
 T duk_safe_get_generic_with_guard(const U& func, const V& guard, duk_context* ctx, duk_idx_t idx, const std::string& key, const T& def = T())
 {
     if(duk_get_top(ctx) <= 0)
@@ -402,6 +403,32 @@ T duk_safe_get_generic_with_guard(const U& func, const V& guard, duk_context* ct
     duk_pop(ctx);
 
     return ret;
+}
+
+///so, the correct thing to do off the bat would have been to use a proper namespace
+///or dukx
+template<typename T>
+inline
+std::string dukx_json_get(const T& rep)
+{
+    duk_context* ctx = js_interop_startup();
+
+    push_duk_val(ctx, rep);
+
+    const char* ptr = duk_json_encode(ctx, -1);
+
+    std::string str;
+
+    if(ptr != nullptr)
+    {
+        str = std::string(ptr);
+    }
+
+    duk_pop(ctx);
+
+    js_interop_shutdown(ctx);
+
+    return str;
 }
 
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED

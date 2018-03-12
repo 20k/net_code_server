@@ -840,7 +840,7 @@ std::optional<std::vector<script_arg>> get_uniform_script_args(user& usr, const 
 
     std::vector<script_arg> args;
 
-    for(int i=0; i < script_inf.args.size(); i++)
+    for(int i=0; i < (int)script_inf.args.size(); i++)
     {
         args.push_back({script_inf.args[i], script_inf.params[i]});
     }
@@ -851,8 +851,6 @@ std::optional<std::vector<script_arg>> get_uniform_script_args(user& usr, const 
 std::string handle_autocompletes(user& usr, const std::string& in)
 {
     std::vector<std::string> dat = no_ss_split(in, " ");
-
-    //std::cout << "got auto req\n";
 
     if(dat.size() < 2)
         return "server_scriptargs_invalid";
@@ -885,6 +883,47 @@ std::string handle_autocompletes(user& usr, const std::string& in)
     return intro + ret;
 }
 
+std::string handle_autocompletes_json(user& usr, const std::string& in)
+{
+    std::vector<std::string> dat = no_ss_split(in, " ");
+
+    if(dat.size() < 2)
+        return "server_scriptargs_invalid_json";
+
+    std::string script = dat[1];
+
+    if(!is_valid_full_name_string(script))
+        return "server_scriptargs_invalid_json " + script;
+
+    auto opt_arg = get_uniform_script_args(usr, script);
+
+    if(!opt_arg.has_value())
+        return "server_scriptargs_invalid_json " + script;
+
+    auto args = *opt_arg;
+
+    std::string intro = "server_scriptargs_json ";
+
+    std::vector<std::string> keys;
+    std::vector<std::string> vals;
+
+    for(script_arg& arg : args)
+    {
+        keys.push_back(arg.key);
+        vals.push_back(arg.val);
+    }
+
+    duk_object_t obj;
+    obj["script"] = script;
+
+    obj["keys"] = keys;
+    obj["vals"] = vals;
+
+    std::string rep = dukx_json_get(obj);
+
+    return intro + rep;
+}
+
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
 {
     //lg::log("Log Command " + str);
@@ -895,6 +934,7 @@ std::string handle_command(command_handler_state& state, const std::string& str,
     std::string client_poll_json = "client_poll_json";
 
     std::string client_scriptargs = "client_scriptargs ";
+    std::string client_scriptargs_json = "client_scriptargs_json ";
 
     if(starts_with(str, client_command))
     {
@@ -939,6 +979,14 @@ std::string handle_command(command_handler_state& state, const std::string& str,
             return "";
 
         return handle_autocompletes(state.current_user, str);
+    }
+
+    if(starts_with(str, client_scriptargs_json))
+    {
+        if(state.auth == "" || state.current_user.name == "")
+            return "";
+
+        return handle_autocompletes_json(state.current_user, str);
     }
 
     return "command Command not understood";

@@ -199,6 +199,8 @@ void test_json()
     }
 
     std::cout << handle_client_poll_json(usr) << std::endl;
+
+    std::cout << handle_autocompletes_json(usr, "server_scriptargs_json cash.steal");
 }
 
 ///making sure this ends up in the right repo
