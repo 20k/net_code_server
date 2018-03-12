@@ -1,6 +1,8 @@
 #include "script_util.hpp"
 #include <assert.h>
 #include "item.hpp"
+#include "script_util_shared.hpp"
+#include "duk_object_functions.hpp"
 
 ///new api
 ///we need a function to upload it to the server
@@ -495,3 +497,13 @@ void script_info::load_from_disk_with_db_metadata(const std::string& name_)
     my_script.load_from_db(mongo_ctx);
 }
 #endif
+
+void set_script_info(duk_context* ctx, const std::string& full_script_name)
+{
+    std::vector<std::string> strings = no_ss_split(full_script_name, ".");
+
+    //assert(strings.size() == 2);
+
+    set_global_string(ctx, "script_host", strings[0]);
+    set_global_string(ctx, "script_ending", strings[1]);
+}

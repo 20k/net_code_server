@@ -8,8 +8,8 @@
 #include <iostream>
 #include <js/js_interop.hpp>
 
-#include "script_util_shared.hpp"
-#include "duk_object_functions.hpp"
+//#include "script_util_shared.hpp"
+//#include "duk_object_functions.hpp"
 
 inline
 std::string base_scripts_string = "./scripts/";
@@ -59,15 +59,6 @@ script_data parse_script(std::string in);
 ///#db.f({[col_key]: {$exists : true}});
 ///$where and $query both need to be disabled, $inspect as well
 
-inline
-void set_script_info(duk_context* ctx, const std::string& full_script_name)
-{
-    std::vector<std::string> strings = no_ss_split(full_script_name, ".");
-
-    //assert(strings.size() == 2);
-
-    set_global_string(ctx, "script_host", strings[0]);
-    set_global_string(ctx, "script_ending", strings[1]);
-}
+void set_script_info(duk_context* ctx, const std::string& full_script_name);
 
 #endif // SCRIPT_UTIL_HPP_INCLUDED

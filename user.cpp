@@ -1,5 +1,6 @@
 #include "user.hpp"
 #include "rng.hpp"
+#include "script_util_shared.hpp"
 
 void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
 {

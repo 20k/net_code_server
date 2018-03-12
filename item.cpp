@@ -1,5 +1,6 @@
 #include "item.hpp"
 #include "user.hpp"
+#include "script_util_shared.hpp"
 
 int32_t item::get_new_id(mongo_lock_proxy& global_props_ctx)
 {

@@ -7,6 +7,7 @@
 #include "rate_limiting.hpp"
 #include "auth.hpp"
 #include "item.hpp"
+#include "script_util_shared.hpp"
 
 #define USE_SECRET_CONTENT
 #ifdef USE_SECRET_CONTENT
