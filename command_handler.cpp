@@ -879,14 +879,6 @@ std::string handle_autocompletes(user& usr, const std::string& in)
         ret += std::to_string(arg.val.size()) + " " + arg.val + " ";
     }
 
-    /*std::string ret;
-
-    for(int i=0; i < (int)script_inf.args.size(); i++)
-    {
-        ret += std::to_string(script_inf.args[i].size()) + " " + script_inf.args[i] + " ";
-        ret += std::to_string(script_inf.params[i].size()) + " " + script_inf.params[i] + " ";
-    }*/
-
     ///if!public && not owned by me
     ///return nothing
 
