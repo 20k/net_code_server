@@ -148,6 +148,7 @@ struct websock_socket : socket_interface
         mbuffer = decltype(mbuffer)();
 
         ws.read(mbuffer, ec);
+        ws.text(ws.got_text());
 
         if(ec)
         {
@@ -168,7 +169,7 @@ struct websock_socket : socket_interface
 
     virtual bool write(const std::string& msg) override
     {
-        ws.text(true);
+        //ws.text(true);
 
         ws.write(boost::asio::buffer(msg), lec);
 
