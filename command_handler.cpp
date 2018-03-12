@@ -860,12 +860,12 @@ std::string handle_autocompletes(user& usr, const std::string& in)
     std::string script = dat[1];
 
     if(!is_valid_full_name_string(script))
-        return "server_scriptargs_invalid";
+        return "server_scriptargs_invalid " + script;
 
     auto opt_arg = get_uniform_script_args(usr, script);
 
     if(!opt_arg.has_value())
-        return "server_scriptargs_invalid";
+        return "server_scriptargs_invalid " + script;
 
     auto args = *opt_arg;
 
