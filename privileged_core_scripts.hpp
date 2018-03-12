@@ -155,9 +155,25 @@ duk_ret_t scripts__get_level(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+std::string format_pretty_names(const std::vector<std::string>& names)
+{
+    std::string ret;
+
+    for(auto& i : names)
+    {
+        ret.append(i);
+        ret += "\n";
+    }
+
+    return ret;
+}
+
+inline
 duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
+
+    bool make_array = duk_get_prop_string_as_int(ctx, -1, "array");
 
     std::string usr = get_caller(ctx);
 
@@ -214,23 +230,18 @@ duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
-    push_duk_val(ctx, names);
-
-    return 1;
-}
-
-inline
-std::string format_pretty_names(const std::vector<std::string>& names)
-{
-    std::string ret;
-
-    for(auto& i : names)
+    if(make_array)
     {
-        ret.append(i);
-        ret += "\n";
+        push_duk_val(ctx, names);
+    }
+    else
+    {
+        std::string str = format_pretty_names(names);
+
+        duk_push_string(ctx, str.c_str());
     }
 
-    return ret;
+    return 1;
 }
 
 ///should take a pretty:1 argument
