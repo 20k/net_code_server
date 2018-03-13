@@ -1695,6 +1695,69 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+duk_ret_t load_item_lock_raw(duk_context* ctx, int node_idx, int load_idx, int unload_idx, user& usr, user_nodes& nodes, std::string& accum)
+{
+    std::string to_load = usr.index_to_item(load_idx);
+    std::string to_unload = usr.index_to_item(unload_idx);
+
+    std::string which = to_load;
+
+    if(to_unload.size() > 0)
+        which = to_unload;
+
+    if(which == "")
+        return push_error(ctx, "Item not found");
+
+    item next;
+
+    {
+        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+        if(!next.exists_in_db(item_ctx, which))
+            return push_error(ctx, "Something weird happened");
+
+        next.load_from_db(item_ctx, which);
+    }
+
+    if(next.get_prop_as_integer("item_type") != (int)item_types::LOCK)
+        return push_error(ctx, "Not a lock");
+
+    if(which == to_load && node_idx == -1)
+    {
+        if(nodes.any_contains_lock(to_load))
+            return push_error(ctx, "Already loaded");
+
+        {
+            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+            nodes.load_lock_to_any(item_ctx, to_load);
+        }
+
+        accum += "Loaded\n";
+    }
+
+    /*if(which == to_load && node_idx >= 0)
+    {
+        nodes.load_lock_to_id(to_load, node_idx);
+    }*/
+
+    if(which == to_unload && node_idx == -1)
+    {
+        nodes.unload_lock_from_any(to_unload);
+
+        accum += "Unloaded\n";
+    }
+
+    //if(which == to_unload && node_idx )
+
+    {
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+        nodes.overwrite_in_db(node_ctx);
+    }
+
+    return 0;
+}
+
+inline
 duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -1741,62 +1804,10 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(load_idx >= 0 || unload_idx >= 0)
     {
-        std::string to_load = usr.index_to_item(load_idx);
-        std::string to_unload = usr.index_to_item(unload_idx);
+        auto ret = load_item_lock_raw(ctx, node_idx, load_idx, unload_idx, usr, nodes, accum);
 
-        std::string which = to_load;
-
-        if(to_unload.size() > 0)
-            which = to_unload;
-
-        if(which == "")
-            return push_error(ctx, "Item not found");
-
-        item next;
-
-        {
-            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
-
-            if(!next.exists_in_db(item_ctx, which))
-                return push_error(ctx, "Something weird happened");
-
-            next.load_from_db(item_ctx, which);
-        }
-
-        if(next.get_prop_as_integer("item_type") != (int)item_types::LOCK)
-            return push_error(ctx, "Not a lock");
-
-        if(which == to_load && node_idx == -1)
-        {
-            if(nodes.any_contains_lock(to_load))
-                return push_error(ctx, "Already loaded");
-
-            {
-                mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
-                nodes.load_lock_to_any(item_ctx, to_load);
-            }
-
-            accum += "Loaded\n";
-        }
-
-        /*if(which == to_load && node_idx >= 0)
-        {
-            nodes.load_lock_to_id(to_load, node_idx);
-        }*/
-
-        if(which == to_unload && node_idx == -1)
-        {
-            nodes.unload_lock_from_any(to_unload);
-
-            accum += "Unloaded\n";
-        }
-
-        //if(which == to_unload && node_idx )
-
-        {
-            mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
-            nodes.overwrite_in_db(node_ctx);
-        }
+        if(ret > 0)
+            return ret;
     }
 
     {
