@@ -898,8 +898,11 @@ std::string handle_autocompletes_json(user& usr, const std::string& in)
     if(!is_valid_full_name_string(script))
         return "server_scriptargs_invalid_json " + script;
 
+    duk_object_t obj;
+    obj["script"] = script;
+
     if(SHOULD_RATELIMIT(usr.name, AUTOCOMPLETES))
-        return "server_scriptargs_ratelimit_json " + script;
+        return "server_scriptargs_ratelimit_json " + dukx_json_get(obj);
 
     auto opt_arg = get_uniform_script_args(usr, script);
 
@@ -918,9 +921,6 @@ std::string handle_autocompletes_json(user& usr, const std::string& in)
         keys.push_back(arg.key);
         vals.push_back(arg.val);
     }
-
-    duk_object_t obj;
-    obj["script"] = script;
 
     obj["keys"] = keys;
     obj["vals"] = vals;
