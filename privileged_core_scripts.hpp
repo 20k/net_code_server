@@ -1075,6 +1075,20 @@ duk_object_t get_item_raw(item& i, bool is_short, user& usr, user_nodes& nodes)
 }
 
 inline
+void change_item_raw(mongo_lock_proxy& mongo_ctx, int load_idx, int unload_idx, user& found_user)
+{
+    std::string tl = found_user.index_to_item(load_idx);
+    std::string tul = found_user.index_to_item(unload_idx);
+
+    ///NEED TO CHECK CONSTRAINTS HERE ALARM
+    ///ALARM ALARM NEED TO PREVENT UNLOADABLE ITEMS FROM BEING LOADED!!!
+    found_user.load_item(tl);
+    found_user.unload_item(tul);
+
+    found_user.overwrite_user_in_db(mongo_ctx);
+}
+
+inline
 duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -1101,19 +1115,9 @@ duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         if(load_idx >= 0 || unload_idx >= 0)
         {
-            std::string tl = found_user.index_to_item(load_idx);
-            std::string tul = found_user.index_to_item(unload_idx);
+            change_item_raw(mongo_ctx, load_idx, unload_idx, found_user);
 
-            ///NEED TO CHECK CONSTRAINTS HERE ALARM
-            ///ALARM ALARM NEED TO PREVENT UNLOADABLE ITEMS FROM BEING LOADED!!!
-            found_user.load_item(tl);
-            found_user.unload_item(tul);
-
-            found_user.overwrite_user_in_db(mongo_ctx);
-
-            push_success(ctx);
-
-            return 1;
+            return push_success(ctx);
         }
     }
 
