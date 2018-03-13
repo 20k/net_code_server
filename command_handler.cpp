@@ -860,6 +860,9 @@ std::string handle_autocompletes(user& usr, const std::string& in)
     if(!is_valid_full_name_string(script))
         return "server_scriptargs_invalid " + script;
 
+    if(SHOULD_RATELIMIT(usr.name, AUTOCOMPLETES))
+        return "server_scriptargs_ratelimit " + script;
+
     auto opt_arg = get_uniform_script_args(usr, script);
 
     if(!opt_arg.has_value())
@@ -894,6 +897,9 @@ std::string handle_autocompletes_json(user& usr, const std::string& in)
 
     if(!is_valid_full_name_string(script))
         return "server_scriptargs_invalid_json " + script;
+
+    if(SHOULD_RATELIMIT(usr.name, AUTOCOMPLETES))
+        return "server_scriptargs_ratelimit_json " + script;
 
     auto opt_arg = get_uniform_script_args(usr, script);
 

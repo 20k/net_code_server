@@ -14,6 +14,7 @@ namespace rate
         CHAT,
         CASH,
         UPG_CHEAT,
+        AUTOCOMPLETES,
     };
 }
 
@@ -23,8 +24,8 @@ struct rate_limit
 {
     ///maps username to a type of rate limit
     std::map<std::string, std::map<rate_limit_t, double>> time_budget_remaining;
-    std::map<rate_limit_t, double> max_reserve = {{rate::CHAT, 30}, {rate::CASH, 30}, {rate::UPG_CHEAT, 10}};
-    std::map<rate_limit_t, double> budget_deplete = {{rate::CHAT, 1}, {rate::CASH, 1}, {rate::UPG_CHEAT, 3}};
+    std::map<rate_limit_t, double> max_reserve = {{rate::CHAT, 30}, {rate::CASH, 30}, {rate::UPG_CHEAT, 10}, {rate::AUTOCOMPLETES, 20}};
+    std::map<rate_limit_t, double> budget_deplete = {{rate::CHAT, 1}, {rate::CASH, 1}, {rate::UPG_CHEAT, 3}, {rate::AUTOCOMPLETES, 1}};
 
     std::mutex lock;
 
@@ -67,6 +68,7 @@ struct rate_limit
 };
 
 #define RATELIMIT_DUK(type) if(!get_global_rate_limit()->try_call(get_caller(ctx), rate::type)) {push_error(ctx, "Rate Limit"); return 1;}
+#define SHOULD_RATELIMIT(name, type) !get_global_rate_limit()->try_call(name, rate::type)
 
 extern rate_limit global_rate_limit;
 
