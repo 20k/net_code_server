@@ -99,9 +99,9 @@ void bot_thread()
 
 void run_non_user_tasks()
 {
-    auto now = std::chrono::high_resolution_clock::now();
-    auto duration = now.time_since_epoch();
-    size_t real_time = duration.count();
+    //auto now = std::chrono::high_resolution_clock::now();
+    //auto duration = now.time_since_epoch();
+    //size_t real_time = duration.count();
 
     while(1)
     {
