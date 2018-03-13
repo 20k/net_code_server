@@ -258,6 +258,18 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
 
     for(int i=0; i < (int)tos.size(); i++)
     {
+        ///this checks if something starts with fs_call etc
+        ///and says that the script is that sec level
+        ///should be secure
+        bool is_raw_var = starts_with(view, tos[i]);
+
+        if(is_raw_var)
+        {
+            found_seclevel = std::min(found_seclevel, sec_levels[i]);
+
+            return true;
+        }
+
         bool success = expand_to_from_scriptname(view, in, offset, froms[i], tos[i], parse_exclusion);
 
         if(success)
