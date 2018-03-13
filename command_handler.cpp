@@ -815,6 +815,8 @@ std::string handle_client_poll_json(user& usr)
     return "chat_api_json " + str;
 }
 
+///needs to handle script bundles
+///use unified script loading
 std::optional<std::vector<script_arg>> get_uniform_script_args(user& usr, const std::string& script)
 {
     if(privileged_args.find(script) != privileged_args.end())

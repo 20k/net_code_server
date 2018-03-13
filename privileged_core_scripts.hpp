@@ -1258,31 +1258,38 @@ duk_ret_t items__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(found_bundle.get_prop("full") != "0")
             return push_error(ctx, "Not an empty script bundle");
 
-        item found_script;
+        /*item found_script;
 
         if(!found_bundle.exists_in_db(item_lock, full_script_name))
             return push_error(ctx, "No such script");
 
-        found_script.load_from_db(item_lock, full_script_name);
+        found_script.load_from_db(item_lock, full_script_name);*/
 
-        int max_storage = found_bundle.get_prop_as_integer("max_script_size");
-
-        if((int)found_script.get_prop("unparsed_source").size() > max_storage)
-            return push_error(ctx, "Empty bundle does not contain enough space");
-
-        /*script_info found_script;
+        script_info found_script;
         found_script.name = full_script_name;
 
         if(!found_script.load_from_db(item_lock))
-            return push_error(ctx, "No such script");
+            return push_error(ctx, "No such script or invalid script");
+
+        if(!found_script.valid)
+            return push_error(ctx, "Script invalid");
 
         int max_storage = found_bundle.get_prop_as_integer("max_script_size");
 
-        if(!found_script.unparsed_source.size() >= max_storage)
-            return push_error(ctx, "Empty bundle does not contain enough space");*/
+        if((int)found_script.unparsed_source.size() > max_storage)
+            return push_error(ctx, "Empty bundle does not contain enough space");
+
+        found_script.fill_as_bundle_compatible_item(found_bundle);
+        found_bundle.set_prop("full", 1);
+
+        /*found_bundle.set_prop_array("args", found_script.get_prop_as_array("args"));
+        found_bundle.set_prop_array("args", found_script.get_prop_as_array("args"));
 
         found_bundle.set_prop("unparsed_source", found_script.get_prop("unparsed_source"));
-        found_bundle.set_prop("full", 1);
+        found_bundle.set_prop("parsed_source", found_script.get_prop("parsed_source"));
+        found_bundle.set_prop_int("seclevel", found_script.get_prop_as_integer("seclevel"));
+        found_bundle.set_prop_int("valid", found_script.get_prop_as_integer("valid"));
+        found_bundle.set_prop("full", 1);*/
 
         found_bundle.overwrite_in_db(item_lock);
     }

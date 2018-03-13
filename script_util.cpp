@@ -511,7 +511,7 @@ void script_info::overwrite_in_db(mongo_lock_proxy& ctx)
     my_script.set_prop("owner", owner);
     my_script.set_prop("is_script", 1);
     my_script.set_prop("unparsed_source", unparsed_source);
-    my_script.set_prop("seclevel", seclevel);
+    //my_script.set_prop("seclevel", seclevel);
 
     /*args = my_script.get_prop_as_array("args");
     params = my_script.get_prop_as_array("params");
@@ -536,6 +536,23 @@ void script_info::overwrite_in_db(mongo_lock_proxy& ctx)
         my_script.set_prop("trust", 0);
         my_script.create_in_db(ctx);
     }
+}
+
+void script_info::fill_as_bundle_compatible_item(item& my_script)
+{
+    //my_script.set_prop("item_id", name);
+    //my_script.set_prop("in_public", in_public);
+    //my_script.set_prop("owner", owner);
+    //my_script.set_prop("is_script", 1);
+    my_script.set_prop("unparsed_source", unparsed_source);
+    //my_script.set_prop("seclevel", seclevel);
+
+    my_script.set_prop_array("args", args);
+    my_script.set_prop_array("params", params);
+
+    my_script.set_prop("parsed_source", parsed_source);
+    my_script.set_prop_int("seclevel", seclevel);
+    my_script.set_prop_int("valid", valid);
 }
 
 bool script_info::exists_in_db(mongo_lock_proxy& ctx)

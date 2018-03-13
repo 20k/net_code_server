@@ -347,9 +347,41 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
     return ret;
 }
 
-inline
-script_info unified_script_loading(duk_context* ctx, const std::string& full_scriptname, std::string& err)
+struct unified_script_info
 {
+    bool valid = false;
+    std::string parsed_source;
+    int seclevel = 0;
+
+    std::vector<std::string> args;
+    std::vector<std::string> params;
+
+    void make_from(item& t)
+    {
+        valid = t.get_prop("valid") == "1";
+        parsed_source = t.get_prop("parsed_source");
+        seclevel = t.get_prop_as_integer("seclevel");
+
+        args = t.get_prop_as_array("args");
+        params = t.get_prop_as_array("params");
+    }
+
+    void make_from(script_info& sinfo)
+    {
+        valid = sinfo.valid;
+        parsed_source = sinfo.parsed_source;
+        seclevel = sinfo.seclevel;
+
+        args = sinfo.args;
+        params = sinfo.params;
+    }
+};
+
+inline
+unified_script_info unified_script_loading(duk_context* ctx, const std::string& full_scriptname, std::string& err)
+{
+    unified_script_info ret;
+
     script_info script;
 
     {
@@ -373,6 +405,17 @@ script_info unified_script_loading(duk_context* ctx, const std::string& full_scr
 
             mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
+            item fnd = current_user.get_loaded_callable_scriptname_item(item_ctx, full_scriptname);
+
+            if(fnd.get_prop("valid") != "1")
+            {
+                err = "Invalid Script";
+                return unified_script_info();
+            }
+
+            //std::string parsed_source = fnd.get_prop("parsed_source");
+
+            #if 0
             ///snafu not to use the script item system here
             ///maybe have it load the parsed source
             std::string unparsed_source = current_user.get_loaded_callable_scriptname_source(item_ctx, full_scriptname);
@@ -398,18 +441,25 @@ script_info unified_script_loading(duk_context* ctx, const std::string& full_scr
                 err = "Script Bundle Error: " + compile_err;
                 return script_info();
             }
+            #endif // 0
 
-            script = script_2;
+            ret.make_from(fnd);
+
+            return ret;
+
+            //script = script_2;
         }
 
         if(!script.valid)
         {
             err = "Script not found";
-            return script_info();
+            return unified_script_info();
         }
     }
 
-    return script;
+    ret.make_from(script);
+
+    return ret;
 }
 
 static
@@ -491,7 +541,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     std::string script_err;
 
-    script_info script = unified_script_loading(ctx, to_call_fullname, script_err);
+    unified_script_info script = unified_script_loading(ctx, to_call_fullname, script_err);
 
     if(!script.valid)
         return push_error(ctx, script_err);

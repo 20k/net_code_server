@@ -18,6 +18,8 @@ struct mongo_lock_proxy;
 
 using autos_t = std::vector<std::pair<std::string, std::string>>;
 
+struct item;
+
 struct script_info
 {
     std::string name;
@@ -40,6 +42,8 @@ struct script_info
     void overwrite_in_db(mongo_lock_proxy& ctx);
 
     bool exists_in_db(mongo_lock_proxy& ctx);
+
+    void fill_as_bundle_compatible_item(item& i);
 };
 
 bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out);

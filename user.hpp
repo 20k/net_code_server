@@ -37,7 +37,9 @@ struct user
     void unload_item(const std::string& id);
     std::vector<std::string> all_loaded_items();
 
-    std::string get_loaded_callable_scriptname_source(mongo_lock_proxy& ctx, const std::string& full_name);
+    //std::string get_loaded_callable_scriptname_source(mongo_lock_proxy& ctx, const std::string& full_name);
+
+    item get_loaded_callable_scriptname_item(mongo_lock_proxy& ctx, const std::string& full_name);
 
     std::string index_to_item(int index);
     int item_to_index(const std::string& item);
