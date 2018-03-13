@@ -126,10 +126,10 @@ struct mongo_context
             change_collection("all_channels");
         }
 
-        if(type == mongo_database_type::PENDING_NOTIFS)
+        /*if(type == mongo_database_type::PENDING_NOTIFS)
         {
             change_collection("all_notifs");
-        }
+        }*/
 
         if(type == mongo_database_type::CHAT_CHANNEL_PROPERTIES)
         {
