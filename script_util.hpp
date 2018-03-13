@@ -33,7 +33,8 @@ struct script_info
 
     //void load_from_disk_with_db_metadata(const std::string& name);
 
-    std::string load_from_unparsed_source(duk_context* ctx, const std::string& unparsed, const std::string& name);
+    ///typescript support is heavy, so disable for cli invocation
+    std::string load_from_unparsed_source(duk_context* ctx, const std::string& unparsed, const std::string& name, bool enable_typescript);
 
     bool load_from_db(mongo_lock_proxy& ctx);
     void overwrite_in_db(mongo_lock_proxy& ctx);
@@ -54,7 +55,7 @@ struct script_data
     bool valid = false;
 };
 
-script_data parse_script(std::string in);
+script_data parse_script(std::string in, bool enable_typescript);
 
 ///#db.f({[col_key]: {$exists : true}});
 ///$where and $query both need to be disabled, $inspect as well

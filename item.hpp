@@ -56,6 +56,11 @@ struct item
         props.set_prop(str, t);
     }
 
+    void set_prop_int(const std::string& str, int t)
+    {
+        props.set_prop_int(str, t);
+    }
+
     std::string get_prop(const std::string& str)
     {
         return props.get_prop(str);

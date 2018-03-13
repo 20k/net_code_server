@@ -149,7 +149,7 @@ void debug_terminal()
             init_js_interop(csd, std::string());
             register_funcs(csd.ctx, 0);
 
-            script_inf.load_from_unparsed_source(csd.ctx, data_source, script);
+            script_inf.load_from_unparsed_source(csd.ctx, data_source, script, true);
 
             std::cout << script_inf.parsed_source << std::endl;
 

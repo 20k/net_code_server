@@ -3,6 +3,8 @@
 #include "item.hpp"
 #include "script_util_shared.hpp"
 #include "duk_object_functions.hpp"
+#include <memory>
+#include "logging.hpp"
 
 ///new api
 ///we need a function to upload it to the server
@@ -303,7 +305,48 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
     return false;
 }
 
-script_data parse_script(std::string in)
+//https://stackoverflow.com/questions/478898/how-to-execute-a-command-and-get-output-of-command-within-c-using-posix
+std::string capture_exec(const std::string& cmd)
+{
+    std::array<char, 128> buffer;
+    std::string result;
+
+    std::shared_ptr<FILE> pipe(popen(cmd.c_str(), "r"), pclose);
+
+    if (!pipe)
+        throw std::runtime_error("popen() failed!");
+
+    while(!feof(pipe.get()))
+    {
+        if(fgets(buffer.data(), 128, pipe.get()) != nullptr)
+        {
+            result += buffer.data();
+        }
+    }
+
+    return result;
+}
+
+std::string make_fill_es6(const std::string& in)
+{
+    duk_object_t dobj;
+    dobj["data"] = in;
+
+    std::string first_pass = dukx_json_get(dobj);
+
+    duk_object_t second;
+    second["data"] = first_pass;
+
+    std::string second_pass = dukx_json_get(second);
+
+    std::string res = capture_exec("C:\\Stuff\\nodejs\\node.exe transpile.js " + second_pass);
+
+    std::cout << "es6 " << res << std::endl;
+
+    return in;
+}
+
+script_data parse_script(std::string in, bool enable_typescript)
 {
     if(in.size() == 0)
         return script_data();
@@ -319,6 +362,11 @@ script_data parse_script(std::string in)
         expand(strview, in, i, found_seclevel, autocompletes);
     }
 
+    if(enable_typescript)
+    {
+        in = make_fill_es6(in);
+    }
+
     script_data script;
     script.autocompletes = autocompletes;
     script.parsed_source = in;
@@ -329,7 +377,7 @@ script_data parse_script(std::string in)
 }
 
 ///WARNING NEED TO VALIDATE
-std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::string& source, const std::string& name_)
+std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::string& source, const std::string& name_, bool enable_typescript)
 {
     name = name_;
 
@@ -351,7 +399,7 @@ std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::
 
     unparsed_source = source;
 
-    script_data sdata = parse_script(unparsed_source);
+    script_data sdata = parse_script(unparsed_source, enable_typescript);
 
     args = decltype(args)();
     params = decltype(params)();
@@ -406,7 +454,35 @@ bool script_info::load_from_db(mongo_lock_proxy& ctx)
     args = decltype(args)();
     params = decltype(params)();
 
+    args = my_script.get_prop_as_array("args");
+    params = my_script.get_prop_as_array("params");
+
+    parsed_source = my_script.get_prop("parsed_source");
+    seclevel = my_script.get_prop_as_integer("seclevel");
+    valid = my_script.get_prop_as_integer("valid");
+
+    if(!valid || parsed_source.size() == 0)
     {
+        args = decltype(args)();
+        params = decltype(params)();
+
+        script_data sdata = parse_script(unparsed_source, true);
+
+        for(auto& i : sdata.autocompletes)
+        {
+            args.push_back(i.first);
+            params.push_back(i.second);
+        }
+
+        parsed_source = sdata.parsed_source;
+        seclevel = sdata.seclevel;
+        valid = sdata.valid;
+
+        std::cout << "fallback_parse" << std::endl;
+        lg::log("fallback_parse");
+    }
+
+    /*{
         script_data sdata = parse_script(unparsed_source);
 
         for(auto& i : sdata.autocompletes)
@@ -418,7 +494,7 @@ bool script_info::load_from_db(mongo_lock_proxy& ctx)
         parsed_source = sdata.parsed_source;
         seclevel = sdata.seclevel;
         valid = sdata.valid;
-    }
+    }*/
 
     return true;
 }
@@ -436,6 +512,20 @@ void script_info::overwrite_in_db(mongo_lock_proxy& ctx)
     my_script.set_prop("is_script", 1);
     my_script.set_prop("unparsed_source", unparsed_source);
     my_script.set_prop("seclevel", seclevel);
+
+    /*args = my_script.get_prop_as_array("args");
+    params = my_script.get_prop_as_array("params");
+
+    parsed_source = my_script.get_prop("parsed_source");
+    seclevel = my_script.get_prop_as_integer("seclevel");
+    valid = my_script.get_prop_as_integer("valid");*/
+
+    my_script.set_prop_array("args", args);
+    my_script.set_prop_array("params", params);
+
+    my_script.set_prop("parsed_source", parsed_source);
+    my_script.set_prop_int("seclevel", seclevel);
+    my_script.set_prop_int("valid", valid);
 
     //mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
 

@@ -373,6 +373,8 @@ script_info unified_script_loading(duk_context* ctx, const std::string& full_scr
 
             mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
+            ///snafu not to use the script item system here
+            ///maybe have it load the parsed source
             std::string unparsed_source = current_user.get_loaded_callable_scriptname_source(item_ctx, full_scriptname);
 
             if(unparsed_source == "")
@@ -385,8 +387,9 @@ script_info unified_script_loading(duk_context* ctx, const std::string& full_scr
             duk_context* temp_context = js_interop_startup();
             register_funcs(temp_context, 0);
 
+            ///FIXME, USE SCRIPT SYSTEM FOR ITEM BUNDLES TO AVOID COMPILATION PAIN
             script_info script_2;
-            std::string compile_err = script_2.load_from_unparsed_source(temp_context, unparsed_source, full_scriptname);
+            std::string compile_err = script_2.load_from_unparsed_source(temp_context, unparsed_source, full_scriptname, true);
 
             js_interop_shutdown(temp_context);
 
@@ -520,7 +523,7 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
     sd.ctx = ctx;
 
     script_info dummy;
-    dummy.load_from_unparsed_source(ctx, attach_wrapper(data, false, true), host + ".invoke");
+    dummy.load_from_unparsed_source(ctx, attach_wrapper(data, false, true), host + ".invoke", false);
 
     if(!dummy.valid)
         return "Invalid Command Line Syntax";

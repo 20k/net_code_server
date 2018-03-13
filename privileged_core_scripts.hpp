@@ -908,6 +908,9 @@ std::string format_item(item& i, bool is_short, user& usr, user_nodes& nodes)
         if(!is_open_source && p.first == "unparsed_source")
             continue;
 
+        if(!is_open_source && p.first == "parsed_source")
+            continue;
+
         ret += "    " + p.first + ": " + p.second + ",\n";
     }
 
@@ -943,6 +946,9 @@ duk_object_t get_item_raw(item& i, bool is_short, user& usr, user_nodes& nodes)
     for(auto& p : i.props.properties)
     {
         if(!is_open_source && p.first == "unparsed_source")
+            continue;
+
+        if(!is_open_source && p.first == "parsed_source")
             continue;
 
         if(is_short && p.first != "short_name")

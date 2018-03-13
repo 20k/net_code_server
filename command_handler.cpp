@@ -462,7 +462,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             register_funcs(csd.ctx, 0);
 
             script_info script_inf;
-            std::string compile_error = script_inf.load_from_unparsed_source(csd.ctx, data_source, fullname);
+            std::string compile_error = script_inf.load_from_unparsed_source(csd.ctx, data_source, fullname, true);
 
             js_interop_shutdown(csd.ctx);
 
