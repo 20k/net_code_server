@@ -312,7 +312,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
 {
     printf("yay command\n");
 
-    lg::log(str);
+    //lg::log(str);
 
     if(starts_with(str, "user "))
     {
@@ -682,9 +682,10 @@ std::vector<mongo_requester> get_and_update_notifs_for_user(user& usr)
 
     {
         mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
+        ctx->change_collection(usr.name);
 
         mongo_requester to_send;
-        to_send.set_prop("to_user", usr.name);
+        //to_send.set_prop("to_user", usr.name);
         to_send.set_prop("is_chat", 1);
         to_send.set_prop("processed", 0);
 

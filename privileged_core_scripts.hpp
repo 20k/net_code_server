@@ -654,11 +654,26 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         users = str_to_array(chan.get_prop("user_list"));
     }
 
+    bool found = false;
+
+    for(auto& i : users)
+    {
+        if(i == get_caller(ctx))
+        {
+            found = true;
+            break;
+        }
+    }
+
+    if(!found)
+        return push_error(ctx, "Not in channel");
+
     {
         ///TODO: LIMIT
         for(auto& current_user : users)
         {
             mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
+            mongo_ctx->change_collection(current_user);
 
             size_t real_time = get_wall_time();
 
@@ -668,7 +683,7 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
             to_insert.set_prop("msg", msg);
             to_insert.set_prop("channel", channel);
             to_insert.set_prop_double("time_ms", real_time);
-            to_insert.set_prop("to_user", current_user);
+            //to_insert.set_prop("to_user", current_user);
             to_insert.set_prop("processed", 0);
 
             to_insert.insert_in_db(mongo_ctx);
@@ -676,63 +691,6 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     return push_success(ctx);
-
-
-    #if 0
-    int64_t global_id = 0;
-
-    {
-        mongo_lock_proxy global_prop_ctx = get_global_mongo_global_properties_context(get_thread_id(ctx));
-
-        mongo_requester request;
-        request.set_prop("chats_send_is_gid", 1);
-
-        std::vector<mongo_requester> found = request.fetch_from_db(global_prop_ctx);
-
-        if(found.size() == 0)
-        {
-            mongo_requester gid;
-            gid.set_prop("chats_send_is_gid", 1);
-            gid.set_prop("chats_send_gid", 1);
-
-            gid.insert_in_db(global_prop_ctx);
-        }
-        else
-        {
-            mongo_requester& cur = found[0];
-
-            global_id = cur.get_prop_as_integer("chats_send_gid");
-
-            //std::cout << "gid " << global_id << std::endl;
-
-            mongo_requester query;
-            query.set_prop("chats_send_is_gid", 1);
-
-            mongo_requester update;
-            update.set_prop("chats_send_gid", global_id + 1);
-
-            query.update_in_db_if_exists(global_prop_ctx, update);
-        }
-    }
-
-    mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(get_thread_id(ctx));
-    //mongo_ctx->change_collection(channel);
-
-    size_t real_time = get_wall_time();
-
-    mongo_requester request;
-    request.set_prop("channel", channel);
-    request.set_prop("msg", msg);
-    request.set_prop("time_ms", real_time);
-    request.set_prop("from", get_caller(ctx));
-    request.set_prop_int("uid", global_id);
-
-    request.insert_in_db(mongo_ctx);
-
-    push_success(ctx);
-
-    return 1;
-    #endif // 0
 }
 
 inline
@@ -748,83 +706,6 @@ std::string format_tim(const std::string& in)
 }
 
 std::string prettify_chat_strings(std::vector<mongo_requester>& found);
-
-#if 0
-inline
-duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
-{
-    COOPERATE_KILL();
-
-    std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
-    int num = duk_get_prop_string_as_int(ctx, -1, "count");
-    bool pretty = !duk_get_prop_string_as_int(ctx, -1, "array");
-
-    /*int offset = 0;
-
-    if(duk_has_prop_string(ctx, -1, "offset"))
-    {
-        offset = duk_get_prop_string_as_int(ctx, -1, "offset");
-    }*/
-
-    if(num <= 0)
-        num = 10;
-
-    if(channel.size() == 0)
-        channel = "0000";
-
-    std::cout << "fchannel " << channel << std::endl;
-
-    if(channel == "" || num >= 100 || channel.size() >= 10)
-    {
-        push_error(ctx, "Usage: #ms.msg.recent({channel:\"<name>\", count:num, pretty:1})");
-        return 1;
-    }
-
-    mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channels_context(get_thread_id(ctx));
-    //mongo_ctx->change_collection(channel);
-
-    ///ALARM: ALARM: RATE LIMIT
-
-    mongo_requester request;
-    request.set_prop("channel", channel);
-    request.set_prop_sort_on("uid", -1);
-
-    request.set_limit(num);
-
-    std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
-
-    if(!pretty)
-    {
-        duk_push_array(ctx);
-
-        int cur_count = 0;
-        for(mongo_requester& i : found)
-        {
-            duk_push_object(ctx);
-
-            for(auto& kk : i.properties)
-            {
-                std::string key = kk.first;
-                std::string value = kk.second;
-
-                put_duk_keyvalue(ctx, key, value);
-            }
-
-            duk_put_prop_index(ctx, -2, cur_count);
-
-            cur_count++;
-        }
-    }
-    else
-    {
-        std::string str = prettify_chat_strings(found);
-
-        push_duk_val(ctx, str);
-    }
-
-    return 1;
-}
-#endif // 0
 
 inline
 duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
@@ -853,13 +734,12 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
-    //mongo_ctx->change_collection(channel);
+    mongo_ctx->change_collection(get_caller(ctx));
 
     ///ALARM: ALARM: RATE LIMIT
 
     mongo_requester request;
     request.set_prop("channel", channel);
-    request.set_prop("to_user", get_caller(ctx));
     request.set_prop("is_chat", 1);
     request.set_prop_sort_on("time_ms", -1);
 

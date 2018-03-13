@@ -112,7 +112,7 @@ void run_non_user_tasks()
         /*global_shared_data* store = fetch_global_shared_data();
 
         {
-            mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
+            mongo_lock_proxy ctx = get_global_mongo_pending _notifs_context(-2);
             std::lock_guard guard(store->lock);
 
             for(shared_data* data : store->data)

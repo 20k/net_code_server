@@ -3,6 +3,7 @@
 #include "http_beast_server.hpp"
 #include "non_user_task_thread.hpp"
 #include "shared_data.hpp"
+#include "logging.hpp"
 
 //
 // Copyright (c) 2016-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
@@ -137,6 +138,8 @@ void read_queue(socket_interface& socket,
 
                 std::string next_command = socket.get_read();
 
+                lg::log(next_command);
+
                 int len;
 
                 bool rate_hit = true;
@@ -148,7 +151,7 @@ void read_queue(socket_interface& socket,
 
                     std::string str = next_command;
 
-                    if(len <= 10 || starts_with(str, "client_poll"))
+                    if(len <= 20 || starts_with(str, "client_poll"))
                     {
                         shared_queue.push_back(next_command);
                         rate_hit = false;
@@ -156,7 +159,10 @@ void read_queue(socket_interface& socket,
                 }
 
                 if(rate_hit)
+                {
+                    lg::log("hit rate limit");
                     shared.add_back_write("command Hit rate limit (read_queue)");
+                }
             }
         }
     }
