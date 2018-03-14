@@ -17,7 +17,7 @@ enum class mongo_database_type
     #if 0
     USER_AUTH,
     #endif // 0
-    CHAT_CHANNELS, ///deprecated
+    //CHAT_CHANNELS, ///deprecated
     PENDING_NOTIFS,
     CHAT_CHANNEL_PROPERTIES,
     NODE_PROPERTIES,
@@ -71,11 +71,11 @@ struct mongo_context
             db = "global_properties";
         }
 
-        if(type == mongo_database_type::CHAT_CHANNELS)
+        /*if(type == mongo_database_type::CHAT_CHANNELS)
         {
             uri_str = "mongodb://chat_channels_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
             db = "chat_channels";
-        }
+        }*/
 
         if(type == mongo_database_type::PENDING_NOTIFS)
         {
@@ -121,10 +121,10 @@ struct mongo_context
             change_collection("global_properties");
         }
 
-        if(type == mongo_database_type::CHAT_CHANNELS)
+        /*if(type == mongo_database_type::CHAT_CHANNELS)
         {
             change_collection("all_channels");
-        }
+        }*/
 
         /*if(type == mongo_database_type::PENDING_NOTIFS)
         {

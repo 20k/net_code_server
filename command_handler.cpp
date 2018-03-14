@@ -298,14 +298,121 @@ std::string hex_to_binary(const std::string& in)
 
 void on_create_user(user& usr)
 {
-    throwaway_user_thread(usr.name, "#msg.manage({join:\"0000\"})");
-    throwaway_user_thread(usr.name, "#msg.manage({join:\"7001\"})");
-    throwaway_user_thread(usr.name, "#msg.manage({join:\"memes\"})");
+    run_in_user_context(usr.name, "#msg.manage({join:\"0000\"})");
+    run_in_user_context(usr.name, "#msg.manage({join:\"7001\"})");
+    run_in_user_context(usr.name, "#msg.manage({join:\"memes\"})");
 }
 
 std::string get_update_message()
 {
     return "If you cannot login, a bad update deleted key.key files. PM me (20k) on discord with a username that you owned and I will recover it";
+}
+
+std::string delete_user(user& usr, const std::string& str)
+{
+    if(SHOULD_RATELIMIT(usr.auth, DELETE_USER))
+        return "You may only delete 1 user per hour";
+
+    std::string command_str = "#delete_user ";
+
+    if(str.size() == command_str.size())
+        return "Invalid username";
+
+    auto splits = no_ss_split(str, " ");
+
+    if(splits.size() > 2)
+        return "Invalid command or username";
+
+    std::string name = splits[1];
+
+    if(!is_valid_string(name))
+        return "Invalid name";
+
+    ///Things to clean up
+    ///user itself - done
+    ///notifs - done
+    ///items - done
+    ///auth - done
+    ///user db - done
+    ///chat channels
+    ///nodes
+
+    ///DELETE USER
+    {
+        mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+        ctx->change_collection(name);
+
+        user to_delete;
+        to_delete.load_from_db(ctx, name);
+
+        if(to_delete.auth != usr.auth)
+            return "Invalid Auth";
+    }
+
+    ///DELETE ITEMS
+    {
+        mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(-2);
+
+        mongo_requester req;
+        req.set_prop("owner", name);
+
+        req.remove_all_from_db(items_ctx);
+    }
+
+    ///DELETE AUTH
+    {
+        mongo_lock_proxy auth_db = get_global_mongo_global_properties_context(-2);
+
+        mongo_requester req;
+        req.set_prop_bin("account_token", usr.auth);
+
+        auto found = req.fetch_from_db(auth_db);
+
+        if(found.size() != 1)
+            return "Auth Error: Purple Catepillar";
+
+        auto found_req = found[0];
+
+        auto arr = str_to_array(found_req.get_prop("users"));
+
+        for(int i=0; i < (int)arr.size(); i++)
+        {
+            if(arr[i] == name)
+            {
+                arr.erase(arr.begin() + i);
+                i--;
+                continue;
+            }
+        }
+
+        found_req.set_prop("users", array_to_str(arr));
+
+        req.update_in_db_if_exact(auth_db, found_req);
+    }
+
+    ///DELETE NOTIFS
+    {
+        mongo_lock_proxy notifs_db = get_global_mongo_pending_notifs_context(-2);
+        notifs_db->change_collection(name);
+
+        //mongo_requester req;
+
+        bson_t* to_remove = BCON_NEW("{", "}");
+        notifs_db->remove_bson(name, to_remove);
+        bson_destroy(to_remove);
+    }
+
+    ///delete user db
+    {
+        mongo_lock_proxy user_db = get_global_mongo_user_accessible_context(-2);
+        user_db->change_collection(name);
+
+        bson_t* to_remove = BCON_NEW("{", "}");
+        user_db->remove_bson(name, to_remove);
+        bson_destroy(to_remove);
+    }
+
+    return "Deleted";
 }
 
 std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
@@ -414,6 +521,10 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
 
             return make_success_col("Constructed new User");
         }
+    }
+    else if(starts_with(str, "#delete_user "))
+    {
+        return delete_user(state.current_user, str);
     }
     else if(starts_with(str, "#up ") || starts_with(str, "#dry ") || starts_with(str, "#up_es6 "))
     {

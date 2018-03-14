@@ -72,11 +72,11 @@ mongo_lock_proxy get_global_mongo_global_properties_context(int lock_id)
     return get_global_mongo_context(mongo_database_type::GLOBAL_PROPERTIES, lock_id);
 }
 
-inline
+/*inline
 mongo_lock_proxy get_global_mongo_chat_channels_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::CHAT_CHANNELS, lock_id);
-}
+}*/
 
 inline
 mongo_lock_proxy get_global_mongo_pending_notifs_context(int lock_id)
