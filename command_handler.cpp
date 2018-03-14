@@ -346,6 +346,8 @@ std::string delete_user(command_handler_state& state, const std::string& str)
     ///nodes - done
 
     ///DELETE USER
+    ///TODO: Delete user last
+    ///means nobody can create a user while its still being deleted
     {
         mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
         ctx->change_collection(name);
