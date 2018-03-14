@@ -461,9 +461,23 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         {
             std::string data_source(begin_it, str.end());
 
+            bool was_public = false;
+
+            {
+                script_info script_inf;
+                script_inf.name = fullname;
+
+                mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(-2);
+                script_inf.load_from_db(item_ctx);
+
+                if(script_inf.valid && script_inf.in_public)
+                    was_public = true;
+            }
+
             stack_duk csd;
             csd.ctx = js_interop_startup();
             register_funcs(csd.ctx, 0);
+
 
             script_info script_inf;
             std::string compile_error = script_inf.load_from_unparsed_source(csd.ctx, data_source, fullname, is_es6);
@@ -493,6 +507,8 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
 
             if(!starts_with(str, "#dry "))
             {
+                script_inf.in_public = was_public;
+
                 mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
                 script_inf.overwrite_in_db(mongo_ctx);
