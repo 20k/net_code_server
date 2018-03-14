@@ -345,9 +345,6 @@ std::string delete_user(command_handler_state& state, const std::string& str)
     ///user db - done
     ///nodes - done
 
-    ///DELETE USER
-    ///TODO: Delete user last
-    ///means nobody can create a user while its still being deleted
     {
         mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
         ctx->change_collection(name);
@@ -360,12 +357,8 @@ std::string delete_user(command_handler_state& state, const std::string& str)
 
         if(SHOULD_RATELIMIT(auth, DELETE_USER))
             return "You may only delete 1 user per hour";
-
-        mongo_requester req;
-        req.set_prop("name", name);
-
-        req.remove_all_from_db(ctx);
     }
+
     ///DELETE ITEMS
     {
         mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(-2);
@@ -438,6 +431,17 @@ std::string delete_user(command_handler_state& state, const std::string& str)
         req.set_prop("owned_by", name);
 
         req.remove_all_from_db(nodes_db);
+    }
+
+    ///DELETE USER
+    {
+        mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+        ctx->change_collection(name);
+
+        mongo_requester req;
+        req.set_prop("name", name);
+
+        req.remove_all_from_db(ctx);
     }
 
     return "Deleted";
