@@ -209,6 +209,9 @@ void get_autocompletes(std::string_view& view, std::string& in, int& offset, aut
     for(; cur_idx != (int)fit; cur_idx++)
     {
         found += in[cur_idx];
+
+        if(in[cur_idx] == '\n')
+            return;
     }
 
     for(int i = start; i < cur_idx + 2; i++)
