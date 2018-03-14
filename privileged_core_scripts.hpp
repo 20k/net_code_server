@@ -1564,7 +1564,7 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string name_of_person_being_attacked = duk_safe_get_prop_string(ctx, -1, "name");
 
-    std::cout << "NAM " << name_of_person_being_attacked << std::endl;
+    int make_array = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "array", 0);
 
     user usr;
 
@@ -1610,7 +1610,21 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
     }
 
-    push_duk_val(ctx, current_node->logs);
+    std::vector<std::string> logs = current_node->logs;
+
+    if(make_array)
+    {
+        push_duk_val(ctx, current_node->logs);
+        return 1;
+    }
+    else
+    {
+        std::string str = format_pretty_names(logs);
+
+        push_duk_val(ctx, str);
+        return 1;
+    }
+
     return 1;
 }
 
