@@ -59,7 +59,7 @@ struct script_data
     bool valid = false;
 };
 
-script_data parse_script(std::string in, bool enable_typescript);
+script_data parse_script(const std::string& file_name, std::string in, bool enable_typescript);
 
 ///#db.f({[col_key]: {$exists : true}});
 ///$where and $query both need to be disabled, $inspect as well

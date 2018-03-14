@@ -330,26 +330,39 @@ std::string capture_exec(const std::string& cmd)
     return result;
 }
 
-std::string make_fill_es6(const std::string& in)
+std::string make_fill_es6(const std::string& file_name, const std::string& in)
 {
-    duk_object_t dobj;
+    /*duk_object_t dobj;
     dobj["data"] = in;
 
-    std::string first_pass = dukx_json_get(dobj);
+    std::string first_pass = dukx_json_get(in);
 
-    duk_object_t second;
-    second["data"] = first_pass;
+    //duk_object_t second;
+    //second["data"] = first_pass;
 
-    std::string second_pass = dukx_json_get(second);
+    std::string second_pass = dukx_json_get(dobj);
 
-    std::string res = capture_exec("C:\\Stuff\\nodejs\\node.exe transpile.js " + second_pass);
+    std::cout << "to pipe " << second_pass << std::endl;*/
+
+    std::string compiler_dir = "compile/";
+
+    write_all_bin(compiler_dir + file_name + ".ts", in);
+
+    std::string res = capture_exec("C:\\Stuff\\nodejs\\node.exe transpile.js " + compiler_dir + file_name + ".ts");
 
     std::cout << "es6 " << res << std::endl;
 
-    return in;
+    std::string found = read_file(compiler_dir + file_name + ".js");
+
+    std::cout << "found " << found << std::endl;
+
+    std::remove((compiler_dir + file_name + ".js").c_str());
+    std::remove((compiler_dir + file_name + ".ts").c_str());
+
+    return found;
 }
 
-script_data parse_script(std::string in, bool enable_typescript)
+script_data parse_script(const std::string& file_name, std::string in, bool enable_typescript)
 {
     if(in.size() == 0)
         return script_data();
@@ -367,7 +380,7 @@ script_data parse_script(std::string in, bool enable_typescript)
 
     if(enable_typescript)
     {
-        in = make_fill_es6(in);
+        in = make_fill_es6(file_name, in);
     }
 
     script_data script;
@@ -402,7 +415,7 @@ std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::
 
     unparsed_source = source;
 
-    script_data sdata = parse_script(unparsed_source, enable_typescript);
+    script_data sdata = parse_script(name, unparsed_source, enable_typescript);
 
     args = decltype(args)();
     params = decltype(params)();
@@ -469,7 +482,7 @@ bool script_info::load_from_db(mongo_lock_proxy& ctx)
         args = decltype(args)();
         params = decltype(params)();
 
-        script_data sdata = parse_script(unparsed_source, true);
+        script_data sdata = parse_script(name, unparsed_source, true);
 
         for(auto& i : sdata.autocompletes)
         {
