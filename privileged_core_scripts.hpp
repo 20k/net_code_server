@@ -1558,6 +1558,63 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 #endif // 0
 
 inline
+duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string name_of_person_being_attacked = duk_safe_get_prop_string(ctx, -1, "name");
+
+    std::cout << "NAM " << name_of_person_being_attacked << std::endl;
+
+    user usr;
+
+    {
+        mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
+        user_info->change_collection(name_of_person_being_attacked);
+
+        if(!usr.load_from_db(user_info, name_of_person_being_attacked))
+            return push_error(ctx, "No such user");
+    }
+
+    user_nodes nodes;
+
+    {
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+        nodes.ensure_exists(node_ctx, name_of_person_being_attacked);
+        nodes.load_from_db(node_ctx, name_of_person_being_attacked);
+    }
+
+    std::string node_fullname = duk_safe_get_prop_string(ctx, -1, "NID");
+
+    std::vector<item> attackables;
+
+    user_node* current_node = nullptr;
+
+    {
+        current_node = nodes.name_to_node(name_of_person_being_attacked + "_" + node_fullname);
+
+        {
+            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+            attackables = current_node->get_locks(item_ctx);
+        }
+    }
+
+    if(current_node == nullptr)
+        return push_error(ctx, "Misc error: Blue Melon");
+
+    if(!nodes.node_accessible(*current_node))
+    {
+        duk_push_string(ctx, nodes.get_lockdown_message().c_str());
+        return 1;
+    }
+
+    push_duk_val(ctx, current_node->logs);
+    return 1;
+}
+
+inline
 duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -1612,6 +1669,28 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
 
         //return push_error(ctx, nodes.get_lockdown_message());
+    }
+
+    ///leave trace in logs
+    {
+        user attacker;
+
+        {
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+            attacker.load_from_db(mongo_ctx, get_caller(ctx));
+        }
+
+        std::string port = attacker.user_port;
+
+        nodes.leave_trace(*current_node, attacker.name, port);
+
+        ///hmm, we are actually double overwriting here
+        {
+            mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+            nodes.overwrite_in_db(node_ctx);
+        }
     }
 
     ///if(current_node.breached)
@@ -1796,6 +1875,7 @@ std::map<std::string, priv_func_info> privileged_functions
     //REGISTER_FUNCTION_PRIV(user__port, 0), ///should this exist? It has to currently for dumb reasons ///nope, it needs special setup
     REGISTER_FUNCTION_PRIV(nodes__manage, 1),
     REGISTER_FUNCTION_PRIV(nodes__port, 1),
+    REGISTER_FUNCTION_PRIV(nodes__view_log, 1),
 };
 
 std::map<std::string, std::vector<script_arg>> construct_core_args();

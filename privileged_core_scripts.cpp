@@ -50,6 +50,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     //ret["user.port"] = make_cary();
     ret["nodes.manage"] = make_cary();
     ret["nodes.port"] = make_cary();
+    ret["nodes.view_log"] = make_cary("name", "\"\"", "NID", "-1");
 
     return ret;
 }
