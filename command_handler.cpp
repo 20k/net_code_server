@@ -309,10 +309,18 @@ std::string get_update_message()
 }
 
 ///should really queue this or something
-std::string delete_user(user& usr, const std::string& str)
+std::string delete_user(command_handler_state& state, const std::string& str)
 {
-    if(SHOULD_RATELIMIT(usr.auth, DELETE_USER))
-        return "You may only delete 1 user per hour";
+    std::string auth;
+
+    {
+        std::lock_guard guard(state.lock);
+
+        auth = state.auth;
+    }
+
+    if(auth == "")
+        return "No auth";
 
     std::string command_str = "#delete_user ";
 
@@ -345,15 +353,18 @@ std::string delete_user(user& usr, const std::string& str)
         user to_delete;
         to_delete.load_from_db(ctx, name);
 
-        if(to_delete.auth != usr.auth)
+        if(to_delete.auth != auth)
             return "Invalid Auth";
+
+
+        if(SHOULD_RATELIMIT(auth, DELETE_USER))
+            return "You may only delete 1 user per hour";
 
         mongo_requester req;
         req.set_prop("name", name);
 
         req.remove_all_from_db(ctx);
     }
-
     ///DELETE ITEMS
     {
         mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(-2);
@@ -369,7 +380,7 @@ std::string delete_user(user& usr, const std::string& str)
         mongo_lock_proxy auth_db = get_global_mongo_global_properties_context(-2);
 
         mongo_requester req;
-        req.set_prop_bin("account_token", usr.auth);
+        req.set_prop_bin("account_token", auth);
 
         auto found = req.fetch_from_db(auth_db);
 
@@ -540,7 +551,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
     }
     else if(starts_with(str, "#delete_user "))
     {
-        return delete_user(state.current_user, str);
+        return delete_user(state, str);
     }
     else if(starts_with(str, "#up ") || starts_with(str, "#dry ") || starts_with(str, "#up_es6 "))
     {
