@@ -332,29 +332,17 @@ std::string capture_exec(const std::string& cmd)
 
 std::string make_fill_es6(const std::string& file_name, const std::string& in)
 {
-    /*duk_object_t dobj;
-    dobj["data"] = in;
-
-    std::string first_pass = dukx_json_get(in);
-
-    //duk_object_t second;
-    //second["data"] = first_pass;
-
-    std::string second_pass = dukx_json_get(dobj);
-
-    std::cout << "to pipe " << second_pass << std::endl;*/
-
     std::string compiler_dir = "compile/";
 
     write_all_bin(compiler_dir + file_name + ".ts", in);
 
     std::string res = capture_exec("C:\\Stuff\\nodejs\\node.exe transpile.js " + compiler_dir + file_name + ".ts");
 
-    std::cout << "es6 " << res << std::endl;
+    //std::cout << "es6 " << res << std::endl;
 
     std::string found = read_file(compiler_dir + file_name + ".js");
 
-    std::cout << "found " << found << std::endl;
+    //std::cout << "found " << found << std::endl;
 
     std::remove((compiler_dir + file_name + ".js").c_str());
     std::remove((compiler_dir + file_name + ".ts").c_str());

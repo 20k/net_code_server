@@ -415,7 +415,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             return make_success_col("Constructed new User");
         }
     }
-    else if(starts_with(str, "#up ") || starts_with(str, "#dry "))
+    else if(starts_with(str, "#up ") || starts_with(str, "#dry ") || starts_with(str, "#up_es6 "))
     {
         if(state.auth == "")
             return make_error_col("No Auth");
@@ -425,9 +425,11 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         if(split_string.size() < 3)
         {
             if(starts_with(str, "#up "))
-                return "Syntax is #up scriptname";
+                return "Syntax is #up scriptname or invalid scriptname";
             if(starts_with(str, "#dry "))
-                return "Syntax is #dry scriptname";
+                return "Syntax is #dry scriptname or invalid scriptname";
+            if(starts_with(str, "#up_es6 ")) ///this is not client facing
+                return "Syntax is #up scriptname or invalid scriptname";
         }
 
         std::string scriptname = strip_whitespace(split_string[1]);
@@ -453,6 +455,8 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             begin_it++;
         }
 
+        bool is_es6 = starts_with(str, "#up_es6 ");
+
         if(begin_it != str.end())
         {
             std::string data_source(begin_it, str.end());
@@ -462,7 +466,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             register_funcs(csd.ctx, 0);
 
             script_info script_inf;
-            std::string compile_error = script_inf.load_from_unparsed_source(csd.ctx, data_source, fullname, true);
+            std::string compile_error = script_inf.load_from_unparsed_source(csd.ctx, data_source, fullname, is_es6);
 
             js_interop_shutdown(csd.ctx);
 
