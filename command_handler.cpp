@@ -356,7 +356,6 @@ std::string delete_user(command_handler_state& state, const std::string& str)
         if(to_delete.auth != auth)
             return "Invalid Auth";
 
-
         if(SHOULD_RATELIMIT(auth, DELETE_USER))
             return "You may only delete 1 user per hour";
 
