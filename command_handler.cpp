@@ -308,6 +308,7 @@ std::string get_update_message()
     return "If you cannot login, a bad update deleted key.key files. PM me (20k) on discord with a username that you owned and I will recover it";
 }
 
+///should really queue this or something
 std::string delete_user(user& usr, const std::string& str)
 {
     if(SHOULD_RATELIMIT(usr.auth, DELETE_USER))
