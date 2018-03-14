@@ -413,41 +413,9 @@ unified_script_info unified_script_loading(duk_context* ctx, const std::string& 
                 return unified_script_info();
             }
 
-            //std::string parsed_source = fnd.get_prop("parsed_source");
-
-            #if 0
-            ///snafu not to use the script item system here
-            ///maybe have it load the parsed source
-            std::string unparsed_source = current_user.get_loaded_callable_scriptname_source(item_ctx, full_scriptname);
-
-            if(unparsed_source == "")
-            {
-                err = "Script not found";
-
-                return script_info();
-            }
-
-            duk_context* temp_context = js_interop_startup();
-            register_funcs(temp_context, 0);
-
-            ///FIXME, USE SCRIPT SYSTEM FOR ITEM BUNDLES TO AVOID COMPILATION PAIN
-            script_info script_2;
-            std::string compile_err = script_2.load_from_unparsed_source(temp_context, unparsed_source, full_scriptname, true);
-
-            js_interop_shutdown(temp_context);
-
-            if(compile_err != "")
-            {
-                err = "Script Bundle Error: " + compile_err;
-                return script_info();
-            }
-            #endif // 0
-
             ret.make_from(fnd);
 
             return ret;
-
-            //script = script_2;
         }
 
         if(!script.valid)

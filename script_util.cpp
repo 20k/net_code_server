@@ -482,20 +482,6 @@ bool script_info::load_from_db(mongo_lock_proxy& ctx)
         lg::log("fallback_parse");
     }
 
-    /*{
-        script_data sdata = parse_script(unparsed_source);
-
-        for(auto& i : sdata.autocompletes)
-        {
-            args.push_back(i.first);
-            params.push_back(i.second);
-        }
-
-        parsed_source = sdata.parsed_source;
-        seclevel = sdata.seclevel;
-        valid = sdata.valid;
-    }*/
-
     return true;
 }
 
@@ -511,14 +497,6 @@ void script_info::overwrite_in_db(mongo_lock_proxy& ctx)
     my_script.set_prop("owner", owner);
     my_script.set_prop("is_script", 1);
     my_script.set_prop("unparsed_source", unparsed_source);
-    //my_script.set_prop("seclevel", seclevel);
-
-    /*args = my_script.get_prop_as_array("args");
-    params = my_script.get_prop_as_array("params");
-
-    parsed_source = my_script.get_prop("parsed_source");
-    seclevel = my_script.get_prop_as_integer("seclevel");
-    valid = my_script.get_prop_as_integer("valid");*/
 
     my_script.set_prop_array("args", args);
     my_script.set_prop_array("params", params);
@@ -545,7 +523,6 @@ void script_info::fill_as_bundle_compatible_item(item& my_script)
     //my_script.set_prop("owner", owner);
     //my_script.set_prop("is_script", 1);
     my_script.set_prop("unparsed_source", unparsed_source);
-    //my_script.set_prop("seclevel", seclevel);
 
     my_script.set_prop_array("args", args);
     my_script.set_prop_array("params", params);
