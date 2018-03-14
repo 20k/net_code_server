@@ -332,7 +332,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
         {
             std::string err = duk_safe_to_std_string(sd.ctx, -1);
 
-            duk_push_string(sd.ctx, err.c_str());
+            push_dukobject(sd.ctx, "ok", false, "msg", err);
         }
     }
 
