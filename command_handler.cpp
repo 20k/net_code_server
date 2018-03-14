@@ -824,22 +824,15 @@ std::optional<std::vector<script_arg>> get_uniform_script_args(user& usr, const 
         return privileged_args[script];
     }
 
-    script_info script_inf;
+    std::string err;
 
-    {
-        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(-2);
-
-        script_inf.name = script;
-
-        script_inf.load_from_db(item_ctx);
-    }
+    unified_script_info script_inf = unified_script_loading(usr.name, -2, script, err);
 
     if(!script_inf.valid)
         return std::nullopt;
 
     if(script_inf.args.size() != script_inf.params.size())
         return std::nullopt;
-
 
     std::vector<script_arg> args;
 

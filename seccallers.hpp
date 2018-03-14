@@ -378,14 +378,14 @@ struct unified_script_info
 };
 
 inline
-unified_script_info unified_script_loading(duk_context* ctx, const std::string& full_scriptname, std::string& err)
+unified_script_info unified_script_loading(const std::string& caller, int thread_id, const std::string& full_scriptname, std::string& err)
 {
     unified_script_info ret;
 
     script_info script;
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(thread_id);
 
         //script.load_from_disk_with_db_metadata(str);
         script.name = full_scriptname;
@@ -398,12 +398,12 @@ unified_script_info unified_script_loading(duk_context* ctx, const std::string& 
             user current_user;
 
             {
-                mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+                mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(thread_id);
 
-                current_user.load_from_db(mongo_ctx, get_caller(ctx));
+                current_user.load_from_db(mongo_ctx, caller);
             }
 
-            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
 
             item fnd = current_user.get_loaded_callable_scriptname_item(item_ctx, full_scriptname);
 
@@ -509,7 +509,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     std::string script_err;
 
-    unified_script_info script = unified_script_loading(ctx, to_call_fullname, script_err);
+    unified_script_info script = unified_script_loading(get_caller(ctx), get_thread_id(ctx), to_call_fullname, script_err);
 
     if(!script.valid)
         return push_error(ctx, script_err);
