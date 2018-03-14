@@ -1282,15 +1282,6 @@ duk_ret_t items__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
         found_script.fill_as_bundle_compatible_item(found_bundle);
         found_bundle.set_prop("full", 1);
 
-        /*found_bundle.set_prop_array("args", found_script.get_prop_as_array("args"));
-        found_bundle.set_prop_array("args", found_script.get_prop_as_array("args"));
-
-        found_bundle.set_prop("unparsed_source", found_script.get_prop("unparsed_source"));
-        found_bundle.set_prop("parsed_source", found_script.get_prop("parsed_source"));
-        found_bundle.set_prop_int("seclevel", found_script.get_prop_as_integer("seclevel"));
-        found_bundle.set_prop_int("valid", found_script.get_prop_as_integer("valid"));
-        found_bundle.set_prop("full", 1);*/
-
         found_bundle.overwrite_in_db(item_lock);
     }
 
