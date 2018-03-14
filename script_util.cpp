@@ -340,11 +340,11 @@ std::string make_fill_es6(const std::string& file_name, const std::string& in)
 
     //std::cout << "es6 " << res << std::endl;
 
-    std::string found = read_file(compiler_dir + file_name + ".js");
+    std::string found = read_file(compiler_dir + file_name + ".ts.ts");
 
     //std::cout << "found " << found << std::endl;
 
-    std::remove((compiler_dir + file_name + ".js").c_str());
+    std::remove((compiler_dir + file_name + ".ts.ts").c_str());
     std::remove((compiler_dir + file_name + ".ts").c_str());
 
     return found;
