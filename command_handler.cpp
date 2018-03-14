@@ -334,8 +334,7 @@ std::string delete_user(user& usr, const std::string& str)
     ///items - done
     ///auth - done
     ///user db - done
-    ///chat channels
-    ///nodes
+    ///nodes - done
 
     ///DELETE USER
     {
@@ -347,6 +346,11 @@ std::string delete_user(user& usr, const std::string& str)
 
         if(to_delete.auth != usr.auth)
             return "Invalid Auth";
+
+        mongo_requester req;
+        req.set_prop("name", name);
+
+        req.remove_all_from_db(ctx);
     }
 
     ///DELETE ITEMS
@@ -395,11 +399,11 @@ std::string delete_user(user& usr, const std::string& str)
         mongo_lock_proxy notifs_db = get_global_mongo_pending_notifs_context(-2);
         notifs_db->change_collection(name);
 
-        //mongo_requester req;
+        bson_t bson;
+        bson_init(&bson);
 
-        bson_t* to_remove = BCON_NEW("{", "}");
-        notifs_db->remove_bson(name, to_remove);
-        bson_destroy(to_remove);
+        notifs_db->remove_bson(name, &bson);
+        bson_destroy(&bson);
     }
 
     ///delete user db
@@ -407,9 +411,20 @@ std::string delete_user(user& usr, const std::string& str)
         mongo_lock_proxy user_db = get_global_mongo_user_accessible_context(-2);
         user_db->change_collection(name);
 
-        bson_t* to_remove = BCON_NEW("{", "}");
-        user_db->remove_bson(name, to_remove);
-        bson_destroy(to_remove);
+        bson_t bson;
+        bson_init(&bson);
+        user_db->remove_bson(name, &bson);
+        bson_destroy(&bson);
+    }
+
+    ///delete nodes
+    {
+        mongo_lock_proxy nodes_db = get_global_mongo_node_properties_context(-2);
+
+        mongo_requester req;
+        req.set_prop("owned_by", name);
+
+        req.remove_all_from_db(nodes_db);
     }
 
     return "Deleted";
