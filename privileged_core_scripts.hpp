@@ -85,6 +85,43 @@ struct script_arg
     std::string val;
 };
 
+inline
+duk_ret_t make_logs_on(duk_context* ctx, const std::string& username, user_node_t type, const std::vector<std::string>& logs)
+{
+    std::string caller = get_caller(ctx);
+
+    user usr;
+
+    {
+        mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
+        user_info->change_collection(username);
+
+        if(!usr.load_from_db(user_info, username))
+            return push_error(ctx, "No such user");
+    }
+
+
+    user_nodes nodes;
+
+    {
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+        nodes.ensure_exists(node_ctx, username);
+        nodes.load_from_db(node_ctx, username);
+
+        user_node* node = nodes.type_to_node(type);
+
+        if(node == nullptr)
+            return push_error(ctx, "Error: Red Martian");
+
+        node->logs.insert(node->logs.end(), logs.begin(), logs.end());
+
+        nodes.overwrite_in_db(node_ctx);
+    }
+
+    return 0;
+}
+
 ///so say this is midsec
 ///we can run if the sl is midsec or lower
 ///lower sls are less secure
@@ -307,45 +344,54 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
         return 1;
     }
 
-    ///NEED TO LOCK MONGODB HERE
-
-    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
-
-    user destination_usr;
-
-    if(!destination_usr.load_from_db(mongo_user_info, to))
     {
-        push_error(ctx, "User does not exist");
-        return 1;
+        mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        user destination_usr;
+
+        if(!destination_usr.load_from_db(mongo_user_info, to))
+        {
+            push_error(ctx, "User does not exist");
+            return 1;
+        }
+
+        user caller_usr;
+
+        if(!caller_usr.load_from_db(mongo_user_info, from))
+        {
+            push_error(ctx, "From user does not exist");
+            return 1;
+        }
+
+        double remaining = caller_usr.cash - amount;
+
+        if(remaining < 0)
+        {
+            push_error(ctx, "Can't send this amount");
+            return 1;
+        }
+
+        ///need to check destination usr can handle amount
+        caller_usr.cash -= amount;
+        destination_usr.cash += amount;
+
+        caller_usr.overwrite_user_in_db(mongo_user_info);
+        destination_usr.overwrite_user_in_db(mongo_user_info);
     }
 
-    user caller_usr;
-
-    if(!caller_usr.load_from_db(mongo_user_info, from))
     {
-        push_error(ctx, "From user does not exist");
-        return 1;
+        std::string cash_log = "`XCash xfer` | from: " + from  + ", to: " + to + ", amount: " + std::to_string(amount);
+
+        int err = make_logs_on(ctx, from, user_node_info::GC_LOG, {cash_log});
+
+        if(err)
+            return err;
+
+        err = make_logs_on(ctx, to, user_node_info::GC_LOG, {cash_log});
+
+        if(err)
+            return err;
     }
-
-    double remaining = caller_usr.cash - amount;
-
-    if(remaining < 0)
-    {
-        push_error(ctx, "Can't send this amount");
-        return 1;
-    }
-
-    ///need to check destination usr can handle amount
-
-    caller_usr.cash -= amount;
-    destination_usr.cash += amount;
-
-    ///hmm so
-    ///we'll need to lock db when doing this
-    caller_usr.overwrite_user_in_db(mongo_user_info);
-    destination_usr.overwrite_user_in_db(mongo_user_info);
-
-    ///NEED TO END MONGODB LOCK HERE
 
     push_success(ctx);
 
@@ -1556,6 +1602,7 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 #endif // 0
+
 
 inline
 duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)

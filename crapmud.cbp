@@ -41,8 +41,8 @@
 				</ExtraCommands>
 			</Target>
 			<Target title="ReleaseAndTest">
-				<Option output="bin/Release/crapmud" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Release/" />
+				<Option output="bin/ReleaseTest/crapmud" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/ReleaseTest/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -111,6 +111,7 @@
 		<Unit filename="script_util.hpp" />
 		<Unit filename="script_util_shared.hpp" />
 		<Unit filename="seccallers.hpp" />
+		<Unit filename="socket_shared.hpp" />
 		<Unit filename="user.cpp" />
 		<Unit filename="user.hpp" />
 		<Extensions>
