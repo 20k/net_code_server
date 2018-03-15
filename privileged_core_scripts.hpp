@@ -1604,10 +1604,13 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(current_node == nullptr)
         return push_error(ctx, "Misc error: Blue Melon");
 
-    if(!nodes.node_accessible(*current_node))
+    if(name_of_person_being_attacked != get_caller(ctx))
     {
-        duk_push_string(ctx, nodes.get_lockdown_message().c_str());
-        return 1;
+        if(!nodes.node_accessible(*current_node))
+        {
+            duk_push_string(ctx, nodes.get_lockdown_message().c_str());
+            return 1;
+        }
     }
 
     std::vector<std::string> logs = current_node->logs;
