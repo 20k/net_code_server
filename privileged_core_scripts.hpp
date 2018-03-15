@@ -1687,7 +1687,8 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(name_of_person_being_attacked != get_caller(ctx))
     {
-        if(!nodes.node_accessible(*current_node))
+        ///there must be both an accessible path, and the node itself must be breached
+        if(!nodes.node_accessible(*current_node) || !current_node->is_breached())
         {
             duk_push_string(ctx, nodes.get_lockdown_message().c_str());
             return 1;
@@ -1832,7 +1833,7 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     ///do info here first, then display the breach message the next time round
-    finalise_info(msg, all_success, current_node->is_breached());
+    finalise_info(msg, all_success, current_node->is_breached(), attackables.size());
 
     if(all_success && !current_node->is_breached())
     {
