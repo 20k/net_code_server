@@ -1128,12 +1128,6 @@ duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     user found_user;
 
-    ///so
-    ///need to find the real item associated with an idx
-    ///check if its a err
-    ///lock or not
-    ///and if it is, call out to load_item_lock_raw
-    ///if its not, call to change_item_raw
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
         mongo_ctx->change_collection(get_caller(ctx));
@@ -1245,11 +1239,51 @@ duk_ret_t items__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string from = get_caller(ctx);
     std::string to = duk_safe_get_prop_string(ctx, -1, "to");
 
+    {
+        user_nodes nodes;
+
+        {
+            mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+            nodes.ensure_exists(node_ctx, get_caller(ctx));
+            nodes.load_from_db(node_ctx, get_caller(ctx));
+        }
+
+        user found_user;
+
+        {
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+            mongo_ctx->change_collection(get_caller(ctx));
+
+            found_user.load_from_db(mongo_ctx, get_caller(ctx));
+
+            if(!found_user.valid)
+            {
+                push_error(ctx, "No such user/really catastrophic error");
+                return 1;
+            }
+        }
+
+        std::string accum;
+
+        auto ret = load_item_raw(ctx, -1, -1, item_idx, found_user, nodes, accum);
+
+        if(ret > 0)
+            return push_error(ctx, accum);
+    }
+
     item placeholder;
 
     if(placeholder.transfer_from_to_by_index(item_idx, from, to, get_thread_id(ctx)))
+    {
+        std::string xfer = "`NItem xfer` | from: " + from  + ", to: " + to + ", index: " + std::to_string(item_idx);
+
+        make_logs_on(ctx, from, user_node_info::ITEM_LOG, {xfer});
+        make_logs_on(ctx, to, user_node_info::ITEM_LOG, {xfer});
+
         duk_push_int(ctx, placeholder.get_prop_as_integer("item_id"));
-     else
+    }
+    else
         push_error(ctx, "Could not xfer");
 
     return 1;
