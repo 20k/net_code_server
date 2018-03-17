@@ -21,6 +21,7 @@ enum class mongo_database_type
     PENDING_NOTIFS,
     CHAT_CHANNEL_PROPERTIES,
     NODE_PROPERTIES,
+    NPC_PROPERTIES,
     MONGO_COUNT
 };
 
@@ -97,6 +98,13 @@ struct mongo_context
             db = "node_properties";
         }
 
+        if(type == mongo_database_type::NPC_PROPERTIES)
+        {
+            uri_str = "mongodb://npc_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
+            db = "npc_properties";
+        }
+
+
         #if 0
         if(type == mongo_database_type::USER_AUTH)
         {
@@ -154,6 +162,13 @@ struct mongo_context
         if(type == mongo_database_type::NODE_PROPERTIES)
         {
             change_collection("all_nodes");
+
+            is_fixed = true;
+        }
+
+        if(type == mongo_database_type::NPC_PROPERTIES)
+        {
+            change_collection("all_npcs");
 
             is_fixed = true;
         }
