@@ -347,7 +347,6 @@ std::string delete_user(command_handler_state& state, const std::string& str)
 
     {
         mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
-        ctx->change_collection(name);
 
         user to_delete;
         to_delete.load_from_db(ctx, name);
@@ -436,7 +435,6 @@ std::string delete_user(command_handler_state& state, const std::string& str)
     ///DELETE USER
     {
         mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
-        ctx->change_collection(name);
 
         mongo_requester req;
         req.set_prop("name", name);
@@ -468,7 +466,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         if(!is_valid_string(user_name))
             return make_error_col("Invalid username");
 
-        int32_t start_from = 0;
+        /*int32_t start_from = 0;
 
         {
             mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
@@ -482,7 +480,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                 start_from = found[0].get_prop_as_integer("chats_send_gid");
             else
                 printf("warning, no chats gid\n");
-        }
+        }*/
 
         bool user_exists = false;
 
@@ -499,6 +497,31 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                 {
                     state.current_user = user();
                     return make_error_col("Incorrect Auth, someone else has registered this account or you are using a different pc and key.key file");
+                }
+            }
+
+
+            {
+                bool overwrite = false;
+
+                mongo_user_info->change_collection(user_name, true);
+
+                if(state.current_user.exists(mongo_user_info, user_name) && !user_exists)
+                {
+                    overwrite = true;
+                    user_exists = true;
+
+                    state.current_user.load_from_db(mongo_user_info, user_name);
+                }
+
+                mongo_user_info->change_collection("all_users", true);
+
+                if(overwrite && !state.current_user.exists(mongo_user_info, user_name))
+                {
+                    state.current_user.construct_new_user(mongo_user_info, user_name, state.current_user.auth);
+                    state.current_user.overwrite_user_in_db(mongo_user_info);
+
+                    return "User Migrated. Please run this command again";
                 }
             }
         }
@@ -545,7 +568,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             {
                 mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-                state.current_user.construct_new_user(mongo_user_info, user_name, state.auth, start_from);
+                state.current_user.construct_new_user(mongo_user_info, user_name, state.auth);
                 state.current_user.overwrite_user_in_db(mongo_user_info);
             }
 
@@ -872,7 +895,6 @@ std::vector<mongo_requester> get_and_update_notifs_for_user(user& usr)
 std::vector<std::string> get_channels_for_user(user& usr)
 {
     mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
-    ctx->change_collection(usr.name);
 
     mongo_requester request;
     request.set_prop("name", usr.name);

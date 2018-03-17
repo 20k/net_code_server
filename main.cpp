@@ -116,7 +116,7 @@ void debug_terminal()
             }
             else
             {
-                current_user.construct_new_user(mongo_user_info, username, "DUMMY_AUTH", 0);
+                current_user.construct_new_user(mongo_user_info, username, "DUMMY_AUTH");
                 current_user.overwrite_user_in_db(mongo_user_info);
 
                 std::cout << "created new user " << username << std::endl;
@@ -193,7 +193,6 @@ void test_json()
 
     {
         mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
-        ctx->change_collection("i20k");
 
         usr.load_from_db(ctx, "i20k");
     }
@@ -277,7 +276,6 @@ int main()
             continue;
 
         mongo_lock_proxy lock = get_global_mongo_user_info_context(-2);
-        lock->change_collection(command);
 
         mongo_requester req;
         req.set_prop("name", command);

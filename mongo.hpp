@@ -38,6 +38,8 @@ struct mongo_context
     std::mutex lock;
     int locked_by = -1;
 
+    bool is_fixed = false;
+
     ///need to run everything through a blacklist
     ///can probably just blacklist json
 
@@ -111,14 +113,25 @@ struct mongo_context
 
         database = mongoc_client_get_database(client, db.c_str());
 
+        if(type == mongo_database_type::USER_PROPERTIES)
+        {
+            change_collection("all_users");
+
+            is_fixed = true;
+        }
+
         if(type == mongo_database_type::USER_ITEMS)
         {
             change_collection("all_items");
+
+            is_fixed = true;
         }
 
         if(type == mongo_database_type::GLOBAL_PROPERTIES)
         {
             change_collection("global_properties");
+
+            is_fixed = true;
         }
 
         /*if(type == mongo_database_type::CHAT_CHANNELS)
@@ -134,11 +147,15 @@ struct mongo_context
         if(type == mongo_database_type::CHAT_CHANNEL_PROPERTIES)
         {
             change_collection("all_channel_properties");
+
+            is_fixed = true;
         }
 
         if(type == mongo_database_type::NODE_PROPERTIES)
         {
             change_collection("all_nodes");
+
+            is_fixed = true;
         }
     }
 
@@ -199,9 +216,15 @@ struct mongo_context
         }
     }
 
-    void change_collection(const std::string& coll)
+    void change_collection(const std::string& coll, bool force_change = false)
     {
-        if(coll == last_collection)
+        if(is_fixed && !force_change)
+        {
+            std::cout << "warning, collection should not be changed" << std::endl;
+            return;
+        }
+
+        if(coll == last_collection && !force_change)
             return;
 
         last_collection = coll;
@@ -896,7 +919,7 @@ struct mongo_requester
         }
     }
 
-    void update_in_db_if_exists(mongo_lock_proxy& ctx, mongo_requester& set_to)
+    /*void update_in_db_if_exists(mongo_lock_proxy& ctx, mongo_requester& set_to)
     {
         bson_t* to_select = bson_new();
 
@@ -934,7 +957,7 @@ struct mongo_requester
 
         bson_destroy(to_update);
         bson_destroy(to_select);
-    }
+    }*/
 
     void update_in_db_if_exact(mongo_lock_proxy& ctx, mongo_requester& set_to)
     {

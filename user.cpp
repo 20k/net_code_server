@@ -4,39 +4,29 @@
 
 void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
 {
-    ctx->change_collection(name);
-
     mongo_requester filter;
     filter.set_prop("name", name);
 
     mongo_requester to_set;
     to_set.set_prop("name", name);
     to_set.set_prop_double("cash", cash);
-    to_set.set_prop_int("last_message_uid", last_message_uid);
     to_set.set_prop("upgr_idx", upgr_idx);
     to_set.set_prop("loaded_upgr_idx", loaded_upgr_idx);
     to_set.set_prop("user_port", user_port);
 
-    filter.update_in_db_if_exists(ctx, to_set);
+    filter.update_in_db_if_exact(ctx, to_set);
 }
 
 bool user::exists(mongo_lock_proxy& ctx, const std::string& name_)
 {
-    ctx->change_collection(name_);
+    mongo_requester req;
+    req.set_prop("name", name_);
 
-    bson_t* to_find = BCON_NEW("name", "{", "$exists", BCON_BOOL(true), "}");
-
-    std::vector<std::string> ret = ctx->find_bson(name_, to_find, nullptr);
-
-    bson_destroy(to_find);
-
-    return ret.size() != 0;
+    return req.fetch_from_db(ctx).size() == 1;
 }
 
 bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
 {
-    ctx->change_collection(name_);
-
     if(!exists(ctx, name_))
         return false;
 
@@ -55,8 +45,6 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
             cash = req.get_prop_as_double("cash");
         if(req.has_prop("auth"))
             auth = req.get_prop("auth");
-        if(req.has_prop("last_message_uid"))
-            last_message_uid = req.get_prop_as_integer("last_message_uid");
         if(req.has_prop("upgr_idx"))
             upgr_idx = req.get_prop("upgr_idx");
         if(req.has_prop("loaded_upgr_idx"))
@@ -75,10 +63,9 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
     return true;
 }
 
-bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, const std::string& auth, int last_message_uid_)
+bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, const std::string& auth)
 {
     name = name_;
-    last_message_uid = last_message_uid_;
 
     if(!is_valid_string(name))
         return false;
@@ -88,15 +75,13 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
 
     valid = true;
 
-    ctx->change_collection(name);
-
     mongo_requester request;
     request.set_prop("name", name);
     request.set_prop_bin("auth", auth);
-    request.set_prop_int("last_message_uid", last_message_uid);
     request.set_prop("upgr_idx", "");
     request.set_prop("loaded_upgr_idx", "");
     request.set_prop("user_port", generate_user_port());
+    request.set_prop("is_user", 1);
 
     request.insert_in_db(ctx);
 

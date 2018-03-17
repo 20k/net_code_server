@@ -94,7 +94,6 @@ duk_ret_t make_logs_on(duk_context* ctx, const std::string& username, user_node_
 
     {
         mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
-        user_info->change_collection(username);
 
         if(!usr.load_from_db(user_info, username))
             return push_error(ctx, "No such user");
@@ -218,7 +217,6 @@ duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     {
         mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-        user_ctx->change_collection(get_caller(ctx));
 
         loaded_user.load_from_db(user_ctx, usr);
     }
@@ -613,7 +611,6 @@ duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-        mongo_ctx->change_collection(get_caller(ctx));
 
         mongo_requester request;
         request.set_prop("name", get_caller(ctx));
@@ -1057,7 +1054,6 @@ duk_ret_t load_item_raw(duk_context* ctx, int node_idx, int load_idx, int unload
 
         {
             mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-            mongo_ctx->change_collection(usr.name);
 
             usr.overwrite_user_in_db(mongo_ctx);
         }
@@ -1130,7 +1126,6 @@ duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-        mongo_ctx->change_collection(get_caller(ctx));
 
         found_user.load_from_db(mongo_ctx, get_caller(ctx));
 
@@ -1253,7 +1248,6 @@ duk_ret_t items__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         {
             mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-            mongo_ctx->change_collection(get_caller(ctx));
 
             found_user.load_from_db(mongo_ctx, get_caller(ctx));
 
@@ -1312,7 +1306,6 @@ duk_ret_t items__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     {
         mongo_lock_proxy user_lock = get_global_mongo_user_info_context(get_thread_id(ctx));
-        user_lock->change_collection(get_caller(ctx));
 
         current_user.load_from_db(user_lock, get_caller(ctx));
     }
@@ -1391,7 +1384,6 @@ duk_ret_t items__register_bundle(priv_context& priv_ctx, duk_context* ctx, int s
 
     {
         mongo_lock_proxy user_lock = get_global_mongo_user_info_context(get_thread_id(ctx));
-        user_lock->change_collection(get_caller(ctx));
 
         current_user.load_from_db(user_lock, get_caller(ctx));
     }
@@ -1508,7 +1500,6 @@ duk_ret_t cash__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     {
         mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-        user_ctx->change_collection(from);
 
         if(!target.load_from_db(user_ctx, from))
             return push_error(ctx, "Target does not exist");
@@ -1651,7 +1642,6 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     {
         mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
-        user_info->change_collection(name_of_person_being_attacked);
 
         if(!usr.load_from_db(user_info, name_of_person_being_attacked))
             return push_error(ctx, "No such user");
@@ -1726,7 +1716,6 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     {
         mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
-        user_info->change_collection(name_of_person_being_attacked);
 
         usr.load_from_db(user_info, name_of_person_being_attacked);
     }

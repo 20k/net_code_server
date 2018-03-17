@@ -114,7 +114,6 @@ bool item::transfer_to_user(const std::string& username, int thread_id)
 {
     {
         mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
-        user_ctx->change_collection(username);
 
         user temp;
         temp.load_from_db(user_ctx, username);
@@ -153,7 +152,6 @@ bool item::remove_from_user(const std::string& username, int thread_id)
 
     {
         mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
-        user_ctx->change_collection(username);
 
         mongo_requester request;
         request.set_prop("name", username);
@@ -217,10 +215,8 @@ bool item::transfer_from_to(const std::string& from, const std::string& to, int 
     mongo_requester from_r;
     from_r.set_prop("name", from);
 
-    user_ctx->change_collection(to);
     auto to_found = to_r.fetch_from_db(user_ctx);
 
-    user_ctx->change_collection(from);
     auto from_found = from_r.fetch_from_db(user_ctx);
 
     if(to_found.size() == 0 || from_found.size() == 0)

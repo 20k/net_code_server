@@ -16,7 +16,6 @@ struct user
     std::string name;
     double cash = 0;
     std::string auth;
-    int32_t last_message_uid = 0;
     std::string upgr_idx;
     std::string loaded_upgr_idx;
     std::string user_port;
@@ -26,7 +25,7 @@ struct user
     void overwrite_user_in_db(mongo_lock_proxy& ctx);
     bool exists(mongo_lock_proxy& ctx, const std::string& name_);
     bool load_from_db(mongo_lock_proxy& ctx, const std::string& name_);
-    bool construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, const std::string& auth, int last_message_uid_);
+    bool construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, const std::string& auth);
 
     std::map<std::string, double> get_properties_from_loaded_items(mongo_lock_proxy& ctx);
 
