@@ -30,6 +30,8 @@
 #include "command_handler.hpp"
 #include "logging.hpp"
 
+#include <secret/npc_manager.hpp>
+
 #if 0
 void user_tests()
 {
@@ -257,6 +259,7 @@ int main()
 
     #if 1
     http_test_run();
+    start_npc_thread();
 
     printf("post\n");
 
