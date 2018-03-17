@@ -501,7 +501,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             }
 
 
-            {
+            /*{
                 bool overwrite = false;
 
                 mongo_user_info->change_collection(user_name, true);
@@ -523,7 +523,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
 
                     return "User Migrated. Please run this command again";
                 }
-            }
+            }*/
         }
 
         if(user_exists)

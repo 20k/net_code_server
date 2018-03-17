@@ -4,6 +4,8 @@
 
 void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
 {
+    ctx->change_collection(name);
+
     mongo_requester filter;
     filter.set_prop("name", name);
 
@@ -19,6 +21,8 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
 
 bool user::exists(mongo_lock_proxy& ctx, const std::string& name_)
 {
+    ctx->change_collection(name_);
+
     mongo_requester req;
     req.set_prop("name", name_);
 
@@ -27,6 +31,8 @@ bool user::exists(mongo_lock_proxy& ctx, const std::string& name_)
 
 bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
 {
+    ctx->change_collection(name_);
+
     if(!exists(ctx, name_))
         return false;
 
@@ -65,6 +71,8 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
 
 bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, const std::string& auth)
 {
+    ctx->change_collection(name_);
+
     name = name_;
 
     if(!is_valid_string(name))

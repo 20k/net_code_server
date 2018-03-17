@@ -113,12 +113,12 @@ struct mongo_context
 
         database = mongoc_client_get_database(client, db.c_str());
 
-        if(type == mongo_database_type::USER_PROPERTIES)
+        /*if(type == mongo_database_type::USER_PROPERTIES)
         {
             change_collection("all_users");
 
             is_fixed = true;
-        }
+        }*/
 
         if(type == mongo_database_type::USER_ITEMS)
         {
