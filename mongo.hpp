@@ -698,6 +698,20 @@ struct mongo_requester
         is_arr[key] = 1;
     }
 
+    template<typename T>
+    void set_prop_array(const std::string& key, const std::vector<T>& vals)
+    {
+        std::vector<std::string> strs;
+
+        for(auto& i : vals)
+        {
+            strs.push_back(stringify_hack(i));
+        }
+
+        arr_props[key] = strs;
+        is_arr[key] = 1;
+    }
+
     void set_limit(int64_t limit_)
     {
         limit = limit_;

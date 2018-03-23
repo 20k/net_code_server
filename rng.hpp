@@ -34,6 +34,13 @@ std::vector<T> random_select_of(int len, const std::vector<T>& of)
     return ret;
 }
 
+template<typename T>
+inline
+T random_select_one(const std::vector<T>& of)
+{
+    return random_select_of(1, of).front();
+}
+
 inline
 std::string random_select_of(int len, const std::string& of)
 {

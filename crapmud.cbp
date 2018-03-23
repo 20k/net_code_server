@@ -85,6 +85,8 @@
 		<Unit filename="command_handler.hpp" />
 		<Unit filename="deps/secret/node.cpp" />
 		<Unit filename="deps/secret/node.hpp" />
+		<Unit filename="deps/secret/npc_manager.cpp" />
+		<Unit filename="deps/secret/npc_manager.hpp" />
 		<Unit filename="deps/secret/secret.cpp" />
 		<Unit filename="deps/secret/secret.hpp" />
 		<Unit filename="duk_object_functions.hpp" />

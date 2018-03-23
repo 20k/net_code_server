@@ -13,6 +13,8 @@
 ///ok. Need to fetch users out of the db
 struct user
 {
+    mongo_requester all_found_props;
+
     std::string name;
     double cash = 0;
     std::string auth;

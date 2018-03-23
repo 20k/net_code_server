@@ -88,6 +88,7 @@ bool starts_with(const T& in, const std::string& test)
     return false;
 }
 
+///ALARM: NEED TO ENFORCE LOWERCASE!!!
 inline
 bool is_valid_name_character(char c)
 {

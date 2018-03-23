@@ -57,6 +57,8 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
             loaded_upgr_idx = req.get_prop("loaded_upgr_idx");
         if(req.has_prop("user_port"))
             user_port = req.get_prop("user_port");
+
+        all_found_props = req;
     }
 
     if(user_port == "")
