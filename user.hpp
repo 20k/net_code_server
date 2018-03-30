@@ -53,6 +53,8 @@ struct user
 
     int find_num_scripts(mongo_lock_proxy& ctx);
     int find_num_public_scripts(mongo_lock_proxy& ctx);
+
+    virtual int get_default_network_links();
 };
 
 #endif // USER_HPP_INCLUDED

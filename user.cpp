@@ -125,7 +125,7 @@ std::map<std::string, double> user::get_total_user_properties(mongo_lock_proxy& 
     found["char_count"] += 500;
     found["script_slots"] += 2;
     found["public_script_slots"] += 1;
-    found["network_links"] = 3;
+    found["network_links"] = get_default_network_links();
 
     return found;
 }
@@ -308,4 +308,9 @@ int user::find_num_public_scripts(mongo_lock_proxy& ctx)
     std::vector<mongo_requester> results = request.fetch_from_db(ctx);
 
     return results.size();
+}
+
+int user::get_default_network_links()
+{
+    return 3;
 }
