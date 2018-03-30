@@ -112,6 +112,7 @@ std::map<std::string, double> user::get_properties_from_loaded_items(mongo_lock_
         ret["char_count"] += item_id.get_prop_as_double("char_count");
         ret["script_slots"] += item_id.get_prop_as_double("script_slots");
         ret["public_script_slots"] += item_id.get_prop_as_double("public_script_slots");
+        ret["network_links"] += item_id.get_prop_as_double("network_links");
     }
 
     return ret;
@@ -124,6 +125,7 @@ std::map<std::string, double> user::get_total_user_properties(mongo_lock_proxy& 
     found["char_count"] += 500;
     found["script_slots"] += 2;
     found["public_script_slots"] += 1;
+    found["network_links"] = 3;
 
     return found;
 }
