@@ -22,6 +22,7 @@ enum class mongo_database_type
     CHAT_CHANNEL_PROPERTIES,
     NODE_PROPERTIES,
     NPC_PROPERTIES,
+    NETWORK_PROPERTIES,
     MONGO_COUNT
 };
 
@@ -104,6 +105,14 @@ struct mongo_context
             db = "npc_properties";
         }
 
+        ///hmm.. somewhat of a naming fuckup here
+        ///TODO:
+        ///When we full wipe and clean the db, normalise all names and passwords here
+        if(type == mongo_database_type::NETWORK_PROPERTIES)
+        {
+            uri_str = "mongodb://network_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
+            db = "all_networks";
+        }
 
         #if 0
         if(type == mongo_database_type::USER_AUTH)
@@ -169,6 +178,13 @@ struct mongo_context
         if(type == mongo_database_type::NPC_PROPERTIES)
         {
             change_collection("all_npcs");
+
+            is_fixed = true;
+        }
+
+        if(type == mongo_database_type::NETWORK_PROPERTIES)
+        {
+            change_collection("all_networks");
 
             is_fixed = true;
         }

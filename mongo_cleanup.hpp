@@ -102,6 +102,12 @@ mongo_lock_proxy get_global_mongo_npc_properties_context(int lock_id)
     return get_global_mongo_context(mongo_database_type::NPC_PROPERTIES, lock_id);
 }
 
+inline
+mongo_lock_proxy get_global_mongo_network_properties_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::NETWORK_PROPERTIES, lock_id);
+}
+
 /*inline
 std::vector<int> any_mongo_locks()
 {
