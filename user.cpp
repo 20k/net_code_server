@@ -312,5 +312,5 @@ int user::find_num_public_scripts(mongo_lock_proxy& ctx)
 
 int user::get_default_network_links()
 {
-    return 3;
+    return 4;
 }
