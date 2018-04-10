@@ -21,6 +21,7 @@ struct user
     std::string upgr_idx;
     std::string loaded_upgr_idx;
     std::string user_port;
+    bool initial_connection_setup = false;
 
     bool valid = false;
 
