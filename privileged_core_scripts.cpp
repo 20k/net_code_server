@@ -42,6 +42,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["msg.send"] = make_cary("channel", "\"0000\"", "msg", "\"\"");
     ret["msg.recent"] = make_cary("channel", "\"0000\"", "count", "99");
     ret["users.me"] = make_cary();
+    ret["items.steal"] = make_cary("from", "\"\"", "idx", "0");
     ret["items.expose"] = make_cary("from", "\"\"");
     ret["items.manage"] = make_cary();
     ret["items.xfer_to"] = make_cary("idx", "0", "to", "\"\"");

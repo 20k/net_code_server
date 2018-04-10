@@ -1220,6 +1220,26 @@ duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::string& from, const std::string& to)
+{
+    item placeholder;
+
+    if(placeholder.transfer_from_to_by_index(item_idx, from, to, get_thread_id(ctx)))
+    {
+        std::string xfer = "`NItem xfer` | from: " + from  + ", to: " + to + ", index: " + std::to_string(item_idx);
+
+        make_logs_on(ctx, from, user_node_info::ITEM_LOG, {xfer});
+        make_logs_on(ctx, to, user_node_info::ITEM_LOG, {xfer});
+
+        duk_push_int(ctx, placeholder.get_prop_as_integer("item_id"));
+    }
+    else
+        push_error(ctx, "Could not xfer");
+
+    return 1;
+}
+
+inline
 duk_ret_t items__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -1267,21 +1287,33 @@ duk_ret_t items__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
             return push_error(ctx, accum);
     }
 
-    item placeholder;
-
-    if(placeholder.transfer_from_to_by_index(item_idx, from, to, get_thread_id(ctx)))
-    {
-        std::string xfer = "`NItem xfer` | from: " + from  + ", to: " + to + ", index: " + std::to_string(item_idx);
-
-        make_logs_on(ctx, from, user_node_info::ITEM_LOG, {xfer});
-        make_logs_on(ctx, to, user_node_info::ITEM_LOG, {xfer});
-
-        duk_push_int(ctx, placeholder.get_prop_as_integer("item_id"));
-    }
-    else
-        push_error(ctx, "Could not xfer");
+    push_xfer_item_with_logs(ctx, item_idx, from, to);
 
     return 1;
+}
+
+inline
+std::optional<std::pair<user, user_nodes>> get_user_and_nodes(duk_context* ctx, const std::string& name)
+{
+    user_nodes nodes;
+
+    {
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+        nodes.ensure_exists(node_ctx, get_caller(ctx));
+        nodes.load_from_db(node_ctx, get_caller(ctx));
+    }
+
+    user found_user;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        if(!found_user.load_from_db(mongo_ctx, get_caller(ctx)))
+            return std::nullopt;
+    }
+
+    return std::pair(found_user, nodes);
 }
 
 inline
@@ -1499,8 +1531,8 @@ duk_ret_t items__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
 
-        nodes.ensure_exists(node_ctx, get_caller(ctx));
-        nodes.load_from_db(node_ctx, get_caller(ctx));
+        nodes.ensure_exists(node_ctx, from);
+        nodes.load_from_db(node_ctx, from);
     }
 
     user found_user;
@@ -1508,7 +1540,7 @@ duk_ret_t items__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
 
-        if(!found_user.load_from_db(mongo_ctx, get_caller(ctx)))
+        if(!found_user.load_from_db(mongo_ctx, from))
             return push_error(ctx, "No such user/really catastrophic error");
     }
 
@@ -1528,11 +1560,36 @@ duk_ret_t items__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
-/*inline
+///have items__steal reset internal node structure
+inline
 duk_ret_t items__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    std::string from = duk_safe_get_prop_string(ctx, -1, "from");
 
-}*/
+    int item_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
+
+    if(from == "" || item_idx < 0)
+        return push_error(ctx, "Args: from:<username>, idx:item_offset");
+
+    auto found = get_user_and_nodes(ctx, from);
+
+    if(!found.has_value())
+        return push_error(ctx, "Error or no such user");
+
+    user found_user = found->first;
+    user_nodes nodes = found->second;
+
+    std::string accum;
+
+    ///unloads item if loaded
+    auto ret = load_item_raw(ctx, -1, -1, item_idx, found_user, nodes, accum);
+
+    if(ret > 0)
+        return push_error(ctx, accum);
+
+    push_xfer_item_with_logs(ctx, item_idx, from, get_caller(ctx));
+    return 1;
+}
 
 inline
 duk_ret_t cash__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
@@ -2007,6 +2064,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(msg__recent, 2),
     REGISTER_FUNCTION_PRIV(users__me, 0),
     REGISTER_FUNCTION_PRIV(items__create, 0),
+    REGISTER_FUNCTION_PRIV(items__steal, 4),
     REGISTER_FUNCTION_PRIV(items__expose, 4),
     //REGISTER_FUNCTION_PRIV(sys__disown_upg, 0),
     //REGISTER_FUNCTION_PRIV(sys__xfer_upgrade_uid, 0),
