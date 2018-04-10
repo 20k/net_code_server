@@ -57,4 +57,42 @@ struct user
     virtual int get_default_network_links();
 };
 
+template<typename T>
+inline
+void for_every_user(const T& t)
+{
+    std::vector<mongo_requester> all;
+
+    {
+        mongo_lock_proxy all_auth = get_global_mongo_global_properties_context(-2);
+
+        mongo_requester request;
+
+        request.exists_check["account_token"] = 1;
+
+        all = request.fetch_from_db(all_auth);
+    }
+
+    for(auto& i : all)
+    {
+        auto users = str_to_array(i.get_prop("users"));
+
+        for(std::string& usrname : users)
+        {
+            user usr;
+
+            {
+                mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+                usr.load_from_db(ctx, usrname);
+
+                if(!usr.valid)
+                    continue;
+            }
+
+            t(usr);
+        }
+    }
+}
+
 #endif // USER_HPP_INCLUDED
