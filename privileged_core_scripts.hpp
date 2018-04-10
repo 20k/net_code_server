@@ -1099,56 +1099,8 @@ duk_ret_t load_item_raw(duk_context* ctx, int node_idx, int load_idx, int unload
 }
 
 inline
-duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
+void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes& nodes, user& found_user)
 {
-    COOPERATE_KILL();
-
-    int pretty = !duk_get_prop_string_as_int(ctx, -1, "array", 0);
-    int full = duk_get_prop_string_as_int(ctx, -1, "full", 0);
-
-    int load_idx = duk_get_prop_string_as_int(ctx, -1, "load", -1);
-    int unload_idx = duk_get_prop_string_as_int(ctx, -1, "unload", -1);
-    int node_idx = duk_get_prop_string_as_int(ctx, -1, "node", -1);
-
-    if(load_idx >= 0 && unload_idx >= 0)
-        return push_error(ctx, "Only one load/unload at a time");
-
-    user_nodes nodes;
-
-    {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
-
-        nodes.ensure_exists(node_ctx, get_caller(ctx));
-        nodes.load_from_db(node_ctx, get_caller(ctx));
-    }
-
-    user found_user;
-
-    {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-
-        found_user.load_from_db(mongo_ctx, get_caller(ctx));
-
-        if(!found_user.valid)
-        {
-            push_error(ctx, "No such user/really catastrophic error");
-            return 1;
-        }
-    }
-
-    if(load_idx >= 0 || unload_idx >= 0)
-    {
-        std::string accum;
-
-        auto ret = load_item_raw(ctx, node_idx, load_idx, unload_idx, found_user, nodes, accum);
-
-        if(ret > 0)
-            return ret;
-
-        push_duk_val(ctx, accum);
-        return 1;
-    }
-
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
     std::vector<std::string> to_ret = str_to_array(found_user.upgr_idx);
@@ -1214,6 +1166,55 @@ duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         push_duk_val(ctx, objs);
     }
+}
+
+inline
+duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    int pretty = !duk_get_prop_string_as_int(ctx, -1, "array", 0);
+    int full = duk_get_prop_string_as_int(ctx, -1, "full", 0);
+
+    int load_idx = duk_get_prop_string_as_int(ctx, -1, "load", -1);
+    int unload_idx = duk_get_prop_string_as_int(ctx, -1, "unload", -1);
+    int node_idx = duk_get_prop_string_as_int(ctx, -1, "node", -1);
+
+    if(load_idx >= 0 && unload_idx >= 0)
+        return push_error(ctx, "Only one load/unload at a time");
+
+    user_nodes nodes;
+
+    {
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+        nodes.ensure_exists(node_ctx, get_caller(ctx));
+        nodes.load_from_db(node_ctx, get_caller(ctx));
+    }
+
+    user found_user;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        if(!found_user.load_from_db(mongo_ctx, get_caller(ctx)))
+            return push_error(ctx, "No such user/really catastrophic error");
+    }
+
+    if(load_idx >= 0 || unload_idx >= 0)
+    {
+        std::string accum;
+
+        auto ret = load_item_raw(ctx, node_idx, load_idx, unload_idx, found_user, nodes, accum);
+
+        if(ret > 0)
+            return ret;
+
+        push_duk_val(ctx, accum);
+        return 1;
+    }
+
+    push_internal_items_view(ctx, pretty, full, nodes, found_user);
 
     return 1;
 }
@@ -1480,6 +1481,58 @@ duk_ret_t items__create(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+inline
+duk_ret_t items__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    int pretty = !duk_get_prop_string_as_int(ctx, -1, "array", 0);
+    int full = duk_get_prop_string_as_int(ctx, -1, "full", 0);
+
+    std::string from = duk_safe_get_prop_string(ctx, -1, "from");
+
+    if(from == "")
+        return push_error(ctx, "Args: from:<username>");
+
+    user_nodes nodes;
+
+    {
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+        nodes.ensure_exists(node_ctx, get_caller(ctx));
+        nodes.load_from_db(node_ctx, get_caller(ctx));
+    }
+
+    user found_user;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        if(!found_user.load_from_db(mongo_ctx, get_caller(ctx)))
+            return push_error(ctx, "No such user/really catastrophic error");
+    }
+
+    auto hostile = nodes.valid_hostile_actions();
+
+    if((hostile & user_node_info::XFER_ITEM_FROM) > 0)
+    {
+        push_internal_items_view(ctx, pretty, full, nodes, found_user);
+
+        return 1;
+    }
+    else
+    {
+        return push_error(ctx, "System Breach Node Secured");
+    }
+
+    return 1;
+}
+
+/*inline
+duk_ret_t items__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+
+}*/
 
 inline
 duk_ret_t cash__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
@@ -1954,6 +2007,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(msg__recent, 2),
     REGISTER_FUNCTION_PRIV(users__me, 0),
     REGISTER_FUNCTION_PRIV(items__create, 0),
+    REGISTER_FUNCTION_PRIV(items__expose, 4),
     //REGISTER_FUNCTION_PRIV(sys__disown_upg, 0),
     //REGISTER_FUNCTION_PRIV(sys__xfer_upgrade_uid, 0),
     REGISTER_FUNCTION_PRIV(items__xfer_to, 1),
