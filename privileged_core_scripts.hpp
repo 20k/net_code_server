@@ -1587,6 +1587,14 @@ duk_ret_t items__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(ret > 0)
         return push_error(ctx, accum);
 
+    {
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+        nodes.reset_all_breach();
+
+        nodes.overwrite_in_db(node_ctx);
+    }
+
     push_xfer_item_with_logs(ctx, item_idx, from, get_caller(ctx));
     return 1;
 }
