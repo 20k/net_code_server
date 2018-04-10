@@ -59,7 +59,7 @@ struct user
 
 template<typename T>
 inline
-void for_every_user(const T& t)
+void for_each_user(const T& t)
 {
     std::vector<mongo_requester> all;
 
