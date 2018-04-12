@@ -274,6 +274,9 @@ bool item::transfer_from_to(const std::string& from, const std::string& to, int 
 
 bool item::transfer_from_to_by_index(int index, const std::string& from, const std::string& to, int thread_id)
 {
+    if(from == to)
+        return true;
+
     mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
 
     user u1, u2;

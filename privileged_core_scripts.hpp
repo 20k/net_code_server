@@ -2034,6 +2034,40 @@ duk_ret_t nodes__port(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+///need to strictly define the conditions which allow you to
+///view the status of this item in the network and view its links
+///requirements:
+///must be extremely straightforward to do. One step process on unguarded nodes
+///so. If the node we're using this for is not locked, we freely view connections... without breaching perhaps?
+///otherwise must be breached
+///not sure on literally autobreaching but might be more consistent
+///Ok. So, you must pwn the front node to expose
+///what about to hack behind
+///Pwn breach node again? Use the permissions system and fill in later?
+///node system can happily placeholder still
+///so. When we try and hack something then, will likely have to be
+///#sys.hack({target:"name", NID:1212, hello:true}), kind of clunky
+///maybe i should start introducing short sytax
+///!name({arg:whatever}) = #sys.hack({name:"name", arg:whatever})
+///and ?name() = #net.view({target:"name"})
+///integrate into parser so you can script? maybe #!name
+///#sys.hack will have to take a path
+///so #sys.hack({path:["name1", "name2", "name3"]}), which will have to be abbreviated to
+///in the event that path isn't a full path, a* to the first element, and from the last element
+///allows easy routing
+///#!name1.name2.name3, or #!name3 will take the shortest path by a*
+
+///ok. viewing and autobreaching should leave no logs, viewing and manually breaching will leave logs as per usual (ie none i believe), but
+///it carries that same degree of hostility
+///accessing a node behind a current node should require a higher degree of breaching
+inline
+duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+
+    push_error(ctx, "unimpl");
+    return 1;
+}
+
 inline
 std::string parse_function_hack(std::string in)
 {
