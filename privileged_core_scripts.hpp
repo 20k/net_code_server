@@ -13,6 +13,7 @@
 #ifdef USE_SECRET_CONTENT
 #include <secret/secret.hpp>
 #include <secret/node.hpp>
+#include <secret/npc_manager.hpp>
 #endif // USE_SECRET_CONTENT
 
 #define COOPERATE_KILL() duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk); \
@@ -2063,8 +2064,29 @@ duk_ret_t nodes__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 inline
 duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
 
-    push_error(ctx, "unimpl");
+    std::string from = duk_safe_get_prop_string(ctx, -1, "from");
+    int pretty = !duk_get_prop_string_as_int(ctx, -1, "array", 0);
+
+    if(from == "")
+        return push_error(ctx, "usage: net.view({from:<username>})");
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    auto links = playspace_network_manage.get_links(from);
+
+    if(!pretty)
+    {
+        push_duk_val(ctx, links);
+    }
+    else
+    {
+        std::string str = format_pretty_names(links);
+
+        push_duk_val(ctx, str);
+    }
+
     return 1;
 }
 
@@ -2118,6 +2140,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(nodes__manage, 1),
     REGISTER_FUNCTION_PRIV(nodes__port, 1),
     REGISTER_FUNCTION_PRIV(nodes__view_log, 1),
+    REGISTER_FUNCTION_PRIV(net__view, 4),
 };
 
 std::map<std::string, std::vector<script_arg>> construct_core_args();
