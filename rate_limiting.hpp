@@ -71,6 +71,14 @@ struct rate_limit
 #define RATELIMIT_DUK(type) if(!get_global_rate_limit()->try_call(get_caller(ctx), rate::type)) {push_error(ctx, "Rate Limit"); return 1;}
 #define SHOULD_RATELIMIT(name, type) !get_global_rate_limit()->try_call(name, rate::type)
 
+#define COOPERATE_KILL() duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk); \
+                         sandbox_data* sand_data = (sandbox_data*)mem_funcs_duk.udata; \
+                         if(sand_data->terminate_semi_gracefully) \
+                         { printf("Cooperating with kill\n");\
+                             while(1){Sleep(10);}\
+                         }
+
+
 extern rate_limit global_rate_limit;
 
 inline

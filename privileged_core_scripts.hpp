@@ -18,13 +18,6 @@
 #include <secret/npc_manager.hpp>
 #endif // USE_SECRET_CONTENT
 
-#define COOPERATE_KILL() duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk); \
-                         sandbox_data* sand_data = (sandbox_data*)mem_funcs_duk.udata; \
-                         if(sand_data->terminate_semi_gracefully) \
-                         { printf("Cooperating with kill\n");\
-                             while(1){Sleep(10);}\
-                         }
-
 struct priv_context
 {
     ///if we execute accts.balance from i20k.hello, this is i20k not accts.balance
@@ -2082,7 +2075,7 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    if(!playspace_network_manage.has_accessible_path_to(from, get_caller(ctx)))
+    if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx)))
        return push_error(ctx, "Inaccessible");
 
     auto links = playspace_network_manage.get_links(from);
@@ -2130,7 +2123,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    if(!playspace_network_manage.has_accessible_path_to(from, get_caller(ctx)))
+    if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx)))
         return push_error(ctx, "Target Inaccessible");
 
     vec2i centre = {w/2, h/2};
