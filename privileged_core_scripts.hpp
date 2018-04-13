@@ -2113,12 +2113,12 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     for(int y=0; y < h; y++)
     {
-        for(int x=0; x < w-1; x++)
+        for(int x=0; x < w; x++)
         {
             str.push_back(" ");
         }
 
-        str.push_back("\n");
+        //str.push_back("\n");
     }
 
     std::string from = duk_safe_get_prop_string(ctx, -1, "from");
@@ -2146,6 +2146,8 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::vector<std::string> next_ring;
     std::vector<std::string> current_ring{from};
 
+    ///eg f_12323, a
+    std::vector<std::pair<std::string, std::string>> keys;
     std::map<std::string, std::string> display_string;
     int overall_count = 0;
 
@@ -2155,7 +2157,11 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         for(auto& i : current_ring)
         {
+            if(rings.find(i) != rings.end())
+                continue;
+
             display_string[i] = chars[overall_count];
+            keys.push_back({i, display_string[i]});
             overall_count++;
             overall_count %= chars.size();
         }
@@ -2276,11 +2282,45 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         //str[clamped.y() * w + clamped.x()] = display_string[i.first].front();
     }
 
+    keys.insert(keys.begin(), {"", "Key"});
+
     std::string built;
 
-    for(auto& i : str)
+    #if 0
+    for(int i=0; i < (int)str.size(); i++)
     {
-        built += i;
+        built += str[i];
+
+        /*built += " ";
+
+        if(i < keys.size())
+        {
+            std::string col = string_to_colour(keys[i].first);
+
+            built += "`" + col + keys[i].first + ": " + keys[i].second + "`";
+        }*/
+
+
+
+        //built += "\n";
+    }
+    #endif // 0
+
+    for(int y=0; y < h; y++)
+    {
+        for(int x=0; x < w; x++)
+        {
+            built += str[y * w + x];
+        }
+
+        if(y < keys.size())
+        {
+            std::string col = string_to_colour(keys[y].first);
+
+            built += "      `" + col + keys[y].second + ": " + keys[y].first + "`";
+        }
+
+        built += "\n";
     }
 
     push_duk_val(ctx, built);
