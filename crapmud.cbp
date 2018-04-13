@@ -58,6 +58,10 @@
 			<Add option="-fexceptions" />
 			<Add option="-fno-devirtualize" />
 			<Add option="-Wno-narrowing" />
+			<Add option="-mmitigate-rop" />
+			<Add option="-pie -fPIE" />
+			<Add option="-fno-strict-aliasing" />
+			<Add option="-D_FORTIFY_SOURCE=2" />
 			<Add directory="deps" />
 		</Compiler>
 		<Linker>

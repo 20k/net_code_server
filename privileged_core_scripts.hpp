@@ -2082,6 +2082,9 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
+    if(!playspace_network_manage.has_accessible_path_to(from, get_caller(ctx)))
+       return push_error(ctx, "Inaccessible");
+
     auto links = playspace_network_manage.get_links(from);
 
     if(!pretty)
@@ -2125,13 +2128,17 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(num < 0 || num >= 10)
         return push_error(ctx, "num out of range [1,10]");
 
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    if(!playspace_network_manage.has_accessible_path_to(from, get_caller(ctx)))
+        return push_error(ctx, "Target Inaccessible");
+
     vec2i centre = {w/2, h/2};
 
     int spacing = 3;
 
     std::map<std::string, int> rings;
 
-    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
     //auto links = playspace_network_manage.get_links(from)
     std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
