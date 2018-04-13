@@ -2108,17 +2108,12 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<std::string> str;
 
-    //for(int i=0; i < w * h; i++)
-    //    str.push_back(' ');
-
     for(int y=0; y < h; y++)
     {
         for(int x=0; x < w; x++)
         {
             str.push_back(" ");
         }
-
-        //str.push_back("\n");
     }
 
     std::string from = duk_safe_get_prop_string(ctx, -1, "from");
@@ -2133,9 +2128,6 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     vec2i centre = {w/2, h/2};
 
     int spacing = 3;
-
-    //std::vector<std::set<std::string>> rings;
-    //rings.resize(num);
 
     std::map<std::string, int> rings;
 
@@ -2214,9 +2206,6 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             next = clamp(next, (vec2i){0, 0}, (vec2i){w, h}-1);
 
             node_to_pos[nodes[i]] = next;
-
-            //str[next.y() * w + next.x()] = chars[overall_count];
-            //overall_count++;
         }
     }
 
@@ -2278,33 +2267,11 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         std::string to_display = "`" + string_to_colour(i.first) + display_string[i.first] + "`";
 
         str[clamped.y() * w + clamped.x()] = to_display;
-
-        //str[clamped.y() * w + clamped.x()] = display_string[i.first].front();
     }
 
     keys.insert(keys.begin(), {"", "Key"});
 
     std::string built;
-
-    #if 0
-    for(int i=0; i < (int)str.size(); i++)
-    {
-        built += str[i];
-
-        /*built += " ";
-
-        if(i < keys.size())
-        {
-            std::string col = string_to_colour(keys[i].first);
-
-            built += "`" + col + keys[i].first + ": " + keys[i].second + "`";
-        }*/
-
-
-
-        //built += "\n";
-    }
-    #endif // 0
 
     for(int y=0; y < h; y++)
     {
@@ -2313,7 +2280,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             built += str[y * w + x];
         }
 
-        if(y < keys.size())
+        if(y < (int)keys.size())
         {
             std::string col = string_to_colour(keys[y].first);
 
@@ -2324,8 +2291,6 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     push_duk_val(ctx, built);
-
-    //push_duk_val(ctx, str);
 
     return 1;
 }
