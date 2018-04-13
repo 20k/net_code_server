@@ -9,6 +9,8 @@
 #include "item.hpp"
 #include "script_util_shared.hpp"
 
+#include <vec/vec.hpp>
+
 #define USE_SECRET_CONTENT
 #ifdef USE_SECRET_CONTENT
 #include <secret/secret.hpp>
@@ -2061,6 +2063,12 @@ duk_ret_t nodes__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 ///ok. viewing and autobreaching should leave no logs, viewing and manually breaching will leave logs as per usual (ie none i believe), but
 ///it carries that same degree of hostility
 ///accessing a node behind a current node should require a higher degree of breaching
+
+///this function is inadequate
+///we need a proper 2d representation
+///we need a n step map, and additionally
+
+///this function needs to respect locks and breaching etc
 inline
 duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
@@ -2086,6 +2094,118 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         push_duk_val(ctx, str);
     }
+
+    return 1;
+}
+
+inline
+duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    int w = 26;
+    int h = 20;
+
+    std::string str;
+
+    //for(int i=0; i < w * h; i++)
+    //    str.push_back(' ');
+
+    for(int y=0; y < h; y++)
+    {
+        for(int x=0; x < w-1; x++)
+        {
+            str.push_back(' ');
+        }
+
+        str.push_back('\n');
+    }
+
+    std::string from = duk_safe_get_prop_string(ctx, -1, "from");
+    int num = duk_get_prop_string_as_int(ctx, -1, "n", 2);
+
+    if(from == "")
+        return push_error(ctx, "usage: net.map({from:<username>, num:2})");
+
+    if(num < 0 || num >= 10)
+        return push_error(ctx, "num out of range [1,10]");
+
+    vec2i centre = {w/2, h/2};
+
+    int spacing = 2;
+
+    //std::vector<std::set<std::string>> rings;
+    //rings.resize(num);
+
+    std::map<std::string, int> rings;
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+    //auto links = playspace_network_manage.get_links(from)
+
+    std::vector<std::string> next_ring;
+    std::vector<std::string> current_ring{from};
+
+    for(int ring = 0; ring < num; ring++)
+    {
+        next_ring.clear();
+
+        for(const std::string& str : current_ring)
+        {
+            if(rings.find(str) != rings.end())
+                continue;
+
+            rings[str] = ring;
+
+            auto connections = playspace_network_manage.get_links(str);
+
+            for(auto& i : connections)
+            {
+                if(rings.find(i) != rings.end())
+                    continue;
+
+                next_ring.push_back(i);
+            }
+        }
+
+        current_ring = next_ring;
+    }
+
+    std::map<int, std::vector<std::string>> ring_to_nodes;
+
+    for(auto& i : rings)
+    {
+        ring_to_nodes[i.second].push_back(i.first);
+    }
+
+    for(int ring = 0; ring < num; ring++)
+    {
+        auto nodes = ring_to_nodes[ring];
+
+        for(int i=0; i < nodes.size(); i++)
+        {
+            float frac = (float)i / nodes.size();
+
+            float angle = frac * 2 * M_PI;
+
+            vec2f offset = {spacing*ring, 0.f};
+            offset = offset.rot(angle);
+
+            vec2i next = centre + (vec2i){offset.x(), offset.y()};
+
+            std::cout << "next " << next.x() << std::endl;
+
+            next = clamp(next, (vec2i){0, 0}, (vec2i){w, h}-1);
+
+            str[next.y() * w + next.x()] = 'a';
+        }
+    }
+
+    /*for(auto& i : rings)
+    {
+        std::cout << i.first << " " << i.second << std::endl;
+    }*/
+
+    push_duk_val(ctx, str);
 
     return 1;
 }
@@ -2141,6 +2261,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(nodes__port, 1),
     REGISTER_FUNCTION_PRIV(nodes__view_log, 1),
     REGISTER_FUNCTION_PRIV(net__view, 4),
+    REGISTER_FUNCTION_PRIV(net__map, 4),
 };
 
 std::map<std::string, std::vector<script_arg>> construct_core_args();

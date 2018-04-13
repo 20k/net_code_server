@@ -54,6 +54,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["nodes.port"] = make_cary();
     ret["nodes.view_log"] = make_cary("name", "\"\"", "NID", "-1");
     ret["net.view"] = make_cary("from", "\"\"");
+    ret["net.map"] = make_cary("from", "\"\"", "n", "2");
 
     return ret;
 }
