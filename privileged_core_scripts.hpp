@@ -2186,8 +2186,6 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     for(auto& i : rings)
     {
         ring_to_nodes[i.second].push_back(i.first);
-
-        std::cout << "ring " << i.first << " " << i.second << std::endl;
     }
 
     std::map<std::string, vec2i> node_to_pos;
