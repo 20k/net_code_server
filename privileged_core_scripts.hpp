@@ -2103,10 +2103,10 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    int w = 26;
-    int h = 20;
+    int w = 40;
+    int h = 30;
 
-    std::string str;
+    std::vector<std::string> str;
 
     //for(int i=0; i < w * h; i++)
     //    str.push_back(' ');
@@ -2115,10 +2115,10 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         for(int x=0; x < w-1; x++)
         {
-            str.push_back(' ');
+            str.push_back(" ");
         }
 
-        str.push_back('\n');
+        str.push_back("\n");
     }
 
     std::string from = duk_safe_get_prop_string(ctx, -1, "from");
@@ -2132,7 +2132,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     vec2i centre = {w/2, h/2};
 
-    int spacing = 2;
+    int spacing = 3;
 
     //std::vector<std::set<std::string>> rings;
     //rings.resize(num);
@@ -2141,13 +2141,24 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
     //auto links = playspace_network_manage.get_links(from)
+    std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     std::vector<std::string> next_ring;
     std::vector<std::string> current_ring{from};
 
+    std::map<std::string, std::string> display_string;
+    int overall_count = 0;
+
     for(int ring = 0; ring < num; ring++)
     {
         next_ring.clear();
+
+        for(auto& i : current_ring)
+        {
+            display_string[i] = chars[overall_count];
+            overall_count++;
+            overall_count %= chars.size();
+        }
 
         for(const std::string& str : current_ring)
         {
@@ -2175,13 +2186,17 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     for(auto& i : rings)
     {
         ring_to_nodes[i.second].push_back(i.first);
+
+        std::cout << "ring " << i.first << " " << i.second << std::endl;
     }
+
+    std::map<std::string, vec2i> node_to_pos;
 
     for(int ring = 0; ring < num; ring++)
     {
         auto nodes = ring_to_nodes[ring];
 
-        for(int i=0; i < nodes.size(); i++)
+        for(int i=0; i < (int)nodes.size(); i++)
         {
             float frac = (float)i / nodes.size();
 
@@ -2192,20 +2207,87 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             vec2i next = centre + (vec2i){offset.x(), offset.y()};
 
-            std::cout << "next " << next.x() << std::endl;
-
             next = clamp(next, (vec2i){0, 0}, (vec2i){w, h}-1);
 
-            str[next.y() * w + next.x()] = 'a';
+            node_to_pos[nodes[i]] = next;
+
+            //str[next.y() * w + next.x()] = chars[overall_count];
+            //overall_count++;
         }
     }
 
-    /*for(auto& i : rings)
+    for(auto& i : node_to_pos)
     {
-        std::cout << i.first << " " << i.second << std::endl;
-    }*/
+        const std::string& name = i.first;
+        vec2i pos = i.second;
 
-    push_duk_val(ctx, str);
+        auto connections = playspace_network_manage.get_links(name);
+
+        int colour_offset_count = 0;
+
+        for(auto& conn : connections)
+        {
+            auto found = node_to_pos.find(conn);
+
+            if(found == node_to_pos.end())
+                continue;
+
+            vec2i to_draw_pos = found->second;
+
+            vec2f out_dir;
+            int out_num;
+
+            line_draw_helper((vec2f){pos.x(), pos.y()}, (vec2f){to_draw_pos.x(), to_draw_pos.y()}, out_dir, out_num);
+
+            /*vec2i idiff = to_draw_pos - pos;
+
+            vec2f fdiff = (vec2f){idiff.x(), idiff.y()};
+
+            out_dir = fdiff.norm();
+            out_num = fdiff.length();*/
+
+            vec2f cur = (vec2f){pos.x(), pos.y()};
+
+            for(int i=0; i < out_num; i++)
+            {
+                vec2f rpos = round(cur);
+                vec2i ipos = clamp((vec2i){rpos.x(), rpos.y()}, (vec2i){0,0}, (vec2i){w-1, h-1});
+
+                std::string col = string_to_colour(name);
+
+                if((colour_offset_count % 2) == 1)
+                    col = string_to_colour(conn);
+
+                str[ipos.y() * w + ipos.x()] = "`" + col + ".`";
+
+                cur += out_dir;
+            }
+
+            colour_offset_count++;
+        }
+    }
+
+    for(auto& i : node_to_pos)
+    {
+        vec2i clamped = clamp(i.second, (vec2i){0, 0}, (vec2i){w-1, h});
+
+        std::string to_display = "`" + string_to_colour(i.first) + display_string[i.first] + "`";
+
+        str[clamped.y() * w + clamped.x()] = to_display;
+
+        //str[clamped.y() * w + clamped.x()] = display_string[i.first].front();
+    }
+
+    std::string built;
+
+    for(auto& i : str)
+    {
+        built += i;
+    }
+
+    push_duk_val(ctx, built);
+
+    //push_duk_val(ctx, str);
 
     return 1;
 }
