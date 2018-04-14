@@ -1808,7 +1808,8 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
 
-        usr.load_from_db(user_info, name_of_person_being_attacked);
+        if(!usr.load_from_db(user_info, name_of_person_being_attacked))
+            return push_error(ctx, "No such user");
     }
 
     user_nodes nodes;
