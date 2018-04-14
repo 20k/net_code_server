@@ -2055,7 +2055,27 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx), path_info::VIEW_LINKS))
        return push_error(ctx, "Inaccessible");
 
-    auto links = playspace_network_manage.get_links(from);
+    std::optional opt_user_and_nodes = get_user_and_nodes(ctx, from);
+
+    if(!opt_user_and_nodes.has_value())
+        return push_error(ctx, "No such user");
+
+    auto hostile_actions = opt_user_and_nodes->second.valid_hostile_actions();
+
+    if(from != get_caller(ctx) && !((hostile_actions & user_node_info::VIEW_LINKS) > 0))
+        return push_error(ctx, "Node is Locked");
+
+    std::vector<std::string> links = playspace_network_manage.get_links(from);
+
+    /*for(int i=0; i < (int)links.size(); i++)
+    {
+        if(!playspace_network_manage.has_accessible_path_to(ctx, links[i], from, path_info::VIEW_LINKS))
+        {
+            links.erase(links.begin() + i);
+            i--;
+            continue;
+        }
+    }*/
 
     if(!pretty)
     {
@@ -2112,6 +2132,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     //auto links = playspace_network_manage.get_links(from)
     std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
+    std::set<std::string> accessible;
     std::set<std::string> inaccessible;
     std::vector<std::string> next_ring;
     std::vector<std::string> current_ring{from};
@@ -2153,10 +2174,17 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
                 if(inaccessible.find(i) != inaccessible.end())
                     continue;
 
-                if(!playspace_network_manage.has_accessible_path_to(ctx, i, get_caller(ctx), path_info::VIEW_LINKS))
+                if(accessible.find(i) == accessible.end())
                 {
-                    inaccessible.insert(i);
-                    continue;
+                    if(!playspace_network_manage.has_accessible_path_to(ctx, i, str, path_info::VIEW_LINKS))
+                    {
+                        inaccessible.insert(i);
+                        continue;
+                    }
+                    else
+                    {
+                        accessible.insert(i);
+                    }
                 }
 
                 next_ring.push_back(i);
