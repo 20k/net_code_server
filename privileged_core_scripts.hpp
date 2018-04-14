@@ -1179,15 +1179,6 @@ duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(load_idx >= 0 && unload_idx >= 0)
         return push_error(ctx, "Only one load/unload at a time");
 
-    user_nodes nodes;
-
-    {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
-
-        nodes.ensure_exists(node_ctx, get_caller(ctx));
-        nodes.load_from_db(node_ctx, get_caller(ctx));
-    }
-
     user found_user;
 
     {
@@ -1195,6 +1186,15 @@ duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         if(!found_user.load_from_db(mongo_ctx, get_caller(ctx)))
             return push_error(ctx, "No such user/really catastrophic error");
+    }
+
+    user_nodes nodes;
+
+    {
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+        nodes.ensure_exists(node_ctx, get_caller(ctx));
+        nodes.load_from_db(node_ctx, get_caller(ctx));
     }
 
     if(load_idx >= 0 || unload_idx >= 0)
@@ -2112,6 +2112,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     //auto links = playspace_network_manage.get_links(from)
     std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
+    std::set<std::string> inaccessible;
     std::vector<std::string> next_ring;
     std::vector<std::string> current_ring{from};
 
@@ -2148,6 +2149,15 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             {
                 if(rings.find(i) != rings.end())
                     continue;
+
+                if(inaccessible.find(i) != inaccessible.end())
+                    continue;
+
+                if(!playspace_network_manage.has_accessible_path_to(ctx, i, get_caller(ctx), path_info::VIEW_LINKS))
+                {
+                    inaccessible.insert(i);
+                    continue;
+                }
 
                 next_ring.push_back(i);
             }
@@ -2272,6 +2282,62 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+#ifdef TESTING
+inline
+duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string target = duk_safe_get_prop_string(ctx, -1, "target");
+
+    if(target == "")
+        return push_error(ctx, "Usage: cheats.arm({target:<target>})");
+
+    std::optional opt_user_and_nodes = get_user_and_nodes(ctx, target);
+
+    if(!opt_user_and_nodes.has_value())
+        return push_error(ctx, "No such user");
+
+    std::string lock = "crt_reg";
+
+    item test_item = item_types::get_default_of(item_types::LOCK, lock);
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(get_thread_id(ctx));
+        test_item.generate_set_id(mongo_ctx);
+    }
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+        test_item.create_in_db(mongo_ctx);
+    }
+
+    if(test_item.transfer_to_user(target, get_thread_id(ctx)))
+    {
+
+    }
+    else
+    {
+        return push_error(ctx, "Could not transfer item to caller");
+    }
+
+    opt_user_and_nodes = get_user_and_nodes(ctx, target);
+
+    std::string accum;
+
+    //auto ret = load_item_raw(ctx, node_idx, load_idx, unload_idx, found_user, nodes, accum);
+
+    auto ret = load_item_raw(ctx, -1, 0, -1, opt_user_and_nodes->first, opt_user_and_nodes->second, accum);
+
+    if(ret > 0)
+        return ret;
+
+    push_duk_val(ctx, accum);
+
+    return 0;
+}
+#endif
+
 inline
 std::string parse_function_hack(std::string in)
 {
@@ -2324,6 +2390,9 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(nodes__view_log, 1),
     REGISTER_FUNCTION_PRIV(net__view, 4),
     REGISTER_FUNCTION_PRIV(net__map, 4),
+    #ifdef TESTING
+    REGISTER_FUNCTION_PRIV(cheats__arm, 4),
+    #endif // TESTING
 };
 
 std::map<std::string, std::vector<script_arg>> construct_core_args();
