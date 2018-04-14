@@ -1288,29 +1288,6 @@ duk_ret_t items__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
-inline
-std::optional<std::pair<user, user_nodes>> get_user_and_nodes(duk_context* ctx, const std::string& name)
-{
-    user found_user;
-
-    {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-
-        if(!found_user.load_from_db(mongo_ctx, get_caller(ctx)))
-            return std::nullopt;
-    }
-
-    user_nodes nodes;
-
-    {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
-
-        nodes.ensure_exists(node_ctx, get_caller(ctx));
-        nodes.load_from_db(node_ctx, get_caller(ctx));
-    }
-
-    return std::pair(found_user, nodes);
-}
 
 inline
 duk_ret_t items__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
@@ -2075,7 +2052,7 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx)))
+    if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx), path_info::VIEW_LINKS))
        return push_error(ctx, "Inaccessible");
 
     auto links = playspace_network_manage.get_links(from);
@@ -2123,7 +2100,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx)))
+    if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx), path_info::VIEW_LINKS))
         return push_error(ctx, "Target Inaccessible");
 
     vec2i centre = {w/2, h/2};
