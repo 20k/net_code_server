@@ -1291,15 +1291,6 @@ duk_ret_t items__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 inline
 std::optional<std::pair<user, user_nodes>> get_user_and_nodes(duk_context* ctx, const std::string& name)
 {
-    user_nodes nodes;
-
-    {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
-
-        nodes.ensure_exists(node_ctx, get_caller(ctx));
-        nodes.load_from_db(node_ctx, get_caller(ctx));
-    }
-
     user found_user;
 
     {
@@ -1307,6 +1298,15 @@ std::optional<std::pair<user, user_nodes>> get_user_and_nodes(duk_context* ctx, 
 
         if(!found_user.load_from_db(mongo_ctx, get_caller(ctx)))
             return std::nullopt;
+    }
+
+    user_nodes nodes;
+
+    {
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+        nodes.ensure_exists(node_ctx, get_caller(ctx));
+        nodes.load_from_db(node_ctx, get_caller(ctx));
     }
 
     return std::pair(found_user, nodes);
