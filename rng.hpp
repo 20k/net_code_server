@@ -91,7 +91,7 @@ T random_select_of_rarity(U<T, float>& rarities, float rarity)
         accum += i.second;
     }
 
-    return rarities.front()->first;
+    return rarities.begin()->first;
 }
 
 inline
