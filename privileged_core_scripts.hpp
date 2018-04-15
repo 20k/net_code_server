@@ -1795,12 +1795,8 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
-duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::string& name_of_person_being_attacked)
 {
-    COOPERATE_KILL();
-
-    std::string name_of_person_being_attacked = get_host_from_fullname(priv_ctx.called_as);
-
     //std::cout << "user_name " << name_of_person_being_attacked << std::endl;
 
     user usr;
@@ -1935,6 +1931,15 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+inline
+duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string name_of_person_being_attacked = get_host_from_fullname(priv_ctx.called_as);
+
+    return hack_internal(priv_ctx, ctx, name_of_person_being_attacked);
+}
 
 inline
 duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
