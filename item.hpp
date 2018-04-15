@@ -120,6 +120,8 @@ struct item
 extern
 double get_wall_time_s();
 
+///migrate a better version of this into secret
+///pass in a probability variable
 namespace item_types
 {
     inline
