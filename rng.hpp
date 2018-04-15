@@ -125,4 +125,15 @@ std::string generate_user_port()
     ///or core_fragment_alpha_9734
 }
 
+template<typename T>
+inline
+void shuffle_csprng_seed(T& t)
+{
+    uint32_t seed = get_random_uint32_t();
+
+    std::minstd_rand gen(seed);
+
+    std::shuffle(t.begin(), t.end(), gen);
+}
+
 #endif // RNG_HPP_INCLUDED
