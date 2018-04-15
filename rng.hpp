@@ -72,6 +72,28 @@ std::string random_select_of_det(int len, const std::string& of, T& t)
     return ret;
 }
 
+template<typename T, template<typename, typename> typename U>
+inline
+T random_select_of_rarity(U<T, float>& rarities, float rarity)
+{
+    float max_rare = 0;
+
+    for(auto& i : rarities)
+        max_rare += i.second;
+
+    float accum = 0;
+
+    for(auto& i : rarities)
+    {
+        if(rarity <= accum / max_rare)
+            return i.first;
+
+        accum += i.second;
+    }
+
+    return rarities.front()->first;
+}
+
 inline
 std::string random_lowercase_ascii_string(int len)
 {
@@ -127,13 +149,13 @@ std::string generate_user_port()
     ///or core_fragment_alpha_9734
 }
 
-template<typename T>
+template<typename U, typename T>
 inline
 void shuffle_csprng_seed(T& t)
 {
     uint32_t seed = get_random_uint32_t();
 
-    std::minstd_rand gen(seed);
+    U gen(seed);
 
     std::shuffle(t.begin(), t.end(), gen);
 }
