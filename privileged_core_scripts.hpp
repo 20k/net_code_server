@@ -1426,6 +1426,7 @@ duk_ret_t items__register_bundle(priv_context& priv_ctx, duk_context* ctx, int s
     return push_success(ctx);
 }
 
+#ifdef TESTING
 inline
 duk_ret_t items__create(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
@@ -1485,6 +1486,7 @@ duk_ret_t items__create(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return 1;
 }
+#endif // TESTING
 
 inline
 duk_ret_t items__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
@@ -1937,6 +1939,24 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
     COOPERATE_KILL();
 
     std::string name_of_person_being_attacked = get_host_from_fullname(priv_ctx.called_as);
+
+    return hack_internal(priv_ctx, ctx, name_of_person_being_attacked);
+}
+
+inline
+duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string name_of_person_being_attacked = duk_safe_get_prop_string(ctx, -1, "target");
+
+    if(name_of_person_being_attacked == "")
+        return push_error(ctx, "Usage: net.hack({target:<name>})");
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    if(!playspace_network_manage.has_accessible_path_to(ctx, name_of_person_being_attacked, get_caller(ctx), path_info::USE_LINKS))
+        return push_error(ctx, "No Path");
 
     return hack_internal(priv_ctx, ctx, name_of_person_being_attacked);
 }
@@ -2409,7 +2429,9 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(msg__send, 3),
     REGISTER_FUNCTION_PRIV(msg__recent, 2),
     REGISTER_FUNCTION_PRIV(users__me, 0),
+    #ifdef TESTING
     REGISTER_FUNCTION_PRIV(items__create, 0),
+    #endif // TESTING
     REGISTER_FUNCTION_PRIV(items__steal, 4),
     REGISTER_FUNCTION_PRIV(items__expose, 4),
     //REGISTER_FUNCTION_PRIV(sys__disown_upg, 0),
@@ -2424,6 +2446,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(nodes__view_log, 1),
     REGISTER_FUNCTION_PRIV(net__view, 4),
     REGISTER_FUNCTION_PRIV(net__map, 4),
+    REGISTER_FUNCTION_PRIV(net__hack, 4),
     #ifdef TESTING
     REGISTER_FUNCTION_PRIV(cheats__arm, 4),
     #endif // TESTING
