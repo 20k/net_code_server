@@ -20,6 +20,14 @@ uint32_t get_random_uint32_t()
     return ret;
 }
 
+inline
+float get_random_float()
+{
+    uint32_t random_int = get_random_uint32_t();
+
+    return (double)random_int / ((double)pow(2., 32.)-1.);
+}
+
 template<typename T>
 inline
 std::vector<T> random_select_of(int len, const std::vector<T>& of)
