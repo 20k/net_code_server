@@ -3,6 +3,8 @@
 
 #include <string>
 #include <vector>
+#include <random>
+#include <algorithm>
 
 std::string random_binary_string(int len);
 
