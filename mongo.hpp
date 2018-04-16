@@ -254,6 +254,8 @@ struct mongo_context
 
     void make_lock(int who)
     {
+        std::lock_guard lck(internal_safety);
+
         map_lock.lock();
 
         per_collection_lock[last_collection];
@@ -270,6 +272,8 @@ struct mongo_context
 
     void make_unlock()
     {
+        std::lock_guard lck(internal_safety);
+
         map_lock.lock();
 
         per_collection_lock[last_collection];
@@ -287,6 +291,8 @@ struct mongo_context
     {
         //if(who == locked_by)
         {
+            std::lock_guard lck(internal_safety);
+
             map_lock.lock();
 
             per_collection_lock[last_collection];
@@ -423,8 +429,8 @@ struct mongo_context
 
     void update_json_many(const std::string& script_host, const std::string& selector, const std::string& update) const
     {
-        if(script_host != last_collection)
-            return;
+        //if(script_host != last_collection)
+        //    return;
 
         bson_t* bs = make_bson_from_json(selector);
         bson_t* us = make_bson_from_json(update);
@@ -467,12 +473,9 @@ struct mongo_context
     }
     #endif // 0
 
-    std::vector<std::string> find_bson(const std::string& script_host, bson_t* bs, bson_t* ps) const
+    std::vector<std::string> find_bson(const std::string& script_host, bson_t* bs, bson_t* ps)
     {
         std::vector<std::string> results;
-
-        //if(script_host != last_collection)
-        //    return results;
 
         if(bs == nullptr)
             return results;
@@ -483,9 +486,16 @@ struct mongo_context
             return {"Banned query"};
         }
 
-        if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
         {
-            return std::vector<std::string>();
+            std::lock_guard lck(internal_safety);
+
+            if(script_host != last_collection)
+                return results;
+
+            if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
+            {
+                return std::vector<std::string>();
+            }
         }
 
         const bson_t *doc;
@@ -512,7 +522,7 @@ struct mongo_context
         return results;
     }
 
-    std::vector<std::string> find_json(const std::string& script_host, const std::string& json, const std::string& proj) const
+    std::vector<std::string> find_json(const std::string& script_host, const std::string& json, const std::string& proj)
     {
         std::vector<std::string> results;
 
@@ -534,24 +544,32 @@ struct mongo_context
         return results;
     }
 
-    void remove_bson(const std::string& script_host, bson_t* bs) const
+    void remove_bson(const std::string& script_host, bson_t* bs)
     {
-        //if(script_host != last_collection)
-        //    return;
+        {
+            std::lock_guard lck(internal_safety);
 
-        if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
-            return;
+            if(script_host != last_collection)
+                return;
+
+            if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
+                return;
+        }
 
         mongoc_collection_delete_many(collection, bs, nullptr, nullptr, nullptr);
     }
 
-    void remove_json(const std::string& script_host, const std::string& json) const
+    void remove_json(const std::string& script_host, const std::string& json)
     {
-        //if(script_host != last_collection)
-        //    return;
+        {
+            std::lock_guard lck(internal_safety);
 
-        if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
-            return;
+            if(script_host != last_collection)
+                return;
+
+            if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
+                return;
+        }
 
         bson_t* bs = make_bson_from_json(json);
 
