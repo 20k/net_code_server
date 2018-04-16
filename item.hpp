@@ -123,6 +123,7 @@ double get_wall_time_s();
 namespace item_types
 {
     item get_default_of(item_types::item_type type, const std::string& lock_name);
+    item get_default(item_types::item_type type);
 }
 
 #endif // ITEMS_HPP_INCLUDED

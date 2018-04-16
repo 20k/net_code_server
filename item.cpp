@@ -343,11 +343,7 @@ item item_types::get_default_of(item_types::item_type type, const std::string& l
 {
     using namespace item_types;
 
-    item new_item;
-    new_item.set_prop("item_type", (int)type);
-    new_item.set_prop("rarity", 0);
-    new_item.set_prop("native_item", 1); ///identifies this class of item, separates it from built in scripts
-    new_item.set_prop("tier", "0");
+    item new_item = get_default(item_types::LOCK);
 
     if(type < quick_names.size() && type >= 0)
         new_item.set_prop("short_name", quick_names[(int)type]);
@@ -399,6 +395,17 @@ item item_types::get_default_of(item_types::item_type type, const std::string& l
         new_item.set_prop("run_every_s", 60*10);
         new_item.set_prop("last_run", 0);
     }
+
+    return new_item;
+}
+
+item item_types::get_default(item_types::item_type type)
+{
+    item new_item;
+    new_item.set_prop("item_type", (int)type);
+    new_item.set_prop("rarity", 0);
+    new_item.set_prop("native_item", 1); ///identifies this class of item, separates it from built in scripts
+    new_item.set_prop("tier", "0");
 
     return new_item;
 }
