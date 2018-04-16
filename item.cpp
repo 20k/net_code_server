@@ -410,6 +410,21 @@ item item_types::get_default(item_types::item_type type)
     return new_item;
 }
 
+void item_types::give_item_to(item& new_item, const std::string& to, int thread_id)
+{
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(thread_id);
+        new_item.generate_set_id(mongo_ctx);
+    }
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(thread_id);
+        new_item.create_in_db(mongo_ctx);
+    }
+
+    new_item.transfer_to_user(to, thread_id);
+}
+
 ///need a remove from user... and then maybe pull out all the lock proxies?
 ///implement remove from user
 
