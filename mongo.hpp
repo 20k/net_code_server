@@ -291,7 +291,7 @@ struct mongo_context
     {
         //if(who == locked_by)
         {
-            std::lock_guard lck(internal_safety);
+            /*std::lock_guard lck(internal_safety);
 
             map_lock.lock();
 
@@ -303,7 +303,20 @@ struct mongo_context
             if(found->second.locked_by == who)
                 found->second.unlock();
 
-            printf("Salvaged db\n");
+            printf("Salvaged db\n");*/
+
+            map_lock.lock();
+
+            for(auto& i : per_collection_lock)
+            {
+                if(i.second.locked_by == who)
+                {
+                    i.second.unlock();
+                    printf("salvaged db\n");
+                }
+            }
+
+            map_lock.unlock();
         }
     }
 
