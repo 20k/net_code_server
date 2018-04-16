@@ -7,6 +7,8 @@
 #include <iostream>
 #include <mutex>
 #include <set>
+#include <map>
+#include <atomic>
 
 enum class mongo_database_type
 {
@@ -28,6 +30,27 @@ enum class mongo_database_type
 
 std::string strip_whitespace(std::string);
 
+struct lock_internal
+{
+    int locked_by = -1;
+    std::atomic_int locked{0};
+
+    void lock(int who)
+    {
+        int expected = 0;
+
+        while(!locked.compare_exchange_strong(expected, 1)){}
+
+        locked_by = who;
+    }
+
+    void unlock()
+    {
+        locked_by = -1;
+        locked = 0;
+    }
+};
+
 struct mongo_context
 {
     mongoc_client_t* client = nullptr;
@@ -37,8 +60,12 @@ struct mongo_context
     std::string last_collection = "";
     std::string last_db = "";
 
-    std::mutex lock;
-    int locked_by = -1;
+    std::recursive_mutex internal_safety;
+    std::mutex map_lock;
+    //std::mutex lock;
+    //int locked_by = -1;
+
+    std::map<std::string, lock_internal> per_collection_lock;
 
     bool is_fixed = false;
 
@@ -48,6 +75,8 @@ struct mongo_context
     ///if we ever have to add another db, make this fully data driven with structs and definitions and the like
     mongo_context(mongo_database_type type)
     {
+        std::lock_guard lck(internal_safety);
+
         std::string uri_str = "Err";
         std::string db = "Err";
 
@@ -139,14 +168,14 @@ struct mongo_context
 
         if(type == mongo_database_type::USER_ITEMS)
         {
-            change_collection("all_items");
+            change_collection_unsafe("all_items");
 
             is_fixed = true;
         }
 
         if(type == mongo_database_type::GLOBAL_PROPERTIES)
         {
-            change_collection("global_properties");
+            change_collection_unsafe("global_properties");
 
             is_fixed = true;
         }
@@ -163,34 +192,34 @@ struct mongo_context
 
         if(type == mongo_database_type::CHAT_CHANNEL_PROPERTIES)
         {
-            change_collection("all_channel_properties");
+            change_collection_unsafe("all_channel_properties");
 
             is_fixed = true;
         }
 
         if(type == mongo_database_type::NODE_PROPERTIES)
         {
-            change_collection("all_nodes");
+            change_collection_unsafe("all_nodes");
 
             is_fixed = true;
         }
 
         if(type == mongo_database_type::NPC_PROPERTIES)
         {
-            change_collection("all_npcs");
+            change_collection_unsafe("all_npcs");
 
             is_fixed = true;
         }
 
         if(type == mongo_database_type::NETWORK_PROPERTIES)
         {
-            change_collection("all_networks");
+            change_collection_unsafe("all_networks");
 
             is_fixed = true;
         }
     }
 
-    bool contains_banned_query(bson_t* bs)
+    bool contains_banned_query(bson_t* bs) const
     {
         if(bs == nullptr)
             return false;
@@ -225,30 +254,57 @@ struct mongo_context
 
     void make_lock(int who)
     {
-        lock.lock();
+        map_lock.lock();
 
-        locked_by = who;
+        per_collection_lock[last_collection];
+        auto found = per_collection_lock.find(last_collection);
+
+        map_lock.unlock();
+
+        found->second.lock(who);
+
+        /*lock.lock();
+
+        locked_by = who;*/
     }
 
     void make_unlock()
     {
-        locked_by = -1;
+        map_lock.lock();
 
-        lock.unlock();
+        per_collection_lock[last_collection];
+        auto found = per_collection_lock.find(last_collection);
+
+        map_lock.unlock();
+
+        found->second.unlock();
+
+        /*locked_by = -1;
+        lock.unlock();*/
     }
 
     void unlock_if(int who)
     {
-        if(who == locked_by)
+        //if(who == locked_by)
         {
-            locked_by = -1;
-            lock.unlock();
+            map_lock.lock();
+
+            per_collection_lock[last_collection];
+            auto found = per_collection_lock.find(last_collection);
+
+            map_lock.unlock();
+
+            if(found->second.locked_by == who)
+                found->second.unlock();
+
             printf("Salvaged db\n");
         }
     }
 
-    void change_collection(const std::string& coll, bool force_change = false)
+    void change_collection_unsafe(const std::string& coll, bool force_change = false)
     {
+        std::lock_guard lck(internal_safety);
+
         if(is_fixed && !force_change)
         {
             std::cout << "warning, collection should not be changed" << std::endl;
@@ -295,7 +351,7 @@ struct mongo_context
         bson_free (str);
     }
 
-    bson_t* make_bson_from_json(const std::string& json)
+    bson_t* make_bson_from_json(const std::string& json) const
     {
         bson_error_t error;
 
@@ -312,10 +368,10 @@ struct mongo_context
         return bson;
     }
 
-    void insert_bson_1(const std::string& script_host, bson_t* bs)
+    void insert_bson_1(const std::string& script_host, bson_t* bs) const
     {
-        if(script_host != last_collection)
-            return;
+        //if(script_host != last_collection)
+        //    return;
 
         if(contains_banned_query(bs))
         {
@@ -331,10 +387,10 @@ struct mongo_context
         }
     }
 
-    void insert_json_1(const std::string& script_host, const std::string& json)
+    void insert_json_1(const std::string& script_host, const std::string& json) const
     {
-        if(script_host != last_collection)
-            return;
+        //if(script_host != last_collection)
+        //    return;
 
         bson_t* bs = make_bson_from_json(json);
 
@@ -346,14 +402,14 @@ struct mongo_context
         bson_destroy(bs);
     }
 
-    void update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update)
+    void update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update) const
     {
         if(selector == nullptr || update == nullptr)
             return;
 
         if(contains_banned_query(selector) || contains_banned_query(update))
         {
-            printf("banned\n");
+            //printf("banned\n");
             return;
         }
 
@@ -365,7 +421,7 @@ struct mongo_context
         }
     }
 
-    void update_json_many(const std::string& script_host, const std::string& selector, const std::string& update)
+    void update_json_many(const std::string& script_host, const std::string& selector, const std::string& update) const
     {
         if(script_host != last_collection)
             return;
@@ -411,19 +467,19 @@ struct mongo_context
     }
     #endif // 0
 
-    std::vector<std::string> find_bson(const std::string& script_host, bson_t* bs, bson_t* ps)
+    std::vector<std::string> find_bson(const std::string& script_host, bson_t* bs, bson_t* ps) const
     {
         std::vector<std::string> results;
 
-        if(script_host != last_collection)
-            return results;
+        //if(script_host != last_collection)
+        //    return results;
 
         if(bs == nullptr)
             return results;
 
         if(contains_banned_query(bs) || contains_banned_query(ps))
         {
-            printf("banned\n");
+            //printf("banned\n");
             return {"Banned query"};
         }
 
@@ -456,12 +512,12 @@ struct mongo_context
         return results;
     }
 
-    std::vector<std::string> find_json(const std::string& script_host, const std::string& json, const std::string& proj)
+    std::vector<std::string> find_json(const std::string& script_host, const std::string& json, const std::string& proj) const
     {
         std::vector<std::string> results;
 
-        if(script_host != last_collection)
-            return results;
+        //if(script_host != last_collection)
+        //    return results;
 
         //printf("find\n");
 
@@ -478,10 +534,10 @@ struct mongo_context
         return results;
     }
 
-    void remove_bson(const std::string& script_host, bson_t* bs)
+    void remove_bson(const std::string& script_host, bson_t* bs) const
     {
-        if(script_host != last_collection)
-            return;
+        //if(script_host != last_collection)
+        //    return;
 
         if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
             return;
@@ -489,10 +545,10 @@ struct mongo_context
         mongoc_collection_delete_many(collection, bs, nullptr, nullptr, nullptr);
     }
 
-    void remove_json(const std::string& script_host, const std::string& json)
+    void remove_json(const std::string& script_host, const std::string& json) const
     {
-        if(script_host != last_collection)
-            return;
+        //if(script_host != last_collection)
+        //    return;
 
         if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
             return;
@@ -504,7 +560,7 @@ struct mongo_context
         bson_destroy(bs);
     }
 
-    void insert_test_data()
+    void insert_test_data() const
     {
         bson_error_t error;
 
@@ -532,6 +588,8 @@ struct mongo_lock_proxy
 {
     mongo_context* ctx = nullptr;
 
+    int ilock_id = -1;
+
     mongo_lock_proxy(mongo_context* fctx, int lock_id)
     {
         ctx = fctx;
@@ -540,6 +598,15 @@ struct mongo_lock_proxy
             return;
 
         ctx->make_lock(lock_id);
+        ilock_id = lock_id;
+    }
+
+    void change_collection(const std::string& coll, bool force_change = false)
+    {
+        ///need to alter locks
+        ctx->make_unlock();
+        ctx->change_collection_unsafe(coll, force_change);
+        ctx->make_lock(ilock_id);
     }
 
     ~mongo_lock_proxy()
@@ -1044,7 +1111,7 @@ void mongo_tests(const std::string& coll)
     ///mongoc_client_t *client = mongoc_client_new ("mongodb://user:password@localhost/?authSource=mydb");
 
     mongo_context ctx(mongo_database_type::USER_ACCESSIBLE);
-    ctx.change_collection(coll);
+    ctx.change_collection_unsafe(coll);
 
     //ctx.insert_test_data();
 

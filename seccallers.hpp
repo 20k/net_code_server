@@ -19,7 +19,7 @@ duk_ret_t db_insert(duk_context* ctx)
     COOPERATE_KILL();
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
-    mongo_ctx->change_collection(get_script_host(ctx));
+    mongo_ctx.change_collection(get_script_host(ctx));
 
     std::string json = duk_json_encode(ctx, -1);
 
@@ -36,7 +36,7 @@ duk_ret_t db_update(duk_context* ctx)
     COOPERATE_KILL();
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
-    mongo_ctx->change_collection(get_script_host(ctx));
+    mongo_ctx.change_collection(get_script_host(ctx));
 
     std::string json_1 = duk_json_encode(ctx, 0);
     std::string json_2 = duk_json_encode(ctx, 1);
@@ -68,7 +68,7 @@ duk_ret_t db_find_all(duk_context* ctx)
     COOPERATE_KILL();
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
-    mongo_ctx->change_collection(get_script_host(ctx));
+    mongo_ctx.change_collection(get_script_host(ctx));
 
     duk_push_this(ctx);
 
@@ -105,7 +105,7 @@ duk_ret_t db_find_one(duk_context* ctx)
     COOPERATE_KILL();
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
-    mongo_ctx->change_collection(get_script_host(ctx));
+    mongo_ctx.change_collection(get_script_host(ctx));
 
     duk_push_this(ctx);
 
@@ -201,7 +201,7 @@ duk_ret_t db_remove(duk_context* ctx)
     COOPERATE_KILL();
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
-    mongo_ctx->change_collection(get_script_host(ctx));
+    mongo_ctx.change_collection(get_script_host(ctx));
 
     std::string json = duk_json_encode(ctx, -1);
 

@@ -712,7 +712,7 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         for(auto& current_user : users)
         {
             mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
-            mongo_ctx->change_collection(current_user);
+            mongo_ctx.change_collection(current_user);
 
             size_t real_time = get_wall_time();
 
@@ -773,7 +773,7 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
-    mongo_ctx->change_collection(get_caller(ctx));
+    mongo_ctx.change_collection(get_caller(ctx));
 
     ///ALARM: ALARM: RATE LIMIT
 
@@ -1653,7 +1653,7 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     {
         mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
-        user_info->change_collection(name_of_person_being_attacked);
+        user_info.change_collection(name_of_person_being_attacked);
 
         usr.load_from_db(user_info, name_of_person_being_attacked);
     }

@@ -261,10 +261,10 @@ bool item::transfer_from_to(const std::string& from, const std::string& to, int 
     mongo_requester from_update;
     from_update.set_prop("upgr_idx", array_to_str(from_upgrades));
 
-    user_ctx->change_collection(to);
+    user_ctx.change_collection(to);
     to_select.update_in_db_if_exact(user_ctx, to_update);
 
-    user_ctx->change_collection(from);
+    user_ctx.change_collection(from);
     from_select.update_in_db_if_exact(user_ctx, from_update);
 
     overwrite_in_db(item_ctx);

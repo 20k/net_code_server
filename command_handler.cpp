@@ -66,7 +66,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(-2);
-        mongo_ctx->change_collection(username);
+        mongo_ctx.change_collection(username);
 
         usr.load_from_db(mongo_ctx, username);
     }
@@ -402,7 +402,7 @@ std::string delete_user(command_handler_state& state, const std::string& str)
     ///DELETE NOTIFS
     {
         mongo_lock_proxy notifs_db = get_global_mongo_pending_notifs_context(-2);
-        notifs_db->change_collection(name);
+        notifs_db.change_collection(name);
 
         bson_t bson;
         bson_init(&bson);
@@ -414,7 +414,7 @@ std::string delete_user(command_handler_state& state, const std::string& str)
     ///delete user db
     {
         mongo_lock_proxy user_db = get_global_mongo_user_accessible_context(-2);
-        user_db->change_collection(name);
+        user_db.change_collection(name);
 
         bson_t bson;
         bson_init(&bson);
@@ -504,7 +504,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             /*{
                 bool overwrite = false;
 
-                mongo_user_info->change_collection(user_name, true);
+                mongo_user_info.change_collection(user_name, true);
 
                 if(state.current_user.exists(mongo_user_info, user_name) && !user_exists)
                 {
@@ -514,7 +514,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                     state.current_user.load_from_db(mongo_user_info, user_name);
                 }
 
-                mongo_user_info->change_collection("all_users", true);
+                mongo_user_info.change_collection("all_users", true);
 
                 if(overwrite && !state.current_user.exists(mongo_user_info, user_name))
                 {
@@ -868,7 +868,7 @@ std::vector<mongo_requester> get_and_update_notifs_for_user(user& usr)
 
     {
         mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
-        ctx->change_collection(usr.name);
+        ctx.change_collection(usr.name);
 
         mongo_requester to_send;
         //to_send.set_prop("to_user", usr.name);
