@@ -68,7 +68,8 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(-2);
         mongo_ctx.change_collection(username);
 
-        usr.load_from_db(mongo_ctx, username);
+        if(!usr.load_from_db(mongo_ctx, username))
+            return "No such user";
     }
 
     static std::mutex id_mut;
