@@ -1014,7 +1014,7 @@ void change_item_raw(mongo_lock_proxy& mongo_ctx, int load_idx, int unload_idx, 
 }*/
 
 inline
-duk_ret_t load_item_raw(duk_context* ctx, int node_idx, int load_idx, int unload_idx, user& usr, user_nodes& nodes, std::string& accum)
+std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr, user_nodes& nodes, std::string& accum, int thread_id)
 {
     std::string to_load = usr.index_to_item(load_idx);
     std::string to_unload = usr.index_to_item(unload_idx);
@@ -1025,15 +1025,15 @@ duk_ret_t load_item_raw(duk_context* ctx, int node_idx, int load_idx, int unload
         which = to_unload;
 
     if(which == "")
-        return push_error(ctx, "Item not found");
+        return "Item not found";
 
     item next;
 
     {
-        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
 
         if(!next.exists_in_db(item_ctx, which))
-            return push_error(ctx, "Something weird happened");
+            return "Something weird happened";
 
         next.load_from_db(item_ctx, which);
     }
@@ -1049,7 +1049,7 @@ duk_ret_t load_item_raw(duk_context* ctx, int node_idx, int load_idx, int unload
         usr.unload_item(tul);
 
         {
-            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(thread_id);
 
             usr.overwrite_user_in_db(mongo_ctx);
         }
@@ -1062,10 +1062,10 @@ duk_ret_t load_item_raw(duk_context* ctx, int node_idx, int load_idx, int unload
     if(which == to_load && node_idx == -1)
     {
         if(nodes.any_contains_lock(to_load))
-            return push_error(ctx, "Already loaded");
+            return "Already loaded";
 
         {
-            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
             nodes.load_lock_to_any(item_ctx, to_load);
         }
 
@@ -1087,11 +1087,11 @@ duk_ret_t load_item_raw(duk_context* ctx, int node_idx, int load_idx, int unload
     //if(which == to_unload && node_idx )
 
     {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(thread_id);
         nodes.overwrite_in_db(node_ctx);
     }
 
-    return 0;
+    return "";
 }
 
 inline
@@ -1201,10 +1201,10 @@ duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         std::string accum;
 
-        auto ret = load_item_raw(ctx, node_idx, load_idx, unload_idx, found_user, nodes, accum);
+        auto ret = load_item_raw(node_idx, load_idx, unload_idx, found_user, nodes, accum, get_thread_id(ctx));
 
-        if(ret > 0)
-            return ret;
+        if(ret != "")
+            return push_error(ctx, ret);
 
         push_duk_val(ctx, accum);
         return 1;
@@ -1277,10 +1277,10 @@ duk_ret_t items__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         std::string accum;
 
-        auto ret = load_item_raw(ctx, -1, -1, item_idx, found_user, nodes, accum);
+        auto ret = load_item_raw(-1, -1, item_idx, found_user, nodes, accum, get_thread_id(ctx));
 
-        if(ret > 0)
-            return push_error(ctx, accum);
+        if(ret != "")
+            return push_error(ctx, ret);
     }
 
     push_xfer_item_with_logs(ctx, item_idx, from, to);
@@ -1546,7 +1546,7 @@ duk_ret_t items__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(from == "" || item_idx < 0)
         return push_error(ctx, "Args: from:<username>, idx:item_offset");
 
-    auto found = get_user_and_nodes(ctx, from);
+    auto found = get_user_and_nodes(from, get_thread_id(ctx));
 
     if(!found.has_value())
         return push_error(ctx, "Error or no such user");
@@ -1557,10 +1557,10 @@ duk_ret_t items__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string accum;
 
     ///unloads item if loaded
-    auto ret = load_item_raw(ctx, -1, -1, item_idx, found_user, nodes, accum);
+    auto ret = load_item_raw(-1, -1, item_idx, found_user, nodes, accum, get_thread_id(ctx));
 
-    if(ret > 0)
-        return push_error(ctx, accum);
+    if(ret != "")
+        return push_error(ctx, ret);
 
     {
         mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
@@ -2081,7 +2081,7 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx), path_info::VIEW_LINKS))
        return push_error(ctx, "Inaccessible");
 
-    std::optional opt_user_and_nodes = get_user_and_nodes(ctx, from);
+    std::optional opt_user_and_nodes = get_user_and_nodes(from, get_thread_id(ctx));
 
     if(!opt_user_and_nodes.has_value())
         return push_error(ctx, "No such user");
@@ -2347,7 +2347,7 @@ duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(target == "")
         return push_error(ctx, "Usage: cheats.arm({target:<target>})");
 
-    std::optional opt_user_and_nodes = get_user_and_nodes(ctx, target);
+    std::optional opt_user_and_nodes = get_user_and_nodes(target, get_thread_id(ctx));
 
     if(!opt_user_and_nodes.has_value())
         return push_error(ctx, "No such user");
@@ -2375,16 +2375,16 @@ duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)
         return push_error(ctx, "Could not transfer item to caller");
     }
 
-    opt_user_and_nodes = get_user_and_nodes(ctx, target);
+    opt_user_and_nodes = get_user_and_nodes(target, get_thread_id(ctx));
 
     std::string accum;
 
     //auto ret = load_item_raw(ctx, node_idx, load_idx, unload_idx, found_user, nodes, accum);
 
-    auto ret = load_item_raw(ctx, -1, 0, -1, opt_user_and_nodes->first, opt_user_and_nodes->second, accum);
+    auto ret = load_item_raw(-1, 0, -1, opt_user_and_nodes->first, opt_user_and_nodes->second, accum, get_thread_id(ctx));
 
-    if(ret > 0)
-        return ret;
+    if(ret != "")
+        return push_error(ctx, ret);
 
     push_duk_val(ctx, accum);
 
