@@ -2347,6 +2347,12 @@ duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(target == "")
         return push_error(ctx, "Usage: cheats.arm({target:<target>})");
 
+    distribute_loot_around(get_global_playspace_network_manager(), target, 1, 0);
+
+    return 0;
+
+    #if 0
+
     std::optional opt_user_and_nodes = get_user_and_nodes(target, get_thread_id(ctx));
 
     if(!opt_user_and_nodes.has_value())
@@ -2389,6 +2395,7 @@ duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)
     push_duk_val(ctx, accum);
 
     return 0;
+    #endif // 0
 }
 #endif
 
