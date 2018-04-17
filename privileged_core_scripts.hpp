@@ -2397,6 +2397,18 @@ duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 0;
     #endif // 0
 }
+
+inline
+duk_ret_t cheats__salvage(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+    while(1){};
+
+    return 0;
+}
 #endif
 
 inline
@@ -2456,6 +2468,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(net__hack, 4),
     #ifdef TESTING
     REGISTER_FUNCTION_PRIV(cheats__arm, 4),
+    REGISTER_FUNCTION_PRIV(cheats__salvage, 4),
     #endif // TESTING
 };
 
