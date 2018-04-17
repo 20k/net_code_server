@@ -770,6 +770,9 @@ struct mongo_requester
 
         std::string prop = properties[str];
 
+        if(prop == "")
+            return 0;
+
         long long val = atoll(prop.c_str());
 
         return val;
@@ -781,6 +784,9 @@ struct mongo_requester
             return double();
 
         std::string prop = properties[str];
+
+        if(prop == "")
+            return 0;
 
         auto val = atof(prop.c_str());
 

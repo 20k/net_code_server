@@ -335,6 +335,11 @@ void item::handle_rotate()
     if(!should_rotate())
         return;
 
+    force_rotate();
+}
+
+void item::force_rotate()
+{
     set_prop("lock_last_rotate_s", get_wall_time_s());
     set_prop("lock_state", get_random_uint32_t());
 }

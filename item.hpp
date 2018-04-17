@@ -113,6 +113,7 @@ struct item
 
     bool should_rotate();
     void handle_rotate();
+    void force_rotate();
 };
 
 extern

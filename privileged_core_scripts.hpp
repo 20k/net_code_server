@@ -1056,7 +1056,7 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
 
         accum += "Performed non lock item operation";
 
-        return 0;
+        return "";
     }
 
     if(which == to_load && node_idx == -1)
@@ -1551,8 +1551,8 @@ duk_ret_t items__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!found.has_value())
         return push_error(ctx, "Error or no such user");
 
-    user found_user = found->first;
-    user_nodes nodes = found->second;
+    user& found_user = found->first;
+    user_nodes& nodes = found->second;
 
     std::string accum;
 
@@ -1562,11 +1562,24 @@ duk_ret_t items__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(ret != "")
         return push_error(ctx, ret);
 
+    nodes.reset_all_breach();
+
+    for(auto& i : nodes.nodes)
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+        std::vector<item> all_locks = i.get_locks(mongo_ctx);
+
+        for(item& it : all_locks)
+        {
+            it.force_rotate();
+
+            it.overwrite_in_db(mongo_ctx);
+        }
+    }
+
     {
         mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
-
-        nodes.reset_all_breach();
-
         nodes.overwrite_in_db(node_ctx);
     }
 
