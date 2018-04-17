@@ -70,10 +70,6 @@ struct mongo_context
 
     std::string default_collection = "";
 
-    ///thread safety of mongoc
-    ///make timed
-    std::recursive_mutex internal_safety;
-
     ///thread safety of below map
     ///make timed
     std::mutex map_lock;
@@ -91,8 +87,6 @@ struct mongo_context
     ///if we ever have to add another db, make this fully data driven with structs and definitions and the like
     mongo_context(mongo_database_type type)
     {
-        std::lock_guard lck(internal_safety);
-
         std::string uri_str = "Err";
         std::string db = "Err";
 
@@ -235,8 +229,6 @@ struct mongo_context
 
     void make_lock(int who, mongoc_client_t* in_case_of_emergency)
     {
-        std::lock_guard lck(internal_safety);
-
         map_lock.lock();
 
         per_collection_lock[last_collection];
@@ -253,8 +245,6 @@ struct mongo_context
 
     void make_unlock()
     {
-        std::lock_guard lck(internal_safety);
-
         map_lock.lock();
 
         per_collection_lock[last_collection];
