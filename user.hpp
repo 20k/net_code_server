@@ -56,6 +56,8 @@ struct user
     int find_num_public_scripts(mongo_lock_proxy& ctx);
 
     virtual int get_default_network_links();
+
+    virtual ~user(){}
 };
 
 template<typename T>
