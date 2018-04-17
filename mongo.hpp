@@ -34,14 +34,16 @@ struct lock_internal
 {
     int locked_by = -1;
     std::atomic_int locked{0};
+    mongoc_client_t* in_case_of_emergency = nullptr;
 
-    void lock(int who)
+    void lock(int who, mongoc_client_t* emergency)
     {
         int expected = 0;
 
         while(!locked.compare_exchange_strong(expected, 1)){}
 
         locked_by = who;
+        in_case_of_emergency = emergency;
     }
 
     void unlock()
@@ -231,7 +233,7 @@ struct mongo_context
         }
     }
 
-    void make_lock(int who)
+    void make_lock(int who, mongoc_client_t* in_case_of_emergency)
     {
         std::lock_guard lck(internal_safety);
 
@@ -242,7 +244,7 @@ struct mongo_context
 
         map_lock.unlock();
 
-        found->second.lock(who);
+        found->second.lock(who, in_case_of_emergency);
 
         /*lock.lock();
 
@@ -290,6 +292,7 @@ struct mongo_context
             {
                 if(i.second.locked_by == who)
                 {
+                    return_client(i.second.in_case_of_emergency);
                     i.second.unlock();
                     printf("salvaged db\n");
                 }
@@ -646,7 +649,7 @@ struct mongo_lock_proxy
         if(fctx == nullptr)
             return;
 
-        ctx.ctx->make_lock(lock_id);
+        ctx.ctx->make_lock(lock_id, ctx.client);
         ilock_id = lock_id;
 
         if(ctx.ctx->default_collection != "")
@@ -660,7 +663,7 @@ struct mongo_lock_proxy
         ///need to alter locks
         ctx.ctx->make_unlock();
         ctx.change_collection_unsafe(coll, force_change);
-        ctx.ctx->make_lock(ilock_id);
+        ctx.ctx->make_lock(ilock_id, ctx.client);
     }
 
     ~mongo_lock_proxy()
