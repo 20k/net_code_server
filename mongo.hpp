@@ -51,8 +51,14 @@ struct lock_internal
     }
 };
 
+///hmm
+///maybe move most of mongo context into lock proxy
+///and get the client in a thread safe way
 struct mongo_context
 {
+    mongoc_uri_t* uri = nullptr;
+    mongoc_client_pool_t* pool = nullptr;
+
     mongoc_client_t* client = nullptr;
     mongoc_database_t* database = nullptr;
     mongoc_collection_t* collection = nullptr;
@@ -60,11 +66,17 @@ struct mongo_context
     std::string last_collection = "";
     std::string last_db = "";
 
+    ///thread safety of mongoc
+    ///make timed
     std::recursive_mutex internal_safety;
+
+    ///thread safety of below map
+    ///make timed
     std::mutex map_lock;
     //std::mutex lock;
     //int locked_by = -1;
 
+    ///this isn't for thread safety, this is for marshalling db access
     std::map<std::string, lock_internal> per_collection_lock;
 
     bool is_fixed = false;
@@ -150,6 +162,10 @@ struct mongo_context
             db = "user_auth";
         }
         #endif // 0
+
+        uri = mongoc_uri_new(uri_str.c_str());
+        pool = mongoc_client_pool_new(uri);
+        mongoc_client_pool_set_error_api(pool, 2);
 
         client = mongoc_client_new(uri_str.c_str());
 
@@ -389,8 +405,12 @@ struct mongo_context
 
     void insert_bson_1(const std::string& script_host, bson_t* bs) const
     {
-        //if(script_host != last_collection)
-        //    return;
+        {
+            std::lock_guard lck(internal_safety);
+
+            if(script_host != last_collection)
+                return;
+        }
 
         if(contains_banned_query(bs))
         {
@@ -408,8 +428,12 @@ struct mongo_context
 
     void insert_json_1(const std::string& script_host, const std::string& json) const
     {
-        //if(script_host != last_collection)
-        //    return;
+        {
+            std::lock_guard lck(internal_safety);
+
+            if(script_host != last_collection)
+                return;
+        }
 
         bson_t* bs = make_bson_from_json(json);
 
@@ -442,8 +466,12 @@ struct mongo_context
 
     void update_json_many(const std::string& script_host, const std::string& selector, const std::string& update) const
     {
-        //if(script_host != last_collection)
-        //    return;
+        {
+            std::lock_guard lck(internal_safety);
+
+            if(script_host != last_collection)
+                return;
+        }
 
         bson_t* bs = make_bson_from_json(selector);
         bson_t* us = make_bson_from_json(update);
@@ -485,6 +513,11 @@ struct mongo_context
         mongoc_cursor_destroy(cursor);
     }
     #endif // 0
+
+    /*bool has_collection(const std::string& coll)
+    {
+        return !mongoc_database_has_collection()
+    }*/
 
     std::vector<std::string> find_bson(const std::string& script_host, bson_t* bs, bson_t* ps)
     {
@@ -539,8 +572,12 @@ struct mongo_context
     {
         std::vector<std::string> results;
 
-        //if(script_host != last_collection)
-        //    return results;
+        {
+            std::lock_guard lck(internal_safety);
+
+            if(script_host != last_collection)
+                return results;
+        }
 
         //printf("find\n");
 
@@ -591,6 +628,7 @@ struct mongo_context
         bson_destroy(bs);
     }
 
+    #if 0
     void insert_test_data() const
     {
         bson_error_t error;
@@ -604,6 +642,17 @@ struct mongo_context
 
         bson_destroy (insert);
     }
+    #endif
+
+    mongoc_client_t* request_client()
+    {
+        return mongoc_client_pool_pop(pool);
+    }
+
+    void return_client(mongoc_client_t* pclient)
+    {
+        return mongoc_client_pool_push(pool, pclient);
+    }
 
     ~mongo_context()
     {
@@ -612,8 +661,26 @@ struct mongo_context
 
         mongoc_database_destroy (database);
         mongoc_client_destroy (client);
+        mongoc_uri_destroy (uri);
     }
 };
+
+/*struct mongo_interface
+{
+    mongoc_client_t* client = nullptr;
+    mongo_context* ctx = nullptr;
+
+    mongo_interface(mongo_context* fctx)
+    {
+        ctx = fctx;
+        client = fctx->request_client();
+    }
+
+    ~mongo_interface()
+    {
+        ctx->return_client(client);
+    }
+};*/
 
 struct mongo_lock_proxy
 {
