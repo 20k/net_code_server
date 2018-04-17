@@ -40,7 +40,7 @@ struct lock_internal
     {
         int expected = 0;
 
-        while(!locked.compare_exchange_strong(expected, 1)){}
+        while(!locked.compare_exchange_strong(expected, 1)){expected = 0;}
 
         locked_by = who;
         in_case_of_emergency = emergency;
