@@ -2360,7 +2360,10 @@ duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(target == "")
         return push_error(ctx, "Usage: cheats.arm({target:<target>})");
 
-    distribute_loot_around(get_global_playspace_network_manager(), target, 1, 0);
+    float gc_cap = 100;
+    float items_cap = 10;
+
+    distribute_loot_around(get_global_playspace_network_manager(), target, 1, 0, gc_cap, items_cap);
 
     return 0;
 
