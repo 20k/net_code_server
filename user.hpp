@@ -50,6 +50,8 @@ struct user
     bool has_item(const std::string& id);
     void remove_item(const std::string& id);
 
+    void clear_items();
+
     int num_items();
 
     int find_num_scripts(mongo_lock_proxy& ctx);

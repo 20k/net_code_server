@@ -286,6 +286,12 @@ void user::remove_item(const std::string& id)
     upgr_idx = array_to_str(items);
 }
 
+void user::clear_items()
+{
+    upgr_idx = "";
+    loaded_upgr_idx = "";
+}
+
 int user::num_items()
 {
     return str_to_array(upgr_idx).size();
