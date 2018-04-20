@@ -2469,7 +2469,7 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         usr.overwrite_user_in_db(mongo_ctx);
 
-        return push_success(ctx, "Success\n");
+        return push_success(ctx, "Success");
     }
 
     if(add_user.size() == 0 && remove_user.size() == 0 && !view_users)
