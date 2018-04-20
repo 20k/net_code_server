@@ -2398,14 +2398,15 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!opt_user_and_nodes.has_value())
         return push_error(ctx, "No such user");
 
+    user& usr = opt_user_and_nodes->first;
+
     auto valid_actions = opt_user_and_nodes->second.valid_hostile_actions();
 
-    if((valid_actions & user_node_info::CLAIM_NPC) == 0)
+    if(!usr.is_allowed_user(get_caller(ctx)) && (valid_actions & user_node_info::CLAIM_NPC) == 0)
         return push_error(ctx, "Cannot claim user, insufficient permissions");
 
     ///anything past this point should probably force a payment of 200 credits
 
-    std::string commands = "Usage: add_user:<username>, remove_user:<username>, view_users:true\nPrice: 200\n";
 
     std::string add_user = duk_safe_get_prop_string(ctx, -1, "add_user");
     std::string remove_user = duk_safe_get_prop_string(ctx, -1, "remove_user");
@@ -2414,9 +2415,16 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<std::string> allowed_users = opt_user_and_nodes->first.get_allowed_users();
 
+    std::string price_str = "Price: 200\n";
+
+    if(usr.is_allowed_user(get_caller(ctx)))
+        price_str = "Price: Free\n";
+
+    std::string commands = "Usage: add_user:<username>, remove_user:<username>, view_users:true\n" + price_str;
+
     if(add_user.size() == 0 && remove_user.size() == 0 && view_users)
     {
-        if(handle_confirmed(ctx, confirm, get_caller(ctx)))
+        if(!usr.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, confirm, get_caller(ctx)))
             return 1;
 
         std::string ret;
@@ -2447,13 +2455,11 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 return push_error(ctx, "Invalid remove_user username");
         }
 
-        user& usr = opt_user_and_nodes->first;
-
         if(usr.all_found_props.get_prop_as_integer("is_user") == 1)
             return push_error(ctx, "Cannot take over a user");
 
         ///should be free if we're an allowed user
-        if(handle_confirmed(ctx, confirm, get_caller(ctx)))
+        if(!usr.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, confirm, get_caller(ctx)))
             return 1;
 
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
