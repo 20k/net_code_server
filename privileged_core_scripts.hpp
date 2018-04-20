@@ -2350,21 +2350,26 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
-duk_ret_t handle_confirmed(duk_context* ctx, bool confirm, user& usr)
+duk_ret_t handle_confirmed(duk_context* ctx, bool confirm, const std::string& username)
 {
+    std::optional opt_user = get_user(username, get_thread_id(ctx));
+
+    if(!opt_user.has_value())
+        return push_error(ctx, "No such user");
+
     if(!confirm)
         return push_error(ctx, "Please confirm:true to pay 200");
 
     double price = 200;
 
-    if(usr.cash < price)
+    if(opt_user->cash < price)
         return push_error(ctx, "Please acquire more wealth");
 
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-        usr.cash -= price;
+        opt_user->cash -= price;
 
-        usr.overwrite_user_in_db(mongo_ctx);
+        opt_user->overwrite_user_in_db(mongo_ctx);
     }
 
     return 0;
@@ -2396,7 +2401,7 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     auto valid_actions = opt_user_and_nodes->second.valid_hostile_actions();
 
     if((valid_actions & user_node_info::CLAIM_NPC) == 0)
-        return push_error(ctx, "Cannot claim user");
+        return push_error(ctx, "Cannot claim user, insufficient permissions");
 
     ///anything past this point should probably force a payment of 200 credits
 
@@ -2411,10 +2416,10 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(add_user.size() == 0 && remove_user.size() == 0 && view_users)
     {
-        if(handle_confirmed(ctx, confirm, opt_user_and_nodes->first))
+        if(handle_confirmed(ctx, confirm, get_caller(ctx)))
             return 1;
 
-        std::string ret = commands;
+        std::string ret;
 
         ret += "Authed Users:\n";
 
@@ -2447,7 +2452,7 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(usr.all_found_props.get_prop_as_integer("is_user") == 1)
             return push_error(ctx, "Cannot take over a user");
 
-        if(handle_confirmed(ctx, confirm, opt_user_and_nodes->first))
+        if(handle_confirmed(ctx, confirm, get_caller(ctx)))
             return 1;
 
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
@@ -2463,6 +2468,14 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
 
         usr.overwrite_user_in_db(mongo_ctx);
+
+        return push_success(ctx, "Success\n");
+    }
+
+    if(add_user.size() == 0 && remove_user.size() == 0 && !view_users)
+    {
+        push_duk_val(ctx, commands);
+        return 1;
     }
 
     return 0;

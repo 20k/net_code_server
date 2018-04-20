@@ -330,6 +330,8 @@ void user::add_allowed_user(const std::string& usr, mongo_lock_proxy& ctx)
     if(is_allowed_user(usr))
         return;
 
+    ctx.change_collection(usr);
+
     owner_list.push_back(usr);
 
     mongo_requester filter;
@@ -349,6 +351,8 @@ void user::remove_allowed_user(const std::string& usr, mongo_lock_proxy& ctx)
 
     if(usr == name)
         return;
+
+    ctx.change_collection(name);
 
     owner_list.erase(std::remove(owner_list.begin(), owner_list.end(), usr), owner_list.end());
 
