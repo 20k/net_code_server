@@ -2452,6 +2452,7 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(usr.all_found_props.get_prop_as_integer("is_user") == 1)
             return push_error(ctx, "Cannot take over a user");
 
+        ///should be free if we're an allowed user
         if(handle_confirmed(ctx, confirm, get_caller(ctx)))
             return 1;
 
