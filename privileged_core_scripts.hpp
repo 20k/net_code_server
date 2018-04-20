@@ -2349,6 +2349,34 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+inline
+duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string name = duk_safe_get_prop_string(ctx, -1, "user");
+
+    if(name == "")
+        return push_error(ctx, "Usage: net.access({user:<name>})");
+
+    ///ok
+    ///need to provide options
+
+    ///valid options:
+    ///add_user
+    ///remove_user
+    ///if no options, print userlist
+
+    std::optional opt_user_and_nodes = get_user_and_nodes(name, get_thread_id(ctx));
+
+    if(!opt_user_and_nodes.has_value())
+        return push_error(ctx, "No such user");
+
+
+
+    return 0;
+}
+
 #ifdef TESTING
 inline
 duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)
@@ -2482,6 +2510,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(net__view, 4),
     REGISTER_FUNCTION_PRIV(net__map, 4),
     REGISTER_FUNCTION_PRIV(net__hack, 4),
+    REGISTER_FUNCTION_PRIV(net__access, 4),
     #ifdef TESTING
     REGISTER_FUNCTION_PRIV(cheats__arm, 4),
     REGISTER_FUNCTION_PRIV(cheats__salvage, 4),
