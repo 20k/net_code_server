@@ -2350,6 +2350,27 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+duk_ret_t handle_confirmed(duk_context* ctx, bool confirm, user& usr)
+{
+    if(!confirm)
+        return push_error(ctx, "Please confirm:true to pay 200");
+
+    double price = 200;
+
+    if(usr.cash < price)
+        return push_error(ctx, "Please acquire more wealth");
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        usr.cash -= price;
+
+        usr.overwrite_user_in_db(mongo_ctx);
+    }
+
+    return 0;
+}
+
+inline
 duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -2372,7 +2393,74 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!opt_user_and_nodes.has_value())
         return push_error(ctx, "No such user");
 
+    auto valid_actions = opt_user_and_nodes->second.valid_hostile_actions();
 
+    if((valid_actions & user_node_info::CLAIM_NPC) == 0)
+        return push_error(ctx, "Cannot claim user");
+
+    ///anything past this point should probably force a payment of 200 credits
+
+    std::string commands = "Usage: add_user:<username>, remove_user:<username>, view_users:true\nPrice: 200\n";
+
+    std::string add_user = duk_safe_get_prop_string(ctx, -1, "add_user");
+    std::string remove_user = duk_safe_get_prop_string(ctx, -1, "remove_user");
+    bool view_users = duk_safe_get_generic_with_guard(duk_get_boolean, duk_is_boolean, ctx, -1, "view_users", false);
+    bool confirm = duk_safe_get_generic_with_guard(duk_get_boolean, duk_is_boolean, ctx, -1, "confirm", false);
+
+    std::vector<std::string> allowed_users = opt_user_and_nodes->first.get_allowed_users();
+
+    if(add_user.size() == 0 && remove_user.size() == 0 && view_users)
+    {
+        if(handle_confirmed(ctx, confirm, opt_user_and_nodes->first))
+            return 1;
+
+        std::string ret = commands;
+
+        ret += "Authed Users:\n";
+
+        for(auto& i : allowed_users)
+        {
+            ret += i + "\n";
+        }
+
+        push_duk_val(ctx, ret);
+
+        return 1;
+    }
+
+    if(add_user.size() > 0 || remove_user.size() > 0)
+    {
+        if(add_user.size() > 0)
+        {
+            if(!get_user(add_user, get_thread_id(ctx)).has_value())
+                return push_error(ctx, "Invalid add_user username");
+        }
+
+        if(remove_user.size() > 0)
+        {
+            if(!get_user(remove_user, get_thread_id(ctx)).has_value())
+                return push_error(ctx, "Invalid remove_user username");
+        }
+
+        if(handle_confirmed(ctx, confirm, opt_user_and_nodes->first))
+            return 1;
+
+        user& usr = opt_user_and_nodes->first;
+
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        if(add_user.size() > 0)
+        {
+            usr.add_allowed_user(add_user, mongo_ctx);
+        }
+
+        if(remove_user.size() > 0)
+        {
+            usr.remove_allowed_user(remove_user, mongo_ctx);
+        }
+
+        usr.overwrite_user_in_db(mongo_ctx);
+    }
 
     return 0;
 }
