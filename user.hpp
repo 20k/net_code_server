@@ -23,6 +23,8 @@ struct user
     std::string user_port;
     bool initial_connection_setup = false;
 
+    std::vector<std::string> owner_list;
+
     bool valid = false;
 
     void overwrite_user_in_db(mongo_lock_proxy& ctx);
@@ -53,6 +55,13 @@ struct user
     void clear_items();
 
     int num_items();
+
+    ///manually injects self
+    std::vector<std::string> get_allowed_users();
+
+    bool is_allowed_user(const std::string& usr); ///returns true for self
+    void add_allowed_user(const std::string& usr, mongo_lock_proxy& ctx);
+    void remove_allowed_user(const std::string& usr, mongo_lock_proxy& ctx); ///does nothing on self
 
     int find_num_scripts(mongo_lock_proxy& ctx);
     int find_num_public_scripts(mongo_lock_proxy& ctx);

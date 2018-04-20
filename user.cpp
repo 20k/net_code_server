@@ -16,6 +16,7 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     to_set.set_prop("loaded_upgr_idx", loaded_upgr_idx);
     to_set.set_prop("user_port", user_port);
     to_set.set_prop("initial_connection_setup", initial_connection_setup);
+    to_set.set_prop_array("owner_list", owner_list);
 
     filter.update_in_db_if_exact(ctx, to_set);
 }
@@ -60,6 +61,8 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
             user_port = req.get_prop("user_port");
         if(req.has_prop("initial_connection_setup"))
             initial_connection_setup = req.get_prop_as_integer("initial_connection_setup");
+        if(req.has_prop("owner_list"))
+            owner_list = req.get_prop_as_array("owner_list");
 
         all_found_props = req;
     }
@@ -96,6 +99,7 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
     request.set_prop("user_port", generate_user_port());
     request.set_prop("is_user", 1);
     request.set_prop("initial_connection_setup", initial_connection_setup);
+    request.set_prop_array("owner_list", std::vector<std::string>());
 
     request.insert_in_db(ctx);
 
@@ -295,6 +299,67 @@ void user::clear_items()
 int user::num_items()
 {
     return str_to_array(upgr_idx).size();
+}
+
+std::vector<std::string> user::get_allowed_users()
+{
+    std::vector<std::string> usrs{name};
+
+    std::vector<std::string> found = owner_list;
+
+    usrs.insert(usrs.end(), found.begin(), found.end());
+
+    return usrs;
+}
+
+bool user::is_allowed_user(const std::string& usr)
+{
+    auto valid = get_allowed_users();
+
+    for(auto& i : valid)
+    {
+        if(i == usr)
+            return true;
+    }
+
+    return false;
+}
+
+void user::add_allowed_user(const std::string& usr, mongo_lock_proxy& ctx)
+{
+    if(is_allowed_user(usr))
+        return;
+
+    owner_list.push_back(usr);
+
+    mongo_requester filter;
+    filter.set_prop("name", name);
+
+    mongo_requester to_set;
+    to_set.set_prop("name", name);
+    to_set.set_prop_array("owner_list", owner_list);
+
+    filter.update_in_db_if_exact(ctx, to_set);
+}
+
+void user::remove_allowed_user(const std::string& usr, mongo_lock_proxy& ctx)
+{
+    if(!is_allowed_user(usr))
+        return;
+
+    if(usr == name)
+        return;
+
+    owner_list.erase(std::remove(owner_list.begin(), owner_list.end(), usr), owner_list.end());
+
+    mongo_requester filter;
+    filter.set_prop("name", name);
+
+    mongo_requester to_set;
+    to_set.set_prop("name", name);
+    to_set.set_prop_array("owner_list", owner_list);
+
+    filter.update_in_db_if_exact(ctx, to_set);
 }
 
 int user::find_num_scripts(mongo_lock_proxy& ctx)
