@@ -17,6 +17,7 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     to_set.set_prop("user_port", user_port);
     to_set.set_prop("initial_connection_setup", initial_connection_setup);
     to_set.set_prop_array("owner_list", owner_list);
+    to_set.set_prop_array("call_stack", call_stack);
 
     filter.update_in_db_if_exact(ctx, to_set);
 }
@@ -63,6 +64,8 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
             initial_connection_setup = req.get_prop_as_integer("initial_connection_setup");
         if(req.has_prop("owner_list"))
             owner_list = req.get_prop_as_array("owner_list");
+        if(req.has_prop("call_stack"))
+            call_stack = req.get_prop_as_array("call_stack");
 
         all_found_props = req;
     }
@@ -100,6 +103,7 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
     request.set_prop("is_user", 1);
     request.set_prop("initial_connection_setup", initial_connection_setup);
     request.set_prop_array("owner_list", std::vector<std::string>());
+    request.set_prop_array("call_stack", std::vector<std::string>());
 
     request.insert_in_db(ctx);
 
@@ -299,6 +303,15 @@ void user::clear_items()
 int user::num_items()
 {
     return str_to_array(upgr_idx).size();
+}
+
+std::vector<std::string> user::get_call_stack()
+{
+    std::vector<std::string> ret{name};
+
+    ret.insert(ret.end(), call_stack.begin(), call_stack.end());
+
+    return ret;
 }
 
 std::vector<std::string> user::get_allowed_users()

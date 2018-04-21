@@ -23,6 +23,8 @@ struct user
     std::string user_port;
     bool initial_connection_setup = false;
 
+    ///stack of users, used for changing cli context
+    std::vector<std::string> call_stack;
     std::vector<std::string> owner_list;
 
     bool valid = false;
@@ -55,6 +57,8 @@ struct user
     void clear_items();
 
     int num_items();
+
+    std::vector<std::string> get_call_stack();
 
     ///manually injects self
     std::vector<std::string> get_allowed_users();
