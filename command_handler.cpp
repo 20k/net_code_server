@@ -25,7 +25,7 @@ duk_ret_t unsafe_wrapper(duk_context* ctx, void* udata)
 {
     unsafe_info* info = (unsafe_info*)udata;
 
-    std::string ret = js_unified_force_call_data(info->ctx, info->command, info->usr->name);
+    std::string ret = js_unified_force_call_data(info->ctx, info->command, info->usr->get_call_stack().back());
 
     info->ret = ret;
 
@@ -103,7 +103,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
     fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number");
 
-    startup_state(sd.ctx, usr.name, usr.name, "invoke", usr.get_call_stack());
+    std::string executing_under = usr.get_call_stack().back();
+
+    startup_state(sd.ctx, executing_under, executing_under, "invoke", usr.get_call_stack());
 
     set_global_int(sd.ctx, "thread_id", local_thread_id);
 
