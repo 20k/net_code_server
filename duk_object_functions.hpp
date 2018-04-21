@@ -5,6 +5,7 @@
 #include <variant>
 #include <map>
 #include <string>
+#include <vector>
 
 using duk_func_t = duk_ret_t (*)(duk_context*);
 using duk_placeholder_t = void*;
@@ -157,6 +158,27 @@ std::string get_duk_val<std::string>(duk_context* ctx)
     return duk_get_string(ctx, -1);
 }
 
+template<typename T>
+inline
+std::vector<T> get_duk_val_arr(duk_context* ctx)
+{
+    std::vector<T> ret;
+
+    int n = duk_get_length(ctx, -1);
+
+    for(int i=0; i < n; i++)
+    {
+        duk_get_prop_index(ctx, -1, i);
+
+        auto val = get_duk_val<T>(ctx);
+        ret.push_back(val);
+
+        duk_pop(ctx);
+    }
+
+    return ret;
+}
+
 template<typename U>
 inline
 void push_dukobject_impl(duk_context* ctx, const std::string& key, const U& u)
@@ -280,13 +302,21 @@ inline
 std::string get_caller(duk_context* ctx)
 {
     duk_push_global_stash(ctx);
-    duk_get_prop_string(ctx, -1, "caller");
+    /*duk_get_prop_string(ctx, -1, "caller");
 
     std::string str = duk_safe_to_string(ctx, -1);
 
+    duk_pop_n(ctx, 2);*/
+
+    duk_get_prop_string(ctx, -1, "caller_stack");
+    std::vector<std::string> ret = get_duk_val_arr<std::string>(ctx);
+
     duk_pop_n(ctx, 2);
 
-    return str;
+    if(ret.size() == 0)
+        return "";
+
+    return ret.back();
 }
 
 inline
