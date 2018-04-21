@@ -225,7 +225,6 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
 
     quick_register(ctx, "HASH_D", "");
     quick_register(ctx, "caller", caller.c_str());
-    quick_register_generic(ctx, "caller_stack", std::vector<std::string>{caller});
     quick_register(ctx, "script_host", script_host.c_str());
     quick_register(ctx, "script_ending", script_ending.c_str());
 
