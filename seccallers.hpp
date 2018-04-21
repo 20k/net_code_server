@@ -219,12 +219,13 @@ duk_ret_t db_remove(duk_context* ctx)
 }
 
 inline
-void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending)
+void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack)
 {
     duk_push_global_stash(ctx);
 
     quick_register(ctx, "HASH_D", "");
     quick_register(ctx, "caller", caller.c_str());
+    quick_register_generic(ctx, "caller_stack", caller_stack);
     quick_register(ctx, "script_host", script_host.c_str());
     quick_register(ctx, "script_ending", script_ending.c_str());
 

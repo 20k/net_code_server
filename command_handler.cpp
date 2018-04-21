@@ -103,7 +103,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
     fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number");
 
-    startup_state(sd.ctx, usr.name, usr.name, "invoke");
+    startup_state(sd.ctx, usr.name, usr.name, "invoke", usr.get_call_stack());
 
     set_global_int(sd.ctx, "thread_id", local_thread_id);
 
