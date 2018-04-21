@@ -90,9 +90,12 @@ bool starts_with(const T& in, const std::string& test)
 
 ///ALARM: NEED TO ENFORCE LOWERCASE!!!
 inline
-bool is_valid_name_character(char c)
+bool is_valid_name_character(char c, bool allow_uppercase = false)
 {
-    return isalnum(c) || c == '_';
+    if(allow_uppercase)
+        return isalnum(c) || c == '_';
+    else
+        return (isdigit(c) || (isalnum(c) && islower(c))) || c == '_';
 }
 
 ///i think something is broken with 7.2s stringstream implementation
@@ -117,7 +120,7 @@ std::vector<std::string> no_ss_split(const std::string& str, const std::string& 
 #define MAX_ANY_NAME_LEN 24
 
 inline
-bool is_valid_string(const std::string& to_parse)
+bool is_valid_string(const std::string& to_parse, bool allow_uppercase = false)
 {
     if(to_parse.size() >= MAX_ANY_NAME_LEN)
         return false;
@@ -136,7 +139,7 @@ bool is_valid_string(const std::string& to_parse)
 
         check_digit = false;
 
-        if(!is_valid_name_character(c))
+        if(!is_valid_name_character(c, allow_uppercase))
         {
             return false;
         }
@@ -164,9 +167,10 @@ bool is_valid_full_name_string(const std::string& name)
     if(strings.size() != 2)
         return false;
 
-    for(auto& str : strings)
+    //for(auto& str : strings)
+    for(int i=0; i < (int)strings.size(); i++)
     {
-        if(!is_valid_string(str))
+        if(!is_valid_string(strings[i], i == 1))
             return false;
     }
 
