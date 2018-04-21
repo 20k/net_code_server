@@ -505,8 +505,10 @@ bool is_valid_channel_name(const std::string& in)
 {
     for(auto& i : in)
     {
-        if(!isalnum(i))
-            return false;
+        if(isalnum(i) || i == '_')
+            continue;
+
+        return false;
     }
 
     return true;
@@ -607,6 +609,7 @@ duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_ctx.change_collection(get_caller(ctx));
 
         mongo_requester request;
         request.set_prop("name", get_caller(ctx));
