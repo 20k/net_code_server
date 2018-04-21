@@ -205,7 +205,7 @@ duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    bool make_array = duk_get_prop_string_as_int(ctx, -1, "array");
+    bool make_array = dukx_is_prop_truthy(ctx, -1, "array");
 
     std::string usr = get_caller(ctx);
 
@@ -279,7 +279,7 @@ duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl)
 inline
 duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
-    int pretty = !duk_get_prop_string_as_int(ctx, -1, "array");
+    int pretty = !dukx_is_prop_truthy(ctx, -1, "array");
     int seclevel = duk_get_prop_string_as_int(ctx, -1, "sec", -1);
 
     mongo_requester request;
@@ -458,7 +458,7 @@ duk_ret_t scripts__core(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    int make_array = duk_get_prop_string_as_int(ctx, -1, "array");
+    int make_array = dukx_is_prop_truthy(ctx, -1, "array");
 
     std::vector<std::string> names;
 
@@ -756,7 +756,7 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
     int num = duk_get_prop_string_as_int(ctx, -1, "count");
-    bool pretty = !duk_get_prop_string_as_int(ctx, -1, "array");
+    bool pretty = !dukx_is_prop_truthy(ctx, -1, "array");
 
     if(num <= 0)
         num = 10;
@@ -826,7 +826,7 @@ duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    int pretty = !duk_get_prop_string_as_int(ctx, -1, "array", 0);
+    int pretty = !dukx_is_prop_truthy(ctx, -1, "array");
 
     std::string caller = get_caller(ctx);
 
@@ -1172,8 +1172,8 @@ duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    int pretty = !duk_get_prop_string_as_int(ctx, -1, "array", 0);
-    int full = duk_get_prop_string_as_int(ctx, -1, "full", 0);
+    int pretty = !dukx_is_prop_truthy(ctx, -1, "array");
+    int full = dukx_is_prop_truthy(ctx, -1, "full");
 
     int load_idx = duk_get_prop_string_as_int(ctx, -1, "load", -1);
     int unload_idx = duk_get_prop_string_as_int(ctx, -1, "unload", -1);
@@ -1496,8 +1496,8 @@ duk_ret_t items__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    int pretty = !duk_get_prop_string_as_int(ctx, -1, "array", 0);
-    int full = duk_get_prop_string_as_int(ctx, -1, "full", 0);
+    int pretty = !dukx_is_prop_truthy(ctx, -1, "array");
+    int full = dukx_is_prop_truthy(ctx, -1, "full");
 
     std::string from = duk_safe_get_prop_string(ctx, -1, "from");
 
@@ -1745,7 +1745,7 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string name_of_person_being_attacked = duk_safe_get_prop_string(ctx, -1, "name");
 
-    int make_array = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "array", 0);
+    int make_array = dukx_is_prop_truthy(ctx, -1, "array");
 
     user usr;
 
@@ -2089,7 +2089,7 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     COOPERATE_KILL();
 
     std::string from = duk_safe_get_prop_string(ctx, -1, "from");
-    int pretty = !duk_get_prop_string_as_int(ctx, -1, "array", 0);
+    int pretty = !dukx_is_prop_truthy(ctx, -1, "array");
 
     if(from == "")
         return push_error(ctx, "usage: net.view({from:<username>})");
@@ -2415,8 +2415,8 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string add_user = duk_safe_get_prop_string(ctx, -1, "add_user");
     std::string remove_user = duk_safe_get_prop_string(ctx, -1, "remove_user");
-    bool view_users = duk_safe_get_generic_with_guard(duk_get_boolean, duk_is_boolean, ctx, -1, "view_users", false);
-    bool confirm = duk_safe_get_generic_with_guard(duk_get_boolean, duk_is_boolean, ctx, -1, "confirm", false);
+    bool view_users = dukx_is_prop_truthy(ctx, -1, "view_users");
+    bool confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
 
     std::vector<std::string> allowed_users = opt_user_and_nodes->first.get_allowed_users();
 
