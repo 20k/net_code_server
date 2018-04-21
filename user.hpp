@@ -20,7 +20,9 @@ struct user
     std::string auth;
     std::string upgr_idx;
     std::string loaded_upgr_idx;
+    #ifdef USE_LOCS
     std::string user_port;
+    #endif // USE_LOCS
     bool initial_connection_setup = false;
 
     ///stack of users, used for changing cli context

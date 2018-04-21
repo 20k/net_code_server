@@ -14,7 +14,9 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     to_set.set_prop_double("cash", cash);
     to_set.set_prop("upgr_idx", upgr_idx);
     to_set.set_prop("loaded_upgr_idx", loaded_upgr_idx);
+    #ifdef USE_LOCS
     to_set.set_prop("user_port", user_port);
+    #endif // USE_LOCS
     to_set.set_prop("initial_connection_setup", initial_connection_setup);
     to_set.set_prop_array("owner_list", owner_list);
     to_set.set_prop_array("call_stack", call_stack);
@@ -58,8 +60,10 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
             upgr_idx = req.get_prop("upgr_idx");
         if(req.has_prop("loaded_upgr_idx"))
             loaded_upgr_idx = req.get_prop("loaded_upgr_idx");
+        #ifdef USE_LOCS
         if(req.has_prop("user_port"))
             user_port = req.get_prop("user_port");
+        #endif // USE_LOCS
         if(req.has_prop("initial_connection_setup"))
             initial_connection_setup = req.get_prop_as_integer("initial_connection_setup");
         if(req.has_prop("owner_list"))
@@ -70,12 +74,14 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
         all_found_props = req;
     }
 
+    #ifdef USE_LOCS
     if(user_port == "")
     {
         user_port = generate_user_port();
 
         overwrite_user_in_db(ctx);
     }
+    #endif // USE_LOCS
 
     return true;
 }
@@ -99,7 +105,9 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
     request.set_prop_bin("auth", auth);
     request.set_prop("upgr_idx", "");
     request.set_prop("loaded_upgr_idx", "");
+    #ifdef USE_LOCS
     request.set_prop("user_port", generate_user_port());
+    #endif // USE_LOCS
     request.set_prop("is_user", 1);
     request.set_prop("initial_connection_setup", initial_connection_setup);
     request.set_prop_array("owner_list", std::vector<std::string>());

@@ -108,6 +108,7 @@ std::string random_lowercase_ascii_string(int len)
     return random_select_of(len, "abcdefghijklmnopqrstuvwxyz0123456789");
 }
 
+#ifdef USE_LOCS
 inline
 std::string generate_user_port()
 {
@@ -156,6 +157,7 @@ std::string generate_user_port()
     ///so, c_f_phi23
     ///or core_fragment_alpha_9734
 }
+#endif // USE_LOCS
 
 template<typename U, typename T>
 inline

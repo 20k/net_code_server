@@ -5,21 +5,6 @@
 #include "mongo.hpp"
 #include "privileged_core_scripts.hpp"
 
-inline
-void quick_register(duk_context* ctx, const std::string& key, const std::string& value)
-{
-    duk_push_string(ctx, value.c_str());
-    duk_put_prop_string(ctx, -2, key.c_str());
-}
-
-template<typename T>
-inline
-void quick_register_generic(duk_context* ctx, const std::string& key, const T& value)
-{
-    push_duk_val(ctx, value);
-    duk_put_prop_string(ctx, -2, key.c_str());
-}
-
 ///#db.i, r, f, u, u1, us,
 static
 duk_ret_t db_insert(duk_context* ctx)
@@ -458,6 +443,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     ///current script
     std::string full_script = get_script_host(ctx) + "." + get_script_ending(ctx);
 
+    #ifdef USE_LOCS
     {
         user usr;
 
@@ -486,6 +472,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
             return result;
         }
     }
+    #endif // USE_LOCS
 
     ///IF IS PRIVILEGED SCRIPT, RETURN THAT CFUNC
     if(privileged_functions.find(to_call_fullname) != privileged_functions.end())

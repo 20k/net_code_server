@@ -1872,9 +1872,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
             attacker.load_from_db(mongo_ctx, get_caller(ctx));
         }
 
-        std::string port = attacker.user_port;
-
-        nodes.leave_trace(*current_node, attacker.name, port);
+        nodes.leave_trace(*current_node, attacker.name);
 
         ///hmm, we are actually double overwriting here
         {
@@ -1946,6 +1944,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
     return 1;
 }
 
+#ifdef USE_LOCS
 inline
 duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
@@ -1955,6 +1954,7 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return hack_internal(priv_ctx, ctx, name_of_person_being_attacked);
 }
+#endif // USE_LOCS
 
 inline
 duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
@@ -2027,6 +2027,7 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+#ifdef USE_LOCS
 inline
 duk_ret_t nodes__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
@@ -2045,6 +2046,7 @@ duk_ret_t nodes__port(priv_context& priv_ctx, duk_context* ctx, int sl)
     duk_push_string(ctx, ret.c_str());
     return 1;
 }
+#endif // USE_LOCS
 
 ///need to strictly define the conditions which allow you to
 ///view the status of this item in the network and view its links
@@ -2556,6 +2558,16 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
         usr.overwrite_user_in_db(user_db);
     }
 
+    duk_push_global_stash(ctx);
+
+    ///new caller
+    quick_register(ctx, "caller", switch_to->name.c_str());
+    quick_register_generic(ctx, "caller_stack", usr.get_call_stack());
+
+    duk_pop_n(ctx, 1);
+
+    ///need to update caller and caller_stack
+
     return push_success(ctx, "Success");
 }
 
@@ -2687,7 +2699,9 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(items__register_bundle, 0),
     //REGISTER_FUNCTION_PRIV(user__port, 0), ///should this exist? It has to currently for dumb reasons ///nope, it needs special setup
     REGISTER_FUNCTION_PRIV(nodes__manage, 1),
+    #ifdef USE_LOCS
     REGISTER_FUNCTION_PRIV(nodes__port, 1),
+    #endif // USE_LOCS
     REGISTER_FUNCTION_PRIV(nodes__view_log, 1),
     REGISTER_FUNCTION_PRIV(net__view, 4),
     REGISTER_FUNCTION_PRIV(net__map, 4),
@@ -2705,7 +2719,9 @@ std::map<std::string, std::vector<script_arg>> construct_core_args();
 extern
 std::map<std::string, std::vector<script_arg>> privileged_args;
 
+#ifdef USE_LOCS
 inline
 priv_func_info user_port_descriptor = {&user__port, 0};
+#endif // USE_LOCS
 
 #endif // PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED

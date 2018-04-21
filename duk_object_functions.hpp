@@ -474,4 +474,19 @@ std::string dukx_json_get(const T& rep)
     return str;
 }
 
+inline
+void quick_register(duk_context* ctx, const std::string& key, const std::string& value)
+{
+    duk_push_string(ctx, value.c_str());
+    duk_put_prop_string(ctx, -2, key.c_str());
+}
+
+template<typename T>
+inline
+void quick_register_generic(duk_context* ctx, const std::string& key, const T& value)
+{
+    push_duk_val(ctx, value);
+    duk_put_prop_string(ctx, -2, key.c_str());
+}
+
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED
