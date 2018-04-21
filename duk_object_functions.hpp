@@ -489,4 +489,15 @@ void quick_register_generic(duk_context* ctx, const std::string& key, const T& v
     duk_put_prop_string(ctx, -2, key.c_str());
 }
 
+inline
+bool dukx_is_truthy(duk_context* ctx, duk_idx_t idx)
+{
+    duk_dup(ctx, idx);
+    bool success = duk_to_boolean(ctx, -1);
+
+    duk_pop(ctx);
+
+    return success;
+}
+
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED
