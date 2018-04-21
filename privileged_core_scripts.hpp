@@ -2488,6 +2488,14 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 0;
 }
 
+inline
+duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    return 0;
+}
+
 #ifdef TESTING
 inline
 duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)

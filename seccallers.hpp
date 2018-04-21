@@ -303,17 +303,9 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
         duk_put_prop_string(sd.ctx, -2, "last_seclevel");
         duk_pop_n(sd.ctx, 1);
 
-        duk_push_global_object(sd.ctx); //[glob]
-
-        duk_idx_t id = duk_push_object(sd.ctx); ///context //[glob -> obj]
-        duk_push_string(sd.ctx, caller.c_str()); ///caller //[glob -> obj -> string]
-        duk_put_prop_string(sd.ctx, id, "caller"); //[glob -> obj]
-
-        duk_put_prop_string(sd.ctx, -2, "context"); //[glob]
-
-        duk_pop_n(sd.ctx, 1); //empty stack, has function at -1
-
-        duk_get_global_string(sd.ctx, "context"); //[context]
+        duk_idx_t id = duk_push_object(sd.ctx); ///[object]
+        duk_push_string(sd.ctx, caller.c_str()); ///[object -> caller]
+        duk_put_prop_string(sd.ctx, id, "caller"); ///[object]
 
         int nargs = 2;
 
