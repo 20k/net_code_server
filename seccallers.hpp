@@ -12,6 +12,14 @@ void quick_register(duk_context* ctx, const std::string& key, const std::string&
     duk_put_prop_string(ctx, -2, key.c_str());
 }
 
+template<typename T>
+inline
+void quick_register_generic(duk_context* ctx, const std::string& key, const T& value)
+{
+    push_duk_val(ctx, value);
+    duk_put_prop_string(ctx, -2, key.c_str());
+}
+
 ///#db.i, r, f, u, u1, us,
 static
 duk_ret_t db_insert(duk_context* ctx)
@@ -217,6 +225,7 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
 
     quick_register(ctx, "HASH_D", "");
     quick_register(ctx, "caller", caller.c_str());
+    quick_register_generic(ctx, "caller_stack", std::vector<std::string>{caller});
     quick_register(ctx, "script_host", script_host.c_str());
     quick_register(ctx, "script_ending", script_ending.c_str());
 
