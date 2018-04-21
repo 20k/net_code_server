@@ -320,6 +320,19 @@ std::string get_caller(duk_context* ctx)
 }
 
 inline
+std::vector<std::string> get_caller_stack(duk_context* ctx)
+{
+    duk_push_global_stash(ctx);
+
+    duk_get_prop_string(ctx, -1, "caller_stack");
+    std::vector<std::string> ret = get_duk_val_arr<std::string>(ctx);
+
+    duk_pop_n(ctx, 2);
+
+    return ret;
+}
+
+inline
 std::string get_script_host(duk_context* ctx)
 {
     return get_global_string(ctx, "script_host");

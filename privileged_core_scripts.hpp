@@ -2493,7 +2493,70 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    return 0;
+    std::string target = duk_safe_get_prop_string(ctx, -1, "user");
+
+    if(target == "")
+        return push_error(ctx, "Usage: net.switch({user:<username:})");
+
+    std::vector<std::string> full_caller_stack = get_caller_stack(ctx);
+
+    std::optional opt_user = get_user(full_caller_stack.front(), get_thread_id(ctx));
+
+    if(!opt_user.has_value())
+        return push_error(ctx, "Invalid username (host)");
+
+    for(auto& i : full_caller_stack)
+    {
+        std::cout << "stk " << i << std::endl;
+    }
+
+    std::optional switch_to = get_user(target, get_thread_id(ctx));
+
+    if(!switch_to.has_value())
+        return push_error(ctx, "Invalid username (target)");
+
+    ///so say we switched from i20k -> f_sdfdf
+    ///call stack would be [i20k, f_sddfdf]
+    ///and we'd be masquerading under the latter
+    ///so. If any member of our call stack is on the permissions list, we're good to go
+    std::vector<std::string> call_stack = opt_user->get_call_stack();
+
+    bool found = false;
+
+    for(auto it = call_stack.begin(); it != call_stack.end(); it++)
+    {
+        if(switch_to->is_allowed_user(*it))
+        {
+            call_stack.resize(std::distance(call_stack.begin(), it) + 1);
+            call_stack.push_back(switch_to->name);
+
+            found = true;
+            break;
+        }
+    }
+
+    if(call_stack.size() == 0)
+    {
+        printf("weird call stack error 0\n");
+        return 0;
+    }
+
+    if(!found)
+        return push_error(ctx, "Insufficient permissions");
+
+    call_stack.erase(call_stack.begin());
+
+    user& usr = opt_user.value();
+
+    usr.call_stack = call_stack;
+
+    {
+        mongo_lock_proxy user_db = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        usr.overwrite_user_in_db(user_db);
+    }
+
+    return push_success(ctx, "Success");
 }
 
 #ifdef TESTING
@@ -2630,6 +2693,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(net__map, 4),
     REGISTER_FUNCTION_PRIV(net__hack, 4),
     REGISTER_FUNCTION_PRIV(net__access, 4),
+    REGISTER_FUNCTION_PRIV(net__switch, 0),
     #ifdef TESTING
     REGISTER_FUNCTION_PRIV(cheats__arm, 4),
     REGISTER_FUNCTION_PRIV(cheats__salvage, 4),
