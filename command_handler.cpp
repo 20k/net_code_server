@@ -337,7 +337,9 @@ std::string delete_user(command_handler_state& state, const std::string& str)
 
     std::string name = splits[1];
 
-    if(!is_valid_string(name))
+    ///override default name checking so we can delete users
+    ///with uppercase names
+    if(!is_valid_string(name, true))
         return "Invalid name";
 
     ///Things to clean up
