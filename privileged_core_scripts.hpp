@@ -2601,10 +2601,10 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!opt_user.has_value())
         return push_error(ctx, "Invalid username (host)");
 
-    for(auto& i : full_caller_stack)
+    /*for(auto& i : full_caller_stack)
     {
         std::cout << "stk " << i << std::endl;
-    }
+    }*/
 
     std::optional switch_to = get_user(target, get_thread_id(ctx));
 
