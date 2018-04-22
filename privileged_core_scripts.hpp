@@ -1230,7 +1230,9 @@ duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::st
         make_logs_on(ctx, from, user_node_info::ITEM_LOG, {xfer});
         make_logs_on(ctx, to, user_node_info::ITEM_LOG, {xfer});
 
-        duk_push_int(ctx, placeholder.get_prop_as_integer("item_id"));
+        //duk_push_int(ctx, placeholder.get_prop_as_integer("item_id"));
+
+        push_success(ctx);
     }
     else
         push_error(ctx, "Could not xfer");
@@ -1491,6 +1493,34 @@ duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 #endif // TESTING
+
+inline
+duk_ret_t cash__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    std::string from = duk_safe_get_prop_string(ctx, -1, "user");
+
+    if(from == "")
+        return push_error(ctx, "Args: user:<username>");
+
+    auto opt_user_and_nodes = get_user_and_nodes(from, get_thread_id(ctx));
+
+    if(!opt_user_and_nodes.has_value())
+        return push_error(ctx, "No such user");
+
+    auto hostile = opt_user_and_nodes->second.valid_hostile_actions();
+
+    if((hostile & user_node_info::XFER_GC_FROM) > 0)
+    {
+        push_duk_val(ctx, opt_user_and_nodes->first.cash);
+        return 1;
+    }
+    else
+    {
+        return push_error(ctx, "System Breach Node Secured");
+    }
+
+    return 1;
+}
 
 inline
 duk_ret_t item__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
@@ -2739,6 +2769,7 @@ inline
 std::map<std::string, priv_func_info> privileged_functions
 {
     REGISTER_FUNCTION_PRIV(cash__balance, 3),
+    REGISTER_FUNCTION_PRIV(cash__expose, 4),
     REGISTER_FUNCTION_PRIV(cash__xfer_to, 2),
     REGISTER_FUNCTION_PRIV(cash__xfer_to_caller, 4),
     REGISTER_FUNCTION_PRIV(cash__steal, 4),
