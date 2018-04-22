@@ -1512,8 +1512,8 @@ duk_ret_t item__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     user& usr = opt_user_and_nodes->first;
 
-    printf("%i num\n", usr.upgr_idx.size());
-    std::cout << "name " << usr.name << std::endl;
+    //printf("%i num\n", usr.upgr_idx.size());
+    //std::cout << "name " << usr.name << std::endl;
 
     auto hostile = opt_user_and_nodes->second.valid_hostile_actions();
 
