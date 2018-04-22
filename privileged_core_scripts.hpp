@@ -1168,7 +1168,7 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
 }
 
 inline
-duk_ret_t items__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t item__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -1239,7 +1239,7 @@ duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::st
 }
 
 inline
-duk_ret_t items__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -1293,7 +1293,7 @@ duk_ret_t items__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 
 
 inline
-duk_ret_t items__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -1371,7 +1371,7 @@ duk_ret_t items__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
-duk_ret_t items__register_bundle(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t item__register_bundle(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -1431,7 +1431,7 @@ duk_ret_t items__register_bundle(priv_context& priv_ctx, duk_context* ctx, int s
 
 #ifdef TESTING
 inline
-duk_ret_t items__create(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
     RATELIMIT_DUK(UPG_CHEAT);
@@ -1492,7 +1492,7 @@ duk_ret_t items__create(priv_context& priv_ctx, duk_context* ctx, int sl)
 #endif // TESTING
 
 inline
-duk_ret_t items__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t item__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -1538,9 +1538,9 @@ duk_ret_t items__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
-///have items__steal reset internal node structure
+///have item__steal reset internal node structure
 inline
-duk_ret_t items__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     std::string from = duk_safe_get_prop_string(ctx, -1, "user");
 
@@ -2690,16 +2690,16 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(msg__recent, 2),
     REGISTER_FUNCTION_PRIV(users__me, 0),
     #ifdef TESTING
-    REGISTER_FUNCTION_PRIV(items__create, 0),
+    REGISTER_FUNCTION_PRIV(item__create, 0),
     #endif // TESTING
-    REGISTER_FUNCTION_PRIV(items__steal, 4),
-    REGISTER_FUNCTION_PRIV(items__expose, 4),
+    REGISTER_FUNCTION_PRIV(item__steal, 4),
+    REGISTER_FUNCTION_PRIV(item__expose, 4),
     //REGISTER_FUNCTION_PRIV(sys__disown_upg, 0),
     //REGISTER_FUNCTION_PRIV(sys__xfer_upgrade_uid, 0),
-    REGISTER_FUNCTION_PRIV(items__xfer_to, 1),
-    REGISTER_FUNCTION_PRIV(items__manage, 2),
-    REGISTER_FUNCTION_PRIV(items__bundle_script, 1),
-    REGISTER_FUNCTION_PRIV(items__register_bundle, 0),
+    REGISTER_FUNCTION_PRIV(item__xfer_to, 1),
+    REGISTER_FUNCTION_PRIV(item__manage, 2),
+    REGISTER_FUNCTION_PRIV(item__bundle_script, 1),
+    REGISTER_FUNCTION_PRIV(item__register_bundle, 0),
     //REGISTER_FUNCTION_PRIV(user__port, 0), ///should this exist? It has to currently for dumb reasons ///nope, it needs special setup
     REGISTER_FUNCTION_PRIV(nodes__manage, 1),
     #ifdef USE_LOCS
