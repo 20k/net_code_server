@@ -1255,15 +1255,6 @@ duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string to = duk_safe_get_prop_string(ctx, -1, "user");
 
     {
-        user_nodes nodes;
-
-        {
-            mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
-
-            nodes.ensure_exists(node_ctx, get_caller(ctx));
-            nodes.load_from_db(node_ctx, get_caller(ctx));
-        }
-
         user found_user;
 
         {
@@ -1277,6 +1268,16 @@ duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
                 return 1;
             }
         }
+
+        user_nodes nodes;
+
+        {
+            mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+            nodes.ensure_exists(node_ctx, get_caller(ctx));
+            nodes.load_from_db(node_ctx, get_caller(ctx));
+        }
+
 
         std::string accum;
 
@@ -1504,29 +1505,21 @@ duk_ret_t item__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(from == "")
         return push_error(ctx, "Args: user:<username>");
 
-    user_nodes nodes;
+    auto opt_user_and_nodes = get_user_and_nodes(from, get_thread_id(ctx));
 
-    {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+    if(!opt_user_and_nodes.has_value())
+        return push_error(ctx, "No such user");
 
-        nodes.ensure_exists(node_ctx, from);
-        nodes.load_from_db(node_ctx, from);
-    }
+    user& usr = opt_user_and_nodes->first;
 
-    user found_user;
+    printf("%i num\n", usr.upgr_idx.size());
+    std::cout << "name " << usr.name << std::endl;
 
-    {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-
-        if(!found_user.load_from_db(mongo_ctx, from))
-            return push_error(ctx, "No such user/really catastrophic error");
-    }
-
-    auto hostile = nodes.valid_hostile_actions();
+    auto hostile = opt_user_and_nodes->second.valid_hostile_actions();
 
     if((hostile & user_node_info::XFER_ITEM_FROM) > 0)
     {
-        push_internal_items_view(ctx, pretty, full, nodes, found_user);
+        push_internal_items_view(ctx, pretty, full, opt_user_and_nodes->second, opt_user_and_nodes->first);
 
         return 1;
     }
@@ -1536,6 +1529,30 @@ duk_ret_t item__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     return 1;
+}
+
+inline
+duk_ret_t handle_confirmed(duk_context* ctx, bool confirm, const std::string& username, double price)
+{
+    std::optional opt_user = get_user(username, get_thread_id(ctx));
+
+    if(!opt_user.has_value())
+        return push_error(ctx, "No such user");
+
+    if(!confirm)
+        return push_error(ctx, "Please confirm:true to pay " + std::to_string(price));
+
+    if(opt_user->cash < price)
+        return push_error(ctx, "Please acquire more wealth");
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        opt_user->cash -= price;
+
+        opt_user->overwrite_user_in_db(mongo_ctx);
+    }
+
+    return 0;
 }
 
 ///have item__steal reset internal node structure
@@ -1553,6 +1570,11 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(!found.has_value())
         return push_error(ctx, "Error or no such user");
+
+    bool confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
+
+    if(handle_confirmed(ctx, confirm, get_caller(ctx), 10))
+        return 1;
 
     user& found_user = found->first;
     user_nodes& nodes = found->second;
@@ -2355,32 +2377,6 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
-duk_ret_t handle_confirmed(duk_context* ctx, bool confirm, const std::string& username)
-{
-    std::optional opt_user = get_user(username, get_thread_id(ctx));
-
-    if(!opt_user.has_value())
-        return push_error(ctx, "No such user");
-
-    if(!confirm)
-        return push_error(ctx, "Please confirm:true to pay 200");
-
-    double price = 200;
-
-    if(opt_user->cash < price)
-        return push_error(ctx, "Please acquire more wealth");
-
-    {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-        opt_user->cash -= price;
-
-        opt_user->overwrite_user_in_db(mongo_ctx);
-    }
-
-    return 0;
-}
-
-inline
 duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -2429,7 +2425,7 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(add_user.size() == 0 && remove_user.size() == 0 && view_users)
     {
-        if(!usr.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, confirm, get_caller(ctx)))
+        if(!usr.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, confirm, get_caller(ctx), 200))
             return 1;
 
         std::string ret;
@@ -2464,7 +2460,7 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             return push_error(ctx, "Cannot take over a user");
 
         ///should be free if we're an allowed user
-        if(!usr.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, confirm, get_caller(ctx)))
+        if(!usr.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, confirm, get_caller(ctx), 200))
             return 1;
 
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));

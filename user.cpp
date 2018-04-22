@@ -1,6 +1,7 @@
 #include "user.hpp"
 #include "rng.hpp"
 #include "script_util_shared.hpp"
+#include <secret/node.hpp>
 
 void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
 {
@@ -302,10 +303,23 @@ void user::remove_item(const std::string& id)
     upgr_idx = array_to_str(items);
 }
 
-void user::clear_items()
+void user::clear_items(int thread_id)
 {
     upgr_idx = "";
     loaded_upgr_idx = "";
+
+    user_nodes nodes = get_nodes(name, thread_id);
+
+    for(user_node& node : nodes.nodes)
+    {
+        node.attached_locks = decltype(node.attached_locks)();
+    }
+
+    {
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(thread_id);
+
+        nodes.overwrite_in_db(node_ctx);
+    }
 }
 
 int user::num_items()

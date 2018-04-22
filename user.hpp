@@ -56,7 +56,7 @@ struct user
     bool has_item(const std::string& id);
     void remove_item(const std::string& id);
 
-    void clear_items();
+    void clear_items(int thread_id);
 
     int num_items();
 
