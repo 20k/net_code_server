@@ -402,11 +402,11 @@ duk_ret_t cash__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     ///need a get either or
     ///so we can support to and name
-    duk_get_prop_string(ctx, -1, "to");
+    duk_get_prop_string(ctx, -1, "user");
 
     if(!duk_is_string(ctx, -1))
     {
-        push_error(ctx, "Call with to:\"usr\"");
+        push_error(ctx, "Call with user:\"usr\"");
         return 1;
     }
 
@@ -1252,7 +1252,7 @@ duk_ret_t items__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     std::string from = get_caller(ctx);
-    std::string to = duk_safe_get_prop_string(ctx, -1, "to");
+    std::string to = duk_safe_get_prop_string(ctx, -1, "user");
 
     {
         user_nodes nodes;
@@ -1499,10 +1499,10 @@ duk_ret_t items__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
     int pretty = !dukx_is_prop_truthy(ctx, -1, "array");
     int full = dukx_is_prop_truthy(ctx, -1, "full");
 
-    std::string from = duk_safe_get_prop_string(ctx, -1, "from");
+    std::string from = duk_safe_get_prop_string(ctx, -1, "user");
 
     if(from == "")
-        return push_error(ctx, "Args: from:<username>");
+        return push_error(ctx, "Args: user:<username>");
 
     user_nodes nodes;
 
@@ -1542,12 +1542,12 @@ duk_ret_t items__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
 inline
 duk_ret_t items__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
-    std::string from = duk_safe_get_prop_string(ctx, -1, "from");
+    std::string from = duk_safe_get_prop_string(ctx, -1, "user");
 
     int item_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
 
     if(from == "" || item_idx < 0)
-        return push_error(ctx, "Args: from:<username>, idx:item_offset");
+        return push_error(ctx, "Args: user:<username>, idx:item_offset");
 
     auto found = get_user_and_nodes(from, get_thread_id(ctx));
 
@@ -1595,10 +1595,10 @@ duk_ret_t cash__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    std::string from = duk_safe_get_prop_string(ctx, -1, "from");
+    std::string from = duk_safe_get_prop_string(ctx, -1, "user");
 
     if(from == "")
-        return push_error(ctx, "Args: from:<username>, amount:<number>");
+        return push_error(ctx, "Args: user:<username>, amount:<number>");
 
     double amount = duk_safe_get_generic(duk_get_number, ctx, -1, "amount", 0);
 
@@ -1743,7 +1743,7 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    std::string name_of_person_being_attacked = duk_safe_get_prop_string(ctx, -1, "name");
+    std::string name_of_person_being_attacked = duk_safe_get_prop_string(ctx, -1, "user");
 
     int make_array = dukx_is_prop_truthy(ctx, -1, "array");
 
@@ -1964,10 +1964,10 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    std::string name_of_person_being_attacked = duk_safe_get_prop_string(ctx, -1, "target");
+    std::string name_of_person_being_attacked = duk_safe_get_prop_string(ctx, -1, "user");
 
     if(name_of_person_being_attacked == "")
-        return push_error(ctx, "Usage: net.hack({target:<name>})");
+        return push_error(ctx, "Usage: net.hack({user:<name>})");
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
@@ -2088,11 +2088,11 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    std::string from = duk_safe_get_prop_string(ctx, -1, "from");
+    std::string from = duk_safe_get_prop_string(ctx, -1, "user");
     int pretty = !dukx_is_prop_truthy(ctx, -1, "array");
 
     if(from == "")
-        return push_error(ctx, "usage: net.view({from:<username>})");
+        return push_error(ctx, "usage: net.view({user:<username>})");
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
@@ -2153,11 +2153,11 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
-    std::string from = duk_safe_get_prop_string(ctx, -1, "from");
+    std::string from = duk_safe_get_prop_string(ctx, -1, "user");
     int num = duk_get_prop_string_as_int(ctx, -1, "n", 2);
 
     if(from == "")
-        return push_error(ctx, "usage: net.map({from:<username>, num:2})");
+        return push_error(ctx, "usage: net.map({user:<username>, num:2})");
 
     if(num < 0 || num >= 10)
         return push_error(ctx, "num out of range [1,10]");
