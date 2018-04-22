@@ -209,11 +209,11 @@ struct mongo_context
             is_fixed = true;
         }
 
-        if(type == mongo_database_type::NODE_PROPERTIES)
+        /*if(type == mongo_database_type::NODE_PROPERTIES)
         {
             default_collection = "all_nodes";
             is_fixed = true;
-        }
+        }*/
 
         if(type == mongo_database_type::NPC_PROPERTIES)
         {

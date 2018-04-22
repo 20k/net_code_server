@@ -433,6 +433,7 @@ std::string delete_user(command_handler_state& state, const std::string& str)
     ///delete nodes
     {
         mongo_lock_proxy nodes_db = get_global_mongo_node_properties_context(-2);
+        nodes_db.change_collection(name);
 
         mongo_requester req;
         req.set_prop("owned_by", name);
