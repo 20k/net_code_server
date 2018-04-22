@@ -9,6 +9,7 @@
 #include <set>
 #include <map>
 #include <atomic>
+#include <chrono>
 
 enum class mongo_database_type
 {
@@ -72,7 +73,7 @@ struct mongo_context
 
     ///thread safety of below map
     ///make timed
-    std::mutex map_lock;
+    std::recursive_timed_mutex map_lock;
     //std::mutex lock;
     //int locked_by = -1;
 
@@ -227,9 +228,17 @@ struct mongo_context
         }
     }
 
+    void map_lock_for()
+    {
+        ///8 second lock
+        int time_ms = 8 * 1000;
+
+        while(!map_lock.try_lock_for(std::chrono::milliseconds(time_ms))){}
+    }
+
     void make_lock(int who, mongoc_client_t* in_case_of_emergency)
     {
-        map_lock.lock();
+        map_lock_for();
 
         per_collection_lock[last_collection];
         auto found = per_collection_lock.find(last_collection);
@@ -245,7 +254,7 @@ struct mongo_context
 
     void make_unlock()
     {
-        map_lock.lock();
+        map_lock_for();
 
         per_collection_lock[last_collection];
         auto found = per_collection_lock.find(last_collection);
@@ -276,7 +285,7 @@ struct mongo_context
 
             printf("Salvaged db\n");*/
 
-            map_lock.lock();
+            map_lock_for();
 
             for(auto& i : per_collection_lock)
             {
