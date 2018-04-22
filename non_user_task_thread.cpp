@@ -5,7 +5,7 @@
 #include <thread>
 #include <windows.h>
 #include "shared_data.hpp"
-#include "privileged_core_scripts.hpp"
+//#include "privileged_core_scripts.hpp"
 #include "rate_limiting.hpp"
 #include "command_handler.hpp"
 
