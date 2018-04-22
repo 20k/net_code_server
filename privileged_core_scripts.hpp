@@ -1540,7 +1540,7 @@ duk_ret_t handle_confirmed(duk_context* ctx, bool confirm, const std::string& us
         return push_error(ctx, "No such user");
 
     if(!confirm)
-        return push_error(ctx, "Please confirm:true to pay " + std::to_string(price));
+        return push_error(ctx, "Please confirm:true to pay " + std::to_string((int)price));
 
     if(opt_user->cash < price)
         return push_error(ctx, "Please acquire more wealth");
