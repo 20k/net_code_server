@@ -9,6 +9,7 @@
 #include "logging.hpp"
 #include <iomanip>
 #include "rng.hpp"
+#include <secret/npc_manager.hpp>
 
 struct unsafe_info
 {
@@ -304,6 +305,8 @@ void on_create_user(user& usr)
     run_in_user_context(usr.name, "#msg.manage({join:\"0000\"})");
     run_in_user_context(usr.name, "#msg.manage({join:\"7001\"})");
     run_in_user_context(usr.name, "#msg.manage({join:\"memes\"})");
+
+    user_first_time_network_setup(get_global_playspace_network_manager(), usr);
 }
 
 std::string get_update_message()
@@ -448,6 +451,12 @@ std::string delete_user(command_handler_state& state, const std::string& str)
         req.remove_all_from_db(ctx);
     }
 
+    {
+        playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+        playspace_network_manage.unlink_all(name);
+    }
+
     return "Deleted";
 }
 
@@ -563,6 +572,10 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                     return make_error_col("Trying something sneaky eh 2?");
 
                 #define MAX_USERS 8
+
+                #ifdef TESTING
+                #define MAX_USERS 999
+                #endif // TESTING
 
                 if(to_check.users.size() >= MAX_USERS)
                     return make_error_col("Max users " + std::to_string(to_check.users.size()) + "/" + std::to_string(MAX_USERS));
