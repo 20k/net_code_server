@@ -241,6 +241,23 @@ item user::get_loaded_callable_scriptname_item(mongo_lock_proxy& ctx, const std:
     return item();
 }
 
+std::vector<item> user::get_all_items(mongo_lock_proxy& ctx)
+{
+    std::vector<std::string> all_items = str_to_array(upgr_idx);
+
+    std::vector<item> ret;
+
+    for(auto& id : all_items)
+    {
+        item next;
+        next.load_from_db(ctx, id);
+
+        ret.push_back(next);
+    }
+
+    return ret;
+}
+
 std::string user::index_to_item(int index)
 {
     std::vector<std::string> items = str_to_array(upgr_idx);

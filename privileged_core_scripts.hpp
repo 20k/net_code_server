@@ -1510,7 +1510,7 @@ duk_ret_t item__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!opt_user_and_nodes.has_value())
         return push_error(ctx, "No such user");
 
-    user& usr = opt_user_and_nodes->first;
+    //user& usr = opt_user_and_nodes->first;
 
     //printf("%i num\n", usr.upgr_idx.size());
     //std::cout << "name " << usr.name << std::endl;
