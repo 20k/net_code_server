@@ -2158,6 +2158,14 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+double npc_name_to_angle(const std::string& str)
+{
+    uint32_t val = std::hash<std::string>{}(str) % (size_t)(pow(2, 32) - 1);
+
+    return ((double)val / (pow(2, 32)-1)) * 2 * M_PI;
+}
+
+inline
 duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -2192,6 +2200,8 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     vec2i centre = {w/2, h/2};
 
     int spacing = 3;
+
+    std::map<std::string, vec2f> offset_pos;
 
     std::map<std::string, int> rings;
 
@@ -2260,6 +2270,149 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         current_ring = next_ring;
     }
 
+    std::map<std::string, std::map<std::string, vec2f>> clusters;
+    std::vector<std::string> unpositioned;
+
+    std::map<std::string, vec2f> global_pos;
+
+    for(auto& i : rings)
+    {
+        const std::string& npc_name = i.first;
+
+        auto connections = playspace_network_manage.get_links(npc_name);
+
+        //std::vector<std::string> lowest{npc_name};
+
+        std::map<std::string, vec2f> local_pos;
+
+        bool is_lowest_of_neighbours = true;
+
+        //vec2f sum = {0,0};
+
+        //for(auto& i : connections)
+        for(int i=0; i < (int)connections.size(); i++)
+        {
+            if(!playspace_network_manage.has_accessible_path_to(ctx, connections[i], npc_name, path_info::VIEW_LINKS, -1))
+                continue;
+
+            if(npc_name > connections[i])
+            {
+                is_lowest_of_neighbours = false;
+                break;
+            }
+
+            //float angle = (float)i / (float)connections.size();
+
+            //angle = angle * 2 * M_PI;
+
+            float angle = npc_name_to_angle(connections[i]);
+
+            vec2f offset_2d = (vec2f){1, 0}.rot(angle);
+
+            local_pos[connections[i]] = offset_2d * spacing;
+
+            //sum += offset_2d;
+
+            //lowest.push_back(i);
+
+        }
+
+        if(!is_lowest_of_neighbours)
+        {
+            continue;
+        }
+
+        //if(connections.size() > 0)
+        //    sum = sum / (float)connections.size();
+
+        local_pos[npc_name] = {0,0};
+        unpositioned.push_back(npc_name);
+
+        clusters[npc_name] = local_pos;
+    }
+
+    #if 0
+    bool any_unpositioned = false;
+    std::string lowest_unpositioned;
+
+    for(auto& npc_name : unpositioned)
+    {
+        if(!any_unpositioned)
+        {
+            lowest_unpositioned = npc_name;
+            any_unpositioned = true;
+            continue;
+        }
+
+        if(npc_name < lowest_unpositioned)
+            lowest_unpositioned = npc_name;
+
+        /*if(npc_name == from)
+        {
+            global_pos[npc_name] = {0,0};
+            continue;
+        }
+
+        vec2f pos = (vec2f){1, 0}.rot(npc_name_to_angle(npc_name)) * spacing * 1.1 * rings[npc_name];
+
+        std::map<std::string, vec2f> cclust = clusters[npc_name];
+
+        for(auto& i : cclust)
+        {
+            i.second += pos;
+
+            global_pos[i.first] = i.second;
+        }
+
+        global_pos[npc_name] = pos;*/
+    }
+    #endif // 0
+
+    std::sort(unpositioned.begin(), unpositioned.end());
+
+    ///ok. So go from lowest to highest
+    ///and positioned based on the last element
+
+    if(unpositioned.size() > 0)
+        global_pos[unpositioned.front()] = {0,0};
+
+    for(int i=1; i < (int)unpositioned.size(); i++)
+    {
+        vec2f last_offset = global_pos[unpositioned[i-1]];
+
+        vec2f offset = (vec2f){1, 0}.rot(npc_name_to_angle(unpositioned[i]));
+
+        global_pos[unpositioned[i]] = last_offset + offset * spacing * 4;
+    }
+
+    for(auto& base_name : unpositioned)
+    {
+        for(auto& kk : clusters[base_name])
+        {
+            global_pos[kk.first] = kk.second * spacing + global_pos[base_name];
+        }
+    }
+
+    vec2f cur_center = global_pos[from];
+
+    for(auto& i : global_pos)
+    {
+        i.second = i.second - cur_center;
+    }
+
+    for(auto& i : global_pos)
+    {
+        i.second += (vec2f){w/2.f, h/2.f};
+
+        i.second = round(i.second);
+    }
+
+    auto node_to_pos = global_pos;
+
+    ///so we now have a set of stable clusters
+    ///ish. with stable local positioning
+
+    #if 0
     std::map<int, std::vector<std::string>> ring_to_nodes;
 
     for(auto& i : rings)
@@ -2289,11 +2442,12 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             node_to_pos[nodes[i]] = next;
         }
     }
+    #endif // 0
 
     for(auto& i : node_to_pos)
     {
         const std::string& name = i.first;
-        vec2i pos = i.second;
+        vec2f pos = i.second;
 
         auto connections = playspace_network_manage.get_links(name);
 
@@ -2306,7 +2460,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(found == node_to_pos.end())
                 continue;
 
-            vec2i to_draw_pos = found->second;
+            vec2f to_draw_pos = found->second;
 
             vec2f out_dir;
             int out_num;
@@ -2343,7 +2497,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     for(auto& i : node_to_pos)
     {
-        vec2i clamped = clamp(i.second, (vec2i){0, 0}, (vec2i){w-1, h});
+        vec2i clamped = clamp((vec2i){i.second.x(), i.second.y()}, (vec2i){0, 0}, (vec2i){w-1, h});
 
         std::string to_display = "`" + string_to_colour(i.first) + display_string[i.first] + "`";
 
