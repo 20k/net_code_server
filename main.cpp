@@ -1,5 +1,6 @@
 #include <iostream>
 #include "duktape.h"
+#include "stacktrace.hpp"
 
 #include <iostream>
 #include <SFML/Graphics.hpp>
@@ -207,6 +208,10 @@ void test_json()
 ///making sure this ends up in the right repo
 int main()
 {
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+
+    stack_on_start();
+
     #ifdef TESTING
     system("start test_launch.bat");
     #endif // TESTING

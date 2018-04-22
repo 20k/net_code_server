@@ -34,14 +34,12 @@ std::string strip_whitespace(std::string);
 struct lock_internal
 {
     int locked_by = -1;
-    std::atomic_int locked{0};
+    std::atomic_flag locked = ATOMIC_FLAG_INIT;
     mongoc_client_t* in_case_of_emergency = nullptr;
 
     void lock(int who, mongoc_client_t* emergency)
     {
-        int expected = 0;
-
-        while(!locked.compare_exchange_strong(expected, 1)){expected = 0;}
+        while(locked.test_and_set(std::memory_order_acquire)){}
 
         locked_by = who;
         in_case_of_emergency = emergency;
@@ -50,7 +48,7 @@ struct lock_internal
     void unlock()
     {
         locked_by = -1;
-        locked = 0;
+        locked.clear(std::memory_order_release);
     }
 };
 
@@ -73,7 +71,7 @@ struct mongo_context
 
     ///thread safety of below map
     ///make timed
-    std::recursive_timed_mutex map_lock;
+    std::recursive_mutex map_lock;
     //std::mutex lock;
     //int locked_by = -1;
 
@@ -233,19 +231,20 @@ struct mongo_context
         ///8 second lock
         int time_ms = 8 * 1000;
 
-        while(!map_lock.try_lock_for(std::chrono::milliseconds(time_ms))){}
+        map_lock.lock();
+
+        //while(!map_lock.try_lock_for(std::chrono::milliseconds(time_ms))){}
     }
 
     void make_lock(int who, mongoc_client_t* in_case_of_emergency)
     {
         map_lock_for();
 
-        per_collection_lock[last_collection];
-        auto found = per_collection_lock.find(last_collection);
+        auto& found = per_collection_lock[last_collection];
 
         map_lock.unlock();
 
-        found->second.lock(who, in_case_of_emergency);
+        found.lock(who, in_case_of_emergency);
 
         /*lock.lock();
 
@@ -256,12 +255,11 @@ struct mongo_context
     {
         map_lock_for();
 
-        per_collection_lock[last_collection];
-        auto found = per_collection_lock.find(last_collection);
+        auto& found = per_collection_lock[last_collection];
 
         map_lock.unlock();
 
-        found->second.unlock();
+        found.unlock();
 
         /*locked_by = -1;
         lock.unlock();*/

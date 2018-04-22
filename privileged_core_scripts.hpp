@@ -8,6 +8,7 @@
 #include "auth.hpp"
 #include "item.hpp"
 #include "script_util_shared.hpp"
+#include "logging.hpp"
 
 #include <vec/vec.hpp>
 
@@ -2200,6 +2201,8 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
+    lg::log("start tid ", get_thread_id(ctx));
+
     int w = 40;
     int h = 30;
 
@@ -2467,6 +2470,8 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     push_duk_val(ctx, built);
+
+    lg::log("end tid ", get_thread_id(ctx));
 
     return 1;
 }
