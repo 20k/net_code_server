@@ -2147,15 +2147,15 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(from == "")
         return push_error(ctx, "usage: net.view({user:<username>})");
 
-    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
-
-    if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx), path_info::VIEW_LINKS))
-       return push_error(ctx, "Inaccessible");
-
     std::optional opt_user_and_nodes = get_user_and_nodes(from, get_thread_id(ctx));
 
     if(!opt_user_and_nodes.has_value())
         return push_error(ctx, "No such user");
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx), path_info::VIEW_LINKS))
+       return push_error(ctx, "Inaccessible");
 
     user& usr = opt_user_and_nodes->first;
 
@@ -2233,6 +2233,9 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(num < 0 || num >= 10)
         return push_error(ctx, "num out of range [1,10]");
+
+    if(!get_user(from, get_thread_id(ctx)).has_value())
+        return push_error(ctx, "User does not exist");
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
