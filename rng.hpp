@@ -93,11 +93,12 @@ T random_select_of_rarity(U<T, float>& rarities, float rarity)
 
     for(auto& i : rarities)
     {
+        accum += i.second;
+
         if(rarity <= accum / max_rare)
             return i.first;
-
-        accum += i.second;
     }
+
 
     return rarities.begin()->first;
 }
