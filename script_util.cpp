@@ -1,7 +1,7 @@
 #include "script_util.hpp"
 #include <assert.h>
 #include "item.hpp"
-#include "script_util_shared.hpp"
+#include <libncclient/nc_util.hpp>
 #include "duk_object_functions.hpp"
 #include <memory>
 #include "logging.hpp"

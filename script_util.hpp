@@ -8,7 +8,7 @@
 #include <iostream>
 #include <js/js_interop.hpp>
 
-//#include "script_util_shared.hpp"
+//#include <libncclient/nc_util.hpp>
 //#include "duk_object_functions.hpp"
 
 inline

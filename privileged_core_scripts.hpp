@@ -7,7 +7,7 @@
 #include "rate_limiting.hpp"
 #include "auth.hpp"
 #include "item.hpp"
-#include "script_util_shared.hpp"
+#include <libncclient/nc_util.hpp>
 #include "logging.hpp"
 
 #include <vec/vec.hpp>

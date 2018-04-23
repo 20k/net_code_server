@@ -1,4 +1,4 @@
-#include "socket_shared.hpp"
+#include <libncclient/socket.hpp>
 
 #include "http_beast_server.hpp"
 #include "non_user_task_thread.hpp"

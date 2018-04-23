@@ -1,6 +1,6 @@
 #include "auth.hpp"
 #include "mongo.hpp"
-#include "script_util_shared.hpp"
+#include <libncclient/nc_util.hpp>
 
 void auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth)
 {

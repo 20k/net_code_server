@@ -10,3 +10,6 @@
 [submodule "deps/vec"]
 	path = deps/vec
 	url = https://github.com/20k/funvectormaths
+[submodule "deps/libncclient"]
+	path = deps/libncclient
+	url = https://github.com/20k/libncclient.git

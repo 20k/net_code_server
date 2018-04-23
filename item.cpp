@@ -1,6 +1,6 @@
 #include "item.hpp"
 #include "user.hpp"
-#include "script_util_shared.hpp"
+#include <libncclient/nc_util.hpp>
 #include "rng.hpp"
 
 int32_t item::get_new_id(mongo_lock_proxy& global_props_ctx)

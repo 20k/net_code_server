@@ -99,9 +99,9 @@
 			<Add option="-lboost_system-mt" />
 			<Add option="-lmswsock" />
 			<Add option="-lole32" />
-			<Add option="-lboost_stacktrace_windbg-mt" />
 			<Add option="-lboost_filesystem-mt" />
 			<Add option="-ldbgeng" />
+			<Add option="-lboost_stacktrace_windbg-mt" />
 			<Add library="C:/Users/James/Desktop/projects/crapmud/libduktape.so.202.20200" />
 		</Linker>
 		<Unit filename="auth.cpp" />
@@ -139,7 +139,6 @@
 		<Unit filename="rng.hpp" />
 		<Unit filename="script_util.cpp" />
 		<Unit filename="script_util.hpp" />
-		<Unit filename="script_util_shared.hpp" />
 		<Unit filename="seccallers.hpp" />
 		<Unit filename="socket_shared.hpp" />
 		<Unit filename="stacktrace.cpp" />
