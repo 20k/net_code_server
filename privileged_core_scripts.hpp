@@ -2157,9 +2157,11 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!opt_user_and_nodes.has_value())
         return push_error(ctx, "No such user");
 
+    user& usr = opt_user_and_nodes->first;
+
     auto hostile_actions = opt_user_and_nodes->second.valid_hostile_actions();
 
-    if(from != get_caller(ctx) && !((hostile_actions & user_node_info::VIEW_LINKS) > 0))
+    if(!usr.is_allowed_user(get_caller(ctx)) && !((hostile_actions & user_node_info::VIEW_LINKS) > 0))
         return push_error(ctx, "Node is Locked");
 
     std::vector<std::string> links = playspace_network_manage.get_links(from);
