@@ -572,11 +572,11 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                 if(!to_check.valid)
                     return make_error_col("Trying something sneaky eh 2?");
 
-                #define MAX_USERS 8
-
                 #ifdef TESTING
                 #define MAX_USERS 999
-                #endif // TESTING
+                #else // TESTING
+                #define MAX_USERS 8
+                #endif
 
                 if(to_check.users.size() >= MAX_USERS)
                     return make_error_col("Max users " + std::to_string(to_check.users.size()) + "/" + std::to_string(MAX_USERS));
