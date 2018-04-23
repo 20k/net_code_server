@@ -2201,8 +2201,6 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    lg::log("start tid ", get_thread_id(ctx));
-
     int w = 40;
     int h = 30;
 
@@ -2441,7 +2439,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     for(auto& i : node_to_pos)
     {
-        vec2i clamped = clamp((vec2i){i.second.x(), i.second.y()}, (vec2i){0, 0}, (vec2i){w-1, h});
+        vec2i clamped = clamp((vec2i){i.second.x(), i.second.y()}, (vec2i){0, 0}, (vec2i){w-1, h-1});
 
         std::string to_display = "`" + string_to_colour(i.first) + display_string[i.first] + "`";
 
@@ -2470,8 +2468,6 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     push_duk_val(ctx, built);
-
-    lg::log("end tid ", get_thread_id(ctx));
 
     return 1;
 }

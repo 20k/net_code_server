@@ -71,7 +71,7 @@ struct mongo_context
 
     ///thread safety of below map
     ///make timed
-    std::recursive_mutex map_lock;
+    std::recursive_timed_mutex map_lock;
     //std::mutex lock;
     //int locked_by = -1;
 
@@ -231,9 +231,9 @@ struct mongo_context
         ///8 second lock
         int time_ms = 8 * 1000;
 
-        map_lock.lock();
+        //map_lock.lock();
 
-        //while(!map_lock.try_lock_for(std::chrono::milliseconds(time_ms))){}
+        while(!map_lock.try_lock_for(std::chrono::milliseconds(time_ms))){}
     }
 
     void make_lock(int who, mongoc_client_t* in_case_of_emergency)
