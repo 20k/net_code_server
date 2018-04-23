@@ -2563,7 +2563,7 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 return push_error(ctx, "Invalid remove_user username");
         }
 
-        if(usr.all_found_props.get_prop_as_integer("is_user") == 1)
+        if(add_user.size() > 0 && (usr.all_found_props.get_prop_as_integer("is_user") == 1 || usr.auth != ""))
             return push_error(ctx, "Cannot take over a user");
 
         ///should be free if we're an allowed user
