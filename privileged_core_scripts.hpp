@@ -2201,8 +2201,17 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    int w = 40;
-    int h = 30;
+    int w = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "w", -1);
+    int h = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "h", -1);
+
+    if(w <= 5 || h <= 5)
+        return push_error(ctx, "w or h <= 5");
+
+    if(w > 80 || h > 80)
+        return push_error(ctx, "w or h > 80");
+
+    //int w = 40;
+    //int h = 30;
 
     std::vector<std::string> str;
 
