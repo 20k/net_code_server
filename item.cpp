@@ -109,8 +109,6 @@ std::string array_to_str(const std::vector<std::string>& arr)
     return accum;
 }
 
-#define MAX_ITEMS 128
-
 bool item::transfer_to_user(const std::string& username, int thread_id)
 {
     {

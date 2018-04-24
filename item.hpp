@@ -44,6 +44,8 @@ bool array_contains(const std::vector<std::string>& arr, const std::string& str)
 std::vector<std::string> str_to_array(const std::string& str);
 std::string array_to_str(const std::vector<std::string>& arr);
 
+#define MAX_ITEMS 32
+
 struct item
 {
     mongo_requester props;

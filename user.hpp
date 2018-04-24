@@ -5,11 +5,6 @@
 #include "script_util.hpp"
 #include "item.hpp"
 
-///how do handle upgrades
-///vector of ids?
-
-#define MAX_ITEMS 32
-
 ///ok. Need to fetch users out of the db
 struct user
 {
