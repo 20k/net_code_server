@@ -8,7 +8,7 @@
 ///how do handle upgrades
 ///vector of ids?
 
-#define MAX_ITEMS 128
+#define MAX_ITEMS 32
 
 ///ok. Need to fetch users out of the db
 struct user
