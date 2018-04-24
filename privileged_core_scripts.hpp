@@ -2267,7 +2267,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         next_ring.clear();
 
-        for(auto& i : current_ring)
+        /*for(auto& i : current_ring)
         {
             if(rings.find(i) != rings.end())
                 continue;
@@ -2276,7 +2276,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             keys.push_back({i, display_string[i]});
             overall_count++;
             overall_count %= chars.size();
-        }
+        }*/
 
         for(const std::string& str : current_ring)
         {
@@ -2284,6 +2284,11 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
                 continue;
 
             rings[str] = ring;
+
+            display_string[str] = chars[overall_count];
+            keys.push_back({str, display_string[str]});
+            overall_count++;
+            overall_count %= chars.size();
 
             auto connections = playspace_network_manage.get_links(str);
 
@@ -2397,8 +2402,14 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         i.second = round(i.second);
     }
 
-    auto node_to_pos = global_pos;
+    //auto node_to_pos = global_pos;
 
+    std::map<std::string, vec2f> node_to_pos;
+
+    for(auto& i : rings)
+    {
+        node_to_pos[i.first] = global_pos[i.first];
+    }
 
     for(auto& i : node_to_pos)
     {
