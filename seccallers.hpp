@@ -301,6 +301,11 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
         duk_push_string(sd.ctx, caller.c_str()); ///[object -> caller]
         duk_put_prop_string(sd.ctx, id, "caller"); ///[object]
 
+        std::string script_host = get_script_host(sd.ctx);
+
+        duk_push_string(sd.ctx, script_host.c_str());
+        duk_put_prop_string(sd.ctx, id, "script_host");
+
         int nargs = 2;
 
         if(duk_is_undefined(sd.ctx, -3))
