@@ -338,6 +338,8 @@ struct unified_script_info
     bool valid = false;
     std::string parsed_source;
     int seclevel = 0;
+    bool in_public = false;
+    std::string owner;
 
     std::vector<std::string> args;
     std::vector<std::string> params;
@@ -347,6 +349,8 @@ struct unified_script_info
         valid = t.get_prop("valid") == "1";
         parsed_source = t.get_prop("parsed_source");
         seclevel = t.get_prop_as_integer("seclevel");
+        in_public = t.get_prop_as_integer("in_public");
+        owner = t.get_prop_as_integer("owner");
 
         args = t.get_prop_as_array("args");
         params = t.get_prop_as_array("params");
@@ -357,6 +361,8 @@ struct unified_script_info
         valid = sinfo.valid;
         parsed_source = sinfo.parsed_source;
         seclevel = sinfo.seclevel;
+        in_public = sinfo.in_public;
+        owner = sinfo.owner;
 
         args = sinfo.args;
         params = sinfo.params;
@@ -500,6 +506,13 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     if(!script.valid)
         return push_error(ctx, script_err);
+
+    #ifdef ENFORCE_PRIVATE
+    std::string caller = get_caller(ctx);
+
+    if(!script.in_public && caller != script.owner)
+        return push_error(ctx, "Script is private");
+    #endif // ENFORCE_PRIVATE
 
     SL_GUARD(script.seclevel);
 
