@@ -31,6 +31,12 @@ struct global_generic_cache
         cache[name] = data;
     }
 
+    void delete_from_cache(const std::string& name)
+    {
+        std::lock_guard guard(mut);
+
+        cache.erase(name);
+    }
 };
 
 #endif // GLOBAL_CACHING_HPP_INCLUDED
