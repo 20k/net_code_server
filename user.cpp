@@ -110,6 +110,8 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
     }
     #endif // USE_LOCS
 
+    cache.overwrite_in_cache(name_, *this);
+
     return true;
 }
 
@@ -146,6 +148,12 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
     cache.overwrite_in_cache(name, *this);
 
     return true;
+}
+
+void user::delete_from_cache(const std::string& name_)
+{
+    global_user_cache& cache = get_global_user_cache();
+    cache.delete_from_cache(name_);
 }
 
 std::map<std::string, double> user::get_properties_from_loaded_items(mongo_lock_proxy& ctx)

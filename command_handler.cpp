@@ -439,6 +439,8 @@ std::string delete_user(command_handler_state& state, const std::string& str)
         req.set_prop("owned_by", name);
 
         req.remove_all_from_db(nodes_db);
+
+        user_nodes::delete_from_cache(name);
     }
 
     ///DELETE USER
@@ -450,6 +452,8 @@ std::string delete_user(command_handler_state& state, const std::string& str)
         req.set_prop("name", name);
 
         req.remove_all_from_db(ctx);
+
+        user::delete_from_cache(name);
     }
 
     {

@@ -31,6 +31,8 @@ struct user
     bool load_from_db(mongo_lock_proxy& ctx, const std::string& name_);
     bool construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, const std::string& auth);
 
+    static void delete_from_cache(const std::string& name_);
+
     std::map<std::string, double> get_properties_from_loaded_items(mongo_lock_proxy& ctx);
 
     std::map<std::string, double> get_total_user_properties(mongo_lock_proxy& ctx);
