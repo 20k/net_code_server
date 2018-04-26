@@ -5,6 +5,30 @@
 #include "mongo.hpp"
 #include "privileged_core_scripts.hpp"
 
+static
+duk_ret_t native_print(duk_context *ctx)
+{
+	COOPERATE_KILL();
+
+    std::string str = duk_safe_to_std_string(ctx, -1);
+
+    duk_push_global_stash(ctx);
+    duk_get_prop_string(ctx, -1, "print_str");
+
+    std::string fstr = duk_safe_to_std_string(ctx, -1);
+
+    fstr += str;
+
+    duk_pop_n(ctx, 1);
+
+    duk_push_string(ctx, fstr.c_str());
+    duk_put_prop_string(ctx, -2, "print_str");
+
+    duk_pop_n(ctx, 2);
+
+	return 0;
+}
+
 ///#db.i, r, f, u, u1, us,
 static
 duk_ret_t db_insert(duk_context* ctx)
@@ -209,6 +233,7 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
     duk_push_global_stash(ctx);
 
     quick_register(ctx, "HASH_D", "");
+    quick_register(ctx, "print_str", "");
     quick_register(ctx, "caller", caller.c_str());
     quick_register_generic(ctx, "caller_stack", caller_stack);
     quick_register(ctx, "script_host", script_host.c_str());
@@ -224,6 +249,11 @@ static
 duk_ret_t hash_d(duk_context* ctx)
 {
     COOPERATE_KILL();
+
+    if(get_caller(ctx) != get_script_host(ctx))
+    {
+        return 0;
+    }
 
     std::string str = duk_json_encode(ctx, -1);
 
@@ -244,13 +274,19 @@ duk_ret_t hash_d(duk_context* ctx)
     return 0;
 }
 
-///needs to be moved somewhere better
 inline
 std::string get_hash_d(duk_context* ctx)
 {
     COOPERATE_KILL();
 
     duk_push_global_stash(ctx);
+
+    if(!duk_has_prop_string(ctx, -1, "HASH_D"))
+    {
+        duk_pop(ctx);
+        return "";
+    }
+
     duk_get_prop_string(ctx, -1, "HASH_D");
 
     std::string str = duk_safe_to_string(ctx, -1);
@@ -261,7 +297,29 @@ std::string get_hash_d(duk_context* ctx)
 }
 
 inline
-std::string compile_and_call(stack_duk& sd, const std::string& data, std::string caller, bool stringify, int seclevel)
+std::string get_print_str(duk_context* ctx)
+{
+    COOPERATE_KILL();
+
+    duk_push_global_stash(ctx);
+
+    if(!duk_has_prop_string(ctx, -1, "print_str"))
+    {
+        duk_pop(ctx);
+        return "";
+    }
+
+    duk_get_prop_string(ctx, -1, "print_str");
+
+    std::string str = duk_safe_to_string(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    return str;
+}
+
+inline
+std::string compile_and_call(stack_duk& sd, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level)
 {
     if(data.size() == 0)
     {
@@ -284,9 +342,9 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
     //DUK_COMPILE_FUNCTION
     if(duk_pcompile(sd.ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
     {
-        ret = duk_safe_to_string(sd.ctx, -1);
+        std::string err = duk_safe_to_string(sd.ctx, -1);
 
-        printf("compile failed: %s\n", ret.c_str());
+        printf("compile failed: %s\n", err.c_str());
 
         duk_push_undefined(sd.ctx);
     }
@@ -330,12 +388,16 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
     std::string str = get_hash_d(sd.ctx);
 
     ///only should do this if the caller is owner of script
-    if(str != "")
+    if(str != "" && is_top_level)
     {
-        ret = str;
+        duk_pop(sd.ctx);
+
+        push_duk_val(sd.ctx, str);
     }
 
-    return ret;
+    std::string extra = get_print_str(sd.ctx);
+
+    return extra;
 }
 
 struct unified_script_info
@@ -530,7 +592,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     set_script_info(ctx, to_call_fullname);
 
-    compile_and_call(sd, load, get_caller(ctx), false, script.seclevel);
+    compile_and_call(sd, load, get_caller(ctx), false, script.seclevel, false);
 
     set_script_info(ctx, full_script);
 
@@ -555,10 +617,15 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
 
     duk_push_undefined(ctx);
 
-    compile_and_call(sd, dummy.parsed_source, get_caller(ctx), false, dummy.seclevel);
+    std::string extra = compile_and_call(sd, dummy.parsed_source, get_caller(ctx), false, dummy.seclevel, true);
 
     if(!duk_is_object_coercible(ctx, -1))
-        return "No return";
+    {
+        if(extra == "")
+            return "No return";
+        else
+            return extra;
+    }
 
     //std::string ret = duk_json_encode(ctx, -1);
 
@@ -577,6 +644,8 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
     }
 
     duk_pop(ctx);
+
+    ret = extra + ret;
 
     return ret;
 }
@@ -737,6 +806,7 @@ void register_funcs(duk_context* ctx, int seclevel)
     inject_c_function(ctx, db_find, "db_find", DUK_VARARGS);
     inject_c_function(ctx, db_remove, "db_remove", 1);
     inject_c_function(ctx, db_update, "db_update", 2);
+    inject_c_function(ctx, native_print, "print", DUK_VARARGS);
 
     //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }
