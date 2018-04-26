@@ -2,6 +2,16 @@
 #include "rng.hpp"
 #include <libncclient/nc_util.hpp>
 #include <secret/node.hpp>
+#include "global_caching.hpp"
+
+using global_user_cache = global_generic_cache<user>;
+
+global_user_cache& get_global_user_cache()
+{
+    static global_user_cache cache;
+
+    return cache;
+}
 
 void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
 {
@@ -23,10 +33,18 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     to_set.set_prop_array("call_stack", call_stack);
 
     filter.update_in_db_if_exact(ctx, to_set);
+
+    global_user_cache& cache = get_global_user_cache();
+    cache.overwrite_in_cache(name, *this);
 }
 
 bool user::exists(mongo_lock_proxy& ctx, const std::string& name_)
 {
+    global_user_cache& cache = get_global_user_cache();
+
+    if(cache.exists_in_cache(name_))
+        return true;
+
     ctx.change_collection(name_);
 
     mongo_requester req;
@@ -37,6 +55,14 @@ bool user::exists(mongo_lock_proxy& ctx, const std::string& name_)
 
 bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
 {
+    global_user_cache& cache = get_global_user_cache();
+
+    if(cache.exists_in_cache(name_))
+    {
+        *this = cache.load_from_cache(name_);
+        return true;
+    }
+
     ctx.change_collection(name_);
 
     if(!exists(ctx, name_))
@@ -115,6 +141,9 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
     request.set_prop_array("call_stack", std::vector<std::string>());
 
     request.insert_in_db(ctx);
+
+    global_user_cache& cache = get_global_user_cache();
+    cache.overwrite_in_cache(name, *this);
 
     return true;
 }
@@ -280,7 +309,6 @@ int user::item_to_index(const std::string& item)
 
     return -1;
 }
-
 
 void user::append_item(const std::string& id)
 {
