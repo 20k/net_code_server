@@ -18,82 +18,60 @@ void bot_thread()
         ///milliseconds
         size_t current_time = get_wall_time();
 
-        std::vector<mongo_requester> found;
-
+        auto check_autorun = [&](user& found_user)
         {
-            mongo_lock_proxy all_users = get_global_mongo_global_properties_context(-2);
+            std::vector<std::string> loaded = found_user.all_loaded_items();
 
-            mongo_requester to_find;
-            to_find.exists_check["users"] = 1;
-
-            found = to_find.fetch_from_db(all_users);
-        }
-
-        for(mongo_requester& found_auth : found)
-        {
-            std::vector<std::string> users = str_to_array(found_auth.get_prop("users"));
-
-            for(std::string& username : users)
+            for(std::string& item_id : loaded)
             {
-                user found_user;
+                item next_item;
 
                 {
-                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(-2);
+                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
-                    found_user.load_from_db(mongo_ctx, username);
+                    next_item.load_from_db(mongo_ctx, item_id);
                 }
 
-                //std::cout << "checking user " << found_user.name << std::endl;
+                std::string type = next_item.get_prop("item_type");
 
-                std::vector<std::string> loaded = found_user.all_loaded_items();
+                if(type != std::to_string(item_types::AUTO_SCRIPT_RUNNER))
+                    continue;
 
-                for(std::string& item_id : loaded)
+                //std::cout << "of type bot brain" << std::endl;
+
+                size_t found_time_ms = next_item.get_prop_as_long("last_run");
+                double run_s = next_item.get_prop_as_double("run_every_s");
+
+                size_t next_time = found_time_ms + run_s * 1000;
+
+                //std::cout << "cur " << current_time << " next " << next_time << " run " << run_s << std::endl;
+
+                if(current_time >= next_time)
                 {
-                    item next_item;
+                    ///WE'RE A VALID BOT BRAIN SCRIPT
+                    ///RUN AND THEN BREAK
+
+                    next_item.set_prop("last_run", current_time);
 
                     {
                         mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
-
-                        next_item.load_from_db(mongo_ctx, item_id);
+                        next_item.overwrite_in_db(mongo_ctx);
                     }
 
-                    std::string type = next_item.get_prop("item_type");
+                    std::cout << "running script autorun " << found_user.name << std::endl;
 
-                    if(type != std::to_string(item_types::AUTO_SCRIPT_RUNNER))
-                        continue;
+                    throwaway_user_thread(found_user.name, "#" + found_user.name + ".autorun()");
 
-                    //std::cout << "of type bot brain" << std::endl;
+                    Sleep(100);
 
-                    size_t found_time_ms = next_item.get_prop_as_long("last_run");
-                    double run_s = next_item.get_prop_as_double("run_every_s");
-
-                    size_t next_time = found_time_ms + run_s * 1000;
-
-                    //std::cout << "cur " << current_time << " next " << next_time << " run " << run_s << std::endl;
-
-                    if(current_time >= next_time)
-                    {
-                        ///WE'RE A VALID BOT BRAIN SCRIPT
-                        ///RUN AND THEN BREAK
-
-                        next_item.set_prop("last_run", current_time);
-
-                        {
-                            mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
-                            next_item.overwrite_in_db(mongo_ctx);
-                        }
-
-                        std::cout << "running script autorun " << found_user.name << std::endl;
-
-                        throwaway_user_thread(found_user.name, "#" + found_user.name + ".autorun()");
-
-                        Sleep(100);
-
-                        break;
-                    }
+                    break;
                 }
             }
-        }
+        };
+
+        for_each_user(check_autorun);
+
+        for_each_npc(check_autorun);
     }
 }
 
