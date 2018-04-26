@@ -334,6 +334,8 @@ int main()
     std::cout << str << std::endl;
     #endif // 0
 
+    CoUninitialize();
+
     //tests();
 
     return 0;
