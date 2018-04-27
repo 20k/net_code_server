@@ -113,4 +113,26 @@ void for_each_user(const T& t)
     }
 }
 
+template<typename T>
+inline
+void for_each_auth(const T& t)
+{
+    std::vector<mongo_requester> all;
+
+    {
+        mongo_lock_proxy all_auth = get_global_mongo_global_properties_context(-2);
+
+        mongo_requester request;
+
+        request.exists_check["account_token"] = 1;
+
+        all = request.fetch_from_db(all_auth);
+    }
+
+    for(auto& i : all)
+    {
+        t(i);
+    }
+}
+
 #endif // USER_HPP_INCLUDED

@@ -504,6 +504,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         if(!is_valid_string(user_name))
             return make_error_col("Invalid username");
 
+
         if(!is_allowed_user(user_name))
             return make_error_col("Claiming or using this specific username is disallowed. If you already own it you may #delete_user the user in question");
 
