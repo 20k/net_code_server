@@ -36,5 +36,6 @@ std::string handle_autocompletes_json(user& usr, const std::string& in);
 
 std::string binary_to_hex(const std::string& in);
 std::string hex_to_binary(const std::string& in);
+std::string delete_user(command_handler_state& state, const std::string& str, bool cli_force = false);
 
 #endif // COMMAND_HANDLER_HPP_INCLUDED

@@ -315,55 +315,65 @@ std::string get_update_message()
 }
 
 ///should really queue this or something
-std::string delete_user(command_handler_state& state, const std::string& str)
+std::string delete_user(command_handler_state& state, const std::string& str, bool cli_force)
 {
     std::string auth;
 
-    {
-        std::lock_guard guard(state.lock);
+    std::string name;
 
-        auth = state.auth;
+    if(!cli_force)
+    {
+
+        {
+            std::lock_guard guard(state.lock);
+
+            auth = state.auth;
+        }
+
+        if(auth == "")
+            return "No auth";
+
+        std::string command_str = "#delete_user ";
+
+        if(str.size() == command_str.size())
+            return "Invalid username";
+
+        auto splits = no_ss_split(str, " ");
+
+        if(splits.size() > 2)
+            return "Invalid command or username";
+
+        name = splits[1];
+
+        ///override default name checking so we can delete users
+        ///with uppercase names
+        if(!is_valid_string(name, true))
+            return "Invalid name";
+
+        ///Things to clean up
+        ///user itself - done
+        ///notifs - done
+        ///items - done
+        ///auth - done
+        ///user db - done
+        ///nodes - done
+
+        {
+            mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+            user to_delete;
+            to_delete.load_from_db(ctx, name);
+
+            if(to_delete.auth != auth)
+                return "Invalid Auth";
+
+            if(SHOULD_RATELIMIT(auth, DELETE_USER))
+                return "You may only delete 1 user per hour";
+        }
     }
-
-    if(auth == "")
-        return "No auth";
-
-    std::string command_str = "#delete_user ";
-
-    if(str.size() == command_str.size())
-        return "Invalid username";
-
-    auto splits = no_ss_split(str, " ");
-
-    if(splits.size() > 2)
-        return "Invalid command or username";
-
-    std::string name = splits[1];
-
-    ///override default name checking so we can delete users
-    ///with uppercase names
-    if(!is_valid_string(name, true))
-        return "Invalid name";
-
-    ///Things to clean up
-    ///user itself - done
-    ///notifs - done
-    ///items - done
-    ///auth - done
-    ///user db - done
-    ///nodes - done
-
+    else
     {
-        mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
-
-        user to_delete;
-        to_delete.load_from_db(ctx, name);
-
-        if(to_delete.auth != auth)
-            return "Invalid Auth";
-
-        if(SHOULD_RATELIMIT(auth, DELETE_USER))
-            return "You may only delete 1 user per hour";
+        name = str;
     }
 
     ///DELETE ITEMS
@@ -385,26 +395,31 @@ std::string delete_user(command_handler_state& state, const std::string& str)
 
         auto found = req.fetch_from_db(auth_db);
 
-        if(found.size() != 1)
-            return "Auth Error: Purple Catepillar";
-
-        auto found_req = found[0];
-
-        auto arr = str_to_array(found_req.get_prop("users"));
-
-        for(int i=0; i < (int)arr.size(); i++)
+        if(found.size() == 1)
         {
-            if(arr[i] == name)
+            auto found_req = found[0];
+
+            auto arr = str_to_array(found_req.get_prop("users"));
+
+            for(int i=0; i < (int)arr.size(); i++)
             {
-                arr.erase(arr.begin() + i);
-                i--;
-                continue;
+                if(arr[i] == name)
+                {
+                    arr.erase(arr.begin() + i);
+                    i--;
+                    continue;
+                }
             }
+
+            found_req.set_prop("users", array_to_str(arr));
+
+            req.update_in_db_if_exact(auth_db, found_req);
         }
-
-        found_req.set_prop("users", array_to_str(arr));
-
-        req.update_in_db_if_exact(auth_db, found_req);
+        else
+        {
+            if(!cli_force)
+                return "Auth Error: Purple Catepillar";
+        }
     }
 
     ///DELETE NOTIFS

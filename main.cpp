@@ -261,6 +261,31 @@ int main()
         }
     }*/
 
+    //#define DELETE_BANNED
+    #ifdef DELETE_BANNED
+    std::set<std::string> banned;
+
+    for(auto& i : privileged_args)
+    {
+        std::string script_name = i.first;
+
+        std::string str = no_ss_split(script_name, ".")[0];
+
+        banned.insert(str);
+    }
+
+    banned.insert("db");
+
+    command_handler_state temp;
+
+    for(auto& i : banned)
+    {
+        std::cout << delete_user(temp, i, true) << std::endl;
+        std::cout << "deleted " << i << std::endl;
+    }
+
+    #endif // DELETE_BANNED
+
 
     #if 1
     http_test_run();
@@ -285,7 +310,7 @@ int main()
 
         mongo_lock_proxy lock = get_global_mongo_user_info_context(-2);
 
-        mongo_requester req;
+        /*mongo_requester req;
         req.set_prop("name", command);
 
         auto res = req.fetch_from_db(lock);
@@ -299,7 +324,17 @@ int main()
             write_all_bin(command + ".key", key);
 
             std::cout << "found" << std::endl;
-        }
+        }*/
+
+        user usr;
+        usr.load_from_db(lock, command);
+
+        if(!usr.valid)
+            continue;
+
+        std::string key = usr.auth;
+
+        write_all_bin(command + ".key", key);
 
         Sleep(50);
     }

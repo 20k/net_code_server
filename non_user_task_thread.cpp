@@ -99,7 +99,7 @@ void manhandle_thread()
 #if 0
 void fix_auth_errors()
 {
-    while(1)
+    //while(1)
     {
         auto fix = [](mongo_requester& found_req)
         {
@@ -117,7 +117,7 @@ void fix_auth_errors()
 
                 std::string uauth = usr.auth;
 
-                if(uauth != req.get_prop("account_token"))
+                if(uauth != req.get_prop("account_token") || !usr.valid)
                 {
                     arr.erase(arr.begin() + i);
                     i--;
