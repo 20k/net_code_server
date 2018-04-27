@@ -465,6 +465,24 @@ std::string delete_user(command_handler_state& state, const std::string& str)
     return "Deleted";
 }
 
+bool is_allowed_user(const std::string& user)
+{
+    std::set<std::string> banned;
+
+    for(auto& i : privileged_args)
+    {
+        std::string script_name = i.first;
+
+        std::string str = no_ss_split(script_name, ".")[0];
+
+        banned.insert(str);
+    }
+
+    banned.insert("db");
+
+    return banned.find(user) == banned.end();
+}
+
 std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
 {
     printf("yay command\n");
@@ -485,6 +503,9 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
 
         if(!is_valid_string(user_name))
             return make_error_col("Invalid username");
+
+        if(!is_allowed_user(user_name))
+            return make_error_col("Claiming or using this specific username is disallowed. If you already own it you may #delete_user the user in question");
 
         /*int32_t start_from = 0;
 

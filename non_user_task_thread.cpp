@@ -9,6 +9,38 @@
 #include "rate_limiting.hpp"
 #include "command_handler.hpp"
 
+/*void manhandle_away_critical_users()
+{
+    std::set<std::string> banned;
+
+    for(auto& i : privileged_args)
+    {
+        std::string script_name = i.first;
+
+        std::string str = no_ss_split(script_name, ".")[0];
+
+        banned.insert(str);
+    }
+
+    auto steal_from = [&](user& usr)
+    {
+        if(banned.find(usr.name) != banned.end())
+            std::cout << "want to steal from " << usr.name << std::endl;
+    };
+
+    for_each_user(steal_from);
+}
+
+void manhandle_thread()
+{
+    while(1)
+    {
+        manhandle_away_critical_users();
+
+        Sleep(10000);
+    }
+}*/
+
 void bot_thread()
 {
     while(1)
@@ -166,4 +198,5 @@ void start_non_user_task_thread()
 {
     std::thread(run_non_user_tasks).detach();
     std::thread(bot_thread).detach();
+    //std::thread(manhandle_away_critical_users).detach();
 }
