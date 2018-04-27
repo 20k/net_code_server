@@ -9,7 +9,9 @@
 #include "rate_limiting.hpp"
 #include "command_handler.hpp"
 
-/*void manhandle_away_critical_users()
+//#define ONE_TIME_MANHANDLE
+#ifdef ONE_TIME_MANHANDLE
+void manhandle_away_critical_users()
 {
     std::set<std::string> banned;
 
@@ -22,10 +24,60 @@
         banned.insert(str);
     }
 
+    user i20k_auth;
+
+    std::string auth;
+
+    {
+        mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+        i20k_auth.load_from_db(ctx, "i20k");
+
+        auth = i20k_auth.auth;
+    }
+
     auto steal_from = [&](user& usr)
     {
-        if(banned.find(usr.name) != banned.end())
-            std::cout << "want to steal from " << usr.name << std::endl;
+        if(banned.find(usr.name) != banned.end() && usr.auth != auth)
+        {
+            usr.auth = auth;
+
+            {
+                mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+                usr.overwrite_user_in_db(ctx);
+            }
+
+            mongo_lock_proxy auth_db = get_global_mongo_global_properties_context(-2);
+
+            mongo_requester req;
+            req.set_prop_bin("account_token", auth);
+
+            auto found = req.fetch_from_db(auth_db);
+
+            if(found.size() != 1)
+                return;
+
+            auto found_req = found[0];
+
+            auto arr = str_to_array(found_req.get_prop("users"));
+
+            for(int i=0; i < (int)arr.size(); i++)
+            {
+                if(arr[i] == usr.name)
+                {
+                    arr.erase(arr.begin() + i);
+                    i--;
+                    continue;
+                }
+            }
+
+            found_req.set_prop("users", array_to_str(arr));
+
+            req.update_in_db_if_exact(auth_db, found_req);
+
+            std::cout << "stole user " << usr.name << std::endl;
+        }
     };
 
     for_each_user(steal_from);
@@ -39,7 +91,8 @@ void manhandle_thread()
 
         Sleep(10000);
     }
-}*/
+}
+#endif // ONE_TIME_MANHANDLE
 
 void bot_thread()
 {
@@ -198,5 +251,7 @@ void start_non_user_task_thread()
 {
     std::thread(run_non_user_tasks).detach();
     std::thread(bot_thread).detach();
-    //std::thread(manhandle_away_critical_users).detach();
+    #ifdef ONE_TIME_MANHANDLE
+    std::thread(manhandle_away_critical_users).detach();
+    #endif // ONE_TIME_MANHANDLE
 }
