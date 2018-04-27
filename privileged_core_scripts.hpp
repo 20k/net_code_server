@@ -172,7 +172,7 @@ duk_ret_t scripts__get_level(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string script_err;
 
-    unified_script_info script = unified_script_loading(get_caller(ctx), get_thread_id(ctx), str, script_err);
+    unified_script_info script = unified_script_loading(get_thread_id(ctx), str, script_err);
 
     if(!script.valid)
         return push_error(ctx, script_err);

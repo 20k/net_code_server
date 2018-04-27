@@ -1054,7 +1054,7 @@ std::optional<std::vector<script_arg>> get_uniform_script_args(user& usr, const 
 
     std::string err;
 
-    unified_script_info script_inf = unified_script_loading(usr.name, -2, script, err);
+    unified_script_info script_inf = unified_script_loading(-2, script, err);
 
     if(!script_inf.valid)
         return std::nullopt;

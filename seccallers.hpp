@@ -481,7 +481,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     std::string script_err;
 
-    unified_script_info script = unified_script_loading(get_caller(ctx), get_thread_id(ctx), to_call_fullname, script_err);
+    unified_script_info script = unified_script_loading(get_thread_id(ctx), to_call_fullname, script_err);
 
     if(!script.valid)
         return push_error(ctx, script_err);

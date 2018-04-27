@@ -41,7 +41,7 @@ struct unified_script_info
 };
 
 inline
-unified_script_info unified_script_loading(const std::string& caller, int thread_id, const std::string& full_scriptname, std::string& err)
+unified_script_info unified_script_loading(int thread_id, const std::string& full_scriptname, std::string& err)
 {
     unified_script_info ret;
 
