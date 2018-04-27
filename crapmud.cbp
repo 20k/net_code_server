@@ -118,6 +118,7 @@
 		<Unit filename="deps/secret/secret.cpp" />
 		<Unit filename="deps/secret/secret.hpp" />
 		<Unit filename="duk_object_functions.hpp" />
+		<Unit filename="global_caching.hpp" />
 		<Unit filename="http_beast_server.cpp" />
 		<Unit filename="http_beast_server.hpp" />
 		<Unit filename="item.cpp" />
@@ -143,6 +144,7 @@
 		<Unit filename="socket_shared.hpp" />
 		<Unit filename="stacktrace.cpp" />
 		<Unit filename="stacktrace.hpp" />
+		<Unit filename="unified_scripts.hpp" />
 		<Unit filename="user.cpp" />
 		<Unit filename="user.hpp" />
 		<Extensions>
