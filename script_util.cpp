@@ -295,9 +295,16 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
                                              "db_insert", "db_remove", "db_find", "db_update", "db_update1", "db_upsert",
                                              };
 
+    std::vector<int> sec_levels_unchecked   {4,
+                                            3, 3, 3, 3, 3, 3};
+
+    assert(sec_levels_unchecked.size() == tos_unchecked.size());
+
     for(int i=0; i < (int)tos_unchecked.size(); i++)
     {
         bool success = expand_to_from_nochecks(view, in, offset, froms_unchecked[i], tos_unchecked[i]);
+
+        found_seclevel = std::min(found_seclevel, sec_levels_unchecked[i]);
 
         if(success)
             return true;

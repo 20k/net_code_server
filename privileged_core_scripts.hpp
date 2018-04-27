@@ -9,6 +9,7 @@
 #include "item.hpp"
 #include <libncclient/nc_util.hpp>
 #include "logging.hpp"
+#include "unified_scripts.hpp"
 
 #include <vec/vec.hpp>
 
@@ -159,16 +160,9 @@ duk_ret_t scripts__get_level(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
     }
 
-    std::string str = duk_get_string(ctx, -1);
+    std::string str = duk_safe_to_std_string(ctx, -1);
 
     duk_pop(ctx);
-
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
-
-    script_info script;
-    //script.load_from_disk_with_db_metadata(str);
-    script.name = str;
-    script.load_from_db(mongo_ctx);
 
     if(privileged_functions.find(str) != privileged_functions.end())
     {
@@ -176,11 +170,12 @@ duk_ret_t scripts__get_level(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
     }
 
+    std::string script_err;
+
+    unified_script_info script = unified_script_loading(get_caller(ctx), get_thread_id(ctx), str, script_err);
+
     if(!script.valid)
-    {
-        push_error(ctx, "Invalid script name " + str);
-        return 1;
-    }
+        return push_error(ctx, script_err);
 
     duk_push_int(ctx, script.seclevel);
 

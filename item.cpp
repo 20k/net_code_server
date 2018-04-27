@@ -346,7 +346,7 @@ item item_types::get_default_of(item_types::item_type type, const std::string& l
 {
     using namespace item_types;
 
-    item new_item = get_default(item_types::LOCK);
+    item new_item = get_default(type);
 
     if(type < quick_names.size() && type >= 0)
         new_item.set_prop("short_name", quick_names[(int)type]);
