@@ -487,8 +487,6 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
 {
     printf("yay command\n");
 
-    //lg::log(str);
-
     if(starts_with(str, "user "))
     {
         if(state.auth == "")
@@ -504,25 +502,8 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         if(!is_valid_string(user_name))
             return make_error_col("Invalid username");
 
-
         if(!is_allowed_user(user_name))
             return make_error_col("Claiming or using this specific username is disallowed. If you already own it you may #delete_user the user in question");
-
-        /*int32_t start_from = 0;
-
-        {
-            mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
-
-            mongo_requester request;
-            request.set_prop("chats_send_is_gid", 1);
-
-            std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
-
-            if(found.size() >= 1)
-                start_from = found[0].get_prop_as_integer("chats_send_gid");
-            else
-                printf("warning, no chats gid\n");
-        }*/
 
         bool user_exists = false;
 
