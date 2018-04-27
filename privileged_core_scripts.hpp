@@ -1610,6 +1610,11 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     user& found_user = found->first;
     user_nodes& nodes = found->second;
 
+    auto hostile = nodes.valid_hostile_actions();
+
+    if(!((hostile & user_node_info::XFER_ITEM_FROM) > 0))
+        return push_error(ctx, "System Breach Node Secured");
+
     std::string accum;
 
     ///unloads item if loaded
