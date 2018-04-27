@@ -1222,6 +1222,13 @@ duk_ret_t item__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 inline
 duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::string& from, const std::string& to)
 {
+    ///TODO: Implement and test this below here when i'm less tired
+    /*std::string accum;
+    auto ret = load_item_raw(-1, -1, item_idx, found_user, nodes, accum, get_thread_id(ctx));
+
+    if(ret != "")
+        return push_error(ctx, ret);*/
+
     item placeholder;
 
     if(placeholder.transfer_from_to_by_index(item_idx, from, to, get_thread_id(ctx)))
@@ -1620,7 +1627,7 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     #endif // 0
 
     std::string item_id = found_user.index_to_item(item_idx);
-    int cost = 25;
+    int cost = 20;
     bool loaded_lock = false;
 
     ///make sure to move this check way below so it cant be exploited
