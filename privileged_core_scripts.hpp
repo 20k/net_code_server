@@ -1602,11 +1602,6 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!found.has_value())
         return push_error(ctx, "Error or no such user");
 
-    bool confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
-
-    if(handle_confirmed(ctx, confirm, get_caller(ctx), 10))
-        return 1;
-
     user& found_user = found->first;
     user_nodes& nodes = found->second;
 
@@ -1615,34 +1610,70 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!((hostile & user_node_info::XFER_ITEM_FROM) > 0))
         return push_error(ctx, "System Breach Node Secured");
 
-    std::string accum;
-
     ///unloads item if loaded
+    #if 0
+    std::string accum;
     auto ret = load_item_raw(-1, -1, item_idx, found_user, nodes, accum, get_thread_id(ctx));
 
     if(ret != "")
         return push_error(ctx, ret);
+    #endif // 0
 
-    nodes.reset_all_breach();
+    std::string item_id = found_user.index_to_item(item_idx);
+    int cost = 25;
+    bool loaded_lock = false;
 
-    for(auto& i : nodes.nodes)
+    ///make sure to move this check way below so it cant be exploited
+    if(item_id == "")
+        return push_error(ctx, "No such item");
+
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
-        std::vector<item> all_locks = i.get_locks(mongo_ctx);
+        item it;
+        it.load_from_db(mongo_ctx, item_id);
 
-        for(item& it : all_locks)
+        if(it.get_prop_as_integer("item_type") == item_types::LOCK && nodes.any_contains_lock(item_id))
         {
-            it.force_rotate();
-
-            it.overwrite_in_db(mongo_ctx);
+            cost = 50;
+            loaded_lock = true;
         }
     }
 
+    bool confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
+
+    if(handle_confirmed(ctx, confirm, get_caller(ctx), cost))
+        return 1;
+
+    if(loaded_lock)
     {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
-        nodes.overwrite_in_db(node_ctx);
+        nodes.reset_all_breach();
+
+        for(auto& i : nodes.nodes)
+        {
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+            std::vector<item> all_locks = i.get_locks(mongo_ctx);
+
+            for(item& it : all_locks)
+            {
+                it.force_rotate();
+
+                it.overwrite_in_db(mongo_ctx);
+            }
+        }
+
+        {
+            mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+            nodes.overwrite_in_db(node_ctx);
+        }
     }
+
+    std::string accum;
+    auto ret = load_item_raw(-1, -1, item_idx, found_user, nodes, accum, get_thread_id(ctx));
+
+    if(ret != "")
+        return push_error(ctx, ret);
 
     push_xfer_item_with_logs(ctx, item_idx, from, get_caller(ctx));
     return 1;
@@ -2027,10 +2058,19 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(name_of_person_being_attacked == "")
         return push_error(ctx, "Usage: net.hack({user:<name>})");
 
-    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+    bool cheats = false;
 
-    if(!playspace_network_manage.has_accessible_path_to(ctx, name_of_person_being_attacked, get_caller(ctx), path_info::USE_LINKS))
-        return push_error(ctx, "No Path");
+    #ifdef TESTING
+    cheats = true;
+    #endif // TESTING
+
+    if(!cheats)
+    {
+        playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+        if(!playspace_network_manage.has_accessible_path_to(ctx, name_of_person_being_attacked, get_caller(ctx), path_info::USE_LINKS))
+            return push_error(ctx, "No Path");
+    }
 
     return hack_internal(priv_ctx, ctx, name_of_person_being_attacked);
 }
