@@ -332,6 +332,8 @@ int main()
         if(!usr.valid)
             continue;
 
+        std::cout << "found" << std::endl;
+
         std::string key = usr.auth;
 
         write_all_bin(command + ".key", key);

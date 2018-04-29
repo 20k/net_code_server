@@ -2816,6 +2816,26 @@ duk_ret_t cheats__salvage(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 #endif
 
+#ifdef LIVE_DEBUGGING
+inline
+duk_ret_t cheats__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    if(get_caller(ctx) != "i20k")
+        return push_error(ctx, "nope");
+
+    auto opt_user_and_nodes = get_user_and_nodes("frag_r57l7u_lrxlc", get_thread_id(ctx));
+
+    std::cout << opt_user_and_nodes->second.nodes.size() << std::endl;
+
+    user_nodes& nodes = opt_user_and_nodes->second;
+
+    for(user_node& node : nodes.nodes)
+    {
+
+    }
+}
+#endif // LIVE_DEBUGGING
+
 inline
 std::string parse_function_hack(std::string in)
 {
@@ -2880,6 +2900,9 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(cheats__arm, 4),
     REGISTER_FUNCTION_PRIV(cheats__salvage, 4),
     #endif // TESTING
+    #ifdef LIVE_DEBUGGING
+    REGISTER_FUNCTION_PRIV(cheats__debug, 4),
+    #endif // LIVE_DEBUGGING
 };
 
 std::map<std::string, std::vector<script_arg>> construct_core_args();
