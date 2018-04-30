@@ -215,12 +215,13 @@ int main()
 
     get_global_structure();
 
+    /*http://www.karldiab.com/3DPointPlotter/
     for(int i=0; i < 2000; i++)
     {
         vec3f pos = sample_game_structure();
 
         printf("%.0f,%.0f,%.0f,", pos.x(), pos.y(), pos.z());
-    }
+    }*/
 
     printf("\n");
 
