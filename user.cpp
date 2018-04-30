@@ -482,3 +482,8 @@ int user::get_default_network_links()
 {
     return 4;
 }
+
+bool user::is_npc()
+{
+    return auth == "";
+}

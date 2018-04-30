@@ -70,6 +70,8 @@ struct user
     int find_num_scripts(mongo_lock_proxy& ctx);
     int find_num_public_scripts(mongo_lock_proxy& ctx);
 
+    bool is_npc();
+
     virtual int get_default_network_links();
 
     virtual ~user(){}
