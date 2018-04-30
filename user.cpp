@@ -144,8 +144,9 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
 
     request.insert_in_db(ctx);
 
-    global_user_cache& cache = get_global_user_cache();
-    cache.overwrite_in_cache(name, *this);
+    ///not valid to cache here
+    //global_user_cache& cache = get_global_user_cache();
+    //cache.overwrite_in_cache(name, *this);
 
     return true;
 }

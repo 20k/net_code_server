@@ -611,6 +611,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                 mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
                 state.current_user.construct_new_user(mongo_user_info, user_name, state.auth);
+                state.current_user.load_from_db(mongo_user_info, user_name);
                 state.current_user.overwrite_user_in_db(mongo_user_info);
             }
 
