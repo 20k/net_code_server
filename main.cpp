@@ -215,6 +215,15 @@ int main()
 
     get_global_structure();
 
+    for(int i=0; i < 1000; i++)
+    {
+        vec3f pos = sample_game_structure();
+
+        printf("%.0f,%.0f,%.0f,", pos.x(), pos.y(), pos.z());
+    }
+
+    printf("\n");
+
     #ifdef TESTING
     system("start test_launch.bat");
     #endif // TESTING
