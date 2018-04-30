@@ -32,6 +32,7 @@
 #include "logging.hpp"
 
 #include <secret/npc_manager.hpp>
+#include <secret/structure.hpp>
 
 #if 0
 void user_tests()
@@ -211,6 +212,8 @@ int main()
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 
     stack_on_start();
+
+    get_global_structure();
 
     #ifdef TESTING
     system("start test_launch.bat");
