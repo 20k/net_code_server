@@ -115,7 +115,14 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
         all_found_props = req;
     }
 
-    if(!has_pos)
+    decltype(pos) nv;
+
+    for(int i=0; i < decltype(nv)::DIM; i++)
+    {
+        nv.v[i] = 0;
+    }
+
+    if(!has_pos || pos == nv)
     {
         pos = sample_game_structure();
 
