@@ -347,7 +347,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
 
         printf("compile failed: %s\n", err.c_str());
 
-        duk_push_undefined(sd.ctx);
+        duk_push_string(sd.ctx, "Syntax or Compile Error");
     }
     else
     {
@@ -551,6 +551,8 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
 
         if(fnd != nullptr)
             ret = std::string(fnd);
+        else if(duk_is_undefined(ctx, -1))
+            ret = "Command returned Undefined, is there a Syntax Error?";
         else
             ret = "Bad Output, could not be JSON'd";
     }
