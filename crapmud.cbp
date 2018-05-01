@@ -108,6 +108,8 @@
 		<Unit filename="auth.hpp" />
 		<Unit filename="command_handler.cpp" />
 		<Unit filename="command_handler.hpp" />
+		<Unit filename="deps/secret/initial_link_setup.cpp" />
+		<Unit filename="deps/secret/initial_link_setup.hpp" />
 		<Unit filename="deps/secret/items_secret.hpp" />
 		<Unit filename="deps/secret/loot_gen.cpp" />
 		<Unit filename="deps/secret/loot_gen.hpp" />
@@ -117,6 +119,8 @@
 		<Unit filename="deps/secret/npc_manager.hpp" />
 		<Unit filename="deps/secret/secret.cpp" />
 		<Unit filename="deps/secret/secret.hpp" />
+		<Unit filename="deps/secret/structure.cpp" />
+		<Unit filename="deps/secret/structure.hpp" />
 		<Unit filename="duk_object_functions.hpp" />
 		<Unit filename="global_caching.hpp" />
 		<Unit filename="http_beast_server.cpp" />
