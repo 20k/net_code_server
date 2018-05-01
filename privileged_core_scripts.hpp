@@ -2276,10 +2276,10 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     int num = duk_get_prop_string_as_int(ctx, -1, "n", 2);
 
     if(from == "")
-        return push_error(ctx, "usage: net.map({user:<username>, num:2})");
+        return push_error(ctx, "usage: net.map({user:<username>, n:2})");
 
     if(num < 0 || num >= 10)
-        return push_error(ctx, "num out of range [1,10]");
+        return push_error(ctx, "n out of range [1,10]");
 
     if(!get_user(from, get_thread_id(ctx)).has_value())
         return push_error(ctx, "User does not exist");
@@ -2367,6 +2367,24 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         current_ring = next_ring;
     }
 
+    std::map<std::string, vec2f> global_pos;
+
+    for(auto& i : rings)
+    {
+        user usr;
+
+        {
+            mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+            if(!usr.load_from_db(user_info, i.first))
+                continue;
+
+            global_pos[usr.name] = (vec2f){usr.pos.v[0], usr.pos.v[1]} / 10.f;
+        }
+    }
+
+    #if 0
+
     std::map<std::string, std::map<std::string, vec2f>> clusters;
     std::vector<std::string> unpositioned;
 
@@ -2435,11 +2453,27 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
+    #endif // 0
+
     vec2f cur_center = global_pos[from];
+
+    vec2f accum = {0,0};
+
+    for(auto& i : rings)
+    {
+        accum += global_pos[i.first];
+    }
+
+    if(rings.size() > 0)
+    {
+        accum = accum / (float)rings.size();
+    }
+
+    accum = (accum + cur_center)/2.f;
 
     for(auto& i : global_pos)
     {
-        i.second = i.second - cur_center;
+        i.second = i.second - accum;
     }
 
     for(auto& i : global_pos)
@@ -2448,8 +2482,6 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         i.second = round(i.second);
     }
-
-    //auto node_to_pos = global_pos;
 
     std::map<std::string, vec2f> node_to_pos;
 
@@ -2516,6 +2548,11 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         std::string to_display = "`" + string_to_colour(i.first) + display_string[i.first] + "`";
 
         str[clamped.y() * w + clamped.x()] = to_display;
+    }
+
+    for(auto& i : keys)
+    {
+        i.second = i.second + " " + std::to_string((int)global_pos[i.first].x()) + " " + std::to_string((int)global_pos[i.first].y());
     }
 
     keys.insert(keys.begin(), {"", "Key"});
