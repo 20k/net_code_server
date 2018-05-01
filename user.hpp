@@ -5,6 +5,8 @@
 #include "script_util.hpp"
 #include "item.hpp"
 
+#include <secret/structure.hpp>
+
 ///ok. Need to fetch users out of the db
 struct user
 {
@@ -23,6 +25,8 @@ struct user
     ///stack of users, used for changing cli context
     std::vector<std::string> call_stack;
     std::vector<std::string> owner_list;
+
+    space_pos_t pos;
 
     bool valid = false;
 

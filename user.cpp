@@ -32,6 +32,9 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     to_set.set_prop_array("owner_list", owner_list);
     to_set.set_prop_array("call_stack", call_stack);
 
+    for(int i=0; i < decltype(pos)::DIM; i++)
+        to_set.set_prop("vector_pos" + std::to_string(i), pos.v[i]);
+
     filter.update_in_db_if_exact(ctx, to_set);
 
     global_user_cache& cache = get_global_user_cache();
@@ -68,6 +71,8 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
     if(!exists(ctx, name_))
         return false;
 
+    bool has_pos = false;
+
     valid = true;
 
     mongo_requester request;
@@ -98,7 +103,23 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
         if(req.has_prop("call_stack"))
             call_stack = req.get_prop_as_array("call_stack");
 
+        for(int i=0; i < decltype(pos)::DIM; i++)
+        {
+            if(req.has_prop("vector_pos" + std::to_string(i)))
+            {
+                pos.v[i] = req.get_prop_as_double("vector_pos" + std::to_string(i));
+                has_pos = true;
+            }
+        }
+
         all_found_props = req;
+    }
+
+    if(!has_pos)
+    {
+        pos = sample_game_structure();
+
+        overwrite_user_in_db(ctx);
     }
 
     #ifdef USE_LOCS
@@ -141,6 +162,11 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
     request.set_prop("initial_connection_setup", initial_connection_setup);
     request.set_prop_array("owner_list", std::vector<std::string>());
     request.set_prop_array("call_stack", std::vector<std::string>());
+
+    pos = sample_game_structure();
+
+    for(int i=0; i < decltype(pos)::DIM; i++)
+        request.set_prop("vector_pos" + std::to_string(i), pos.v[i]);
 
     request.insert_in_db(ctx);
 
