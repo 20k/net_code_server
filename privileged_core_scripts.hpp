@@ -2517,7 +2517,12 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             //std::string extra_str = std::to_string((int)global_pos[name].x()) + ", " + std::to_string((int)global_pos[name].y());
 
-            built += "      `" + col + keys[y].second + " | " + keys[y].first + "`";// + " | [" + extra_str + "]";
+            built += "      `" + col + keys[y].second;
+
+            if(keys[y].first.size() > 0)
+                built += " | " + keys[y].first;// + " | [" + extra_str + "]";
+
+            built += "`";
         }
 
         built += "\n";
