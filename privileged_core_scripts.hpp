@@ -2570,6 +2570,32 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         {
             std::string col = string_to_colour(keys[y].first);
 
+            //#define ITEM_DEBUG
+            #ifdef ITEM_DEBUG
+            std::optional user_and_nodes = get_user_and_nodes(keys[y].first, get_thread_id(ctx));
+
+            if(user_and_nodes.has_value())
+            {
+                user_nodes& nodes = user_and_nodes->second;
+
+                int num_items = 0;
+
+                for(user_node& node : nodes.nodes)
+                {
+                    num_items += node.attached_locks.size();
+                }
+
+                if(num_items == 0)
+                {
+                    col = "L";
+                }
+                else
+                {
+                    col = "D";
+                }
+            }
+            #endif // ITEM_DEBUG
+
             built += "      `" + col + keys[y].second + ": " + keys[y].first + "`";
         }
 
