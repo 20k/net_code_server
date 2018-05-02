@@ -2379,7 +2379,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(!usr.load_from_db(user_info, i.first))
                 continue;
 
-            global_pos[usr.name] = (vec2f){usr.pos.v[0], usr.pos.v[1]} / 10.f;
+            global_pos[usr.name] = (vec2f){usr.pos.v[0], usr.pos.v[1]} / 5.f;
         }
     }
 
