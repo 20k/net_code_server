@@ -105,6 +105,8 @@ struct item
     void create_in_db(mongo_lock_proxy&);
     void load_from_db(mongo_lock_proxy&, const std::string& item_id);
 
+    static void delete_item(mongo_lock_proxy&, const std::string& item_id);
+
     ///manages lock proxies internally
     bool transfer_to_user(const std::string& name, int thread_id);
     bool remove_from_user(const std::string& name, int thread_id);

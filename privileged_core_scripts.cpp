@@ -46,6 +46,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["item.steal"] = make_cary("user", "\"\"", "idx", "0");
     ret["item.expose"] = make_cary("user", "\"\"");
     ret["item.manage"] = make_cary();
+    ret["item.cull"] = make_cary("idx", "0");
     ret["item.xfer_to"] = make_cary("idx", "0", "user", "\"\"");
     ret["item.bundle_script"] = make_cary("idx", "0", "name", "\"\"");
     ret["item.register_bundle"] = make_cary("idx", "0", "name", "\"\"");

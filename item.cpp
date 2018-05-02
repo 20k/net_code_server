@@ -81,6 +81,14 @@ void item::load_from_db(mongo_lock_proxy& ctx, const std::string& item_id)
     }
 }
 
+void item::delete_item(mongo_lock_proxy& ctx, const std::string& item_id)
+{
+    mongo_requester request;
+    request.set_prop("item_id", item_id);
+
+    request.remove_all_from_db(ctx);
+}
+
 bool array_contains(const std::vector<std::string>& arr, const std::string& str)
 {
     for(auto& i : arr)

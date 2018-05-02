@@ -1164,6 +1164,50 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
 }
 
 inline
+duk_ret_t item__cull(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    int idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
+
+    if(idx < 0)
+        return push_error(ctx, "Idx out of range");
+
+    auto opt_user_and_nodes = get_user_and_nodes(get_caller(ctx), get_thread_id(ctx));
+
+    if(!opt_user_and_nodes.has_value())
+        return push_error(ctx, "Catastrophic error Blue Walrus in item.cull");
+
+    user& usr = opt_user_and_nodes->first;
+    std::string id = usr.index_to_item(idx);
+
+    if(id == "")
+        return push_error(ctx, "No such item");
+
+    std::string accum;
+
+    auto ret = load_item_raw(-1, -1, idx, opt_user_and_nodes->first, opt_user_and_nodes->second, accum, get_thread_id(ctx));
+
+    if(ret != "")
+        return push_error(ctx, ret);
+
+
+    {
+        mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+        item::delete_item(items_ctx, id);
+    }
+
+    usr.remove_item(id);
+
+    {
+        mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        usr.overwrite_user_in_db(user_ctx);
+    }
+
+    return push_success(ctx, "Success");
+}
+
+inline
 duk_ret_t item__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -2876,6 +2920,7 @@ std::map<std::string, priv_func_info> privileged_functions
     //REGISTER_FUNCTION_PRIV(sys__xfer_upgrade_uid, 0),
     REGISTER_FUNCTION_PRIV(item__xfer_to, 1),
     REGISTER_FUNCTION_PRIV(item__manage, 2),
+    REGISTER_FUNCTION_PRIV(item__cull, 1),
     REGISTER_FUNCTION_PRIV(item__bundle_script, 1),
     REGISTER_FUNCTION_PRIV(item__register_bundle, 0),
     //REGISTER_FUNCTION_PRIV(user__port, 0), ///should this exist? It has to currently for dumb reasons ///nope, it needs special setup
