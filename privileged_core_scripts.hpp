@@ -2575,7 +2575,7 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string commands = "Usage: add_user:<username>, remove_user:<username>, view_users:true\n" + price_str;
 
-    std::string situation_string = "[" + std::to_string((int)usr.pos.v[0]) + ", " + std::to_string((int)usr.pos.v[1]) + ", " + std::to_string((int)usr.pos.v[2]) + "]";
+    std::string situation_string = "Location: [" + std::to_string((int)usr.pos.v[0]) + ", " + std::to_string((int)usr.pos.v[1]) + ", " + std::to_string((int)usr.pos.v[2]) + "]";
 
     commands += situation_string;
 
