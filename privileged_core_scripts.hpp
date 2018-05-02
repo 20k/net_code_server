@@ -1349,6 +1349,10 @@ duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     int item_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
     std::string scriptname = duk_safe_get_prop_string(ctx, -1, "name");
+    std::string tag = duk_safe_get_prop_string(ctx, -1, "tag");
+
+    if(tag.size() > 8)
+        return push_error(ctx, "Tag must be <= 8 characters");
 
     if(scriptname == "")
         return push_error(ctx, "Invalid name");
@@ -1410,6 +1414,16 @@ duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         if((int)found_script.unparsed_source.size() > max_storage)
             return push_error(ctx, "Empty bundle does not contain enough space");
+
+
+        std::string name = found_bundle.get_prop("short_name");
+
+        if(tag != "")
+        {
+            name += " [" + tag + "]";
+
+            found_bundle.set_prop("short_name", name);
+        }
 
         found_script.fill_as_bundle_compatible_item(found_bundle);
         found_bundle.set_prop("full", 1);
