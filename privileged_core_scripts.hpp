@@ -2515,9 +2515,9 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             std::string name = keys[y].first;
 
-            std::string extra_str = std::to_string((int)global_pos[name].x()) + " " + std::to_string((int)global_pos[name].y());
+            //std::string extra_str = std::to_string((int)global_pos[name].x()) + ", " + std::to_string((int)global_pos[name].y());
 
-            built += "      `" + col + keys[y].second + ": " + keys[y].first + "`" + " " + extra_str;
+            built += "      `" + col + keys[y].second + " | " + keys[y].first + "`";// + " | [" + extra_str + "]";
         }
 
         built += "\n";
@@ -2556,7 +2556,7 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     auto valid_actions = opt_user_and_nodes->second.valid_hostile_actions();
 
     if(!usr.is_allowed_user(get_caller(ctx)) && (valid_actions & user_node_info::CLAIM_NPC) == 0)
-        return push_error(ctx, "Cannot claim user, insufficient permissions");
+        return push_error(ctx, "Cannot access control panel, insufficient permissions");
 
     ///anything past this point should probably force a payment of 200 credits
 
@@ -2574,6 +2574,10 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
         price_str = "Price: Free\n";
 
     std::string commands = "Usage: add_user:<username>, remove_user:<username>, view_users:true\n" + price_str;
+
+    std::string situation_string = "[" + std::to_string((int)usr.pos.v[0]) + ", " + std::to_string((int)usr.pos.v[1]) + ", " + std::to_string((int)usr.pos.v[2]) + "]";
+
+    commands += situation_string;
 
     if(add_user.size() == 0 && remove_user.size() == 0 && view_users)
     {
