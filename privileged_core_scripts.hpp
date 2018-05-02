@@ -2291,7 +2291,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     //vec2i centre = {w/2, h/2};
 
-    int spacing = 3;
+    //int spacing = 3;
 
     std::map<std::string, vec2f> offset_pos;
 
