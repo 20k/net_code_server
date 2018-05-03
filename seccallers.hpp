@@ -6,6 +6,8 @@
 #include "privileged_core_scripts.hpp"
 #include "unified_scripts.hpp"
 
+int my_timeout_check(void* udata);
+
 static
 duk_ret_t native_print(duk_context *ctx)
 {

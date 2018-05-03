@@ -122,6 +122,9 @@
 		<Unit filename="deps/secret/structure.cpp" />
 		<Unit filename="deps/secret/structure.hpp" />
 		<Unit filename="duk_object_functions.hpp" />
+		<Unit filename="duktape.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="global_caching.hpp" />
 		<Unit filename="http_beast_server.cpp" />
 		<Unit filename="http_beast_server.hpp" />
