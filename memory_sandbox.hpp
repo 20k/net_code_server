@@ -3,6 +3,8 @@
 
 #include "duktape.h"
 
+#include <windows.h>
+
 typedef struct
 {
     /* The double value in the union is there to ensure alignment is

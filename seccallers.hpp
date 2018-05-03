@@ -384,7 +384,9 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
 
         duk_int_t ret_val = duk_pcall(sd.ctx, nargs);
 
-        if(ret_val != DUK_EXEC_SUCCESS)
+        bool timeout = is_script_timeout(sd.ctx);
+
+        if(ret_val != DUK_EXEC_SUCCESS && !timeout)
         {
             std::string err = duk_safe_to_std_string(sd.ctx, -1);
 
@@ -398,6 +400,11 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
             ///this essentially rethrows an exception
             ///if we're not top level, and we've timedout
             COOPERATE_KILL();
+        }
+
+        if(ret_val != DUK_EXEC_SUCCESS && is_top_level && timeout)
+        {
+            push_dukobject(sd.ctx, "ok", false, "msg", "Ran for longer than 5000ms and timed out");
         }
     }
 
