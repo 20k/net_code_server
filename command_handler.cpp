@@ -168,7 +168,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             TerminateThread(native_handle, 1);
             CloseHandle(native_handle);
 
-            inf.ret = "Ran for longer than " + std::to_string((int)max_time_ms) + "ms and was terminated";
+            inf.ret = "Ran for longer than " + std::to_string((int)max_time_ms) + "ms and was uncooperatively terminated";
 
             terminated = true;
 
