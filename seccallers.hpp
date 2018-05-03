@@ -30,6 +30,14 @@ duk_ret_t native_print(duk_context *ctx)
 	return 0;
 }
 
+static
+duk_ret_t timeout_yield(duk_context* ctx)
+{
+    COOPERATE_KILL();
+
+    return 0;
+}
+
 ///#db.i, r, f, u, u1, us,
 static
 duk_ret_t db_insert(duk_context* ctx)
@@ -278,8 +286,6 @@ duk_ret_t hash_d(duk_context* ctx)
 inline
 std::string get_hash_d(duk_context* ctx)
 {
-    COOPERATE_KILL();
-
     duk_push_global_stash(ctx);
 
     if(!duk_has_prop_string(ctx, -1, "HASH_D"))
@@ -300,8 +306,6 @@ std::string get_hash_d(duk_context* ctx)
 inline
 std::string get_print_str(duk_context* ctx)
 {
-    COOPERATE_KILL();
-
     duk_push_global_stash(ctx);
 
     if(!duk_has_prop_string(ctx, -1, "print_str"))
@@ -383,6 +387,15 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
             std::string err = duk_safe_to_std_string(sd.ctx, -1);
 
             push_dukobject(sd.ctx, "ok", false, "msg", err);
+        }
+
+        if(!is_top_level)
+        {
+            duk_context* ctx = sd.ctx;
+
+            ///this essentially rethrows an exception
+            ///if we're not top level, and we've timedout
+            COOPERATE_KILL();
         }
     }
 
@@ -721,6 +734,8 @@ void register_funcs(duk_context* ctx, int seclevel)
     inject_c_function(ctx, db_remove, "db_remove", 1);
     inject_c_function(ctx, db_update, "db_update", 2);
     inject_c_function(ctx, native_print, "print", DUK_VARARGS);
+
+    inject_c_function(ctx, timeout_yield, "timeout_yield",  0);
 
     //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }

@@ -75,7 +75,7 @@ struct rate_limit
                          sandbox_data* sand_data = (sandbox_data*)mem_funcs_duk.udata; \
                          if(sand_data->terminate_semi_gracefully) \
                          { printf("Cooperating with kill\n");\
-                             while(1){Sleep(10);}\
+                             throw std::runtime_error("Script timeout");\
                          }
 
 
