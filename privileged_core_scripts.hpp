@@ -2314,8 +2314,10 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(w <= 5 || h <= 5)
         return push_error(ctx, "w or h <= 5");
 
-    if(w > 160 || h > 160)
-        return push_error(ctx, "w or h > 160");
+    #define MAX_TERM 360
+
+    if(w > MAX_TERM || h > MAX_TERM)
+        return push_error(ctx, "w or h > " + std::to_string(MAX_TERM));
 
     //int w = 40;
     //int h = 30;
