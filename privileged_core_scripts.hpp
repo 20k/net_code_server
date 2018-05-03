@@ -2314,8 +2314,8 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(w <= 5 || h <= 5)
         return push_error(ctx, "w or h <= 5");
 
-    if(w > 80 || h > 80)
-        return push_error(ctx, "w or h > 80");
+    if(w > 160 || h > 160)
+        return push_error(ctx, "w or h > 160");
 
     //int w = 40;
     //int h = 30;
