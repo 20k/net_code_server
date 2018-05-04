@@ -10,6 +10,7 @@
 #include <iomanip>
 #include "rng.hpp"
 #include <secret/npc_manager.hpp>
+#include <json/json.hpp>
 
 struct unsafe_info
 {
@@ -905,7 +906,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
     return make_error_col("Command Not Found or Unimplemented");
 }
 
-std::vector<mongo_requester> get_and_update_notifs_for_user(user& usr)
+std::vector<mongo_requester> get_and_update_chat_msgs_for_user(user& usr)
 {
     std::vector<mongo_requester> found;
 
@@ -955,7 +956,7 @@ std::vector<std::string> get_channels_for_user(user& usr)
 
 std::string handle_client_poll(user& usr)
 {
-    std::vector<mongo_requester> found = get_and_update_notifs_for_user(usr);
+    std::vector<mongo_requester> found = get_and_update_chat_msgs_for_user(usr);
 
     std::vector<std::string> channels = get_channels_for_user(usr);
 
@@ -993,55 +994,33 @@ std::string handle_client_poll(user& usr)
 
 std::string handle_client_poll_json(user& usr)
 {
-    std::vector<mongo_requester> found = get_and_update_notifs_for_user(usr);
-
-    duk_context* ctx = js_interop_startup();
-
-    duk_object_t to_encode;
-
+    std::vector<mongo_requester> found = get_and_update_chat_msgs_for_user(usr);
     std::vector<std::string> channels = get_channels_for_user(usr);
 
-    to_encode["channels"] = channels;
+    using json = nlohmann::json;
 
-    std::vector<duk_placeholder_t> objects;
+    json all;
+
+    all["channels"] = channels;
+
+    std::vector<json> cdata;
 
     for(mongo_requester& req : found)
     {
-        duk_object_t obj;
-
+        json api;
         std::string chan = req.get_prop("channel");
         std::vector<mongo_requester> to_col{req};
         std::string pretty = prettify_chat_strings(to_col);
 
-        ///so, wanna encode {channel:"chan", pretty:"pretty"}
+        api["channel"] = chan;
+        api["text"] = pretty;
 
-        obj["channel"] = chan;
-        obj["text"] = pretty;
-
-        objects.push_back(new duk_object_t(obj));
+        cdata.push_back(api);
     }
 
-    to_encode["data"] = objects;
+    all["data"] = cdata;
 
-    push_duk_val(ctx, to_encode);
-
-    const char* ptr = duk_json_encode(ctx, -1);
-
-    std::string str;
-
-    if(ptr != nullptr)
-    {
-        str = std::string(ptr);
-    }
-
-    duk_pop(ctx);
-
-    js_interop_shutdown(ctx);
-
-    for(auto& i : objects)
-        delete (duk_object_t*)i;
-
-    return "chat_api_json " + str;
+    return "chat_api_json " + all.dump();
 }
 
 ///needs to handle script bundles
@@ -1123,16 +1102,18 @@ std::string handle_autocompletes_json(user& usr, const std::string& in)
     if(!is_valid_full_name_string(script))
         return "server_scriptargs_invalid_json " + script;
 
-    duk_object_t obj;
+    using json = nlohmann::json;
+
+    json obj;
     obj["script"] = script;
 
     if(SHOULD_RATELIMIT(usr.name, AUTOCOMPLETES))
-        return "server_scriptargs_ratelimit_json " + dukx_json_get(obj);
+        return "server_scriptargs_ratelimit_json " + obj.dump();
 
     auto opt_arg = get_uniform_script_args(usr, script);
 
     if(!opt_arg.has_value())
-        return "server_scriptargs_invalid_json " + script;
+        return "server_scriptargs_invalid_json " + obj.dump();
 
     auto args = *opt_arg;
 
@@ -1150,9 +1131,7 @@ std::string handle_autocompletes_json(user& usr, const std::string& in)
     obj["keys"] = keys;
     obj["vals"] = vals;
 
-    std::string rep = dukx_json_get(obj);
-
-    return intro + rep;
+    return intro + obj.dump();
 }
 
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
