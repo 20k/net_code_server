@@ -915,7 +915,6 @@ std::vector<mongo_requester> get_and_update_chat_msgs_for_user(user& usr)
         ctx.change_collection(usr.name);
 
         mongo_requester to_send;
-        //to_send.set_prop("to_user", usr.name);
         to_send.set_prop("is_chat", 1);
         to_send.set_prop("processed", 0);
 
@@ -926,8 +925,33 @@ std::vector<mongo_requester> get_and_update_chat_msgs_for_user(user& usr)
         to_send.set_prop("processed", 1);
 
         old_search.update_in_db_if_exact(ctx, to_send);
+    }
 
-        //to_send.remove_all_from_db(ctx);
+    if(found.size() > 1000)
+        found.resize(1000);
+
+    return found;
+}
+
+std::vector<mongo_requester> get_and_update_tells_for_user(user& usr)
+{
+    std::vector<mongo_requester> found;
+
+    {
+        mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
+        ctx.change_collection(usr.name);
+
+        mongo_requester to_send;
+        to_send.set_prop("is_tell", 1);
+        to_send.set_prop("processed", 0);
+
+        found = to_send.fetch_from_db(ctx);
+
+        mongo_requester old_search = to_send;
+
+        to_send.set_prop("processed", 1);
+
+        old_search.update_in_db_if_exact(ctx, to_send);
     }
 
     if(found.size() > 1000)

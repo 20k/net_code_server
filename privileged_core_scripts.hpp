@@ -732,6 +732,38 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+duk_ret_t msg__tell(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+    RATELIMIT_DUK(CHAT);
+
+    std::string to = duk_safe_get_prop_string(ctx, -1, "user");
+    std::string msg = duk_safe_get_prop_string(ctx, -1, "msg");
+
+    if(to == "")
+        return push_error(ctx, "Invalid user argument");
+
+    if(msg.size() > 10000)
+        return push_error(ctx, "Too long msg, 10k is max");
+
+    mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
+    mongo_ctx.change_collection(to);
+
+    size_t real_time = get_wall_time();
+
+    mongo_requester to_insert;
+    to_insert.set_prop("user", get_caller(ctx));
+    to_insert.set_prop("is_tell", 1);
+    to_insert.set_prop("msg", msg);
+    to_insert.set_prop_double("time_ms", real_time);
+    to_insert.set_prop("processed", 0);
+
+    to_insert.insert_in_db(mongo_ctx);
+
+    return push_success(ctx);
+}
+
+inline
 std::string format_tim(const std::string& in)
 {
     if(in.size() == 1)
@@ -2925,6 +2957,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(scripts__public, 4),
     REGISTER_FUNCTION_PRIV(msg__manage, 3),
     REGISTER_FUNCTION_PRIV(msg__send, 3),
+    REGISTER_FUNCTION_PRIV(msg__tell, 3),
     REGISTER_FUNCTION_PRIV(msg__recent, 2),
     REGISTER_FUNCTION_PRIV(users__me, 0),
     #ifdef TESTING

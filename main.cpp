@@ -190,6 +190,7 @@ void test_hexbin()
 }
 
 extern std::string handle_client_poll_json(user& usr);
+//extern std::string handle_client_poll_json_old(user& usr);
 
 void test_json()
 {
@@ -202,6 +203,7 @@ void test_json()
     }
 
     std::cout << handle_client_poll_json(usr) << std::endl;
+    //std::cout << handle_client_poll_json_old(usr) << std::endl;
 
     std::cout << handle_autocompletes_json(usr, "server_scriptargs_json cash.steal");
 }
@@ -231,7 +233,7 @@ int main()
 
     test_hexbin();
     initialse_mongo_all();
-    //test_json();
+    test_json();
 
     lg::set_logfile("./log.txt");
 
