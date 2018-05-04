@@ -1099,13 +1099,13 @@ std::string handle_autocompletes_json(user& usr, const std::string& in)
 
     std::string script = dat[1];
 
-    if(!is_valid_full_name_string(script))
-        return "server_scriptargs_invalid_json " + script;
-
     using json = nlohmann::json;
 
     json obj;
     obj["script"] = script;
+
+    if(!is_valid_full_name_string(script))
+        return "server_scriptargs_invalid_json " + obj.dump();
 
     if(SHOULD_RATELIMIT(usr.name, AUTOCOMPLETES))
         return "server_scriptargs_ratelimit_json " + obj.dump();
