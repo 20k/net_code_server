@@ -41,7 +41,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["scripts.core"] = make_cary();
     ret["msg.manage"] = make_cary();
     ret["msg.send"] = make_cary("channel", "\"0000\"", "msg", "\"\"");
-    ret["msg.tell"] = make_cary("user", "\"0000\"", "msg", "\"\"");
+    ret["msg.tell"] = make_cary("user", "\"\"", "msg", "\"\"");
     ret["msg.recent"] = make_cary("channel", "\"0000\"", "count", "99");
     ret["users.me"] = make_cary();
     ret["item.steal"] = make_cary("user", "\"\"", "idx", "0");
@@ -65,7 +65,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     return ret;
 }
 
-std::string prettify_chat_strings(const std::vector<mongo_requester>& found)
+std::string prettify_chat_strings(const std::vector<mongo_requester>& found, bool use_channels)
 {
     std::string str;
 
@@ -93,7 +93,14 @@ std::string prettify_chat_strings(const std::vector<mongo_requester>& found)
 
         std::string tstr = "`b" + format_tim(std::to_string(hour)) + format_tim(std::to_string(minute)) + "`";
 
-        std::string msg = tstr + " `P" + i.get_prop("channel") + "`" + " " + colour_string(i.get_prop("user")) + " "  + i.get_prop("msg");
+        std::string chan_str = " `P" + i.get_prop("channel") + "`";
+
+        std::string msg;
+
+        if(use_channels)
+            msg = tstr + chan_str + " " + colour_string(i.get_prop("user")) + " "  + i.get_prop("msg");
+        else
+            msg = tstr + " " + colour_string(i.get_prop("user")) + " "  + i.get_prop("msg");
 
         str = msg + "\n" + str;
     }

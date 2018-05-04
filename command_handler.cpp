@@ -1051,7 +1051,7 @@ std::string handle_client_poll_json(user& usr)
         json api;
 
         api["user"] = req.get_prop("user");
-        api["text"] = prettify_chat_strings({req});
+        api["text"] = prettify_chat_strings({req}, false);
 
         tdata.push_back(api);
     }
