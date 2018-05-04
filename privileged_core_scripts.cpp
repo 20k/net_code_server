@@ -65,12 +65,12 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     return ret;
 }
 
-std::string prettify_chat_strings(std::vector<mongo_requester>& found)
+std::string prettify_chat_strings(const std::vector<mongo_requester>& found)
 {
     std::string str;
 
     ///STD::CHRONO PLS
-    for(mongo_requester& i : found)
+    for(const mongo_requester& i : found)
     {
         int64_t time_code_ms = i.get_prop_as_integer("time_ms");
 

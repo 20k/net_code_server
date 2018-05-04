@@ -1021,6 +1021,8 @@ std::string handle_client_poll_json(user& usr)
     std::vector<mongo_requester> found = get_and_update_chat_msgs_for_user(usr);
     std::vector<std::string> channels = get_channels_for_user(usr);
 
+    std::vector<mongo_requester> tells = get_and_update_tells_for_user(usr);
+
     using json = nlohmann::json;
 
     json all;
@@ -1042,7 +1044,20 @@ std::string handle_client_poll_json(user& usr)
         cdata.push_back(api);
     }
 
+    std::vector<json> tdata;
+
+    for(mongo_requester& req : tells)
+    {
+        json api;
+
+        api["user"] = req.get_prop("user");
+        api["text"] = prettify_chat_strings({req});
+
+        tdata.push_back(api);
+    }
+
     all["data"] = cdata;
+    all["tells"] = tdata;
 
     return "chat_api_json " + all.dump();
 }

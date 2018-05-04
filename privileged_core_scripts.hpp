@@ -775,7 +775,7 @@ std::string format_tim(const std::string& in)
     return in;
 }
 
-std::string prettify_chat_strings(std::vector<mongo_requester>& found);
+std::string prettify_chat_strings(const std::vector<mongo_requester>& found);
 
 inline
 duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)

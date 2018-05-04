@@ -749,17 +749,17 @@ struct mongo_requester
 
     int64_t limit = -1;
 
-    bool has_prop(const std::string& str)
+    bool has_prop(const std::string& str) const
     {
         return (properties.find(str) != properties.end()) || (arr_props.find(str) != arr_props.end());
     }
 
-    std::string get_prop(const std::string& str)
+    std::string get_prop(const std::string& str) const
     {
         if(!has_prop(str))
             return std::string();
 
-        return properties[str];
+        return properties.at(str);
     }
 
     std::vector<std::string> get_prop_as_array(const std::string& str)
@@ -770,12 +770,12 @@ struct mongo_requester
         return arr_props[str];
     }
 
-    int64_t get_prop_as_integer(const std::string& str)
+    int64_t get_prop_as_integer(const std::string& str) const
     {
         if(!has_prop(str))
             return int64_t();
 
-        std::string prop = properties[str];
+        std::string prop = properties.at(str);
 
         if(prop == "")
             return 0;
