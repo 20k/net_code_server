@@ -45,6 +45,24 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
 {
     unified_script_info ret;
 
+    #if 0
+    ///check C hooks
+    {
+        mongo_requester req;
+        req.set_prop("item_id", full_scriptname);
+        req.set_prop("c_shim", 1);
+
+        mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(thread_id);
+
+        auto found = req.fetch_from_db(items_ctx);
+
+        if(found.size() == 1)
+        {
+
+        }
+    }
+    #endif // 0
+
     script_info script;
 
     {
