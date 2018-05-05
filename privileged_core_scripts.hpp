@@ -1561,7 +1561,13 @@ duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl)
             return push_error(ctx, "No such lock");
     }
 
-    test_item = item_types::get_default_of((item_types::item_type)item_type, lock_type);
+    std::string short_name = duk_safe_get_prop_string(ctx, -1, "short_name");
+    std::string description = duk_safe_get_prop_string(ctx, -1, "description");
+
+    if(short_name == "" && description == "")
+        test_item = item_types::get_default_of((item_types::item_type)item_type, lock_type);
+    else
+        test_item = item_types::get_named_describer(short_name, description);
 
     ///this isn't adequate
     ///we need a give item to user, and remove item from user primitive
@@ -2795,8 +2801,12 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 0;
     }
 
+    #ifndef TESTING
     if(!found)
         return push_error(ctx, "Insufficient permissions");
+    #else // TESTING
+    call_stack.push_back(switch_to->name);
+    #endif // TESTING
 
     call_stack.erase(call_stack.begin());
 

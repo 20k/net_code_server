@@ -421,6 +421,16 @@ item item_types::get_default(item_types::item_type type)
     return new_item;
 }
 
+item item_types::get_named_describer(const std::string& short_name, const std::string& description)
+{
+    item new_item = item_types::get_default_of(item_types::MISC, "");
+    new_item.set_prop("rarity", 3);
+    new_item.set_prop("short_name", short_name);
+    new_item.set_prop("desc", description);
+
+    return new_item;
+}
+
 void item_types::give_item_to(item& new_item, const std::string& to, int thread_id)
 {
     {

@@ -129,6 +129,7 @@ namespace item_types
 {
     item get_default_of(item_types::item_type type, const std::string& lock_name);
     item get_default(item_types::item_type type);
+    item get_named_describer(const std::string& short_name, const std::string& description);
     void give_item_to(item& new_item, const std::string& to, int thread_id);
 }
 
