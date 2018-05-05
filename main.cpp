@@ -33,6 +33,7 @@
 
 #include <secret/npc_manager.hpp>
 #include <secret/structure.hpp>
+#include <secret/one_shots.hpp>
 
 #if 0
 void user_tests()
@@ -305,6 +306,7 @@ int main()
     #if 1
     http_test_run();
     start_npc_thread();
+    init_purple_whale();
 
     printf("post\n");
 
