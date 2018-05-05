@@ -155,7 +155,7 @@ struct db_interfaceable
 
             if(cacheable)
             {
-                this_cache.overwrite_in_cache(id, *this);
+                this_cache.overwrite_in_cache(id, *(concrete*)this);
             }
 
             return true;
@@ -182,13 +182,15 @@ struct db_interfaceable
 
             if(cacheable)
             {
-                this_cache.overwrite_in_cache(id, *this);
+                this_cache.overwrite_in_cache(id, *(concrete*)this);
             }
         }
         catch(...)
         {
             return false;
         }
+
+        return false;
     }
 
     void overwrite_in_db(mongo_lock_proxy& ctx)
