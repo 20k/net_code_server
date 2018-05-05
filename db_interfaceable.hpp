@@ -116,7 +116,7 @@ struct db_interfaceable
     std::string key_name;
     json data;
 
-    static global_generic_cache<concrete> this_cache;
+    static inline global_generic_cache<concrete> this_cache;
 
     db_interfaceable()
     {
