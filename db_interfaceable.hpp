@@ -184,6 +184,8 @@ struct db_interfaceable
             {
                 this_cache.overwrite_in_cache(id, *(concrete*)this);
             }
+
+            return true;
         }
         catch(...)
         {
