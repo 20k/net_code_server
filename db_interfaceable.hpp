@@ -123,11 +123,24 @@ struct db_interfaceable
         stringify_params(key_name, name...);
     }
 
+    template<typename T>
+    T get_as(const std::string& key)
+    {
+        return data[key].get<T>();
+    }
 
-    virtual bool handle_serialise(bool ser);
+    template<typename T>
+    void set_as(const std::string& key, const T& t)
+    {
+        data[key] = t;
+    }
+
+    virtual bool handle_serialise(bool ser) {return false;}
 
     bool load_from_db(mongo_lock_proxy& ctx, const std::string& id)
     {
+        data[key_name] = id;
+
         if(!exists(ctx, id))
             return false;
 
@@ -198,7 +211,7 @@ struct db_interfaceable
 
         if(cacheable)
         {
-            this_cache.overwrite_in_cache(data[key_name], *this);
+            this_cache.overwrite_in_cache(data[key_name].get<std::string>(), *(concrete*)this);
         }
     }
 
@@ -213,7 +226,7 @@ struct db_interfaceable
 
         if(cacheable)
         {
-            this_cache.delete_from_cache(data[key_name]);
+            this_cache.delete_from_cache(data[key_name].get<std::string>());
         }
     }
 

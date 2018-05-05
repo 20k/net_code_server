@@ -24,7 +24,7 @@ struct global_generic_cache
         return cache[name];
     }
 
-    void overwrite_in_cache(const std::string& name, T& data)
+    void overwrite_in_cache(const std::string& name, const T& data)
     {
         std::lock_guard guard(mut);
 
