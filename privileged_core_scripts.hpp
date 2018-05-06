@@ -1787,7 +1787,7 @@ duk_ret_t cash__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(from == "")
         return push_error(ctx, "Args: user:<username>, amount:<number>");
 
-    double amount = duk_safe_get_generic(duk_get_number, ctx, -1, "amount", 0);
+    double amount = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "amount", 0.0);
 
     if(amount == 0)
         return push_error(ctx, "amount is not a number, or 0");
