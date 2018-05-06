@@ -308,7 +308,17 @@ void on_create_user(user& usr)
     run_in_user_context(usr.name, "#msg.manage({join:\"7001\"})");
     run_in_user_context(usr.name, "#msg.manage({join:\"memes\"})");
 
+    {
+        mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+        usr.load_from_db(ctx, usr.name);
+    }
+
     user_first_time_network_setup(get_global_playspace_network_manager(), usr);
+
+    {
+        mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+        usr.load_from_db(ctx, usr.name);
+    }
 }
 
 std::string get_update_message()
