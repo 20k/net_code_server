@@ -216,18 +216,23 @@ struct db_interfaceable
     {
         handle_serialise(true);
 
-        if(cacheable)
-        {
-            this_cache.overwrite_in_cache(data[key_name].get<std::string>(), *(concrete*)this);
-        }
-
         if(!exists(ctx, data[key_name].get<std::string>()))
         {
+            if(cacheable)
+            {
+                this_cache.overwrite_in_cache(data[key_name].get<std::string>(), *(concrete*)this);
+            }
+
             ///insert
             ctx->insert_json_1(ctx->last_collection, data.dump());
         }
         else
         {
+            if(cacheable)
+            {
+                this_cache.overwrite_in_cache(data[key_name].get<std::string>(), *(concrete*)this);
+            }
+
             ///overwrite
             json selector;
             selector[key_name] = data[key_name];
