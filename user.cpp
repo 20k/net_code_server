@@ -35,6 +35,8 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     for(int i=0; i < decltype(pos)::DIM; i++)
         to_set.set_prop("vector_pos" + std::to_string(i), pos.v[i]);
 
+    to_set.set_prop("joined_channels", joined_channels);
+
     filter.update_in_db_if_exact(ctx, to_set);
 
     global_user_cache& cache = get_global_user_cache();
@@ -112,6 +114,9 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
             }
         }
 
+        if(req.has_prop("joined_channels"))
+            joined_channels = req.get_prop("joined_channels");
+
         all_found_props = req;
     }
 
@@ -176,6 +181,8 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
 
     for(int i=0; i < decltype(pos)::DIM; i++)
         request.set_prop("vector_pos" + std::to_string(i), pos.v[i]);
+
+    request.set_prop("joined_channels", "");
 
     request.insert_in_db(ctx);
 

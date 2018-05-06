@@ -969,20 +969,16 @@ std::vector<std::string> get_channels_for_user(user& usr)
 {
     usr.cleanup_call_stack(-2);
 
+    std::string name = usr.get_call_stack().back();
+
     mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
-    ctx.change_collection(usr.get_call_stack().back());
 
-    mongo_requester request;
-    request.set_prop("name", usr.get_call_stack().back());
+    user fuser;
 
-    auto mfound = request.fetch_from_db(ctx);
+    if(!fuser.load_from_db(ctx, name))
+        return std::vector<std::string>();
 
-    if(mfound.size() != 1)
-        return {};
-
-    mongo_requester& cur_user = mfound[0];
-
-    return str_to_array(cur_user.get_prop("joined_channels"));
+    return str_to_array(fuser.joined_channels);
 }
 
 std::string handle_client_poll(user& usr)

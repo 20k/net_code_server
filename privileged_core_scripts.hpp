@@ -605,19 +605,13 @@ duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-        mongo_ctx.change_collection(get_caller(ctx));
 
-        mongo_requester request;
-        request.set_prop("name", get_caller(ctx));
+        user found_user;
 
-        auto found = request.fetch_from_db(mongo_ctx);
+        if(!found_user.load_from_db(mongo_ctx, get_caller(ctx)))
+            return push_error(ctx, "No such user, very bad error");
 
-        if(found.size() != 1)
-            return push_error(ctx, "Catastrophic error: Red camel");
-
-        mongo_requester& fuser = found[0];
-
-        std::vector<std::string> chans = str_to_array(fuser.get_prop("joined_channels"));
+        std::vector<std::string> chans = str_to_array(found_user.joined_channels);
 
         if(to_join != "" && !array_contains(chans, to_join))
         {
@@ -631,10 +625,8 @@ duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
             chans.erase(it);
         }
 
-        mongo_requester to_set;
-        to_set.set_prop("joined_channels", array_to_str(chans));
-
-        request.update_in_db_if_exact(mongo_ctx, to_set);
+        found_user.joined_channels = array_to_str(chans);
+        found_user.overwrite_user_in_db(mongo_ctx);
     }
 
     if(to_create.size() > 0)

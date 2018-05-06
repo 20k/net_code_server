@@ -26,6 +26,8 @@ struct user
     std::vector<std::string> call_stack;
     std::vector<std::string> owner_list;
 
+    std::string joined_channels;
+
     space_pos_t pos;
 
     bool valid = false;
