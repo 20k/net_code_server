@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+//std::map<std::string,
+
 struct unified_script_info
 {
     bool valid = false;
@@ -14,6 +16,8 @@ struct unified_script_info
 
     std::vector<std::string> args;
     std::vector<std::string> params;
+
+    bool is_c_shim = false;
 
     void make_from(item& t)
     {
@@ -60,6 +64,8 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
         if(found.size() == 1)
         {
             std::string c_shim_name = found[0].get_prop("c_shim_name");
+
+
         }
     }
     #endif // 0
