@@ -45,7 +45,8 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
 {
     unified_script_info ret;
 
-    #if 0
+    //#define USE_C_SHIMS
+    #ifdef USE_C_SHIMS
     ///check C hooks
     {
         mongo_requester req;
@@ -58,7 +59,7 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
 
         if(found.size() == 1)
         {
-
+            std::string c_shim_name = found[0].get_prop("c_shim_name");
         }
     }
     #endif // 0
