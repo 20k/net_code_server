@@ -302,9 +302,30 @@ int main()
 
     #endif // DELETE_BANNED
 
-
     #if 1
     http_test_run();
+
+    ///fix db screwup
+    for_each_npc([](npc_user& npc)
+                     {
+                        npc_prop_list props;
+
+                        {
+                            mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
+
+                            props.load_from_db(ctx, npc.name);
+                        }
+
+                        props.force_conversion<std::vector<std::string>>("vals", from_string<float>);
+                        props.force_conversion<std::vector<std::string>>("props", from_string<int>);
+
+                        {
+                            mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
+
+                            props.overwrite_in_db(ctx);
+                        }
+                     });
+
     start_npc_thread();
     init_purple_whale();
 

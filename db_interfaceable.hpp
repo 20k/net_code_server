@@ -123,6 +123,23 @@ struct db_interfaceable
         stringify_params(key_name, name...);
     }
 
+    template<typename T, typename U>
+    bool force_conversion(const std::string& key, U cv)
+    {
+        try
+        {
+            auto found = data[key].get<T>();
+
+            data[key] = cv(found);
+
+            return true;
+        }
+        catch(...)
+        {
+            return false;
+        }
+    }
+
     template<typename T>
     T get_as(const std::string& key)
     {
@@ -148,14 +165,14 @@ struct db_interfaceable
         {
             *this = this_cache.load_from_cache(id);
 
-            if(handle_serialise(false))
-            {
-                overwrite_in_db(ctx);
-            }
-
             if(cacheable)
             {
                 this_cache.overwrite_in_cache(id, *(concrete*)this);
+            }
+
+            if(handle_serialise(false))
+            {
+                overwrite_in_db(ctx);
             }
 
             return true;
@@ -175,14 +192,14 @@ struct db_interfaceable
 
             data = json::parse(js);
 
-            if(handle_serialise(false))
-            {
-                overwrite_in_db(ctx);
-            }
-
             if(cacheable)
             {
                 this_cache.overwrite_in_cache(id, *(concrete*)this);
+            }
+
+            if(handle_serialise(false))
+            {
+                overwrite_in_db(ctx);
             }
 
             return true;
@@ -199,7 +216,12 @@ struct db_interfaceable
     {
         handle_serialise(true);
 
-        if(!exists(ctx, key_name))
+        if(cacheable)
+        {
+            this_cache.overwrite_in_cache(data[key_name].get<std::string>(), *(concrete*)this);
+        }
+
+        if(!exists(ctx, data[key_name].get<std::string>()))
         {
             ///insert
             ctx->insert_json_1(ctx->last_collection, data.dump());
@@ -210,12 +232,12 @@ struct db_interfaceable
             json selector;
             selector[key_name] = data[key_name];
 
-            ctx->update_json_many(ctx->last_collection, selector.dump(), data.dump());
-        }
+            //std::cout << "selector " << selector.dump() << " data " << data.dump() << std::endl;
 
-        if(cacheable)
-        {
-            this_cache.overwrite_in_cache(data[key_name].get<std::string>(), *(concrete*)this);
+            json to_set;
+            to_set["$set"] = data;
+
+            ctx->update_json_many(ctx->last_collection, selector.dump(), to_set.dump());
         }
     }
 
@@ -251,6 +273,19 @@ struct db_interfaceable
 
     virtual ~db_interfaceable(){}
 };
+
+template<typename T>
+std::vector<T> from_string(const std::vector<std::string>& in)
+{
+    std::vector<T> ret;
+
+    for(auto& i : in)
+    {
+        ret.push_back(atof(i.c_str()));
+    }
+
+    return ret;
+}
 
 struct test_dbable : db_interfaceable<test_dbable, false, MACRO_GET_STR("test_key")>
 {
