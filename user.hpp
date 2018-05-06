@@ -62,6 +62,7 @@ struct user
 
     int num_items();
 
+    void cleanup_call_stack(int thread_id);
     std::vector<std::string> get_call_stack();
 
     ///manually injects self

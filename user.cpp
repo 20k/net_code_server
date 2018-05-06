@@ -416,6 +416,45 @@ int user::num_items()
     return str_to_array(upgr_idx).size();
 }
 
+void user::cleanup_call_stack(int thread_id)
+{
+    std::vector<std::string> stk = call_stack;
+
+    if(stk.size() == 0)
+        return;
+
+    int start_valid = (int)stk.size();
+    int last_valid = (int)stk.size();
+
+    for(int i=0; i < (int)stk.size(); i++)
+    {
+        mongo_lock_proxy ctx = get_global_mongo_user_info_context(thread_id);
+
+        user usr;
+
+        if(!usr.load_from_db(ctx, stk[i]))
+        {
+            last_valid = i;
+            break;
+        }
+
+        if(!usr.is_allowed_user(name))
+        {
+            last_valid = i;
+            break;
+        }
+    }
+
+    stk.resize(last_valid);
+
+    if(start_valid != last_valid)
+    {
+        mongo_lock_proxy ctx = get_global_mongo_user_info_context(thread_id);
+
+        overwrite_user_in_db(ctx);
+    }
+}
+
 std::vector<std::string> user::get_call_stack()
 {
     std::vector<std::string> ret{name};

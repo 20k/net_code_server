@@ -105,6 +105,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
     fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number");
 
+    usr.cleanup_call_stack(local_thread_id);
     std::string executing_under = usr.get_call_stack().back();
 
     startup_state(sd.ctx, executing_under, executing_under, "invoke", usr.get_call_stack());
@@ -910,9 +911,11 @@ std::vector<mongo_requester> get_and_update_chat_msgs_for_user(user& usr)
 {
     std::vector<mongo_requester> found;
 
+    usr.cleanup_call_stack(-2);
+
     {
         mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
-        ctx.change_collection(usr.name);
+        ctx.change_collection(usr.get_call_stack().back());
 
         mongo_requester to_send;
         to_send.set_prop("is_chat", 1);
@@ -937,9 +940,11 @@ std::vector<mongo_requester> get_and_update_tells_for_user(user& usr)
 {
     std::vector<mongo_requester> found;
 
+    usr.cleanup_call_stack(-2);
+
     {
         mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
-        ctx.change_collection(usr.name);
+        ctx.change_collection(usr.get_call_stack().back());
 
         mongo_requester to_send;
         to_send.set_prop("is_tell", 1);
@@ -962,11 +967,13 @@ std::vector<mongo_requester> get_and_update_tells_for_user(user& usr)
 
 std::vector<std::string> get_channels_for_user(user& usr)
 {
+    usr.cleanup_call_stack(-2);
+
     mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
-    ctx.change_collection(usr.name);
+    ctx.change_collection(usr.get_call_stack().back());
 
     mongo_requester request;
-    request.set_prop("name", usr.name);
+    request.set_prop("name", usr.get_call_stack().back());
 
     auto mfound = request.fetch_from_db(ctx);
 
