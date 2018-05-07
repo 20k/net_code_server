@@ -344,6 +344,42 @@ std::string get_script_ending(duk_context* ctx)
     return get_global_string(ctx, "script_ending");
 }
 
+template<typename T>
+T* get_shim_pointer(duk_context* ctx)
+{
+    duk_push_global_stash(ctx);
+
+    duk_get_prop_string(ctx, -1, "c_shim_ptr");
+
+    T* ptr = (T*)duk_get_pointer(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    return ptr;
+}
+
+template<typename T>
+void set_copy_allocate_shim_pointer(duk_context* ctx, const T& t)
+{
+    T* new_shim = new T(t);
+
+    duk_push_global_stash(ctx); ///[stash]
+
+    duk_push_pointer(ctx, (void*)new_shim); ///[stash, pointer]
+
+    duk_put_prop_string(ctx, -2, "c_shim_ptr"); ///[stash]
+
+    duk_pop(ctx); ///[]
+}
+
+template<typename T>
+void free_shim_pointer(duk_context* ctx)
+{
+    T* ptr = get_shim_pointer<T>(ctx);
+
+    delete ptr;
+}
+
 inline
 std::string duk_safe_to_std_string(duk_context* ctx, duk_idx_t idx)
 {

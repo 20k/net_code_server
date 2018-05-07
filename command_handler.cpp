@@ -207,6 +207,8 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         if(terminated)
             printf("Attempting unsafe resource cleanup\n");
 
+        teardown_state(sd.ctx);
+
         js_interop_shutdown(sd.ctx);
     }
     catch(...)

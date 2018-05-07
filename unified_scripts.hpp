@@ -3,8 +3,12 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
-//std::map<std::string,
+inline std::map<std::string, duk_ret_t (*)(duk_context*, int)> c_shim_map;
+inline std::mutex shim_lock;
+
+using shim_map_t = std::map<std::string, duk_ret_t (*)(duk_context*, int)>;
 
 struct unified_script_info
 {
@@ -18,6 +22,7 @@ struct unified_script_info
     std::vector<std::string> params;
 
     bool is_c_shim = false;
+    std::string c_shim_name;
 
     void make_from(item& t)
     {
@@ -45,11 +50,11 @@ struct unified_script_info
 };
 
 inline
-unified_script_info unified_script_loading(int thread_id, const std::string& full_scriptname, std::string& err)
+unified_script_info unified_script_loading(int thread_id, const std::string& full_scriptname, std::string& err, shim_map_t shim_map = shim_map_t())
 {
     unified_script_info ret;
 
-    //#define USE_C_SHIMS
+    #define USE_C_SHIMS
     #ifdef USE_C_SHIMS
     ///check C hooks
     {
@@ -65,7 +70,17 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
         {
             std::string c_shim_name = found[0].get_prop("c_shim_name");
 
+            if(shim_map.find(c_shim_name) != shim_map.end())
+            {
+                ret.c_shim_name = c_shim_name;
+                ret.seclevel = 4;
+                ret.owner = found[0].get_prop("owner");
+                ret.is_c_shim = true;
+                ret.valid = true;
+                ret.parsed_source = "function(context, args){\n    return \"This script is a fake shim to c++ and this source is fake, sorry <3\";\n}";
 
+                return ret;
+            }
         }
     }
     #endif // 0

@@ -250,10 +250,22 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
     quick_register(ctx, "script_host", script_host.c_str());
     quick_register(ctx, "script_ending", script_ending.c_str());
 
+    {
+        std::lock_guard guard(shim_lock);
+
+        set_copy_allocate_shim_pointer(ctx, c_shim_map);
+    }
+
     duk_push_int(ctx, 0);
     duk_put_prop_string(ctx, -2, "DB_ID");
 
     duk_pop_n(ctx, 1);
+}
+
+inline
+void teardown_state(duk_context* ctx)
+{
+    free_shim_pointer<shim_map_t>(ctx);
 }
 
 static
@@ -503,7 +515,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     std::string script_err;
 
-    unified_script_info script = unified_script_loading(get_thread_id(ctx), to_call_fullname, script_err);
+    unified_script_info script = unified_script_loading(get_thread_id(ctx), to_call_fullname, script_err, c_shim_map);
 
     if(!script.valid)
         return push_error(ctx, script_err);
@@ -526,7 +538,10 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     set_script_info(ctx, to_call_fullname);
 
-    compile_and_call(sd, load, get_caller(ctx), false, script.seclevel, false);
+    if(!script.is_c_shim)
+        compile_and_call(sd, load, get_caller(ctx), false, script.seclevel, false);
+    else
+        c_shim_map[script.c_shim_name](sd.ctx, sl);
 
     set_script_info(ctx, full_script);
 
