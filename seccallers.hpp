@@ -515,7 +515,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     std::string script_err;
 
-    unified_script_info script = unified_script_loading(get_thread_id(ctx), to_call_fullname, script_err, c_shim_map);
+    unified_script_info script = unified_script_loading(get_thread_id(ctx), to_call_fullname, script_err, *get_shim_pointer<shim_map_t>(ctx));
 
     if(!script.valid)
         return push_error(ctx, script_err);
@@ -541,7 +541,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     if(!script.is_c_shim)
         compile_and_call(sd, load, get_caller(ctx), false, script.seclevel, false);
     else
-        c_shim_map[script.c_shim_name](sd.ctx, sl);
+        (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name](sd.ctx, sl);
 
     set_script_info(ctx, full_script);
 
