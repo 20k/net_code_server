@@ -140,6 +140,11 @@ struct db_interfaceable
         }
     }
 
+    bool has(const std::string& key)
+    {
+        return data.count(key) > 0;
+    }
+
     template<typename T>
     T get_as(const std::string& key)
     {
