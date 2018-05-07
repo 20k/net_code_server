@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <libncclient/nc_util.hpp>
 
 inline std::map<std::string, duk_ret_t (*)(duk_context*, int)> c_shim_map;
 inline std::mutex shim_lock;

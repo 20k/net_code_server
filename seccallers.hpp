@@ -533,6 +533,8 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     //std::cout << load << std::endl;
 
+    duk_ret_t result = 1;
+
     stack_duk sd;
     sd.ctx = ctx;
 
@@ -541,11 +543,11 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     if(!script.is_c_shim)
         compile_and_call(sd, load, get_caller(ctx), false, script.seclevel, false);
     else
-        (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name](sd.ctx, sl);
+        result = (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name](sd.ctx, sl);
 
     set_script_info(ctx, full_script);
 
-    return 1;
+    return result;
 }
 
 inline
