@@ -306,6 +306,7 @@ int main()
     http_test_run();
 
     ///fix db screwup
+    #ifndef TESTING
     for_each_npc([](npc_user& npc)
                      {
                         npc_prop_list props;
@@ -325,6 +326,7 @@ int main()
                             props.overwrite_in_db(ctx);
                         }
                      });
+    #endif // TESTING
 
     start_npc_thread();
     init_purple_whale();

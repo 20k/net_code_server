@@ -58,7 +58,7 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
     #define USE_C_SHIMS
     #ifdef USE_C_SHIMS
     ///check C hooks
-    {
+    /*{
         mongo_requester req;
         req.set_prop("item_id", full_scriptname);
         req.set_prop("c_shim", 1);
@@ -83,7 +83,22 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
                 return ret;
             }
         }
+    }*/
+
+    std::string c_shim_name = full_scriptname;
+
+    if(shim_map.find(c_shim_name) != shim_map.end())
+    {
+        ret.c_shim_name = c_shim_name;
+        ret.seclevel = 4;
+        ret.owner = get_host_from_fullname(c_shim_name);
+        ret.is_c_shim = true;
+        ret.valid = true;
+        ret.parsed_source = "function(context, args){\n    return \"This script is a fake shim to c++ and this source is fake, sorry <3\";\n}";
+
+        return ret;
     }
+
     #endif // 0
 
     script_info script;
