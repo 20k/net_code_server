@@ -34,7 +34,7 @@ std::string handle_command(command_handler_state& state, const std::string& str,
 
 std::string handle_autocompletes_json(user& usr, const std::string& in);
 
-std::string binary_to_hex(const std::string& in);
+std::string binary_to_hex(const std::string& in, bool swap_endianness = false);
 std::string hex_to_binary(const std::string& in);
 std::string delete_user(command_handler_state& state, const std::string& str, bool cli_force = false);
 

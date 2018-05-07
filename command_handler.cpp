@@ -228,7 +228,7 @@ void throwaway_user_thread(const std::string& username, const std::string& comma
     std::thread(run_in_user_context, username, command).detach();
 }
 
-std::string binary_to_hex(const std::string& in)
+std::string binary_to_hex(const std::string& in, bool swap_endianness)
 {
     std::string ret;
 
@@ -238,6 +238,11 @@ std::string binary_to_hex(const std::string& in)
     {
         int lower_bits = ((int)i) & 0xF;
         int upper_bits = (((int)i) >> 4) & 0xF;
+
+        if(swap_endianness)
+        {
+            std::swap(lower_bits, upper_bits);
+        }
 
         ret += std::string(1, LUT[lower_bits]) + std::string(1, LUT[upper_bits]);
     }

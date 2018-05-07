@@ -396,7 +396,7 @@ inline
 std::string duk_safe_get_prop_string(duk_context* ctx, duk_idx_t idx, const std::string& key)
 {
     if(duk_get_top(ctx) <= 0)
-        return std::string();;
+        return std::string();
 
     if(duk_is_undefined(ctx, idx))
         return std::string();
@@ -411,6 +411,18 @@ std::string duk_safe_get_prop_string(duk_context* ctx, duk_idx_t idx, const std:
     duk_pop(ctx);
 
     return ret;
+}
+
+inline
+bool duk_safe_prop_valid(duk_context* ctx, duk_idx_t idx, const std::string& key)
+{
+    if(duk_get_top(ctx) <= 0)
+        return false;
+
+    if(duk_is_undefined(ctx, idx))
+        return false;
+
+    return true;
 }
 
 inline
