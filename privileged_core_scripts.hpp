@@ -2368,8 +2368,8 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(from == "")
         return push_error(ctx, "usage: net.map({user:<username>, n:2})");
 
-    if(num < 0 || num >= 10)
-        return push_error(ctx, "n out of range [1,10]");
+    if(num < 0 || num > 15)
+        return push_error(ctx, "n out of range [1,15]");
 
     if(!get_user(from, get_thread_id(ctx)).has_value())
         return push_error(ctx, "User does not exist");

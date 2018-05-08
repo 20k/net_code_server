@@ -124,7 +124,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
     //sf::Clock clk;
     float max_time_ms = 5000;
-    float db_grace_time_ms = 1000;
+    float db_grace_time_ms = 2000;
 
     auto time_start = std::chrono::high_resolution_clock::now();
 
