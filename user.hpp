@@ -41,7 +41,7 @@ struct user
 
     std::map<std::string, double> get_properties_from_loaded_items(mongo_lock_proxy& ctx);
 
-    std::map<std::string, double> get_total_user_properties(mongo_lock_proxy& ctx);
+    std::map<std::string, double> get_total_user_properties(int thread_id);
 
     bool has_loaded_item(const std::string& id);
     bool load_item(const std::string& id);
@@ -79,7 +79,7 @@ struct user
 
     bool is_npc();
 
-    virtual int get_default_network_links();
+    int get_default_network_links(int thread_id);
 
     virtual ~user(){}
 };

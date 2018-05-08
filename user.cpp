@@ -3,6 +3,7 @@
 #include <libncclient/nc_util.hpp>
 #include <secret/node.hpp>
 #include "global_caching.hpp"
+#include <secret/npc_manager.hpp>
 
 using global_user_cache = global_generic_cache<user>;
 
@@ -219,14 +220,24 @@ std::map<std::string, double> user::get_properties_from_loaded_items(mongo_lock_
     return ret;
 }
 
-std::map<std::string, double> user::get_total_user_properties(mongo_lock_proxy& ctx)
+std::map<std::string, double> user::get_total_user_properties(int thread_id)
 {
-    std::map<std::string, double> found = get_properties_from_loaded_items(ctx);
+    std::map<std::string, double> found;
+
+
+    {
+        mongo_lock_proxy ctx = get_global_mongo_user_items_context(thread_id);
+
+        found = get_properties_from_loaded_items(ctx);
+    }
 
     found["char_count"] += 500;
     found["script_slots"] += 2;
     found["public_script_slots"] += 1;
-    found["network_links"] = get_default_network_links();
+
+    {
+        found["network_links"] = get_default_network_links(-2);
+    }
 
     return found;
 }
@@ -559,9 +570,43 @@ int user::find_num_public_scripts(mongo_lock_proxy& ctx)
     return results.size();
 }
 
-int user::get_default_network_links()
+int user::get_default_network_links(int thread_id)
 {
-    return 4;
+    if(!is_npc())
+        return 4;
+
+    int base = 4;
+
+    npc_prop_list props;
+
+    {
+        mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(thread_id);
+
+        if(!props.load_from_db(ctx, name))
+            return 4;
+    }
+
+    if(props.has("vals") && props.has("props"))
+    {
+        std::vector<int> enums = props.get_as<std::vector<int>>("props");
+        std::vector<float> vals = props.get_as<std::vector<float>>("vals");
+
+        for(int i=0; i < (int)enums.size(); i++)
+        {
+            if(enums[i] == npc_info::MAX_CONNECT)
+            {
+                if(vals[i] > 0)
+                    base++;
+                else if(vals[i] < 0)
+                    base--;
+            }
+        }
+    }
+
+    if(base < 1)
+        base = 1;
+
+    return base;
 }
 
 bool user::is_npc()

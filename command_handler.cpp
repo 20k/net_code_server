@@ -726,8 +726,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             std::map<std::string, double> user_details;
 
             {
-                mongo_lock_proxy items_lock = get_global_mongo_user_items_context(-2);
-                user_details = cur.get_total_user_properties(items_lock);
+                user_details = cur.get_total_user_properties(-2);
             }
 
             int num_chars = script_inf.unparsed_source.size();
