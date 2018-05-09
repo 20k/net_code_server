@@ -655,6 +655,8 @@ struct mongo_lock_proxy
         }
     }
 
+    mongo_lock_proxy(const mongo_lock_proxy&) = delete;
+
     void change_collection(const std::string& coll, bool force_change = false)
     {
         ///need to alter locks
