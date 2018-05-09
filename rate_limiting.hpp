@@ -50,13 +50,18 @@ struct rate_limit
         return true;
     }
 
-    bool try_call_manual(const std::string& usr_name, const std::string& name, double mreserve, double mdeplete)
+    bool try_call_manual(const std::string& usr_name, const std::string& name, double mreserve, double mdeplete, double mmax)
     {
         std::lock_guard gd(lock);
 
         if(time_budget_remaining_manual.find(usr_name) == time_budget_remaining_manual.end())
         {
             time_budget_remaining_manual[usr_name][name] = mreserve;
+        }
+
+        if(time_budget_remaining_manual[usr_name][name] > mmax)
+        {
+            time_budget_remaining_manual[usr_name][name] = mmax;
         }
 
         double& num_remaining = time_budget_remaining_manual[usr_name][name];
