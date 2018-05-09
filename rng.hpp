@@ -28,6 +28,7 @@ float get_random_float()
     return (double)random_int / ((double)pow(2., 32.)-1.);
 }
 
+///TODO REPLACE WITH SAMPLE
 template<typename T>
 inline
 std::vector<T> random_select_of(int len, const std::vector<T>& of)
@@ -44,6 +45,7 @@ std::vector<T> random_select_of(int len, const std::vector<T>& of)
     return ret;
 }
 
+///TODO REPLACE WITH SAMPLE
 template<typename T>
 inline
 T random_select_one(const std::vector<T>& of)
@@ -51,6 +53,7 @@ T random_select_one(const std::vector<T>& of)
     return random_select_of(1, of).front();
 }
 
+///TODO REPLACE WITH SAMPLE
 inline
 std::string random_select_of(int len, const std::string& of)
 {
@@ -66,6 +69,7 @@ std::string random_select_of(int len, const std::string& of)
     return ret;
 }
 
+///TODO REPLACE WITH SAMPLE
 template<typename T>
 inline
 std::string random_select_of_det(int len, const std::string& of, T& t)
