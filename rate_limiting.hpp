@@ -25,6 +25,7 @@ struct rate_limit
 {
     ///maps username to a type of rate limit
     std::map<std::string, std::map<rate_limit_t, double>> time_budget_remaining;
+    std::map<std::string, std::map<std::string, double>> time_budget_remaining_manual;
     std::map<rate_limit_t, double> max_reserve = {{rate::CHAT, 10}, {rate::CASH, 30}, {rate::UPG_CHEAT, 10}, {rate::AUTOCOMPLETES, 30}, {rate::DELETE_USER, 61*60}};
     std::map<rate_limit_t, double> budget_deplete = {{rate::CHAT, 1}, {rate::CASH, 1}, {rate::UPG_CHEAT, 3}, {rate::AUTOCOMPLETES, 1}, {rate::DELETE_USER, 60*60}};
 
@@ -49,6 +50,25 @@ struct rate_limit
         return true;
     }
 
+    bool try_call_manual(const std::string& usr_name, const std::string& name, double mreserve, double mdeplete)
+    {
+        std::lock_guard gd(lock);
+
+        if(time_budget_remaining_manual.find(usr_name) == time_budget_remaining_manual.end())
+        {
+            time_budget_remaining_manual[usr_name][name] = mreserve;
+        }
+
+        double& num_remaining = time_budget_remaining_manual[usr_name][name];
+
+        if(num_remaining - mdeplete <= 0)
+            return false;
+
+        num_remaining -= mdeplete;
+
+        return true;
+    }
+
     void donate_time_budget(double time_s)
     {
         std::lock_guard gd(lock);
@@ -65,7 +85,30 @@ struct rate_limit
                 }
             }
         }
+
+        for(auto& i : time_budget_remaining_manual)
+        {
+            for(auto& j : i.second)
+            {
+                j.second += time_s;
+            }
+        }
     }
+
+    /*void donate_time_budget_manual(const std::string& name, double time_s, double mreserve)
+    {
+        std::lock_guard gd(lock);
+
+        for(auto& j : time_budget_remaining_manual[name])
+        {
+            j.second += time_s;
+
+            if(j.second > mreserve)
+            {
+                j.second = mreserve;
+            }
+        }
+    }*/
 };
 
 #define RATELIMIT_DUK(type) if(!get_global_rate_limit()->try_call(get_caller(ctx), rate::type)) {push_error(ctx, "Rate Limit"); return 1;}

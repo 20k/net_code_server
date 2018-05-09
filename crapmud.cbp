@@ -119,6 +119,8 @@
 		<Unit filename="deps/secret/node.hpp" />
 		<Unit filename="deps/secret/npc_manager.cpp" />
 		<Unit filename="deps/secret/npc_manager.hpp" />
+		<Unit filename="deps/secret/one_shot_core.cpp" />
+		<Unit filename="deps/secret/one_shot_core.hpp" />
 		<Unit filename="deps/secret/one_shots.cpp" />
 		<Unit filename="deps/secret/one_shots.hpp" />
 		<Unit filename="deps/secret/secret.cpp" />

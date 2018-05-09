@@ -34,6 +34,7 @@
 #include <secret/npc_manager.hpp>
 #include <secret/structure.hpp>
 #include <secret/one_shots.hpp>
+#include <secret/one_shot_core.hpp>
 
 #if 0
 void user_tests()
@@ -330,6 +331,7 @@ int main()
 
     start_npc_thread();
     init_purple_whale();
+    init_blue_mantis();
 
     printf("post\n");
 
