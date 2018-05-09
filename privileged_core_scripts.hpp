@@ -2773,6 +2773,7 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///so. If any member of our call stack is on the permissions list, we're good to go
     std::vector<std::string> call_stack = opt_user->get_call_stack();
 
+    #ifndef TESTING
     bool found = false;
 
     for(auto it = call_stack.begin(); it != call_stack.end(); it++)
@@ -2786,6 +2787,7 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
             break;
         }
     }
+    #endif // TESTING
 
     if(call_stack.size() == 0)
     {
