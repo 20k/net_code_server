@@ -110,6 +110,8 @@
 		<Unit filename="db_interfaceable.cpp" />
 		<Unit filename="db_interfaceable.hpp" />
 		<Unit filename="deps/json/json.hpp" />
+		<Unit filename="deps/secret/common.cpp" />
+		<Unit filename="deps/secret/common.hpp" />
 		<Unit filename="deps/secret/initial_link_setup.cpp" />
 		<Unit filename="deps/secret/initial_link_setup.hpp" />
 		<Unit filename="deps/secret/items_secret.hpp" />
@@ -123,7 +125,6 @@
 		<Unit filename="deps/secret/one_shot_core.hpp" />
 		<Unit filename="deps/secret/one_shots.cpp" />
 		<Unit filename="deps/secret/one_shots.hpp" />
-		<Unit filename="deps/secret/puzzle_common.hpp" />
 		<Unit filename="deps/secret/secret.cpp" />
 		<Unit filename="deps/secret/secret.hpp" />
 		<Unit filename="deps/secret/structure.cpp" />
