@@ -333,6 +333,193 @@ std::string get_update_message()
     return "If you cannot login, a bad update deleted key.key files. PM me (20k) on discord with a username that you owned and I will recover it";
 }
 
+void delete_notifs_for(const std::string& name)
+{
+    ///DELETE NOTIFS
+    {
+        mongo_lock_proxy notifs_db = get_global_mongo_pending_notifs_context(-2);
+        notifs_db.change_collection(name);
+
+        bson_t bson;
+        bson_init(&bson);
+
+        notifs_db->remove_bson(name, &bson);
+        bson_destroy(&bson);
+    }
+}
+
+void delete_user_db_for(const std::string& name)
+{
+    ///delete user db
+    {
+        mongo_lock_proxy user_db = get_global_mongo_user_accessible_context(-2);
+        user_db.change_collection(name);
+
+        bson_t bson;
+        bson_init(&bson);
+        user_db->remove_bson(name, &bson);
+        bson_destroy(&bson);
+    }
+}
+
+void delete_nodes_for(const std::string& name)
+{
+    ///delete nodes
+    {
+        mongo_lock_proxy nodes_db = get_global_mongo_node_properties_context(-2);
+        nodes_db.change_collection(name);
+
+        mongo_requester req;
+        req.set_prop("owned_by", name);
+
+        req.remove_all_from_db(nodes_db);
+
+        user_nodes::delete_from_cache(name);
+    }
+}
+
+void delete_user_for(const std::string& name)
+{
+    ///DELETE USER
+    {
+        mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+        ctx.change_collection(name);
+
+        mongo_requester req;
+        req.set_prop("name", name);
+
+        req.remove_all_from_db(ctx);
+
+        user::delete_from_cache(name);
+    }
+}
+
+void delete_links_for(const std::string& name)
+{
+    {
+        playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+        playspace_network_manage.unlink_all(name);
+    }
+}
+
+///ok
+///things this function needs to do
+///preserve items
+///preserve nodes
+
+///things this function does not need to do
+///fix up notifs (?)
+///fix up user db
+///fixup auth
+std::string rename_user_force(const std::string& from_name, const std::string& to_name)
+{
+    user usr;
+
+    {
+        mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+        if(user().exists(ctx, to_name))
+            return "User already exists";
+
+        if(!usr.load_from_db(ctx, from_name))
+            return "No such user";
+
+        if(!usr.is_npc())
+            return "Currently only allowed for npcs";
+    }
+
+    ///so
+    {
+        npc_user tusr;
+
+        {
+            mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+            ///we construct the new user
+            tusr.construct_in_user_database(ctx, to_name);
+
+            ///rename the old user
+            usr.name = to_name;
+            ///then rewrite the user over the constructed npc user
+            usr.overwrite_user_in_db(ctx);
+        }
+
+        npc_prop_list props;
+
+        ///oh jesus this is so much easier with the new db system
+        ///overwrite does upsert
+        {
+            mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
+
+            ///load old props
+            props.load_from_db(ctx, from_name);
+            ///delete those bad boys
+            props.remove_from_db(ctx);
+
+            ///rename props
+            props.data[props.key_name] = to_name;
+            ///insert into db under new name
+            props.overwrite_in_db(ctx);
+        }
+    }
+
+    ///transfer items
+    {
+        mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(-2);
+
+        mongo_requester req;
+        req.set_prop("owner", from_name);
+
+        auto found = req.fetch_from_db(items_ctx);
+
+        for(auto& i : found)
+        {
+            i.set_prop("owner", to_name);
+
+            i.insert_in_db(items_ctx);
+        }
+    }
+
+    ///IGNORE AUTH
+
+    ///NODES
+    user_nodes nodes = get_nodes(from_name, -2);
+
+    {
+        nodes.owned_by = to_name;
+
+        for(user_node& node : nodes.nodes)
+        {
+            node.owned_by = to_name;
+        }
+    }
+
+    {
+        mongo_lock_proxy nodes_ctx = get_global_mongo_node_properties_context(-2);
+        nodes_ctx.change_collection(to_name);
+
+        user_nodes tmp;
+        tmp.ensure_exists(nodes_ctx, to_name);
+
+        nodes.overwrite_in_db(nodes_ctx);
+    }
+
+    ///ok
+    ///need to relink
+    {
+        get_global_playspace_network_manager().rename(from_name, to_name);
+    }
+
+    delete_nodes_for(from_name);
+    delete_user_db_for(from_name);
+    delete_user_for(from_name);
+    delete_notifs_for(from_name);
+
+
+    return "Renamed " + from_name + " " + to_name;
+}
+
 ///should really queue this or something
 std::string delete_user(command_handler_state& state, const std::string& str, bool cli_force)
 {
@@ -441,60 +628,16 @@ std::string delete_user(command_handler_state& state, const std::string& str, bo
         }
     }
 
-    ///DELETE NOTIFS
-    {
-        mongo_lock_proxy notifs_db = get_global_mongo_pending_notifs_context(-2);
-        notifs_db.change_collection(name);
+    delete_notifs_for(name);
 
-        bson_t bson;
-        bson_init(&bson);
+    delete_user_db_for(name);
 
-        notifs_db->remove_bson(name, &bson);
-        bson_destroy(&bson);
-    }
+    delete_nodes_for(name);
 
-    ///delete user db
-    {
-        mongo_lock_proxy user_db = get_global_mongo_user_accessible_context(-2);
-        user_db.change_collection(name);
+    delete_user_for(name);
 
-        bson_t bson;
-        bson_init(&bson);
-        user_db->remove_bson(name, &bson);
-        bson_destroy(&bson);
-    }
+    delete_links_for(name);
 
-    ///delete nodes
-    {
-        mongo_lock_proxy nodes_db = get_global_mongo_node_properties_context(-2);
-        nodes_db.change_collection(name);
-
-        mongo_requester req;
-        req.set_prop("owned_by", name);
-
-        req.remove_all_from_db(nodes_db);
-
-        user_nodes::delete_from_cache(name);
-    }
-
-    ///DELETE USER
-    {
-        mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
-        ctx.change_collection(name);
-
-        mongo_requester req;
-        req.set_prop("name", name);
-
-        req.remove_all_from_db(ctx);
-
-        user::delete_from_cache(name);
-    }
-
-    {
-        playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
-
-        playspace_network_manage.unlink_all(name);
-    }
 
     return "Deleted";
 }
