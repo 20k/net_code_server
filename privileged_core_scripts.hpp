@@ -42,27 +42,6 @@ bool can_run(int csec_level, int maximum_sec)
     return csec_level <= maximum_sec;
 }
 
-inline
-duk_ret_t push_error(duk_context* ctx, const std::string& msg)
-{
-    push_dukobject(ctx, "ok", false, "msg", msg);
-    return 1;
-}
-
-inline
-duk_ret_t push_success(duk_context* ctx)
-{
-    push_dukobject(ctx, "ok", true);
-    return 1;
-}
-
-inline
-duk_ret_t push_success(duk_context* ctx, const std::string& msg)
-{
-    push_dukobject(ctx, "ok", true, "msg", msg);
-    return 1;
-}
-
 ///could potentially use __FUNCTION__ here
 ///as it should work across msvc/gcc/clang... but... technically not portable
 #define SL_GUARD(x) if(!can_run(sl, x)){ push_error(ctx, "Security level guarantee failed"); return 1; }
@@ -82,42 +61,6 @@ struct script_arg
     std::string key;
     std::string val;
 };
-
-inline
-duk_ret_t make_logs_on(duk_context* ctx, const std::string& username, user_node_t type, const std::vector<std::string>& logs)
-{
-    std::string caller = get_caller(ctx);
-
-    user usr;
-
-    {
-        mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
-
-        if(!usr.load_from_db(user_info, username))
-            return push_error(ctx, "No such user");
-    }
-
-
-    user_nodes nodes;
-
-    {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
-
-        nodes.ensure_exists(node_ctx, username);
-        nodes.load_from_db(node_ctx, username);
-
-        user_node* node = nodes.type_to_node(type);
-
-        if(node == nullptr)
-            return push_error(ctx, "Error: Red Martian");
-
-        node->logs.insert(node->logs.end(), logs.begin(), logs.end());
-
-        nodes.overwrite_in_db(node_ctx);
-    }
-
-    return 0;
-}
 
 ///so say this is midsec
 ///we can run if the sl is midsec or lower
@@ -2054,7 +1997,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
             attacker.load_from_db(mongo_ctx, get_caller(ctx));
         }
 
-        nodes.leave_trace(*current_node, attacker.name);
+        nodes.leave_trace(*current_node, attacker.name, usr, get_thread_id(ctx));
 
         ///hmm, we are actually double overwriting here
         {
@@ -2591,6 +2534,8 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
                 {
                     num_items += node.attached_locks.size();
                 }
+
+                num_items = user_and_nodes->first.num_items();
 
                 if(num_items == 0)
                 {

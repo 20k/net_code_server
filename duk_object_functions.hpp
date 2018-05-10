@@ -239,6 +239,27 @@ bool get_duk_keyvalue(duk_context* ctx, const std::string& key, T& value)
 }
 
 inline
+duk_ret_t push_error(duk_context* ctx, const std::string& msg)
+{
+    push_dukobject(ctx, "ok", false, "msg", msg);
+    return 1;
+}
+
+inline
+duk_ret_t push_success(duk_context* ctx)
+{
+    push_dukobject(ctx, "ok", true);
+    return 1;
+}
+
+inline
+duk_ret_t push_success(duk_context* ctx, const std::string& msg)
+{
+    push_dukobject(ctx, "ok", true, "msg", msg);
+    return 1;
+}
+
+inline
 void freeze_duk(duk_context* ctx)
 {
     duk_freeze(ctx, -1);
