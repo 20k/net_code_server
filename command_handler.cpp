@@ -489,9 +489,32 @@ std::string rename_user_force(const std::string& from_name, const std::string& t
     {
         nodes.owned_by = to_name;
 
+        std::map<std::string, std::string> rename_map;
+
         for(user_node& node : nodes.nodes)
         {
             node.owned_by = to_name;
+
+            std::string old_name = node.unique_id;
+
+            std::string ext = node.unique_id;
+
+            for(int i=0; i < (int)node.owned_by.size() + 1; i++)
+            {
+                ext.erase(ext.begin());
+            }
+
+            node.unique_id = to_name + "_" + ext;
+
+            rename_map[old_name] = node.unique_id;
+        }
+
+        for(auto& i : nodes.nodes)
+        {
+            for(auto& j : i.connected_to)
+            {
+                j  = rename_map[j];
+            }
         }
     }
 

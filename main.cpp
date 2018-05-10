@@ -339,7 +339,38 @@ int main()
     {
         std::string command;
 
+
         std::getline(std::cin, command);
+
+        if(starts_with(command, "#rename"))
+        {
+            std::cout << "enter user start name " << std::endl;
+
+            std::string start;
+
+            std::getline(std::cin, start);
+
+            std::cout << "enter user to name" << std::endl;
+
+            std::string fin;
+            std::getline(std::cin, fin);
+
+            std::cout << "rename " << start << " " << fin << "? y/n" << std::endl;
+
+            std::string sure;
+            std::getline(std::cin, sure);
+
+            if(starts_with(sure, "y"))
+            {
+                std::cout << rename_user_force(start, fin) << std::endl;
+            }
+            else
+            {
+                std::cout << "did nothing " << std::endl;
+            }
+
+            continue;
+        }
 
         std::cout << "Are you sure? y/n" << std::endl;
 
