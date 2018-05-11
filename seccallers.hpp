@@ -543,7 +543,24 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     if(!script.is_c_shim)
         compile_and_call(sd, load, get_caller(ctx), false, script.seclevel, false);
     else
-        result = (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name](sd.ctx, sl);
+    {
+        duk_push_c_function(ctx, (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name], 1);
+
+        int nargs = 1;
+
+        if(duk_is_undefined(ctx, -2))
+        {
+            duk_push_object(ctx);
+        }
+        else
+        {
+            duk_dup(sd.ctx, -2);
+        }
+
+        duk_pcall(ctx, nargs);
+
+        //result = (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name](sd.ctx, sl);
+    }
 
     set_script_info(ctx, full_script);
 

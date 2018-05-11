@@ -6,10 +6,10 @@
 #include <map>
 #include <libncclient/nc_util.hpp>
 
-inline std::map<std::string, duk_ret_t (*)(duk_context*, int)> c_shim_map;
+inline std::map<std::string, duk_ret_t (*)(duk_context*)> c_shim_map;
 inline std::mutex shim_lock;
 
-using shim_map_t = std::map<std::string, duk_ret_t (*)(duk_context*, int)>;
+using shim_map_t = std::map<std::string, duk_ret_t (*)(duk_context*)>;
 
 struct unified_script_info
 {
