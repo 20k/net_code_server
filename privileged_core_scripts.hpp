@@ -2838,6 +2838,23 @@ duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 inline
+duk_ret_t cheats__give(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+    user u1;
+    u1.load_from_db(mongo_ctx, get_caller(ctx));
+
+    u1.cash += 200;
+
+    u1.overwrite_user_in_db(mongo_ctx);
+
+    return 0;
+}
+
+inline
 duk_ret_t cheats__salvage(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -2935,6 +2952,7 @@ std::map<std::string, priv_func_info> privileged_functions
     #ifdef TESTING
     REGISTER_FUNCTION_PRIV(cheats__arm, 4),
     REGISTER_FUNCTION_PRIV(cheats__salvage, 4),
+    REGISTER_FUNCTION_PRIV(cheats__give, 4),
     #endif // TESTING
     #ifdef LIVE_DEBUGGING
     REGISTER_FUNCTION_PRIV(cheats__debug, 4),
