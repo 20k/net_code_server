@@ -394,6 +394,16 @@ void delete_user_for(const std::string& name)
     }
 }
 
+void delete_npc_db_for(const std::string& name)
+{
+    mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
+
+    npc_prop_list npc_props;
+    npc_props.set_as("name", name);
+
+    npc_props.remove_from_db(ctx);
+}
+
 void delete_links_for(const std::string& name)
 {
     {
@@ -648,6 +658,21 @@ std::string delete_user(command_handler_state& state, const std::string& str, bo
         {
             if(!cli_force)
                 return "Auth Error: Purple Catepillar";
+        }
+    }
+
+    {
+        user funtimes;
+
+        {
+            mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+            funtimes.load_from_db(ctx, name);
+        }
+
+        if(funtimes.is_npc())
+        {
+            delete_npc_db_for(name);
         }
     }
 
