@@ -720,6 +720,7 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
     int num = duk_get_prop_string_as_int(ctx, -1, "count");
     bool pretty = !dukx_is_prop_truthy(ctx, -1, "array");
+    bool is_tell = dukx_is_prop_truthy(ctx, -1, "tell");
 
     if(num <= 0)
         num = 10;
@@ -727,16 +728,25 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(channel.size() == 0)
         channel = "0000";
 
+    if(num >= 100)
+    {
+        return push_error(ctx, "Count cannot be >= than 100");
+    }
+
     std::cout << "fchannel " << channel << std::endl;
 
-    if(!is_valid_channel_name(channel))
-        return push_error(ctx, "Invalid channel name");
-
-    if(channel == "" || num >= 100 || channel.size() >= 10)
+    if(!is_tell)
     {
-        push_error(ctx, "Usage: #ms.msg.recent({channel:\"<name>\", count:num, pretty:1})");
-        return 1;
+        if(!is_valid_channel_name(channel))
+            return push_error(ctx, "Invalid channel name");
+
+        if(channel == "" || channel.size() >= 10)
+        {
+            push_error(ctx, "Usage: #ms.msg.recent({channel:\"<name>\", count:num, pretty:1})");
+            return 1;
+        }
     }
+
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
     mongo_ctx.change_collection(get_caller(ctx));
@@ -744,8 +754,17 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///ALARM: ALARM: RATE LIMIT
 
     mongo_requester request;
-    request.set_prop("channel", channel);
-    request.set_prop("is_chat", 1);
+
+    if(!is_tell)
+    {
+        request.set_prop("channel", channel);
+        request.set_prop("is_chat", 1);
+    }
+    else
+    {
+        request.set_prop("is_tell", 1);
+    }
+
     request.set_prop_sort_on("time_ms", -1);
 
     request.set_limit(num);
@@ -776,7 +795,7 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
     else
     {
-        std::string str = prettify_chat_strings(found);
+        std::string str = prettify_chat_strings(found, !is_tell);
 
         push_duk_val(ctx, str);
     }
