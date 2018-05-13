@@ -890,6 +890,21 @@ duk_ret_t sys__xfer_upgrade_uid(priv_context& priv_ctx, duk_context* ctx, int sl
 #endif // 0
 
 inline
+std::string escape_str(std::string in)
+{
+    for(int i=0; i < (int)in.size(); i++)
+    {
+        if(in[i] == '\n')
+        {
+            in[i] = '\\';
+            in.insert(in.begin() + i + 1, 'n');
+        }
+    }
+
+    return in;
+}
+
+inline
 std::string format_item(item& i, bool is_short, user& usr, user_nodes& nodes)
 {
     if(is_short)
@@ -916,7 +931,16 @@ std::string format_item(item& i, bool is_short, user& usr, user_nodes& nodes)
         if(!is_open_source && p.first == "parsed_source")
             continue;
 
-        ret += "    " + p.first + ": " + p.second + ",\n";
+        std::string str = p.second;
+
+        #ifdef DO_DESC_ESCAPING
+        if(p.first == "desc")
+        {
+            str = escape_str(str);
+        }
+        #endif // DO_DESC_ESCAPING
+
+        ret += "    " + p.first + ": " + str + ",\n";
     }
 
     if(usr.has_loaded_item(i.get_prop("item_id")))
