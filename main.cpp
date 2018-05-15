@@ -36,6 +36,8 @@
 #include <secret/one_shots.hpp>
 #include <secret/one_shot_core.hpp>
 
+#include <libncclient/nc_util.hpp>
+
 #if 0
 void user_tests()
 {

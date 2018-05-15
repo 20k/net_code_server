@@ -8,6 +8,7 @@
 //#include "privileged_core_scripts.hpp"
 #include "rate_limiting.hpp"
 #include "command_handler.hpp"
+#include <secret/npc_manager.hpp>
 
 //#define ONE_TIME_MANHANDLE
 #ifdef ONE_TIME_MANHANDLE
@@ -138,6 +139,8 @@ void fix_auth_errors()
     }
 }
 #endif // 0
+
+extern size_t get_wall_time();
 
 void bot_thread()
 {

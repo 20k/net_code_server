@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "duktape.h"
+
 using duk_func_t = duk_ret_t (*)(duk_context*);
 using duk_placeholder_t = void*;
 using duk_variant_t = std::variant<bool, int, double, std::string, std::vector<std::string>, duk_placeholder_t, std::vector<duk_placeholder_t>>;
@@ -523,7 +525,7 @@ template<typename T>
 inline
 std::string dukx_json_get(const T& rep)
 {
-    duk_context* ctx = js_interop_startup();
+    duk_context* ctx = duk_create_heap_default();
 
     push_duk_val(ctx, rep);
 
@@ -538,7 +540,7 @@ std::string dukx_json_get(const T& rep)
 
     duk_pop(ctx);
 
-    js_interop_shutdown(ctx);
+    duk_destroy_heap(ctx);
 
     return str;
 }

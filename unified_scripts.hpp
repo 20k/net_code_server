@@ -5,6 +5,9 @@
 #include <vector>
 #include <map>
 #include <libncclient/nc_util.hpp>
+#include "item.hpp"
+#include "script_util.hpp"
+#include "user.hpp"
 
 inline std::map<std::string, duk_ret_t (*)(duk_context*)> c_shim_map;
 inline std::mutex shim_lock;

@@ -11,6 +11,9 @@
 #include "rng.hpp"
 #include <secret/npc_manager.hpp>
 #include <json/json.hpp>
+#include <libncclient/nc_util.hpp>
+#include "rate_limiting.hpp"
+#include "privileged_core_scripts.hpp"
 
 struct unsafe_info
 {
