@@ -58,7 +58,6 @@ duk_ret_t db_insert(duk_context* ctx)
     return 1;
 }
 
-
 duk_ret_t db_update(duk_context* ctx)
 {
     COOPERATE_KILL();
@@ -230,6 +229,15 @@ duk_ret_t db_remove(duk_context* ctx)
     return 0;
 }
 
+duk_ret_t async_pipe(duk_context* ctx)
+{
+    COOPERATE_KILL();
+
+
+
+    return 0;
+}
+
 void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack)
 {
     duk_push_global_stash(ctx);
@@ -240,6 +248,7 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
     quick_register_generic(ctx, "caller_stack", caller_stack);
     quick_register(ctx, "script_host", script_host.c_str());
     quick_register(ctx, "script_ending", script_ending.c_str());
+    quick_register(ctx, "async_pipe", "");
 
     {
         std::lock_guard guard(shim_lock);
@@ -673,6 +682,7 @@ void register_funcs(duk_context* ctx, int seclevel)
     inject_c_function(ctx, native_print, "print", DUK_VARARGS);
 
     inject_c_function(ctx, timeout_yield, "timeout_yield",  0);
+    inject_c_function(ctx, async_pipe, "async_pipe",  1);
 
     //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }
