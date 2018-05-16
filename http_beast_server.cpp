@@ -97,7 +97,7 @@ void async_command_handler(shared_data& shared, command_handler_state& state, st
             continue;
         }
 
-        std::string to_pipe = handle_command(state, to_exec, glob, my_id);
+        std::string to_pipe = handle_command(state, to_exec, glob, my_id, shared);
         shared.add_back_write(to_pipe);
 
         Sleep(5);

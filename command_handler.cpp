@@ -15,6 +15,7 @@
 #include "rate_limiting.hpp"
 #include "privileged_core_scripts.hpp"
 #include "shared_duk_worker_state.hpp"
+#include "shared_data.hpp"
 
 struct unsafe_info
 {
@@ -66,7 +67,7 @@ struct cleanup_auth_at_exit
     }
 };
 
-std::string run_in_user_context(const std::string& username, const std::string& command)
+std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<shared_data*> shared_queue)
 {
     user usr;
 
@@ -231,7 +232,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
 void throwaway_user_thread(const std::string& username, const std::string& command)
 {
-    std::thread(run_in_user_context, username, command).detach();
+    std::thread(run_in_user_context, username, command, std::nullopt).detach();
 }
 
 std::string binary_to_hex(const std::string& in, bool swap_endianness)
@@ -317,9 +318,9 @@ std::string hex_to_binary(const std::string& in)
 
 void on_create_user(user& usr)
 {
-    run_in_user_context(usr.name, "#msg.manage({join:\"0000\"})");
-    run_in_user_context(usr.name, "#msg.manage({join:\"7001\"})");
-    run_in_user_context(usr.name, "#msg.manage({join:\"memes\"})");
+    run_in_user_context(usr.name, "#msg.manage({join:\"0000\"})", std::nullopt);
+    run_in_user_context(usr.name, "#msg.manage({join:\"7001\"})", std::nullopt);
+    run_in_user_context(usr.name, "#msg.manage({join:\"memes\"})", std::nullopt);
 
     {
         mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
@@ -714,7 +715,7 @@ bool is_allowed_user(const std::string& user)
     return banned.find(user) == banned.end();
 }
 
-std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
+std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id, shared_data& shared)
 {
     printf("yay command\n");
 
@@ -1114,7 +1115,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                 return "No account or not logged in";
         }
 
-        return run_in_user_context(state.current_user.name, str);
+        return run_in_user_context(state.current_user.name, str, &shared);
     }
 
     return make_error_col("Command Not Found or Unimplemented");
@@ -1389,7 +1390,7 @@ std::string handle_autocompletes_json(user& usr, const std::string& in)
     return intro + obj.dump();
 }
 
-std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id)
+std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id, shared_data& shared)
 {
     //lg::log("Log Command " + str);
 
@@ -1405,14 +1406,14 @@ std::string handle_command(command_handler_state& state, const std::string& str,
     {
         std::string to_exec(str.begin() + client_command.size(), str.end());
 
-        return "command " + handle_command_impl(state, to_exec, glob, my_id);
+        return "command " + handle_command_impl(state, to_exec, glob, my_id, shared);
     }
 
     if(starts_with(str, client_chat))
     {
         std::string to_exec(str.begin() + client_chat.size(), str.end());
 
-        handle_command_impl(state, to_exec, glob, my_id);
+        handle_command_impl(state, to_exec, glob, my_id, shared);
 
         return "";
     }

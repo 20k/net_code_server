@@ -26,6 +26,7 @@ duk_ret_t db_find(duk_context* ctx);
 
 duk_ret_t db_remove(duk_context* ctx);
 
+duk_ret_t set_is_realtime_script(duk_context* ctx);
 duk_ret_t async_pipe(duk_context* ctx);
 
 void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack, shared_duk_worker_state* shared_state);

@@ -230,11 +230,26 @@ duk_ret_t db_remove(duk_context* ctx)
     return 0;
 }
 
+duk_ret_t set_is_realtime_script(duk_context* ctx)
+{
+    COOPERATE_KILL();
+
+    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(ctx);
+
+    shared_state->set_realtime();
+
+    return 0;
+}
+
 duk_ret_t async_pipe(duk_context* ctx)
 {
     COOPERATE_KILL();
 
+    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(ctx);
 
+    std::string str = duk_safe_to_std_string(ctx, -1);
+
+    shared_state->set_output_data(str);
 
     return 0;
 }
@@ -690,6 +705,7 @@ void register_funcs(duk_context* ctx, int seclevel)
 
     inject_c_function(ctx, timeout_yield, "timeout_yield",  0);
     inject_c_function(ctx, async_pipe, "async_pipe",  1);
+    inject_c_function(ctx, set_is_realtime_script, "set_is_realtime_script", 0);
 
     //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }

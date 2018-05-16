@@ -429,6 +429,12 @@ void free_shim_pointer(duk_context* ctx)
     delete ptr;
 }
 
+template<typename T>
+T* get_shared_worker_state_ptr(duk_context* ctx)
+{
+    return dukx_get_pointer<T>(ctx, "shared_caller_state");
+}
+
 inline
 std::string duk_safe_to_std_string(duk_context* ctx, duk_idx_t idx)
 {
