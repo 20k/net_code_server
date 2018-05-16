@@ -368,6 +368,32 @@ std::string get_script_ending(duk_context* ctx)
 }
 
 template<typename T>
+void dukx_put_pointer(duk_context* ctx, T* ptr, const std::string& key)
+{
+    duk_push_global_stash(ctx); ///[stash]
+
+    duk_push_pointer(ctx, (void*)ptr); ///[stash, pointer]
+
+    duk_put_prop_string(ctx, -2, key.c_str());
+
+    duk_pop(ctx);
+}
+
+template<typename T>
+T* dukx_get_pointer(duk_context* ctx, const std::string& key)
+{
+    duk_push_global_stash(ctx);
+
+    duk_get_prop_string(ctx, -1, key.c_str());
+
+    T* ptr = (T*)duk_get_pointer(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    return ptr;
+}
+
+template<typename T>
 T* get_shim_pointer(duk_context* ctx)
 {
     duk_push_global_stash(ctx);

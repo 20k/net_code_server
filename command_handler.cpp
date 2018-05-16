@@ -14,6 +14,7 @@
 #include <libncclient/nc_util.hpp>
 #include "rate_limiting.hpp"
 #include "privileged_core_scripts.hpp"
+#include "shared_duk_worker_state.hpp"
 
 struct unsafe_info
 {
@@ -111,7 +112,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
     usr.cleanup_call_stack(local_thread_id);
     std::string executing_under = usr.get_call_stack().back();
 
-    startup_state(sd.ctx, executing_under, executing_under, "invoke", usr.get_call_stack());
+    shared_duk_worker_state* shared_duk_state = new shared_duk_worker_state;
+
+    startup_state(sd.ctx, executing_under, executing_under, "invoke", usr.get_call_stack(), shared_duk_state);
 
     set_global_int(sd.ctx, "thread_id", local_thread_id);
 

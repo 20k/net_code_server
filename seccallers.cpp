@@ -4,6 +4,7 @@
 #include "rate_limiting.hpp"
 #include "unified_scripts.hpp"
 #include "privileged_core_scripts.hpp"
+#include "shared_duk_worker_state.hpp"
 
 int my_timeout_check(void* udata)
 {
@@ -238,7 +239,7 @@ duk_ret_t async_pipe(duk_context* ctx)
     return 0;
 }
 
-void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack)
+void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack, shared_duk_worker_state* shared_state)
 {
     duk_push_global_stash(ctx);
 
@@ -259,11 +260,17 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
     duk_push_int(ctx, 0);
     duk_put_prop_string(ctx, -2, "DB_ID");
 
+    dukx_put_pointer(ctx, shared_state, "shared_caller_state");
+
     duk_pop_n(ctx, 1);
 }
 
 void teardown_state(duk_context* ctx)
 {
+    shared_duk_worker_state* shared_state = dukx_get_pointer<shared_duk_worker_state>(ctx, "shared_caller_state");
+
+    delete shared_state;
+
     free_shim_pointer<shim_map_t>(ctx);
 }
 

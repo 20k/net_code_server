@@ -3,6 +3,8 @@
 
 #include "duk_object_functions.hpp"
 
+struct shared_duk_worker_state;
+
 int my_timeout_check(void* udata);
 
 duk_ret_t native_print(duk_context *ctx);
@@ -26,7 +28,7 @@ duk_ret_t db_remove(duk_context* ctx);
 
 duk_ret_t async_pipe(duk_context* ctx);
 
-void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack);
+void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack, shared_duk_worker_state* shared_state);
 
 void teardown_state(duk_context* ctx);
 
