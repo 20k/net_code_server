@@ -258,6 +258,10 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             std::atomic_bool request_going{false};
             std::atomic_bool request_finished{true};
 
+            ///finished last means did we execute the last element in the chain
+            ///so that we dont execute more than one whole sequence in a frame
+            std::atomic_bool finished_last{false};
+
             const double max_frame_time_ms = 16;
             const double max_allowed_frame_time_ms = 2; ///before we sleep for (max_frame - max_allowed)
             double current_frame_time_ms = 0;
@@ -272,12 +276,14 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                 current_frame_time_ms += dt_ms;
 
-                if(current_frame_time_ms >= max_allowed_frame_time_ms)
+                if(current_frame_time_ms >= max_allowed_frame_time_ms || finished_last)
                 {
                     ///THIS ISNT QUITE CORRECT
                     ///it makes the graphics programmer sad as frames will come out IRREGULARLY
                     ///needs to take into account the extra time we've elapsed for
                     double to_sleep = max_frame_time_ms - max_allowed_frame_time_ms;
+
+                    to_sleep = clamp(to_sleep, 0., 200.);
 
                     current_frame_time_ms = 0;
 
@@ -285,6 +291,12 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                     {
                         sleep_thread_for(thrd, to_sleep);
                     }
+                    else
+                    {
+                        Sleep(to_sleep);
+                    }
+
+                    finished_last = false;
                 }
 
                 ///ok
@@ -333,11 +345,13 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                             {
                                 inf.ret = duk_safe_to_std_string(sd.ctx, -1);
                                 request_finished = true;
+                                finished_last = true;
                                 return;
                             }
 
                             duk_pop(sd.ctx);
                             request_finished = true;
+                            finished_last = true;
                         });
                     }
                 }
