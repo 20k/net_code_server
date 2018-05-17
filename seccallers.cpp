@@ -264,7 +264,6 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
     quick_register_generic(ctx, "caller_stack", caller_stack);
     quick_register(ctx, "script_host", script_host.c_str());
     quick_register(ctx, "script_ending", script_ending.c_str());
-    quick_register(ctx, "async_pipe", "");
 
     {
         std::lock_guard guard(shim_lock);

@@ -187,6 +187,14 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
         double elapsed = dur.count();
 
+        ///you know
+        ///if we change db stuff to happen on a separate thread and spinlock
+        ///the worker trying to retrieve data
+        ///so that it can throw on a long calling db op
+        ///we could remove forceful thread termination and dear god my life
+        ///would become so much easier
+        ///maybe a structure with a thread pool to manage incoming db requests and
+        ///service them, which returns an event thing to wait on
         if(elapsed >= max_time_ms + db_grace_time_ms)
         {
             pthread_t thread = launch->native_handle();
@@ -231,56 +239,125 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         ///script finished calling
         ///should this be moved into a thread?
         ///answer: yes
+
+
+        ///hmm
+        ///hmmm
+        ///crap
+        ///so the way this wants to work:
+        ///overall a frame has xms to execute in client threadland
+        ///but we want to call both functions if applicable
+        ///so essentially, this thread needs to keep a clock, and after the total amount of available time is gone, it should sleep
         if(current_mode == script_management_mode::REALTIME)
         {
             double last_time = get_wall_time();
 
-            while(!sand_data->terminate_semi_gracefully)
-            {
-                printf("loop\n");
+            bool is_valid = !duk_is_undefined(sd.ctx, -1);
 
+            std::thread thrd;
+            std::atomic_bool request_going{false};
+            std::atomic_bool request_finished{true};
+
+            const double max_frame_time_ms = 16;
+            const double max_allowed_frame_time_ms = 2; ///before we sleep for (max_frame - max_allowed)
+            double current_frame_time_ms = 0;
+
+            double time_of_last_on_update = get_wall_time();
+
+            while(!sand_data->terminate_semi_gracefully && is_valid)
+            {
                 double next_time = get_wall_time();
                 double dt_ms = next_time - last_time;
                 last_time = next_time;
 
-                if(!duk_is_undefined(sd.ctx, -1))
+                current_frame_time_ms += dt_ms;
+
+                if(current_frame_time_ms >= max_allowed_frame_time_ms)
+                {
+                    ///THIS ISNT QUITE CORRECT
+                    ///it makes the graphics programmer sad as frames will come out IRREGULARLY
+                    ///needs to take into account the extra time we've elapsed for
+                    double to_sleep = max_frame_time_ms - max_allowed_frame_time_ms;
+
+                    current_frame_time_ms = 0;
+
+                    if(request_going)
+                    {
+                        sleep_thread_for(thrd, to_sleep);
+                    }
+                }
+
+                ///ok
+                ///only one request is allowed to run at a time by the laws of duktape
+                ///so. If we have a currently executing request
+                ///we give it a timeslice
+                ///otherwise we invoke the next request in the list
+                ///so
+                ///need to launch a request
+                ///then manage its runtime
+                if(!request_going)
                 {
                     if(duk_has_prop_string(sd.ctx, -1, "on_update"))
                     {
-                        duk_push_string(sd.ctx, "on_update");
-                        duk_push_number(sd.ctx, dt_ms);
+                        request_going = true;
 
-                        if(duk_pcall_prop(sd.ctx, -3, 1) != DUK_EXEC_SUCCESS)
+                        double cur_time = get_wall_time();
+                        double current_dt = cur_time - time_of_last_on_update;
+                        time_of_last_on_update = cur_time;
+
+                        thrd = std::thread([&sd, &inf, &request_finished, current_dt]()
                         {
-                            printf("ehere1\n");
+                            duk_push_string(sd.ctx, "on_update");
+                            duk_push_number(sd.ctx, current_dt);
 
-                            inf.ret = duk_safe_to_std_string(sd.ctx, -1);
-                            break;
-                        }
+                            if(duk_pcall_prop(sd.ctx, -3, 1) != DUK_EXEC_SUCCESS)
+                            {
+                                inf.ret = duk_safe_to_std_string(sd.ctx, -1);
+                                request_finished = true;
+                                return;
+                            }
 
-                        duk_pop(sd.ctx);
+                            duk_pop(sd.ctx);
+                            request_finished = true;
+                        });
                     }
-
-                    if(duk_has_prop_string(sd.ctx, -1, "on_draw"))
+                    else if(duk_has_prop_string(sd.ctx, -1, "on_draw"))
                     {
-                        duk_push_string(sd.ctx, "on_draw");
+                        request_going = true;
 
-                        if(duk_pcall_prop(sd.ctx, -2, 0) != DUK_EXEC_SUCCESS)
+                        thrd = std::thread([&]()
                         {
-                            printf("ehere\n");
+                            duk_push_string(sd.ctx, "on_draw");
 
-                            inf.ret = duk_safe_to_std_string(sd.ctx, -1);
-                            break;
-                        }
+                            if(duk_pcall_prop(sd.ctx, -2, 0) != DUK_EXEC_SUCCESS)
+                            {
+                                inf.ret = duk_safe_to_std_string(sd.ctx, -1);
+                                request_finished = true;
+                                return;
+                            }
 
-                        duk_pop(sd.ctx);
+                            duk_pop(sd.ctx);
+                            request_finished = true;
+                        });
                     }
                 }
-                else
-                {
-                    printf("leave here\n");
 
-                    break;
+                if(request_finished)
+                {
+                    request_finished = false;
+                    request_going = false;
+
+                    thrd.join();
+                }
+
+                if(shared_duk_state->has_output_data_available())
+                {
+                    std::string str = shared_duk_state->consume_output_data();
+
+                    if(shared_queue.has_value())
+                    {
+                        shared_queue.value()->add_back_write("command " + str);
+                    }
                 }
             }
 

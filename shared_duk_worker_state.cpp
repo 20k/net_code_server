@@ -26,9 +26,12 @@ std::string shared_duk_worker_state::consume_output_data()
         return "";
 
     has_output_data = false;
+
+    std::string ret = realtime_output_data;
+
     realtime_output_data = "";
 
-    return realtime_output_data;
+    return ret;
 }
 
 bool shared_duk_worker_state::has_output_data_available()
