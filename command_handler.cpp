@@ -255,6 +255,8 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
             while(!sand_data->terminate_semi_gracefully)
             {
+                printf("loop\n");
+
                 double next_time = get_wall_time();
                 double dt_ms = next_time - last_time;
                 last_time = next_time;
@@ -266,11 +268,15 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                         duk_push_string(sd.ctx, "on_update");
                         duk_push_number(sd.ctx, dt_ms);
 
-                        if(duk_pcall_prop(sd.ctx, -2, 1) != DUK_EXEC_SUCCESS)
+                        if(duk_pcall_prop(sd.ctx, -3, 1) != DUK_EXEC_SUCCESS)
                         {
-                            inf.ret = duk_json_encode(sd.ctx, -1);
+                            printf("ehere1\n");
+
+                            inf.ret = duk_safe_to_std_string(sd.ctx, -1);
                             break;
                         }
+
+                        duk_pop(sd.ctx);
                     }
 
                     if(duk_has_prop_string(sd.ctx, -1, "on_draw"))
@@ -279,13 +285,19 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                         if(duk_pcall_prop(sd.ctx, -2, 0) != DUK_EXEC_SUCCESS)
                         {
-                            inf.ret = duk_json_encode(sd.ctx, -1);
+                            printf("ehere\n");
+
+                            inf.ret = duk_safe_to_std_string(sd.ctx, -1);
                             break;
                         }
+
+                        duk_pop(sd.ctx);
                     }
                 }
                 else
                 {
+                    printf("leave here\n");
+
                     break;
                 }
             }
