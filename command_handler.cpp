@@ -214,24 +214,6 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         }
 
         Sleep(1);
-
-        /*if(current_mode == script_management_mode::REALTIME)
-        {
-            if(shared_duk_state->has_output_data_available())
-            {
-                std::string str = shared_duk_state->consume_output_data();
-
-                if(shared_queue.has_value())
-                {
-                    shared_queue.value()->add_back_write(str);
-                }
-            }
-
-            ///hmm
-            ///to call draw and update we'd have to guarantee that the script had terminated
-            ///so we could do that below
-            ///but we'd also need to still keep terminating etc as normal
-        }*/
     }
 
     if(shared_duk_state->is_realtime())
