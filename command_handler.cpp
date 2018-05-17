@@ -36,17 +36,21 @@ duk_ret_t unsafe_wrapper(duk_context* ctx, void* udata)
 
     info->ret = ret;
 
-    return 0;
+    return 1;
 }
 
 void managed_duktape_thread(unsafe_info* info)
 {
     if(duk_safe_call(info->ctx, unsafe_wrapper, (void*)info, 0, 1) != 0)
     {
+        duk_dup(info->ctx, -1);
+
         printf("Err in safe wrapper %s\n", duk_safe_to_string(info->ctx, -1));
+
+        duk_pop(info->ctx);
     }
 
-    duk_pop(info->ctx);
+    //duk_pop(info->ctx);
 
     info->finished = 1;
 }
@@ -66,6 +70,15 @@ struct cleanup_auth_at_exit
         to_cleanup[auth] = 0;
     }
 };
+
+namespace script_management_mode
+{
+    enum mode
+    {
+        DEFAULT,
+        REALTIME,
+    };
+}
 
 std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<shared_data*> shared_queue)
 {
@@ -141,6 +154,8 @@ std::string run_in_user_context(const std::string& username, const std::string& 
     int sleeping_time_slice_ms = 1;
     #endif // ACTIVE_TIME_MANAGEMENT
 
+    script_management_mode::mode current_mode = script_management_mode::DEFAULT;
+
     while(!inf.finished)
     {
         #ifdef ACTIVE_TIME_MANAGEMENT
@@ -190,12 +205,59 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         }
 
         Sleep(1);
+
+        /*if(current_mode == script_management_mode::REALTIME)
+        {
+            if(shared_duk_state->has_output_data_available())
+            {
+                std::string str = shared_duk_state->consume_output_data();
+
+                if(shared_queue.has_value())
+                {
+                    shared_queue.value()->add_back_write(str);
+                }
+            }
+
+            ///hmm
+            ///to call draw and update we'd have to guarantee that the script had terminated
+            ///so we could do that below
+            ///but we'd also need to still keep terminating etc as normal
+        }*/
+    }
+
+    if(shared_duk_state->is_realtime())
+    {
+        current_mode = script_management_mode::REALTIME;
+
+        printf("scooted into realtime mode\n");
     }
 
     if(inf.finished && !terminated)
     {
         launch->join();
         delete launch;
+
+        ///script finished calling
+        if(current_mode == script_management_mode::REALTIME)
+        {
+            /*duk_dup(sd.ctx, -1);
+            printf("hello %s\n", duk_json_encode(sd.ctx, -1));
+            duk_pop(sd.ctx);*/
+
+            ///inspect duktape return type
+            if(!duk_is_undefined(sd.ctx, -1))
+            {
+                if(duk_has_prop_string(sd.ctx, -1, "on_update"))
+                {
+                    printf("on update");
+                }
+
+                if(duk_has_prop_string(sd.ctx, -1, "on_draw"))
+                {
+                    printf("on draw");
+                }
+            }
+        }
     }
 
     if(terminated)

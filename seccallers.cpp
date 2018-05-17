@@ -612,6 +612,9 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
 
     //std::string ret = duk_json_encode(ctx, -1);
 
+    ///leave the last value on the stack
+    duk_dup(ctx, -1);
+
     std::string ret;
 
     if(duk_is_string(ctx, -1))
@@ -628,6 +631,8 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
             ret = "Bad Output, could not be JSON'd";
     }
 
+    ///probably done some gross things to the value on the stack
+    ///so we get rid of the duped one
     duk_pop(ctx);
 
     ret = extra + ret;
