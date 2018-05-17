@@ -422,7 +422,13 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                     if(shared_queue.has_value())
                     {
-                        shared_queue.value()->add_back_write("command " + str);
+                        using json = nlohmann::json;
+
+                        json j;
+                        j["id"] = current_id;
+                        j["msg"] = str;
+
+                        shared_queue.value()->add_back_write("command_realtime_json " + j.dump());
                     }
                 }
             }
