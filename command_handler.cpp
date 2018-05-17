@@ -250,6 +250,36 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         ///so essentially, this thread needs to keep a clock, and after the total amount of available time is gone, it should sleep
         if(current_mode == script_management_mode::REALTIME)
         {
+            int current_id = 0;
+
+            {
+                mongo_requester req;
+
+                mongo_lock_proxy mctx = get_global_mongo_global_properties_context(-2);
+
+                req.set_prop("worker_id_is_gid", 1);
+
+                auto found = req.fetch_from_db(mctx);
+
+                if(found.size() == 0)
+                {
+                    req.set_prop("worker_id_gid", 0);
+
+                    req.insert_in_db(mctx);
+                }
+                else
+                {
+                    current_id = found[0].get_prop_as_integer("worker_id_gid");
+
+                    mongo_requester to_set;
+                    to_set.set_prop("worker_id_gid", current_id+1);
+
+                    req.update_in_db_if_exact(mctx, to_set);
+                }
+
+                printf("%i cid\n", current_id);
+            }
+
             double last_time = get_wall_time();
 
             bool is_valid = !duk_is_undefined(sd.ctx, -1);
