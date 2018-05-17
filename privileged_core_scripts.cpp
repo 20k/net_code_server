@@ -126,8 +126,6 @@ double get_wall_time_s()
     return real_time;
 }
 
-
-
 duk_ret_t cash__balance(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();

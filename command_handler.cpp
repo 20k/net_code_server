@@ -80,6 +80,15 @@ namespace script_management_mode
     };
 }
 
+void sleep_thread_for(std::thread& t, int sleep_ms)
+{
+    pthread_t thread = t.native_handle();
+    void* native_handle = pthread_gethandle(thread);
+    SuspendThread(native_handle);
+    Sleep(sleep_ms);
+    ResumeThread(native_handle);
+}
+
 std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<shared_data*> shared_queue)
 {
     user usr;
@@ -238,13 +247,55 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         delete launch;
 
         ///script finished calling
+        ///should this be moved into a thread?
+        ///answer: yes
         if(current_mode == script_management_mode::REALTIME)
         {
+            double last_time = get_wall_time();
+
+            while(!sand_data->terminate_semi_gracefully)
+            {
+                double next_time = get_wall_time();
+                double dt_ms = next_time - last_time;
+                last_time = next_time;
+
+                if(!duk_is_undefined(sd.ctx, -1))
+                {
+                    if(duk_has_prop_string(sd.ctx, -1, "on_update"))
+                    {
+                        duk_push_string(sd.ctx, "on_update");
+                        duk_push_number(sd.ctx, dt_ms);
+
+                        if(duk_pcall_prop(sd.ctx, -2, 1) != DUK_EXEC_SUCCESS)
+                        {
+                            inf.ret = duk_json_encode(sd.ctx, -1);
+                            break;
+                        }
+                    }
+
+                    if(duk_has_prop_string(sd.ctx, -1, "on_draw"))
+                    {
+                        duk_push_string(sd.ctx, "on_draw");
+
+                        if(duk_pcall_prop(sd.ctx, -2, 0) != DUK_EXEC_SUCCESS)
+                        {
+                            inf.ret = duk_json_encode(sd.ctx, -1);
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+
             /*duk_dup(sd.ctx, -1);
             printf("hello %s\n", duk_json_encode(sd.ctx, -1));
             duk_pop(sd.ctx);*/
 
-            ///inspect duktape return type
+            /*///inspect duktape return type
             if(!duk_is_undefined(sd.ctx, -1))
             {
                 if(duk_has_prop_string(sd.ctx, -1, "on_update"))
@@ -256,7 +307,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                 {
                     printf("on draw");
                 }
-            }
+            }*/
         }
     }
 
