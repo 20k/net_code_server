@@ -268,6 +268,8 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
             double time_of_last_on_update = get_wall_time();
 
+            bool unshared_finished = false;
+
             while(!sand_data->terminate_semi_gracefully && is_valid)
             {
                 double next_time = get_wall_time();
@@ -276,14 +278,14 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                 current_frame_time_ms += dt_ms;
 
-                if(current_frame_time_ms >= max_allowed_frame_time_ms || finished_last)
+                if(current_frame_time_ms >= max_allowed_frame_time_ms || unshared_finished)
                 {
                     ///THIS ISNT QUITE CORRECT
                     ///it makes the graphics programmer sad as frames will come out IRREGULARLY
                     ///needs to take into account the extra time we've elapsed for
-                    double to_sleep = max_frame_time_ms - max_allowed_frame_time_ms;
+                    double to_sleep = max_frame_time_ms - current_frame_time_ms;
 
-                    to_sleep = clamp(to_sleep, 0., 200.);
+                    to_sleep = clamp(floor(to_sleep), 0., 200.);
 
                     current_frame_time_ms = 0;
 
@@ -296,7 +298,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                         Sleep(to_sleep);
                     }
 
-                    finished_last = false;
+                    unshared_finished = false;
+
+                    last_time = get_wall_time();
                 }
 
                 ///ok
@@ -317,7 +321,14 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                         double current_dt = cur_time - time_of_last_on_update;
                         time_of_last_on_update = cur_time;
 
-                        thrd = std::thread([&sd, &inf, &request_finished, current_dt]()
+                        bool is_last = false;
+
+                        if(!duk_has_prop_string(sd.ctx, -1, "on_draw"))
+                        {
+                            is_last = true;
+                        }
+
+                        thrd = std::thread([&sd, &inf, &request_finished, &finished_last, current_dt, is_last]()
                         {
                             duk_push_string(sd.ctx, "on_update");
                             duk_push_number(sd.ctx, current_dt);
@@ -325,11 +336,19 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                             if(duk_pcall_prop(sd.ctx, -3, 1) != DUK_EXEC_SUCCESS)
                             {
                                 inf.ret = duk_safe_to_std_string(sd.ctx, -1);
+
+                                if(is_last)
+                                    finished_last = true;
+
                                 request_finished = true;
                                 return;
                             }
 
                             duk_pop(sd.ctx);
+
+                            if(is_last)
+                                finished_last = true;
+
                             request_finished = true;
                         });
                     }
@@ -344,14 +363,14 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                             if(duk_pcall_prop(sd.ctx, -2, 0) != DUK_EXEC_SUCCESS)
                             {
                                 inf.ret = duk_safe_to_std_string(sd.ctx, -1);
-                                request_finished = true;
                                 finished_last = true;
+                                request_finished = true;
                                 return;
                             }
 
                             duk_pop(sd.ctx);
-                            request_finished = true;
                             finished_last = true;
+                            request_finished = true;
                         });
                     }
                 }
@@ -360,6 +379,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                 {
                     request_finished = false;
                     request_going = false;
+
+                    unshared_finished = finished_last;
+                    finished_last = false;
 
                     thrd.join();
                 }
@@ -374,25 +396,6 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                     }
                 }
             }
-
-
-            /*duk_dup(sd.ctx, -1);
-            printf("hello %s\n", duk_json_encode(sd.ctx, -1));
-            duk_pop(sd.ctx);*/
-
-            /*///inspect duktape return type
-            if(!duk_is_undefined(sd.ctx, -1))
-            {
-                if(duk_has_prop_string(sd.ctx, -1, "on_update"))
-                {
-                    printf("on update");
-                }
-
-                if(duk_has_prop_string(sd.ctx, -1, "on_draw"))
-                {
-                    printf("on draw");
-                }
-            }*/
         }
     }
 
