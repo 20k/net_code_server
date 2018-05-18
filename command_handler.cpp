@@ -104,7 +104,7 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
         {
             double current_dt = clk.restart().asMicroseconds() / 1000.;
 
-            std::cout << " dt " << current_dt << std::endl;
+            //std::cout << " dt " << current_dt << std::endl;
 
             duk_push_string(ctx, "on_update");
             duk_push_number(ctx, current_dt);
@@ -148,7 +148,7 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
 
         while(!fedback)
         {
-            Sleep(1);
+            std::this_thread::yield();
         }
 
         fedback = false;
@@ -403,7 +403,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                     current_frame_time_ms += dt_ms;
 
-                    if(current_frame_time_ms >= max_allowed_frame_time_ms || request_long_sleep)
+                    bool long_sleep_requested = request_long_sleep;
+
+                    if(current_frame_time_ms >= max_allowed_frame_time_ms || long_sleep_requested)
                     {
                         ///THIS ISNT QUITE CORRECT
                         ///it makes the graphics programmer sad as frames will come out IRREGULARLY
@@ -414,11 +416,18 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                         current_frame_time_ms = 0;
 
+                        //sf::Clock slept_for;
+
                         sleep_thread_for(thrd, to_sleep);
 
-                        request_long_sleep = false;
+                        //std::cout << "slept for " << slept_for.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
-                        fedback = true;
+                        if(long_sleep_requested)
+                        {
+                            request_long_sleep = false;
+
+                            fedback = true;
+                        }
                     }
 
                     if(shared_duk_state->has_output_data_available())
