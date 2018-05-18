@@ -249,6 +249,9 @@ duk_ret_t async_pipe(duk_context* ctx)
 
     std::string str = duk_safe_to_std_string(ctx, -1);
 
+    if(str.size() > 100*100)
+        str.resize(100*100);
+
     shared_state->set_output_data(str);
 
     return 0;

@@ -331,6 +331,8 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         printf("scooted into realtime mode\n");
     }
 
+    bool launched_realtime = false;
+
     if(inf.finished && !terminated)
     {
         launch->join();
@@ -348,9 +350,11 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         ///overall a frame has xms to execute in client threadland
         ///but we want to call both functions if applicable
         ///so essentially, this thread needs to keep a clock, and after the total amount of available time is gone, it should sleep
-        if(current_mode == script_management_mode::REALTIME && state.has_value() && shared_queue.has_value())
+        if(current_mode == script_management_mode::REALTIME && state.has_value() && shared_queue.has_value() && !sand_data->terminate_semi_gracefully)
         {
             state.value()->number_of_realtime_scripts++;
+
+            launched_realtime = true;
 
             int current_id = 0;
 
@@ -413,7 +417,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                 std::thread thrd = std::thread(async_realtime_script_handler, sd.ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf.ret),
                                                std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id);
 
-                while(!sand_data->terminate_semi_gracefully && !state.value()->should_terminate_any_realtime)
+                while(!state.value()->should_terminate_any_realtime)
                 {
                     /*std::string unprocessed_keystrokes;
 
@@ -428,8 +432,6 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                     /*double next_time = get_wall_time();
                     double dt_ms = next_time - last_time;
                     last_time = next_time;*/
-
-                    //std::cout <<" asdfasdf\n";
 
                     double dt_ms = clk.restart().asMicroseconds() / 1000.;
 
@@ -488,6 +490,8 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                     Sleep(1);
                 }
 
+                fedback = true;
+
                 thrd.join();
 
                 while(!terminated)
@@ -528,8 +532,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
     printf("cleaned up unsafe\n");
 
 
-
-    if(current_mode == script_management_mode::REALTIME && state.has_value())
+    if(launched_realtime)
     {
         state.value()->number_of_realtime_scripts_terminated++;
     }
