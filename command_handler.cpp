@@ -92,13 +92,45 @@ void sleep_thread_for(std::thread& t, int sleep_ms)
 }
 
 void async_realtime_script_handler(duk_context* ctx, shared_data& shared, command_handler_state& state, double& time_of_last_on_update, std::string& ret,
-                                   std::atomic_bool& terminated, std::atomic_bool& request_long_sleep, std::atomic_bool& fedback)
+                                   std::atomic_bool& terminated, std::atomic_bool& request_long_sleep, std::atomic_bool& fedback, int current_id)
 {
     sf::Clock clk;
 
     while(!state.should_terminate_any_realtime)
     {
         bool any = false;
+
+        std::string unprocessed_keystrokes;
+
+        {
+            std::lock_guard guard(state.lock);
+
+            unprocessed_keystrokes = state.unprocessed_keystrokes[current_id];
+
+            state.unprocessed_keystrokes[current_id].clear();
+        }
+
+        if(duk_has_prop_string(ctx, -1, "on_input"))
+        {
+            while(unprocessed_keystrokes.size() > 0)
+            {
+                std::string c = std::string(1, unprocessed_keystrokes[0]);
+                unprocessed_keystrokes.erase(unprocessed_keystrokes.begin());
+
+                duk_push_string(ctx, "on_input");
+                duk_push_string(ctx, c.c_str());
+
+                if(duk_pcall_prop(ctx, -3, 1) != DUK_EXEC_SUCCESS)
+                {
+                    ret = duk_safe_to_std_string(ctx, -1);
+                    break;
+                }
+
+                duk_pop(ctx);
+            }
+
+            ///DONT SET ANY
+        }
 
         if(duk_has_prop_string(ctx, -1, "on_update"))
         {
@@ -379,7 +411,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                 std::atomic_bool request_long_sleep{false};
 
                 std::thread thrd = std::thread(async_realtime_script_handler, sd.ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf.ret),
-                                               std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback));
+                                               std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id);
 
                 while(!sand_data->terminate_semi_gracefully && !state.value()->should_terminate_any_realtime)
                 {
