@@ -172,6 +172,8 @@ void read_queue(socket_interface& socket,
 
     }
 
+    state.should_terminate_any_realtime = true;
+
     shared.should_terminate = true;
 
     socket.shutdown();
@@ -260,7 +262,7 @@ void thread_session(
     std::thread(write_queue, std::ref(*msock), std::ref(glob), my_id, std::ref(shared), conn_type).detach();
 
     ///3rd thread is the js exec context
-    while(shared.termination_count != 3)
+    while(shared.termination_count != 3 || state.number_of_realtime_scripts_terminated != state.number_of_realtime_scripts)
     {
         Sleep(500);
     }

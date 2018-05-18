@@ -9,6 +9,8 @@
 #include "seccallers.hpp"
 
 struct shared_data;
+struct command_handler_state;
+struct global_state;
 
 inline
 void init_js_interop(stack_duk& sd, const std::string& js_data)
@@ -17,7 +19,7 @@ void init_js_interop(stack_duk& sd, const std::string& js_data)
 }
 
 ///shared queue used for async responses from servers
-std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<shared_data*> shared_queue);
+std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<shared_data*> shared_queue, std::optional<command_handler_state*> state);
 void throwaway_user_thread(const std::string& username, const std::string& command);
 
 struct command_handler_state
@@ -27,11 +29,11 @@ struct command_handler_state
     user current_user;
 
     std::string auth;
+
+    std::atomic_bool should_terminate_any_realtime{false};
+    std::atomic_int number_of_realtime_scripts{0};
+    std::atomic_int number_of_realtime_scripts_terminated{0};
 };
-
-struct global_state;
-
-struct shared_data;
 
 ///context?
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id, shared_data& shared);

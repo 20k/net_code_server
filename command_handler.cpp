@@ -89,7 +89,7 @@ void sleep_thread_for(std::thread& t, int sleep_ms)
     ResumeThread(native_handle);
 }
 
-std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<shared_data*> shared_queue)
+std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<shared_data*> shared_queue, std::optional<command_handler_state*> state)
 {
     user usr;
 
@@ -248,7 +248,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         ///overall a frame has xms to execute in client threadland
         ///but we want to call both functions if applicable
         ///so essentially, this thread needs to keep a clock, and after the total amount of available time is gone, it should sleep
-        if(current_mode == script_management_mode::REALTIME)
+        if(current_mode == script_management_mode::REALTIME && state.has_value())
         {
             int current_id = 0;
 
@@ -300,7 +300,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
             bool unshared_finished = false;
 
-            while(!sand_data->terminate_semi_gracefully && is_valid)
+            while(!sand_data->terminate_semi_gracefully && is_valid && !state.value()->should_terminate_any_realtime)
             {
                 double next_time = get_wall_time();
                 double dt_ms = next_time - last_time;
@@ -432,6 +432,13 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                     }
                 }
             }
+
+            printf("Ended realtime\n");
+
+            /*if(state.value()->should_terminate_any_realtime)
+            {
+                state.value()->number_of_realtime_scripts_terminated
+            }*/
         }
     }
 
@@ -469,7 +476,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
 void throwaway_user_thread(const std::string& username, const std::string& command)
 {
-    std::thread(run_in_user_context, username, command, std::nullopt).detach();
+    std::thread(run_in_user_context, username, command, std::nullopt, std::nullopt).detach();
 }
 
 std::string binary_to_hex(const std::string& in, bool swap_endianness)
@@ -555,9 +562,9 @@ std::string hex_to_binary(const std::string& in)
 
 void on_create_user(user& usr)
 {
-    run_in_user_context(usr.name, "#msg.manage({join:\"0000\"})", std::nullopt);
-    run_in_user_context(usr.name, "#msg.manage({join:\"7001\"})", std::nullopt);
-    run_in_user_context(usr.name, "#msg.manage({join:\"memes\"})", std::nullopt);
+    run_in_user_context(usr.name, "#msg.manage({join:\"0000\"})", std::nullopt, std::nullopt);
+    run_in_user_context(usr.name, "#msg.manage({join:\"7001\"})", std::nullopt, std::nullopt);
+    run_in_user_context(usr.name, "#msg.manage({join:\"memes\"})", std::nullopt, std::nullopt);
 
     {
         mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
@@ -1352,7 +1359,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                 return "No account or not logged in";
         }
 
-        return run_in_user_context(state.current_user.name, str, &shared);
+        return run_in_user_context(state.current_user.name, str, &shared, &state);
     }
 
     return make_error_col("Command Not Found or Unimplemented");
