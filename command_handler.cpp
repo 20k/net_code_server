@@ -16,6 +16,8 @@
 #include "privileged_core_scripts.hpp"
 #include "shared_duk_worker_state.hpp"
 #include "shared_data.hpp"
+#include <atomic>
+#include <SFML/System.hpp>
 
 struct unsafe_info
 {
@@ -87,6 +89,72 @@ void sleep_thread_for(std::thread& t, int sleep_ms)
     SuspendThread(native_handle);
     Sleep(sleep_ms);
     ResumeThread(native_handle);
+}
+
+void async_realtime_script_handler(duk_context* ctx, shared_data& shared, command_handler_state& state, double& time_of_last_on_update, std::string& ret,
+                                   std::atomic_bool& terminated, std::atomic_bool& request_long_sleep, std::atomic_bool& fedback)
+{
+    sf::Clock clk;
+
+    while(!state.should_terminate_any_realtime)
+    {
+        bool any = false;
+
+        if(duk_has_prop_string(ctx, -1, "on_update"))
+        {
+            double current_dt = clk.restart().asMicroseconds() / 1000.;
+
+            std::cout << " dt " << current_dt << std::endl;
+
+            duk_push_string(ctx, "on_update");
+            duk_push_number(ctx, current_dt);
+
+            if(duk_pcall_prop(ctx, -3, 1) != DUK_EXEC_SUCCESS)
+            {
+                ret = duk_safe_to_std_string(ctx, -1);
+                break;
+            }
+
+            duk_pop(ctx);
+
+            if(!duk_has_prop_string(ctx, -1, "on_draw"))
+            {
+                request_long_sleep = true;
+            }
+
+            any = true;
+        }
+
+        if(duk_has_prop_string(ctx, -1, "on_draw"))
+        {
+            duk_push_string(ctx, "on_draw");
+
+            if(duk_pcall_prop(ctx, -2, 0) != DUK_EXEC_SUCCESS)
+            {
+                ret = duk_safe_to_std_string(ctx, -1);
+                break;
+            }
+
+            duk_pop(ctx);
+            request_long_sleep = true;
+
+            any = true;
+        }
+
+        if(!any)
+        {
+            request_long_sleep = true;
+        }
+
+        while(!fedback)
+        {
+            Sleep(1);
+        }
+
+        fedback = false;
+    }
+
+    terminated = true;
 }
 
 std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<shared_data*> shared_queue, std::optional<command_handler_state*> state)
@@ -248,7 +316,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         ///overall a frame has xms to execute in client threadland
         ///but we want to call both functions if applicable
         ///so essentially, this thread needs to keep a clock, and after the total amount of available time is gone, it should sleep
-        if(current_mode == script_management_mode::REALTIME && state.has_value())
+        if(current_mode == script_management_mode::REALTIME && state.has_value() && shared_queue.has_value())
         {
             state.value()->number_of_realtime_scripts++;
 
@@ -282,13 +350,13 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                 printf("%i cid\n", current_id);
             }
 
-            double last_time = get_wall_time();
+            //double last_time = get_wall_time();
 
             bool is_valid = !duk_is_undefined(sd.ctx, -1);
 
-            std::thread thrd;
             std::atomic_bool request_going{false};
             std::atomic_bool request_finished{true};
+            std::atomic_bool fedback{false};
 
             ///finished last means did we execute the last element in the chain
             ///so that we dont execute more than one whole sequence in a frame
@@ -300,138 +368,90 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
             double time_of_last_on_update = get_wall_time();
 
-            bool unshared_finished = false;
+            sf::Clock clk;
 
-            while(!sand_data->terminate_semi_gracefully && is_valid && !state.value()->should_terminate_any_realtime)
+            if(is_valid)
             {
-                double next_time = get_wall_time();
-                double dt_ms = next_time - last_time;
-                last_time = next_time;
+                command_handler_state& cstate = *state.value();
+                shared_data& cqueue = *shared_queue.value();
 
-                current_frame_time_ms += dt_ms;
+                std::atomic_bool terminated{false};
+                std::atomic_bool request_long_sleep{false};
 
-                if(current_frame_time_ms >= max_allowed_frame_time_ms || unshared_finished)
+                std::thread thrd = std::thread(async_realtime_script_handler, sd.ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf.ret),
+                                               std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback));
+
+                while(!sand_data->terminate_semi_gracefully && !state.value()->should_terminate_any_realtime)
                 {
-                    ///THIS ISNT QUITE CORRECT
-                    ///it makes the graphics programmer sad as frames will come out IRREGULARLY
-                    ///needs to take into account the extra time we've elapsed for
-                    double to_sleep = max_frame_time_ms - current_frame_time_ms;
+                    /*std::string unprocessed_keystrokes;
 
-                    to_sleep = clamp(floor(to_sleep), 0., 200.);
-
-                    current_frame_time_ms = 0;
-
-                    if(request_going)
                     {
+                        std::lock_guard guard(state.value()->lock);
+
+                        unprocessed_keystrokes = state.value()->unprocessed_keystrokes[current_id];
+
+                        state.value()->unprocessed_keystrokes[current_id].clear();
+                    }*/
+
+                    /*double next_time = get_wall_time();
+                    double dt_ms = next_time - last_time;
+                    last_time = next_time;*/
+
+                    //std::cout <<" asdfasdf\n";
+
+                    double dt_ms = clk.restart().asMicroseconds() / 1000.;
+
+                    current_frame_time_ms += dt_ms;
+
+                    if(current_frame_time_ms >= max_allowed_frame_time_ms || request_long_sleep)
+                    {
+                        ///THIS ISNT QUITE CORRECT
+                        ///it makes the graphics programmer sad as frames will come out IRREGULARLY
+                        ///needs to take into account the extra time we've elapsed for
+                        double to_sleep = max_frame_time_ms - max_allowed_frame_time_ms;
+
+                        to_sleep = clamp(floor(to_sleep), 0., 200.);
+
+                        current_frame_time_ms = 0;
+
                         sleep_thread_for(thrd, to_sleep);
+
+                        request_long_sleep = false;
+
+                        fedback = true;
                     }
-                    else
+
+                    if(shared_duk_state->has_output_data_available())
                     {
-                        Sleep(to_sleep);
-                    }
+                        std::string str = shared_duk_state->consume_output_data();
 
-                    unshared_finished = false;
-
-                    last_time = get_wall_time();
-                }
-
-                ///ok
-                ///only one request is allowed to run at a time by the laws of duktape
-                ///so. If we have a currently executing request
-                ///we give it a timeslice
-                ///otherwise we invoke the next request in the list
-                ///so
-                ///need to launch a request
-                ///then manage its runtime
-                if(!request_going)
-                {
-                    if(duk_has_prop_string(sd.ctx, -1, "on_update"))
-                    {
-                        request_going = true;
-
-                        double cur_time = get_wall_time();
-                        double current_dt = cur_time - time_of_last_on_update;
-                        time_of_last_on_update = cur_time;
-
-                        bool is_last = false;
-
-                        if(!duk_has_prop_string(sd.ctx, -1, "on_draw"))
+                        if(shared_queue.has_value())
                         {
-                            is_last = true;
+                            try
+                            {
+                                using json = nlohmann::json;
+
+                                json j;
+                                j["id"] = current_id;
+                                j["msg"] = str;
+
+                                shared_queue.value()->add_back_write("command_realtime_json " + j.dump());
+                            }
+                            catch(...)
+                            {
+
+                            }
                         }
-
-                        thrd = std::thread([&sd, &inf, &request_finished, &finished_last, current_dt, is_last]()
-                        {
-                            duk_push_string(sd.ctx, "on_update");
-                            duk_push_number(sd.ctx, current_dt);
-
-                            if(duk_pcall_prop(sd.ctx, -3, 1) != DUK_EXEC_SUCCESS)
-                            {
-                                inf.ret = duk_safe_to_std_string(sd.ctx, -1);
-
-                                if(is_last)
-                                    finished_last = true;
-
-                                request_finished = true;
-                                return;
-                            }
-
-                            duk_pop(sd.ctx);
-
-                            if(is_last)
-                                finished_last = true;
-
-                            request_finished = true;
-                        });
                     }
-                    else if(duk_has_prop_string(sd.ctx, -1, "on_draw"))
-                    {
-                        request_going = true;
 
-                        thrd = std::thread([&]()
-                        {
-                            duk_push_string(sd.ctx, "on_draw");
-
-                            if(duk_pcall_prop(sd.ctx, -2, 0) != DUK_EXEC_SUCCESS)
-                            {
-                                inf.ret = duk_safe_to_std_string(sd.ctx, -1);
-                                finished_last = true;
-                                request_finished = true;
-                                return;
-                            }
-
-                            duk_pop(sd.ctx);
-                            finished_last = true;
-                            request_finished = true;
-                        });
-                    }
+                    Sleep(1);
                 }
 
-                if(request_finished)
+                thrd.join();
+
+                while(!terminated)
                 {
-                    request_finished = false;
-                    request_going = false;
 
-                    unshared_finished = finished_last;
-                    finished_last = false;
-
-                    thrd.join();
-                }
-
-                if(shared_duk_state->has_output_data_available())
-                {
-                    std::string str = shared_duk_state->consume_output_data();
-
-                    if(shared_queue.has_value())
-                    {
-                        using json = nlohmann::json;
-
-                        json j;
-                        j["id"] = current_id;
-                        j["msg"] = str;
-
-                        shared_queue.value()->add_back_write("command_realtime_json " + j.dump());
-                    }
                 }
             }
 
