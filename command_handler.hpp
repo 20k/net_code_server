@@ -28,6 +28,8 @@ struct command_handler_state
 
     user current_user;
 
+    std::map<int, std::string> unprocessed_keystrokes;
+
     std::string auth;
 
     std::atomic_bool should_terminate_any_realtime{false};

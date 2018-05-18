@@ -5,6 +5,7 @@
 #include "shared_data.hpp"
 #include "logging.hpp"
 #include <libncclient/nc_util.hpp>
+#include <json/json.hpp>
 
 //
 // Copyright (c) 2016-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
@@ -114,6 +115,43 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
     {
         state.should_terminate_any_realtime = true;
         return true;
+    }
+
+    std::string kstr = "client_script_keystrokes ";
+
+    if(starts_with(str, kstr))
+    {
+        try
+        {
+            using nlohmann::json;
+
+            std::string to_parse(str.begin() + kstr.size(), str.end());
+
+            json j = json::parse(to_parse);
+
+            int id = j["id"];
+            std::string str = j["keys"];
+
+            if(str.size() > 10)
+                return true;
+
+            {
+                std::lock_guard guard(state.lock);
+
+                state.unprocessed_keystrokes[id] += str;
+
+                while(state.unprocessed_keystrokes[id].size() > 200)
+                {
+                    state.unprocessed_keystrokes[id].erase(state.unprocessed_keystrokes[id].begin());
+                }
+            }
+
+            return true;
+        }
+        catch(...)
+        {
+            return true;
+        }
     }
 
     return false;
