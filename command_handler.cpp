@@ -250,6 +250,8 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         ///so essentially, this thread needs to keep a clock, and after the total amount of available time is gone, it should sleep
         if(current_mode == script_management_mode::REALTIME && state.has_value())
         {
+            state.value()->number_of_realtime_scripts++;
+
             int current_id = 0;
 
             {
@@ -468,6 +470,13 @@ std::string run_in_user_context(const std::string& username, const std::string& 
     }
 
     printf("cleaned up unsafe\n");
+
+
+
+    if(current_mode == script_management_mode::REALTIME && state.has_value())
+    {
+        state.value()->number_of_realtime_scripts_terminated++;
+    }
 
     std::string ret = inf.ret;
 
