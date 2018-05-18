@@ -108,6 +108,17 @@ void async_command_handler(shared_data& shared, command_handler_state& state, st
     shared.termination_count++;
 }
 
+bool handle_termination_shortcircuit(command_handler_state& state, const std::string& str)
+{
+    if(str == "client_terminate_scripts")
+    {
+        state.should_terminate_any_realtime = true;
+        return true;
+    }
+
+    return false;
+}
+
 // Handles an HTTP server connection
 void read_queue(socket_interface& socket,
                 global_state& glob,
@@ -140,6 +151,9 @@ void read_queue(socket_interface& socket,
                 std::string next_command = socket.get_read();
 
                 lg::log(next_command);
+
+                if(handle_termination_shortcircuit(state, next_command))
+                   continue;
 
                 int len;
 
@@ -264,6 +278,11 @@ void thread_session(
     ///3rd thread is the js exec context
     while(shared.termination_count != 3 || state.number_of_realtime_scripts_terminated != state.number_of_realtime_scripts)
     {
+        if(state.number_of_realtime_scripts_terminated == state.number_of_realtime_scripts)
+        {
+            state.should_terminate_any_realtime = false;
+        }
+
         Sleep(500);
     }
 

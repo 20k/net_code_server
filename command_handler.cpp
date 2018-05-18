@@ -436,11 +436,6 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             }
 
             printf("Ended realtime\n");
-
-            /*if(state.value()->should_terminate_any_realtime)
-            {
-                state.value()->number_of_realtime_scripts_terminated
-            }*/
         }
     }
 
