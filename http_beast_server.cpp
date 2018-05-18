@@ -179,7 +179,7 @@ void read_queue(socket_interface& socket,
             if(shared.should_terminate)
                 break;
 
-            Sleep(50);
+            Sleep(4);
 
             //if(socket.available() > 0)
             {
@@ -263,7 +263,7 @@ void write_queue(socket_interface& socket,
             }
             else
             {
-                Sleep(50);
+                Sleep(1);
             }
 
             if(!socket.is_open())
