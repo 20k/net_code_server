@@ -238,8 +238,6 @@ duk_ret_t set_is_realtime_script(duk_context* ctx)
 
     shared_state->set_realtime();
 
-
-
     return 0;
 }
 
