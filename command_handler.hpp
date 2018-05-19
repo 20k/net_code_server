@@ -24,25 +24,55 @@ void throwaway_user_thread(const std::string& username, const std::string& comma
 
 struct command_handler_state
 {
+    std::mutex command_lock;
+
     std::mutex lock;
 
-    user current_user;
-
     std::map<int, std::string> unprocessed_keystrokes;
-
-    std::string auth;
 
     std::atomic_bool should_terminate_any_realtime{false};
     std::atomic_int number_of_realtime_scripts{0};
     std::atomic_int number_of_realtime_scripts_terminated{0};
 
     std::map<int, bool> should_terminate_realtime;
+
+    std::string get_auth()
+    {
+        std::lock_guard guard(command_lock);
+
+        return auth;
+    }
+
+    void set_auth(const std::string& str)
+    {
+        std::lock_guard guard(command_lock);
+
+        auth = str;
+    }
+
+    void set_user(const user& usr)
+    {
+        std::lock_guard guard(command_lock);
+
+        current_user = usr;
+    }
+
+    user get_user()
+    {
+        std::lock_guard guard(command_lock);
+
+        return current_user;
+    }
+
+private:
+    std::string auth;
+    user current_user;
 };
 
 ///context?
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id, shared_data& shared);
 
-std::string handle_autocompletes_json(user& usr, const std::string& in);
+std::string handle_autocompletes_json(const std::string& username, const std::string& in);
 
 std::string binary_to_hex(const std::string& in, bool swap_endianness = false);
 std::string hex_to_binary(const std::string& in);

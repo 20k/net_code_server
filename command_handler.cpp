@@ -895,9 +895,7 @@ std::string delete_user(command_handler_state& state, const std::string& str, bo
     {
 
         {
-            std::lock_guard guard(state.lock);
-
-            auth = state.auth;
+            auth = state.get_auth();
         }
 
         if(auth == "")
@@ -1045,7 +1043,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
 
     if(starts_with(str, "user "))
     {
-        if(state.auth == "")
+        if(state.get_auth() == "")
             return make_error_col("Please create account with \"register client\"");
 
         std::vector<std::string> split_string = no_ss_split(str, " ");
@@ -1066,17 +1064,20 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         {
             mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-            if(state.current_user.exists(mongo_user_info, user_name))
+            user fnd;
+
+            if(fnd.exists(mongo_user_info, user_name))
             {
                 user_exists = true;
 
-                state.current_user.load_from_db(mongo_user_info, user_name);
+                fnd.load_from_db(mongo_user_info, user_name);
 
-                if(state.current_user.auth != state.auth)
+                if(fnd.auth != state.get_auth())
                 {
-                    state.current_user = user();
                     return make_error_col("Incorrect Auth, someone else has registered this account or you are using a different pc and key.key file");
                 }
+
+                state.set_user(fnd);
             }
 
 
@@ -1111,7 +1112,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
                 mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
 
                 auth to_check;
-                to_check.load_from_db(mongo_ctx, state.auth);
+                to_check.load_from_db(mongo_ctx, state.get_auth());
 
                 if(!to_check.valid)
                     return make_error_col("Trying something sneaky eh?");
@@ -1124,13 +1125,13 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         }
         else
         {
-            state.current_user = user();
+            state.set_user(user());
 
             {
                 mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
 
                 auth to_check;
-                to_check.load_from_db(mongo_ctx, state.auth);
+                to_check.load_from_db(mongo_ctx, state.get_auth());
 
                 if(!to_check.valid)
                     return make_error_col("Trying something sneaky eh 2?");
@@ -1151,12 +1152,20 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             {
                 mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-                state.current_user.construct_new_user(mongo_user_info, user_name, state.auth);
-                state.current_user.load_from_db(mongo_user_info, user_name);
-                state.current_user.overwrite_user_in_db(mongo_user_info);
+                user new_user;
+
+                new_user.construct_new_user(mongo_user_info, user_name, state.get_auth());
+                new_user.load_from_db(mongo_user_info, user_name);
+                new_user.overwrite_user_in_db(mongo_user_info);
+
+                state.set_user(new_user);
             }
 
-            on_create_user(state.current_user);
+            user cur = state.get_user();
+
+            on_create_user(cur);
+
+            state.set_user(cur);
 
             return make_success_col("Constructed new User");
         }
@@ -1167,7 +1176,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
     }
     else if(starts_with(str, "#up ") || starts_with(str, "#dry ") || starts_with(str, "#up_es6 "))
     {
-        if(state.auth == "")
+        if(state.get_auth() == "")
             return make_error_col("No Auth");
 
         std::vector<std::string> split_string = no_ss_split(str, " ");
@@ -1184,7 +1193,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
 
         std::string scriptname = strip_whitespace(split_string[1]);
 
-        std::string fullname = state.current_user.name + "." + scriptname;
+        std::string fullname = state.get_user().name + "." + scriptname;
 
         if(!is_valid_full_name_string(fullname))
         {
@@ -1242,7 +1251,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             {
                 mongo_lock_proxy user_locks = get_global_mongo_user_info_context(-2);
 
-                cur.load_from_db(user_locks, state.current_user.name);
+                cur.load_from_db(user_locks, state.get_user().name);
             }
 
             std::map<std::string, double> user_details;
@@ -1273,7 +1282,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
     }
     else if(starts_with(str, "#remove "))
     {
-        if(state.auth == "")
+        if(state.get_auth() == "")
             return make_error_col("No Auth");
 
         std::vector<std::string> split_string = no_ss_split(str, " ");
@@ -1285,7 +1294,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
 
         std::string scriptname = strip_whitespace(split_string[1]);
 
-        std::string fullname = state.current_user.name + "." + scriptname;
+        std::string fullname = state.get_user().name + "." + scriptname;
 
         if(!is_valid_full_name_string(fullname))
             return make_error_col("Invalid script name " + fullname);
@@ -1294,7 +1303,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
             script_info script_inf;
-            script_inf.name = state.current_user.name + "." + scriptname;
+            script_inf.name = state.get_user().name + "." + scriptname;
 
             if(!script_inf.exists_in_db(mongo_ctx))
                 return make_error_col("Script not found");
@@ -1309,7 +1318,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
     }
     else if(starts_with(str, "#public ") || starts_with(str, "#private "))
     {
-        if(state.auth == "")
+        if(state.get_auth() == "")
             return make_error_col("No Auth");
 
         int in_public_state = starts_with(str, "#public ");
@@ -1323,7 +1332,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
 
         std::string scriptname = strip_whitespace(split_string[1]);
 
-        std::string fullname = state.current_user.name + "." + scriptname;
+        std::string fullname = state.get_user().name + "." + scriptname;
 
         if(!is_valid_full_name_string(fullname))
             return make_error_col("Invalid script name " + fullname);
@@ -1332,7 +1341,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
             mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
             script_info script_inf;
-            script_inf.name = state.current_user.name + "." + scriptname;
+            script_inf.name = state.get_user().name + "." + scriptname;
 
             if(!script_inf.exists_in_db(mongo_ctx))
                 return make_error_col("Script not found");
@@ -1360,7 +1369,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
         request.insert_in_db(ctx);
 
-        state.auth = to_ret;
+        state.set_auth(to_ret);
 
         if(starts_with(str, "register client_hex"))
         {
@@ -1402,7 +1411,7 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         if(request.fetch_from_db(ctx).size() == 0)
             return make_error_col("Auth Failed, have you run \"register client\" at least once?");
 
-        state.auth = auth_token;
+        state.set_auth(auth_token);
 
         auth user_auth;
 
@@ -1435,11 +1444,11 @@ std::string handle_command_impl(command_handler_state& state, const std::string&
         {
             mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-            if(!state.current_user.exists(mongo_user_info, state.current_user.name))
+            if(!user().exists(mongo_user_info, state.get_user().name))
                 return "No account or not logged in";
         }
 
-        return run_in_user_context(state.current_user.name, str, &shared, &state);
+        return run_in_user_context(state.get_user().name, str, &shared, &state);
     }
 
     return make_error_col("Command Not Found or Unimplemented");
@@ -1605,7 +1614,7 @@ std::string handle_client_poll_json(user& usr)
 
 ///needs to handle script bundles
 ///use unified script loading
-std::optional<std::vector<script_arg>> get_uniform_script_args(user& usr, const std::string& script)
+std::optional<std::vector<script_arg>> get_uniform_script_args(const std::string& script)
 {
     if(privileged_args.find(script) != privileged_args.end())
     {
@@ -1632,7 +1641,7 @@ std::optional<std::vector<script_arg>> get_uniform_script_args(user& usr, const 
     return args;
 }
 
-std::string handle_autocompletes(user& usr, const std::string& in)
+std::string handle_autocompletes(const std::string& username, const std::string& in)
 {
     std::vector<std::string> dat = no_ss_split(in, " ");
 
@@ -1644,10 +1653,10 @@ std::string handle_autocompletes(user& usr, const std::string& in)
     if(!is_valid_full_name_string(script))
         return "server_scriptargs_invalid " + script;
 
-    if(SHOULD_RATELIMIT(usr.name, AUTOCOMPLETES))
+    if(SHOULD_RATELIMIT(username, AUTOCOMPLETES))
         return "server_scriptargs_ratelimit " + script;
 
-    auto opt_arg = get_uniform_script_args(usr, script);
+    auto opt_arg = get_uniform_script_args(script);
 
     if(!opt_arg.has_value())
         return "server_scriptargs_invalid " + script;
@@ -1670,7 +1679,7 @@ std::string handle_autocompletes(user& usr, const std::string& in)
     return intro + ret;
 }
 
-std::string handle_autocompletes_json(user& usr, const std::string& in)
+std::string handle_autocompletes_json(const std::string& username, const std::string& in)
 {
     std::vector<std::string> dat = no_ss_split(in, " ");
 
@@ -1687,10 +1696,10 @@ std::string handle_autocompletes_json(user& usr, const std::string& in)
     if(!is_valid_full_name_string(script))
         return "server_scriptargs_invalid_json " + obj.dump();
 
-    if(SHOULD_RATELIMIT(usr.name, AUTOCOMPLETES))
+    if(SHOULD_RATELIMIT(username, AUTOCOMPLETES))
         return "server_scriptargs_ratelimit_json " + obj.dump();
 
-    auto opt_arg = get_uniform_script_args(usr, script);
+    auto opt_arg = get_uniform_script_args(script);
 
     if(!opt_arg.has_value())
         return "server_scriptargs_invalid_json " + obj.dump();
@@ -1726,6 +1735,9 @@ std::string handle_command(command_handler_state& state, const std::string& str,
     std::string client_scriptargs = "client_scriptargs ";
     std::string client_scriptargs_json = "client_scriptargs_json ";
 
+    std::string current_user = state.get_user().name;
+    std::string current_auth = state.get_auth();
+
     if(starts_with(str, client_command))
     {
         std::string to_exec(str.begin() + client_command.size(), str.end());
@@ -1743,40 +1755,62 @@ std::string handle_command(command_handler_state& state, const std::string& str,
     }
 
     ///matches both client poll and json
+
+    ///this path specifically may be called in parallel with the other parts
+    ///hence the current user guard
     if(starts_with(str, client_poll))
     {
-        if(state.auth == "" || state.current_user.name == "")
+        if(current_auth == "" || current_user == "")
             return "";
 
         {
             mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-            if(!state.current_user.exists(mongo_user_info, state.current_user.name))
+            if(!state.get_user().exists(mongo_user_info, current_user))
                 return "";
 
-            state.current_user.load_from_db(mongo_user_info, state.current_user.name);
+            //state.current_user.load_from_db(mongo_user_info, state.current_user.name);
+
+            user u1;
+            u1.load_from_db(mongo_user_info, current_user);
+
+            state.set_user(u1);
         }
 
+        user cur = state.get_user();
+
         if(starts_with(str, client_poll_json))
-            return handle_client_poll_json(state.current_user);
+        {
+             auto ret = handle_client_poll_json(cur);
+
+             state.set_user(cur);
+
+             return ret;
+        }
         if(starts_with(str, client_poll))
-            return handle_client_poll(state.current_user);
+        {
+            auto ret = handle_client_poll(cur);
+
+            state.set_user(cur);
+
+            return ret;
+        }
     }
 
     if(starts_with(str, client_scriptargs))
     {
-        if(state.auth == "" || state.current_user.name == "")
+        if(current_auth == "" || current_user == "")
             return "";
 
-        return handle_autocompletes(state.current_user, str);
+        return handle_autocompletes(current_user, str);
     }
 
     if(starts_with(str, client_scriptargs_json))
     {
-        if(state.auth == "" || state.current_user.name == "")
+        if(current_auth == "" || current_user == "")
             return "";
 
-        return handle_autocompletes_json(state.current_user, str);
+        return handle_autocompletes_json(current_user, str);
     }
 
     return "command Command not understood";
