@@ -475,6 +475,8 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                             //std::cout << "slept for " << slept_for.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
+                            clk.restart();
+
                             if(long_sleep_requested)
                             {
                                 request_long_sleep = false;
