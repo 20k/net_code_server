@@ -339,18 +339,6 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         launch->join();
         delete launch;
 
-        ///script finished calling
-        ///should this be moved into a thread?
-        ///answer: yes
-
-
-        ///hmm
-        ///hmmm
-        ///crap
-        ///so the way this wants to work:
-        ///overall a frame has xms to execute in client threadland
-        ///but we want to call both functions if applicable
-        ///so essentially, this thread needs to keep a clock, and after the total amount of available time is gone, it should sleep
         if(current_mode == script_management_mode::REALTIME && state.has_value() && shared_queue.has_value() && !sand_data->terminate_semi_gracefully)
         {
             state.value()->number_of_realtime_scripts++;
@@ -430,20 +418,6 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                             break;
                         }
                     }
-
-                    /*std::string unprocessed_keystrokes;
-
-                    {
-                        std::lock_guard guard(state.value()->lock);
-
-                        unprocessed_keystrokes = state.value()->unprocessed_keystrokes[current_id];
-
-                        state.value()->unprocessed_keystrokes[current_id].clear();
-                    }*/
-
-                    /*double next_time = get_wall_time();
-                    double dt_ms = next_time - last_time;
-                    last_time = next_time;*/
 
                     double dt_ms = clk.restart().asMicroseconds() / 1000.;
 
