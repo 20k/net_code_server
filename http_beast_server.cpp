@@ -229,7 +229,7 @@ void read_queue(socket_interface& socket,
 
                 std::string next_command = socket.get_read();
 
-                if(next_command.size() > 2000)
+                if(next_command.size() > 200000)
                     continue;
 
                 lg::log(next_command);
