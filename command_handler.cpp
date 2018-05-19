@@ -99,28 +99,53 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
 
     while(!state.should_terminate_any_realtime && !force_terminate)
     {
-        bool did_real_operation = false;
-        bool any = false;
-
-        std::string unprocessed_keystrokes;
-
+        try
         {
-            std::lock_guard guard(state.lock);
+            bool did_real_operation = false;
+            bool any = false;
 
-            unprocessed_keystrokes = state.unprocessed_keystrokes[current_id];
+            std::string unprocessed_keystrokes;
 
-            state.unprocessed_keystrokes[current_id].clear();
-        }
-
-        if(duk_has_prop_string(ctx, -1, "on_input"))
-        {
-            while(unprocessed_keystrokes.size() > 0)
             {
-                std::string c = std::string(1, unprocessed_keystrokes[0]);
-                unprocessed_keystrokes.erase(unprocessed_keystrokes.begin());
+                std::lock_guard guard(state.lock);
 
-                duk_push_string(ctx, "on_input");
-                duk_push_string(ctx, c.c_str());
+                unprocessed_keystrokes = state.unprocessed_keystrokes[current_id];
+
+                state.unprocessed_keystrokes[current_id].clear();
+            }
+
+            if(duk_has_prop_string(ctx, -1, "on_input"))
+            {
+                while(unprocessed_keystrokes.size() > 0)
+                {
+                    std::string c = std::string(1, unprocessed_keystrokes[0]);
+                    unprocessed_keystrokes.erase(unprocessed_keystrokes.begin());
+
+                    duk_push_string(ctx, "on_input");
+                    duk_push_string(ctx, c.c_str());
+
+                    if(duk_pcall_prop(ctx, -3, 1) != DUK_EXEC_SUCCESS)
+                    {
+                        ret = duk_safe_to_std_string(ctx, -1);
+                        force_terminate = true;
+                        break;
+                    }
+
+                    duk_pop(ctx);
+                }
+
+                ///DONT SET real_operation
+                any = true;
+            }
+
+            if(duk_has_prop_string(ctx, -1, "on_update"))
+            {
+                double current_dt = clk.restart().asMicroseconds() / 1000.;
+
+                //std::cout << " dt " << current_dt << std::endl;
+
+                duk_push_string(ctx, "on_update");
+                duk_push_number(ctx, current_dt);
 
                 if(duk_pcall_prop(ctx, -3, 1) != DUK_EXEC_SUCCESS)
                 {
@@ -130,79 +155,64 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
                 }
 
                 duk_pop(ctx);
+
+                if(!duk_has_prop_string(ctx, -1, "on_draw"))
+                {
+                    request_long_sleep = true;
+                }
+
+                did_real_operation = true;
+                any = true;
             }
 
-            ///DONT SET real_operation
-            any = true;
-        }
-
-        if(duk_has_prop_string(ctx, -1, "on_update"))
-        {
-            double current_dt = clk.restart().asMicroseconds() / 1000.;
-
-            //std::cout << " dt " << current_dt << std::endl;
-
-            duk_push_string(ctx, "on_update");
-            duk_push_number(ctx, current_dt);
-
-            if(duk_pcall_prop(ctx, -3, 1) != DUK_EXEC_SUCCESS)
+            if(duk_has_prop_string(ctx, -1, "on_draw"))
             {
-                ret = duk_safe_to_std_string(ctx, -1);
-                force_terminate = true;
-                break;
+                duk_push_string(ctx, "on_draw");
+
+                if(duk_pcall_prop(ctx, -2, 0) != DUK_EXEC_SUCCESS)
+                {
+                    ret = duk_safe_to_std_string(ctx, -1);
+                    force_terminate = true;
+                    break;
+                }
+
+                if(duk_is_string(ctx, -1))
+                {
+                    async_pipe(ctx);
+                }
+
+                duk_pop(ctx);
+                request_long_sleep = true;
+
+                did_real_operation = true;
+                any = true;
             }
 
-            duk_pop(ctx);
-
-            if(!duk_has_prop_string(ctx, -1, "on_draw"))
+            if(!did_real_operation)
             {
                 request_long_sleep = true;
             }
 
-            did_real_operation = true;
-            any = true;
-        }
-
-        if(duk_has_prop_string(ctx, -1, "on_draw"))
-        {
-            duk_push_string(ctx, "on_draw");
-
-            if(duk_pcall_prop(ctx, -2, 0) != DUK_EXEC_SUCCESS)
+            if(!any)
             {
-                ret = duk_safe_to_std_string(ctx, -1);
                 force_terminate = true;
                 break;
             }
 
-            if(duk_is_string(ctx, -1))
+            while(!fedback)
             {
-                async_pipe(ctx);
+                std::this_thread::yield();
             }
 
-            duk_pop(ctx);
-            request_long_sleep = true;
-
-            did_real_operation = true;
-            any = true;
+            fedback = false;
         }
-
-        if(!did_real_operation)
-        {
-            request_long_sleep = true;
-        }
-
-        if(!any)
+        catch(...)
         {
             force_terminate = true;
+
+            printf("Caugh exception in async\n");
             break;
         }
-
-        while(!fedback)
-        {
-            std::this_thread::yield();
-        }
-
-        fedback = false;
     }
 
     terminated = true;
@@ -210,348 +220,355 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
 
 std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<shared_data*> shared_queue, std::optional<command_handler_state*> state)
 {
-    user usr;
-
-    {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(-2);
-        mongo_ctx.change_collection(username);
-
-        if(!usr.load_from_db(mongo_ctx, username))
-            return "No such user";
-    }
-
-    static std::mutex id_mut;
-
-    static std::map<std::string, int> auth_guard;
-    static int32_t gthread_id = 0;
-    int32_t local_thread_id;
-
-    {
-        std::lock_guard<std::mutex> lk(id_mut);
-
-        local_thread_id = gthread_id++;
-
-        if(auth_guard[usr.auth] == 1)
-            return make_error_col("Cannot run two scripts at once in different contexts!");
-
-        auth_guard[usr.auth] = 1;
-    }
-
-    cleanup_auth_at_exit cleanup(id_mut, auth_guard, usr.auth);
-
-    stack_duk sd;
-    //init_js_interop(sd, std::string());
-    sd.ctx = create_sandbox_heap();
-    native_register(sd.ctx);
-
-    duk_memory_functions funcs;
-    duk_get_memory_functions(sd.ctx, &funcs);
-
-    sandbox_data* sand_data = (sandbox_data*)funcs.udata;
-
-    fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number", "Object");
-
-    usr.cleanup_call_stack(local_thread_id);
-    std::string executing_under = usr.get_call_stack().back();
-
-    shared_duk_worker_state* shared_duk_state = new shared_duk_worker_state;
-
-    startup_state(sd.ctx, executing_under, executing_under, "invoke", usr.get_call_stack(), shared_duk_state);
-
-    set_global_int(sd.ctx, "thread_id", local_thread_id);
-
-    unsafe_info inf;
-    inf.usr = &usr;
-    inf.command = command;
-    inf.ctx = sd.ctx;
-
-    std::thread* launch = new std::thread(managed_duktape_thread, &inf);
-    //launch->detach();
-
-    bool terminated = false;
-
-    //sf::Clock clk;
-    float max_time_ms = 5000;
-    float db_grace_time_ms = 2000;
-
-    auto time_start = std::chrono::high_resolution_clock::now();
-
-    #define ACTIVE_TIME_MANAGEMENT
-    #ifdef ACTIVE_TIME_MANAGEMENT
-    int active_time_slice_ms = 1;
-    int sleeping_time_slice_ms = 1;
-    #endif // ACTIVE_TIME_MANAGEMENT
-
-    script_management_mode::mode current_mode = script_management_mode::DEFAULT;
-
-    while(!inf.finished)
-    {
-        #ifdef ACTIVE_TIME_MANAGEMENT
-        {
-            Sleep(active_time_slice_ms);
-
-            pthread_t thread = launch->native_handle();
-            void* native_handle = pthread_gethandle(thread);
-            SuspendThread(native_handle);
-            Sleep(sleeping_time_slice_ms);
-            ResumeThread(native_handle);
-        }
-        #endif // ACTIVE_TIME_MANAGEMENT
-
-        auto time_current = std::chrono::high_resolution_clock::now();
-
-        auto diff = time_current - time_start;
-
-        auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
-
-        double elapsed = dur.count();
-
-        ///you know
-        ///if we change db stuff to happen on a separate thread and spinlock
-        ///the worker trying to retrieve data
-        ///so that it can throw on a long calling db op
-        ///we could remove forceful thread termination and dear god my life
-        ///would become so much easier
-        ///maybe a structure with a thread pool to manage incoming db requests and
-        ///service them, which returns an event thing to wait on
-        if(elapsed >= max_time_ms + db_grace_time_ms)
-        {
-            pthread_t thread = launch->native_handle();
-
-            void* native_handle = pthread_gethandle(thread);
-
-            printf("UNSAFE THREAD TERMINATION\n");
-
-            ///this is obviously very unsafe, doubly so due to the whole mutex thing, which may leave them locked
-            ///going to need to have an intermittent sync point, where all threads block going in and we free all locks or something
-            SuspendThread(native_handle);
-            TerminateThread(native_handle, 1);
-            CloseHandle(native_handle);
-
-            inf.ret = "Ran for longer than " + std::to_string((int)max_time_ms) + "ms and was uncooperatively terminated";
-
-            terminated = true;
-
-            break;
-        }
-
-        if(elapsed >= max_time_ms)
-        {
-            sand_data->terminate_semi_gracefully = true;
-        }
-
-        Sleep(1);
-    }
-
-    if(shared_duk_state->is_realtime())
-    {
-        current_mode = script_management_mode::REALTIME;
-
-        printf("scooted into realtime mode\n");
-    }
-
-    bool launched_realtime = false;
-
-    if(inf.finished && !terminated)
-    {
-        launch->join();
-        delete launch;
-
-        if(current_mode == script_management_mode::REALTIME && state.has_value() && shared_queue.has_value() && !sand_data->terminate_semi_gracefully)
-        {
-            state.value()->number_of_realtime_scripts++;
-
-            launched_realtime = true;
-
-            int current_id = 0;
-
-            {
-                mongo_requester req;
-
-                mongo_lock_proxy mctx = get_global_mongo_global_properties_context(-2);
-
-                req.set_prop("worker_id_is_gid", 1);
-
-                auto found = req.fetch_from_db(mctx);
-
-                if(found.size() == 0)
-                {
-                    req.set_prop("worker_id_gid", 0);
-
-                    req.insert_in_db(mctx);
-                }
-                else
-                {
-                    current_id = found[0].get_prop_as_integer("worker_id_gid");
-
-                    mongo_requester to_set;
-                    to_set.set_prop("worker_id_gid", current_id+1);
-
-                    req.update_in_db_if_exact(mctx, to_set);
-                }
-
-                printf("%i cid\n", current_id);
-            }
-
-            //double last_time = get_wall_time();
-
-            bool is_valid = !duk_is_undefined(sd.ctx, -1);
-
-            std::atomic_bool request_going{false};
-            std::atomic_bool request_finished{true};
-            std::atomic_bool fedback{false};
-
-            ///finished last means did we execute the last element in the chain
-            ///so that we dont execute more than one whole sequence in a frame
-            std::atomic_bool finished_last{false};
-
-            const double max_frame_time_ms = 16;
-            const double max_allowed_frame_time_ms = 2; ///before we sleep for (max_frame - max_allowed)
-            double current_frame_time_ms = 0;
-
-            double time_of_last_on_update = get_wall_time();
-
-            sf::Clock clk;
-
-            if(is_valid)
-            {
-                command_handler_state& cstate = *state.value();
-                shared_data& cqueue = *shared_queue.value();
-
-                std::atomic_bool terminated{false};
-                std::atomic_bool request_long_sleep{false};
-                std::atomic_bool force_terminate{false};
-
-                std::thread thrd = std::thread(async_realtime_script_handler, sd.ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf.ret),
-                                               std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate));
-
-                while(!state.value()->should_terminate_any_realtime && !force_terminate)
-                {
-                    {
-                        std::lock_guard guard(state.value()->lock);
-
-                        if(state.value()->should_terminate_realtime[current_id])
-                        {
-                            force_terminate = true;
-                            break;
-                        }
-                    }
-
-                    {
-                        if(!shared_duk_state->is_realtime())
-                        {
-                            force_terminate = true;
-                            break;
-                        }
-                    }
-
-                    double dt_ms = clk.restart().asMicroseconds() / 1000.;
-
-                    current_frame_time_ms += dt_ms;
-
-                    bool long_sleep_requested = request_long_sleep;
-
-                    if(current_frame_time_ms >= max_allowed_frame_time_ms || long_sleep_requested)
-                    {
-                        ///THIS ISNT QUITE CORRECT
-                        ///it makes the graphics programmer sad as frames will come out IRREGULARLY
-                        ///needs to take into account the extra time we've elapsed for
-                        double to_sleep = max_frame_time_ms - max_allowed_frame_time_ms;
-
-                        to_sleep = clamp(floor(to_sleep), 0., 200.);
-
-                        current_frame_time_ms = 0;
-
-                        //sf::Clock slept_for;
-
-                        sleep_thread_for(thrd, to_sleep);
-
-                        //std::cout << "slept for " << slept_for.getElapsedTime().asMicroseconds() / 1000. << std::endl;
-
-                        if(long_sleep_requested)
-                        {
-                            request_long_sleep = false;
-
-                            fedback = true;
-                        }
-                    }
-
-                    if(shared_duk_state->has_output_data_available())
-                    {
-                        std::string str = shared_duk_state->consume_output_data();
-
-                        if(shared_queue.has_value())
-                        {
-                            try
-                            {
-                                using json = nlohmann::json;
-
-                                json j;
-                                j["id"] = current_id;
-                                j["msg"] = str;
-
-                                shared_queue.value()->add_back_write("command_realtime_json " + j.dump());
-                            }
-                            catch(...)
-                            {
-
-                            }
-                        }
-                    }
-
-                    Sleep(1);
-                }
-
-                fedback = true;
-
-                thrd.join();
-
-                while(!terminated)
-                {
-
-                }
-            }
-
-            printf("Ended realtime\n");
-        }
-    }
-
-    if(terminated)
-    {
-        for(auto& i : mongo_databases)
-        {
-            i->unlock_if(local_thread_id);
-        }
-    }
-
-    //managed_duktape_thread(&inf);
-
-    //if(!terminated)
     try
     {
+        user usr;
+
+        {
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(-2);
+            mongo_ctx.change_collection(username);
+
+            if(!usr.load_from_db(mongo_ctx, username))
+                return "No such user";
+        }
+
+        static std::mutex id_mut;
+
+        static std::map<std::string, int> auth_guard;
+        static int32_t gthread_id = 0;
+        int32_t local_thread_id;
+
+        {
+            std::lock_guard<std::mutex> lk(id_mut);
+
+            local_thread_id = gthread_id++;
+
+            if(auth_guard[usr.auth] == 1)
+                return make_error_col("Cannot run two scripts at once in different contexts!");
+
+            auth_guard[usr.auth] = 1;
+        }
+
+        cleanup_auth_at_exit cleanup(id_mut, auth_guard, usr.auth);
+
+        stack_duk sd;
+        //init_js_interop(sd, std::string());
+        sd.ctx = create_sandbox_heap();
+        native_register(sd.ctx);
+
+        duk_memory_functions funcs;
+        duk_get_memory_functions(sd.ctx, &funcs);
+
+        sandbox_data* sand_data = (sandbox_data*)funcs.udata;
+
+        fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number", "Object");
+
+        usr.cleanup_call_stack(local_thread_id);
+        std::string executing_under = usr.get_call_stack().back();
+
+        shared_duk_worker_state* shared_duk_state = new shared_duk_worker_state;
+
+        startup_state(sd.ctx, executing_under, executing_under, "invoke", usr.get_call_stack(), shared_duk_state);
+
+        set_global_int(sd.ctx, "thread_id", local_thread_id);
+
+        unsafe_info inf;
+        inf.usr = &usr;
+        inf.command = command;
+        inf.ctx = sd.ctx;
+
+        std::thread* launch = new std::thread(managed_duktape_thread, &inf);
+        //launch->detach();
+
+        bool terminated = false;
+
+        //sf::Clock clk;
+        float max_time_ms = 5000;
+        float db_grace_time_ms = 2000;
+
+        auto time_start = std::chrono::high_resolution_clock::now();
+
+        #define ACTIVE_TIME_MANAGEMENT
+        #ifdef ACTIVE_TIME_MANAGEMENT
+        int active_time_slice_ms = 1;
+        int sleeping_time_slice_ms = 1;
+        #endif // ACTIVE_TIME_MANAGEMENT
+
+        script_management_mode::mode current_mode = script_management_mode::DEFAULT;
+
+        while(!inf.finished)
+        {
+            #ifdef ACTIVE_TIME_MANAGEMENT
+            {
+                Sleep(active_time_slice_ms);
+
+                pthread_t thread = launch->native_handle();
+                void* native_handle = pthread_gethandle(thread);
+                SuspendThread(native_handle);
+                Sleep(sleeping_time_slice_ms);
+                ResumeThread(native_handle);
+            }
+            #endif // ACTIVE_TIME_MANAGEMENT
+
+            auto time_current = std::chrono::high_resolution_clock::now();
+
+            auto diff = time_current - time_start;
+
+            auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
+
+            double elapsed = dur.count();
+
+            ///you know
+            ///if we change db stuff to happen on a separate thread and spinlock
+            ///the worker trying to retrieve data
+            ///so that it can throw on a long calling db op
+            ///we could remove forceful thread termination and dear god my life
+            ///would become so much easier
+            ///maybe a structure with a thread pool to manage incoming db requests and
+            ///service them, which returns an event thing to wait on
+            if(elapsed >= max_time_ms + db_grace_time_ms)
+            {
+                pthread_t thread = launch->native_handle();
+
+                void* native_handle = pthread_gethandle(thread);
+
+                printf("UNSAFE THREAD TERMINATION\n");
+
+                ///this is obviously very unsafe, doubly so due to the whole mutex thing, which may leave them locked
+                ///going to need to have an intermittent sync point, where all threads block going in and we free all locks or something
+                SuspendThread(native_handle);
+                TerminateThread(native_handle, 1);
+                CloseHandle(native_handle);
+
+                inf.ret = "Ran for longer than " + std::to_string((int)max_time_ms) + "ms and was uncooperatively terminated";
+
+                terminated = true;
+
+                break;
+            }
+
+            if(elapsed >= max_time_ms)
+            {
+                sand_data->terminate_semi_gracefully = true;
+            }
+
+            Sleep(1);
+        }
+
+        if(shared_duk_state->is_realtime())
+        {
+            current_mode = script_management_mode::REALTIME;
+
+            printf("scooted into realtime mode\n");
+        }
+
+        bool launched_realtime = false;
+
+        if(inf.finished && !terminated)
+        {
+            launch->join();
+            delete launch;
+
+            if(current_mode == script_management_mode::REALTIME && state.has_value() && shared_queue.has_value() && !sand_data->terminate_semi_gracefully)
+            {
+                state.value()->number_of_realtime_scripts++;
+
+                launched_realtime = true;
+
+                int current_id = 0;
+
+                {
+                    mongo_requester req;
+
+                    mongo_lock_proxy mctx = get_global_mongo_global_properties_context(-2);
+
+                    req.set_prop("worker_id_is_gid", 1);
+
+                    auto found = req.fetch_from_db(mctx);
+
+                    if(found.size() == 0)
+                    {
+                        req.set_prop("worker_id_gid", 0);
+
+                        req.insert_in_db(mctx);
+                    }
+                    else
+                    {
+                        current_id = found[0].get_prop_as_integer("worker_id_gid");
+
+                        mongo_requester to_set;
+                        to_set.set_prop("worker_id_gid", current_id+1);
+
+                        req.update_in_db_if_exact(mctx, to_set);
+                    }
+
+                    printf("%i cid\n", current_id);
+                }
+
+                //double last_time = get_wall_time();
+
+                bool is_valid = !duk_is_undefined(sd.ctx, -1);
+
+                std::atomic_bool request_going{false};
+                std::atomic_bool request_finished{true};
+                std::atomic_bool fedback{false};
+
+                ///finished last means did we execute the last element in the chain
+                ///so that we dont execute more than one whole sequence in a frame
+                std::atomic_bool finished_last{false};
+
+                const double max_frame_time_ms = 16;
+                const double max_allowed_frame_time_ms = 2; ///before we sleep for (max_frame - max_allowed)
+                double current_frame_time_ms = 0;
+
+                double time_of_last_on_update = get_wall_time();
+
+                sf::Clock clk;
+
+                if(is_valid)
+                {
+                    command_handler_state& cstate = *state.value();
+                    shared_data& cqueue = *shared_queue.value();
+
+                    std::atomic_bool terminated{false};
+                    std::atomic_bool request_long_sleep{false};
+                    std::atomic_bool force_terminate{false};
+
+                    std::thread thrd = std::thread(async_realtime_script_handler, sd.ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf.ret),
+                                                   std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate));
+
+                    while(!force_terminate)
+                    {
+                        if(state.value()->should_terminate_any_realtime)
+                            break;
+
+                        {
+                            std::lock_guard guard(state.value()->lock);
+
+                            if(state.value()->should_terminate_realtime[current_id])
+                                break;
+                        }
+
+                        if(!shared_duk_state->is_realtime())
+                            break;
+
+                        double dt_ms = clk.restart().asMicroseconds() / 1000.;
+
+                        current_frame_time_ms += dt_ms;
+
+                        bool long_sleep_requested = request_long_sleep;
+
+                        if(current_frame_time_ms >= max_allowed_frame_time_ms || long_sleep_requested)
+                        {
+                            ///THIS ISNT QUITE CORRECT
+                            ///it makes the graphics programmer sad as frames will come out IRREGULARLY
+                            ///needs to take into account the extra time we've elapsed for
+                            double to_sleep = max_frame_time_ms - max_allowed_frame_time_ms;
+
+                            to_sleep = clamp(floor(to_sleep), 0., 200.);
+
+                            current_frame_time_ms = 0;
+
+                            //sf::Clock slept_for;
+
+                            sleep_thread_for(thrd, to_sleep);
+
+                            //std::cout << "slept for " << slept_for.getElapsedTime().asMicroseconds() / 1000. << std::endl;
+
+                            if(long_sleep_requested)
+                            {
+                                request_long_sleep = false;
+
+                                fedback = true;
+                            }
+                        }
+
+                        if(shared_duk_state->has_output_data_available())
+                        {
+                            std::string str = shared_duk_state->consume_output_data();
+
+                            if(shared_queue.has_value())
+                            {
+                                try
+                                {
+                                    using json = nlohmann::json;
+
+                                    json j;
+                                    j["id"] = current_id;
+                                    j["msg"] = str;
+
+                                    shared_queue.value()->add_back_write("command_realtime_json " + j.dump());
+                                }
+                                catch(...)
+                                {
+
+                                }
+                            }
+                        }
+
+                        Sleep(1);
+
+                    }
+
+                    force_terminate = true;
+                    fedback = true;
+
+                    Sleep(50);
+
+                    sand_data->terminate_semi_gracefully = true;
+
+                    thrd.join();
+
+                    while(!terminated)
+                    {
+
+                    }
+                }
+
+                printf("Ended realtime\n");
+            }
+        }
         if(terminated)
-            printf("Attempting unsafe resource cleanup\n");
+        {
+            for(auto& i : mongo_databases)
+            {
+                i->unlock_if(local_thread_id);
+            }
+        }
 
-        teardown_state(sd.ctx);
+        //managed_duktape_thread(&inf);
 
-        js_interop_shutdown(sd.ctx);
+        //if(!terminated)
+        try
+        {
+            if(terminated)
+                printf("Attempting unsafe resource cleanup\n");
+
+            teardown_state(sd.ctx);
+
+            js_interop_shutdown(sd.ctx);
+        }
+        catch(...)
+        {
+            printf("Failed to cleanup resources\n");
+        }
+
+        printf("cleaned up unsafe\n");
+
+
+        if(launched_realtime)
+        {
+            state.value()->number_of_realtime_scripts_terminated++;
+        }
+
+        std::string ret = inf.ret;
+
+        return ret;
     }
     catch(...)
     {
-        printf("Failed to cleanup resources\n");
+        return "Caught exception";
     }
-
-    printf("cleaned up unsafe\n");
-
-
-    if(launched_realtime)
-    {
-        state.value()->number_of_realtime_scripts_terminated++;
-    }
-
-    std::string ret = inf.ret;
-
-    return ret;
 }
 
 void throwaway_user_thread(const std::string& username, const std::string& command)
