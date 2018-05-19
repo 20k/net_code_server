@@ -291,6 +291,15 @@ void teardown_state(duk_context* ctx)
     free_shim_pointer<shim_map_t>(ctx);
 }
 
+duk_ret_t terminate_realtime(duk_context* ctx)
+{
+    shared_duk_worker_state* shared_state = dukx_get_pointer<shared_duk_worker_state>(ctx, "shared_caller_state");
+
+    shared_state->disable_realtime();
+
+    return 0;
+}
+
 duk_ret_t hash_d(duk_context* ctx)
 {
     COOPERATE_KILL();
@@ -713,6 +722,7 @@ void register_funcs(duk_context* ctx, int seclevel)
     inject_c_function(ctx, timeout_yield, "timeout_yield",  0);
     inject_c_function(ctx, async_pipe, "async_pipe",  1);
     inject_c_function(ctx, set_is_realtime_script, "set_is_realtime_script", 0);
+    inject_c_function(ctx, terminate_realtime, "terminate_realtime", 0);
 
     //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }

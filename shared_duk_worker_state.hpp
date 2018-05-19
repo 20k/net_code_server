@@ -9,6 +9,7 @@
 struct shared_duk_worker_state
 {
     void set_realtime();
+    void disable_realtime();
     bool is_realtime();
 
     void set_output_data(const std::string& str);

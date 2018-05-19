@@ -424,6 +424,14 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                         }
                     }
 
+                    {
+                        if(!shared_duk_state->is_realtime())
+                        {
+                            force_terminate = true;
+                            break;
+                        }
+                    }
+
                     double dt_ms = clk.restart().asMicroseconds() / 1000.;
 
                     current_frame_time_ms += dt_ms;

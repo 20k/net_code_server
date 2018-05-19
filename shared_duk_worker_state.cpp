@@ -5,6 +5,11 @@ void shared_duk_worker_state::set_realtime()
     is_realtime_script = 1;
 }
 
+void shared_duk_worker_state::disable_realtime()
+{
+    is_realtime_script = 0;
+}
+
 bool shared_duk_worker_state::is_realtime()
 {
     return is_realtime_script;

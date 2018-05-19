@@ -33,6 +33,8 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
 
 void teardown_state(duk_context* ctx);
 
+duk_ret_t terminate_realtime(duk_context* ctx);
+
 duk_ret_t hash_d(duk_context* ctx);
 
 std::string get_hash_d(duk_context* ctx);
