@@ -302,7 +302,7 @@ void write_queue(socket_interface& socket,
                 if(next_command == "" && conn_type == connection_type::WEBSOCKET)
                     continue;
 
-                if(next_command.size() > 2000)
+                if(next_command.size() > 100*100)
                     continue;
 
                 if(socket.write(next_command))
