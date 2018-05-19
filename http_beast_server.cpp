@@ -111,9 +111,41 @@ void async_command_handler(shared_data& shared, command_handler_state& state, st
 
 bool handle_termination_shortcircuit(command_handler_state& state, const std::string& str)
 {
-    if(str == "client_terminate_scripts")
+    std::string tstr = "client_terminate_scripts ";
+
+    if(starts_with(str, tstr))
     {
-        state.should_terminate_any_realtime = true;
+        std::string to_parse(str.begin() + tstr.size(), str.end());
+
+        try
+        {
+            using nlohmann::json;
+
+            json j = json::parse(to_parse);
+
+            int id = j["id"];
+
+            if(id <= -1)
+            {
+                state.should_terminate_any_realtime = true;
+            }
+            else
+            {
+                std::lock_guard guard(state.lock);
+
+                if(state.should_terminate_realtime.size() > 100)
+                    state.should_terminate_realtime.clear();
+
+                state.should_terminate_realtime[id] = true;
+            }
+
+            return true;
+        }
+        catch(...)
+        {
+            return true;
+        }
+
         return true;
     }
 

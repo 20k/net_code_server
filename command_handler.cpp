@@ -92,11 +92,12 @@ void sleep_thread_for(std::thread& t, int sleep_ms)
 }
 
 void async_realtime_script_handler(duk_context* ctx, shared_data& shared, command_handler_state& state, double& time_of_last_on_update, std::string& ret,
-                                   std::atomic_bool& terminated, std::atomic_bool& request_long_sleep, std::atomic_bool& fedback, int current_id)
+                                   std::atomic_bool& terminated, std::atomic_bool& request_long_sleep, std::atomic_bool& fedback, int current_id,
+                                   std::atomic_bool& force_terminate)
 {
     sf::Clock clk;
 
-    while(!state.should_terminate_any_realtime)
+    while(!state.should_terminate_any_realtime && !force_terminate)
     {
         bool any = false;
 
@@ -413,12 +414,23 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                 std::atomic_bool terminated{false};
                 std::atomic_bool request_long_sleep{false};
+                std::atomic_bool force_terminate{false};
 
                 std::thread thrd = std::thread(async_realtime_script_handler, sd.ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf.ret),
-                                               std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id);
+                                               std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate));
 
                 while(!state.value()->should_terminate_any_realtime)
                 {
+                    {
+                        std::lock_guard guard(state.value()->lock);
+
+                        if(state.value()->should_terminate_realtime[current_id])
+                        {
+                            force_terminate = true;
+                            break;
+                        }
+                    }
+
                     /*std::string unprocessed_keystrokes;
 
                     {
