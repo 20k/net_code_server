@@ -229,6 +229,9 @@ void read_queue(socket_interface& socket,
 
                 std::string next_command = socket.get_read();
 
+                if(next_command.size() > 2000)
+                    continue;
+
                 lg::log(next_command);
 
                 if(handle_termination_shortcircuit(state, next_command, shared, glob, my_id))
@@ -297,6 +300,9 @@ void write_queue(socket_interface& socket,
                 //    printf("sending test write\n");
 
                 if(next_command == "" && conn_type == connection_type::WEBSOCKET)
+                    continue;
+
+                if(next_command.size() > 2000)
                     continue;
 
                 if(socket.write(next_command))
