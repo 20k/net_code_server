@@ -168,6 +168,11 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
                 break;
             }
 
+            if(duk_is_string(ctx, -1))
+            {
+                async_pipe(ctx);
+            }
+
             duk_pop(ctx);
             request_long_sleep = true;
 
