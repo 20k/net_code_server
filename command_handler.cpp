@@ -99,6 +99,7 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
 
     while(!state.should_terminate_any_realtime && !force_terminate)
     {
+        bool did_real_operation = false;
         bool any = false;
 
         std::string unprocessed_keystrokes;
@@ -124,13 +125,15 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
                 if(duk_pcall_prop(ctx, -3, 1) != DUK_EXEC_SUCCESS)
                 {
                     ret = duk_safe_to_std_string(ctx, -1);
+                    force_terminate = true;
                     break;
                 }
 
                 duk_pop(ctx);
             }
 
-            ///DONT SET ANY
+            ///DONT SET real_operation
+            any = true;
         }
 
         if(duk_has_prop_string(ctx, -1, "on_update"))
@@ -145,6 +148,7 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
             if(duk_pcall_prop(ctx, -3, 1) != DUK_EXEC_SUCCESS)
             {
                 ret = duk_safe_to_std_string(ctx, -1);
+                force_terminate = true;
                 break;
             }
 
@@ -155,6 +159,7 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
                 request_long_sleep = true;
             }
 
+            did_real_operation = true;
             any = true;
         }
 
@@ -165,6 +170,7 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
             if(duk_pcall_prop(ctx, -2, 0) != DUK_EXEC_SUCCESS)
             {
                 ret = duk_safe_to_std_string(ctx, -1);
+                force_terminate = true;
                 break;
             }
 
@@ -176,12 +182,19 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
             duk_pop(ctx);
             request_long_sleep = true;
 
+            did_real_operation = true;
             any = true;
+        }
+
+        if(!did_real_operation)
+        {
+            request_long_sleep = true;
         }
 
         if(!any)
         {
-            request_long_sleep = true;
+            force_terminate = true;
+            break;
         }
 
         while(!fedback)
@@ -412,7 +425,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                 std::thread thrd = std::thread(async_realtime_script_handler, sd.ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf.ret),
                                                std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate));
 
-                while(!state.value()->should_terminate_any_realtime)
+                while(!state.value()->should_terminate_any_realtime && !force_terminate)
                 {
                     {
                         std::lock_guard guard(state.value()->lock);
