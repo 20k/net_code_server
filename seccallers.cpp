@@ -238,6 +238,8 @@ duk_ret_t set_is_realtime_script(duk_context* ctx)
 
     shared_state->set_realtime();
 
+
+
     return 0;
 }
 
@@ -255,6 +257,17 @@ duk_ret_t async_pipe(duk_context* ctx)
     shared_state->set_output_data(str);
 
     return 0;
+}
+
+duk_ret_t is_realtime_script(duk_context* ctx)
+{
+    COOPERATE_KILL();
+
+    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(ctx);
+
+    duk_push_boolean(ctx, shared_state->is_realtime());
+
+    return 1;
 }
 
 void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack, shared_duk_worker_state* shared_state)
@@ -723,6 +736,7 @@ void register_funcs(duk_context* ctx, int seclevel)
     inject_c_function(ctx, async_pipe, "async_pipe",  1);
     inject_c_function(ctx, set_is_realtime_script, "set_is_realtime_script", 0);
     inject_c_function(ctx, terminate_realtime, "terminate_realtime", 0);
+    inject_c_function(ctx, is_realtime_script, "is_realtime_script", 0);
 
     //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }
