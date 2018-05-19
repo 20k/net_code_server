@@ -109,7 +109,7 @@ void async_command_handler(shared_data& shared, command_handler_state& state, st
     shared.termination_count++;
 }
 
-bool handle_termination_shortcircuit(command_handler_state& state, const std::string& str)
+bool handle_termination_shortcircuit(command_handler_state& state, const std::string& str, shared_data& shared, global_state& glob, int64_t my_id)
 {
     std::string tstr = "client_terminate_scripts ";
 
@@ -186,6 +186,15 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
         }
     }
 
+    if(str == "client_poll" || str == "client_poll_json")
+    {
+        std::string out = handle_command(state, str, glob, my_id, shared);
+
+        shared.add_back_write(out);
+
+        return true;
+    }
+
     return false;
 }
 
@@ -222,7 +231,7 @@ void read_queue(socket_interface& socket,
 
                 lg::log(next_command);
 
-                if(handle_termination_shortcircuit(state, next_command))
+                if(handle_termination_shortcircuit(state, next_command, shared, glob, my_id))
                    continue;
 
                 int len;
