@@ -19,6 +19,9 @@ void shared_duk_worker_state::set_output_data(const std::string& str)
 {
     std::lock_guard guard(lck);
 
+    if(realtime_output_data == str)
+        return;
+
     realtime_output_data = str;
     has_output_data = true;
 }
@@ -33,8 +36,6 @@ std::string shared_duk_worker_state::consume_output_data()
     has_output_data = false;
 
     std::string ret = realtime_output_data;
-
-    realtime_output_data = "";
 
     return ret;
 }

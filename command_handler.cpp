@@ -491,7 +491,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                         {
                             std::string str = shared_duk_state->consume_output_data();
 
-                            if(shared_queue.has_value())
+                            if(shared_queue.has_value() && str != "")
                             {
                                 try
                                 {
