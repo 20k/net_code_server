@@ -167,6 +167,8 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
             if(str.size() > 10)
                 return true;
 
+            std::cout << "keystroke " << str << "\n";
+
             {
                 std::lock_guard guard(state.lock);
 
