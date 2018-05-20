@@ -44,3 +44,8 @@ bool shared_duk_worker_state::has_output_data_available()
 {
     return has_output_data;
 }
+
+void shared_duk_worker_state::set_close_window_on_exit()
+{
+    should_close_window_on_exit = true;
+}
