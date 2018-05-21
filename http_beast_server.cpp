@@ -162,17 +162,19 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
             json j = json::parse(to_parse);
 
             int id = j["id"];
-            std::string str = j["keys"];
+            std::vector<std::string> str = j["input_keys"];
 
             if(str.size() > 10)
                 return true;
 
-            std::cout << "keystroke " << str << "\n";
+            for(auto& i : str)
+                std::cout << "keystroke " << i << "\n";
 
             {
                 std::lock_guard guard(state.lock);
 
-                state.unprocessed_keystrokes[id] += str;
+                for(auto& i : str)
+                    state.unprocessed_keystrokes[id].push_back(i);
 
                 while(state.unprocessed_keystrokes[id].size() > 200)
                 {

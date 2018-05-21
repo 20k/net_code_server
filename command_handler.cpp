@@ -104,7 +104,7 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
             bool did_real_operation = false;
             bool any = false;
 
-            std::string unprocessed_keystrokes;
+            std::vector<std::string> unprocessed_keystrokes;
 
             {
                 std::lock_guard guard(state.lock);
@@ -118,7 +118,7 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
             {
                 while(unprocessed_keystrokes.size() > 0)
                 {
-                    std::string c = std::string(1, unprocessed_keystrokes[0]);
+                    std::string c = unprocessed_keystrokes[0];
                     unprocessed_keystrokes.erase(unprocessed_keystrokes.begin());
 
                     std::cout << "called on_input " << get_wall_time() << " " << c << std::endl;

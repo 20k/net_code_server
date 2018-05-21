@@ -28,7 +28,7 @@ struct command_handler_state
 
     std::mutex lock;
 
-    std::map<int, std::string> unprocessed_keystrokes;
+    std::map<int, std::vector<std::string>> unprocessed_keystrokes;
 
     std::atomic_bool should_terminate_any_realtime{false};
     std::atomic_int number_of_realtime_scripts{0};
