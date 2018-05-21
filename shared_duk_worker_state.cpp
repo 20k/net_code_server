@@ -69,3 +69,17 @@ std::pair<int, int> shared_duk_worker_state::get_width_height()
 
     return {width, height};
 }
+
+void shared_duk_worker_state::set_key_state(const std::map<std::string, bool>& key_state)
+{
+    std::lock_guard guard(key_lock);
+
+    ikey_state = key_state;
+}
+
+bool shared_duk_worker_state::is_key_down(const std::string& str)
+{
+    std::lock_guard guard(key_lock);
+
+    return ikey_state[str];
+}

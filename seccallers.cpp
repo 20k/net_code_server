@@ -299,6 +299,25 @@ duk_ret_t set_start_window_size(duk_context* ctx)
     return 0;
 }
 
+duk_ret_t is_key_down(duk_context* ctx)
+{
+    COOPERATE_KILL();
+
+    if(!duk_is_string(ctx, -1))
+    {
+        push_duk_val(ctx, false);
+        return false;
+    }
+
+    std::string str = duk_safe_to_std_string(ctx, -1);
+
+    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(ctx);
+
+    push_duk_val(ctx, (bool)shared_state->is_key_down(str));
+
+    return 1;
+}
+
 void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack, shared_duk_worker_state* shared_state)
 {
     duk_push_global_stash(ctx);
@@ -768,6 +787,7 @@ void register_funcs(duk_context* ctx, int seclevel)
     inject_c_function(ctx, is_realtime_script, "is_realtime_script", 0);
     inject_c_function(ctx, set_close_window_on_exit, "set_close_window_on_exit", 0);
     inject_c_function(ctx, set_start_window_size, "set_start_window_size", 1);
+    inject_c_function(ctx, is_key_down, "is_key_down", 1);
 
     //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }

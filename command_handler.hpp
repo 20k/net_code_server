@@ -72,7 +72,18 @@ struct command_handler_state
 
         std::lock_guard guard(key_lock);
 
+        ///ur cheating!!!
+        if(key_states.size() > 250)
+            key_states.clear();
+
         key_states[str] = is_down;
+    }
+
+    std::map<std::string, bool> get_key_state()
+    {
+        std::lock_guard guard(key_lock);
+
+        return key_states;
     }
 
 private:

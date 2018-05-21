@@ -173,6 +173,8 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
 
             std::string to_parse(str.begin() + kstr.size(), str.end());
 
+            //std::cout << "parsed " << to_parse << std::endl;
+
             json j = json::parse(to_parse);
 
             int id = j["id"];
@@ -190,8 +192,8 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
                     std::vector<std::string> str = j["input_keys"];
                     str = sanitise_input_vec(str);
 
-                    for(auto& i : str)
-                        std::cout << "keystroke " << i << "\n";
+                    //for(auto& i : str)
+                    //    std::cout << "keystroke " << i << "\n";
 
                     {
                         std::lock_guard guard(state.lock);
@@ -208,17 +210,24 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
                 catch(...){}
             }
 
-            //released_keys
-
             if(j.find("pressed_keys") != j.end())
             {
+                //std::cout << "presser\n";
+
                 try
                 {
                     std::vector<std::string> str = j["pressed_keys"];
                     str = sanitise_input_vec(str);
 
+                    /*for(auto& i : str)
+                    {
+                        std::cout << " dfdf " << i << std::endl;
+                    }*/
+
                     for(auto& i : str)
                     {
+                        //std::cout << "Pressed " << i << std::endl;
+
                         state.set_key_state(i, true);
                     }
                 }

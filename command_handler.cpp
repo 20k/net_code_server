@@ -121,7 +121,7 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
                     std::string c = unprocessed_keystrokes[0];
                     unprocessed_keystrokes.erase(unprocessed_keystrokes.begin());
 
-                    std::cout << "called on_input " << get_wall_time() << " " << c << std::endl;
+                    //std::cout << "called on_input " << get_wall_time() << " " << c << std::endl;
 
                     duk_push_string(ctx, "on_input");
                     duk_push_string(ctx, c.c_str());
@@ -471,6 +471,8 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                         if(!shared_duk_state->is_realtime())
                             break;
+
+                        shared_duk_state->set_key_state(state.value()->get_key_state());
 
                         double dt_ms = clk.restart().asMicroseconds() / 1000.;
 

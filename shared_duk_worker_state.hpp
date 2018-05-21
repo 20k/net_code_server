@@ -4,6 +4,7 @@
 #include <atomic>
 #include <mutex>
 #include <string>
+#include <map>
 
 ///shared between the manager thread, and the executing thread
 struct shared_duk_worker_state
@@ -22,6 +23,9 @@ struct shared_duk_worker_state
     void set_width_height(int width, int height);
     std::pair<int, int> get_width_height();
 
+    void set_key_state(const std::map<std::string, bool>& key_state);
+    bool is_key_down(const std::string& str);
+
 private:
     std::atomic_int is_realtime_script{0};
     std::string realtime_output_data;
@@ -32,6 +36,9 @@ private:
 
     int width = 10;
     int height = 10;
+
+    std::map<std::string, bool> ikey_state;
+    std::mutex key_lock;
 };
 
 #endif // SHARED_DUK_WORKER_STATE_HPP_INCLUDED

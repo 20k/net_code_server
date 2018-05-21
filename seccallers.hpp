@@ -32,6 +32,7 @@ duk_ret_t async_pipe(duk_context* ctx);
 duk_ret_t is_realtime_script(duk_context* ctx);
 duk_ret_t set_close_window_on_exit(duk_context* ctx);
 duk_ret_t set_start_window_size(duk_context* ctx);
+duk_ret_t is_key_down(duk_context* ctx);
 
 void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack, shared_duk_worker_state* shared_state);
 
