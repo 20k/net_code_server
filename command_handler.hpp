@@ -25,10 +25,11 @@ void throwaway_user_thread(const std::string& username, const std::string& comma
 struct command_handler_state
 {
     std::mutex command_lock;
-
     std::mutex lock;
+    std::mutex key_lock;
 
     std::map<int, std::vector<std::string>> unprocessed_keystrokes;
+    std::map<std::string, bool> key_states;
 
     std::atomic_bool should_terminate_any_realtime{false};
     std::atomic_int number_of_realtime_scripts{0};
@@ -62,6 +63,16 @@ struct command_handler_state
         std::lock_guard guard(command_lock);
 
         return current_user;
+    }
+
+    void set_key_state(const std::string& str, bool is_down)
+    {
+        if(str.size() > 10)
+            return;
+
+        std::lock_guard guard(key_lock);
+
+        key_states[str] = is_down;
     }
 
 private:

@@ -109,6 +109,20 @@ void async_command_handler(shared_data& shared, command_handler_state& state, st
     shared.termination_count++;
 }
 
+std::vector<std::string> sanitise_input_vec(std::vector<std::string> vec)
+{
+    if(vec.size() > 10)
+        vec.resize(10);
+
+    for(auto& i : vec)
+    {
+        if(i.size() > 10)
+            i.resize(10);
+    }
+
+    return vec;
+}
+
 bool handle_termination_shortcircuit(command_handler_state& state, const std::string& str, shared_data& shared, global_state& glob, int64_t my_id)
 {
     std::string tstr = "client_terminate_scripts ";
@@ -162,24 +176,68 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
             json j = json::parse(to_parse);
 
             int id = j["id"];
-            std::vector<std::string> str = j["input_keys"];
 
-            if(str.size() > 10)
-                return true;
+            ///todo
+            ///keystroke special funtime
+            ///create a push vector function
+            ///need to also have an internal map of key state
+            ///assume keys are not pressed when we get them the first time, dont do any magic
 
-            for(auto& i : str)
-                std::cout << "keystroke " << i << "\n";
-
+            if(j.find("input_keys") != j.end())
             {
-                std::lock_guard guard(state.lock);
-
-                for(auto& i : str)
-                    state.unprocessed_keystrokes[id].push_back(i);
-
-                while(state.unprocessed_keystrokes[id].size() > 200)
+                try
                 {
-                    state.unprocessed_keystrokes[id].erase(state.unprocessed_keystrokes[id].begin());
+                    std::vector<std::string> str = j["input_keys"];
+                    str = sanitise_input_vec(str);
+
+                    for(auto& i : str)
+                        std::cout << "keystroke " << i << "\n";
+
+                    {
+                        std::lock_guard guard(state.lock);
+
+                        for(auto& i : str)
+                            state.unprocessed_keystrokes[id].push_back(i);
+
+                        while(state.unprocessed_keystrokes[id].size() > 200)
+                        {
+                            state.unprocessed_keystrokes[id].erase(state.unprocessed_keystrokes[id].begin());
+                        }
+                    }
                 }
+                catch(...){}
+            }
+
+            //released_keys
+
+            if(j.find("pressed_keys") != j.end())
+            {
+                try
+                {
+                    std::vector<std::string> str = j["pressed_keys"];
+                    str = sanitise_input_vec(str);
+
+                    for(auto& i : str)
+                    {
+                        state.set_key_state(i, true);
+                    }
+                }
+                catch(...){}
+            }
+
+            if(j.find("released_keys") != j.end())
+            {
+                try
+                {
+                    std::vector<std::string> str = j["released_keys"];
+                    str = sanitise_input_vec(str);
+
+                    for(auto& i : str)
+                    {
+                        state.set_key_state(i, false);
+                    }
+                }
+                catch(...){}
             }
 
             return true;
