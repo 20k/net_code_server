@@ -7,6 +7,7 @@
 #include "user.hpp"
 #include <js/js_interop.hpp>
 #include "seccallers.hpp"
+#include "command_handler_state.hpp"
 
 struct shared_data;
 struct command_handler_state;
@@ -21,75 +22,6 @@ void init_js_interop(stack_duk& sd, const std::string& js_data)
 ///shared queue used for async responses from servers
 std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<shared_data*> shared_queue, std::optional<command_handler_state*> state);
 void throwaway_user_thread(const std::string& username, const std::string& command);
-
-struct command_handler_state
-{
-    std::mutex command_lock;
-    std::mutex lock;
-    std::mutex key_lock;
-
-    std::map<int, std::vector<std::string>> unprocessed_keystrokes;
-    std::map<std::string, bool> key_states;
-
-    std::atomic_bool should_terminate_any_realtime{false};
-    std::atomic_int number_of_realtime_scripts{0};
-    std::atomic_int number_of_realtime_scripts_terminated{0};
-
-    std::map<int, bool> should_terminate_realtime;
-
-    std::string get_auth()
-    {
-        std::lock_guard guard(command_lock);
-
-        return auth;
-    }
-
-    void set_auth(const std::string& str)
-    {
-        std::lock_guard guard(command_lock);
-
-        auth = str;
-    }
-
-    void set_user(const user& usr)
-    {
-        std::lock_guard guard(command_lock);
-
-        current_user = usr;
-    }
-
-    user get_user()
-    {
-        std::lock_guard guard(command_lock);
-
-        return current_user;
-    }
-
-    void set_key_state(const std::string& str, bool is_down)
-    {
-        if(str.size() > 10)
-            return;
-
-        std::lock_guard guard(key_lock);
-
-        ///ur cheating!!!
-        if(key_states.size() > 250)
-            key_states.clear();
-
-        key_states[str] = is_down;
-    }
-
-    std::map<std::string, bool> get_key_state()
-    {
-        std::lock_guard guard(key_lock);
-
-        return key_states;
-    }
-
-private:
-    std::string auth;
-    user current_user;
-};
 
 ///context?
 std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id, shared_data& shared);
