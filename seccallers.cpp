@@ -279,6 +279,26 @@ duk_ret_t set_close_window_on_exit(duk_context* ctx)
     return 0;
 }
 
+duk_ret_t set_start_window_size(duk_context* ctx)
+{
+    COOPERATE_KILL();
+
+    if(duk_is_undefined(ctx, -1) || !duk_is_object_coercible(ctx, -1))
+        return push_error(ctx, "Usage: set_start_window_size({width:10, height:25});");
+
+    if(!duk_has_prop_string(ctx, -1, "width") || !duk_has_prop_string(ctx, -1, "height"))
+        return push_error(ctx, "Must have width *and* height property");
+
+    int width = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "width", 10.);
+    int height = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "height", 10.);
+
+    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(ctx);
+
+    shared_state->set_width_height(width, height);
+
+    return 0;
+}
+
 void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack, shared_duk_worker_state* shared_state)
 {
     duk_push_global_stash(ctx);
@@ -747,6 +767,7 @@ void register_funcs(duk_context* ctx, int seclevel)
     inject_c_function(ctx, terminate_realtime, "terminate_realtime", 0);
     inject_c_function(ctx, is_realtime_script, "is_realtime_script", 0);
     inject_c_function(ctx, set_close_window_on_exit, "set_close_window_on_exit", 0);
+    inject_c_function(ctx, set_start_window_size, "set_start_window_size", 1);
 
     //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }

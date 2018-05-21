@@ -54,3 +54,18 @@ bool shared_duk_worker_state::close_window_on_exit()
 {
     return should_close_window_on_exit;
 }
+
+void shared_duk_worker_state::set_width_height(int pwidth, int pheight)
+{
+    std::lock_guard guard(whguard);
+
+    width = pwidth;
+    height = pheight;
+}
+
+std::pair<int, int> shared_duk_worker_state::get_width_height()
+{
+    std::lock_guard guard(whguard);
+
+    return {width, height};
+}
