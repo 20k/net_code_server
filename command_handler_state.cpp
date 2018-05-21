@@ -48,3 +48,8 @@ std::map<std::string, bool> command_handler_state::get_key_state()
 
     return key_states;
 }
+
+int command_handler_state::number_of_running_realtime_scripts()
+{
+    return number_of_realtime_scripts - number_of_realtime_scripts_terminated;
+}

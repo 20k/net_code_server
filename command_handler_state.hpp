@@ -32,6 +32,8 @@ struct command_handler_state
     void set_key_state(const std::string& str, bool is_down);
     std::map<std::string, bool> get_key_state();
 
+    int number_of_running_realtime_scripts();
+
 private:
     std::string auth;
     user current_user;
