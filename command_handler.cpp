@@ -436,6 +436,24 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                     std::atomic_bool request_long_sleep{false};
                     std::atomic_bool force_terminate{false};
 
+                    ///pipe window size
+                    {
+                        auto [width, height] = shared_duk_state->get_width_height();
+
+                        try
+                        {
+                            using json = nlohmann::json;
+
+                            json j;
+                            j["id"] = current_id;
+                            j["width"] = width;
+                            j["height"] = height;
+
+                            shared_queue.value()->add_back_write("command_realtime_json " + j.dump());
+                        }
+                        catch(...){}
+                    }
+
                     std::thread thrd = std::thread(async_realtime_script_handler, sd.ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf.ret),
                                                    std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate));
 
