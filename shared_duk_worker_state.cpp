@@ -49,3 +49,8 @@ void shared_duk_worker_state::set_close_window_on_exit()
 {
     should_close_window_on_exit = true;
 }
+
+bool shared_duk_worker_state::close_window_on_exit()
+{
+    return should_close_window_on_exit;
+}

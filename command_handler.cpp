@@ -526,6 +526,24 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                     {
 
                     }
+
+                    if(shared_duk_state->close_window_on_exit())
+                    {
+                        try
+                        {
+                            using json = nlohmann::json;
+
+                            json j;
+                            j["id"] = current_id;
+                            j["close"] = true;
+
+                            shared_queue.value()->add_back_write("command_realtime_json " + j.dump());
+                        }
+                        catch(...)
+                        {
+
+                        }
+                    }
                 }
 
                 printf("Ended realtime\n");

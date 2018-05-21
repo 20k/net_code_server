@@ -217,6 +217,8 @@ int main()
 {
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 
+    std::cout << std::hash<std::string>{}("aaaaaaaa") << std::endl;
+
     stack_on_start();
 
     get_global_structure();

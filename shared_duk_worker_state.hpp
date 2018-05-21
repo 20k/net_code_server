@@ -15,7 +15,9 @@ struct shared_duk_worker_state
     void set_output_data(const std::string& str);
     std::string consume_output_data();
     bool has_output_data_available();
+
     void set_close_window_on_exit();
+    bool close_window_on_exit();
 
 private:
     std::atomic_int is_realtime_script{0};
