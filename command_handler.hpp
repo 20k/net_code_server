@@ -23,7 +23,7 @@ void init_js_interop(stack_duk& sd, const std::string& js_data)
 }
 
 ///shared queue used for async responses from servers
-std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<shared_data*> shared_queue, std::optional<command_handler_state*> state);
+std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared);
 void throwaway_user_thread(const std::string& username, const std::string& command);
 
 ///context?

@@ -247,7 +247,7 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
     terminated = true;
 }
 
-std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<shared_data*> shared_queue, std::optional<command_handler_state*> state)
+std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared)
 {
     try
     {
@@ -308,9 +308,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
         std::thread* launch = new std::thread(managed_duktape_thread, &inf);
 
-        if(state.has_value())
+        if(all_shared.has_value())
         {
-            state.value()->number_of_oneshot_scripts++;
+            all_shared.value()->state.number_of_oneshot_scripts++;
         }
 
         //launch->detach();
@@ -390,9 +390,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             Sleep(1);
         }
 
-        if(state.has_value())
+        if(all_shared.has_value())
         {
-            state.value()->number_of_oneshot_scripts_terminated++;
+            all_shared.value()->state.number_of_oneshot_scripts_terminated++;
         }
 
         if(shared_duk_state->is_realtime())
@@ -409,9 +409,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             launch->join();
             delete launch;
 
-            if(current_mode == script_management_mode::REALTIME && state.has_value() && shared_queue.has_value() && !sand_data->terminate_semi_gracefully)
+            if(current_mode == script_management_mode::REALTIME && all_shared.has_value() && !sand_data->terminate_semi_gracefully)
             {
-                state.value()->number_of_realtime_scripts++;
+                all_shared.value()->state.number_of_realtime_scripts++;
 
                 launched_realtime = true;
 
@@ -467,8 +467,8 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                 if(is_valid)
                 {
-                    command_handler_state& cstate = *state.value();
-                    shared_data& cqueue = *shared_queue.value();
+                    command_handler_state& cstate = all_shared.value()->state;
+                    shared_data& cqueue = all_shared.value()->shared;
 
                     std::atomic_bool terminated{false};
                     std::atomic_bool request_long_sleep{false};
@@ -487,7 +487,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                             j["width"] = width;
                             j["height"] = height;
 
-                            shared_queue.value()->add_back_write("command_realtime_json " + j.dump());
+                            all_shared.value()->shared.add_back_write("command_realtime_json " + j.dump());
                         }
                         catch(...){}
                     }
@@ -497,20 +497,20 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                     while(!force_terminate)
                     {
-                        if(state.value()->should_terminate_any_realtime)
+                        if(all_shared.value()->state.should_terminate_any_realtime)
                             break;
 
                         {
-                            std::lock_guard guard(state.value()->lock);
+                            std::lock_guard guard(all_shared.value()->state.lock);
 
-                            if(state.value()->should_terminate_realtime[current_id])
+                            if(all_shared.value()->state.should_terminate_realtime[current_id])
                                 break;
                         }
 
                         if(!shared_duk_state->is_realtime())
                             break;
 
-                        shared_duk_state->set_key_state(state.value()->get_key_state());
+                        shared_duk_state->set_key_state(all_shared.value()->state.get_key_state());
 
                         double dt_ms = clk.restart().asMicroseconds() / 1000.;
 
@@ -549,7 +549,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                         {
                             std::string str = shared_duk_state->consume_output_data();
 
-                            if(shared_queue.has_value() && str != "")
+                            if(all_shared.has_value() && str != "")
                             {
                                 try
                                 {
@@ -559,7 +559,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                                     j["id"] = current_id;
                                     j["msg"] = str;
 
-                                    shared_queue.value()->add_back_write("command_realtime_json " + j.dump());
+                                    all_shared.value()->shared.add_back_write("command_realtime_json " + j.dump());
                                 }
                                 catch(...)
                                 {
@@ -595,7 +595,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                             j["id"] = current_id;
                             j["close"] = true;
 
-                            shared_queue.value()->add_back_write("command_realtime_json " + j.dump());
+                            all_shared.value()->shared.add_back_write("command_realtime_json " + j.dump());
                         }
                         catch(...)
                         {
@@ -637,7 +637,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
         if(launched_realtime)
         {
-            state.value()->number_of_realtime_scripts_terminated++;
+            all_shared.value()->state.number_of_realtime_scripts_terminated++;
         }
 
         std::string ret = inf.ret;
@@ -652,7 +652,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
 void throwaway_user_thread(const std::string& username, const std::string& command)
 {
-    std::thread(run_in_user_context, username, command, std::nullopt, std::nullopt).detach();
+    std::thread(run_in_user_context, username, command, std::nullopt).detach();
 }
 
 std::string binary_to_hex(const std::string& in, bool swap_endianness)
@@ -738,9 +738,9 @@ std::string hex_to_binary(const std::string& in)
 
 void on_create_user(user& usr)
 {
-    run_in_user_context(usr.name, "#msg.manage({join:\"0000\"})", std::nullopt, std::nullopt);
-    run_in_user_context(usr.name, "#msg.manage({join:\"7001\"})", std::nullopt, std::nullopt);
-    run_in_user_context(usr.name, "#msg.manage({join:\"memes\"})", std::nullopt, std::nullopt);
+    run_in_user_context(usr.name, "#msg.manage({join:\"0000\"})", std::nullopt);
+    run_in_user_context(usr.name, "#msg.manage({join:\"7001\"})", std::nullopt);
+    run_in_user_context(usr.name, "#msg.manage({join:\"memes\"})", std::nullopt);
 
     {
         mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
@@ -1544,7 +1544,7 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
                 return "No account or not logged in";
         }
 
-        return run_in_user_context(all_shared->state.get_user().name, str, &all_shared->shared, &all_shared->state);
+        return run_in_user_context(all_shared->state.get_user().name, str, all_shared);
     }
 
     return make_error_col("Command Not Found or Unimplemented");
