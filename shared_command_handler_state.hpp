@@ -7,7 +7,9 @@
 
 struct shared_command_handler_state
 {
-    shared_command_handler_state(tcp::socket&& socket, connection_type::connection_type type)
+    connection_t type = connection_type::HTTP;
+
+    shared_command_handler_state(tcp::socket&& socket, connection_type::connection_type type) : type(type)
     {
         if(type == connection_type::HTTP)
         {

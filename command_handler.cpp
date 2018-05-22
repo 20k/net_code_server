@@ -1132,7 +1132,7 @@ bool is_allowed_user(const std::string& user)
     return banned.find(user) == banned.end();
 }
 
-std::string handle_command_impl(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id, shared_data& shared)
+std::string handle_command_impl(command_handler_state& state, const std::string& str, int64_t my_id, shared_data& shared)
 {
     printf("yay command\n");
 
@@ -1818,7 +1818,7 @@ std::string handle_autocompletes_json(const std::string& username, const std::st
     return intro + obj.dump();
 }
 
-std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id, shared_data& shared)
+std::string handle_command(command_handler_state& state, const std::string& str, int64_t my_id, shared_data& shared)
 {
     //lg::log("Log Command " + str);
 
@@ -1837,14 +1837,14 @@ std::string handle_command(command_handler_state& state, const std::string& str,
     {
         std::string to_exec(str.begin() + client_command.size(), str.end());
 
-        return "command " + handle_command_impl(state, to_exec, glob, my_id, shared);
+        return "command " + handle_command_impl(state, to_exec, my_id, shared);
     }
 
     if(starts_with(str, client_chat))
     {
         std::string to_exec(str.begin() + client_chat.size(), str.end());
 
-        handle_command_impl(state, to_exec, glob, my_id, shared);
+        handle_command_impl(state, to_exec, my_id, shared);
 
         return "";
     }

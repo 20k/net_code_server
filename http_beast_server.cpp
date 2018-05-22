@@ -60,12 +60,11 @@
 
 #include "command_handler.hpp"
 
-void async_command_handler(shared_data& shared, command_handler_state& state, std::deque<std::string>& shared_queue, std::mutex& shared_lock,
-                           global_state& glob, int64_t my_id)
+void async_command_handler(std::shared_ptr<shared_command_handler_state> all_shared, std::deque<std::string>& shared_queue, std::mutex& shared_lock)
 {
     while(1)
     {
-        if(shared.should_terminate)
+        if(all_shared->shared.should_terminate)
             break;
 
         std::string to_exec = "";
@@ -88,15 +87,15 @@ void async_command_handler(shared_data& shared, command_handler_state& state, st
             continue;
         }
 
-        std::string to_pipe = handle_command(state, to_exec, glob, my_id, shared);
-        shared.add_back_write(to_pipe);
+        std::string to_pipe = handle_command(all_shared->state, to_exec, all_shared->my_id, all_shared->shared);
+        all_shared->shared.add_back_write(to_pipe);
 
         Sleep(5);
     }
 
     std::cout << "shutdown async" << std::endl;
 
-    shared.termination_count++;
+    all_shared->shared.termination_count++;
 }
 
 std::vector<std::string> sanitise_input_vec(std::vector<std::string> vec)
@@ -113,7 +112,7 @@ std::vector<std::string> sanitise_input_vec(std::vector<std::string> vec)
     return vec;
 }
 
-bool handle_termination_shortcircuit(command_handler_state& state, const std::string& str, shared_data& shared, global_state& glob, int64_t my_id)
+bool handle_termination_shortcircuit(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str)
 {
     std::string tstr = "client_terminate_scripts ";
 
@@ -131,16 +130,16 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
 
             if(id <= -1)
             {
-                state.should_terminate_any_realtime = true;
+                all_shared->state.should_terminate_any_realtime = true;
             }
             else
             {
-                std::lock_guard guard(state.lock);
+                std::lock_guard guard(all_shared->state.lock);
 
-                if(state.should_terminate_realtime.size() > 100)
-                    state.should_terminate_realtime.clear();
+                if(all_shared->state.should_terminate_realtime.size() > 100)
+                    all_shared->state.should_terminate_realtime.clear();
 
-                state.should_terminate_realtime[id] = true;
+                all_shared->state.should_terminate_realtime[id] = true;
             }
 
             return true;
@@ -186,14 +185,14 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
                     //    std::cout << "keystroke " << i << "\n";
 
                     {
-                        std::lock_guard guard(state.lock);
+                        std::lock_guard guard(all_shared->state.lock);
 
                         for(auto& i : str)
-                            state.unprocessed_keystrokes[id].push_back(i);
+                            all_shared->state.unprocessed_keystrokes[id].push_back(i);
 
-                        while(state.unprocessed_keystrokes[id].size() > 200)
+                        while(all_shared->state.unprocessed_keystrokes[id].size() > 200)
                         {
-                            state.unprocessed_keystrokes[id].erase(state.unprocessed_keystrokes[id].begin());
+                            all_shared->state.unprocessed_keystrokes[id].erase(all_shared->state.unprocessed_keystrokes[id].begin());
                         }
                     }
                 }
@@ -218,7 +217,7 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
                     {
                         //std::cout << "Pressed " << i << std::endl;
 
-                        state.set_key_state(i, true);
+                        all_shared->state.set_key_state(i, true);
                     }
                 }
                 catch(...){}
@@ -233,7 +232,7 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
 
                     for(auto& i : str)
                     {
-                        state.set_key_state(i, false);
+                        all_shared->state.set_key_state(i, false);
                     }
                 }
                 catch(...){}
@@ -267,7 +266,7 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
             int width = j["width"];
             int height = j["height"];
 
-            state.set_width_height(id, width, height);
+            all_shared->state.set_width_height(id, width, height);
 
             return true;
         }
@@ -279,9 +278,9 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
 
     if(str == "client_poll" || str == "client_poll_json")
     {
-        std::string out = handle_command(state, str, glob, my_id, shared);
+        std::string out = handle_command(all_shared->state, str, all_shared->my_id, all_shared->shared);
 
-        shared.add_back_write(out);
+        all_shared->shared.add_back_write(out);
 
         return true;
     }
@@ -290,17 +289,11 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
 }
 
 // Handles an HTTP server connection
-void read_queue(socket_interface& socket,
-                global_state& glob,
-                int64_t my_id,
-                shared_data& shared,
+void read_queue(std::shared_ptr<shared_command_handler_state> all_shared,
                 std::deque<std::string>& shared_queue,
-                std::mutex& shared_lock,
-                command_handler_state& state,
-                connection_t conn_type)
+                std::mutex& shared_lock)
 {
-    std::thread(async_command_handler, std::ref(shared), std::ref(state), std::ref(shared_queue), std::ref(shared_lock),
-                std::ref(glob), my_id).detach();
+    std::thread(async_command_handler, all_shared, std::ref(shared_queue), std::ref(shared_lock)).detach();
 
     boost::system::error_code ec;
 
@@ -308,24 +301,24 @@ void read_queue(socket_interface& socket,
     {
         while(1)
         {
-            if(shared.should_terminate)
+            if(all_shared->shared.should_terminate)
                 break;
 
             Sleep(4);
 
             //if(socket.available() > 0)
             {
-                if(socket.read(ec))
+                if(all_shared->msock->read(ec))
                     break;
 
-                std::string next_command = socket.get_read();
+                std::string next_command = all_shared->msock->get_read();
 
                 if(next_command.size() > 200000)
                     continue;
 
                 lg::log(next_command);
 
-                if(handle_termination_shortcircuit(state, next_command, shared, glob, my_id))
+                if(handle_termination_shortcircuit(all_shared, next_command))
                    continue;
 
                 int len;
@@ -349,7 +342,7 @@ void read_queue(socket_interface& socket,
                 if(rate_hit)
                 {
                     lg::log("hit rate limit");
-                    shared.add_back_write("command Hit rate limit (read_queue)");
+                    all_shared->shared.add_back_write("command Hit rate limit (read_queue)");
                 }
             }
         }
@@ -359,44 +352,40 @@ void read_queue(socket_interface& socket,
 
     }
 
-    state.should_terminate_any_realtime = true;
+    all_shared->state.should_terminate_any_realtime = true;
 
-    shared.should_terminate = true;
+    all_shared->shared.should_terminate = true;
 
-    socket.shutdown();
+    all_shared->msock->shutdown();
 
     std::cout << "shutdown read" << std::endl;
 
-    shared.termination_count++;
+    all_shared->shared.termination_count++;
 }
 
-void write_queue(socket_interface& socket,
-                global_state& glob,
-                int64_t my_id,
-                shared_data& shared,
-                connection_t conn_type)
+void write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
 {
     try
     {
         while(1)
         {
-            if(shared.should_terminate)
+            if(all_shared->shared.should_terminate)
                 break;
 
-            if(shared.has_front_write())
+            if(all_shared->shared.has_front_write())
             {
-                std::string next_command = shared.get_front_write();
+                std::string next_command = all_shared->shared.get_front_write();
 
                 //if(next_command != "")
                 //    printf("sending test write\n");
 
-                if(next_command == "" && conn_type == connection_type::WEBSOCKET)
+                if(next_command == "" && all_shared->type == connection_type::WEBSOCKET)
                     continue;
 
                 if(next_command.size() > 100*100)
                     continue;
 
-                if(socket.write(next_command))
+                if(all_shared->msock->write(next_command))
                     break;
             }
             else
@@ -404,7 +393,7 @@ void write_queue(socket_interface& socket,
                 Sleep(1);
             }
 
-            if(!socket.is_open())
+            if(!all_shared->msock->is_open())
                 break;
         }
     }
@@ -413,9 +402,9 @@ void write_queue(socket_interface& socket,
 
     }
 
-    shared.should_terminate = true;
+    all_shared->shared.should_terminate = true;
 
-    shared.termination_count++;
+    all_shared->shared.termination_count++;
 
     std::cout << "shutdown write" << std::endl;
 }
@@ -425,24 +414,23 @@ void thread_session(
     int64_t my_id,
     connection_t conn_type)
 {
-    shared_command_handler_state all_shared(std::move(socket), conn_type);
+    std::shared_ptr<shared_command_handler_state> all_shared = std::make_shared<shared_command_handler_state>(std::move(socket), conn_type);
 
     std::deque<std::string> shared_queue;
     std::mutex shared_lock;
 
     global_shared_data* store = fetch_global_shared_data();
-    store->add(&all_shared.shared);
+    store->add(&all_shared->shared);
 
-    std::thread(read_queue, std::ref(*msock), my_id, std::ref(shared),
-                std::ref(shared_queue), std::ref(shared_lock), std::ref(state), conn_type).detach();
-    std::thread(write_queue, std::ref(*msock), my_id, std::ref(shared), conn_type).detach();
+    std::thread(read_queue, all_shared, std::ref(shared_queue), std::ref(shared_lock)).detach();
+    std::thread(write_queue, all_shared).detach();
 
     ///3rd thread is the js exec context
-    while(all_shared.shared.termination_count != 3 || all_shared.state.number_of_realtime_scripts_terminated != all_shared.state.number_of_realtime_scripts)
+    while(all_shared->shared.termination_count != 3 || all_shared->state.number_of_realtime_scripts_terminated != all_shared->state.number_of_realtime_scripts)
     {
-        if(all_shared.state.number_of_realtime_scripts_terminated == all_shared.state.number_of_realtime_scripts)
+        if(all_shared->state.number_of_realtime_scripts_terminated == all_shared->state.number_of_realtime_scripts)
         {
-            all_shared.state.should_terminate_any_realtime = false;
+            all_shared->state.should_terminate_any_realtime = false;
         }
 
         Sleep(500);
@@ -453,7 +441,7 @@ void thread_session(
 
         for(int i=0; i < (int)store->data.size(); i++)
         {
-            if(store->data[i] == &shared)
+            if(store->data[i] == &all_shared->shared)
             {
                 store->data.erase(store->data.begin() + i);
                 break;
@@ -481,7 +469,7 @@ void session_wrapper(tcp::socket&& socket,
     }
 }
 
-void http_test_server()
+/*void http_test_server()
 {
     try
     {
@@ -520,7 +508,7 @@ void http_test_server()
         std::cerr << "HTTP Error: " << e.what() << std::endl;
         //return EXIT_FAILURE;
     }
-}
+}*/
 
 void websocket_test_server()
 {
@@ -552,7 +540,6 @@ void websocket_test_server()
                 session_wrapper,
                 std::move(socket),
                 doc_root,
-                std::ref(glob),
                 id,
                 connection_type::WEBSOCKET).detach();
         }
@@ -570,7 +557,7 @@ void http_test_run()
 
     start_non_user_task_thread();
 
-    std::thread(http_test_server).detach();
+    //std::thread(http_test_server).detach();
     //std::thread(websocket_test_server).detach();
 
     std::thread(websocket_test_server).detach();

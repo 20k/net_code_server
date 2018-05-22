@@ -24,7 +24,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 void throwaway_user_thread(const std::string& username, const std::string& command);
 
 ///context?
-std::string handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id, shared_data& shared);
+std::string handle_command(command_handler_state& state, const std::string& str, int64_t my_id, shared_data& shared);
 
 std::string handle_autocompletes_json(const std::string& username, const std::string& in);
 
