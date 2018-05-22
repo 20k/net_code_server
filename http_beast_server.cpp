@@ -6,6 +6,7 @@
 #include "logging.hpp"
 #include <libncclient/nc_util.hpp>
 #include <json/json.hpp>
+#include "shared_command_handler_state.hpp"
 
 //
 // Copyright (c) 2016-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
@@ -58,17 +59,6 @@
 #include <thread>
 
 #include "command_handler.hpp"
-
-namespace connection_type
-{
-    enum connection_type
-    {
-        WEBSOCKET,
-        HTTP
-    };
-}
-
-using connection_t = connection_type::connection_type;
 
 void async_command_handler(shared_data& shared, command_handler_state& state, std::deque<std::string>& shared_queue, std::mutex& shared_lock,
                            global_state& glob, int64_t my_id)
@@ -432,41 +422,27 @@ void write_queue(socket_interface& socket,
 
 void thread_session(
     tcp::socket&& socket,
-    global_state& glob,
     int64_t my_id,
     connection_t conn_type)
 {
-    shared_data shared;
+    shared_command_handler_state all_shared(std::move(socket), conn_type);
 
     std::deque<std::string> shared_queue;
     std::mutex shared_lock;
-    command_handler_state state;
-
 
     global_shared_data* store = fetch_global_shared_data();
-    store->add(&shared);
+    store->add(&all_shared.shared);
 
-    socket_interface* msock = nullptr;
-
-    if(conn_type == connection_type::HTTP)
-    {
-        msock = new http_socket(std::move(socket));
-    }
-    if(conn_type == connection_type::WEBSOCKET)
-    {
-        msock = new websock_socket(std::move(socket));
-    }
-
-    std::thread(read_queue, std::ref(*msock), std::ref(glob), my_id, std::ref(shared),
+    std::thread(read_queue, std::ref(*msock), my_id, std::ref(shared),
                 std::ref(shared_queue), std::ref(shared_lock), std::ref(state), conn_type).detach();
-    std::thread(write_queue, std::ref(*msock), std::ref(glob), my_id, std::ref(shared), conn_type).detach();
+    std::thread(write_queue, std::ref(*msock), my_id, std::ref(shared), conn_type).detach();
 
     ///3rd thread is the js exec context
-    while(shared.termination_count != 3 || state.number_of_realtime_scripts_terminated != state.number_of_realtime_scripts)
+    while(all_shared.shared.termination_count != 3 || all_shared.state.number_of_realtime_scripts_terminated != all_shared.state.number_of_realtime_scripts)
     {
-        if(state.number_of_realtime_scripts_terminated == state.number_of_realtime_scripts)
+        if(all_shared.state.number_of_realtime_scripts_terminated == all_shared.state.number_of_realtime_scripts)
         {
-            state.should_terminate_any_realtime = false;
+            all_shared.state.should_terminate_any_realtime = false;
         }
 
         Sleep(500);
@@ -487,20 +463,17 @@ void thread_session(
 
     Sleep(50);
 
-    delete msock;
-
     std::cout << "shutdown session" << std::endl;
 }
 
 void session_wrapper(tcp::socket&& socket,
                      std::string const& doc_root,
-                     global_state& glob,
                      int64_t my_id,
                      connection_t conn_type)
 {
     try
     {
-        thread_session(std::move(socket), glob, my_id, conn_type);
+        thread_session(std::move(socket), my_id, conn_type);
     }
     catch(...)
     {
@@ -538,7 +511,6 @@ void http_test_server()
                 session_wrapper,
                 std::move(socket),
                 doc_root,
-                std::ref(glob),
                 id,
                 connection_type::HTTP).detach();
         }

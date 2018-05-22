@@ -1910,3 +1910,11 @@ std::string handle_command(command_handler_state& state, const std::string& str,
 
     return "command Command not understood";
 }
+
+void async_handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id, shared_data& shared)
+{
+    std::thread([&]()
+                {
+
+                });
+}

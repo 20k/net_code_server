@@ -33,4 +33,15 @@ std::string hex_to_binary(const std::string& in);
 std::string delete_user(command_handler_state& state, const std::string& str, bool cli_force = false);
 std::string rename_user_force(const std::string& from_name, const std::string& to_name);
 
+namespace connection_type
+{
+    enum connection_type
+    {
+        WEBSOCKET,
+        HTTP
+    };
+}
+
+using connection_t = connection_type::connection_type;
+
 #endif // COMMAND_HANDLER_HPP_INCLUDED
