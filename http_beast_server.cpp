@@ -87,7 +87,7 @@ void async_command_handler(std::shared_ptr<shared_command_handler_state> all_sha
             continue;
         }
 
-        std::string to_pipe = handle_command(all_shared->state, to_exec, all_shared->my_id, all_shared->shared);
+        std::string to_pipe = handle_command(all_shared, to_exec);
         all_shared->shared.add_back_write(to_pipe);
 
         Sleep(5);
@@ -278,7 +278,7 @@ bool handle_termination_shortcircuit(std::shared_ptr<shared_command_handler_stat
 
     if(str == "client_poll" || str == "client_poll_json")
     {
-        std::string out = handle_command(all_shared->state, str, all_shared->my_id, all_shared->shared);
+        std::string out = handle_command(all_shared, str);
 
         all_shared->shared.add_back_write(out);
 

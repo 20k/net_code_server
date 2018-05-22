@@ -8,6 +8,9 @@
 #include <js/js_interop.hpp>
 #include "seccallers.hpp"
 #include "command_handler_state.hpp"
+#include <memory>
+
+struct shared_command_handler_state;
 
 struct shared_data;
 struct command_handler_state;
@@ -24,7 +27,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 void throwaway_user_thread(const std::string& username, const std::string& command);
 
 ///context?
-std::string handle_command(command_handler_state& state, const std::string& str, int64_t my_id, shared_data& shared);
+std::string handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str);
 
 std::string handle_autocompletes_json(const std::string& username, const std::string& in);
 
