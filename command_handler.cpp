@@ -114,6 +114,32 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
                 state.unprocessed_keystrokes[current_id].clear();
             }
 
+            if(duk_has_prop_string(ctx, -1, "on_resize"))
+            {
+                if(state.has_new_width_height(current_id))
+                {
+                    std::pair<int, int> width_height = state.consume_width_height(current_id);
+
+                    width_height.first = clamp(width_height.first, 5, 400);
+                    width_height.second = clamp(width_height.second, 5, 400);
+
+                    duk_push_string(ctx, "on_resize");
+                    push_dukobject(ctx, "width", width_height.first, "height", width_height.second);
+
+                    if(duk_pcall_prop(ctx, -3, 1) != DUK_EXEC_SUCCESS)
+                    {
+                        ret = duk_safe_to_std_string(ctx, -1);
+                        force_terminate = true;
+                        break;
+                    }
+
+                    duk_pop(ctx);
+                }
+
+                ///DONT SET real_operation
+                any = true;
+            }
+
             if(duk_has_prop_string(ctx, -1, "on_input"))
             {
                 while(unprocessed_keystrokes.size() > 0)

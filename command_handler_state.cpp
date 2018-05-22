@@ -53,3 +53,34 @@ int command_handler_state::number_of_running_realtime_scripts()
 {
     return number_of_realtime_scripts - number_of_realtime_scripts_terminated;
 }
+
+bool command_handler_state::has_new_width_height(int script_id)
+{
+    std::lock_guard guard(size_lock);
+
+    return received_sizes.find(script_id) != received_sizes.end();
+}
+
+void command_handler_state::set_width_height(int script_id, int pwidth, int pheight)
+{
+    std::lock_guard guard(size_lock);
+
+    if(received_sizes.size() > 200)
+        received_sizes.clear();
+
+    pwidth = clamp(pwidth, 5, 400);
+    pheight = clamp(pheight, 5, 400);
+
+    received_sizes[script_id] = {pwidth, pheight};
+}
+
+std::pair<int, int> command_handler_state::consume_width_height(int script_id)
+{
+    std::lock_guard guard(size_lock);
+
+    auto ret = received_sizes[script_id];
+
+    received_sizes.erase(received_sizes.find(script_id));
+
+    return ret;
+}

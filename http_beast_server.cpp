@@ -257,6 +257,36 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
         }
     }
 
+    std::string istr = "client_script_info ";
+
+    if(starts_with(str, istr))
+    {
+        try
+        {
+            using nlohmann::json;
+
+            std::string to_parse(str.begin() + kstr.size(), str.end());
+
+            json j = json::parse(to_parse);
+
+            int id = j["id"];
+
+            if(id < 0)
+                return true;
+
+            int width = j["width"];
+            int height = j["height"];
+
+            state.set_width_height(id, width, height);
+
+            return true;
+        }
+        catch(...)
+        {
+            return true;
+        }
+    }
+
     if(str == "client_poll" || str == "client_poll_json")
     {
         std::string out = handle_command(state, str, glob, my_id, shared);

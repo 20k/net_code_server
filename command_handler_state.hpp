@@ -34,9 +34,16 @@ struct command_handler_state
 
     int number_of_running_realtime_scripts();
 
+    bool has_new_width_height(int script_id);
+    void set_width_height(int script_id, int width, int height);
+    std::pair<int, int> consume_width_height(int script_id);
+
 private:
     std::string auth;
     user current_user;
+
+    std::map<int, std::pair<int, int>> received_sizes;
+    std::mutex size_lock;
 };
 
 #endif // COMMAND_HANDLER_STATE_HPP_INCLUDED
