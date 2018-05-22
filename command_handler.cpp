@@ -306,6 +306,12 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         inf.ctx = sd.ctx;
 
         std::thread* launch = new std::thread(managed_duktape_thread, &inf);
+
+        if(state.has_value())
+        {
+            state.value()->number_of_oneshot_scripts++;
+        }
+
         //launch->detach();
 
         bool terminated = false;
@@ -381,6 +387,11 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             }
 
             Sleep(1);
+        }
+
+        if(state.has_value())
+        {
+            state.value()->number_of_oneshot_scripts_terminated++;
         }
 
         if(shared_duk_state->is_realtime())

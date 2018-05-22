@@ -21,6 +21,9 @@ struct command_handler_state
     std::atomic_int number_of_realtime_scripts{0};
     std::atomic_int number_of_realtime_scripts_terminated{0};
 
+    std::atomic_int number_of_oneshot_scripts{0};
+    std::atomic_int number_of_oneshot_scripts_terminated{0};
+
     std::map<int, bool> should_terminate_realtime;
 
     std::string get_auth();
