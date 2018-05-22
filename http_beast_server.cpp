@@ -265,7 +265,7 @@ bool handle_termination_shortcircuit(command_handler_state& state, const std::st
         {
             using nlohmann::json;
 
-            std::string to_parse(str.begin() + kstr.size(), str.end());
+            std::string to_parse(str.begin() + istr.size(), str.end());
 
             json j = json::parse(to_parse);
 
