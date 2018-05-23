@@ -2809,13 +2809,18 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!switch_to.has_value())
         return push_error(ctx, "Invalid username (target)");
 
+    if(!switch_to->is_npc() && switch_to->name != opt_user->name)
+        return push_error(ctx, "Cannot switch to a user");
+
+    opt_user->cleanup_call_stack(get_thread_id(ctx));
+
     ///so say we switched from i20k -> f_sdfdf
     ///call stack would be [i20k, f_sddfdf]
     ///and we'd be masquerading under the latter
     ///so. If any member of our call stack is on the permissions list, we're good to go
     std::vector<std::string> call_stack = opt_user->get_call_stack();
 
-    #ifndef TESTING
+    //#ifndef TESTING
     bool found = false;
 
     for(auto it = call_stack.begin(); it != call_stack.end(); it++)
@@ -2829,7 +2834,7 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
             break;
         }
     }
-    #endif // TESTING
+    //#endif // TESTING
 
     if(call_stack.size() == 0)
     {
@@ -2837,12 +2842,12 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 0;
     }
 
-    #ifndef TESTING
+    //#ifndef TESTING
     if(!found)
         return push_error(ctx, "Insufficient permissions");
-    #else // TESTING
-    call_stack.push_back(switch_to->name);
-    #endif // TESTING
+    //#else // TESTING
+    //call_stack.push_back(switch_to->name);
+    //#endif // TESTING
 
     call_stack.erase(call_stack.begin());
 

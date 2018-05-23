@@ -495,6 +495,9 @@ std::vector<std::string> user::get_allowed_users()
 
 bool user::is_allowed_user(const std::string& usr)
 {
+    if(!is_npc())
+        return false;
+
     auto valid = get_allowed_users();
 
     for(auto& i : valid)
