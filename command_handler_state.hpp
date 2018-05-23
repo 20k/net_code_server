@@ -36,6 +36,7 @@ struct command_handler_state
     std::map<std::string, bool> get_key_state();
 
     int number_of_running_realtime_scripts();
+    int number_of_running_oneshot_scripts();
 
     bool has_new_width_height(int script_id);
     void set_width_height(int script_id, int width, int height);

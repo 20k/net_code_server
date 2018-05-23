@@ -34,6 +34,15 @@ struct shared_command_handler_state
     shared_data shared;
 
     std::atomic_bool execution_is_blocked{false};
+
+    float live_work_units()
+    {
+        float blocking_script_invocation_cost = 1;
+        float async_script_invocation_cost = 1;
+
+        return blocking_script_invocation_cost * state.number_of_running_oneshot_scripts() +
+               async_script_invocation_cost * state.number_of_running_realtime_scripts();
+    }
 };
 
 #endif // SHARED_COMMAND_HANDLER_STATE_HPP_INCLUDED

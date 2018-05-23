@@ -54,6 +54,11 @@ int command_handler_state::number_of_running_realtime_scripts()
     return number_of_realtime_scripts - number_of_realtime_scripts_terminated;
 }
 
+int command_handler_state::number_of_running_oneshot_scripts()
+{
+    return number_of_oneshot_scripts - number_of_oneshot_scripts_terminated;
+}
+
 bool command_handler_state::has_new_width_height(int script_id)
 {
     std::lock_guard guard(size_lock);
