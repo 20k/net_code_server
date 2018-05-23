@@ -373,6 +373,13 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
         while(!inf.finished)
         {
+            int sleep_mult = 1;
+
+            if(all_shared.has_value())
+            {
+                sleep_mult = all_shared.value()->live_work_units();
+            }
+
             #ifdef ACTIVE_TIME_MANAGEMENT
             {
                 Sleep(active_time_slice_ms);
@@ -380,7 +387,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                 pthread_t thread = launch->native_handle();
                 void* native_handle = pthread_gethandle(thread);
                 SuspendThread(native_handle);
-                Sleep(sleeping_time_slice_ms);
+                Sleep(sleeping_time_slice_ms * sleep_mult);
                 ResumeThread(native_handle);
             }
             #endif // ACTIVE_TIME_MANAGEMENT
@@ -569,6 +576,10 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                             double to_sleep = max_frame_time_ms - max_allowed_frame_time_ms;
 
                             to_sleep = clamp(floor(to_sleep), 0., 200.);
+
+                            to_sleep = to_sleep * all_shared.value()->live_work_units();
+
+                            printf("%f sleeping for\n", to_sleep);
 
                             current_frame_time_ms = 0;
 
@@ -1219,6 +1230,12 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
                 all_shared->state.set_user(fnd);
             }
 
+            auto allowed = fnd.get_call_stack();
+
+            for(auto& i : allowed)
+            {
+                std::cout <<" a  " << i << std::endl;
+            }
 
             /*{
                 bool overwrite = false;
