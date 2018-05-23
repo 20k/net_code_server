@@ -330,7 +330,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
         sandbox_data* sand_data = (sandbox_data*)funcs.udata;
 
-        fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number", "Object");
+        fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number", "Object", "Duktape");
 
         usr.cleanup_call_stack(local_thread_id);
         std::string executing_under = usr.get_call_stack().back();
