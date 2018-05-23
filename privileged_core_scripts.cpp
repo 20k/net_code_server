@@ -2844,12 +2844,18 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     //#ifndef TESTING
     if(!found)
-        return push_error(ctx, "Insufficient permissions");
+    {
+        if(switch_to->name == opt_user->name)
+            call_stack = std::vector<std::string>{opt_user->name};
+        else
+            return push_error(ctx, "Insufficient permissions");
+    }
     //#else // TESTING
     //call_stack.push_back(switch_to->name);
     //#endif // TESTING
 
-    call_stack.erase(call_stack.begin());
+    if(call_stack.size() > 0)
+        call_stack.erase(call_stack.begin());
 
     user& usr = opt_user.value();
 

@@ -579,7 +579,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                             to_sleep = to_sleep * all_shared.value()->live_work_units();
 
-                            printf("%f sleeping for\n", to_sleep);
+                            //printf("%f sleeping for\n", to_sleep);
 
                             current_frame_time_ms = 0;
 
@@ -1232,10 +1232,10 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
             auto allowed = fnd.get_call_stack();
 
-            for(auto& i : allowed)
+            /*for(auto& i : allowed)
             {
                 std::cout <<" a  " << i << std::endl;
-            }
+            }*/
 
             /*{
                 bool overwrite = false;
