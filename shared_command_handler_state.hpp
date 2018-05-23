@@ -32,6 +32,8 @@ struct shared_command_handler_state
     int64_t my_id = 0;
 
     shared_data shared;
+
+    std::atomic_bool execution_is_blocked{false};
 };
 
 #endif // SHARED_COMMAND_HANDLER_STATE_HPP_INCLUDED

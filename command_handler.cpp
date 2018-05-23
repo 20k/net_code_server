@@ -63,11 +63,23 @@ struct cleanup_auth_at_exit
     std::mutex& to_lock;
     std::map<std::string, int>& to_cleanup;
     std::string& auth;
+    bool blocked = true;
 
     cleanup_auth_at_exit(std::mutex& lk, std::map<std::string, int>& cleanup, std::string& ath) : to_lock(lk), to_cleanup(cleanup), auth(ath) {}
 
+    void unblock()
+    {
+        std::lock_guard<std::mutex> lk(to_lock);
+
+        to_cleanup[auth] = 0;
+        blocked = false;
+    }
+
     ~cleanup_auth_at_exit()
     {
+        if(!blocked)
+            return;
+
         std::lock_guard<std::mutex> lk(to_lock);
 
         to_cleanup[auth] = 0;
@@ -247,10 +259,38 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
     terminated = true;
 }
 
+struct execution_blocker_guard
+{
+    std::optional<std::shared_ptr<shared_command_handler_state>>& shared;
+    bool blocked = true;
+
+    execution_blocker_guard(std::optional<std::shared_ptr<shared_command_handler_state>>& all_shared) : shared(all_shared)
+    {
+        if(all_shared)
+            all_shared.value()->execution_is_blocked = true;
+    }
+
+    void unblock()
+    {
+        if(shared)
+            shared.value()->execution_is_blocked = false;
+
+        blocked = false;
+    }
+
+    ~execution_blocker_guard()
+    {
+        if(shared && blocked)
+            shared.value()->execution_is_blocked = false;
+    }
+};
+
 std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared)
 {
     try
     {
+        execution_blocker_guard exec_guard(all_shared);
+
         user usr;
 
         {
@@ -411,6 +451,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
             if(current_mode == script_management_mode::REALTIME && all_shared.has_value() && !sand_data->terminate_semi_gracefully)
             {
+                exec_guard.unblock();
+                cleanup.unblock();
+
                 all_shared.value()->state.number_of_realtime_scripts++;
 
                 launched_realtime = true;
@@ -1912,10 +1955,17 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
     return "command Command not understood";
 }
 
-void async_handle_command(command_handler_state& state, const std::string& str, global_state& glob, int64_t my_id, shared_data& shared)
+void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str)
 {
-    std::thread([&]()
+    std::thread([=]()
                 {
+                    std::string result = handle_command(all_shared, str);
 
-                });
+                    if(result == "")
+                        return;
+
+                    shared_data& shared = all_shared->shared;
+                    shared.add_back_write(result);
+
+                }).detach();
 }

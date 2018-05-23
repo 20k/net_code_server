@@ -87,8 +87,17 @@ void async_command_handler(std::shared_ptr<shared_command_handler_state> all_sha
             continue;
         }
 
-        std::string to_pipe = handle_command(all_shared, to_exec);
-        all_shared->shared.add_back_write(to_pipe);
+
+
+        //std::string to_pipe = handle_command(all_shared, to_exec);
+        //all_shared->shared.add_back_write(to_pipe);
+
+        while(all_shared->execution_is_blocked)
+        {
+            Sleep(5);
+        }
+
+        async_handle_command(all_shared, to_exec);
 
         Sleep(5);
     }

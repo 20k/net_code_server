@@ -28,6 +28,7 @@ void throwaway_user_thread(const std::string& username, const std::string& comma
 
 ///context?
 std::string handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str);
+void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str);
 
 std::string handle_autocompletes_json(const std::string& username, const std::string& in);
 
