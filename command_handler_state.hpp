@@ -15,7 +15,7 @@ struct command_handler_state
     std::mutex key_lock;
 
     std::map<int, std::vector<std::string>> unprocessed_keystrokes;
-    std::map<std::string, bool> key_states;
+    std::map<int, std::map<std::string, bool>> key_states;
 
     std::atomic_bool should_terminate_any_realtime{false};
     std::atomic_int number_of_realtime_scripts{0};
@@ -32,8 +32,8 @@ struct command_handler_state
     void set_user(const user& usr);
     user get_user();
 
-    void set_key_state(const std::string& str, bool is_down);
-    std::map<std::string, bool> get_key_state();
+    void set_key_state(int script_id, const std::string& str, bool is_down);
+    std::map<std::string, bool> get_key_state(int script_id);
 
     int number_of_running_realtime_scripts();
     int number_of_running_oneshot_scripts();

@@ -226,7 +226,7 @@ bool handle_termination_shortcircuit(std::shared_ptr<shared_command_handler_stat
                     {
                         //std::cout << "Pressed " << i << std::endl;
 
-                        all_shared->state.set_key_state(i, true);
+                        all_shared->state.set_key_state(id, i, true);
                     }
                 }
                 catch(...){}
@@ -241,7 +241,7 @@ bool handle_termination_shortcircuit(std::shared_ptr<shared_command_handler_stat
 
                     for(auto& i : str)
                     {
-                        all_shared->state.set_key_state(i, false);
+                        all_shared->state.set_key_state(id, i, false);
                     }
                 }
                 catch(...){}

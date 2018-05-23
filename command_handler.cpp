@@ -560,7 +560,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                         if(!shared_duk_state->is_realtime())
                             break;
 
-                        shared_duk_state->set_key_state(all_shared.value()->state.get_key_state());
+                        shared_duk_state->set_key_state(all_shared.value()->state.get_key_state(current_id));
 
                         double dt_ms = clk.restart().asMicroseconds() / 1000.;
 

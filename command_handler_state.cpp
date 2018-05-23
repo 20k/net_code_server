@@ -28,7 +28,7 @@ user command_handler_state::get_user()
     return current_user;
 }
 
-void command_handler_state::set_key_state(const std::string& str, bool is_down)
+void command_handler_state::set_key_state(int script_id, const std::string& str, bool is_down)
 {
     if(str.size() > 10)
         return;
@@ -36,17 +36,20 @@ void command_handler_state::set_key_state(const std::string& str, bool is_down)
     std::lock_guard guard(key_lock);
 
     ///ur cheating!!!
-    if(key_states.size() > 250)
+    if(key_states.size() > 2500)
         key_states.clear();
 
-    key_states[str] = is_down;
+    if(key_states[script_id].size() > 250)
+        key_states[script_id].clear();
+
+    key_states[script_id][str] = is_down;
 }
 
-std::map<std::string, bool> command_handler_state::get_key_state()
+std::map<std::string, bool> command_handler_state::get_key_state(int script_id)
 {
     std::lock_guard guard(key_lock);
 
-    return key_states;
+    return key_states[script_id];
 }
 
 int command_handler_state::number_of_running_realtime_scripts()
