@@ -81,6 +81,8 @@ struct user
 
     int get_default_network_links(int thread_id);
 
+    std::string fetch_sector();
+
     virtual ~user(){}
 };
 

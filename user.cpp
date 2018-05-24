@@ -616,3 +616,8 @@ bool user::is_npc()
 {
     return auth == "";
 }
+
+std::string user::fetch_sector()
+{
+    return get_nearest_structure(pos).name;
+}
