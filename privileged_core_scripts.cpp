@@ -2952,6 +2952,92 @@ duk_ret_t gal__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+std::string format_string(const std::string& str, const std::vector<std::string>& all)
+{
+    std::string ret = str;
+
+    int max_str = 0;
+
+    for(auto& i : all)
+    {
+        if((int)i.size() > max_str)
+        {
+            max_str = (int)i.size();
+        }
+    }
+
+    for(int i=(int)ret.size(); i < max_str; i++)
+    {
+        ret += ' ';
+    }
+
+    return ret;
+}
+
+duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
+
+    using nlohmann::json;
+
+    std::vector<json> data;
+
+    auto structs = get_global_structure();
+
+    for(auto& i : structs)
+    {
+        auto pos = i.get_centre();
+
+        json j;
+        j["name"] = i.name;
+        j["x"] = pos.x();
+        j["y"] = pos.y();
+        j["z"] = pos.z();
+
+        data.push_back(j);
+    }
+
+    if(is_arr)
+    {
+        json parsed;
+        parsed = data;
+
+        duk_push_string(ctx, ((std::string)parsed.dump()).c_str());
+
+        duk_json_decode(ctx, -1);
+        return 1;
+    }
+    else
+    {
+        std::string str;
+
+        std::vector<std::string> names;
+        std::vector<std::string> positions;
+
+        for(auto& i : data)
+        {
+            names.push_back("Name: " + (std::string)i["name"]);
+
+            float x = i["x"];
+            float y = i["y"];
+            float z = i["z"];
+
+            std::string xyz = "Position: [" + std::to_string((int)x) + ", " + std::to_string((int)y) + ", " + std::to_string((int)z) + "]";
+
+            positions.push_back(xyz);
+        }
+
+        for(int i=0; i < (int)names.size(); i++)
+        {
+            str += format_string(names[i], names) + " | " + format_string(positions[i], positions) + "\n";
+        }
+
+        duk_push_string(ctx, str.c_str());
+    }
+
+    return 1;
+}
+
 #ifdef TESTING
 
 duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)
