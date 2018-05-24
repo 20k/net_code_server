@@ -28,7 +28,7 @@ user command_handler_state::get_user()
     return current_user;
 }
 
-void command_handler_state::set_key_state(int script_id, const std::string& str, bool is_down)
+void command_handler_state::set_key_state(int script_id, const std::string& str, key_state_t is_down)
 {
     if(str.size() > 10)
         return;
@@ -45,7 +45,7 @@ void command_handler_state::set_key_state(int script_id, const std::string& str,
     key_states[script_id][str] = is_down;
 }
 
-std::map<std::string, bool> command_handler_state::get_key_state(int script_id)
+std::map<std::string, key_state_t> command_handler_state::get_key_state(int script_id)
 {
     std::lock_guard guard(key_lock);
 

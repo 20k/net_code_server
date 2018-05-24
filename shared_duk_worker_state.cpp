@@ -70,9 +70,24 @@ std::pair<int, int> shared_duk_worker_state::get_width_height()
     return {width, height};
 }
 
-void shared_duk_worker_state::set_key_state(const std::map<std::string, bool>& key_state)
+void shared_duk_worker_state::resolve_key_states()
 {
     std::lock_guard guard(key_lock);
+
+    for(auto& i : ikey_state)
+    {
+        if(i.second == key_state::DOWN_THEN_UP)
+            i.second = key_state::UP;
+        if(i.second == key_state::UP_THEN_DOWN)
+            i.second = key_state::DOWN;
+    }
+}
+
+void shared_duk_worker_state::set_key_state(const std::map<std::string, key_state_t>& key_state)
+{
+    std::lock_guard guard(key_lock);
+
+    resolve_key_states();
 
     ikey_state = key_state;
 }
@@ -81,7 +96,7 @@ bool shared_duk_worker_state::is_key_down(const std::string& str)
 {
     std::lock_guard guard(key_lock);
 
-    return ikey_state[str];
+    return ikey_state[str] == key_state::DOWN || ikey_state[str] == key_state::DOWN_THEN_UP;;
 }
 
 void shared_duk_worker_state::set_mouse_pos(vec2f pos)

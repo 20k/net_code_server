@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <vec/vec.hpp>
+#include "command_handler_state.hpp"
 
 ///shared between the manager thread, and the executing thread
 struct shared_duk_worker_state
@@ -24,7 +25,7 @@ struct shared_duk_worker_state
     void set_width_height(int width, int height);
     std::pair<int, int> get_width_height();
 
-    void set_key_state(const std::map<std::string, bool>& key_state);
+    void set_key_state(const std::map<std::string, key_state_t>& key_state);
     bool is_key_down(const std::string& str);
 
     void set_mouse_pos(vec2f pos);
@@ -41,11 +42,13 @@ private:
     int width = 10;
     int height = 10;
 
-    std::map<std::string, bool> ikey_state;
-    std::mutex key_lock;
+    std::map<std::string, key_state_t> ikey_state;
+    std::recursive_mutex key_lock;
 
     vec2f mouse_pos;
     std::mutex mouse_lock;
+
+    void resolve_key_states();
 };
 
 #endif // SHARED_DUK_WORKER_STATE_HPP_INCLUDED

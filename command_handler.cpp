@@ -106,7 +106,7 @@ void sleep_thread_for(std::thread& t, int sleep_ms)
 
 void async_realtime_script_handler(duk_context* ctx, shared_data& shared, command_handler_state& state, double& time_of_last_on_update, std::string& ret,
                                    std::atomic_bool& terminated, std::atomic_bool& request_long_sleep, std::atomic_bool& fedback, int current_id,
-                                   std::atomic_bool& force_terminate, std::atomic<double>& avg_exec_time)
+                                   std::atomic_bool& force_terminate, std::atomic<double>& avg_exec_time, std::shared_ptr<shared_command_handler_state> all_shared)
 {
     sf::Clock clk;
 
@@ -119,6 +119,11 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
             sf::Clock elapsed;
 
             bool any = false;
+
+            shared_duk_worker_state* shared_duk_state = get_shared_worker_state_ptr<shared_duk_worker_state>(ctx);
+
+            shared_duk_state->set_key_state(all_shared->state.get_key_state(current_id));
+            shared_duk_state->set_mouse_pos(all_shared->state.get_mouse_pos(current_id));
 
             if(duk_has_prop_string(ctx, -1, "on_wheelmoved"))
             {
@@ -568,7 +573,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                     std::thread thrd = std::thread(async_realtime_script_handler, sd.ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf.ret),
                                                    std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate),
-                                                   std::ref(avg_exec_time));
+                                                   std::ref(avg_exec_time), std::ref(all_shared.value()));
 
                     while(!force_terminate)
                     {
@@ -587,9 +592,6 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                         if(all_shared.value()->live_work_units() > 10)
                             break;
-
-                        shared_duk_state->set_key_state(all_shared.value()->state.get_key_state(current_id));
-                        shared_duk_state->set_mouse_pos(all_shared.value()->state.get_mouse_pos(current_id));
 
                         double dt_ms = clk.restart().asMicroseconds() / 1000.;
 

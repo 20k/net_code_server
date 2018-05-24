@@ -313,7 +313,9 @@ duk_ret_t is_key_down(duk_context* ctx)
 
     shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(ctx);
 
-    push_duk_val(ctx, (bool)shared_state->is_key_down(str));
+    bool is_down = shared_state->is_key_down(str);
+
+    push_duk_val(ctx, is_down);
 
     return 1;
 }
