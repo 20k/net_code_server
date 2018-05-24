@@ -2884,6 +2884,74 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
     return push_success(ctx, "Success");
 }
 
+duk_ret_t gal__map(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    auto structs = get_global_structure();
+
+    int w = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "w", 40);
+    int h = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "h", 30);
+
+    if(w < 0 || h < 0)
+        return push_error(ctx, "w or h < 0");
+
+    w = clamp(w, 2, 200);
+    h = clamp(h, 2, 200);
+
+    //std::vector<std::vector<std::string>> strs;
+
+    std::vector<std::string> strs;
+    strs.resize(h);
+
+    for(int i=0; i < (int)h; i++)
+    {
+        strs[i].resize(w-1);
+
+        for(auto& k : strs[i])
+            k = ' ';
+
+        strs[i].push_back('\n');
+    }
+
+    vec2f br = {-FLT_MAX, -FLT_MAX};
+    vec2f tl = {FLT_MAX, FLT_MAX};
+
+    for(auto& i : structs)
+    {
+        auto pos = i.get_centre();
+
+        br = max(br, pos.xy());
+        tl = min(tl, pos.xy());
+    }
+
+    for(auto& i : structs)
+    {
+        auto pos = i.get_centre();
+
+        vec2f scaled = (pos.xy() - tl) / (br - tl);
+
+        //std::cout << "pos " << pos << " br " << br << " tl " << tl << std::endl;
+
+        vec2f real_size = scaled * (vec2f){w, h};
+
+        real_size = clamp(real_size, (vec2f){0.f, 0.f}, (vec2f){w, h}-1.f);
+
+        real_size = round(real_size);
+
+        strs[(int)real_size.y()][(int)real_size.x()] = 'n';
+    }
+
+    std::string fin;
+
+    for(auto& i : strs)
+    {
+        fin += i;
+    }
+
+    push_duk_val(ctx, fin);
+
+    return 1;
+}
+
 #ifdef TESTING
 
 duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)
