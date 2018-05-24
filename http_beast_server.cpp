@@ -346,7 +346,7 @@ void read_queue(std::shared_ptr<shared_command_handler_state> all_shared,
             if(all_shared->shared.should_terminate)
                 break;
 
-            Sleep(4);
+            Sleep(2);
 
             //if(socket.available() > 0)
             {
