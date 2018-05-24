@@ -223,6 +223,8 @@ int main()
 
     get_global_structure();
 
+    sample_game_structure();
+
     /*http://www.karldiab.com/3DPointPlotter/
     for(int i=0; i < 2000; i++)
     {
