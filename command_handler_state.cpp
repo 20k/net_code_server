@@ -92,3 +92,46 @@ std::pair<int, int> command_handler_state::consume_width_height(int script_id)
 
     return ret;
 }
+
+void command_handler_state::add_mouse_state(int script_id, vec2f mpos, vec2f mwheel_add)
+{
+    mwheel_add = clamp(mwheel_add, -1000.f, 1000.f);
+
+    std::lock_guard guard(mouse_lock);
+
+    if(mouse_pos.size() > 250)
+        mouse_pos.clear();
+
+    if(mousewheel_state.size() > 250)
+        mousewheel_state.clear();
+
+    mouse_pos[script_id] = mpos;
+    mousewheel_state[script_id] += mwheel_add;
+}
+
+vec2f command_handler_state::get_mouse_pos(int script_id)
+{
+    std::lock_guard guard(mouse_lock);
+
+    return mouse_pos[script_id];
+}
+
+vec2f command_handler_state::consume_mousewheel_state(int script_id)
+{
+    std::lock_guard guard(mouse_lock);
+
+    vec2f scrollwheel = mousewheel_state[script_id];
+
+    mousewheel_state[script_id] = {0,0};
+
+    return scrollwheel;
+}
+
+bool command_handler_state::has_mousewheel_state(int script_id)
+{
+    std::lock_guard guard(mouse_lock);
+
+    vec2f scrollwheel = mousewheel_state[script_id];
+
+    return scrollwheel.x() != 0 || scrollwheel.y() != 0;
+}

@@ -285,6 +285,39 @@ bool handle_termination_shortcircuit(std::shared_ptr<shared_command_handler_stat
         }
     }
 
+    std::string mstr = "client_script_mouseinput ";
+
+    if(starts_with(str, mstr))
+    {
+        try
+        {
+            using nlohmann::json;
+
+            std::string to_parse(str.begin() + mstr.size(), str.end());
+
+            json j = json::parse(to_parse);
+
+            int id = j["id"];
+
+            if(id < 0)
+                return true;
+
+            float mouse_x = j["mouse_x"];
+            float mouse_y = j["mouse_y"];
+
+            float mousewheel_x = j["mousewheel_x"];
+            float mousewheel_y = j["mousewheel_y"];
+
+            all_shared->state.add_mouse_state(id, {mouse_x, mouse_y}, {mousewheel_x, mousewheel_y});
+
+            return true;
+        }
+        catch(...)
+        {
+            return true;
+        }
+    }
+
     if(str == "client_poll" || str == "client_poll_json")
     {
         std::string out = handle_command(all_shared, str);

@@ -5,6 +5,7 @@
 #include <mutex>
 #include <string>
 #include <map>
+#include <vec/vec.hpp>
 
 ///shared between the manager thread, and the executing thread
 struct shared_duk_worker_state
@@ -26,6 +27,9 @@ struct shared_duk_worker_state
     void set_key_state(const std::map<std::string, bool>& key_state);
     bool is_key_down(const std::string& str);
 
+    void set_mouse_pos(vec2f pos);
+    vec2f get_mouse_pos();
+
 private:
     std::atomic_int is_realtime_script{0};
     std::string realtime_output_data;
@@ -39,6 +43,9 @@ private:
 
     std::map<std::string, bool> ikey_state;
     std::mutex key_lock;
+
+    vec2f mouse_pos;
+    std::mutex mouse_lock;
 };
 
 #endif // SHARED_DUK_WORKER_STATE_HPP_INCLUDED

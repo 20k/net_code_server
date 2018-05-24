@@ -42,12 +42,23 @@ struct command_handler_state
     void set_width_height(int script_id, int width, int height);
     std::pair<int, int> consume_width_height(int script_id);
 
+    void add_mouse_state(int script_id, vec2f mpos, vec2f mwheel_pos);
+    vec2f get_mouse_pos(int script_id);
+
+    vec2f consume_mousewheel_state(int script_id);
+    bool has_mousewheel_state(int script_id);
+
 private:
     std::string auth;
     user current_user;
 
     std::map<int, std::pair<int, int>> received_sizes;
     std::mutex size_lock;
+
+    std::mutex mouse_lock;
+
+    std::map<int, vec2f> mouse_pos;
+    std::map<int, vec2f> mousewheel_state;
 };
 
 #endif // COMMAND_HANDLER_STATE_HPP_INCLUDED

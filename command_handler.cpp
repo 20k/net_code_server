@@ -127,6 +127,28 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
                 state.unprocessed_keystrokes[current_id].clear();
             }
 
+            if(duk_has_prop_string(ctx, -1, "on_wheelmoved"))
+            {
+                if(state.has_mousewheel_state(current_id))
+                {
+                    vec2f wheel = state.consume_mousewheel_state(current_id);
+
+                    duk_push_string(ctx, "on_wheelmoved");
+                    push_dukobject(ctx, "x", wheel.x(), "y", wheel.y());
+
+                    if(duk_pcall_prop(ctx, -3, 1) != DUK_EXEC_SUCCESS)
+                    {
+                        ret = duk_safe_to_std_string(ctx, -1);
+                        force_terminate = true;
+                        break;
+                    }
+
+                    duk_pop(ctx);
+                }
+
+                any = true;
+            }
+
             if(duk_has_prop_string(ctx, -1, "on_resize"))
             {
                 if(state.has_new_width_height(current_id))
@@ -564,6 +586,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                             break;
 
                         shared_duk_state->set_key_state(all_shared.value()->state.get_key_state(current_id));
+                        shared_duk_state->set_mouse_pos(all_shared.value()->state.get_mouse_pos(current_id));
 
                         double dt_ms = clk.restart().asMicroseconds() / 1000.;
 
