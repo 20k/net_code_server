@@ -106,26 +106,19 @@ void sleep_thread_for(std::thread& t, int sleep_ms)
 
 void async_realtime_script_handler(duk_context* ctx, shared_data& shared, command_handler_state& state, double& time_of_last_on_update, std::string& ret,
                                    std::atomic_bool& terminated, std::atomic_bool& request_long_sleep, std::atomic_bool& fedback, int current_id,
-                                   std::atomic_bool& force_terminate)
+                                   std::atomic_bool& force_terminate, std::atomic<double>& avg_exec_time)
 {
     sf::Clock clk;
+
+    avg_exec_time = 4;
 
     while(!state.should_terminate_any_realtime && !force_terminate)
     {
         try
         {
-            bool did_real_operation = false;
+            sf::Clock elapsed;
+
             bool any = false;
-
-            std::vector<std::string> unprocessed_keystrokes;
-
-            {
-                std::lock_guard guard(state.lock);
-
-                unprocessed_keystrokes = state.unprocessed_keystrokes[current_id];
-
-                state.unprocessed_keystrokes[current_id].clear();
-            }
 
             if(duk_has_prop_string(ctx, -1, "on_wheelmoved"))
             {
@@ -177,6 +170,16 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
 
             if(duk_has_prop_string(ctx, -1, "on_input"))
             {
+                std::vector<std::string> unprocessed_keystrokes;
+
+                {
+                    std::lock_guard guard(state.lock);
+
+                    unprocessed_keystrokes = state.unprocessed_keystrokes[current_id];
+
+                    state.unprocessed_keystrokes[current_id].clear();
+                }
+
                 while(unprocessed_keystrokes.size() > 0)
                 {
                     std::string c = unprocessed_keystrokes[0];
@@ -219,12 +222,6 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
 
                 duk_pop(ctx);
 
-                if(!duk_has_prop_string(ctx, -1, "on_draw"))
-                {
-                    request_long_sleep = true;
-                }
-
-                did_real_operation = true;
                 any = true;
             }
 
@@ -245,15 +242,8 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
                 }
 
                 duk_pop(ctx);
-                request_long_sleep = true;
 
-                did_real_operation = true;
                 any = true;
-            }
-
-            if(!did_real_operation)
-            {
-                request_long_sleep = true;
             }
 
             if(!any)
@@ -261,6 +251,13 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
                 force_terminate = true;
                 break;
             }
+
+            request_long_sleep = true;
+
+            //std::cout << "Full frame too " << elapsed.getElapsedTime().asMicroseconds() / 1000. << std::endl;
+
+            double exec_time = elapsed.getElapsedTime().asMicroseconds() / 1000.;
+            avg_exec_time = (avg_exec_time + exec_time)/2.;
 
             while(!fedback)
             {
@@ -532,6 +529,11 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                 const double max_frame_time_ms = 16;
                 const double max_allowed_frame_time_ms = 2; ///before we sleep for (max_frame - max_allowed)
                 double current_frame_time_ms = 0;
+                double current_goodwill_ms = 0;
+                double max_goodwill_ms = 6;
+
+                std::atomic<double> avg_exec_time = 0;
+                double estimated_time_remaining = max_allowed_frame_time_ms;
 
                 double time_of_last_on_update = get_wall_time();
 
@@ -565,7 +567,8 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                     }
 
                     std::thread thrd = std::thread(async_realtime_script_handler, sd.ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf.ret),
-                                                   std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate));
+                                                   std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate),
+                                                   std::ref(avg_exec_time));
 
                     while(!force_terminate)
                     {
@@ -591,15 +594,23 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                         double dt_ms = clk.restart().asMicroseconds() / 1000.;
 
                         current_frame_time_ms += dt_ms;
+                        estimated_time_remaining -= dt_ms;
 
                         bool long_sleep_requested = request_long_sleep;
 
-                        if(current_frame_time_ms >= max_allowed_frame_time_ms || long_sleep_requested)
+                        if(current_frame_time_ms >= max_allowed_frame_time_ms + current_goodwill_ms || long_sleep_requested)
                         {
+                            //std::cout << "ftime " << current_frame_time_ms << std::endl;
+
+                            if(current_frame_time_ms >= max_allowed_frame_time_ms)
+                            {
+                                current_goodwill_ms -= current_frame_time_ms - max_allowed_frame_time_ms;
+                            }
+
                             ///THIS ISNT QUITE CORRECT
                             ///it makes the graphics programmer sad as frames will come out IRREGULARLY
                             ///needs to take into account the extra time we've elapsed for
-                            double to_sleep = max_frame_time_ms - max_allowed_frame_time_ms;
+                            double to_sleep = max_frame_time_ms - current_frame_time_ms;
 
                             to_sleep = clamp(floor(to_sleep), 0., 200.);
 
@@ -607,11 +618,12 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                             //printf("%f sleeping for\n", to_sleep);
 
-                            current_frame_time_ms = 0;
 
                             //sf::Clock slept_for;
 
                             sleep_thread_for(thrd, to_sleep);
+
+                            estimated_time_remaining = avg_exec_time;
 
                             //std::cout << "slept for " << slept_for.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
@@ -623,6 +635,15 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                                 fedback = true;
                             }
+
+                            if(current_frame_time_ms < max_allowed_frame_time_ms)
+                            {
+                                current_goodwill_ms += max_allowed_frame_time_ms - current_frame_time_ms;
+                            }
+
+                            current_goodwill_ms = clamp(current_goodwill_ms, 0.f, max_goodwill_ms);
+
+                            current_frame_time_ms = 0;
                         }
 
                         if(shared_duk_state->has_output_data_available())
@@ -648,7 +669,10 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                             }
                         }
 
-                        Sleep(1);
+                        if(estimated_time_remaining >= 1.5f)
+                            Sleep(1);
+                        else
+                            std::this_thread::yield();
                     }
 
                     force_terminate = true;
