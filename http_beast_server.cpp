@@ -361,7 +361,7 @@ void read_queue(std::shared_ptr<shared_command_handler_state> all_shared,
                 lg::log(next_command);
 
                 if(handle_termination_shortcircuit(all_shared, next_command))
-                   continue;
+                    continue;
 
                 int len;
 

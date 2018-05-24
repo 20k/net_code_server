@@ -598,6 +598,26 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                         bool long_sleep_requested = request_long_sleep;
 
+                        if(shared_duk_state->has_output_data_available())
+                        {
+                            std::string str = shared_duk_state->consume_output_data();
+
+                            if(str != "")
+                            {
+                                try
+                                {
+                                    using json = nlohmann::json;
+
+                                    json j;
+                                    j["id"] = current_id;
+                                    j["msg"] = str;
+
+                                    all_shared.value()->shared.add_back_write("command_realtime_json " + j.dump());
+                                }
+                                catch(...){}
+                            }
+                        }
+
                         if(current_frame_time_ms >= max_allowed_frame_time_ms + current_goodwill_ms || long_sleep_requested)
                         {
                             //std::cout << "ftime " << current_frame_time_ms << std::endl;
@@ -646,28 +666,6 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                             current_frame_time_ms = 0;
                         }
 
-                        if(shared_duk_state->has_output_data_available())
-                        {
-                            std::string str = shared_duk_state->consume_output_data();
-
-                            if(all_shared.has_value() && str != "")
-                            {
-                                try
-                                {
-                                    using json = nlohmann::json;
-
-                                    json j;
-                                    j["id"] = current_id;
-                                    j["msg"] = str;
-
-                                    all_shared.value()->shared.add_back_write("command_realtime_json " + j.dump());
-                                }
-                                catch(...)
-                                {
-
-                                }
-                            }
-                        }
 
                         if(estimated_time_remaining >= 1.5f)
                             Sleep(1);
