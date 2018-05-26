@@ -58,6 +58,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["nodes.view_log"] = make_cary("user", "\"\"", "NID", "-1");
     ret["net.view"] = make_cary("user", "\"\"");
     ret["net.map"] = make_cary("user", "\"\"", "n", "6");
+    ret["net.links"] = make_cary("user", "\"\"", "n", "6");
     ret["net.hack"] = make_cary("user", "\"\"");
     ret["net.access"] = make_cary("user", "\"\"");
     ret["net.switch"] = make_cary("user", "\"\"");
@@ -2373,7 +2374,6 @@ double npc_name_to_angle(const std::string& str)
     return ((double)val / (pow(2, 32)-1)) * 2 * M_PI;
 }
 
-
 duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -2665,6 +2665,132 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+duk_ret_t net__links(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string from = duk_safe_get_prop_string(ctx, -1, "user");
+    int num = duk_get_prop_string_as_int(ctx, -1, "n", 2);
+
+    if(from == "")
+        return push_error(ctx, "usage: net.links({user:<username>, n:6})");
+
+    if(num < 0 || num > 15)
+        return push_error(ctx, "n out of range [1,15]");
+
+    if(!get_user(from, get_thread_id(ctx)).has_value())
+        return push_error(ctx, "User does not exist");
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx), path_info::VIEW_LINKS))
+        return push_error(ctx, "Target Inaccessible");
+
+    std::map<std::string, int> rings;
+    std::set<std::string> accessible;
+    std::set<std::string> inaccessible;
+    std::vector<std::string> next_ring;
+    std::vector<std::string> current_ring{from};
+
+    for(int ring = 0; ring < num; ring++)
+    {
+        next_ring.clear();
+
+        for(const std::string& str : current_ring)
+        {
+            if(rings.find(str) != rings.end())
+                continue;
+
+            rings[str] = ring;
+
+            auto connections = playspace_network_manage.get_links(str);
+
+            for(auto& i : connections)
+            {
+                if(rings.find(i) != rings.end())
+                    continue;
+
+                if(inaccessible.find(i) != inaccessible.end())
+                    continue;
+
+                if(accessible.find(i) == accessible.end())
+                {
+                    if(!playspace_network_manage.has_accessible_path_to(ctx, i, str, path_info::VIEW_LINKS))
+                    {
+                        inaccessible.insert(i);
+                        continue;
+                    }
+                    else
+                    {
+                        accessible.insert(i);
+                    }
+                }
+
+                next_ring.push_back(i);
+            }
+        }
+
+        current_ring = next_ring;
+    }
+
+    std::map<std::string, vec3f> global_pos;
+
+    for(auto& i : rings)
+    {
+        user usr;
+
+        {
+            mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+            if(!usr.load_from_db(user_info, i.first))
+                continue;
+
+            global_pos[usr.name] = usr.pos;
+        }
+    }
+
+    ///so
+    ///the information we want to give back to the client wants to be very rich
+    ///we need the connections of every npc if we have permission
+    ///path to original player? unsure on this
+    ///position
+
+    using nlohmann::json;
+
+    std::vector<json> all_npc_data;
+
+    for(auto& i : global_pos)
+    {
+        const std::string& name = i.first;
+        vec3f pos = i.second;
+
+        json j;
+        j["name"] = name;
+        j["x"] = pos.x();
+        j["y"] = pos.y();
+        j["z"] = pos.z();
+
+        auto connections = playspace_network_manage.get_links(name);
+
+        for(auto it = connections.begin(); it != connections.end();)
+        {
+            if(accessible.find(*it) == accessible.end())
+                it = connections.erase(it);
+            else
+                it++;
+        }
+
+        j["links"] = connections;
+
+        all_npc_data.push_back(j);
+    }
+
+    json arr = all_npc_data;
+
+    push_duk_val(ctx, arr);
+
+    return 1;
+}
 
 duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 {

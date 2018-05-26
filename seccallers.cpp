@@ -367,6 +367,20 @@ void teardown_state(duk_context* ctx)
     free_shim_pointer<shim_map_t>(ctx);
 }
 
+duk_ret_t get_string_col(duk_context* ctx)
+{
+    if(!duk_is_string(ctx, -1))
+        return 0;
+
+    std::string str = duk_safe_to_std_string(ctx, -1);
+
+    std::string c = string_to_colour(str);
+
+    push_duk_val(ctx, c);
+
+    return 1;
+}
+
 duk_ret_t terminate_realtime(duk_context* ctx)
 {
     shared_duk_worker_state* shared_state = dukx_get_pointer<shared_duk_worker_state>(ctx, "shared_caller_state");
@@ -804,6 +818,7 @@ void register_funcs(duk_context* ctx, int seclevel)
     inject_c_function(ctx, set_start_window_size, "set_start_window_size", 1);
     inject_c_function(ctx, is_key_down, "is_key_down", 1);
     inject_c_function(ctx, mouse_get_position, "mouse_get_position", 0);
+    inject_c_function(ctx, get_string_col, "get_string_col", 1);
 
     //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }

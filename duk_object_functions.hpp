@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "duktape.h"
+#include <json/json.hpp>
 
 using duk_func_t = duk_ret_t (*)(duk_context*);
 using duk_placeholder_t = void*;
@@ -60,6 +61,12 @@ void push_duk_val(duk_context* ctx, const std::string& t)
     duk_push_string(ctx, t.c_str());
 }
 
+inline
+void push_duk_val(duk_context* ctx, const nlohmann::json& j)
+{
+    duk_push_string(ctx, j.dump().c_str());
+    duk_json_decode(ctx, -1);
+}
 
 template<typename T>
 inline
