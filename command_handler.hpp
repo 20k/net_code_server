@@ -42,6 +42,7 @@ namespace connection_type
     enum connection_type
     {
         WEBSOCKET,
+        WEBSOCKET_SSL,
         HTTP
     };
 }

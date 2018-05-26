@@ -311,7 +311,7 @@ int main()
 
     #if 1
 
-    http_test_run();
+    boot_connection_handlers();
 
 
     ///fix db screwup

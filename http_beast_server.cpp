@@ -37,11 +37,13 @@
 #ifdef EXTERN_IP
 #define HOST_PORT 6750
 #define HOST_WEBSOCKET_PORT 6760
+#define HOST_WEBSOCKET_SSL_PORT 6770
 #endif // EXTERN_IP
 
 #ifdef LOCAL_IP
 #define HOST_PORT 6751
 #define HOST_WEBSOCKET_PORT 6761
+#define HOST_WEBSOCKET_SSL_PORT 6771
 #endif // LOCAL_IP
 
 
@@ -421,7 +423,7 @@ void write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
                 //if(next_command != "")
                 //    printf("sending test write\n");
 
-                if(next_command == "" && all_shared->type == connection_type::WEBSOCKET)
+                if(next_command == "" && all_shared->type!= connection_type::HTTP)
                     continue;
 
                 if(next_command.size() > 100*100)
@@ -552,6 +554,8 @@ void session_wrapper(tcp::socket&& socket,
     }
 }*/
 
+global_state glob;
+
 void websocket_test_server()
 {
     try
@@ -562,8 +566,6 @@ void websocket_test_server()
 
         // The io_context is required for all I/O
         boost::asio::io_context ioc{2};
-
-        global_state glob;
 
         // The acceptor receives incoming connections
         tcp::acceptor acceptor{ioc, {address, port}};
@@ -593,7 +595,46 @@ void websocket_test_server()
     }
 }
 
-void http_test_run()
+void websocket_ssl_test_server()
+{
+    try
+    {
+        auto const address = boost::asio::ip::make_address(HOST_IP);
+        auto const port = static_cast<unsigned short>(HOST_WEBSOCKET_SSL_PORT);
+        std::string const doc_root = "./doc_root";
+
+        // The io_context is required for all I/O
+        boost::asio::io_context ioc{2};
+
+        // The acceptor receives incoming connections
+        tcp::acceptor acceptor{ioc, {address, port}};
+        for(;;)
+        {
+            // This will receive the new connection
+            tcp::socket socket{ioc};
+
+            // Block until we get a connection
+            acceptor.accept(socket);
+
+            int id = glob.global_id++;
+
+            // Launch the session, transferring ownership of the socket
+            std::thread(
+                session_wrapper,
+                std::move(socket),
+                doc_root,
+                id,
+                connection_type::WEBSOCKET_SSL).detach();
+        }
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Websocket Error: " << e.what() << std::endl;
+        //return EXIT_FAILURE;
+    }
+}
+
+void boot_connection_handlers()
 {
     //std::thread{std::bind(&http_test_server, &req)}.detach();
 
@@ -603,6 +644,7 @@ void http_test_run()
     //std::thread(websocket_test_server).detach();
 
     std::thread(websocket_test_server).detach();
+    std::thread(websocket_ssl_test_server).detach();
 
     //http_test_server();
 }
