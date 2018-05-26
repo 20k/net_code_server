@@ -21,8 +21,6 @@ struct shared_command_handler_state
         }
         if(type == connection_type::WEBSOCKET_SSL)
         {
-            std::cout << "ssling\n";
-
             msock = new websock_socket_ssl(std::move(socket));
         }
     }
