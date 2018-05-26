@@ -25,7 +25,7 @@ float get_random_float()
 {
     uint32_t random_int = get_random_uint32_t();
 
-    return (double)random_int / ((double)pow(2., 32.)-1.);
+    return (double)random_int / ((double)pow(2., 32.));
 }
 
 ///TODO REPLACE WITH SAMPLE
