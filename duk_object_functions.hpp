@@ -277,7 +277,7 @@ void freeze_duk(duk_context* ctx)
 inline
 std::string get_global_string(duk_context* ctx, const std::string& name)
 {
-    duk_push_global_stash(ctx);
+    duk_push_heap_stash(ctx);
     duk_get_prop_string(ctx, -1, name.c_str());
 
     std::string str = duk_safe_to_string(ctx, -1);
@@ -290,7 +290,7 @@ std::string get_global_string(duk_context* ctx, const std::string& name)
 inline
 int32_t get_global_int(duk_context* ctx, const std::string& name)
 {
-    duk_push_global_stash(ctx);
+    duk_push_heap_stash(ctx);
     duk_get_prop_string(ctx, -1, name.c_str());
 
     int32_t ret = duk_get_int(ctx, -1);
@@ -303,7 +303,7 @@ int32_t get_global_int(duk_context* ctx, const std::string& name)
 inline
 void set_global_int(duk_context* ctx, const std::string& name, int32_t val)
 {
-    duk_push_global_stash(ctx);
+    duk_push_heap_stash(ctx);
 
     duk_push_int(ctx, val);
     duk_put_prop_string(ctx, -2, name.c_str());
@@ -314,7 +314,7 @@ void set_global_int(duk_context* ctx, const std::string& name, int32_t val)
 inline
 void set_global_string(duk_context* ctx, const std::string& name, const std::string& val)
 {
-    duk_push_global_stash(ctx);
+    duk_push_heap_stash(ctx);
 
     duk_push_string(ctx, val.c_str());
     duk_put_prop_string(ctx, -2, name.c_str());
@@ -331,7 +331,7 @@ int32_t get_thread_id(duk_context* ctx)
 inline
 std::string get_caller(duk_context* ctx)
 {
-    duk_push_global_stash(ctx);
+    duk_push_heap_stash(ctx);
     /*duk_get_prop_string(ctx, -1, "caller");
 
     std::string str = duk_safe_to_string(ctx, -1);
@@ -352,7 +352,7 @@ std::string get_caller(duk_context* ctx)
 inline
 std::vector<std::string> get_caller_stack(duk_context* ctx)
 {
-    duk_push_global_stash(ctx);
+    duk_push_heap_stash(ctx);
 
     duk_get_prop_string(ctx, -1, "caller_stack");
     std::vector<std::string> ret = get_duk_val_arr<std::string>(ctx);
@@ -377,7 +377,7 @@ std::string get_script_ending(duk_context* ctx)
 template<typename T>
 void dukx_put_pointer(duk_context* ctx, T* ptr, const std::string& key)
 {
-    duk_push_global_stash(ctx); ///[stash]
+    duk_push_heap_stash(ctx); ///[stash]
 
     duk_push_pointer(ctx, (void*)ptr); ///[stash, pointer]
 
@@ -389,7 +389,7 @@ void dukx_put_pointer(duk_context* ctx, T* ptr, const std::string& key)
 template<typename T>
 T* dukx_get_pointer(duk_context* ctx, const std::string& key)
 {
-    duk_push_global_stash(ctx);
+    duk_push_heap_stash(ctx);
 
     duk_get_prop_string(ctx, -1, key.c_str());
 
@@ -403,7 +403,7 @@ T* dukx_get_pointer(duk_context* ctx, const std::string& key)
 template<typename T>
 T* get_shim_pointer(duk_context* ctx)
 {
-    duk_push_global_stash(ctx);
+    duk_push_heap_stash(ctx);
 
     duk_get_prop_string(ctx, -1, "c_shim_ptr");
 
@@ -419,7 +419,7 @@ void set_copy_allocate_shim_pointer(duk_context* ctx, const T& t)
 {
     T* new_shim = new T(t);
 
-    duk_push_global_stash(ctx); ///[stash]
+    duk_push_heap_stash(ctx); ///[stash]
 
     duk_push_pointer(ctx, (void*)new_shim); ///[stash, pointer]
 

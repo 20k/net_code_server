@@ -19,7 +19,7 @@ duk_ret_t native_print(duk_context *ctx)
 
     std::string str = duk_safe_to_std_string(ctx, -1);
 
-    duk_push_global_stash(ctx);
+    duk_push_heap_stash(ctx);
     duk_get_prop_string(ctx, -1, "print_str");
 
     std::string fstr = duk_safe_to_std_string(ctx, -1);
@@ -335,7 +335,7 @@ duk_ret_t mouse_get_position(duk_context* ctx)
 
 void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack, shared_duk_worker_state* shared_state)
 {
-    duk_push_global_stash(ctx);
+    duk_push_heap_stash(ctx);
 
     quick_register(ctx, "HASH_D", "");
     quick_register(ctx, "print_str", "");
@@ -401,7 +401,7 @@ duk_ret_t hash_d(duk_context* ctx)
 
     std::string str = duk_json_encode(ctx, -1);
 
-    duk_push_global_stash(ctx);
+    duk_push_heap_stash(ctx);
     duk_get_prop_string(ctx, -1, "HASH_D");
 
     std::string fstr = duk_safe_to_string(ctx, -1);
@@ -420,7 +420,7 @@ duk_ret_t hash_d(duk_context* ctx)
 
 std::string get_hash_d(duk_context* ctx)
 {
-    duk_push_global_stash(ctx);
+    duk_push_heap_stash(ctx);
 
     if(!duk_has_prop_string(ctx, -1, "HASH_D"))
     {
@@ -439,7 +439,7 @@ std::string get_hash_d(duk_context* ctx)
 
 std::string get_print_str(duk_context* ctx)
 {
-    duk_push_global_stash(ctx);
+    duk_push_heap_stash(ctx);
 
     if(!duk_has_prop_string(ctx, -1, "print_str"))
     {
@@ -465,7 +465,16 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
         return "Script not found";
     }
 
-    register_funcs(sd.ctx, seclevel);
+    duk_idx_t thr_idx = duk_push_thread_new_globalenv(sd.ctx);
+    duk_context* new_ctx = duk_get_context(sd.ctx, thr_idx);
+    //duk_pop(sd.ctx);
+
+    /*duk_dup(sd.ctx, -2);
+    ///push args
+    duk_xcopy_top(new_ctx, sd.ctx, 1);
+    duk_pop(sd.ctx);*/
+
+    register_funcs(new_ctx, seclevel);
 
     std::string wrapper = attach_wrapper(data, stringify, false);
 
@@ -473,13 +482,13 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
 
     std::string ret;
 
-    duk_push_string(sd.ctx, wrapper.c_str());
-    duk_push_string(sd.ctx, "test-name");
+    duk_push_string(new_ctx, wrapper.c_str());
+    duk_push_string(new_ctx, "test-name");
 
     //DUK_COMPILE_FUNCTION
-    if(duk_pcompile(sd.ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
+    if(duk_pcompile(new_ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
     {
-        std::string err = duk_safe_to_string(sd.ctx, -1);
+        std::string err = duk_safe_to_string(new_ctx, -1);
 
         printf("compile failed: %s\n", err.c_str());
 
@@ -487,56 +496,69 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
     }
     else
     {
-        duk_push_global_stash(sd.ctx);
-        duk_push_int(sd.ctx, seclevel);
-        duk_put_prop_string(sd.ctx, -2, "last_seclevel");
-        duk_pop_n(sd.ctx, 1);
+        duk_push_heap_stash(new_ctx);
+        duk_push_int(new_ctx, seclevel);
+        duk_put_prop_string(new_ctx, -2, "last_seclevel");
+        duk_pop_n(new_ctx, 1);
 
-        duk_idx_t id = duk_push_object(sd.ctx); ///[object]
-        duk_push_string(sd.ctx, caller.c_str()); ///[object -> caller]
-        duk_put_prop_string(sd.ctx, id, "caller"); ///[object]
+        duk_idx_t id = duk_push_object(new_ctx); ///[object]
+        duk_push_string(new_ctx, caller.c_str()); ///[object -> caller]
+        duk_put_prop_string(new_ctx, id, "caller"); ///[object]
 
         std::string script_host = get_script_host(sd.ctx);
 
-        duk_push_string(sd.ctx, script_host.c_str());
-        duk_put_prop_string(sd.ctx, id, "script_host");
+        duk_push_string(new_ctx, script_host.c_str());
+        duk_put_prop_string(new_ctx, id, "script_host");
 
         int nargs = 2;
 
-        if(duk_is_undefined(sd.ctx, -3))
-        {
-            nargs = 1;
-        }
+        ///[object] is on the stack, aka context
+        if(duk_is_undefined(sd.ctx, -2))
+            duk_push_undefined(new_ctx);
         else
         {
-            duk_dup(sd.ctx, -3); //[args]
+            duk_dup(sd.ctx, -2);
+            ///push args
+            duk_xcopy_top(new_ctx, sd.ctx, 1);
+            duk_pop(sd.ctx);
         }
 
-        duk_int_t ret_val = duk_pcall(sd.ctx, nargs);
+        ///now we have [object, args] on the stack 2
 
-        bool timeout = is_script_timeout(sd.ctx);
-
-        if(ret_val != DUK_EXEC_SUCCESS && !timeout)
         {
-            std::string err = duk_safe_to_std_string(sd.ctx, -1);
+            ///now we have [thread] on stack 1, and [object, args] on stack 2
+            ///stack 2 now has [val]
+            duk_int_t ret_val = duk_pcall(new_ctx, nargs);
 
-            push_dukobject(sd.ctx, "ok", false, "msg", err);
-        }
+            ///stack 2 is now empty, and stack 1 now has [thread, val]
+            duk_xmove_top(sd.ctx, new_ctx, 1);
 
-        if(!is_top_level)
-        {
-            duk_context* ctx = sd.ctx;
+            bool timeout = is_script_timeout(sd.ctx);
 
-            ///this essentially rethrows an exception
-            ///if we're not top level, and we've timedout
-            COOPERATE_KILL();
-        }
+            if(ret_val != DUK_EXEC_SUCCESS && !timeout)
+            {
+                std::string err = duk_safe_to_std_string(sd.ctx, -1);
 
-        if(ret_val != DUK_EXEC_SUCCESS && is_top_level && timeout)
-        {
-            push_dukobject(sd.ctx, "ok", false, "msg", "Ran for longer than 5000ms and timed out");
+                push_dukobject(sd.ctx, "ok", false, "msg", err);
+            }
+
+            if(!is_top_level)
+            {
+                duk_context* ctx = sd.ctx;
+
+                ///this essentially rethrows an exception
+                ///if we're not top level, and we've timedout
+                COOPERATE_KILL();
+            }
+
+            if(ret_val != DUK_EXEC_SUCCESS && is_top_level && timeout)
+            {
+                push_dukobject(sd.ctx, "ok", false, "msg", "Ran for longer than 5000ms and timed out");
+            }
         }
     }
+
+    duk_remove(sd.ctx, -2);
 
     std::string str = get_hash_d(sd.ctx);
 

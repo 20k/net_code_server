@@ -102,6 +102,8 @@
 			<Add option="-lboost_filesystem-mt" />
 			<Add option="-ldbgeng" />
 			<Add option="-lboost_stacktrace_windbg-mt" />
+			<Add option="-lcrypto" />
+			<Add option="-lssl" />
 		</Linker>
 		<Unit filename="auth.cpp" />
 		<Unit filename="auth.hpp" />

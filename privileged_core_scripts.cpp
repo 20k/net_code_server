@@ -2997,7 +2997,7 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
         usr.overwrite_user_in_db(user_db);
     }
 
-    duk_push_global_stash(ctx);
+    duk_push_heap_stash(ctx);
 
     ///new caller
     quick_register(ctx, "caller", switch_to->name.c_str());
