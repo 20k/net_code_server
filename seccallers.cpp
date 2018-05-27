@@ -469,11 +469,6 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
     duk_context* new_ctx = duk_get_context(sd.ctx, thr_idx);
     //duk_pop(sd.ctx);
 
-    /*duk_dup(sd.ctx, -2);
-    ///push args
-    duk_xcopy_top(new_ctx, sd.ctx, 1);
-    duk_pop(sd.ctx);*/
-
     register_funcs(new_ctx, seclevel);
 
     std::string wrapper = attach_wrapper(data, stringify, false);
