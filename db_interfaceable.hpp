@@ -241,7 +241,7 @@ struct db_interfaceable
                 concrete val;
                 val.data = json::parse(js);
 
-                handle_serialise(val.data, false);
+                val.handle_serialise(val.data, false);
 
                 ret.push_back(val);
             }
