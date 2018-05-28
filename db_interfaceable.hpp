@@ -25,14 +25,18 @@ struct db_common
 {
     std::string key;
 
+    db_common(const std::string& _key) : key(_key) {}
+
     //db_common(const std::string& fkey) : key(fkey){}
 
     //virtual void extract_from(json& j){}
 
+    virtual void serialise(json& j, bool ser) {}
+
     virtual ~db_common(){}
 };
 
-template<typename T>
+/*template<typename T>
 struct db_val : db_common
 {
     T val;
@@ -65,7 +69,54 @@ struct db_val : db_common
     }
 
     virtual ~db_val(){}
+};*/
+
+template<typename T>
+struct db_val : db_common
+{
+    T val = T();
+    //U* u = nullptr;
+
+    db_val(const std::string& _key) : db_common(_key) {}
+
+    //void init_impl_ptr(U* ptr) {u = ptr;}
+
+    void operator=(const db_val<T>& other)
+    {
+        if(this == &other)
+            return;
+
+        *this = other;
+
+        //u->template set_as<T>(key, other.u->template get_as<T>(other.key));
+    }
+
+    virtual void serialise(json& j, bool ser) override
+    {
+        if(ser)
+        {
+            j[key] = val;
+        }
+        else
+        {
+            val = j[key].get<T>();
+        }
+    }
+
+    template<typename V>
+    void operator=(const V& other)
+    {
+        //u->template set_as<T>(key, other);
+        val = other;
+    }
+
+    operator T&() {return val;};
+    //operator T&() = delete;
+    operator T() const { return val; }
+    //operator T() const { return u->template get_as<T>(key); }
 };
+
+#define DB_VAL(type, name) db_val<type> name{#name}
 
 #define MACRO_GET_1(str, i) \
     (sizeof(str) > (i) ? str[(i)] : 0)
@@ -123,6 +174,8 @@ struct db_interfaceable
         stringify_params(key_name, name...);
     }
 
+    virtual void serialise(bool ser){}
+
     template<typename T, typename U>
     bool force_conversion(const std::string& key, U cv)
     {
@@ -157,7 +210,13 @@ struct db_interfaceable
         data[key] = t;
     }
 
-    virtual bool handle_serialise(bool ser) {return false;}
+    template<typename T>
+    void set_key_data(const T& val)
+    {
+        data[key_name] = val;
+    }
+
+    virtual bool handle_serialise(json& j, bool ser) {return false;}
 
     bool load_from_db(mongo_lock_proxy& ctx, const std::string& id)
     {
@@ -175,7 +234,7 @@ struct db_interfaceable
                 this_cache.overwrite_in_cache(id, *(concrete*)this);
             }
 
-            if(handle_serialise(false))
+            if(handle_serialise(data, false))
             {
                 overwrite_in_db(ctx);
             }
@@ -202,7 +261,7 @@ struct db_interfaceable
                 this_cache.overwrite_in_cache(id, *(concrete*)this);
             }
 
-            if(handle_serialise(false))
+            if(handle_serialise(data, false))
             {
                 overwrite_in_db(ctx);
             }
@@ -219,7 +278,7 @@ struct db_interfaceable
 
     void overwrite_in_db(mongo_lock_proxy& ctx)
     {
-        handle_serialise(true);
+        handle_serialise(data, true);
 
         if(!exists(ctx, data[key_name].get<std::string>()))
         {
@@ -253,7 +312,7 @@ struct db_interfaceable
 
     void remove_from_db(mongo_lock_proxy& ctx)
     {
-        handle_serialise(false);
+        handle_serialise(data, false);
 
         json j;
         j[key_name] = data[key_name];

@@ -2,6 +2,8 @@
 
 #include <ratio>
 
+#include "scheduled_tasks.hpp"
+
 std::map<std::string, std::vector<script_arg>> privileged_args = construct_core_args();
 
 std::vector<script_arg> make_cary()
