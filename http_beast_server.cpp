@@ -350,7 +350,7 @@ void read_queue(std::shared_ptr<shared_command_handler_state> all_shared,
 
             Sleep(2);
 
-            //if(socket.available() > 0)
+            if(all_shared->msock->available() > 0)
             {
                 if(all_shared->msock->read(ec))
                     break;
