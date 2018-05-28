@@ -416,6 +416,9 @@ void write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
             if(all_shared->shared.should_terminate)
                 break;
 
+            if(all_shared->msock->timed_out())
+                break;
+
             if(all_shared->shared.has_front_write())
             {
                 std::string next_command = all_shared->shared.get_front_write();
