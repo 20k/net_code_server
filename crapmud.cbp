@@ -155,6 +155,8 @@
 		<Unit filename="rate_limiting.hpp" />
 		<Unit filename="rng.cpp" />
 		<Unit filename="rng.hpp" />
+		<Unit filename="scheduled_tasks.cpp" />
+		<Unit filename="scheduled_tasks.hpp" />
 		<Unit filename="script_util.cpp" />
 		<Unit filename="script_util.hpp" />
 		<Unit filename="seccallers.cpp" />

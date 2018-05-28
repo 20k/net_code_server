@@ -2920,7 +2920,7 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string target = duk_safe_get_prop_string(ctx, -1, "user");
 
     if(target == "")
-        return push_error(ctx, "Usage: net.switch({user:<username:})");
+        return push_error(ctx, "Usage: net.switch({user:<username>})");
 
     std::vector<std::string> full_caller_stack = get_caller_stack(ctx);
 
@@ -3008,6 +3008,84 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///need to update caller and caller_stack
 
     return push_success(ctx, "Success");
+}
+
+/*namespace task_type
+{
+    enum task_type
+    {
+        LINK_XFER
+    };
+}
+
+void schedule_task(const std::string& user, const std::string& type, float duration)
+{
+
+}*/
+
+duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string host = duk_safe_get_prop_string(ctx, -1, "user");
+    std::string target = duk_safe_get_prop_string(ctx, -1, "target");
+
+    if(host == "")
+        return push_error(ctx, "Usage: net.move({user:<username>, target:<username>})");
+
+    if(target == "")
+        return push_error(ctx, "Usage: net.move({user:<username>, target:<username>})");
+
+    std::optional opt_user = get_user(host, get_thread_id(ctx));
+
+    if(!opt_user.has_value())
+        return push_error(ctx, "Invalid username (user)");
+
+    std::optional opt_target = get_user(target, get_thread_id(ctx));
+
+    if(!opt_target.has_value())
+        return push_error(ctx, "Invalid username (target)");
+
+    user u1 = opt_user.value();
+
+    if(!u1.is_allowed_user(get_caller(ctx)))
+        return push_error(ctx, "No permission for user");
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, target, host, path_info::USE_LINKS, -1);
+
+    if(path.size() == 0)
+        return push_error(ctx, "No path");
+
+    double dist = (opt_user->pos - opt_target->pos).length();
+
+    double cost = path.size() * 100 + dist;
+
+    bool confirm = duk_safe_get_generic(dukx_is_truthy, ctx, -1, "confirm", false);
+
+    float temp_time_s = 10 * path.size() + dist/10.;
+
+    if(!confirm)
+    {
+        std::string str = "Please confirm:true to pay " + std::to_string(cost) + " for a travel trip of " + std::to_string(path.size()) + " links across " + std::to_string(dist) + " ERR(s)\n";
+
+        str += "Time: " + std::to_string(temp_time_s) + "(s)";
+
+        push_duk_val(ctx, str);
+
+        return 1;
+    }
+
+
+
+    ///so
+    ///path leaking
+    ///the obvious choice to make is whether or not it should leak into the breach or front node
+    ///aka, when you're hacking to look for leaked paths from a move, should you trigger a probing script or not?
+    ///decision is that yes it should trigger probes
+
+    return 1;
 }
 
 duk_ret_t gal__map(priv_context& priv_ctx, duk_context* ctx, int sl)
