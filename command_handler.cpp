@@ -1235,8 +1235,10 @@ bool is_allowed_user(const std::string& user)
     return banned.find(user) == banned.end();
 }
 
-std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str)
+std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str, bool& is_auth)
 {
+    is_auth = false;
+
     printf("yay command\n");
 
     if(starts_with(str, "user "))
@@ -1575,12 +1577,14 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
         all_shared->state.set_auth(to_ret);
 
+        is_auth = true;
+
         if(starts_with(str, "register client_hex"))
         {
-            return "####registered secret_hex " + binary_to_hex(to_ret);
+            return "secret_hex " + binary_to_hex(to_ret);
         }
 
-        return "####registered secret " + to_ret;
+        return "secret " + to_ret;
     }
     #endif // ALLOW_SELF_AUTH
     else if(starts_with(str, "auth client ") || starts_with(str, "auth client_hex "))
@@ -1946,14 +1950,25 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
     {
         std::string to_exec(str.begin() + client_command.size(), str.end());
 
-        return "command " + handle_command_impl(all_shared, to_exec);
+        bool is_auth = false;
+
+        std::string ret = handle_command_impl(all_shared, to_exec, is_auth);
+
+        if(is_auth)
+        {
+            return "command_auth " + ret;
+        }
+
+        return "command " + ret;
     }
 
     if(starts_with(str, client_chat))
     {
         std::string to_exec(str.begin() + client_chat.size(), str.end());
 
-        handle_command_impl(all_shared, to_exec);
+        bool is_auth = false;
+
+        handle_command_impl(all_shared, to_exec, is_auth);
 
         return "";
     }
