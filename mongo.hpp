@@ -10,6 +10,7 @@
 #include <map>
 #include <atomic>
 #include <chrono>
+#include <json/json.hpp>
 
 enum class mongo_database_type
 {
@@ -26,6 +27,7 @@ enum class mongo_database_type
     NODE_PROPERTIES,
     NPC_PROPERTIES,
     NETWORK_PROPERTIES,
+    SCHEDULED_TASK,
     MONGO_COUNT
 };
 
@@ -93,24 +95,32 @@ struct mongo_context
         {
             uri_str = "mongodb://user_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";;
             db = "user_dbs";
+
+            client = mongoc_client_new(uri_str.c_str());
         }
 
         if(type == mongo_database_type::USER_PROPERTIES)
         {
             uri_str = "mongodb://user_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
             db = "user_properties";
+
+            client = mongoc_client_new(uri_str.c_str());
         }
 
         if(type == mongo_database_type::USER_ITEMS)
         {
             uri_str = "mongodb://user_items_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
             db = "user_items";
+
+            client = mongoc_client_new(uri_str.c_str());
         }
 
         if(type == mongo_database_type::GLOBAL_PROPERTIES)
         {
             uri_str = "mongodb://global_properties_database:james20kuserhandlermongofundiff@localhost:27017/?authSource=users";
             db = "global_properties";
+
+            client = mongoc_client_new(uri_str.c_str());
         }
 
         /*if(type == mongo_database_type::CHAT_CHANNELS)
@@ -123,24 +133,32 @@ struct mongo_context
         {
             uri_str = "mongodb://pending_notifs_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
             db = "pending_notifs";
+
+            client = mongoc_client_new(uri_str.c_str());
         }
 
         if(type == mongo_database_type::CHAT_CHANNEL_PROPERTIES)
         {
             uri_str = "mongodb://chat_channel_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
             db = "chat_channel_properties";
+
+            client = mongoc_client_new(uri_str.c_str());
         }
 
         if(type == mongo_database_type::NODE_PROPERTIES)
         {
             uri_str = "mongodb://node_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
             db = "node_properties";
+
+            client = mongoc_client_new(uri_str.c_str());
         }
 
         if(type == mongo_database_type::NPC_PROPERTIES)
         {
             uri_str = "mongodb://npc_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
             db = "npc_properties";
+
+            client = mongoc_client_new(uri_str.c_str());
         }
 
         ///hmm.. somewhat of a naming fuckup here
@@ -150,7 +168,89 @@ struct mongo_context
         {
             uri_str = "mongodb://network_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
             db = "all_networks";
+
+            client = mongoc_client_new(uri_str.c_str());
         }
+
+        mongoc_client_set_appname(client, "crapmud");
+
+        std::map<mongo_database_type, std::string> procedural_dbs
+        {
+            {mongo_database_type::SCHEDULED_TASK, "SCHEDULED_TASK"},
+        };
+
+        for(auto& i : procedural_dbs)
+        {
+            if(i.first == type)
+            {
+                uri_str = "mongodb://" + i.second + ":" + i.second + "handlermongofun@localhost:27017";
+                db = i.second;
+
+                std::cout << "curi " << uri_str << std::endl;
+
+                client = mongoc_client_new(uri_str.c_str());
+
+                char** strv;
+                bson_error_t error;
+
+                if ((strv = mongoc_client_get_database_names_with_opts (client, NULL, &error)))
+                {
+                    bool found = false;
+                    std::string name = i.second;
+
+                    for (int i = 0; strv[i]; i++)
+                    {
+                        std::string str(strv[i]);
+
+                        if(str == name)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if(!found)
+                    {
+                        mongoc_database_t* ldb = mongoc_client_get_database(client, name.c_str());
+
+                        nlohmann::json j;
+
+                        std::vector<nlohmann::json> all_roles;
+
+                        j["role"] = "readWrite";
+                        j["db"] = i.second;
+
+                        all_roles.push_back(j);
+
+                        nlohmann::json fin;
+                        fin["roles"] = all_roles;
+
+                        std::string str = fin.dump();
+
+                        bson_t* bson = bson_new_from_json((const uint8_t*)str.c_str(), str.size(), nullptr);
+
+                        mongoc_database_add_user(ldb, name.c_str(), (name + "handlermongofun").c_str(), bson,nullptr, nullptr);
+
+                        mongoc_collection_t* col = mongoc_database_create_collection(ldb, "empty", nullptr, nullptr);
+                        mongoc_collection_destroy(col);
+
+                        mongoc_database_destroy(ldb);
+
+                        bson_destroy(bson);
+                    }
+
+                    bson_strfreev (strv);
+                }
+                else
+                {
+                    fprintf (stderr, "Command failed: %s\n", error.message);
+                }
+            }
+        }
+
+        uri = mongoc_uri_new(uri_str.c_str());
+        pool = mongoc_client_pool_new(uri);
+        mongoc_client_pool_set_error_api(pool, 2);
 
         #if 0
         if(type == mongo_database_type::USER_AUTH)
@@ -159,14 +259,6 @@ struct mongo_context
             db = "user_auth";
         }
         #endif // 0
-
-        uri = mongoc_uri_new(uri_str.c_str());
-        pool = mongoc_client_pool_new(uri);
-        mongoc_client_pool_set_error_api(pool, 2);
-
-        client = mongoc_client_new(uri_str.c_str());
-
-        mongoc_client_set_appname(client, "crapmud");
 
         last_db = db;
 
