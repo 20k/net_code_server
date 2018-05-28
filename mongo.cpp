@@ -155,7 +155,7 @@ mongo_context::mongo_context(mongo_database_type type)
                     mongoc_database_add_user(ldb, name.c_str(), (name + "handlermongofun").c_str(), bson, nullptr, nullptr);
 
                     mongoc_collection_t* col = mongoc_database_create_collection(ldb, default_collection.c_str(), nullptr, nullptr);
-                    mongoc_collection_destroy(col);
+                    //mongoc_collection_destroy(col);
 
                     mongoc_database_destroy(ldb);
 
