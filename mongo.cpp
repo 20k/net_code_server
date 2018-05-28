@@ -141,7 +141,10 @@ mongo_context::mongo_context(mongo_database_type type)
                     all_roles.push_back(j);
 
                     nlohmann::json fin;
-                    fin["roles"] = all_roles;
+                    fin = all_roles;
+
+                    //nlohmann::json fin;
+                    //fin["roles"] = all_roles;
 
                     std::string str = fin.dump();
 
@@ -149,10 +152,10 @@ mongo_context::mongo_context(mongo_database_type type)
 
                     bson_t* bson = bson_new_from_json((const uint8_t*)str.c_str(), str.size(), nullptr);
 
-                    mongoc_database_add_user(ldb, name.c_str(), (name + "handlermongofun").c_str(), bson,nullptr, nullptr);
+                    mongoc_database_add_user(ldb, name.c_str(), (name + "handlermongofun").c_str(), bson, nullptr, nullptr);
 
                     mongoc_collection_t* col = mongoc_database_create_collection(ldb, default_collection.c_str(), nullptr, nullptr);
-                    //mongoc_collection_destroy(col);
+                    mongoc_collection_destroy(col);
 
                     mongoc_database_destroy(ldb);
 
