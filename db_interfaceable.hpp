@@ -218,6 +218,41 @@ struct db_interfaceable
 
     virtual bool handle_serialise(json& j, bool ser) {return false;}
 
+    static
+    std::vector<concrete> fetch_all_from_db(mongo_lock_proxy& ctx)
+    {
+        std::string static_key;
+        stringify_params(static_key, name...);
+
+        json exist;
+        exist["$exists"] = true;
+
+        json to_find;
+        to_find[static_key] = exist;
+
+        auto found = ctx->find_json(ctx->last_collection, to_find.dump(), "{}");
+
+        std::vector<concrete> ret;
+
+        for(auto& js : found)
+        {
+            try
+            {
+                concrete val;
+                val.data = json::parse(js);
+
+                handle_serialise(val.data, false);
+
+                ret.push_back(val);
+            }
+            catch(...){}
+        }
+
+        return ret;
+    }
+
+    ///need a fetch all from db
+    ///just returns a vector, and checks for $exists : id
     bool load_from_db(mongo_lock_proxy& ctx, const std::string& id)
     {
         data[key_name] = id;

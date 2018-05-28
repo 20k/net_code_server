@@ -27,7 +27,7 @@ namespace task_type
     };
 }
 
-struct task_data_db : db_interfaceable<task_data_db, true, MACRO_GET_STR("data_type")>
+struct task_data_db : db_interfaceable<task_data_db, true, MACRO_GET_STR("id")>
 {
     /*db_val<float, task_data_db> end_time_s = 0;
     db_val<bool, task_data_db> called_callback = false;
@@ -48,6 +48,11 @@ struct task_data_db : db_interfaceable<task_data_db, true, MACRO_GET_STR("data_t
 
         return false;
     }
+
+    bool finished()
+    {
+        return get_wall_time_s() >= end_time_s;
+    }
 };
 
 struct scheduled_tasks
@@ -63,25 +68,6 @@ struct scheduled_tasks
         bool finished()
         {
             return get_wall_time_s() >= end_time_s;
-        }
-
-        nlohmann::json get()
-        {
-            nlohmann::json j;
-            j["end_time_s"] = end_time_s;
-            j["called_callback"] = called_callback;
-            j["type"] = type;
-            j["data"] = data;
-
-            return j;
-        }
-
-        void set(nlohmann::json& j)
-        {
-            end_time_s = j["end_time_s"];
-            called_callback = j["called_callback"];
-            type = j["type"];
-            data = j["data"].get<std::vector<std::string>>();
         }
     };
 
