@@ -29,11 +29,6 @@ namespace task_type
 
 struct task_data_db : db_interfaceable<task_data_db, true, MACRO_GET_STR("id")>
 {
-    /*db_val<float, task_data_db> end_time_s = 0;
-    db_val<bool, task_data_db> called_callback = false;
-    db_val<task_type::task_type, task_data_db> type;
-    db_val<std::vector<std::string>, task_data_db> data;*/
-
     DB_VAL(float, start_time_s);
     DB_VAL(float, end_time_s);
     DB_VAL(bool, called_callback);
@@ -173,122 +168,6 @@ struct scheduled_tasks
         }
     }
 };
-
-#if 0
-struct scheduled_tasks
-{
-    struct task_data
-    {
-        float end_time_s = 0;
-
-        bool called_callback = false;
-        task_type::task_type type;
-        std::vector<std::string> data;
-
-        bool finished()
-        {
-            return get_wall_time_s() >= end_time_s;
-        }
-    };
-
-    std::map<std::string, std::map<task_type::task_type, std::map<int, task_data>>> data_map;
-    std::map<std::string, std::map<task_type::task_type, int>> counter_map;
-
-    int task_register(const std::string& id, const task_type::task_type& task, float time_s, const std::vector<std::string>& data)
-    {
-        std::lock_guard guard(mut);
-
-        int counter = counter_map[id][task]++;
-
-        data_map[id][task][counter].end_time_s = get_wall_time_s() + time_s;
-        data_map[id][task][counter].type = task;
-        data_map[id][task][counter].data = data;
-
-        return counter;
-    }
-
-    bool task_finished(const std::string& id, const task_type::task_type& task, int cnt)
-    {
-        std::lock_guard guard(mut);
-
-        return data_map[id][task][cnt].finished();
-    }
-
-    task_data get_task(const std::string& id, const task_type::task_type& task, int cnt)
-    {
-        std::lock_guard guard(mut);
-
-        return data_map[id][task][cnt];
-    }
-
-    std::vector<int> get_all_tasks(const std::string& id, const task_type::task_type& task)
-    {
-        std::lock_guard guard(mut);
-
-        std::map<int, task_data> tasks = data_map[id][task];
-
-        std::vector<int> vec;
-
-        for(auto& i : tasks)
-            vec.push_back(i.first);
-
-        return vec;
-    }
-
-    void task_complete(const std::string& id, const task_type::task_type& task, int cnt)
-    {
-        std::lock_guard guard(mut);
-
-        if(data_map[id][task].find(cnt) == data_map[id][task].end())
-            return;
-
-        data_map[id][task].erase(data_map[id][task].find(cnt));
-    }
-
-    void check_all_tasks(double dt_s)
-    {
-        std::lock_guard guard(mut);
-
-        for(auto& i : data_map)
-        {
-            for(auto& j : i.second)
-            {
-                std::vector<int> to_erase;
-
-                for(auto& k : j.second)
-                {
-                    task_data& d = k.second;
-
-                    if(d.finished() && !d.called_callback)
-                    {
-                        //d.callback(i.first, j.first, k.first);
-
-                        handle_callback(d, i.first, k.first);
-
-                        d.called_callback = true;
-
-                        to_erase.push_back(k.first);
-                    }
-                }
-
-                for(auto& k : to_erase)
-                {
-                    j.second.erase(j.second.find(k));
-                }
-            }
-        }
-    }
-
-    scheduled_tasks()
-    {
-        std::thread(task_thread, std::ref(*this)).detach();
-    }
-
-    //std::vector<std::string> fetch_all_tasks(const std::string& id)
-
-    std::recursive_mutex mut;
-};
-#endif
 
 inline
 scheduled_tasks& get_global_scheduled_tasks()
