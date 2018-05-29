@@ -81,7 +81,7 @@ struct db_val : db_common
 
     //void init_impl_ptr(U* ptr) {u = ptr;}
 
-    void operator=(const db_val<T>& other)
+    /*void operator=(const db_val<T>& other)
     {
         if(this == &other)
             return;
@@ -89,7 +89,7 @@ struct db_val : db_common
         *this = other;
 
         //u->template set_as<T>(key, other.u->template get_as<T>(other.key));
-    }
+    }*/
 
     virtual void serialise(json& j, bool ser) override
     {

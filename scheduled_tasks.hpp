@@ -124,6 +124,8 @@ struct scheduled_tasks
             tdd.set_key_data(cnt);
 
             task_data[cnt] = tdd;
+
+            return 0;
         }
 
         {

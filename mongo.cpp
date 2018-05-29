@@ -96,7 +96,7 @@ mongo_context::mongo_context(mongo_database_type type)
     {
         if(i.first == type)
         {
-            uri_str = "mongodb://" + i.second + ":" + i.second + "handlermongofun@localhost:27017";
+            uri_str = "mongodb://" + i.second + ":" + i.second + "handlermongofun@localhost:27017/?authSource=" + i.second;
 
             std::string turi = "mongodb://20k_admin:james20kcaterpillarmongofun@localhost:27017";
 

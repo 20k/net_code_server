@@ -3090,6 +3090,17 @@ duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+duk_ret_t cheats__task(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    scheduled_tasks& tasks = get_global_scheduled_tasks();
+
+    tasks.task_register(task_type::ON_RELINK, 10, {"hello", "whythere"}, get_thread_id(ctx));
+
+    return 0;
+}
+
 duk_ret_t gal__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     auto structs = get_global_structure();

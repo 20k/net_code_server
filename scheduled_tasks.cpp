@@ -9,11 +9,14 @@ void task_thread(scheduled_tasks& tasks)
     {
         tasks.check_all_tasks(clk.getElapsedTime().asMicroseconds() / 1000. / 1000.);
 
-        Sleep(100);
+        Sleep(1000);
     }
 }
 
 void on_finish_relink(int cnt, const std::vector<std::string>& data)
 {
+    if(data.size() != 2)
+        return;
 
+    std::cout << "FINISHED RELINK timeout yay! " << data[0] << " " << data[1] << std::endl;
 }

@@ -224,6 +224,7 @@ duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t cheats__give(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t cheats__salvage(priv_context& priv_ctx, duk_context* ctx, int sl);
+duk_ret_t cheats__task(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 #endif
 
@@ -317,6 +318,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(cheats__arm, 4),
     REGISTER_FUNCTION_PRIV(cheats__salvage, 4),
     REGISTER_FUNCTION_PRIV(cheats__give, 4),
+    REGISTER_FUNCTION_PRIV(cheats__task, 4),
     #endif // TESTING
     #ifdef LIVE_DEBUGGING
     REGISTER_FUNCTION_PRIV(cheats__debug, 4),
