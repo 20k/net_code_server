@@ -121,11 +121,9 @@ struct scheduled_tasks
 
             cnt = counter++;
             tdd.count_offset = cnt;
-            tdd.set_key_data(cnt);
+            tdd.set_key_data(std::to_string(cnt));
 
             task_data[cnt] = tdd;
-
-            return 0;
         }
 
         {
@@ -161,8 +159,6 @@ struct scheduled_tasks
 
             if(d.finished() && !d.called_callback)
             {
-                //d.callback(i.first, j.first, k.first);
-
                 handle_callback(d);
 
                 d.called_callback = true;

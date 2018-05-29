@@ -210,16 +210,14 @@ struct db_interfaceable
         data[key] = t;
     }
 
-    template<typename T>
-    void set_key_data(const T& val)
+    void set_key_data(const std::string& val)
     {
         data[key_name] = val;
     }
 
-    template<typename T>
-    T get_key_data()
+    std::string get_key_data()
     {
-        return data[key_name].get<T>();
+        return data[key_name].get<std::string>();
     }
 
     virtual bool handle_serialise(json& j, bool ser) {return false;}

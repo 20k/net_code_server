@@ -3096,7 +3096,7 @@ duk_ret_t cheats__task(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     scheduled_tasks& tasks = get_global_scheduled_tasks();
 
-    tasks.task_register(task_type::ON_RELINK, 10, {"hello", "whythere"}, get_thread_id(ctx));
+    tasks.task_register(task_type::ON_RELINK, 1, {"hello", "whythere"}, get_thread_id(ctx));
 
     return 0;
 }
