@@ -13,7 +13,7 @@ void task_thread(scheduled_tasks& tasks)
     }
 }
 
-void on_finish_relink(const std::string& username, int cnt, const std::vector<std::string>& data)
+void on_finish_relink(int cnt, const std::vector<std::string>& data)
 {
 
 }

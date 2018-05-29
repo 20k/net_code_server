@@ -216,6 +216,12 @@ struct db_interfaceable
         data[key_name] = val;
     }
 
+    template<typename T>
+    T get_key_data()
+    {
+        return data[key_name].get<T>();
+    }
+
     virtual bool handle_serialise(json& j, bool ser) {return false;}
 
     static
