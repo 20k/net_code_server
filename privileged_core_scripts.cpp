@@ -3055,10 +3055,19 @@ duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, target, host, path_info::USE_LINKS, -1);
+    float link_stability_cost = 50;
+
+    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, target, host, path_info::USE_LINKS, -1, link_stability_cost);
 
     if(path.size() == 0)
-        return push_error(ctx, "No path");
+    {
+        auto pseudo_path = playspace_network_manage.get_accessible_path_to(ctx, target, host, path_info::USE_LINKS, -1);
+
+        if(pseudo_path.size() != 0)
+            return push_error(ctx, "Path insufficiently stable, each link must have at least 50 stability");
+        else
+            return push_error(ctx, "No path");
+    }
 
     double dist = (opt_user->pos - opt_target->pos).length();
 
