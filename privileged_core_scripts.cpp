@@ -3088,6 +3088,9 @@ duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
     }
 
+    if(playspace_network_manage.current_network_links(opt_target->name) >= playspace_network_manage.max_network_links(opt_target->name))
+        return push_error(ctx, "Target has no free link slots");
+
     scheduled_tasks& tasks = get_global_scheduled_tasks();
 
     int time_s = 5;
