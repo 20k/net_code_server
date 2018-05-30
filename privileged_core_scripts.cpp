@@ -3074,7 +3074,11 @@ duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     double dist = (opt_user->pos - opt_target->pos).length();
 
+    float cost_mult = 0.1f;
+
     double cost = path.size() * 100 + dist;
+
+    cost *= cost_mult;
 
     bool confirm = duk_safe_get_generic(dukx_is_truthy, ctx, -1, "confirm", false);
 
