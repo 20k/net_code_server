@@ -74,6 +74,12 @@ void on_finish_relink(int cnt, const std::vector<std::string>& data)
         start.overwrite_user_in_db(ctx);
     }
 
+    std::string mover_str_start = u1->name + " relinked to " + u2->name;
+    std::string mover_str_dest = u1->name + " was attached";
+
+    make_logs_on("extern", start.name, user_node_info::BREACH, {mover_str_start}, -2);
+    make_logs_on("extern", fin.name, user_node_info::BREACH, {mover_str_dest}, -2);
+
     ///ok
     ///need to rip up data[0]
     ///and move it over to data.back()
