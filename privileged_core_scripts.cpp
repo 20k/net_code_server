@@ -3088,7 +3088,13 @@ duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
     }
 
+    scheduled_tasks& tasks = get_global_scheduled_tasks();
 
+    int time_s = 5;
+
+    tasks.task_register(task_type::ON_RELINK, time_s, path, get_thread_id(ctx));
+
+    push_duk_val(ctx, "Relinking will finish in " + std::to_string(time_s) + " seconds");
 
     ///so
     ///path leaking
