@@ -319,8 +319,6 @@ duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
-
-
 duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const std::string& to, double amount)
 {
     COOPERATE_KILL();
@@ -331,11 +329,23 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
         return 1;
     }
 
+    ///this is considered a catastrophically large amount
+    double cash_to_destroy_link = 10000;
+
     if(from == to)
     {
         push_error(ctx, "Money definitely shifted hands");
         return 1;
     }
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, to, from, path_info::NONE, -1, amount / cash_to_destroy_link);
+
+    if(path.size() == 0)
+        return push_error(ctx, "User does not exist or is disconnected");
+
+    playspace_network_manage.modify_path_per_link_strength(path, -amount / cash_to_destroy_link);
 
     {
         mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
