@@ -783,6 +783,20 @@ void create_notification(duk_context* ctx, const std::string& to, const std::str
     to_insert.insert_in_db(mongo_ctx);
 }
 
+void create_xfer_notif(duk_context* ctx, const std::string& xfer_from, const std::string& xfer_to, double amount)
+{
+    COOPERATE_KILL();
+
+    if(xfer_from == "" || xfer_to == "")
+        return;
+
+    std::string notif_from = "`P-Sent " + std::to_string(amount) + " (xfer)-`";
+    std::string notif_to = "`P-Received " + std::to_string(amount) + " (xfer)-`";
+
+    create_notification(ctx, xfer_from, notif_from);
+    create_notification(ctx, xfer_to, notif_to);
+}
+
 std::string format_time(const std::string& in)
 {
     if(in.size() == 1)

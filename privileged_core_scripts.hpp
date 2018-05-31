@@ -102,6 +102,7 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t msg__tell(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 void create_notification(duk_context* ctx, const std::string& to, const std::string& notif_msg);
+void create_xfer_notif(duk_context* ctx, const std::string& xfer_from, const std::string& xfer_to, double amount);
 
 ///formats time
 std::string format_time(const std::string& in);
