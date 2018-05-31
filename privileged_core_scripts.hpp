@@ -101,6 +101,8 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t msg__tell(priv_context& priv_ctx, duk_context* ctx, int sl);
 
+void create_notification(duk_context* ctx, const std::string& to, const std::string& notif_msg);
+
 ///formats time
 std::string format_time(const std::string& in);
 std::string prettify_chat_strings(const std::vector<mongo_requester>& found, bool use_channels = true);

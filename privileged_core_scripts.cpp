@@ -758,6 +758,30 @@ duk_ret_t msg__tell(priv_context& priv_ctx, duk_context* ctx, int sl)
     return push_success(ctx);
 }
 
+void create_notification(duk_context* ctx, const std::string& to, const std::string& notif_msg)
+{
+    COOPERATE_KILL();
+
+    if(to == "")
+        return;
+
+    if(notif_msg.size() > 10000)
+        return;
+
+    mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
+    mongo_ctx.change_collection(to);
+
+    size_t real_time = get_wall_time();
+
+    mongo_requester to_insert;
+    to_insert.set_prop("user", to);
+    to_insert.set_prop("is_notif", 1);
+    to_insert.set_prop("msg", notif_msg);
+    to_insert.set_prop_double("time_ms", real_time);
+    to_insert.set_prop("processed", 0);
+
+    to_insert.insert_in_db(mongo_ctx);
+}
 
 std::string format_time(const std::string& in)
 {
