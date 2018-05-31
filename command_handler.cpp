@@ -1720,6 +1720,35 @@ std::vector<mongo_requester> get_and_update_tells_for_user(user& usr)
     return found;
 }
 
+std::vector<mongo_requester> get_and_update_notifs_for_user(user& usr)
+{
+    std::vector<mongo_requester> found;
+
+    usr.cleanup_call_stack(-2);
+
+    {
+        mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
+        ctx.change_collection(usr.get_call_stack().back());
+
+        mongo_requester to_send;
+        to_send.set_prop("is_notif", 1);
+        to_send.set_prop("processed", 0);
+
+        found = to_send.fetch_from_db(ctx);
+
+        mongo_requester old_search = to_send;
+
+        to_send.set_prop("processed", 1);
+
+        old_search.update_in_db_if_exact(ctx, to_send);
+    }
+
+    if(found.size() > 1000)
+        found.resize(1000);
+
+    return found;
+}
+
 std::vector<std::string> get_channels_for_user(user& usr)
 {
     usr.cleanup_call_stack(-2);
@@ -1780,6 +1809,7 @@ std::string handle_client_poll_json(user& usr)
     std::vector<std::string> channels = get_channels_for_user(usr);
 
     std::vector<mongo_requester> tells = get_and_update_tells_for_user(usr);
+    std::vector<mongo_requester> notifs = get_and_update_notifs_for_user(usr);
 
     using json = nlohmann::json;
 
@@ -1814,8 +1844,19 @@ std::string handle_client_poll_json(user& usr)
         tdata.push_back(api);
     }
 
+    std::vector<json> ndata;
+
+    for(mongo_requester& req : notifs)
+    {
+        json api;
+        api["text"] = req.get_prop("msg");
+
+        ndata.push_back(api);
+    }
+
     all["data"] = cdata;
     all["tells"] = tdata;
+    all["notifs"] = ndata;
 
     return "chat_api_json " + all.dump();
 }
