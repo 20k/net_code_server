@@ -1442,6 +1442,17 @@ duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::st
     if(ret != "")
         return push_error(ctx, ret);*/
 
+    float items_to_destroy_link = 100;
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, to, from, path_info::NONE, -1, 1.f / items_to_destroy_link);
+
+    if(path.size() == 0)
+        return push_error(ctx, "User does not exist or is disconnected");
+
+    playspace_network_manage.modify_path_per_link_strength(path, -1.f / items_to_destroy_link);
+
     item placeholder;
 
     if(placeholder.transfer_from_to_by_index(item_idx, from, to, get_thread_id(ctx)))
