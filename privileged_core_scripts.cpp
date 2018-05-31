@@ -1451,12 +1451,12 @@ duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::st
     if(path.size() == 0)
         return push_error(ctx, "User does not exist or is disconnected");
 
-    playspace_network_manage.modify_path_per_link_strength(path, -1.f / items_to_destroy_link);
-
     item placeholder;
 
     if(placeholder.transfer_from_to_by_index(item_idx, from, to, get_thread_id(ctx)))
     {
+        playspace_network_manage.modify_path_per_link_strength(path, -1.f / items_to_destroy_link);
+
         std::string xfer = "`NItem xfer` | from: " + from  + ", to: " + to + ", index: " + std::to_string(item_idx);
 
         make_logs_on(ctx, from, user_node_info::ITEM_LOG, {xfer});
