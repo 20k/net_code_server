@@ -386,6 +386,8 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
             return err;
     }
 
+    create_xfer_notif(ctx, from, to, amount);
+
     push_success(ctx);
 
     return 1;
