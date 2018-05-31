@@ -3242,6 +3242,90 @@ duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+///from a gameplay perspective it'd be nice to see the stability between two points
+///with cash causing stability loss along a path, itll be possible to use that to trace people (which is very much suboptimal)
+///lets say that I fix that though
+///so. Path tells you link stability between first and last node
+///what gameplay ramifications does this have?
+///Ok so. If we have view perms this will give path, otherwise itll just give link stability
+///with optional minimum stability
+duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    float minimum_stability = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "min_stability", 0.f);
+
+    std::string start = duk_safe_get_prop_string(ctx, -1, "user");
+    std::string target = duk_safe_get_prop_string(ctx, -1, "target");
+    int arr = dukx_is_prop_truthy(ctx, -1, "array");
+
+    if(start == "")
+        start = get_caller(ctx);
+
+    if(target == "")
+        return push_error(ctx, "Requires target:<username> argument");
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    std::vector<std::string> viewable_distance = playspace_network_manage.get_accessible_path_to(ctx, target, start, path_info::VIEW_LINKS, -1, minimum_stability);
+
+    ///STRANGER DANGER
+    std::vector<std::string> link_path = playspace_network_manage.get_accessible_path_to(ctx, target, start, path_info::NONE, -1, minimum_stability);
+
+    float total_path_strength = playspace_network_manage.get_total_path_link_strength(link_path);
+
+    float avg_path_strength = 0.f;
+
+    if(link_path.size() > 0)
+        avg_path_strength = total_path_strength / (float)link_path.size();
+
+    std::string visible_path = "Visible Path: ";
+
+    if(viewable_distance.size() == 0)
+        visible_path += "Unknown";
+    else
+    {
+        for(int i=0; i < (int)viewable_distance.size(); i++)
+        {
+            if(i < (int)viewable_distance.size() - 1)
+                visible_path += viewable_distance[i] + " -> ";
+            else
+                visible_path += viewable_distance[i];
+        }
+    }
+
+    std::string path_stab = "Direct Path Stability: ";
+
+    if(link_path.size() == 0)
+    {
+        path_stab += "Unknown";
+    }
+    else
+    {
+        path_stab += to_string_with_enforced_variable_dp(total_path_strength, 2) + " [total], " +
+                     to_string_with_enforced_variable_dp(avg_path_strength, 2) + " [avg]";
+    }
+
+    if(!arr)
+    {
+        push_duk_val(ctx, visible_path + "\n" + path_stab);
+    }
+    else
+    {
+        using nlohmann::json;
+
+        json j;
+
+        j["path"] = viewable_distance;
+        j["total_stability"] = total_path_strength;
+        j["avg_stability"] = avg_path_strength;
+
+        push_duk_val(ctx, j);
+    }
+
+    return 1;
+}
+
 duk_ret_t cheats__task(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();

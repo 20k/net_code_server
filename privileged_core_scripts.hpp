@@ -220,6 +220,7 @@ duk_ret_t net__links(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl);
+duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t gal__map(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl);
@@ -317,6 +318,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(net__access, 0),
     REGISTER_FUNCTION_PRIV(net__switch, 0),
     REGISTER_FUNCTION_PRIV(net__move, 0),
+    REGISTER_FUNCTION_PRIV(net__path, 0),
     REGISTER_FUNCTION_PRIV(gal__map, 1),
     REGISTER_FUNCTION_PRIV(gal__list, 4),
     #ifdef TESTING
