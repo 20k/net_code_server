@@ -785,6 +785,32 @@ void create_notification(duk_context* ctx, const std::string& to, const std::str
     to_insert.insert_in_db(mongo_ctx);
 }
 
+template<typename T>
+inline
+std::string to_string_with_enforced_variable_dp(T a_value, int forced_dp = 1)
+{
+    if(fabs(a_value) <= 0.0999999 && fabs(a_value) >= 0.0001)
+        forced_dp++;
+
+    std::string fstr = std::to_string(a_value);
+
+    auto found = fstr.find('.');
+
+    if(found == std::string::npos)
+    {
+        return fstr + ".0";
+    }
+
+    found += forced_dp + 1;
+
+    if(found >= fstr.size())
+        return fstr;
+
+    fstr.resize(found);
+
+    return fstr;
+}
+
 void create_xfer_notif(duk_context* ctx, const std::string& xfer_from, const std::string& xfer_to, double amount)
 {
     COOPERATE_KILL();
@@ -792,8 +818,8 @@ void create_xfer_notif(duk_context* ctx, const std::string& xfer_from, const std
     if(xfer_from == "" || xfer_to == "")
         return;
 
-    std::string notif_from = "`e-Sent " + std::to_string(amount) + " (xfer)-`";
-    std::string notif_to = "`e-Received " + std::to_string(amount) + " (xfer)-`";
+    std::string notif_from = "`e-Sent " + to_string_with_enforced_variable_dp(amount, 2) + " (xfer)-`";
+    std::string notif_to = "`e-Received " + to_string_with_enforced_variable_dp(amount, 2) + " (xfer)-`";
 
     create_notification(ctx, xfer_from, notif_from);
     create_notification(ctx, xfer_to, notif_to);
