@@ -1844,14 +1844,11 @@ std::string handle_client_poll_json(user& usr)
         tdata.push_back(api);
     }
 
-    std::vector<json> ndata;
+    std::vector<std::string> ndata;
 
     for(mongo_requester& req : notifs)
     {
-        json api;
-        api["text"] = req.get_prop("msg");
-
-        ndata.push_back(api);
+        ndata.push_back(req.get_prop("msg"));
     }
 
     all["data"] = cdata;

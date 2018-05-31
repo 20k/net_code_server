@@ -792,8 +792,8 @@ void create_xfer_notif(duk_context* ctx, const std::string& xfer_from, const std
     if(xfer_from == "" || xfer_to == "")
         return;
 
-    std::string notif_from = "`P-Sent " + std::to_string(amount) + " (xfer)-`";
-    std::string notif_to = "`P-Received " + std::to_string(amount) + " (xfer)-`";
+    std::string notif_from = "`e-Sent " + std::to_string(amount) + " (xfer)-`";
+    std::string notif_to = "`e-Received " + std::to_string(amount) + " (xfer)-`";
 
     create_notification(ctx, xfer_from, notif_from);
     create_notification(ctx, xfer_to, notif_to);
