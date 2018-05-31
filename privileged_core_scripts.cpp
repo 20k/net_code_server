@@ -1719,6 +1719,26 @@ duk_ret_t handle_confirmed(duk_context* ctx, bool confirm, const std::string& us
     return 0;
 }
 
+duk_ret_t take_cash(duk_context* ctx, const std::string& username, double price)
+{
+    std::optional opt_user = get_user(username, get_thread_id(ctx));
+
+    if(!opt_user.has_value())
+        return push_error(ctx, "No such user");
+
+    if(opt_user->cash < price)
+        return push_error(ctx, "Please acquire more wealth");
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        opt_user->cash -= price;
+
+        opt_user->overwrite_user_in_db(mongo_ctx);
+    }
+
+    return 0;
+}
+
 ///have item__steal reset internal node structure
 
 duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
@@ -3098,7 +3118,8 @@ duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(playspace_network_manage.current_network_links(opt_target->name) >= playspace_network_manage.max_network_links(opt_target->name))
         return push_error(ctx, "Target has no free link slots");
 
-    ///MAKE TAKE CASH
+    if(take_cash(ctx, get_caller(ctx), cost) != 0)
+        return 1;
 
     scheduled_tasks& tasks = get_global_scheduled_tasks();
 
