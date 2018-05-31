@@ -2481,7 +2481,7 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(val.has_value())
             stabs.push_back(val.value());
         else
-            stabs.push_back(0.f);
+            stabs.push_back(-1.f);
     }
 
     if(!pretty)
