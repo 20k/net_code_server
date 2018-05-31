@@ -2462,24 +2462,43 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         return push_error(ctx, "Node is Locked");
 
     std::vector<std::string> links = playspace_network_manage.get_links(from);
+    std::vector<float> stabs;
 
-    /*for(int i=0; i < (int)links.size(); i++)
+    for(int i=0; i < (int)links.size(); i++)
     {
-        if(!playspace_network_manage.has_accessible_path_to(ctx, links[i], from, path_info::VIEW_LINKS))
-        {
-            links.erase(links.begin() + i);
-            i--;
-            continue;
-        }
-    }*/
+        auto val = playspace_network_manage.get_neighbour_link_strength(usr.name, links[i]);
+
+        if(val.has_value())
+            stabs.push_back(val.value());
+        else
+            stabs.push_back(0.f);
+    }
 
     if(!pretty)
     {
-        push_duk_val(ctx, links);
+        std::vector<json> all;
+
+        for(int i=0; i < (int)links.size(); i++)
+        {
+            json j;
+            j["neighbour"] = links[i];
+            j["stability"] = stabs[i];
+
+            all.push_back(j);
+        }
+
+        json j = all;
+
+        push_duk_val(ctx, all);
     }
     else
     {
-        std::string str = format_pretty_names(links);
+        std::string str;
+
+        for(int i=0; i < (int)links.size(); i++)
+        {
+            str += links[i] + ", " + to_string_with_enforced_variable_dp(stabs[i], 2) + "\n";
+        }
 
         push_duk_val(ctx, str);
     }
