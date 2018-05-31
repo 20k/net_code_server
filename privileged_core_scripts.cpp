@@ -825,6 +825,32 @@ void create_xfer_notif(duk_context* ctx, const std::string& xfer_from, const std
     create_notification(ctx, xfer_to, notif_to);
 }
 
+void create_xfer_item_notif(duk_context* ctx, const std::string& xfer_from, const std::string& xfer_to, const std::string& item_name)
+{
+    COOPERATE_KILL();
+
+    if(xfer_from == "" || xfer_to == "")
+        return;
+
+    std::string notif_from = "`e-Lost " + item_name + " (xfer)-`";
+    std::string notif_to = "`e-Received " + item_name + " (xfer)-`";
+
+    create_notification(ctx, xfer_from, notif_from);
+    create_notification(ctx, xfer_to, notif_to);
+}
+
+void create_destroy_item_notif(duk_context* ctx, const std::string& to, const std::string& item_name)
+{
+    COOPERATE_KILL();
+
+    if(item_name == "")
+        return;
+
+    std::string cull_msg = "`e-Destroyed " + item_name + "-`";
+
+    create_notification(ctx, to, cull_msg);
+}
+
 std::string format_time(const std::string& in)
 {
     if(in.size() == 1)
@@ -1326,6 +1352,11 @@ duk_ret_t item__cull(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
+        item found;
+        found.load_from_db(items_ctx, id);
+
+        create_destroy_item_notif(ctx, get_caller(ctx), found.get_prop("short_name"));
+
         item::delete_item(items_ctx, id);
     }
 
@@ -1411,6 +1442,8 @@ duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::st
         make_logs_on(ctx, to, user_node_info::ITEM_LOG, {xfer});
 
         //duk_push_int(ctx, placeholder.get_prop_as_integer("item_id"));
+
+        create_xfer_item_notif(ctx, from, to, placeholder.get_prop("short_name"));
 
         push_success(ctx);
     }
