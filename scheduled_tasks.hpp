@@ -16,6 +16,7 @@ struct scheduled_tasks;
 void task_thread(scheduled_tasks& tasks);
 
 void on_finish_relink(int cnt, const std::vector<std::string>& data);
+void on_disconnect_link(int cnt, const std::vector<std::string>& data);
 
 extern double get_wall_time_s();
 
@@ -24,6 +25,7 @@ namespace task_type
     enum task_type
     {
         ON_RELINK,
+        ON_DISCONNECT,
     };
 }
 
@@ -92,6 +94,11 @@ struct scheduled_tasks
         if(d.type == task_type::ON_RELINK)
         {
             on_finish_relink(d.count_offset, (std::vector<std::string>)d.udata);
+        }
+
+        if(d.type == task_type::ON_DISCONNECT)
+        {
+            on_disconnect_link(d.count_offset, (std::vector<std::string>)d.udata);
         }
 
         {

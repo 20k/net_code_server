@@ -85,3 +85,26 @@ void on_finish_relink(int cnt, const std::vector<std::string>& data)
 
     printf("relinked\n");
 }
+
+void on_disconnect_link(int cnt, const std::vector<std::string>& data)
+{
+    if(data.size() != 2)
+        return;
+
+    std::string s1 = data[0];
+    std::string s2 = data[1];
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    auto opt_stren = playspace_network_manage.get_neighbour_link_strength(s1, s2);
+
+    if(!opt_stren.has_value())
+        return;
+
+    if(opt_stren.value() >= 30.f)
+        return;
+
+    playspace_network_manage.unlink(s1, s2);
+
+    printf("unlink\n");
+}
