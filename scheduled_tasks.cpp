@@ -46,7 +46,7 @@ void on_finish_relink(int cnt, const std::vector<std::string>& data)
 
     float total_path_stability = playspace_network_manage.get_total_path_link_strength(data);
 
-    playspace_network_manage.modify_path_per_link_strength(data, -link_stability_cost);
+    playspace_network_manage.modify_path_per_link_strength_with_logs(data, -link_stability_cost, {"Relinking"}, -2);
 
     user& start = u1.value();
     user& fin = u2.value();

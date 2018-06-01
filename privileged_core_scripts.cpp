@@ -345,7 +345,9 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
     if(path.size() == 0)
         return push_error(ctx, "User does not exist or is disconnected");
 
-    playspace_network_manage.modify_path_per_link_strength(path, -amount / cash_to_destroy_link);
+    std::string leak_msg = "Xfer'd " + std::to_string(amount);
+
+    playspace_network_manage.modify_path_per_link_strength_with_logs(path, -amount / cash_to_destroy_link, {leak_msg}, get_thread_id(ctx));
 
     {
         mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
@@ -1455,7 +1457,7 @@ duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::st
 
     if(placeholder.transfer_from_to_by_index(item_idx, from, to, get_thread_id(ctx)))
     {
-        playspace_network_manage.modify_path_per_link_strength(path, -1.f / items_to_destroy_link);
+        playspace_network_manage.modify_path_per_link_strength_with_logs(path, -1.f / items_to_destroy_link, {"Xfer'd Item"}, get_thread_id(ctx));
 
         std::string xfer = "`NItem xfer` | from: " + from  + ", to: " + to + ", index: " + std::to_string(item_idx);
 
