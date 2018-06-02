@@ -3,10 +3,20 @@
 #include <secret/node.hpp>
 #include <secret/npc_manager.hpp>
 #include "rng.hpp"
+#include <secret/initial_link_setup.hpp>
 
 
 void on_heal_network_link(int cnt, const std::vector<std::string>& data)
 {
+    if(data.size() != 2)
+        return;
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    //npc_generator::force_link_singular(playspace_network_manage, data[0], {data[1]});
+
+    playspace_network_manage.link(data[0], data[1]);
+
     for(auto& i : data)
     {
         std::cout << i << std::endl;
