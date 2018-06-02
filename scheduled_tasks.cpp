@@ -4,6 +4,17 @@
 #include <secret/npc_manager.hpp>
 #include "rng.hpp"
 
+
+void on_heal_network_link(int cnt, const std::vector<std::string>& data)
+{
+    for(auto& i : data)
+    {
+        std::cout << i << std::endl;
+    }
+
+    printf("heal\n");
+}
+
 void task_thread(scheduled_tasks& tasks)
 {
     sf::Clock clk;

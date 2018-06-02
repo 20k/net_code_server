@@ -3379,6 +3379,22 @@ duk_ret_t cheats__task(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 0;
 }
 
+duk_ret_t cheats__disconnect(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string usr = duk_safe_get_prop_string(ctx, -1, "user");
+
+    if(usr == "")
+        return push_error(ctx, "ARGLBLARLGB");
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    playspace_network_manage.unlink_all(usr);
+
+    return 0;
+}
+
 duk_ret_t gal__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     auto structs = get_global_structure();
