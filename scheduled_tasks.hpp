@@ -144,7 +144,7 @@ struct scheduled_tasks
         return cnt;
     }
 
-    std::vector<task_data_db> get_all_tasks_of_type(task_type::task_type task, int thread_id)
+    std::vector<task_data_db> get_all_tasks_of_type(task_type::task_type task)
     {
         std::vector<task_data_db> all;
 

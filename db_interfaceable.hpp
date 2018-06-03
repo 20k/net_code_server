@@ -113,6 +113,9 @@ struct db_val : db_common
         val = other;
     }
 
+    T& value() {return val;};
+    T value() const {return val;};
+
     operator T&() {return val;};
     //operator T&() = delete;
     operator T() const { return val; }
