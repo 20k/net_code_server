@@ -2960,7 +2960,21 @@ duk_ret_t net__links(priv_context& priv_ctx, duk_context* ctx, int sl)
                 it++;
         }
 
+        std::vector<float> stabs;
+
+        for(int i=0; i < (int)connections.size(); i++)
+        {
+            auto val = playspace_network_manage.get_neighbour_link_strength(name, connections[i]);
+
+            if(val.has_value())
+                stabs.push_back(val.value());
+            else
+                stabs.push_back(-1.f);
+        }
+
+
         j["links"] = connections;
+        j["stabilities"] = stabs;
 
         all_npc_data.push_back(j);
     }
@@ -2982,22 +2996,11 @@ duk_ret_t net__links(priv_context& priv_ctx, duk_context* ctx, int sl)
             std::string name = j["name"];
             vec3f pos = (vec3f){j["x"], j["y"], j["z"]};
             std::vector<std::string> links = j["links"];
+            std::vector<float> stabs = j["stabilities"];
 
             std::string pos_str = std::to_string(pos.x()) + " " + std::to_string(pos.y()) + " " + std::to_string(pos.z());
 
             std::string link_str = "[";
-
-            std::vector<float> stabs;
-
-            for(int i=0; i < (int)links.size(); i++)
-            {
-                auto val = playspace_network_manage.get_neighbour_link_strength(name, links[i]);
-
-                if(val.has_value())
-                    stabs.push_back(val.value());
-                else
-                    stabs.push_back(-1.f);
-            }
 
             for(int i=0; i < (int)links.size(); i++)
             {
