@@ -58,9 +58,9 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["nodes.manage"] = make_cary();
     ret["nodes.port"] = make_cary();
     ret["nodes.view_log"] = make_cary("user", "\"\"", "NID", "-1");
-    ret["net.view"] = make_cary("user", "\"\"");
+    ret["net.view"] = make_cary("user", "\"\"", "n", "6");
     ret["net.map"] = make_cary("user", "\"\"", "n", "6");
-    ret["net.links"] = make_cary("user", "\"\"", "n", "6");
+    //ret["net.links"] = make_cary("user", "\"\"", "n", "6");
     ret["net.hack"] = make_cary("user", "\"\"");
     ret["net.access"] = make_cary("user", "\"\"");
     ret["net.switch"] = make_cary("user", "\"\"");
@@ -2463,6 +2463,7 @@ duk_ret_t nodes__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 
 ///this function needs to respect locks and breaching etc
 
+#if 0
 duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -2534,6 +2535,7 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return 1;
 }
+#endif // 0
 
 
 double npc_name_to_angle(const std::string& str)
@@ -2834,7 +2836,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
-duk_ret_t net__links(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
