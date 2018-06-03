@@ -1755,14 +1755,39 @@ std::vector<std::string> get_channels_for_user(user& usr)
 
     std::string name = usr.get_call_stack().back();
 
-    mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+    /*mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
 
     user fuser;
 
     if(!fuser.load_from_db(ctx, name))
         return std::vector<std::string>();
 
-    return str_to_array(fuser.joined_channels);
+    return str_to_array(fuser.joined_channels);*/
+
+    std::vector<std::string> ret;
+
+    mongo_lock_proxy ctx = get_global_mongo_chat_channel_propeties_context(-2);
+
+    mongo_requester all;
+    all.exists_check["channel_name"] = 1;
+
+    auto found = all.fetch_from_db(ctx);
+
+    for(auto& i : found)
+    {
+        std::vector<std::string> users = str_to_array(i.get_prop("user_list"));
+
+        for(auto& k : users)
+        {
+            if(k == name)
+            {
+                ret.push_back(i.get_prop("channel_name"));
+                break;
+            }
+        }
+    }
+
+    return ret;
 }
 
 std::string handle_client_poll(user& usr)
@@ -1816,6 +1841,13 @@ std::string handle_client_poll_json(user& usr)
     json all;
 
     all["channels"] = channels;
+
+    /*std::cout << "poll json\n";
+
+    for(auto& i : channels)
+    {
+        std::cout << "CHAN " << i << std::endl;
+    }*/
 
     std::vector<json> cdata;
 

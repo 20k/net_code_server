@@ -521,6 +521,9 @@ bool is_valid_channel_name(const std::string& in)
         if(isalnum(i) || i == '_')
             continue;
 
+        if(i == ' ')
+            return false;
+
         return false;
     }
 
