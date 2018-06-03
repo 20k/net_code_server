@@ -2343,8 +2343,14 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-        if(!playspace_network_manage.has_accessible_path_to(ctx, name_of_person_being_attacked, get_caller(ctx), path_info::USE_LINKS))
+        float hack_cost = 0.25f;
+
+        auto path = playspace_network_manage.get_accessible_path_to(ctx, name_of_person_being_attacked, get_caller(ctx), path_info::USE_LINKS, -1, hack_cost);
+
+        if(path.size() == 0)
             return push_error(ctx, "No Path");
+
+        playspace_network_manage.modify_path_per_link_strength_with_logs(path, -hack_cost, {"Hostile Path Access"}, get_thread_id(ctx));
     }
 
     return hack_internal(priv_ctx, ctx, name_of_person_being_attacked);
