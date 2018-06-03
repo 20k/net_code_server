@@ -1766,12 +1766,28 @@ std::vector<std::string> get_channels_for_user(user& usr)
 
     std::vector<std::string> ret;
 
+    static std::vector<mongo_requester> all_data;
+    static std::mutex lock;
+    static sf::Clock clk;
+
+    std::lock_guard guard(lock);
+
     mongo_lock_proxy ctx = get_global_mongo_chat_channel_propeties_context(-2);
 
     mongo_requester all;
     all.exists_check["channel_name"] = 1;
 
-    auto found = all.fetch_from_db(ctx);
+    std::vector<mongo_requester> found;
+
+    if(clk.getElapsedTime().asSeconds() > 1)
+    {
+        found = all.fetch_from_db(ctx);
+        clk.restart();
+    }
+    else
+        found = all_data;
+
+    all_data = found;
 
     for(auto& i : found)
     {
