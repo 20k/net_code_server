@@ -2841,19 +2841,30 @@ duk_ret_t net__links(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string from = duk_safe_get_prop_string(ctx, -1, "user");
     int num = duk_get_prop_string_as_int(ctx, -1, "n", 2);
 
+    bool arr = dukx_is_prop_truthy(ctx, -1, "array");
+
     if(from == "")
         return push_error(ctx, "usage: net.links({user:<username>, n:6})");
 
     if(num < 0 || num > 15)
         return push_error(ctx, "n out of range [1,15]");
 
-    if(!get_user(from, get_thread_id(ctx)).has_value())
+    auto opt_user_and_nodes = get_user_and_nodes(from, get_thread_id(ctx));
+
+    if(!opt_user_and_nodes.has_value())
         return push_error(ctx, "User does not exist");
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
     if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx), path_info::VIEW_LINKS))
         return push_error(ctx, "Target Inaccessible");
+
+    user& usr = opt_user_and_nodes->first;
+
+    auto hostile_actions = opt_user_and_nodes->second.valid_hostile_actions();
+
+    if(!usr.is_allowed_user(get_caller(ctx)) && !((hostile_actions & user_node_info::VIEW_LINKS) > 0))
+        return push_error(ctx, "Node is Locked");
 
     std::map<std::string, int> rings;
     std::set<std::string> accessible;
@@ -2954,9 +2965,71 @@ duk_ret_t net__links(priv_context& priv_ctx, duk_context* ctx, int sl)
         all_npc_data.push_back(j);
     }
 
-    json arr = all_npc_data;
+    json final_data = all_npc_data;
 
-    push_duk_val(ctx, arr);
+    if(arr)
+        push_duk_val(ctx, final_data);
+    else
+    {
+        std::string str;
+
+        std::vector<std::string> all_names{"Name"};
+        std::vector<std::string> all_positions{"Position"};
+        std::vector<std::string> all_links{"Links"};
+
+        for(json& j : all_npc_data)
+        {
+            std::string name = j["name"];
+            vec3f pos = (vec3f){j["x"], j["y"], j["z"]};
+            std::vector<std::string> links = j["links"];
+
+            std::string pos_str = std::to_string(pos.x()) + " " + std::to_string(pos.y()) + " " + std::to_string(pos.z());
+
+            std::string link_str = "[";
+
+            std::vector<float> stabs;
+
+            for(int i=0; i < (int)links.size(); i++)
+            {
+                auto val = playspace_network_manage.get_neighbour_link_strength(name, links[i]);
+
+                if(val.has_value())
+                    stabs.push_back(val.value());
+                else
+                    stabs.push_back(-1.f);
+            }
+
+            for(int i=0; i < (int)links.size(); i++)
+            {
+                std::string stab_str = "`c" + to_string_with_enforced_variable_dp(stabs[i], 2) + "`";
+
+                if(i != (int)links.size()-1)
+                    link_str += colour_string(links[i]) + " " + stab_str + ", ";
+                else
+                    link_str += colour_string(links[i]) + " " + stab_str;
+            }
+
+            link_str += "]";
+
+            all_names.push_back(name);
+            all_positions.push_back(pos_str);
+            all_links.push_back(link_str);
+        }
+
+        for(int i=0; i < (int)all_names.size(); i++)
+        {
+            std::string formatted_name = format_by_vector(all_names[i], all_names);
+            std::string formatted_pos = format_by_vector(all_positions[i], all_positions);
+            std::string formatted_link = format_by_vector(all_links[i], all_links);
+
+            if(i != 0)
+                formatted_name = colour_string(formatted_name);
+
+            str += formatted_name + " | " + formatted_pos + " | " + formatted_link + "\n";
+        }
+
+        push_duk_val(ctx, str);
+    }
 
     return 1;
 }
