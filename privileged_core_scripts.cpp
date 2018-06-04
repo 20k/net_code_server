@@ -2608,7 +2608,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     //auto links = playspace_network_manage.get_links(from)
     std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-    std::set<std::string> accessible;
+    std::set<std::string> accessible{from};
     std::set<std::string> inaccessible;
     std::vector<std::string> next_ring;
     std::vector<std::string> current_ring{from};
@@ -2876,7 +2876,7 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         return push_error(ctx, "Node is Locked");
 
     std::map<std::string, int> rings;
-    std::set<std::string> accessible;
+    std::set<std::string> accessible{from};
     std::set<std::string> inaccessible;
     std::vector<std::string> next_ring;
     std::vector<std::string> current_ring{from};
