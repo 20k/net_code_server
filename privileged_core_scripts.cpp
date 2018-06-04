@@ -3473,12 +3473,13 @@ duk_ret_t net__link(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    std::optional opt_user_and_nodes = get_user_and_nodes(usr, get_thread_id(ctx));
+    std::optional opt_user_and_nodes_1 = get_user_and_nodes(usr, get_thread_id(ctx));
+    std::optional opt_user_and_nodes_2 = get_user_and_nodes(target, get_thread_id(ctx));
 
-    if(!opt_user_and_nodes.has_value())
+    if(!opt_user_and_nodes_1.has_value())
         return push_error(ctx, "No such user (user)");
 
-    if(!get_user(target, get_thread_id(ctx)).has_value())
+    if(!opt_user_and_nodes_2.has_value())
         return push_error(ctx, "No such user (target)");
 
     ///the requirements for being able to strengthen two points in the network is that we have vision on the first
@@ -3503,17 +3504,19 @@ duk_ret_t net__link(priv_context& priv_ctx, duk_context* ctx, int sl)
     float link_stability_for_one_cash = 0.1;
     float link_stability_to_cash = 1.f/link_stability_for_one_cash;
 
+    std::string stab_str = "1 link stability : " + std::to_string(link_stability_to_cash) + " cash\n";
+    std::string no_stab_str = "No stability requested, please input " + make_key_col("stability") + ":" + make_val_col("num");
+    float price = stab * link_stability_to_cash;
+
     if(!create)
     {
-        float price = stab * link_stability_to_cash;
-
         std::string rstr = "Strengthen connection or pass " + make_key_col("create") + ":" + make_val_col("true") + " to attempt new linkage\n";
 
         if(price <= 0)
         {
-            rstr += "1 link stability : " + std::to_string(link_stability_to_cash) + " cash\n";
+            rstr += stab_str;
             rstr += "Select Path " + make_key_col("type") + ":" + make_val_col("view") + " or " + make_val_col("use") + " (selected " + path_type + ")\n";
-            rstr += "No stability requested, please input " + make_key_col("stability") + ":" + make_val_col("num");
+            rstr += no_stab_str;
         }
         else
         {
@@ -3546,7 +3549,57 @@ duk_ret_t net__link(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
     else
     {
-        push_duk_val(ctx, "Targets unlinked, schedule new connection?");
+        user_nodes& n1 = opt_user_and_nodes_1->second;
+        user_nodes& n2 = opt_user_and_nodes_2->second;
+
+        user& u1 = opt_user_and_nodes_1->first;
+        user& u2 = opt_user_and_nodes_2->first;
+
+        bool invalid_1 = !n1.is_valid_hostile_action(user_node_info::hostile_actions::USE_LINKS) && !u1.is_allowed_user(get_caller(ctx));
+        bool invalid_2 = !n2.is_valid_hostile_action(user_node_info::hostile_actions::USE_LINKS) && !u2.is_allowed_user(get_caller(ctx));
+
+        if(invalid_1 || invalid_2)
+            return push_error(ctx, "Breach Node Secured");
+
+        std::string rstr;
+
+        if(price <= 0)
+        {
+            rstr += stab_str;
+            rstr += no_stab_str;
+
+            push_duk_val(ctx, rstr);
+            return 1;
+        }
+        else
+        {
+            vec3f vdist = (u2.pos - u1.pos);
+
+            double dist = vdist.length();
+
+            ///30 cash per network unit
+            price += (dist / ESEP) * 30.f;
+
+            rstr += std::to_string(stab) + " for " + std::to_string(price) + " cash, please confirm:true";
+        }
+
+        if(price > 0)
+        {
+            if(handle_confirmed(ctx, confirm, get_caller(ctx), price))
+                return 1;
+
+            if(playspace_network_manage.current_network_links(usr) >= playspace_network_manage.max_network_links(usr) ||
+               playspace_network_manage.current_network_links(target) >= playspace_network_manage.max_network_links(target))
+                return push_error(ctx, "No spare links");
+
+            scheduled_tasks& task_sched = get_global_scheduled_tasks();
+
+            task_sched.task_register(task_type::ON_HEAL_NETWORK, 10.f, {usr, target}, get_thread_id(ctx));
+
+            return push_success(ctx, "Link creation scheduled in 10s");
+        }
+
+        push_duk_val(ctx, "Schedule new connection?");
     }
 
     return 1;
