@@ -2923,6 +2923,8 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     std::map<std::string, vec3f> global_pos;
+    std::vector<std::string> ordered_names;
+
 
     for(auto& i : rings)
     {
@@ -2935,8 +2937,11 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
                 continue;
 
             global_pos[usr.name] = usr.pos;
+            ordered_names.push_back(usr.name);
         }
     }
+
+    std::sort(ordered_names.begin(), ordered_names.end(), [&](const auto& u1, const auto& u2){return rings[u1] < rings[u2];});
 
     ///so
     ///the information we want to give back to the client wants to be very rich
@@ -2944,14 +2949,15 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///path to original player? unsure on this
     ///position
 
+
     using nlohmann::json;
 
     std::vector<json> all_npc_data;
 
-    for(auto& i : global_pos)
+    for(auto& i : ordered_names)
     {
-        const std::string& name = i.first;
-        vec3f pos = i.second;
+        const std::string& name = i;
+        vec3f pos = global_pos[name];
 
         json j;
         j["name"] = name;
