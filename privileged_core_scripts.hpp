@@ -319,9 +319,11 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(net__hack, 4),
     REGISTER_FUNCTION_PRIV(net__access, 0),
     REGISTER_FUNCTION_PRIV(net__switch, 0),
+    #ifdef PVP
     REGISTER_FUNCTION_PRIV(net__move, 0),
     REGISTER_FUNCTION_PRIV(net__path, 0),
-    //REGISTER_FUNCTION_PRIV(net__link, 4),
+    #endif // PVP
+    REGISTER_FUNCTION_PRIV(net__link, 4),
     REGISTER_FUNCTION_PRIV(gal__map, 1),
     REGISTER_FUNCTION_PRIV(gal__list, 4),
     #ifdef TESTING

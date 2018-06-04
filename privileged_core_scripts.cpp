@@ -3396,6 +3396,9 @@ duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
+    if(!playspace_network_manage.has_accessible_path_to(ctx, start, get_caller(ctx), path_info::VIEW_LINKS))
+        return push_error(ctx, "No path to start user");
+
     std::vector<std::string> viewable_distance = playspace_network_manage.get_accessible_path_to(ctx, target, start, path_info::VIEW_LINKS, -1, minimum_stability);
 
     ///STRANGER DANGER
@@ -3450,6 +3453,104 @@ duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
         j["avg_stability"] = avg_path_strength;
 
         push_duk_val(ctx, j);
+    }
+
+    return 1;
+}
+
+duk_ret_t net__link(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string usr = duk_safe_get_prop_string(ctx, -1, "user");
+    std::string target = duk_safe_get_prop_string(ctx, -1, "target");
+
+    if(target == "")
+        return push_error(ctx, "Requires a target:<username> parameter");
+
+    if(usr == "")
+        usr = get_caller(ctx);
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    std::optional opt_user_and_nodes = get_user_and_nodes(usr, get_thread_id(ctx));
+
+    if(!opt_user_and_nodes.has_value())
+        return push_error(ctx, "No such user (user)");
+
+    if(!get_user(target, get_thread_id(ctx)).has_value())
+        return push_error(ctx, "No such user (target)");
+
+    ///the requirements for being able to strengthen two points in the network is that we have vision on the first
+    ///and then either use or view perms to the second
+    if(!playspace_network_manage.has_accessible_path_to(ctx, usr, get_caller(ctx), path_info::VIEW_LINKS))
+        return push_error(ctx, "No currently visible path to user");
+
+    bool confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
+    bool create = dukx_is_prop_truthy(ctx, -1, "create");
+
+    double stab = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "stability", 0);
+    std::string path_type = duk_safe_get_prop_string(ctx, -1, "type");
+
+    for(auto& i : path_type)
+    {
+        i = std::tolower(i);
+    }
+
+    if(path_type == "")
+        path_type = "use";
+
+    float link_stability_for_one_cash = 0.1;
+    float link_stability_to_cash = 1.f/link_stability_for_one_cash;
+
+    if(!create)
+    {
+        float price = stab * link_stability_to_cash;
+
+        std::string rstr = "Strengthen connection or pass " + make_key_col("create") + ":" + make_val_col("true") + " to attempt new linkage\n";
+
+        if(price <= 0)
+        {
+            rstr += "1 link stability : " + std::to_string(link_stability_to_cash) + " cash\n";
+            rstr += "Select Path " + make_key_col("type") + ":" + make_val_col("view") + " or " + make_val_col("use") + " (selected " + path_type + ")\n";
+            rstr += "No stability requested, please input " + make_key_col("stability") + ":" + make_val_col("num");
+        }
+        else
+        {
+            rstr += std::to_string(stab) + " for " + std::to_string(price) + " cash, please confirm:true";
+        }
+
+        if(confirm && price > 0)
+        {
+            if(handle_confirmed(ctx, confirm, get_caller(ctx), price))
+                return 1;
+
+            std::vector<std::string> path;
+
+            //if(path_type == "direct")
+            //    path = playspace_network_manage.get_accessible_path_to(ctx, target, usr, path_info::NONE);
+            if(path_type == "view")
+                path = playspace_network_manage.get_accessible_path_to(ctx, target, usr, path_info::VIEW_LINKS);
+            if(path_type == "use")
+                path = playspace_network_manage.get_accessible_path_to(ctx, target, usr, path_info::USE_LINKS);
+
+            if(path.size() == 0)
+                return push_error(ctx, "No path");
+
+            playspace_network_manage.modify_path_per_link_strength_with_logs(path, stab / ((float)path.size() - 1.f) , {"Path Fortify"}, get_thread_id(ctx));
+
+            return push_success(ctx, "Distributed " + std::to_string(stab) + " across " + std::to_string((int)path.size() - 1) + " links");
+        }
+
+        push_duk_val(ctx, rstr);
+
+        //user& t_usr = get_user()
+
+        //price =
+    }
+    else
+    {
+        push_duk_val(ctx, "Targets unlinked, schedule new connection?");
     }
 
     return 1;
