@@ -3543,10 +3543,6 @@ duk_ret_t net__link(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
 
         push_duk_val(ctx, rstr);
-
-        //user& t_usr = get_user()
-
-        //price =
     }
     else
     {
