@@ -2872,7 +2872,7 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     auto hostile_actions = opt_user_and_nodes->second.valid_hostile_actions();
 
-    if(!usr.is_allowed_user(get_caller(ctx)) && !((hostile_actions & user_node_info::VIEW_LINKS) > 0))
+    if(!usr.is_allowed_user(get_caller(ctx)) && usr.name != get_caller(ctx) && !((hostile_actions & user_node_info::VIEW_LINKS) > 0))
         return push_error(ctx, "Node is Locked");
 
     std::map<std::string, int> rings;
@@ -3302,10 +3302,10 @@ duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     user u1 = opt_user.value();
 
-    if(!u1.is_allowed_user(get_caller(ctx)))
+    if(!u1.is_allowed_user(get_caller(ctx)) && u1.name != get_caller(ctx))
         return push_error(ctx, "No permission for user (user)");
 
-    if(!opt_target->is_allowed_user(get_caller(ctx)))
+    if(!opt_target->is_allowed_user(get_caller(ctx)) && opt_target->name != get_caller(ctx))
         return push_error(ctx, "No permission for user (target)");
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
@@ -3558,8 +3558,8 @@ duk_ret_t net__modify(priv_context& priv_ctx, duk_context* ctx, int sl)
         user& u1 = opt_user_and_nodes_1->first;
         user& u2 = opt_user_and_nodes_2->first;
 
-        bool invalid_1 = !n1.is_valid_hostile_action(user_node_info::hostile_actions::USE_LINKS) && !u1.is_allowed_user(get_caller(ctx));
-        bool invalid_2 = !n2.is_valid_hostile_action(user_node_info::hostile_actions::USE_LINKS) && !u2.is_allowed_user(get_caller(ctx));
+        bool invalid_1 = !n1.is_valid_hostile_action(user_node_info::hostile_actions::USE_LINKS) && !u1.is_allowed_user(get_caller(ctx)) && u1.name != get_caller(ctx);
+        bool invalid_2 = !n2.is_valid_hostile_action(user_node_info::hostile_actions::USE_LINKS) && !u2.is_allowed_user(get_caller(ctx)) && u2.name != get_caller(ctx);
 
         if(invalid_1 || invalid_2)
             return push_error(ctx, "Breach Node Secured");
