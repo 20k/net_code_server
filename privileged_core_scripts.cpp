@@ -3508,7 +3508,7 @@ duk_ret_t net__modify(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(path_type == "")
         path_type = "use";
 
-    float link_stability_for_one_cash = 0.1;
+    float link_stability_for_one_cash = 1.f;
     float link_stability_to_cash = 1.f/link_stability_for_one_cash;
 
     std::string stab_str = "1 link stability : " + std::to_string(link_stability_to_cash) + " cash\n";
