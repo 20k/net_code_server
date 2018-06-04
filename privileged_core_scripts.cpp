@@ -64,7 +64,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["net.hack"] = make_cary("user", "\"\"");
     ret["net.access"] = make_cary("user", "\"\"");
     ret["net.switch"] = make_cary("user", "\"\"");
-    ret["net.modify"] = make_cary("user", "\"\"", "target", "\"\"", "type", "\"use\"", "delta", "0", "create", "false");
+    ret["net.modify"] = make_cary("user", "\"\"", "target", "\"\"");
 
     return ret;
 }
