@@ -99,10 +99,17 @@ struct db_val : db_common
         }
         else
         {
-            if(j.find(key) == j.end())
-                j[key] = val;
+            //if(j.find(key) == j.end())
+            //    j[key] = val;
 
-            val = j[key].get<T>();
+            try
+            {
+                val = j[key].get<T>();
+            }
+            catch(...)
+            {
+                j[key] = val;
+            }
         }
     }
 

@@ -64,6 +64,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["net.hack"] = make_cary("user", "\"\"");
     ret["net.access"] = make_cary("user", "\"\"");
     ret["net.switch"] = make_cary("user", "\"\"");
+    ret["net.modify"] = make_cary("user", "\"\"", "target", "\"\"", "type", "\"use\"", "delta", "0", "create", "false");
 
     return ret;
 }
@@ -1828,6 +1829,9 @@ duk_ret_t handle_confirmed(duk_context* ctx, bool confirm, const std::string& us
     if(!opt_user.has_value())
         return push_error(ctx, "No such user");
 
+    if(isnanf(price))
+        return push_error(ctx, "NaN");
+
     if(!confirm)
         return push_error(ctx, "Please confirm:true to pay " + std::to_string((int)price));
 
@@ -3458,7 +3462,7 @@ duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
-duk_ret_t net__link(priv_context& priv_ctx, duk_context* ctx, int sl)
+duk_ret_t net__modify(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
@@ -3490,8 +3494,11 @@ duk_ret_t net__link(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
     bool create = dukx_is_prop_truthy(ctx, -1, "create");
 
-    double stab = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "stability", 0);
+    double stab = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "delta", 0);
     std::string path_type = duk_safe_get_prop_string(ctx, -1, "type");
+
+    if(isnanf(stab))
+        stab = 0;
 
     for(auto& i : path_type)
     {
@@ -3505,25 +3512,21 @@ duk_ret_t net__link(priv_context& priv_ctx, duk_context* ctx, int sl)
     float link_stability_to_cash = 1.f/link_stability_for_one_cash;
 
     std::string stab_str = "1 link stability : " + std::to_string(link_stability_to_cash) + " cash\n";
-    std::string no_stab_str = "No stability requested, please input " + make_key_col("stability") + ":" + make_val_col("num");
-    float price = stab * link_stability_to_cash;
+    std::string no_stab_str = "No stability delta requested, please input " + make_key_col("delta") + ":" + make_val_col("num");
+    float price = fabs(stab * link_stability_to_cash);
 
     if(!create)
     {
-        std::string rstr = "Strengthen connection or pass " + make_key_col("create") + ":" + make_val_col("true") + " to attempt new linkage\n";
+        std::string rstr = "Change connection strength or pass " + make_key_col("create") + ":" + make_val_col("true") + " to attempt new linkage\n";
 
-        if(price <= 0)
+        if(price == 0)
         {
             rstr += stab_str;
             rstr += "Select Path " + make_key_col("type") + ":" + make_val_col("view") + " or " + make_val_col("use") + " (selected " + path_type + ")\n";
             rstr += no_stab_str;
         }
-        else
-        {
-            rstr += std::to_string(stab) + " for " + std::to_string(price) + " cash, please confirm:true";
-        }
 
-        if(confirm && price > 0)
+        if(price != 0)
         {
             if(handle_confirmed(ctx, confirm, get_caller(ctx), price))
                 return 1;
@@ -3561,6 +3564,9 @@ duk_ret_t net__link(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(invalid_1 || invalid_2)
             return push_error(ctx, "Breach Node Secured");
 
+        if(stab <= 0)
+            return push_error(ctx, "Cannot create a new link with stability <= 0");
+
         std::string rstr;
 
         if(price <= 0)
@@ -3579,11 +3585,9 @@ duk_ret_t net__link(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             ///30 cash per network unit
             price += (dist / ESEP) * 30.f;
-
-            rstr += std::to_string(stab) + " for " + std::to_string(price) + " cash, please confirm:true";
         }
 
-        if(price > 0)
+        if(price != 0)
         {
             if(handle_confirmed(ctx, confirm, get_caller(ctx), price))
                 return 1;
@@ -3594,7 +3598,7 @@ duk_ret_t net__link(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             scheduled_tasks& task_sched = get_global_scheduled_tasks();
 
-            task_sched.task_register(task_type::ON_HEAL_NETWORK, 10.f, {usr, target}, get_thread_id(ctx));
+            task_sched.task_register(task_type::ON_HEAL_NETWORK, 10.f, {usr, target, std::to_string(stab)}, get_thread_id(ctx));
 
             return push_success(ctx, "Link creation scheduled in 10s");
         }

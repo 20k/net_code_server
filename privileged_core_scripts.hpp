@@ -216,12 +216,12 @@ duk_ret_t nodes__port(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t net__links(priv_context& priv_ctx, duk_context* ctx, int sl);
+//duk_ret_t net__links(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t net__link(priv_context& priv_ctx, duk_context* ctx, int sl);
+duk_ret_t net__modify(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t gal__map(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl);
@@ -323,7 +323,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(net__move, 0),
     REGISTER_FUNCTION_PRIV(net__path, 0),
     #endif // PVP
-    REGISTER_FUNCTION_PRIV(net__link, 4),
+    REGISTER_FUNCTION_PRIV(net__modify, 0),
     REGISTER_FUNCTION_PRIV(gal__map, 1),
     REGISTER_FUNCTION_PRIV(gal__list, 4),
     #ifdef TESTING

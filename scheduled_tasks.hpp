@@ -33,8 +33,8 @@ namespace task_type
 
 struct task_data_db : db_interfaceable<task_data_db, true, MACRO_GET_STR("id")>
 {
-    DB_VAL(float, start_time_s);
-    DB_VAL(float, end_time_s);
+    DB_VAL(double, start_time_s);
+    DB_VAL(double, end_time_s);
     DB_VAL(bool, called_callback);
     DB_VAL(task_type::task_type, type);
     DB_VAL(std::vector<std::string>, udata);
@@ -54,7 +54,7 @@ struct task_data_db : db_interfaceable<task_data_db, true, MACRO_GET_STR("id")>
 
     bool finished()
     {
-        return get_wall_time_s() >= end_time_s;
+        return get_wall_time_s() >= (double)end_time_s;
     }
 };
 
@@ -115,13 +115,15 @@ struct scheduled_tasks
         }
     }
 
-    int task_register(const task_type::task_type& task, float time_s, const std::vector<std::string>& data, int thread_id)
+    int task_register(const task_type::task_type& task, double time_s, const std::vector<std::string>& data, int thread_id)
     {
         task_data_db tdd;
         tdd.start_time_s = get_wall_time_s();
         tdd.end_time_s = tdd.start_time_s + time_s;
         tdd.type = task;
         tdd.udata = data;
+
+        //std::cout << "register task " << tdd.type.value() << " " << tdd.start_time_s.value() << " " << tdd.end_time_s.value() << std::endl;
 
         int cnt = 0;
 
@@ -168,6 +170,8 @@ struct scheduled_tasks
 
             if(d.finished() && !d.called_callback)
             {
+                //std::cout << "exec task " << d.type.value() << " " << d.start_time_s.value() << " " << d.end_time_s.value() << std::endl;
+
                 handle_callback(d);
 
                 d.called_callback = true;

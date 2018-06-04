@@ -8,7 +8,7 @@
 
 void on_heal_network_link(int cnt, const std::vector<std::string>& data)
 {
-    if(data.size() != 2)
+    if(data.size() != 2 && data.size() != 3)
         return;
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
@@ -16,6 +16,11 @@ void on_heal_network_link(int cnt, const std::vector<std::string>& data)
     //npc_generator::force_link_singular(playspace_network_manage, data[0], {data[1]});
 
     playspace_network_manage.link(data[0], data[1]);
+
+    if(data.size() == 3)
+    {
+        playspace_network_manage.set_neighbour_link_strength(data[0], data[1], std::stof(data[2]));
+    }
 
     for(auto& i : data)
     {
