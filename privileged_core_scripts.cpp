@@ -3034,8 +3034,26 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
             std::string formatted_pos = format_by_vector(all_positions[i], all_positions);
             std::string formatted_link = format_by_vector(all_links[i], all_links);
 
+            std::string rname = formatted_name;
+
+            int pnum = 0;
+            while(rname.size() > 0 && rname.back() == ' ')
+            {
+                rname.pop_back();
+                pnum++;
+            }
+
             if(i != 0)
-                formatted_name = colour_string(formatted_name);
+            {
+                rname = colour_string(rname);
+
+                for(int kk=0; kk < pnum; kk++)
+                {
+                    rname += " ";
+                }
+
+                formatted_name = rname;
+            }
 
             str += formatted_name + " | " + formatted_pos + " | " + formatted_link + "\n";
         }
