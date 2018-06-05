@@ -518,12 +518,12 @@ void script_info::overwrite_in_db(mongo_lock_proxy& ctx)
 
     //mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
 
-    if(my_script.exists_in_db(ctx, name))
+    if(my_script.exists(ctx, name))
         my_script.overwrite_in_db(ctx);
     else
     {
         my_script.set_prop("trust", 0);
-        my_script.create_in_db(ctx);
+        my_script.overwrite_in_db(ctx);
     }
 }
 
@@ -551,7 +551,7 @@ bool script_info::exists_in_db(mongo_lock_proxy& ctx)
 
     //mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
 
-    return my_script.exists_in_db(ctx, name);
+    return my_script.exists(ctx, name);
 }
 
 #if 0

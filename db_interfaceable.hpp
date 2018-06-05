@@ -185,6 +185,7 @@ struct db_interfaceable
     db_interfaceable()
     {
         stringify_params(key_name, name...);
+        //std::cout << "key " << key_name << " len " << key_name.size() << std::endl;
     }
 
     virtual void serialise(bool ser){}
@@ -221,6 +222,25 @@ struct db_interfaceable
     void set_as(const std::string& key, const T& t)
     {
         data[key] = t;
+    }
+
+    ///for compatibility with legacy db classes
+    template<typename T>
+    void set_stringify_as(const std::string& key, const T& t)
+    {
+        data[key] = stringify_hack(t);
+    }
+
+    std::string get_stringify(const std::string& key)
+    {
+        json j = data[key];
+
+        if(j.type() == json::value_t::string)
+        {
+            return j.get<std::string>();
+        }
+
+        return j.dump();
     }
 
     void set_key_data(const std::string& val)

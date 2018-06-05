@@ -38,6 +38,7 @@ int32_t item::get_new_id(mongo_lock_proxy& global_props_ctx)
     }
 }
 
+#if 0
 bool item::exists_in_db(mongo_lock_proxy& ctx, const std::string& item_id)
 {
     mongo_requester request;
@@ -88,6 +89,7 @@ void item::delete_item(mongo_lock_proxy& ctx, const std::string& item_id)
 
     request.remove_all_from_db(ctx);
 }
+#endif // 0
 
 bool array_contains(const std::vector<std::string>& arr, const std::string& str)
 {
@@ -440,7 +442,7 @@ void item_types::give_item_to(item& new_item, const std::string& to, int thread_
 
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(thread_id);
-        new_item.create_in_db(mongo_ctx);
+        new_item.overwrite_in_db(mongo_ctx);
     }
 
     new_item.transfer_to_user(to, thread_id);

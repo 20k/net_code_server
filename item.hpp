@@ -5,6 +5,7 @@
 #include <vector>
 #include <utility>
 #include "mongo.hpp"
+#include "db_interfaceable.hpp"
 
 struct mongo_lock_proxy;
 
@@ -46,49 +47,74 @@ std::string array_to_str(const std::vector<std::string>& arr);
 
 #define MAX_ITEMS 48
 
-struct item
+struct item : db_interfaceable<item, true, MACRO_GET_STR("item_id")>
 {
-    mongo_requester props;
-
     template<typename T>
     void set_prop(const std::string& str, const T& t)
     {
-        props.set_prop(str, t);
+        set_stringify_as(str, t);
     }
 
     void set_prop_int(const std::string& str, int t)
     {
-        props.set_prop_int(str, t);
+        set_as(str, t);
     }
 
     std::string get_prop(const std::string& str)
     {
-        return props.get_prop(str);
+        return get_as<std::string>(str);
     }
 
     std::vector<std::string> get_prop_as_array(const std::string& str)
     {
-        return props.get_prop_as_array(str);
+        return get_as<std::vector<std::string>>(str);
     }
 
     int32_t get_prop_as_integer(const std::string& str)
     {
-        return props.get_prop_as_integer(str);
+        return (int32_t)get_prop_as_long(str);
     }
 
     int64_t get_prop_as_long(const std::string& str)
     {
-        return props.get_prop_as_integer(str);
+        if(!has(str))
+            return int64_t();
+
+        std::string prop = get_as<std::string>(str);
+
+        if(prop == "")
+            return 0;
+
+        long long val = atoll(prop.c_str());
+
+        return val;
     }
 
     double get_prop_as_double(const std::string& str)
     {
-        return props.get_prop_as_double(str);
+        if(!has(str))
+            return double();
+
+        std::string prop = get_as<std::string>(str);
+
+        if(prop == "")
+            return 0;
+
+        auto val = atof(prop.c_str());
+
+        return val;
     }
 
     void set_prop_array(const std::string& key, const std::vector<std::string>& vals)
     {
-        props.set_prop_array(key, vals);
+        std::vector<std::string> strs;
+
+        for(auto& i : vals)
+        {
+            strs.push_back(stringify_hack(i));
+        }
+
+        set_as(key, vals);
     }
 
     void generate_set_id(mongo_lock_proxy& global_props_context)
@@ -99,13 +125,6 @@ struct item
     }
 
     int32_t get_new_id(mongo_lock_proxy& global_props_context);
-
-    bool exists_in_db(mongo_lock_proxy&, const std::string& item_id);
-    void overwrite_in_db(mongo_lock_proxy&);
-    void create_in_db(mongo_lock_proxy&);
-    void load_from_db(mongo_lock_proxy&, const std::string& item_id);
-
-    static void delete_item(mongo_lock_proxy&, const std::string& item_id);
 
     ///manages lock proxies internally
     bool transfer_to_user(const std::string& name, int thread_id);

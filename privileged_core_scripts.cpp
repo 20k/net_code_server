@@ -1105,26 +1105,30 @@ std::string format_item(item& i, bool is_short, user& usr, user_nodes& nodes)
 
     std::string ret = "{\n";
 
-    bool is_open_source = i.props.get_prop_as_integer("open_source");
+    bool is_open_source = i.get_prop_as_integer("open_source");
 
-    for(auto& p : i.props.properties)
+    //for(auto& p : i.data)
+    for(auto it = i.data.begin(); it != i.data.end(); it++)
     {
-        if(!is_open_source && p.first == "unparsed_source")
+        if(it.key() == "_id")
             continue;
 
-        if(!is_open_source && p.first == "parsed_source")
+        if(!is_open_source && it.key() == "unparsed_source")
             continue;
 
-        std::string str = p.second;
+        if(!is_open_source && it.key() == "parsed_source")
+            continue;
+
+        std::string str = i.get_stringify(it.key());
 
         #ifdef DO_DESC_ESCAPING
-        if(p.first == "desc")
+        if(it.key() == "desc")
         {
             str = escape_str(str);
         }
         #endif // DO_DESC_ESCAPING
 
-        ret += "    " + p.first + ": " + str + ",\n";
+        ret += "    " + it.key() + ": " + str + ",\n";
     }
 
     if(usr.has_loaded_item(i.get_prop("item_id")))
@@ -1156,18 +1160,22 @@ duk_object_t get_item_raw(item& i, bool is_short, user& usr, user_nodes& nodes)
 
     bool is_open_source = i.get_prop_as_integer("open_source");
 
-    for(auto& p : i.props.properties)
+    //for(auto& p : i.props.properties)
+    for(auto it = i.data.begin(); it != i.data.end(); it++)
     {
-        if(!is_open_source && p.first == "unparsed_source")
+        if(it.key() == "_id")
             continue;
 
-        if(!is_open_source && p.first == "parsed_source")
+        if(!is_open_source && it.key() == "unparsed_source")
             continue;
 
-        if(is_short && p.first != "short_name")
+        if(!is_open_source && it.key() == "parsed_source")
             continue;
 
-        obj[p.first] = p.second;
+        if(is_short && it.key() != "short_name")
+            continue;
+
+        obj[it.key()] = i.get_stringify(it.key());
     }
 
     return obj;
@@ -1206,7 +1214,7 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
     {
         mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
 
-        if(!next.exists_in_db(item_ctx, which))
+        if(!next.exists(item_ctx, which))
             return "Something weird happened";
 
         next.load_from_db(item_ctx, which);
@@ -1373,7 +1381,7 @@ duk_ret_t item__cull(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         create_destroy_item_notif(ctx, get_caller(ctx), found.get_prop("short_name"));
 
-        item::delete_item(items_ctx, id);
+        found.remove_from_db(items_ctx);
     }
 
     usr.remove_item(id);
@@ -1576,7 +1584,7 @@ duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         item found_bundle;
 
-        if(!found_bundle.exists_in_db(item_lock, item_id))
+        if(!found_bundle.exists(item_lock, item_id))
             return push_error(ctx, "No such item");
 
         found_bundle.load_from_db(item_lock, item_id);
@@ -1667,7 +1675,7 @@ duk_ret_t item__register_bundle(priv_context& priv_ctx, duk_context* ctx, int sl
 
         item found_bundle;
 
-        if(!found_bundle.exists_in_db(item_lock, item_id))
+        if(!found_bundle.exists(item_lock, item_id))
             return push_error(ctx, "No such item");
 
         found_bundle.load_from_db(item_lock, item_id);
@@ -1742,7 +1750,7 @@ duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
-        test_item.create_in_db(mongo_ctx);
+        test_item.overwrite_in_db(mongo_ctx);
     }
 
     if(test_item.transfer_to_user(get_caller(ctx), get_thread_id(ctx)))
