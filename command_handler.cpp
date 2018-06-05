@@ -1662,6 +1662,27 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
     return make_error_col("Command Not Found or Unimplemented");
 }
 
+void strip_old_msg_or_notif(mongo_lock_proxy& ctx)
+{
+    mongo_requester to_fetch;
+    to_fetch.set_prop("processed", 1);
+
+    auto all = to_fetch.fetch_from_db(ctx);
+
+    for(auto& req : all)
+    {
+        size_t found_time = (size_t)std::stoll(req.get_prop("time_ms"));
+
+        size_t thirty_days = 1000ull * 60ull * 60ull * 24ull * 30ull;
+
+        if(get_wall_time() >= found_time + thirty_days)
+        {
+            req.set_prop("processed", 1);
+            req.remove_all_from_db(ctx);
+        }
+    }
+}
+
 std::vector<mongo_requester> get_and_update_chat_msgs_for_user(user& usr)
 {
     std::vector<mongo_requester> found;
@@ -1683,6 +1704,8 @@ std::vector<mongo_requester> get_and_update_chat_msgs_for_user(user& usr)
         to_send.set_prop("processed", 1);
 
         old_search.update_in_db_if_exact(ctx, to_send);
+
+        strip_old_msg_or_notif(ctx);
     }
 
     if(found.size() > 1000)
@@ -1712,6 +1735,8 @@ std::vector<mongo_requester> get_and_update_tells_for_user(user& usr)
         to_send.set_prop("processed", 1);
 
         old_search.update_in_db_if_exact(ctx, to_send);
+
+        strip_old_msg_or_notif(ctx);
     }
 
     if(found.size() > 1000)
