@@ -1704,8 +1704,6 @@ std::vector<mongo_requester> get_and_update_chat_msgs_for_user(user& usr)
         to_send.set_prop("processed", 1);
 
         old_search.update_in_db_if_exact(ctx, to_send);
-
-        strip_old_msg_or_notif(ctx);
     }
 
     if(found.size() > 1000)
@@ -1735,8 +1733,6 @@ std::vector<mongo_requester> get_and_update_tells_for_user(user& usr)
         to_send.set_prop("processed", 1);
 
         old_search.update_in_db_if_exact(ctx, to_send);
-
-        strip_old_msg_or_notif(ctx);
     }
 
     if(found.size() > 1000)

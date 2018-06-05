@@ -335,6 +335,14 @@ int main()
                             props.overwrite_in_db(ctx);
                         }
                      });
+
+    for_each_user([](user& u1)
+                  {
+                        mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
+                        ctx.change_collection(u1.get_call_stack().back());
+
+                        strip_old_msg_or_notif(ctx);
+                  });
     #endif // TESTING
 
     start_npc_thread();
