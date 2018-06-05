@@ -306,17 +306,19 @@ bool item::transfer_from_to_by_index(int index, const std::string& from, const s
     u1.remove_item(item_id);
     u2.append_item(item_id);
 
-    mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
+    {
+        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
 
-    load_from_db(item_ctx, item_id);
-    set_prop("owner", to);
-    set_prop("item_id", item_id);
+        load_from_db(item_ctx, item_id);
+        set_prop("owner", to);
+        set_prop("item_id", item_id);
 
-    ///unregister script bundle
-    if(get_prop("item_type") == std::to_string(item_types::EMPTY_SCRIPT_BUNDLE))
-        set_prop("registered_as", "");
+        ///unregister script bundle
+        if(get_prop("item_type") == std::to_string(item_types::EMPTY_SCRIPT_BUNDLE))
+            set_prop("registered_as", "");
 
-    overwrite_in_db(item_ctx);
+        overwrite_in_db(item_ctx);
+    }
 
     u1.overwrite_user_in_db(user_ctx);
     u2.overwrite_user_in_db(user_ctx);

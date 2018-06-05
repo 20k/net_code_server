@@ -62,7 +62,7 @@ struct item : db_interfaceable<item, true, MACRO_GET_STR("item_id")>
 
     std::string get_prop(const std::string& str)
     {
-        return get_as<std::string>(str);
+        return get_stringify(str);
     }
 
     std::vector<std::string> get_prop_as_array(const std::string& str)
@@ -80,7 +80,7 @@ struct item : db_interfaceable<item, true, MACRO_GET_STR("item_id")>
         if(!has(str))
             return int64_t();
 
-        std::string prop = get_as<std::string>(str);
+        std::string prop = get_stringify(str);
 
         if(prop == "")
             return 0;

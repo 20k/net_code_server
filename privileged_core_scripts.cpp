@@ -1456,6 +1456,9 @@ duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::st
     if(ret != "")
         return push_error(ctx, ret);*/
 
+    if(from == to)
+        return push_success(ctx, "Item definitely transferred to a different user");
+
     float items_to_destroy_link = 100;
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
