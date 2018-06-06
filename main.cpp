@@ -212,6 +212,13 @@ void test_json()
     std::cout << handle_autocompletes_json(usr.name, "server_scriptargs_json cash.steal");
 }
 
+void test_deadlock_detection()
+{
+    mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+    mongo_lock_proxy ctx2 = get_global_mongo_user_accessible_context(-2);
+    mongo_lock_proxy ctx3 = get_global_mongo_user_info_context(-3);
+}
+
 ///making sure this ends up in the right repo
 int main()
 {
@@ -242,6 +249,8 @@ int main()
     test_hexbin();
     initialse_mongo_all();
     test_json();
+
+    //test_deadlock_detection();
 
     lg::set_logfile("./log.txt");
 

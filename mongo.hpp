@@ -10,6 +10,8 @@
 #include <map>
 #include <atomic>
 #include <chrono>
+#include <SFML/System.hpp>
+#include "logging.hpp"
 
 enum class mongo_database_type
 {
@@ -38,9 +40,25 @@ struct lock_internal
     std::atomic_flag locked = ATOMIC_FLAG_INIT;
     mongoc_client_t* in_case_of_emergency = nullptr;
 
-    void lock(int who, mongoc_client_t* emergency)
+    void lock(const std::string& debug_info, int who, mongoc_client_t* emergency)
     {
+        #define DEADLOCK_DETECTION
+        #ifdef DEADLOCK_DETECTION
+        sf::Clock clk;
+        #endif // DEADLOCK_DETECTION
+
+        #ifndef DEADLOCK_DETECTION
         while(locked.test_and_set(std::memory_order_acquire)){}
+        #else
+        while(locked.test_and_set(std::memory_order_acquire))
+        {
+            if(clk.getElapsedTime().asSeconds() > 20)
+            {
+                std::cout << "deadlock detected " << debug_info << " who: " + std::to_string(who) << std::endl;
+                throw std::runtime_error("Deadlock " + std::to_string(who) + " " + debug_info);
+            }
+        }
+        #endif // DEADLOCK_DETECTION
 
         locked_by = who;
         in_case_of_emergency = emergency;
@@ -65,7 +83,7 @@ struct mongo_context
     mongoc_database_t* database = nullptr;
     //mongoc_collection_t* collection = nullptr;
 
-    std::string last_collection = "";
+    //std::string last_collection = "";
     std::string last_db = "";
 
     std::string default_collection = "";
@@ -97,28 +115,34 @@ struct mongo_context
         while(!map_lock.try_lock_for(std::chrono::milliseconds(time_ms))){}
     }
 
-    void make_lock(int who, mongoc_client_t* in_case_of_emergency)
+    void make_lock(const std::string& debug_info, const std::string& collection, int who, mongoc_client_t* in_case_of_emergency)
     {
         map_lock_for();
 
-        auto& found = per_collection_lock[last_collection];
+        auto& found = per_collection_lock[collection];
 
         map_lock.unlock();
 
-        found.lock(who, in_case_of_emergency);
+        lg::log("Locking ", debug_info, " ", collection, " ", std::to_string(who));
+
+        found.lock(debug_info, who, in_case_of_emergency);
+
+        lg::log("Locked ", debug_info, " " , std::to_string(who));
 
         /*lock.lock();
 
         locked_by = who;*/
     }
 
-    void make_unlock()
+    void make_unlock(const std::string& collection)
     {
         map_lock_for();
 
-        auto& found = per_collection_lock[last_collection];
+        auto& found = per_collection_lock[collection];
 
         map_lock.unlock();
+
+        lg::log("Unlocking ", collection);
 
         found.unlock();
 
@@ -507,8 +531,9 @@ struct mongo_lock_proxy
         if(fctx == nullptr)
             return;
 
-        ctx.ctx->make_lock(lock_id, ctx.client);
+        ctx.ctx->make_lock(fctx->last_db, fctx->default_collection, lock_id, ctx.client);
         ilock_id = lock_id;
+        ctx.last_collection = fctx->default_collection;
 
         if(ctx.ctx->default_collection != "")
         {
@@ -521,14 +546,14 @@ struct mongo_lock_proxy
     void change_collection(const std::string& coll, bool force_change = false)
     {
         ///need to alter locks
-        ctx.ctx->make_unlock();
+        ctx.ctx->make_unlock(ctx.last_collection);
         ctx.change_collection_unsafe(coll, force_change);
-        ctx.ctx->make_lock(ilock_id, ctx.client);
+        ctx.ctx->make_lock(ctx.ctx->last_db, coll, ilock_id, ctx.client);
     }
 
     ~mongo_lock_proxy()
     {
-        ctx.ctx->make_unlock();
+        ctx.ctx->make_unlock(ctx.last_collection);
     }
 
     mongo_interface* operator->()
