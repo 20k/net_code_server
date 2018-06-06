@@ -859,7 +859,7 @@ void on_create_user(user& usr)
 
 std::string get_update_message()
 {
-    return "If you cannot login, a bad update deleted key.key files. PM me (20k) on discord with a username that you owned and I will recover it";
+    return "If you cannot login, a bad update deleted key.key files. PM me (20k) on discord with a username that you owned and I will recover it. Run #scripts.core() to get started";
 }
 
 void delete_notifs_for(const std::string& name)
