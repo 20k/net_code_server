@@ -67,7 +67,14 @@ struct item : db_interfaceable<item, true, MACRO_GET_STR("item_id")>
         if(!has(str))
             return std::string();
 
-        return get_stringify(str);
+        try
+        {
+            return get_stringify(str);
+        }
+        catch(...)
+        {
+            return std::string();
+        }
     }
 
     std::vector<std::string> get_prop_as_array(const std::string& str)
@@ -75,7 +82,14 @@ struct item : db_interfaceable<item, true, MACRO_GET_STR("item_id")>
         if(!has(str))
             return std::vector<std::string>();
 
-        return get_as<std::vector<std::string>>(str);
+        try
+        {
+            return get_as<std::vector<std::string>>(str);
+        }
+        catch(...)
+        {
+            return std::vector<std::string>();
+        }
     }
 
     int32_t get_prop_as_integer(const std::string& str)
@@ -88,14 +102,21 @@ struct item : db_interfaceable<item, true, MACRO_GET_STR("item_id")>
         if(!has(str))
             return int64_t();
 
-        std::string prop = get_stringify(str);
+        try
+        {
+            std::string prop = get_stringify(str);
 
-        if(prop == "")
+            if(prop == "")
+                return 0;
+
+            long long val = atoll(prop.c_str());
+
+            return val;
+        }
+        catch(...)
+        {
             return 0;
-
-        long long val = atoll(prop.c_str());
-
-        return val;
+        }
     }
 
     double get_prop_as_double(const std::string& str)
@@ -103,14 +124,21 @@ struct item : db_interfaceable<item, true, MACRO_GET_STR("item_id")>
         if(!has(str))
             return double();
 
-        std::string prop = get_as<std::string>(str);
+        try
+        {
+            std::string prop = get_as<std::string>(str);
 
-        if(prop == "")
-            return 0;
+            if(prop == "")
+                return 0;
 
-        auto val = atof(prop.c_str());
+            auto val = atof(prop.c_str());
 
-        return val;
+            return val;
+        }
+        catch(...)
+        {
+            return 0.;
+        }
     }
 
     void set_prop_array(const std::string& key, const std::vector<std::string>& vals)
