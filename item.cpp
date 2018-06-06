@@ -411,6 +411,12 @@ item item_types::get_default_of(item_types::item_type type, const std::string& l
         new_item.set_prop("last_run", 0);
     }
 
+    if(type == ON_BREACH)
+    {
+        new_item.set_prop("script_name", "");
+        new_item.set_prop("desc", "Runs a script when your breach node is compromised");
+    }
+
     return new_item;
 }
 

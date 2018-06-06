@@ -21,7 +21,8 @@ namespace item_types
         EMPTY_SCRIPT_BUNDLE = 5,
         MISC = 6,
         AUTO_SCRIPT_RUNNER = 7,
-        ERR = 8,
+        ON_BREACH = 8,
+        ERR = 9,
     };
 
     static std::vector<std::string> quick_names
@@ -34,6 +35,7 @@ namespace item_types
         "script_bundle",
         "misc",
         "auto_script_runner",
+        "on_breach",
         "error_vnf",
     };
 
