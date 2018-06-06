@@ -228,6 +228,8 @@ int main()
 
     stack_on_start();
 
+    lg::set_logfile("./log.txt");
+
     get_global_structure();
 
     sample_game_structure();
@@ -252,7 +254,6 @@ int main()
 
     //test_deadlock_detection();
 
-    lg::set_logfile("./log.txt");
 
     /*{
         std::vector<mongo_requester> all;
