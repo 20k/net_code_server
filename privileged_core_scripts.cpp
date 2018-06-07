@@ -2359,11 +2359,13 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
                 if(!is_valid_full_name_string(script_name))
                     continue;
 
-                script_name = "#" + script_name + "()";
+                script_name = "#" + script_name + "({attacker:\"" + get_caller(ctx) + "\"})";
 
                 ///remember that this includes user.call_stack weirdness
                 ///500ms exec time
-                throwaway_user_thread(usr.name, script_name, 500. / 1000.);
+                throwaway_user_thread(usr.name, script_name, 500. / 1000., true);
+
+                //std::cout << "res " << run_in_user_context(usr.name, script_name, std::nullopt, 500. / 1000., true);
 
                 break;
             }

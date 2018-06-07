@@ -304,7 +304,7 @@ struct execution_blocker_guard
     }
 };
 
-std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared, std::optional<float> custom_exec_time_s)
+std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared, std::optional<float> custom_exec_time_s, bool force_exec)
 {
     try
     {
@@ -331,13 +331,22 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
             local_thread_id = gthread_id++;
 
-            if(auth_guard[usr.auth] == 1)
-                return make_error_col("Cannot run two scripts at once in different contexts!");
+            if(!force_exec)
+            {
+                if(auth_guard[usr.auth] == 1)
+                    return make_error_col("Cannot run two scripts at once in different contexts!");
 
-            auth_guard[usr.auth] = 1;
+                auth_guard[usr.auth] = 1;
+            }
         }
 
         cleanup_auth_at_exit cleanup(id_mut, auth_guard, usr.auth);
+
+        if(force_exec)
+        {
+            cleanup.unblock();
+            exec_guard.unblock();
+        }
 
         stack_duk sd;
         //init_js_interop(sd, std::string());
@@ -755,9 +764,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
     }
 }
 
-void throwaway_user_thread(const std::string& username, const std::string& command, std::optional<float> custom_exec_time_s)
+void throwaway_user_thread(const std::string& username, const std::string& command, std::optional<float> custom_exec_time_s, bool force_exec)
 {
-    std::thread(run_in_user_context, username, command, std::nullopt, custom_exec_time_s).detach();
+    std::thread(run_in_user_context, username, command, std::nullopt, custom_exec_time_s, force_exec).detach();
 }
 
 std::string binary_to_hex(const std::string& in, bool swap_endianness)
