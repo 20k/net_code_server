@@ -14,15 +14,33 @@
 
 ///then, when we want to load, we look from the db
 
+std::string function_wrap(const std::string& str)
+{
+    return "(function(){" + str + "})()";
+}
+
+std::string attach_unparsed_wrapper(std::string str)
+{
+    while(str.size() > 0 && isspace(str.front()))
+        str.erase(str.begin());
+
+    return "return " + str;
+}
+
 bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out)
 {
     std::string prologue = "function INTERNAL_TEST(context, args)\n{'use strict'\nvar IVAR = ";
     std::string endlogue = "\n\nreturn IVAR(context, args);\n\n}\n";
 
-    std::string wrapper = prologue + script.parsed_source + endlogue;
+    std::string wrapper = prologue + function_wrap(script.parsed_source) + endlogue;
 
     duk_push_string(ctx, wrapper.c_str());
     duk_push_string(ctx, "test-name");
+
+    //#define DEBUG_REAL
+    #ifdef DEBUG_REAL
+    std::cout << wrapper << std::endl;
+    #endif // DEBUG_REAL
 
     if(duk_pcompile(ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
     {
@@ -35,7 +53,6 @@ bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out
         #ifdef DEBUG_SOURCE
         std::cout << script.parsed_source << std::endl;
         #endif // DEBUG_SOURCE
-
 
         duk_pop(ctx);
 
@@ -71,7 +88,10 @@ std::string attach_wrapper(const std::string& data_in, bool stringify, bool dire
         endlogue = "\n\n return IVAR }";
     }
 
-    return prologue + data_in + endlogue;
+    if(!direct)
+        return prologue + function_wrap(data_in) + endlogue;
+    else
+        return prologue + data_in + endlogue;
 }
 
 bool string_is_in(const std::string& str, const std::vector<std::string>& in)
@@ -388,7 +408,7 @@ script_data parse_script(const std::string& file_name, std::string in, bool enab
 }
 
 ///WARNING NEED TO VALIDATE
-std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::string& source, const std::string& name_, bool enable_typescript)
+std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::string& source, const std::string& name_, bool enable_typescript, bool is_cli)
 {
     name = name_;
 
@@ -407,10 +427,14 @@ std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::
     }
 
     owner = no_ss_split(name, ".")[0];
-
     unparsed_source = source;
 
-    script_data sdata = parse_script(name, unparsed_source, enable_typescript);
+    script_data sdata;
+
+    if(!is_cli)
+        sdata = parse_script(name, attach_unparsed_wrapper(unparsed_source), enable_typescript);
+    else
+        sdata = parse_script(name, unparsed_source, enable_typescript);
 
     args = decltype(args)();
     params = decltype(params)();
@@ -477,7 +501,7 @@ bool script_info::load_from_db(mongo_lock_proxy& ctx)
         args = decltype(args)();
         params = decltype(params)();
 
-        script_data sdata = parse_script(name, unparsed_source, true);
+        script_data sdata = parse_script(name, attach_unparsed_wrapper(unparsed_source), true);
 
         for(auto& i : sdata.autocompletes)
         {

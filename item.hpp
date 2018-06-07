@@ -178,6 +178,34 @@ struct item : db_interfaceable<item, true, MACRO_GET_STR("item_id")>
 extern
 double get_wall_time_s();
 
+template<typename T>
+void for_each_item(T t)
+{
+    std::vector<item> id;
+
+    {
+        mongo_lock_proxy ctx = get_global_mongo_user_items_context(-2);
+
+        mongo_requester req;
+        req.exists_check["item_id"] = 1;
+
+        auto all = req.fetch_from_db(ctx);
+
+        for(auto& i : all)
+        {
+            item n;
+            n.load_from_db(ctx, i.get_prop("item_id"));
+
+            id.push_back(n);
+        }
+    }
+
+    for(auto& i : id)
+    {
+        t(i);
+    }
+}
+
 ///migrate a better version of this into secret
 ///pass in a probability variable
 namespace item_types

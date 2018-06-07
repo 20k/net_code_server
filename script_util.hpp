@@ -36,7 +36,7 @@ struct script_info
     //void load_from_disk_with_db_metadata(const std::string& name);
 
     ///typescript support is heavy, so disable for cli invocation
-    std::string load_from_unparsed_source(duk_context* ctx, const std::string& unparsed, const std::string& name, bool enable_typescript);
+    std::string load_from_unparsed_source(duk_context* ctx, const std::string& unparsed, const std::string& name, bool enable_typescript, bool is_cli);
 
     bool load_from_db(mongo_lock_proxy& ctx);
     void overwrite_in_db(mongo_lock_proxy& ctx);
@@ -48,6 +48,7 @@ struct script_info
 
 bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out);
 std::string attach_wrapper(const std::string& data_in, bool stringify, bool direct);
+std::string attach_unparsed_wrapper(std::string str);
 
 void register_funcs(duk_context* ctx, int seclevel);
 

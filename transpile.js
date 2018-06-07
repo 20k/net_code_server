@@ -39,7 +39,7 @@ compile(process.argv.slice(2), {
     target: ts.ScriptTarget.ES5, module: ts.ModuleKind.CommonJS
 });*/
 
-let result = ts.transpileModule(text, { compilerOptions: { module: ts.ModuleKind.CommonJS, noEmitOnError: false, noImplicitAny: false, target:ts.ScriptTarget.ES5 } });
+let result = ts.transpileModule(text, { compilerOptions: { module: ts.ModuleKind.CommonJS, noEmitOnError: false, noImplicitAny: false, downlevelIteration:true, target:ts.ScriptTarget.ES5 } });
 
 let r2 = result.outputText
 

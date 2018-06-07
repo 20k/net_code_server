@@ -157,7 +157,7 @@ void debug_terminal()
             init_js_interop(csd, std::string());
             register_funcs(csd.ctx, 0);
 
-            script_inf.load_from_unparsed_source(csd.ctx, data_source, script, true);
+            script_inf.load_from_unparsed_source(csd.ctx, data_source, script, true, false);
 
             std::cout << script_inf.parsed_source << std::endl;
 
@@ -260,6 +260,33 @@ int main()
     test_hexbin();
     initialse_mongo_all();
     test_json();
+
+    //#define REGEN_SCRIPTS
+    #ifdef REGEN_SCRIPTS
+    int nid = 0;
+    for_each_item([&](item& it)
+                  {
+                        if(!it.has("unparsed_source"))
+                            return;
+
+                        std::string unparsed_source = it.get_prop("unparsed_source");
+
+                        //std::string parsed_source = parse_script(, ).parsed_source;
+
+                        script_data data = parse_script("temp" + std::to_string(nid++), attach_unparsed_wrapper(unparsed_source), true);
+
+                        if(!data.valid)
+                            return;
+
+                        it.set_prop("parsed_source", data.parsed_source);
+
+                        {
+                            mongo_lock_proxy ctx = get_global_mongo_user_items_context(-2);
+
+                            it.overwrite_in_db(ctx);
+                        }
+                  });
+    #endif // REGEN_SCRIPTS
 
     //test_correct_collection_locking();
 

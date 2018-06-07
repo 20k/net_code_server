@@ -471,8 +471,14 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
 
     register_funcs(new_ctx, seclevel);
 
-    std::string wrapper = attach_wrapper(data, stringify, false);
+    std::string wrapper;
 
+    if(!is_top_level)
+        wrapper = attach_wrapper(data, stringify, false);
+    else ///wrapper already attached
+        wrapper = data;
+
+    //std::cout << "wrapper:\n";
     //std::cout << wrapper << std::endl;
 
     std::string ret;
@@ -709,7 +715,7 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
     sd.ctx = ctx;
 
     script_info dummy;
-    dummy.load_from_unparsed_source(ctx, attach_wrapper(data, false, true), host + ".invoke", false);
+    dummy.load_from_unparsed_source(ctx, attach_wrapper(data, false, true), host + ".invoke", false, true);
 
     if(!dummy.valid)
         return "Invalid Command Line Syntax";

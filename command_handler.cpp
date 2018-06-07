@@ -1445,7 +1445,7 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
 
             script_info script_inf;
-            std::string compile_error = script_inf.load_from_unparsed_source(csd.ctx, data_source, fullname, is_es6);
+            std::string compile_error = script_inf.load_from_unparsed_source(csd.ctx, data_source, fullname, is_es6, false);
 
             js_interop_shutdown(csd.ctx);
 
