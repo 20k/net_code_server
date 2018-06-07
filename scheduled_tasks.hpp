@@ -15,9 +15,9 @@ struct scheduled_tasks;
 
 void task_thread(scheduled_tasks& tasks);
 
-void on_finish_relink(int cnt, const std::vector<std::string>& data);
-void on_disconnect_link(int cnt, const std::vector<std::string>& data);
-void on_heal_network_link(int cnt, const std::vector<std::string>& data);
+void on_finish_relink(int cnt, std::vector<std::string> data);
+void on_disconnect_link(int cnt, std::vector<std::string> data);
+void on_heal_network_link(int cnt, std::vector<std::string> data);
 
 extern double get_wall_time_s();
 
@@ -76,7 +76,7 @@ struct scheduled_tasks
         }
 
         {
-            std::lock_guard guard(mut);
+            safe_lock_guard guard(mut);
 
             for(auto& i : all)
             {
@@ -95,17 +95,17 @@ struct scheduled_tasks
     {
         if(d.type == task_type::ON_RELINK)
         {
-            on_finish_relink(d.count_offset, (std::vector<std::string>)d.udata);
+             std::thread(on_finish_relink, d.count_offset, (std::vector<std::string>)d.udata).detach();
         }
 
         if(d.type == task_type::ON_DISCONNECT)
         {
-            on_disconnect_link(d.count_offset, (std::vector<std::string>)d.udata);
+             std::thread(on_disconnect_link, d.count_offset, (std::vector<std::string>)d.udata).detach();
         }
 
         if(d.type == task_type::ON_HEAL_NETWORK)
         {
-            on_heal_network_link(d.count_offset, (std::vector<std::string>)d.udata);
+             std::thread(on_heal_network_link, d.count_offset, (std::vector<std::string>)d.udata).detach();
         }
 
         {
@@ -128,7 +128,7 @@ struct scheduled_tasks
         int cnt = 0;
 
         {
-            std::lock_guard guard(mut);
+            safe_lock_guard guard(mut);
 
             cnt = counter++;
             tdd.count_offset = cnt;
@@ -161,7 +161,7 @@ struct scheduled_tasks
 
     void check_all_tasks(double dt_s)
     {
-        std::lock_guard guard(mut);
+        safe_lock_guard guard(mut);
         std::vector<int> to_erase;
 
         for(auto& i : task_data)

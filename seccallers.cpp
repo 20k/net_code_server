@@ -345,7 +345,7 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
     quick_register(ctx, "script_ending", script_ending.c_str());
 
     {
-        std::lock_guard guard(shim_lock);
+        safe_lock_guard guard(shim_lock);
 
         set_copy_allocate_shim_pointer(ctx, c_shim_map);
     }

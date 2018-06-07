@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include "mongo.hpp"
 
 namespace rate
 {
@@ -33,7 +34,7 @@ struct rate_limit
 
     bool try_call(const std::string& usr_name, rate_limit_t type)
     {
-        std::lock_guard gd(lock);
+        safe_lock_guard gd(lock);
 
         if(time_budget_remaining.find(usr_name) == time_budget_remaining.end())
         {
@@ -52,7 +53,7 @@ struct rate_limit
 
     bool try_call_manual(const std::string& usr_name, const std::string& name, double mreserve, double mdeplete, double mmax)
     {
-        std::lock_guard gd(lock);
+        safe_lock_guard gd(lock);
 
         if(time_budget_remaining_manual.find(usr_name) == time_budget_remaining_manual.end())
         {
@@ -76,7 +77,7 @@ struct rate_limit
 
     void donate_time_budget(double time_s)
     {
-        std::lock_guard gd(lock);
+        safe_lock_guard gd(lock);
 
         for(auto& i : time_budget_remaining)
         {
@@ -102,7 +103,7 @@ struct rate_limit
 
     /*void donate_time_budget_manual(const std::string& name, double time_s, double mreserve)
     {
-        std::lock_guard gd(lock);
+        safe_lock_guard gd(lock);
 
         for(auto& j : time_budget_remaining_manual[name])
         {

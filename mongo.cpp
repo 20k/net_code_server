@@ -1,6 +1,8 @@
 #include "mongo.hpp"
 #include <json/json.hpp>
 
+//std::mutex mongo_context::found;
+
 mongo_context::mongo_context(mongo_database_type type)
 {
     std::string uri_str = "Err";

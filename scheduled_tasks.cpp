@@ -6,7 +6,7 @@
 #include <secret/initial_link_setup.hpp>
 
 
-void on_heal_network_link(int cnt, const std::vector<std::string>& data)
+void on_heal_network_link(int cnt, std::vector<std::string> data)
 {
     if(data.size() != 2 && data.size() != 3)
         return;
@@ -42,7 +42,7 @@ void task_thread(scheduled_tasks& tasks)
     }
 }
 
-void on_finish_relink(int cnt, const std::vector<std::string>& data)
+void on_finish_relink(int cnt, std::vector<std::string> data)
 {
     /*if(data.size() != 2)
         return;
@@ -112,7 +112,7 @@ void on_finish_relink(int cnt, const std::vector<std::string>& data)
     printf("relinked\n");
 }
 
-void on_disconnect_link(int cnt, const std::vector<std::string>& data)
+void on_disconnect_link(int cnt, std::vector<std::string> data)
 {
     if(data.size() != 2)
         return;

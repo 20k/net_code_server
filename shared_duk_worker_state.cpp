@@ -1,4 +1,5 @@
 #include "shared_duk_worker_state.hpp"
+#include "mongo.hpp"
 
 void shared_duk_worker_state::set_realtime()
 {
@@ -17,7 +18,7 @@ bool shared_duk_worker_state::is_realtime()
 
 void shared_duk_worker_state::set_output_data(const std::string& str)
 {
-    std::lock_guard guard(lck);
+    safe_lock_guard guard(lck);
 
     if(realtime_output_data == str)
         return;
@@ -28,7 +29,7 @@ void shared_duk_worker_state::set_output_data(const std::string& str)
 
 std::string shared_duk_worker_state::consume_output_data()
 {
-    std::lock_guard guard(lck);
+    safe_lock_guard guard(lck);
 
     if(!has_output_data)
         return "";
@@ -57,7 +58,7 @@ bool shared_duk_worker_state::close_window_on_exit()
 
 void shared_duk_worker_state::set_width_height(int pwidth, int pheight)
 {
-    std::lock_guard guard(whguard);
+    safe_lock_guard guard(whguard);
 
     width = pwidth;
     height = pheight;
@@ -65,35 +66,35 @@ void shared_duk_worker_state::set_width_height(int pwidth, int pheight)
 
 std::pair<int, int> shared_duk_worker_state::get_width_height()
 {
-    std::lock_guard guard(whguard);
+    safe_lock_guard guard(whguard);
 
     return {width, height};
 }
 
 void shared_duk_worker_state::set_key_state(const std::map<std::string, bool>& key_state)
 {
-    std::lock_guard guard(key_lock);
+    safe_lock_guard guard(key_lock);
 
     ikey_state = key_state;
 }
 
 bool shared_duk_worker_state::is_key_down(const std::string& str)
 {
-    std::lock_guard guard(key_lock);
+    safe_lock_guard guard(key_lock);
 
     return ikey_state[str];
 }
 
 void shared_duk_worker_state::set_mouse_pos(vec2f pos)
 {
-    std::lock_guard guard(mouse_lock);
+    safe_lock_guard guard(mouse_lock);
 
     mouse_pos = pos;
 }
 
 vec2f shared_duk_worker_state::get_mouse_pos()
 {
-    std::lock_guard guard(mouse_lock);
+    safe_lock_guard guard(mouse_lock);
 
     return mouse_pos;
 }

@@ -214,9 +214,15 @@ void test_json()
 
 void test_deadlock_detection()
 {
+    printf("predl\n");
+
     mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+    ctx.change_collection("i20k");
     mongo_lock_proxy ctx2 = get_global_mongo_user_accessible_context(-2);
     mongo_lock_proxy ctx3 = get_global_mongo_user_info_context(-3);
+    ctx3.change_collection("i20k");
+
+    printf("postdl\n");
 }
 
 void test_correct_collection_locking()
@@ -226,6 +232,16 @@ void test_correct_collection_locking()
     mongo_lock_proxy ctx2 = get_global_mongo_user_accessible_context(-2);
     mongo_lock_proxy ctx3 = get_global_mongo_user_info_context(-3);
     ctx3.change_collection("i20k8");
+}
+
+void test_locking()
+{
+    mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+    ctx.change_collection("i20k");
+
+    std::mutex mut;
+
+    safe_lock_guard guard(mut);
 }
 
 ///making sure this ends up in the right repo
@@ -358,10 +374,23 @@ int main()
     #endif // DELETE_BANNED
 
     #if 1
+    test_locking();
 
     boot_connection_handlers();
 
-    while(1){Sleep(100);}
+
+    //#define PROVOKE_CRASH
+    #ifdef PROVOKE_CRASH
+
+
+    for_each_item([&](item& it)
+                  {
+                        mongo_lock_proxy ctx = get_global_mongo_user_items_context(-2);
+
+                        it.overwrite_in_db(ctx);
+                  });
+
+    #endif
 
     ///fix db screwup
     #ifndef TESTING

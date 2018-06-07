@@ -224,7 +224,7 @@ void run_non_user_tasks()
 
         {
             mongo_lock_proxy ctx = get_global_mongo_pending _notifs_context(-2);
-            std::lock_guard guard(store->lock);
+            safe_lock_guard guard(store->lock);
 
             for(shared_data* data : store->data)
             {
@@ -275,7 +275,7 @@ void run_non_user_tasks()
 
         if(channel_to_string.size() != 0)
         {
-            std::lock_guard guard(store->lock);
+            safe_lock_guard guard(store->lock);
 
             for(shared_data* data : store->data)
             {

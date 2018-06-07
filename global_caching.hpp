@@ -8,7 +8,7 @@ template<typename T>
 struct global_generic_cache
 {
     std::map<std::string, T> cache;
-    std::timed_mutex mut;
+    std::mutex mut;
 
     bool exists_in_cache(const std::string& name)
     {

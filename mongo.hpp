@@ -10,9 +10,13 @@
 #include <map>
 #include <atomic>
 #include <chrono>
-#include <SFML/System.hpp>
 #include "logging.hpp"
 #include <boost/stacktrace.hpp>
+
+//#define DEADLOCK_DETECTION
+#ifdef DEADLOCK_DETECTION
+#include <SFML/System.hpp>
+#endif // DEADLOCK_DETECTION
 #include <thread>
 
 enum class mongo_database_type
@@ -39,12 +43,15 @@ std::string strip_whitespace(std::string);
 struct lock_internal
 {
     int locked_by = -1;
+    #ifdef DEADLOCK_DETECTION
+    std::thread::id locked_by_tid;
+    std::string locked_by_debug;
+    #endif // DEADLOCK_DETECTION
     std::atomic_flag locked = ATOMIC_FLAG_INIT;
     mongoc_client_t* in_case_of_emergency = nullptr;
 
     void lock(const std::string& debug_info, int who, mongoc_client_t* emergency)
     {
-        //#define DEADLOCK_DETECTION
         #ifdef DEADLOCK_DETECTION
         static std::atomic_int is_deadlocked{0};
         static std::mutex map_lock;
@@ -53,8 +60,10 @@ struct lock_internal
         sf::Clock clk;
         #endif // DEADLOCK_DETECTION
 
+        Sleep(1);
+
         #ifndef DEADLOCK_DETECTION
-        while(locked.test_and_set(std::memory_order_acquire)){std::this_thread::yield();}
+        while(locked.test_and_set(std::memory_order_acquire)){Sleep(1);}
         #else
 
         {
@@ -62,34 +71,38 @@ struct lock_internal
             debug[who].push_back(debug_info);
         }
 
+        Sleep(1);
+
         while(locked.test_and_set(std::memory_order_acquire))
         {
+            Sleep(1);
+
             if(clk.getElapsedTime().asSeconds() > 30 || (is_deadlocked == 1 && clk.getElapsedTime().asSeconds() > 5))
             {
-                std::cout << "deadlock detected " << debug_info << " who: " + std::to_string(who) << std::endl;
-                lg::log("Deadlock ", debug_info, " who: ", std::to_string(who));
+                std::cout << "deadlock detected " << debug_info << " who: " + std::to_string(who) << " by " << locked_by << " debug " << debug_info << " with tid " << locked_by_tid << " my tid " << std::this_thread::get_id() << std::endl;
+                lg::log("Deadlock ", debug_info, " who: ", std::to_string(who), " by ", locked_by, " debug ", debug_info);
 
-                lg::log("Begin map info from ", who);
+                /*lg::log("Begin map info from ", who);
 
                 {
-                    std::lock_guard guard(map_lock);
+                    safe_lock_guard guard(map_lock);
 
                     for(auto& i : debug)
                     {
                         for(auto& k : i.second)
                             lg::log("me ", who, " them ", i.first, " coll ", k);
                     }
-                }
+                }*/
 
                 lg::log("End map info from ", who);
 
                 is_deadlocked = 1;
 
-                int my_crash_id = crash_id++;
+                //int my_crash_id = crash_id++;
 
-                std::cout << "call stack " << boost::stacktrace::stacktrace() << std::endl;
+                //std::cout << "call stack " << boost::stacktrace::stacktrace() << std::endl;
 
-                *lg::output << "crash with id " + std::to_string(my_crash_id) + " Start stacktrace: " << boost::stacktrace::stacktrace() << std::endl;
+                //*lg::output << "crash with id " + std::to_string(my_crash_id) + " Start stacktrace: " << boost::stacktrace::stacktrace() << std::endl;
 
                 Sleep(5000);
                 //throw std::runtime_error("Deadlock " + std::to_string(who) + " " + debug_info);
@@ -110,11 +123,18 @@ struct lock_internal
         #endif // DEADLOCK_DETECTION
 
         locked_by = who;
+        #ifdef DEADLOCK_DETECTION
+        locked_by_tid = std::this_thread::get_id();
+        locked_by_debug = debug_info;
+        #endif // DEADLOCK_DETECTION
         in_case_of_emergency = emergency;
     }
 
     void unlock()
     {
+        #ifdef DEADLOCK_DETECTION
+        locked_by_debug = "";
+        #endif // DEADLOCK_DETECTION
         locked_by = -1;
         locked.clear(std::memory_order_release);
     }
@@ -146,6 +166,13 @@ struct mongo_context
     ///this isn't for thread safety, this is for marshalling db access
     std::map<std::string, lock_internal> per_collection_lock;
 
+    static inline std::map<std::thread::id, std::atomic_int> thread_counter;
+    static inline std::mutex thread_lock;
+
+    //lock_internal found;
+
+    //static std::mutex found;
+
     bool is_fixed = false;
 
     ///need to run everything through a blacklist
@@ -172,7 +199,24 @@ struct mongo_context
 
         map_lock.unlock();
 
+        #ifdef DEADLOCK_DETECTION
+        {
+            std::lock_guard<std::mutex> guard(thread_lock);
+
+            thread_counter[std::this_thread::get_id()]++;
+
+            if(thread_counter[std::this_thread::get_id()] > 1)
+            {
+                printf("WOW BAD\n");
+            }
+        }
+
         lg::log("Locking ", debug_info, " ", collection, " ", std::to_string(who));
+        #endif // DEADLOCK_DETECTION
+
+        //std::cout << "lock collection " << collection << " on " << this << std::endl;
+
+        //found.lock();
 
         found.lock(debug_info, who, in_case_of_emergency);
 
@@ -191,7 +235,15 @@ struct mongo_context
 
         map_lock.unlock();
 
+        #ifdef DEADLOCK_DETECTION
+        {
+            std::lock_guard<std::mutex> guard(thread_lock);
+
+            thread_counter[std::this_thread::get_id()]--;
+        }
+
         lg::log("Unlocking ", collection);
+        #endif // DEADLOCK_DETECTION
 
         found.unlock();
 
@@ -203,7 +255,7 @@ struct mongo_context
     {
         //if(who == locked_by)
         {
-            /*std::lock_guard lck(internal_safety);
+            /*safe_lock_guard lck(internal_safety);
 
             map_lock.lock();
 
@@ -295,6 +347,37 @@ struct mongo_context
         //mongoc_database_destroy (database);
         mongoc_client_destroy (client);
         mongoc_uri_destroy (uri);
+    }
+};
+
+template<typename T>
+struct safe_lock_guard
+{
+    std::lock_guard<T> guard;
+
+    safe_lock_guard(T& t) : guard(t)
+    {
+        #ifdef DEADLOCK_DETECTION
+        std::lock_guard<std::mutex> g(mongo_context::thread_lock);
+
+        mongo_context::thread_counter[std::this_thread::get_id()]++;
+
+        if(mongo_context::thread_counter[std::this_thread::get_id()] > 1)
+        {
+            printf("bad guard\n");
+
+            std::cout << boost::stacktrace::stacktrace() << std::endl;
+        }
+        #endif // DEADLOCK_DETECTION
+    }
+
+    ~safe_lock_guard()
+    {
+        #ifdef DEADLOCK_DETECTION
+        std::lock_guard<std::mutex> g(mongo_context::thread_lock);
+
+        mongo_context::thread_counter[std::this_thread::get_id()]--;
+        #endif // DEADLOCK_DETECTION
     }
 };
 

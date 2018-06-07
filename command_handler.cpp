@@ -69,7 +69,7 @@ struct cleanup_auth_at_exit
 
     void unblock()
     {
-        std::lock_guard<std::mutex> lk(to_lock);
+        safe_lock_guard lk(to_lock);
 
         to_cleanup[auth] = 0;
         blocked = false;
@@ -80,7 +80,7 @@ struct cleanup_auth_at_exit
         if(!blocked)
             return;
 
-        std::lock_guard<std::mutex> lk(to_lock);
+        safe_lock_guard lk(to_lock);
 
         to_cleanup[auth] = 0;
     }
@@ -173,7 +173,7 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
                 std::vector<std::string> unprocessed_keystrokes;
 
                 {
-                    std::lock_guard guard(state.lock);
+                    safe_lock_guard guard(state.lock);
 
                     unprocessed_keystrokes = state.unprocessed_keystrokes[current_id];
 
@@ -327,7 +327,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         int32_t local_thread_id;
 
         {
-            std::lock_guard<std::mutex> lk(id_mut);
+            safe_lock_guard lk(id_mut);
 
             local_thread_id = gthread_id++;
 
@@ -576,7 +576,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                             break;
 
                         {
-                            std::lock_guard guard(all_shared.value()->state.lock);
+                            safe_lock_guard guard(all_shared.value()->state.lock);
 
                             if(all_shared.value()->state.should_terminate_realtime[current_id])
                                 break;
@@ -1818,9 +1818,6 @@ std::vector<std::string> get_channels_for_user(user& usr)
     static std::mutex lock;
     static sf::Clock clk;
 
-    std::lock_guard guard(lock);
-
-    mongo_lock_proxy ctx = get_global_mongo_chat_channel_propeties_context(-2);
 
     mongo_requester all;
     all.exists_check["channel_name"] = 1;
@@ -1829,13 +1826,23 @@ std::vector<std::string> get_channels_for_user(user& usr)
 
     if(clk.getElapsedTime().asSeconds() > 1)
     {
+        mongo_lock_proxy ctx = get_global_mongo_chat_channel_propeties_context(-2);
+
         found = all.fetch_from_db(ctx);
         clk.restart();
     }
     else
-        found = all_data;
+    {
+        safe_lock_guard guard(lock);
 
-    all_data = found;
+        found = all_data;
+    }
+
+    {
+        safe_lock_guard guard(lock);
+
+        all_data = found;
+    }
 
     for(auto& i : found)
     {

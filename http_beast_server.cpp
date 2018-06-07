@@ -73,7 +73,7 @@ void async_command_handler(std::shared_ptr<shared_command_handler_state> all_sha
         bool found_command = false;
 
         {
-            std::lock_guard lg(shared_lock);
+            safe_lock_guard lg(shared_lock);
 
             if(shared_queue.size() > 0)
             {
@@ -145,7 +145,7 @@ bool handle_termination_shortcircuit(std::shared_ptr<shared_command_handler_stat
             }
             else
             {
-                std::lock_guard guard(all_shared->state.lock);
+                safe_lock_guard guard(all_shared->state.lock);
 
                 if(all_shared->state.should_terminate_realtime.size() > 100)
                     all_shared->state.should_terminate_realtime.clear();
@@ -196,7 +196,7 @@ bool handle_termination_shortcircuit(std::shared_ptr<shared_command_handler_stat
                     //    std::cout << "keystroke " << i << "\n";
 
                     {
-                        std::lock_guard guard(all_shared->state.lock);
+                        safe_lock_guard guard(all_shared->state.lock);
 
                         for(auto& i : str)
                             all_shared->state.unprocessed_keystrokes[id].push_back(i);
@@ -370,7 +370,7 @@ void read_queue(std::shared_ptr<shared_command_handler_state> all_shared,
                 bool rate_hit = true;
 
                 {
-                    std::lock_guard lg(shared_lock);
+                    safe_lock_guard lg(shared_lock);
 
                     len = shared_queue.size();
 
@@ -484,7 +484,7 @@ void thread_session(
     }
 
     {
-        std::lock_guard guard(store->lock);
+        safe_lock_guard guard(store->lock);
 
         for(int i=0; i < (int)store->data.size(); i++)
         {
