@@ -486,8 +486,13 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
     duk_push_string(new_ctx, wrapper.c_str());
     duk_push_string(new_ctx, "test-name");
 
+    duk_int_t mode = DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT;
+
+    if(is_top_level)
+        mode = DUK_COMPILE_EVAL;
+
     //DUK_COMPILE_FUNCTION
-    if(duk_pcompile(new_ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
+    if(duk_pcompile(new_ctx, mode) != 0)
     {
         std::string err = duk_safe_to_string(new_ctx, -1);
 
@@ -715,7 +720,7 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
     sd.ctx = ctx;
 
     script_info dummy;
-    dummy.load_from_unparsed_source(ctx, attach_wrapper(data, false, true), host + ".invoke", false, true);
+    dummy.load_from_unparsed_source(ctx, data, host + ".invoke", false, true);
 
     if(!dummy.valid)
         return "Invalid Command Line Syntax";
