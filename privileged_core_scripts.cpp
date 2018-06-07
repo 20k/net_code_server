@@ -61,7 +61,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["net.view"] = make_cary("user", "\"\"", "n", "6");
     ret["net.map"] = make_cary("user", "\"\"", "n", "6");
     //ret["net.links"] = make_cary("user", "\"\"", "n", "6");
-    ret["net.hack"] = make_cary("user", "\"\"");
+    ret["net.hack"] = make_cary("user", "\"\"", "NID", "-1");
     ret["net.access"] = make_cary("user", "\"\"");
     ret["net.switch"] = make_cary("user", "\"\"");
     ret["net.modify"] = make_cary("user", "\"\"", "target", "\"\"");

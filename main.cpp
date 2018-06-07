@@ -361,6 +361,7 @@ int main()
 
     boot_connection_handlers();
 
+    while(1){Sleep(100);}
 
     ///fix db screwup
     #ifndef TESTING

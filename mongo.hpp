@@ -13,6 +13,7 @@
 #include <SFML/System.hpp>
 #include "logging.hpp"
 #include <boost/stacktrace.hpp>
+#include <thread>
 
 enum class mongo_database_type
 {
@@ -43,21 +44,17 @@ struct lock_internal
 
     void lock(const std::string& debug_info, int who, mongoc_client_t* emergency)
     {
-        static std::atomic_int is_deadlocked{0};
-
-        static std::mutex map_lock;
-
-        static std::map<int, std::vector<std::string>> debug;
-
-        static std::atomic_int crash_id{0};
-
-        #define DEADLOCK_DETECTION
+        //#define DEADLOCK_DETECTION
         #ifdef DEADLOCK_DETECTION
+        static std::atomic_int is_deadlocked{0};
+        static std::mutex map_lock;
+        static std::map<int, std::vector<std::string>> debug;
+        static std::atomic_int crash_id{0};
         sf::Clock clk;
         #endif // DEADLOCK_DETECTION
 
         #ifndef DEADLOCK_DETECTION
-        while(locked.test_and_set(std::memory_order_acquire)){}
+        while(locked.test_and_set(std::memory_order_acquire)){std::this_thread::yield();}
         #else
 
         {
@@ -92,10 +89,10 @@ struct lock_internal
 
                 std::cout << "call stack " << boost::stacktrace::stacktrace() << std::endl;
 
-                *lg::output << "crash with id " + my_crash_id + " Start stacktrace: " + boost::stacktrace::stacktrace() << std::endl;
+                *lg::output << "crash with id " + std::to_string(my_crash_id) + " Start stacktrace: " << boost::stacktrace::stacktrace() << std::endl;
 
                 Sleep(5000);
-                throw std::runtime_error("Deadlock " + std::to_string(who) + " " + debug_info);
+                //throw std::runtime_error("Deadlock " + std::to_string(who) + " " + debug_info);
             }
         }
 
