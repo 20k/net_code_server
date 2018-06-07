@@ -65,6 +65,8 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["net.access"] = make_cary("user", "\"\"");
     ret["net.switch"] = make_cary("user", "\"\"");
     ret["net.modify"] = make_cary("user", "\"\"", "target", "\"\"");
+    ret["net.move"] = make_cary("user", "\"\"", "target", "\"\"");
+    ret["net.path"] = make_cary("user", "\"\"", "target", "\"\"", "min_stability", "0");
 
     return ret;
 }
@@ -2864,7 +2866,7 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool arr = dukx_is_prop_truthy(ctx, -1, "array");
 
     if(from == "")
-        return push_error(ctx, "usage: net.links({user:<username>, n:6})");
+        return push_error(ctx, "usage: net.view({user:<username>, n:6})");
 
     if(num < 0 || num > 15)
         return push_error(ctx, "n out of range [1,15]");
