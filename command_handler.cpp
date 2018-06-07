@@ -1274,11 +1274,6 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
                     fnd.load_from_db(mongo_user_info, user_name);
 
-                    if(fnd.auth != all_shared->state.get_auth())
-                    {
-                        return make_error_col("Incorrect Auth, someone else has registered this account or you are using a different pc and key.key file");
-                    }
-
                     should_set = true;
                 }
 
@@ -1288,6 +1283,11 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
             if(should_set)
             {
                 all_shared->state.set_user(fnd);
+
+                if(fnd.auth != all_shared->state.get_auth())
+                {
+                    return make_error_col("Incorrect Auth, someone else has registered this account or you are using a different pc and key.key file");
+                }
             }
 
             /*for(auto& i : allowed)
@@ -1342,10 +1342,12 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
             all_shared->state.set_user(user());
 
             {
+                auto fauth = all_shared->state.get_auth();
+
                 mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
 
                 auth to_check;
-                to_check.load_from_db(mongo_ctx, all_shared->state.get_auth());
+                to_check.load_from_db(mongo_ctx, fauth);
 
                 if(!to_check.valid)
                     return make_error_col("Trying something sneaky eh 2?");
@@ -1367,10 +1369,12 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
                 user new_user;
 
+                auto fauth = all_shared->state.get_auth();
+
                 {
                     mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-                    new_user.construct_new_user(mongo_user_info, user_name, all_shared->state.get_auth());
+                    new_user.construct_new_user(mongo_user_info, user_name, fauth);
                     new_user.load_from_db(mongo_user_info, user_name);
                     new_user.overwrite_user_in_db(mongo_user_info);
                 }
@@ -1589,10 +1593,10 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
         mongo_requester request;
         request.set_prop_bin("account_token", to_ret);
 
+        all_shared->state.set_auth(to_ret);
+
         mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
         request.insert_in_db(ctx);
-
-        all_shared->state.set_auth(to_ret);
 
         is_auth = true;
 
@@ -1626,21 +1630,24 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
         if(auth_token.length() > 140)
             return make_error_col("Auth too long");
 
-        mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
+        {
+            mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
 
-        mongo_requester request;
-        request.set_prop_bin("account_token", auth_token);
+            mongo_requester request;
+            request.set_prop_bin("account_token", auth_token);
 
-        std::cout << "auth len " << auth_token.size() << std::endl;
+            std::cout << "auth len " << auth_token.size() << std::endl;
 
-        if(request.fetch_from_db(ctx).size() == 0)
-            return make_error_col("Auth Failed, have you run \"register client\" at least once?");
+            if(request.fetch_from_db(ctx).size() == 0)
+                return make_error_col("Auth Failed, have you run \"register client\" at least once?");
+
+
+            auth user_auth;
+
+            user_auth.load_from_db(ctx, auth_token);
+        }
 
         all_shared->state.set_auth(auth_token);
-
-        auth user_auth;
-
-        user_auth.load_from_db(ctx, auth_token);
 
         std::vector<std::string> users = user_auth.users;
 
