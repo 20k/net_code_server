@@ -52,7 +52,7 @@ struct lock_internal
         #else
         while(locked.test_and_set(std::memory_order_acquire))
         {
-            if(clk.getElapsedTime().asSeconds() > 20)
+            if(clk.getElapsedTime().asSeconds() > 30)
             {
                 std::cout << "deadlock detected " << debug_info << " who: " + std::to_string(who) << std::endl;
                 throw std::runtime_error("Deadlock " + std::to_string(who) + " " + debug_info);
