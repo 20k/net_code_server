@@ -304,7 +304,7 @@ struct execution_blocker_guard
     }
 };
 
-std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared)
+std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared, std::optional<float> custom_exec_time_s)
 {
     try
     {
@@ -379,6 +379,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         //sf::Clock clk;
         float max_time_ms = 5000;
         float db_grace_time_ms = 2000;
+
+        if(custom_exec_time_s.has_value())
+            max_time_ms = custom_exec_time_s.value() * 1000.;
 
         auto time_start = std::chrono::high_resolution_clock::now();
 
@@ -752,9 +755,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
     }
 }
 
-void throwaway_user_thread(const std::string& username, const std::string& command)
+void throwaway_user_thread(const std::string& username, const std::string& command, std::optional<float> custom_exec_time_s)
 {
-    std::thread(run_in_user_context, username, command, std::nullopt).detach();
+    std::thread(run_in_user_context, username, command, std::nullopt, custom_exec_time_s).detach();
 }
 
 std::string binary_to_hex(const std::string& in, bool swap_endianness)
