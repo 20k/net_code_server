@@ -12,6 +12,7 @@
 #include <chrono>
 #include <SFML/System.hpp>
 #include "logging.hpp"
+#include <boost/stacktrace.hpp>
 
 enum class mongo_database_type
 {
@@ -44,6 +45,12 @@ struct lock_internal
     {
         static std::atomic_int is_deadlocked{0};
 
+        static std::mutex map_lock;
+
+        static std::map<int, std::vector<std::string>> debug;
+
+        static std::atomic_int crash_id{0};
+
         #define DEADLOCK_DETECTION
         #ifdef DEADLOCK_DETECTION
         sf::Clock clk;
@@ -52,6 +59,12 @@ struct lock_internal
         #ifndef DEADLOCK_DETECTION
         while(locked.test_and_set(std::memory_order_acquire)){}
         #else
+
+        {
+            std::lock_guard guard(map_lock);
+            debug[who].push_back(debug_info);
+        }
+
         while(locked.test_and_set(std::memory_order_acquire))
         {
             if(clk.getElapsedTime().asSeconds() > 30 || (is_deadlocked == 1 && clk.getElapsedTime().asSeconds() > 5))
@@ -59,10 +72,42 @@ struct lock_internal
                 std::cout << "deadlock detected " << debug_info << " who: " + std::to_string(who) << std::endl;
                 lg::log("Deadlock ", debug_info, " who: ", std::to_string(who));
 
+                lg::log("Begin map info from ", who);
+
+                {
+                    std::lock_guard guard(map_lock);
+
+                    for(auto& i : debug)
+                    {
+                        for(auto& k : i.second)
+                            lg::log("me ", who, " them ", i.first, " coll ", k);
+                    }
+                }
+
+                lg::log("End map info from ", who);
+
                 is_deadlocked = 1;
+
+                int my_crash_id = crash_id++;
+
+                std::cout << "call stack " << boost::stacktrace::stacktrace() << std::endl;
+
+                *lg::output << "crash with id " + my_crash_id + " Start stacktrace: " + boost::stacktrace::stacktrace() << std::endl;
 
                 Sleep(5000);
                 throw std::runtime_error("Deadlock " + std::to_string(who) + " " + debug_info);
+            }
+        }
+
+        {
+            std::lock_guard guard(map_lock);
+            for(int i=0; i < (int)debug[who].size(); i++)
+            {
+                if(debug[who][i] == debug_info)
+                {
+                    debug[who].erase(debug[who].begin() + i);
+                    break;
+                }
             }
         }
         #endif // DEADLOCK_DETECTION
