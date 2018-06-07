@@ -42,6 +42,8 @@ struct lock_internal
 
     void lock(const std::string& debug_info, int who, mongoc_client_t* emergency)
     {
+        static std::atomic_int is_deadlocked{0};
+
         #define DEADLOCK_DETECTION
         #ifdef DEADLOCK_DETECTION
         sf::Clock clk;
@@ -52,10 +54,14 @@ struct lock_internal
         #else
         while(locked.test_and_set(std::memory_order_acquire))
         {
-            if(clk.getElapsedTime().asSeconds() > 30)
+            if(clk.getElapsedTime().asSeconds() > 30 || (is_deadlocked == 1 && clk.getElapsedTime().asSeconds() > 5))
             {
                 std::cout << "deadlock detected " << debug_info << " who: " + std::to_string(who) << std::endl;
                 lg::log("Deadlock ", debug_info, " who: ", std::to_string(who));
+
+                is_deadlocked = 1;
+
+                Sleep(5000);
                 throw std::runtime_error("Deadlock " + std::to_string(who) + " " + debug_info);
             }
         }
