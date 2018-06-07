@@ -147,6 +147,8 @@ duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t item__register_bundle(priv_context& priv_ctx, duk_context* ctx, int sl);
+
+duk_ret_t item__configure_on_breach(priv_context& priv_ctx, duk_context* ctx, int sl);
 #ifdef TESTING
 
 duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl);
@@ -308,6 +310,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(item__cull, 1),
     REGISTER_FUNCTION_PRIV(item__bundle_script, 1),
     REGISTER_FUNCTION_PRIV(item__register_bundle, 0),
+    REGISTER_FUNCTION_PRIV(item__configure_on_breach, 1),
     //REGISTER_FUNCTION_PRIV(user__port, 0), ///should this exist? It has to currently for dumb reasons ///nope, it needs special setup
     REGISTER_FUNCTION_PRIV(nodes__manage, 1),
     #ifdef USE_LOCS

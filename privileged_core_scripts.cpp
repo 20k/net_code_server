@@ -54,6 +54,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["item.xfer_to"] = make_cary("idx", "0", "user", "\"\"");
     ret["item.bundle_script"] = make_cary("idx", "0", "name", "\"\"", "tag", "\"\"");
     ret["item.register_bundle"] = make_cary("idx", "0", "name", "\"\"");
+    ret["item.configure_on_breach"] = make_cary("idx", "0", "name", "\"\"");
     ret["cash.steal"] = make_cary("user", "\"\"", "amount", "0");
     //ret["user.port"] = make_cary();
     ret["nodes.manage"] = make_cary();
@@ -1700,6 +1701,93 @@ duk_ret_t item__register_bundle(priv_context& priv_ctx, duk_context* ctx, int sl
     return push_success(ctx);
 }
 
+std::string on_breach_name_to_real_script_name(std::string script_name, const std::string& host)
+{
+    if(script_name.find('.') == std::string::npos && script_name.size() > 0)
+        script_name = host + "." + script_name;
+
+    if(script_name.size() == 0)
+        script_name = host + ".on_breach";
+
+    if(!is_valid_full_name_string(script_name))
+        return "";
+
+    return script_name;
+}
+
+duk_ret_t item__configure_on_breach(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    int item_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
+    std::string scriptname = duk_safe_get_prop_string(ctx, -1, "name");
+
+    if(scriptname.size() > 60)
+        return push_error(ctx, "Too long script name");
+
+    bool has_name = dukx_is_prop_truthy(ctx, -1, "name");
+    bool confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
+
+    if(item_idx == -1)
+        return push_error(ctx, "Usage: idx:num, name:\"script_name\"");
+
+    user usr;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        if(!usr.load_from_db(mongo_ctx, get_caller(ctx)))
+            return push_error(ctx, "Invalid calling user");
+    }
+
+    std::string item_id = usr.index_to_item(item_idx);
+
+    if(item_id == "")
+        return push_error(ctx, "Invalid item");
+
+    item it;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+        if(!it.load_from_db(mongo_ctx, item_id))
+            return push_error(ctx, "No such item");
+    }
+
+    if(it.get_prop_as_integer("item_type") != item_types::ON_BREACH)
+        return push_error(ctx, "Wrong item type, must be on_breach");
+
+    std::string new_name = on_breach_name_to_real_script_name(scriptname, priv_ctx.original_host);
+    std::string real_name = on_breach_name_to_real_script_name(it.get_prop("script_name"), priv_ctx.original_host);
+
+    if(!has_name)
+        return push_success(ctx, "Configured to run as " + real_name);
+
+    if(new_name == "")
+        return push_error(ctx, "Invalid name");
+
+    if(has_name && !confirm)
+    {
+        return push_success(ctx, "Please run " + make_key_col("confirm") + ":" + make_val_col("true") + " to confirm setting on_breach script name to " + new_name);
+    }
+
+    if(has_name && confirm)
+    {
+        it.set_prop("script_name", scriptname);
+
+        {
+             mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+             it.overwrite_in_db(mongo_ctx);
+        }
+
+        return push_success(ctx, "Set on_breach script name to " + new_name);
+    }
+
+    push_duk_val(ctx, "Should be impossible to reach here");
+    return 1;
+}
+
 #ifdef TESTING
 
 duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl)
@@ -2197,7 +2285,6 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
-
 duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::string& name_of_person_being_attacked)
 {
     //std::cout << "user_name " << name_of_person_being_attacked << std::endl;
@@ -2350,13 +2437,9 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
             {
                 std::string script_name = it.get_prop("script_name");
 
-                if(script_name.find('.') == std::string::npos && script_name.size() > 0)
-                    script_name = usr.name + "." + script_name;
+                script_name = on_breach_name_to_real_script_name(script_name, usr.name);
 
-                if(script_name.size() == 0)
-                    script_name = usr.name + ".on_breach";
-
-                if(!is_valid_full_name_string(script_name))
+                if(script_name == "")
                     continue;
 
                 script_name = "#" + script_name + "({attacker:\"" + get_caller(ctx) + "\"})";
