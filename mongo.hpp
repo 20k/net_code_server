@@ -127,7 +127,7 @@ struct mongo_context
 
         found.lock(debug_info, who, in_case_of_emergency);
 
-        lg::log("Locked ", debug_info, " " , std::to_string(who));
+        //lg::log("Locked ", debug_info, " " , std::to_string(who));
 
         /*lock.lock();
 

@@ -219,6 +219,15 @@ void test_deadlock_detection()
     mongo_lock_proxy ctx3 = get_global_mongo_user_info_context(-3);
 }
 
+void test_correct_collection_locking()
+{
+    mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+    ctx.change_collection("i20k");
+    mongo_lock_proxy ctx2 = get_global_mongo_user_accessible_context(-2);
+    mongo_lock_proxy ctx3 = get_global_mongo_user_info_context(-3);
+    ctx3.change_collection("i20k8");
+}
+
 ///making sure this ends up in the right repo
 int main()
 {
@@ -251,6 +260,8 @@ int main()
     test_hexbin();
     initialse_mongo_all();
     test_json();
+
+    //test_correct_collection_locking();
 
     //test_deadlock_detection();
 
