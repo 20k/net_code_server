@@ -55,6 +55,7 @@ struct lock_internal
             if(clk.getElapsedTime().asSeconds() > 30)
             {
                 std::cout << "deadlock detected " << debug_info << " who: " + std::to_string(who) << std::endl;
+                lg::log("Deadlock ", debug_info, " who: ", std::to_string(who));
                 throw std::runtime_error("Deadlock " + std::to_string(who) + " " + debug_info);
             }
         }
@@ -531,7 +532,9 @@ struct mongo_lock_proxy
         if(fctx == nullptr)
             return;
 
-        ctx.ctx->make_lock(fctx->last_db, fctx->default_collection, lock_id, ctx.client);
+        if(fctx->default_collection != "")
+            ctx.ctx->make_lock(fctx->last_db, fctx->default_collection, lock_id, ctx.client);
+
         ilock_id = lock_id;
         ctx.last_collection = fctx->default_collection;
 
@@ -546,7 +549,9 @@ struct mongo_lock_proxy
     void change_collection(const std::string& coll, bool force_change = false)
     {
         ///need to alter locks
-        ctx.ctx->make_unlock(ctx.last_collection);
+        if(ctx.last_collection != "")
+            ctx.ctx->make_unlock(ctx.last_collection);
+
         ctx.change_collection_unsafe(coll, force_change);
         ctx.ctx->make_lock(ctx.ctx->last_db, coll, ilock_id, ctx.client);
     }

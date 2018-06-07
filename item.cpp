@@ -286,11 +286,13 @@ bool item::transfer_from_to_by_index(int index, const std::string& from, const s
     if(from == to)
         return true;
 
-    mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
-
     user u1, u2;
-    u1.load_from_db(user_ctx, from);
-    u2.load_from_db(user_ctx, to);
+
+    {
+        mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
+        u1.load_from_db(user_ctx, from);
+        u2.load_from_db(user_ctx, to);
+    }
 
     if(!u1.valid || !u2.valid)
         return false;
@@ -320,8 +322,11 @@ bool item::transfer_from_to_by_index(int index, const std::string& from, const s
         overwrite_in_db(item_ctx);
     }
 
-    u1.overwrite_user_in_db(user_ctx);
-    u2.overwrite_user_in_db(user_ctx);
+    {
+        mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
+        u1.overwrite_user_in_db(user_ctx);
+        u2.overwrite_user_in_db(user_ctx);
+    }
 
     return true;
 }
