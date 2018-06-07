@@ -801,6 +801,24 @@ void remove_func(duk_context* ctx, const std::string& name)
     duk_pop(ctx);
 }
 
+duk_ret_t dummy(duk_context* ctx)
+{
+    return 0;
+}
+
+void inject_hacky_Symbol(duk_context* ctx)
+{
+    duk_push_global_object(ctx);
+
+    duk_push_c_function(ctx, &dummy, 0);
+    duk_put_prop_string(ctx, -2, "Symbol");
+
+    duk_push_string(ctx, "__Symbol_iterator");
+    duk_put_prop_string(ctx, -2, "iterator");
+
+    duk_pop(ctx);
+}
+
 void register_funcs(duk_context* ctx, int seclevel)
 {
     remove_func(ctx, "fs_call");
@@ -842,6 +860,8 @@ void register_funcs(duk_context* ctx, int seclevel)
     inject_c_function(ctx, is_key_down, "is_key_down", 1);
     inject_c_function(ctx, mouse_get_position, "mouse_get_position", 0);
     inject_c_function(ctx, get_string_col, "get_string_col", 1);
+
+    inject_hacky_Symbol(ctx);
 
     //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }
