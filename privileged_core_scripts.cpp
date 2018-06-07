@@ -3,6 +3,7 @@
 #include <ratio>
 
 #include "scheduled_tasks.hpp"
+#include "command_handler.hpp"
 
 std::map<std::string, std::vector<script_arg>> privileged_args = construct_core_args();
 
@@ -2304,6 +2305,13 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
         }
     }
 
+    user_node* breach_node = nodes.type_to_node(user_node_info::BREACH);
+
+    if(breach_node == nullptr)
+        push_error(ctx, "Error Code: Yellow Panther in hack_internal (net.hack?)");
+
+    bool breach_is_breached = breach_node->is_breached();
+
     if(current_node->is_breached())
     {
         msg += current_node->get_breach_message(nodes);
@@ -2324,6 +2332,43 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
         mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
 
         nodes.overwrite_in_db(node_ctx);
+    }
+
+    if(breach_node->is_breached() && !breach_is_breached)
+    {
+        std::vector<item> all_items;
+
+        {
+            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+            all_items = usr.get_all_items(item_ctx);
+        }
+
+        for(item& it : all_items)
+        {
+            if(it.get_prop_as_integer("item_type") == item_types::ON_BREACH && usr.has_loaded_item(it.get_prop("item_id")))
+            {
+                std::string script_name = it.get_prop("script_name");
+
+                if(script_name.find('.') == std::string::npos && script_name.size() > 0)
+                    script_name = usr.name + "." + script_name;
+
+                if(script_name.size() == 0)
+                    script_name = usr.name + ".on_breach";
+
+                if(!is_valid_full_name_string(script_name))
+                    continue;
+
+                script_name = "#" + script_name + "()";
+
+                ///remember that this includes user.call_stack weirdness
+                ///500ms exec time
+                throwaway_user_thread(usr.name, script_name, 500. / 1000.);
+
+                break;
+            }
+        }
+        //std::cout << "srun\n";
     }
 
     duk_push_string(ctx, msg.c_str());
