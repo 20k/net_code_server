@@ -491,7 +491,6 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
     if(is_top_level)
         mode = DUK_COMPILE_EVAL;
 
-    //DUK_COMPILE_FUNCTION
     if(duk_pcompile(new_ctx, mode) != 0)
     {
         std::string err = duk_safe_to_string(new_ctx, -1);
