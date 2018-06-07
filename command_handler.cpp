@@ -1630,6 +1630,8 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
         if(auth_token.length() > 140)
             return make_error_col("Auth too long");
 
+        std::vector<std::string> users;
+
         {
             mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
 
@@ -1645,11 +1647,10 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
             auth user_auth;
 
             user_auth.load_from_db(ctx, auth_token);
+            users = user_auth.users;
         }
 
         all_shared->state.set_auth(auth_token);
-
-        std::vector<std::string> users = user_auth.users;
 
         std::string auth_string;
 
