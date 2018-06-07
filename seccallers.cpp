@@ -515,6 +515,12 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
         duk_push_string(new_ctx, script_host.c_str());
         duk_put_prop_string(new_ctx, id, "script_host");
 
+        ///duplicate current object, put it into the global object
+        duk_push_global_object(new_ctx);
+        duk_dup(new_ctx, -2);
+        duk_put_prop_string(new_ctx, -2, "context");
+        duk_pop(new_ctx);
+
         int nargs = 2;
 
         ///[object] is on the stack, aka context
