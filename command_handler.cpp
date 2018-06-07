@@ -1262,25 +1262,33 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
         bool user_exists = false;
 
         {
-            mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
-
+            bool should_set = false;
             user fnd;
 
-            if(fnd.exists(mongo_user_info, user_name))
             {
-                user_exists = true;
+                mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-                fnd.load_from_db(mongo_user_info, user_name);
-
-                if(fnd.auth != all_shared->state.get_auth())
+                if(fnd.exists(mongo_user_info, user_name))
                 {
-                    return make_error_col("Incorrect Auth, someone else has registered this account or you are using a different pc and key.key file");
+                    user_exists = true;
+
+                    fnd.load_from_db(mongo_user_info, user_name);
+
+                    if(fnd.auth != all_shared->state.get_auth())
+                    {
+                        return make_error_col("Incorrect Auth, someone else has registered this account or you are using a different pc and key.key file");
+                    }
+
+                    should_set = true;
                 }
 
-                all_shared->state.set_user(fnd);
+                auto allowed = fnd.get_call_stack();
             }
 
-            auto allowed = fnd.get_call_stack();
+            if(should_set)
+            {
+                all_shared->state.set_user(fnd);
+            }
 
             /*for(auto& i : allowed)
             {
@@ -1356,13 +1364,16 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
             }
 
             {
-                mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
                 user new_user;
 
-                new_user.construct_new_user(mongo_user_info, user_name, all_shared->state.get_auth());
-                new_user.load_from_db(mongo_user_info, user_name);
-                new_user.overwrite_user_in_db(mongo_user_info);
+                {
+                    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
+
+                    new_user.construct_new_user(mongo_user_info, user_name, all_shared->state.get_auth());
+                    new_user.load_from_db(mongo_user_info, user_name);
+                    new_user.overwrite_user_in_db(mongo_user_info);
+                }
 
                 all_shared->state.set_user(new_user);
             }
@@ -1455,9 +1466,11 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
             user cur;
 
             {
+                auto uname = all_shared->state.get_user().name;
+
                 mongo_lock_proxy user_locks = get_global_mongo_user_info_context(-2);
 
-                cur.load_from_db(user_locks, all_shared->state.get_user().name);
+                cur.load_from_db(user_locks, uname);
             }
 
             std::map<std::string, double> user_details;
@@ -1506,10 +1519,12 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
             return make_error_col("Invalid script name " + fullname);
 
         {
+            auto uname = all_shared->state.get_user().name;
+
             mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
             script_info script_inf;
-            script_inf.name = all_shared->state.get_user().name + "." + scriptname;
+            script_inf.name = uname + "." + scriptname;
 
             if(!script_inf.exists_in_db(mongo_ctx))
                 return make_error_col("Script not found");
@@ -1544,10 +1559,12 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
             return make_error_col("Invalid script name " + fullname);
 
         {
+            auto uname = all_shared->state.get_user().name;
+
             mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
             script_info script_inf;
-            script_inf.name = all_shared->state.get_user().name + "." + scriptname;
+            script_inf.name = uname + "." + scriptname;
 
             if(!script_inf.exists_in_db(mongo_ctx))
                 return make_error_col("Script not found");
@@ -1649,14 +1666,16 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
     }
     else
     {
+        auto name = all_shared->state.get_user().name;
+
         {
             mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-            if(!user().exists(mongo_user_info, all_shared->state.get_user().name))
+            if(!user().exists(mongo_user_info, name))
                 return "No account or not logged in";
         }
 
-        return run_in_user_context(all_shared->state.get_user().name, str, all_shared);
+        return run_in_user_context(name, str, all_shared);
     }
 
     return make_error_col("Command Not Found or Unimplemented");
@@ -2090,9 +2109,11 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
             return "";
 
         {
+            auto ut = all_shared->state.get_user();
+
             mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-            if(!all_shared->state.get_user().exists(mongo_user_info, current_user))
+            if(!ut.exists(mongo_user_info, current_user))
                 return "";
 
             //state.current_user.load_from_db(mongo_user_info, state.current_user.name);
