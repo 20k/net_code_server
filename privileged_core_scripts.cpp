@@ -3181,7 +3181,9 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         {
             std::string formatted_name = format_by_vector(all_names[i], all_names);
             std::string formatted_pos = format_by_vector(all_positions[i], all_positions);
-            std::string formatted_link = format_by_vector(all_links[i], all_links);
+            //std::string formatted_link = format_by_vector(all_links[i], all_links);
+
+            std::string formatted_link = all_links[i];
 
             std::string rname = formatted_name;
 
