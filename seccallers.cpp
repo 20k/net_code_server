@@ -837,6 +837,11 @@ void register_funcs(duk_context* ctx, int seclevel)
     remove_func(ctx, "ls_call");
     remove_func(ctx, "ns_call");
 
+    remove_func(ctx, "db_insert");
+    remove_func(ctx, "db_find");
+    remove_func(ctx, "db_remove");
+    remove_func(ctx, "db_update");
+
     if(seclevel <= 4)
         inject_c_function(ctx, sl_call<4>, "fs_call", 1);
 
@@ -854,10 +859,14 @@ void register_funcs(duk_context* ctx, int seclevel)
 
     inject_c_function(ctx, hash_d, "hash_d", 1);
 
-    inject_c_function(ctx, db_insert, "db_insert", 1);
-    inject_c_function(ctx, db_find, "db_find", DUK_VARARGS);
-    inject_c_function(ctx, db_remove, "db_remove", 1);
-    inject_c_function(ctx, db_update, "db_update", 2);
+    if(seclevel <= 3)
+    {
+        inject_c_function(ctx, db_insert, "db_insert", 1);
+        inject_c_function(ctx, db_find, "db_find", DUK_VARARGS);
+        inject_c_function(ctx, db_remove, "db_remove", 1);
+        inject_c_function(ctx, db_update, "db_update", 2);
+    }
+
     inject_c_function(ctx, native_print, "print", DUK_VARARGS);
 
     inject_c_function(ctx, timeout_yield, "timeout_yield",  0);

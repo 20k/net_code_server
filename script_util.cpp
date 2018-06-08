@@ -322,6 +322,15 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
 
     for(int i=0; i < (int)tos_unchecked.size(); i++)
     {
+        bool is_raw_var = starts_with(view, tos_unchecked[i]);
+
+        if(is_raw_var)
+        {
+            found_seclevel = std::min(found_seclevel, sec_levels_unchecked[i]);
+
+            return true;
+        }
+
         bool success = expand_to_from_nochecks(view, in, offset, froms_unchecked[i], tos_unchecked[i]);
 
         if(success)
