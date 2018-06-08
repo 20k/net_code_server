@@ -316,7 +316,7 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
                                              };
 
     std::vector<int> sec_levels_unchecked   {4,
-                                            3, 3, 3, 3, 3, 3};
+                                             3, 3, 3, 3, 3, 3};
 
     assert(sec_levels_unchecked.size() == tos_unchecked.size());
 
@@ -324,10 +324,11 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
     {
         bool success = expand_to_from_nochecks(view, in, offset, froms_unchecked[i], tos_unchecked[i]);
 
-        found_seclevel = std::min(found_seclevel, sec_levels_unchecked[i]);
-
         if(success)
+        {
+            found_seclevel = std::min(found_seclevel, sec_levels_unchecked[i]);
             return true;
+        }
     }
 
     //std::cout << in << std::endl;
