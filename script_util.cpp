@@ -327,6 +327,7 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
         if(success)
         {
             found_seclevel = std::min(found_seclevel, sec_levels_unchecked[i]);
+
             return true;
         }
     }
