@@ -17,6 +17,7 @@ namespace rate
         UPG_CHEAT,
         AUTOCOMPLETES,
         DELETE_USER, ///does not persist between server restarts
+        POLL,
     };
 }
 
@@ -27,8 +28,8 @@ struct rate_limit
     ///maps username to a type of rate limit
     std::map<std::string, std::map<rate_limit_t, double>> time_budget_remaining;
     std::map<std::string, std::map<std::string, double>> time_budget_remaining_manual;
-    std::map<rate_limit_t, double> max_reserve = {{rate::CHAT, 10}, {rate::CASH, 30}, {rate::UPG_CHEAT, 10}, {rate::AUTOCOMPLETES, 30}, {rate::DELETE_USER, 61*60}};
-    std::map<rate_limit_t, double> budget_deplete = {{rate::CHAT, 1}, {rate::CASH, 1}, {rate::UPG_CHEAT, 3}, {rate::AUTOCOMPLETES, 1}, {rate::DELETE_USER, 60*60}};
+    std::map<rate_limit_t, double> max_reserve = {{rate::CHAT, 10}, {rate::CASH, 30}, {rate::UPG_CHEAT, 10}, {rate::AUTOCOMPLETES, 30}, {rate::DELETE_USER, 61*60}, {rate::POLL, 5}};
+    std::map<rate_limit_t, double> budget_deplete = {{rate::CHAT, 1}, {rate::CASH, 1}, {rate::UPG_CHEAT, 3}, {rate::AUTOCOMPLETES, 1}, {rate::DELETE_USER, 60*60}, {rate::POLL, 0.25f}};
 
     std::mutex lock;
 

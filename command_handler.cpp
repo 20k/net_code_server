@@ -2135,6 +2135,9 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
         if(current_auth == "" || current_user == "")
             return "";
 
+        if(SHOULD_RATELIMIT(current_auth, POLL))
+            return "";
+
         {
             auto ut = all_shared->state.get_user();
 
