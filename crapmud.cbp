@@ -179,7 +179,6 @@
 		<Unit filename="shared_command_handler_state.hpp" />
 		<Unit filename="shared_duk_worker_state.cpp" />
 		<Unit filename="shared_duk_worker_state.hpp" />
-		<Unit filename="socket_shared.hpp" />
 		<Unit filename="stacktrace.cpp" />
 		<Unit filename="stacktrace.hpp" />
 		<Unit filename="unified_scripts.hpp" />
