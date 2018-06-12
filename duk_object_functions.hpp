@@ -585,6 +585,34 @@ std::string dukx_json_get(const T& rep)
 }
 
 inline
+nlohmann::json dukx_get_as_json(duk_context* ctx, int offset)
+{
+    duk_dup(ctx, offset);
+
+    const char* ptr = duk_json_encode(ctx, -1);
+
+    std::string str;
+
+    if(ptr != nullptr)
+        str = std::string(ptr);
+
+    duk_pop(ctx);
+
+    nlohmann::json j;
+
+    try
+    {
+        j = nlohmann::json::parse(str);
+    }
+    catch(...)
+    {
+
+    }
+
+    return j;
+}
+
+inline
 void quick_register(duk_context* ctx, const std::string& key, const std::string& value)
 {
     duk_push_string(ctx, value.c_str());
