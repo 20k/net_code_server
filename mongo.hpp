@@ -522,7 +522,17 @@ struct mongo_interface
             return;
 
         bson_t* bs = make_bson_from_json(selector);
+
+        if(bs == nullptr)
+            return;
+
         bson_t* us = make_bson_from_json(update);
+
+        if(us == nullptr)
+        {
+            bson_destroy(bs);
+            return;
+        }
 
         update_bson_many(script_host, bs, us);
 
@@ -592,12 +602,23 @@ struct mongo_interface
         bson_t* bs = make_bson_from_json(json);
         bson_t* ps = make_bson_from_json(proj);
 
+        if(bs == nullptr)
+            return results;
+
+        //std::cout << " bs " << bs << " ps " << ps << std::endl;
+
         results = find_bson(script_host, bs, ps);
+
+        //std::cout <<" found\n";
 
         if(ps)
             bson_destroy(ps);
 
+        //std::cout << "f1\n";
+
         bson_destroy(bs);
+
+        //std::cout << "f2\n";
 
         return results;
     }
@@ -608,6 +629,9 @@ struct mongo_interface
             return;
 
         if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
+            return;
+
+        if(bs == nullptr)
             return;
 
         mongoc_collection_delete_many(collection, bs, nullptr, nullptr, nullptr);
@@ -622,6 +646,9 @@ struct mongo_interface
             return;
 
         bson_t* bs = make_bson_from_json(json);
+
+        if(bs == nullptr)
+            return;
 
         remove_bson(script_host, bs);
 
