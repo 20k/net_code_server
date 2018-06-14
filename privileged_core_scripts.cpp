@@ -3578,12 +3578,14 @@ duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///STRANGER DANGER
     std::vector<std::string> link_path = playspace_network_manage.get_accessible_path_to(ctx, target, start, path_info::NONE, -1, minimum_stability);
 
-    float total_path_strength = playspace_network_manage.get_total_path_link_strength(link_path);
+    //float total_path_strength = playspace_network_manage.get_total_path_link_strength(link_path);
 
-    float avg_path_strength = 0.f;
+    //float avg_path_strength = 0.f;
 
-    if(link_path.size() > 0)
-        avg_path_strength = total_path_strength / (float)link_path.size();
+    //if(link_path.size() > 0)
+    //    avg_path_strength = total_path_strength / (float)link_path.size();
+
+    float minimum_path_strength = playspace_network_manage.get_minimum_path_link_strength(link_path);
 
     std::string visible_path = "Visible Path: ";
 
@@ -3608,8 +3610,10 @@ duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
     else
     {
-        path_stab += to_string_with_enforced_variable_dp(total_path_strength, 2) + " [total], " +
-                     to_string_with_enforced_variable_dp(avg_path_strength, 2) + " [avg]";
+        path_stab += to_string_with_enforced_variable_dp(minimum_path_strength, 2) + " [min]";
+
+        //path_stab += to_string_with_enforced_variable_dp(total_path_strength, 2) + " [total], " +
+        //             to_string_with_enforced_variable_dp(avg_path_strength, 2) + " [avg]";
     }
 
     if(!arr)
@@ -3623,8 +3627,10 @@ duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
         json j;
 
         j["path"] = viewable_distance;
-        j["total_stability"] = total_path_strength;
-        j["avg_stability"] = avg_path_strength;
+        //j["total_stability"] = total_path_strength;
+        //j["avg_stability"] = avg_path_strength;
+
+        j["min_stability"] = minimum_path_strength;
 
         push_duk_val(ctx, j);
     }
