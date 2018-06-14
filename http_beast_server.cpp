@@ -432,6 +432,8 @@ void write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
                 if(next_command.size() > 100*100)
                 {
                     next_command.resize(100*100);
+
+                    next_command += " [Truncated, > 100 * 100]";
                 }
 
                 if(all_shared->msock->write(next_command))
