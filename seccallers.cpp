@@ -460,7 +460,7 @@ std::string get_print_str(duk_context* ctx)
     return str;
 }
 
-std::string compile_and_call(stack_duk& sd, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level)
+std::string compile_and_call(stack_duk& sd, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script)
 {
     if(data.size() == 0)
     {
@@ -518,6 +518,9 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
 
         duk_push_string(new_ctx, script_host.c_str());
         duk_put_prop_string(new_ctx, id, "script_host");
+
+        duk_push_string(new_ctx, calling_script.c_str());
+        duk_put_prop_string(new_ctx, id, "calling_script");
 
         ///duplicate current object, put it into the global object
         duk_push_global_object(new_ctx);
@@ -705,7 +708,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     set_script_info(ctx, to_call_fullname);
 
     if(!script.is_c_shim)
-        compile_and_call(sd, load, get_caller(ctx), false, script.seclevel, false);
+        compile_and_call(sd, load, get_caller(ctx), false, script.seclevel, false, full_script);
     else
     {
         duk_push_c_function(ctx, (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name], 1);
@@ -748,7 +751,7 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
 
     duk_push_undefined(ctx);
 
-    std::string extra = compile_and_call(sd, dummy.parsed_source, get_caller(ctx), false, dummy.seclevel, true);
+    std::string extra = compile_and_call(sd, dummy.parsed_source, get_caller(ctx), false, dummy.seclevel, true, "core.invoke");
 
     if(!duk_is_object_coercible(ctx, -1))
     {
