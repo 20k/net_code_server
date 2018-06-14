@@ -548,9 +548,19 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
 
             if(ret_val != DUK_EXEC_SUCCESS && !timeout)
             {
+                std::string error_prop;
+
+                if(duk_has_prop_string(sd.ctx, -1, "lineNumber"))
+                {
+                    error_prop = std::to_string(duk_get_prop_string_as_int(sd.ctx, -1, "lineNumber", 0));
+                }
+
                 std::string err = duk_safe_to_std_string(sd.ctx, -1);
 
-                push_dukobject(sd.ctx, "ok", false, "msg", err);
+                if(error_prop == "")
+                    push_dukobject(sd.ctx, "ok", false, "msg", err);
+                else
+                    push_dukobject(sd.ctx, "ok", false, "msg", err + ". Line Number: " + error_prop);
             }
 
             if(!is_top_level)
