@@ -3656,13 +3656,13 @@ duk_ret_t net__modify(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!opt_user_and_nodes_2.has_value())
         return push_error(ctx, "No such user (target)");
 
-    ///the requirements for being able to strengthen two points in the network is that we have vision on the first
-    ///and then either use or view perms to the second
-    if(!playspace_network_manage.has_accessible_path_to(ctx, usr, get_caller(ctx), path_info::VIEW_LINKS))
-        return push_error(ctx, "No currently visible path to user");
-
     bool confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
     bool create = dukx_is_prop_truthy(ctx, -1, "create");
+
+    ///the requirements for being able to strengthen two points in the network is that we have vision on the first
+    ///and then either use or view perms to the second
+    if(!create && !playspace_network_manage.has_accessible_path_to(ctx, usr, get_caller(ctx), path_info::VIEW_LINKS))
+        return push_error(ctx, "No currently visible path to user");
 
     double stab = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "delta", 0);
     std::string path_type = duk_safe_get_prop_string(ctx, -1, "type");
