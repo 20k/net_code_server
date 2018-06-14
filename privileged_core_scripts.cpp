@@ -1976,6 +1976,7 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     std::string from = duk_safe_get_prop_string(ctx, -1, "user");
 
+    ///if you pass in an array we get nan, which seems to convert to 0
     int item_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
 
     if(from == "" || item_idx < 0)
