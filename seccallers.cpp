@@ -564,6 +564,8 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
 
                 std::string err = duk_safe_to_std_string(sd.ctx, -1);
 
+                duk_pop(sd.ctx);
+
                 if(error_prop == "")
                     push_dukobject(sd.ctx, "ok", false, "msg", err);
                 else
@@ -581,6 +583,8 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
 
             if(ret_val != DUK_EXEC_SUCCESS && is_top_level && timeout)
             {
+                duk_pop(sd.ctx);
+
                 push_dukobject(sd.ctx, "ok", false, "msg", "Ran for longer than 5000ms and timed out");
             }
         }
