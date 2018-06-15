@@ -3562,6 +3562,14 @@ duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string target = duk_safe_get_prop_string(ctx, -1, "target");
     int arr = dukx_is_prop_truthy(ctx, -1, "array");
 
+    std::string path_type = duk_safe_get_prop_string(ctx, -1, "type");
+
+    if(!duk_has_prop_string(ctx, -1, "type"))
+        path_type = "view";
+
+    if(path_type != "view" && path_type != "use")
+        return push_error(ctx, "type must be view or use");
+
     if(start == "")
         start = get_caller(ctx);
 
@@ -3573,7 +3581,12 @@ duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!playspace_network_manage.has_accessible_path_to(ctx, start, get_caller(ctx), path_info::VIEW_LINKS))
         return push_error(ctx, "No path to start user");
 
-    std::vector<std::string> viewable_distance = playspace_network_manage.get_accessible_path_to(ctx, target, start, path_info::VIEW_LINKS, -1, minimum_stability);
+    std::vector<std::string> viewable_distance;
+
+    if(path_type == "view")
+        viewable_distance = playspace_network_manage.get_accessible_path_to(ctx, target, start, path_info::VIEW_LINKS, -1, minimum_stability);
+    else
+        viewable_distance = playspace_network_manage.get_accessible_path_to(ctx, target, start, path_info::USE_LINKS, -1, minimum_stability);
 
     ///STRANGER DANGER
     std::vector<std::string> link_path = playspace_network_manage.get_accessible_path_to(ctx, target, start, path_info::NONE, -1, minimum_stability);
@@ -3587,7 +3600,9 @@ duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     float minimum_path_strength = playspace_network_manage.get_minimum_path_link_strength(link_path);
 
-    std::string visible_path = "Visible Path: ";
+    std::string visible_path = path_type + " path: ";
+
+    visible_path[0] = toupper(visible_path[0]);
 
     if(viewable_distance.size() == 0)
         visible_path += "Unknown";

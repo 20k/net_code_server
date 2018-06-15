@@ -531,7 +531,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
         int nargs = 2;
 
         ///[object] is on the stack, aka context
-        if(duk_is_undefined(sd.ctx, -2))
+        if(!duk_is_object(sd.ctx, -2))
             duk_push_undefined(new_ctx);
         else
         {
@@ -897,7 +897,7 @@ void register_funcs(duk_context* ctx, int seclevel)
     inject_c_function(ctx, mouse_get_position, "mouse_get_position", 0);
     inject_c_function(ctx, get_string_col, "get_string_col", 1);
 
-    inject_hacky_Symbol(ctx);
+    //inject_hacky_Symbol(ctx);
 
     //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }

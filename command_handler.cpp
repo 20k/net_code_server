@@ -351,7 +351,6 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         stack_duk sd;
         //init_js_interop(sd, std::string());
         sd.ctx = create_sandbox_heap();
-        native_register(sd.ctx);
 
         duk_memory_functions funcs;
         duk_get_memory_functions(sd.ctx, &funcs);
