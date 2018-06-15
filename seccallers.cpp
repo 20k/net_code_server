@@ -590,6 +590,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
         }
     }
 
+    ///removes the global
     duk_remove(sd.ctx, -2);
 
     std::string str = get_hash_d(sd.ctx);
@@ -842,10 +843,12 @@ void inject_hacky_Symbol(duk_context* ctx)
     duk_push_global_object(ctx);
 
     duk_push_c_function(ctx, &dummy, 0);
-    duk_put_prop_string(ctx, -2, "Symbol");
+    //duk_put_prop_string(ctx, -2, "Symbol");
 
     duk_push_string(ctx, "__Symbol_iterator");
     duk_put_prop_string(ctx, -2, "iterator");
+
+    duk_put_prop_string(ctx, -2, "Symbol");
 
     duk_pop(ctx);
 }
@@ -901,7 +904,7 @@ void register_funcs(duk_context* ctx, int seclevel)
     inject_c_function(ctx, mouse_get_position, "mouse_get_position", 0);
     inject_c_function(ctx, get_string_col, "get_string_col", 1);
 
-    //inject_hacky_Symbol(ctx);
+    inject_hacky_Symbol(ctx);
 
     //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }
