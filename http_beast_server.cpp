@@ -38,12 +38,14 @@
 #define HOST_PORT 6750
 #define HOST_WEBSOCKET_PORT 6760
 #define HOST_WEBSOCKET_SSL_PORT 6770
+#define HOST_WEBSOCKET_SSL_PORT_2 6780
 #endif // EXTERN_IP
 
 #ifdef LOCAL_IP
 #define HOST_PORT 6751
 #define HOST_WEBSOCKET_PORT 6761
 #define HOST_WEBSOCKET_SSL_PORT 6771
+#define HOST_WEBSOCKET_SSL_PORT_2 6781
 #endif // LOCAL_IP
 
 
@@ -602,12 +604,12 @@ void websocket_test_server()
     }
 }
 
-void websocket_ssl_test_server()
+void websocket_ssl_test_server(int in_port)
 {
     try
     {
         auto const address = boost::asio::ip::make_address(HOST_IP);
-        auto const port = static_cast<unsigned short>(HOST_WEBSOCKET_SSL_PORT);
+        auto const port = static_cast<unsigned short>(in_port);
         std::string const doc_root = "./doc_root";
 
         // The io_context is required for all I/O
@@ -651,7 +653,8 @@ void boot_connection_handlers()
     //std::thread(websocket_test_server).detach();
 
     std::thread(websocket_test_server).detach();
-    std::thread(websocket_ssl_test_server).detach();
+    std::thread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT).detach();
+    std::thread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT_2).detach();
 
     //http_test_server();
 }
