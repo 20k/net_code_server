@@ -3243,7 +3243,7 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     auto valid_actions = opt_user_and_nodes->second.valid_hostile_actions();
 
     if(!usr.is_allowed_user(get_caller(ctx)) && (valid_actions & user_node_info::CLAIM_NPC) == 0)
-        return push_error(ctx, "Cannot access control panel, insufficient permissions");
+        return push_error(ctx, "Cannot access control panel, insufficient permissions or full user");
 
     ///anything past this point should probably force a payment of 200 credits
 
