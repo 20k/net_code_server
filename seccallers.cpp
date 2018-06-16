@@ -69,11 +69,13 @@ duk_ret_t db_update(duk_context* ctx)
     std::string json_1 = duk_json_encode(ctx, 0);
     std::string json_2 = duk_json_encode(ctx, 1);
 
-    mongo_ctx->update_json_many(get_script_host(ctx), json_1, json_2);
+    std::string error = mongo_ctx->update_json_many(get_script_host(ctx), json_1, json_2);
 
     //std::cout << "update " << json_1 << " with " << json_2 << std::endl;
 
-    return 0;
+    push_dukobject(ctx, "filter", json_1, "update", json_2, "error", error);
+
+    return 1;
 }
 
 void parse_push_json(duk_context* ctx, const std::vector<std::string>& jsons)

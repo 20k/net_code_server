@@ -463,6 +463,25 @@ struct mongo_interface
         return bson;
     }
 
+    bson_t* make_bson_from_json_err(const std::string& json, std::string& err) const
+    {
+        bson_error_t error;
+
+        bson_t* bson = bson_new_from_json ((const uint8_t *)json.c_str(), -1, &error);
+
+        if (!bson)
+        {
+            //std::cout << "errd " << json << std::endl;
+
+            //fprintf (stderr, "bson err: %s\n", error.message);
+            err = error.message;
+            return nullptr;
+        }
+
+        err = "";
+        return bson;
+    }
+
     void insert_bson_1(const std::string& script_host, bson_t* bs) const
     {
         if(script_host != last_collection)
@@ -497,15 +516,15 @@ struct mongo_interface
         bson_destroy(bs);
     }
 
-    void update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update) const
+    std::string update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update) const
     {
         if(selector == nullptr || update == nullptr)
-            return;
+            return "Null pointer";
 
         if(contains_banned_query(selector) || contains_banned_query(update))
         {
             //printf("banned\n");
-            return;
+            return "Contains banned query";
         }
 
         bson_error_t error;
@@ -513,31 +532,39 @@ struct mongo_interface
         if(!mongoc_collection_update_many(collection, selector, update, nullptr, nullptr, &error))
         {
             fprintf (stderr, "err: %s\n", error.message);
+
+            return error.message;
         }
+
+        return "";
     }
 
-    void update_json_many(const std::string& script_host, const std::string& selector, const std::string& update) const
+    std::string update_json_many(const std::string& script_host, const std::string& selector, const std::string& update) const
     {
         if(script_host != last_collection)
-            return;
+            return "Wrong collection, this is an internal error";
 
-        bson_t* bs = make_bson_from_json(selector);
+        std::string err;
+
+        bson_t* bs = make_bson_from_json_err(selector, err);
 
         if(bs == nullptr)
-            return;
+            return err;
 
-        bson_t* us = make_bson_from_json(update);
+        bson_t* us = make_bson_from_json_err(update, err);
 
         if(us == nullptr)
         {
             bson_destroy(bs);
-            return;
+            return err;
         }
 
-        update_bson_many(script_host, bs, us);
+        std::string update_err = update_bson_many(script_host, bs, us);
 
         bson_destroy(bs);
         bson_destroy(us);
+
+        return update_err;
     }
 
     /*bool has_collection(const std::string& coll)
