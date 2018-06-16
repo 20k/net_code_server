@@ -319,7 +319,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(nodes__view_log, 1),
     REGISTER_FUNCTION_PRIV(net__view, 1),
     REGISTER_FUNCTION_PRIV(net__map, 1),
-    REGISTER_FUNCTION_PRIV(net__hack, 4),
+    REGISTER_FUNCTION_PRIV(net__hack, 0),
     REGISTER_FUNCTION_PRIV(net__access, 0),
     REGISTER_FUNCTION_PRIV(net__switch, 0),
     REGISTER_FUNCTION_PRIV(net__move, 0),
