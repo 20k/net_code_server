@@ -672,64 +672,7 @@ void dukx_push_c_function_with_hidden(duk_context* ctx, T& t, int nargs, U... u)
 }
 
 void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t idx);
-
-template<duk_c_function t>
-inline
-duk_ret_t dukx_wrap_ctx(duk_context* ctx)
-{
-    ///[arg1, arg2... argtop]
-    int top = duk_get_top(ctx);
-
-    ///[argstop, thread]
-    duk_push_thread(ctx);
-    //duk_push_thread_new_globalenv(ctx);
-
-    duk_context* new_ctx = duk_get_context(ctx, -1);
-
-    duk_push_object(new_ctx);
-    duk_set_global_object(new_ctx);
-
-    ///[thread, argstop]
-    duk_insert(ctx, 0);
-
-    duk_require_stack(new_ctx, top+1);
-
-    duk_push_current_function(ctx);
-    duk_xmove_top(new_ctx, ctx, 1);
-    duk_get_prop_string(new_ctx, -1, DUKX_HIDDEN_SYMBOL("WRAPPED").c_str());
-    duk_remove(new_ctx, -2);
-
-    duk_xmove_top(ctx, new_ctx, 1);
-
-    ///[thread, argstop, new_arg]
-
-    duk_replace(ctx, -1 - top);
-
-
-    ///ok so we have [thread, argstop]
-    ///we want to replace the first arg with the hidden body
-    ///[new -> cfunc]
-    duk_push_c_function(new_ctx, t, top);
-    ///[old -> thread]
-    ///[new -> cfunc, argstop]
-    duk_xmove_top(new_ctx, ctx, top);
-
-    ///[new -> return]
-    duk_call(new_ctx, top);
-
-    ///[new -> empty]
-    ///[old -> thread, return]
-    //duk_xmove_top(ctx, new_ctx, 1);
-
-    dukx_sanitise_move_value(new_ctx, ctx, -1);
-
-    ///remove thread
-    ///[old -> return]
-    duk_remove(ctx, 0);
-
-    return 1;
-
-}
+void dukx_sanitise_in_place(duk_context* ctx);
 
 inline
 duk_ret_t dukx_proxy_get_prototype_of(duk_context* ctx)
@@ -794,7 +737,7 @@ duk_ret_t dukx_proxy_define_property(duk_context* ctx)
 inline
 duk_ret_t dukx_proxy_has(duk_context* ctx)
 {
-    printf("hprop\n");
+    //printf("hprop\n");
 
     duk_push_boolean(ctx, duk_has_prop(ctx, 0));
     return 1;
@@ -812,6 +755,10 @@ duk_ret_t dukx_stringify_parse(duk_context* ctx)
     return 1;
 }
 
+///HEY
+///THIS FUNCTION IS AN EXCEPTION
+///MUST HANDLE ITS OWN SANITISATION
+///AS SOMETIMES IT LETS SLIP SOMETHING THAT ISNT SANITISED ON PURPOSE
 inline
 duk_ret_t dukx_proxy_get(duk_context* ctx)
 {
@@ -840,6 +787,7 @@ duk_ret_t dukx_proxy_get(duk_context* ctx)
 
     ///return target
 
+    ///NO SANITISE PASTH
     if(str == "toJSON")
     {
         duk_pop(ctx);
@@ -849,15 +797,17 @@ duk_ret_t dukx_proxy_get(duk_context* ctx)
         duk_dup(ctx, -2);
         duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("json_me_harder").c_str());
 
-        duk_push_true(ctx);
-        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("no_proxy").c_str());
+        //duk_push_true(ctx);
+        //duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("no_proxy").c_str());
 
-        duk_def_prop(ctx, -1,
+        /*duk_def_prop(ctx, -1,
              DUK_DEFPROP_HAVE_WRITABLE |
              DUK_DEFPROP_HAVE_ENUMERABLE | DUK_DEFPROP_ENUMERABLE |
-             DUK_DEFPROP_HAVE_CONFIGURABLE);
+             DUK_DEFPROP_HAVE_CONFIGURABLE | DUK_DEFPROP_FORCE);*/
 
-        printf("stringify\n");
+        duk_freeze(ctx, -1);
+
+        //printf("stringify\n");
 
         //duk_pop(ctx);
         return 1;
@@ -875,7 +825,9 @@ duk_ret_t dukx_proxy_get(duk_context* ctx)
     duk_pop(ctx);
 
     if(!duk_get_prop(ctx, 0))
-        return 0;
+        duk_push_undefined(ctx);
+
+    dukx_sanitise_in_place(ctx);
 
     return 1;
 }
@@ -963,17 +915,75 @@ duk_ret_t dukx_dummy(duk_context* ctx)
     return 0;
 }
 
+template<duk_c_function t>
+inline
+duk_ret_t dukx_wrap_ctx(duk_context* ctx)
+{
+    ///[arg1, arg2... argtop]
+    int top = duk_get_top(ctx);
+
+    ///[argstop, thread]
+    duk_push_thread(ctx);
+    //duk_push_thread_new_globalenv(ctx);
+
+    duk_context* new_ctx = duk_get_context(ctx, -1);
+
+    duk_push_object(new_ctx);
+    duk_set_global_object(new_ctx);
+
+    ///[thread, argstop]
+    duk_insert(ctx, 0);
+
+    duk_require_stack(new_ctx, top+1);
+
+    duk_push_current_function(ctx);
+    duk_xmove_top(new_ctx, ctx, 1);
+    duk_get_prop_string(new_ctx, -1, DUKX_HIDDEN_SYMBOL("WRAPPED").c_str());
+    duk_remove(new_ctx, -2);
+
+    duk_xmove_top(ctx, new_ctx, 1);
+
+    ///[thread, argstop, new_arg]
+
+    ///replaces this to [thread, new_arg, argstopexcept0]
+    duk_replace(ctx, -1 - top);
+
+    ///ok so we have [thread, argstop]
+    ///we want to replace the first arg with the hidden body
+    ///[new -> cfunc]
+    duk_push_c_function(new_ctx, t, top);
+    ///[old -> thread]
+    ///[new -> cfunc, argstop]
+    duk_xmove_top(new_ctx, ctx, top);
+
+    ///[new -> return]
+    duk_call(new_ctx, top);
+
+    ///[new -> empty]
+    ///[old -> thread, return]
+    //duk_xmove_top(ctx, new_ctx, 1);
+
+    ///get is special cased because
+    ///it can let unsanitised values out
+    if(t != dukx_proxy_get)
+        dukx_sanitise_move_value(new_ctx, ctx, -1);
+    else
+        duk_xmove_top(ctx, new_ctx, 1);
+
+    ///remove thread
+    ///[old -> return]
+    duk_remove(ctx, 0);
+
+    return 1;
+}
+
 #define DUKX_HIDE() duk_dup(dst_ctx, -4);\
                     duk_put_prop_string(dst_ctx, -2, DUKX_HIDDEN_SYMBOL("WRAPPED").c_str());
 
 inline
-void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t idx)
+void dukx_sanitise_in_place(duk_context* dst_ctx)
 {
-    duk_dup(ctx, idx);
-    duk_xmove_top(dst_ctx, ctx, 1);
-    duk_remove(ctx, idx);
-
-    if(duk_is_primitive(dst_ctx, -1) || duk_has_prop_string(ctx, -1, DUKX_HIDDEN_SYMBOL("no_proxy").c_str()))
+    if(duk_is_primitive(dst_ctx, -1))
         return;
 
     if(duk_is_function(dst_ctx, -1))
@@ -1054,6 +1064,18 @@ void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t 
     duk_remove(dst_ctx, -2);
 
     ///[proxy] left on stack
+}
+
+inline
+void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t idx)
+{
+    //printf("top 1 %i top 2 %i\n", duk_get_top(ctx), duk_get_top(dst_ctx));
+
+    duk_dup(ctx, idx);
+    duk_xmove_top(dst_ctx, ctx, 1);
+    duk_remove(ctx, idx);
+
+    dukx_sanitise_in_place(dst_ctx);
 }
 
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED
