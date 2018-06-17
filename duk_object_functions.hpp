@@ -679,9 +679,13 @@ duk_ret_t dukx_wrap_ctx(duk_context* ctx)
     int top = duk_get_top(ctx);
 
     ///[argstop, thread]
-    duk_push_thread_new_globalenv(ctx);
+    duk_push_thread(ctx);
+    //duk_push_thread_new_globalenv(ctx);
 
     duk_context* new_ctx = duk_get_context(ctx, -1);
+
+    duk_push_object(new_ctx);
+    duk_set_global_object(new_ctx);
 
     ///[thread, argstop]
     duk_insert(ctx, 0);
@@ -887,49 +891,49 @@ void dukx_sanitise_fixify_return_value(duk_context* ctx, duk_context* dst_ctx, d
     duk_require_stack(dst_ctx, 16);
 
 
-    duk_push_c_function(dst_ctx, dukx_proxy_get_prototype_of, 1);
+    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_get_prototype_of>, 1);
     duk_put_prop_string(dst_ctx, -2, "getPrototypeOf");
 
 
-    duk_push_c_function(dst_ctx, dukx_proxy_set_prototype_of, 2);
+    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_set_prototype_of>, 2);
     duk_put_prop_string(dst_ctx, -2, "setPrototypeOf");
 
 
-    duk_push_c_function(dst_ctx, dukx_proxy_is_extensible, 1);
+    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_is_extensible>, 1);
     duk_put_prop_string(dst_ctx, -2, "isExtensible");
 
 
-    duk_push_c_function(dst_ctx, dukx_proxy_prevent_extension, 1);
+    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_prevent_extension>, 1);
     duk_put_prop_string(dst_ctx, -2, "preventExtension");
 
 
-    duk_push_c_function(dst_ctx, dukx_proxy_get_own_property, 2);
+    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_get_own_property>, 2);
     duk_put_prop_string(dst_ctx, -2, "getOwnPropertyDescriptor");
 
 
-    duk_push_c_function(dst_ctx, dukx_proxy_define_property, 3);
+    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_define_property>, 3);
     duk_put_prop_string(dst_ctx, -2, "defineProperty");
 
 
-    duk_push_c_function(dst_ctx, dukx_proxy_has, 2);
+    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_has>, 2);
     duk_put_prop_string(dst_ctx, -2, "has");
 
-    duk_push_c_function(dst_ctx, dukx_proxy_get, 3);  /* 'get' trap */
+    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_get>, 3);  /* 'get' trap */
     duk_put_prop_string(dst_ctx, -2, "get");
 
-    duk_push_c_function(dst_ctx, dukx_proxy_set, 4);  /* 'set' trap */
+    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_set>, 4);  /* 'set' trap */
     duk_put_prop_string(dst_ctx, -2, "set");
 
-    duk_push_c_function(dst_ctx, dukx_proxy_delete_property, 2);
+    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_delete_property>, 2);
     duk_put_prop_string(dst_ctx, -2, "deleteProperty");
 
-    duk_push_c_function(dst_ctx, dukx_proxy_own_keys, 1);
+    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_own_keys>, 1);
     duk_put_prop_string(dst_ctx, -2, "ownKeys");
 
-    duk_push_c_function(dst_ctx, dukx_proxy_apply, 3);
+    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_apply>, 3);
     duk_put_prop_string(dst_ctx, -2, "apply");
 
-    duk_push_c_function(dst_ctx, dukx_proxy_construct, 2);
+    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_construct>, 2);
     duk_put_prop_string(dst_ctx, -2, "construct");
 
 
