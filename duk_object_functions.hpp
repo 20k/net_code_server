@@ -11,7 +11,7 @@
 #include <json/json.hpp>
 
 using duk_func_t = duk_ret_t (*)(duk_context*);
-using duk_placeholder_t = void*;
+//using duk_placeholder_t = void*;
 //using duk_variant_t = std::variant<bool, int, double, std::string, std::vector<std::string>, duk_placeholder_t, std::vector<duk_placeholder_t>>;
 //using duk_object_t = std::map<std::string, duk_variant_t>;
 
@@ -22,7 +22,7 @@ void push_duk_val(duk_context* ctx, const double& t);
 void push_duk_val(duk_context* ctx, const std::string& t);
 //void push_duk_val(duk_context* ctx, const duk_variant_t& t);
 //void push_duk_val(duk_context* ctx, const duk_object_t& obj);
-void push_duk_val(duk_context* ctx, const duk_placeholder_t& t);
+//void push_duk_val(duk_context* ctx, const duk_placeholder_t& t);
 
 inline
 void push_duk_val(duk_context* ctx, const duk_func_t& func)
