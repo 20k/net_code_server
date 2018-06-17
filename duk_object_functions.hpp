@@ -671,6 +671,43 @@ void dukx_push_c_function_with_hidden(duk_context* ctx, T& t, int nargs, U... u)
     duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("HIDDEN_OBJ").c_str());
 }
 
+template<typename T>
+inline
+duk_ret_t dukx_wrap_ctx(duk_context* ctx, T& t)
+{
+    ///[arg1, arg2... argtop]
+    int top = duk_get_top(ctx);
+
+    ///[argstop, thread]
+    duk_push_thread_new_globalenv(ctx);
+
+    duk_context* new_ctx = duk_get_context(ctx, -1);
+
+    ///[thread, argstop]
+    duk_insert(ctx, 0);
+
+    duk_require_stack(new_ctx, top+1);
+
+    ///[new -> cfunc]
+    duk_push_c_function(new_ctx, t, top);
+    ///[old -> thread]
+    ///[new -> cfunc, argstop]
+    duk_xmove_top(new_ctx, ctx, top);
+
+    ///[new -> return]
+    duk_call(new_ctx, top);
+
+    ///[new -> empty]
+    ///[old -> thread, return]
+    duk_xmove_top(ctx, new_ctx, 1);
+
+    ///remove thread
+    ///[old -> return]
+    duk_remove(ctx, 0);
+
+    return 1;
+
+}
 
 inline
 duk_ret_t dukx_proxy_get_prototype_of(duk_context* ctx)
