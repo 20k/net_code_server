@@ -932,7 +932,6 @@ void dukx_sanitise_fixify_return_value(duk_context* ctx, duk_context* dst_ctx, d
     duk_put_prop_string(dst_ctx, -2, "construct");
 
 
-
     duk_push_proxy(dst_ctx, 0);
 }
 
