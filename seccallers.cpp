@@ -202,7 +202,7 @@ duk_ret_t db_find(duk_context* ctx)
     }
 
     if(nargs == 0 || nargs > 2)
-        return 0;
+        return push_error(ctx, "Invalid number of args");
 
     duk_push_object(ctx);
 
