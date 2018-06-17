@@ -894,22 +894,17 @@ void dukx_sanitise_fixify_return_value(duk_context* ctx, duk_context* dst_ctx, d
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_get_prototype_of>, 1);
     duk_put_prop_string(dst_ctx, -2, "getPrototypeOf");
 
-
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_set_prototype_of>, 2);
     duk_put_prop_string(dst_ctx, -2, "setPrototypeOf");
-
 
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_is_extensible>, 1);
     duk_put_prop_string(dst_ctx, -2, "isExtensible");
 
-
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_prevent_extension>, 1);
     duk_put_prop_string(dst_ctx, -2, "preventExtension");
 
-
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_get_own_property>, 2);
     duk_put_prop_string(dst_ctx, -2, "getOwnPropertyDescriptor");
-
 
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_define_property>, 3);
     duk_put_prop_string(dst_ctx, -2, "defineProperty");
