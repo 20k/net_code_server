@@ -720,7 +720,7 @@ duk_ret_t dukx_wrap_ctx(duk_context* ctx)
 inline
 duk_ret_t dukx_proxy_get_prototype_of(duk_context* ctx)
 {
-    printf("gproto\n");
+    //printf("gproto\n");
 
     duk_get_prototype(ctx, 0);
 
@@ -732,7 +732,7 @@ duk_ret_t dukx_proxy_get_prototype_of(duk_context* ctx)
 inline
 duk_ret_t dukx_proxy_set_prototype_of(duk_context* ctx)
 {
-    printf("sproto\n");
+    //printf("sproto\n");
 
     duk_set_prototype(ctx, 0);
 
