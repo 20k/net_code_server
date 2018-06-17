@@ -47,12 +47,14 @@ duk_ret_t db_insert(duk_context* ctx)
 {
     COOPERATE_KILL();
 
+    std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
-    mongo_ctx.change_collection(get_script_host(ctx));
+    mongo_ctx.change_collection(secret_script_host);
 
     std::string json = duk_json_encode(ctx, -1);
 
-    mongo_ctx->insert_json_1(get_script_host(ctx), json);
+    mongo_ctx->insert_json_1(secret_script_host, json);
 
     //std::cout << "json " << json << std::endl;
 
@@ -63,17 +65,21 @@ duk_ret_t db_update(duk_context* ctx)
 {
     COOPERATE_KILL();
 
+    std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
+
+    //std::cout << "SECRET HOST " << secret_script_host << std::endl;
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
-    mongo_ctx.change_collection(get_script_host(ctx));
+    mongo_ctx.change_collection(secret_script_host);
 
     std::string json_1 = duk_json_encode(ctx, 0);
     std::string json_2 = duk_json_encode(ctx, 1);
 
-    std::string error = mongo_ctx->update_json_many(get_script_host(ctx), json_1, json_2);
+    std::string error = mongo_ctx->update_json_many(secret_script_host, json_1, json_2);
 
     //std::cout << "update " << json_1 << " with " << json_2 << std::endl;
 
-    push_dukobject(ctx, "filter", json_1, "update", json_2, "error", error, "host", get_script_host(ctx));
+    push_dukobject(ctx, "filter", json_1, "update", json_2, "error", error, "host", secret_script_host);
 
     return 1;
 }
@@ -95,8 +101,10 @@ duk_ret_t db_find_all(duk_context* ctx)
 {
     COOPERATE_KILL();
 
+    std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
-    mongo_ctx.change_collection(get_script_host(ctx));
+    mongo_ctx.change_collection(secret_script_host);
 
     duk_push_this(ctx);
 
@@ -120,7 +128,7 @@ duk_ret_t db_find_all(duk_context* ctx)
     if(caller != get_caller(ctx))
         return 0;
 
-    std::vector<std::string> db_data = mongo_ctx->find_json(get_script_host(ctx), json, proj);
+    std::vector<std::string> db_data = mongo_ctx->find_json(secret_script_host, json, proj);
 
     parse_push_json(ctx, db_data);
 
@@ -131,8 +139,10 @@ duk_ret_t db_find_one(duk_context* ctx)
 {
     COOPERATE_KILL();
 
+    std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
-    mongo_ctx.change_collection(get_script_host(ctx));
+    mongo_ctx.change_collection(secret_script_host);
 
     duk_push_this(ctx);
 
@@ -156,7 +166,7 @@ duk_ret_t db_find_one(duk_context* ctx)
     if(caller != get_caller(ctx))
         return 0;
 
-    std::vector<std::string> db_data = mongo_ctx->find_json(get_script_host(ctx), json, proj);
+    std::vector<std::string> db_data = mongo_ctx->find_json(secret_script_host, json, proj);
 
     if(db_data.size() == 0)
     {
@@ -206,10 +216,18 @@ duk_ret_t db_find(duk_context* ctx)
     duk_put_prop_string(ctx, -2, "DB_CALLER");
 
     //[object]
-    duk_push_c_function(ctx, db_find_all, 0);
+    /*duk_push_c_function(ctx, db_find_all, 0);
     duk_put_prop_string(ctx, -2, "array");
 
     duk_push_c_function(ctx, db_find_one, 0);
+    duk_put_prop_string(ctx, -2, "first");*/
+
+
+
+    dukx_push_c_function_with_hidden(ctx, db_find_all, 0, "script_host", dukx_get_hidden_prop_on_this(ctx, "script_host"));
+    duk_put_prop_string(ctx, -2, "array");
+
+    dukx_push_c_function_with_hidden(ctx, db_find_one, 0, "script_host", dukx_get_hidden_prop_on_this(ctx, "script_host"));
     duk_put_prop_string(ctx, -2, "first");
 
     duk_freeze(ctx, -1);
@@ -222,12 +240,14 @@ duk_ret_t db_remove(duk_context* ctx)
 {
     COOPERATE_KILL();
 
+    std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
-    mongo_ctx.change_collection(get_script_host(ctx));
+    mongo_ctx.change_collection(secret_script_host);
 
     std::string json = duk_json_encode(ctx, -1);
 
-    mongo_ctx->remove_json(get_script_host(ctx), json);
+    mongo_ctx->remove_json(secret_script_host, json);
 
     return 0;
 }
@@ -908,10 +928,10 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
 
     if(seclevel <= 3)
     {
-        inject_c_function(ctx, db_insert, "db_insert", 1);
-        inject_c_function(ctx, db_find, "db_find", DUK_VARARGS);
-        inject_c_function(ctx, db_remove, "db_remove", 1);
-        inject_c_function(ctx, db_update, "db_update", 2);
+        inject_c_function(ctx, db_insert, "db_insert", 1, "script_host", script_host);
+        inject_c_function(ctx, db_find, "db_find", DUK_VARARGS, "script_host", script_host);
+        inject_c_function(ctx, db_remove, "db_remove", 1, "script_host", script_host);
+        inject_c_function(ctx, db_update, "db_update", 2, "script_host", script_host);
     }
 
     inject_c_function(ctx, native_print, "print", DUK_VARARGS);
