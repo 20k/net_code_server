@@ -675,7 +675,7 @@ void dukx_push_c_function_with_hidden(duk_context* ctx, T& t, int nargs, U... u)
 inline
 duk_ret_t dukx_proxy_get_prototype_of(duk_context* ctx)
 {
-    printf("gproto\n");
+    //printf("gproto\n");
 
     duk_get_prototype(ctx, 0);
 
@@ -687,18 +687,20 @@ duk_ret_t dukx_proxy_get_prototype_of(duk_context* ctx)
 inline
 duk_ret_t dukx_proxy_set_prototype_of(duk_context* ctx)
 {
-    printf("sproto\n");
+    //printf("sproto\n");
 
     duk_set_prototype(ctx, 0);
 
-    return 0;
+    duk_push_true(ctx);
+
+    return 1;
 }
 
 ///uuh
 inline
 duk_ret_t dukx_proxy_is_extensible(duk_context* ctx)
 {
-    printf("ext\n");
+    //printf("ext\n");
 
     duk_push_true(ctx);
     return 1;
@@ -707,7 +709,7 @@ duk_ret_t dukx_proxy_is_extensible(duk_context* ctx)
 inline
 duk_ret_t dukx_proxy_prevent_extension(duk_context* ctx)
 {
-    printf("pext\n");
+    //printf("pext\n");
 
     return 0;
 }
@@ -715,7 +717,7 @@ duk_ret_t dukx_proxy_prevent_extension(duk_context* ctx)
 inline
 duk_ret_t dukx_proxy_get_own_property(duk_context* ctx)
 {
-    printf("gprop\n");
+    //printf("gprop\n");
 
     duk_get_prop_desc(ctx, 0, 0);
     return 1;
@@ -724,7 +726,7 @@ duk_ret_t dukx_proxy_get_own_property(duk_context* ctx)
 inline
 duk_ret_t dukx_proxy_define_property(duk_context* ctx)
 {
-    printf("dprop\n");
+    //printf("dprop\n");
 
     duk_push_true(ctx);
     return 1;
@@ -733,16 +735,16 @@ duk_ret_t dukx_proxy_define_property(duk_context* ctx)
 inline
 duk_ret_t dukx_proxy_has(duk_context* ctx)
 {
-    printf("hprop\n");
+    //printf("hprop\n");
 
-    duk_has_prop(ctx, 0);
+    duk_push_boolean(ctx, duk_has_prop(ctx, 0));
     return 1;
 }
 
 inline
 duk_ret_t dukx_proxy_get(duk_context* ctx)
 {
-    printf("get\n");
+    //printf("get\n");
 
     duk_dup(ctx, 1);
 
@@ -754,28 +756,35 @@ duk_ret_t dukx_proxy_get(duk_context* ctx)
 inline
 duk_ret_t dukx_proxy_set(duk_context* ctx)
 {
-    printf("set\n");
+    //printf("set\n");
 
-    duk_put_prop(ctx, 0);
+    for(int i=0; i < 4; i++)
+    {
+        //printf("%i set %s\n", i, duk_safe_to_string(ctx, i));
+    }
 
-    return 0;
+    ///remove receiver
+    duk_remove(ctx, 3);
+
+    duk_push_boolean(ctx, duk_put_prop(ctx, 0));
+
+    return 1;
 }
 
 inline
 duk_ret_t dukx_proxy_delete_property(duk_context* ctx)
 {
-    printf("del\n");
+    //printf("del\n");
 
-    duk_dup(ctx, 1);
-    duk_del_prop(ctx, 0);
+    duk_push_boolean(ctx, duk_del_prop(ctx, 0));
 
-    return 0;
+    return 1;
 }
 
 inline
 duk_ret_t dukx_proxy_own_keys(duk_context* ctx)
 {
-    printf("keys\n");
+    //printf("keys\n");
 
     duk_enum(ctx, 0, 0);
 
@@ -796,7 +805,7 @@ duk_ret_t dukx_proxy_own_keys(duk_context* ctx)
 inline
 duk_ret_t dukx_proxy_apply(duk_context* ctx)
 {
-    printf("apply\n");
+    //printf("apply\n");
 
     int id = 2;
 
@@ -819,9 +828,11 @@ duk_ret_t dukx_proxy_apply(duk_context* ctx)
 inline
 duk_ret_t dukx_proxy_construct(duk_context* ctx)
 {
-    printf("pcst\n");
+    //printf("pcst\n");
 
-    return 0;
+    duk_push_true(ctx);
+
+    return 1;
 }
 
 inline
@@ -878,7 +889,7 @@ void dukx_sanitise_fixify_return_value(duk_context* ctx, duk_context* dst_ctx, d
     duk_push_c_function(dst_ctx, dukx_proxy_own_keys, 1);
     duk_put_prop_string(dst_ctx, -2, "ownKeys");
 
-    duk_push_c_function(dst_ctx, dukx_proxy_apply, DUK_VARARGS);
+    duk_push_c_function(dst_ctx, dukx_proxy_apply, 3);
     duk_put_prop_string(dst_ctx, -2, "apply");
 
     duk_push_c_function(dst_ctx, dukx_proxy_construct, 2);
