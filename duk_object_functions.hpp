@@ -744,6 +744,8 @@ duk_ret_t dukx_proxy_get(duk_context* ctx)
 {
     printf("get\n");
 
+    duk_dup(ctx, 1);
+
     duk_get_prop(ctx, 0);
 
     return 1;
@@ -764,6 +766,7 @@ duk_ret_t dukx_proxy_delete_property(duk_context* ctx)
 {
     printf("del\n");
 
+    duk_dup(ctx, 1);
     duk_del_prop(ctx, 0);
 
     return 0;
