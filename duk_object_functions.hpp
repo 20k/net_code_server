@@ -671,4 +671,191 @@ void dukx_push_c_function_with_hidden(duk_context* ctx, T& t, int nargs, U... u)
     duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("HIDDEN_OBJ").c_str());
 }
 
+/*#define DUKX_IS_COPY_PUSH(type) if(duk_is_##type(ctx, idx)) { \
+                                                  auto var = duk_get_##type(ctx, idx);\
+                                                  duk_push_##type(dst_ctx, var); }*/
+
+#define DUKX_IS_VALID_ELEM(type) if(duk_is_##type(ctx, idx)){return true;}
+
+///blah blah global
+inline
+duk_ret_t dukx_safe_getter(duk_context* ctx)
+{
+    duk_push_current_function(ctx);
+
+    duk_get_prop_string(ctx, -1, DUKX_HIDDEN_SYMBOL("HIDDEN_GET"));
+
+    duk_remove(ctx, -2);
+
+    return 1;
+}
+
+inline
+duk_ret_t dukx_safe_setter(duk_context* ctx)
+{
+    duk_push_current_function(ctx);
+
+    duk_get_prop_string(ctx, -1, DUKX_HIDDEN_SYMBOL("HIDDEN_SET"));
+
+    duk_remove(ctx, -2);
+
+    return 1;
+}
+
+inline
+void dukx_setget_manufactor(duk_context* ctx, duk_idx_t idx)
+{
+    duk_push_c_function(ctx, dukx_safe_getter, 0);
+    duk_dup(ctx, -1 + idx);
+    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("HIDDEN_GET"));
+
+    duk_push_c_function(ctx, dukx_safe_setter, 0);
+    duk_dup(ctx, -2 + idx);
+    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("HIDDEN_SET"));
+
+    duk_def_prop(ctx, -2 + idx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_HAVE_SETTER | DUK_DEFPROP_FORCE);
+}
+
+inline
+void dukx_do_valid(duk_context* ctx, duk_context* dst_ctx, duk_idx_t idx, const std::string& my_key)
+{
+    /*DUKX_IS_VALID_ELEM(array);
+    DUKX_IS_VALID_ELEM(boolean);
+
+    return false;*/
+
+    if(!duk_is_function(ctx, idx))
+    {
+        //duk_push_string(dst_ctx, my_key.c_str());
+
+        //duk_def_prop(dst_ctx, )
+
+        ///so ok
+        ///we migrate over to dst_ctx
+        ///we set props
+        ///and we say that this key is just fine and dandy
+        ///then we find all the keys that aren't fine and dandy
+        ///and then forcibly set it to something not very much fun
+        ///so that references to it break
+
+
+    }
+}
+
+#if 0
+inline
+void dukx_sanitise_single(duk_context* ctx, duk_context* dst_ctx, duk_idx_t idx, const std::string& my_key)
+{
+    dukx_do_valid(ctx, dst_ctx, idx, my_key);
+
+    duk_enum(ctx, idx, DUK_ENUM_INCLUDE_NONENUMERABLE | DUK_ENUM_INCLUDE_SYMBOLS | DUK_ENUM_NO_PROXY_BEHAVIOR);
+
+    while(duk_next(ctx, -1, 0))
+    {
+        ///dup key
+        duk_dup(ctx, -1);
+        std::string current_key = duk_safe_to_std_string(ctx, -1);
+        duk_pop(ctx);
+
+        ///this removes key off the stack
+        duk_get_prop_desc(ctx, -1, 0);
+
+        if(duk_is_object(ctx, -1))
+        {
+            std::vector<std::string> blacklist{"get", "set"};
+
+            bool any_blacklisted = false;
+
+            for(auto& i : blacklist)
+            {
+                if(duk_has_prop_string(ctx, -1, i.c_str()))
+                {
+                    any_blacklisted = true;
+                    break;
+                }
+            }
+
+            //if(any_blacklisted)
+            //    continue;
+
+            ///stack is
+            ///[object, enumerator, desc]
+
+            duk_get_prop_string(ctx, -2 + idx, current_key.c_str());
+
+            ///[object, enumerator, desc, value]
+
+            dukx_sanitise_single(ctx, dst_ctx, -1, current_key);
+            duk_pop(ctx);
+
+            ///[object, enumerator, desc]
+        }
+
+        ///[object, enumerator, desc]
+
+        duk_pop(ctx);
+    }
+
+    ///pop the enumerator off
+    duk_pop(ctx);
+}
+#endif // 0
+
+inline
+duk_ret_t dukx_proxy_get(duk_context* ctx)
+{
+    duk_get_prop(ctx, 0);
+}
+
+inline
+duk_ret_t dukx_proxy_set(duk_context* ctx)
+{
+    duk_put_prop(ctx, 0);
+}
+
+inline
+void dukx_sanitise_fixify_return_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t idx)
+{
+    #if 0
+    #define DUK_TYPE_NONE                     0U    /* no value, e.g. invalid index */
+    #define DUK_TYPE_UNDEFINED                1U    /* Ecmascript undefined */
+    #define DUK_TYPE_NULL                     2U    /* Ecmascript null */
+    #define DUK_TYPE_BOOLEAN                  3U    /* Ecmascript boolean: 0 or 1 */
+    #define DUK_TYPE_NUMBER                   4U    /* Ecmascript number: double */
+    #define DUK_TYPE_STRING                   5U    /* Ecmascript string: CESU-8 / extended UTF-8 encoded */
+    #define DUK_TYPE_OBJECT                   6U    /* Ecmascript object: includes objects, arrays, functions, threads */
+    #define DUK_TYPE_BUFFER                   7U    /* fixed or dynamic, garbage collected byte buffer */
+    #define DUK_TYPE_POINTER                  8U    /* raw void pointer */
+    #define DUK_TYPE_LIGHTFUNC                9U    /* lightweight function pointer */
+    #endif // 0
+
+    //duk_inspect_value(ctx, idx);
+
+    //std::map<void*, bool> cycle_detector;
+
+    //dukx_sanitise_single(ctx, dst_ctx, idx, "");
+
+
+    /*duk_enum(ctx, idx, DUK_ENUM_INCLUDE_NONENUMERABLE | DUK_ENUM_INCLUDE_SYMBOLS | DUK_ENUM_NO_PROXY_BEHAVIOR);
+
+    while(duk_next(ctx, -1, 0))
+    {
+        ///define getters/setters for all of these top level values
+
+        dukx_setget_manufactor
+    }*/
+
+    duk_xmove_top(dst_ctx, ctx, 1);
+
+    duk_push_object(dst_ctx);  /* handler */
+
+    duk_push_c_function(dst_ctx, dukx_safe_getter, 3);  /* 'get' trap */
+    duk_put_prop_string(dst_ctx, -2, "get");
+
+    duk_push_c_function(dst_ctx, dukx_safe_setter, 4);  /* 'set' trap */
+    duk_put_prop_string(dst_ctx, -2, "set");
+
+    duk_push_proxy(dst_ctx, 0);
+}
+
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED

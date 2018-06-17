@@ -570,8 +570,17 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
             ///stack 2 now has [val]
             duk_int_t ret_val = duk_pcall(new_ctx, nargs);
 
+            try
+            {
+                dukx_sanitise_fixify_return_value(new_ctx, sd.ctx, -1);
+            }
+            catch(...)
+            {
+
+            }
+
             ///stack 2 is now empty, and stack 1 now has [thread, val]
-            duk_xmove_top(sd.ctx, new_ctx, 1);
+            //duk_xmove_top(sd.ctx, new_ctx, 1);
 
             bool timeout = is_script_timeout(sd.ctx);
 
