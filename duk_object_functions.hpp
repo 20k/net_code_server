@@ -801,6 +801,18 @@ duk_ret_t dukx_proxy_has(duk_context* ctx)
 }
 
 inline
+duk_ret_t dukx_stringify_parse(duk_context* ctx)
+{
+    duk_push_current_function(ctx);
+    duk_get_prop_string(ctx, -1, DUKX_HIDDEN_SYMBOL("json_me_harder").c_str());
+    duk_dup(ctx, -1);
+    duk_json_encode(ctx, -1);
+    duk_json_decode(ctx, -1);
+
+    return 1;
+}
+
+inline
 duk_ret_t dukx_proxy_get(duk_context* ctx)
 {
     printf("get\n");
@@ -834,17 +846,17 @@ duk_ret_t dukx_proxy_get(duk_context* ctx)
 
     ///return target
 
-    ///is it safe to do this?
-    ///no
     if(str == "toJSON")
     {
         duk_pop(ctx);
         duk_pop(ctx);
 
-        duk_json_encode(ctx, 0);
-        duk_json_decode(ctx, 0);
+        duk_push_c_function(ctx, dukx_stringify_parse, 0);
+        duk_dup(ctx, -2);
+        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("json_me_harder").c_str());
 
-        //duk_get_prop_string(ctx, 0, str.c_str());
+        duk_push_true(ctx);
+        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("no_proxy").c_str());
 
         printf("stringify\n");
 
@@ -969,7 +981,7 @@ void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t 
     duk_xmove_top(dst_ctx, ctx, 1);
     duk_remove(ctx, idx);
 
-    if(duk_is_primitive(dst_ctx, -1))
+    if(duk_is_primitive(dst_ctx, -1) || duk_has_prop_string(ctx, -1, DUKX_HIDDEN_SYMBOL("no_proxy").c_str()))
         return;
 
     if(duk_is_function(dst_ctx, -1))
