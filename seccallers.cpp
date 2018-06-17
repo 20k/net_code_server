@@ -5,6 +5,7 @@
 #include "unified_scripts.hpp"
 #include "privileged_core_scripts.hpp"
 #include "shared_duk_worker_state.hpp"
+#include "duk_object_functions.hpp"
 
 int my_timeout_check(void* udata)
 {
@@ -903,6 +904,45 @@ void inject_c_function(duk_context *ctx, T& t, const std::string& str, int nargs
     duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("HIDDEN_OBJ").c_str());
 
 	duk_put_global_string(ctx, str.c_str());
+}
+
+template<int N>
+static
+duk_ret_t jxs_call(duk_context* ctx)
+{
+    int current_seclevel = get_global_int(ctx, "last_seclevel");
+
+    duk_ret_t ret = js_call(ctx, N);
+
+    set_global_int(ctx, "last_seclevel", current_seclevel);
+
+    ///its now no longer necessary to reset the functions after a script call
+    ///as the global object can be only modified by us
+    ///in theory
+    //register_funcs(ctx, current_seclevel);
+
+    return ret;
+}
+
+///so ideally this would provide validation
+///pass through context and set appropriately
+///and modify args
+template<int N>
+inline
+duk_ret_t sl_call(duk_context* ctx)
+{
+    static_assert(N >= 0 && N <= 4);
+
+    std::string str = duk_require_string(ctx, -1);
+
+    duk_push_c_function(ctx, &jxs_call<N>, 1);
+
+    put_duk_keyvalue(ctx, "FUNCTION_NAME", str);
+    put_duk_keyvalue(ctx, "call", err);
+
+    freeze_duk(ctx);
+
+    return 1;
 }
 
 void register_funcs(duk_context* ctx, int seclevel, const std::string& script_host)

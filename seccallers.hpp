@@ -1,7 +1,9 @@
 #ifndef SECCALLERS_HPP_INCLUDED
 #define SECCALLERS_HPP_INCLUDED
 
-#include "duk_object_functions.hpp"
+#include "duktape.h"
+#include <string>
+#include <vector>
 
 struct shared_duk_worker_state;
 
@@ -55,47 +57,7 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
 
 void register_funcs(duk_context* ctx, int seclevel, const std::string& script_host);
 
-template<int N>
-static
-duk_ret_t jxs_call(duk_context* ctx)
-{
-    int current_seclevel = get_global_int(ctx, "last_seclevel");
-
-    duk_ret_t ret = js_call(ctx, N);
-
-    set_global_int(ctx, "last_seclevel", current_seclevel);
-
-    ///its now no longer necessary to reset the functions after a script call
-    ///as the global object can be only modified by us
-    ///in theory
-    //register_funcs(ctx, current_seclevel);
-
-    return ret;
-}
-
 duk_ret_t err(duk_context* ctx);
-
-///so ideally this would provide validation
-///pass through context and set appropriately
-///and modify args
-template<int N>
-inline
-duk_ret_t sl_call(duk_context* ctx)
-{
-    static_assert(N >= 0 && N <= 4);
-
-    std::string str = duk_require_string(ctx, -1);
-
-    duk_push_c_function(ctx, &jxs_call<N>, 1);
-
-    put_duk_keyvalue(ctx, "FUNCTION_NAME", str);
-    put_duk_keyvalue(ctx, "call", err);
-
-    freeze_duk(ctx);
-
-    return 1;
-}
-
 std::string add_freeze(const std::string& name);
 
 void do_freeze(duk_context* ctx, const std::string& name, std::string& script_accumulate);

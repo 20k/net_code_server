@@ -19,6 +19,7 @@
 #include <atomic>
 #include <SFML/System.hpp>
 #include "shared_command_handler_state.hpp"
+#include "duk_object_functions.hpp"
 
 struct unsafe_info
 {

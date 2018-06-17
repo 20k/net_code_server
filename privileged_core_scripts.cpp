@@ -4,6 +4,7 @@
 
 #include "scheduled_tasks.hpp"
 #include "command_handler.hpp"
+#include "duk_object_functions.hpp"
 
 std::map<std::string, std::vector<script_arg>> privileged_args = construct_core_args();
 
