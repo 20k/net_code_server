@@ -671,9 +671,9 @@ void dukx_push_c_function_with_hidden(duk_context* ctx, T& t, int nargs, U... u)
     duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("HIDDEN_OBJ").c_str());
 }
 
-template<typename T>
+template<duk_c_function t>
 inline
-duk_ret_t dukx_wrap_ctx(duk_context* ctx, T& t)
+duk_ret_t dukx_wrap_ctx(duk_context* ctx)
 {
     ///[arg1, arg2... argtop]
     int top = duk_get_top(ctx);
