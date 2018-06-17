@@ -573,7 +573,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
 
             try
             {
-                dukx_sanitise_fixify_return_value(new_ctx, sd.ctx);
+                dukx_sanitise_move_value(new_ctx, sd.ctx, -1);
             }
             catch(...)
             {

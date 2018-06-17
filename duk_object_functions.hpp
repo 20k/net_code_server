@@ -671,7 +671,7 @@ void dukx_push_c_function_with_hidden(duk_context* ctx, T& t, int nargs, U... u)
     duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("HIDDEN_OBJ").c_str());
 }
 
-void dukx_sanitise_fixify_return_value(duk_context* ctx, duk_context* dst_ctx);
+void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t idx);
 
 template<duk_c_function t>
 inline
@@ -707,7 +707,7 @@ duk_ret_t dukx_wrap_ctx(duk_context* ctx)
     ///[old -> thread, return]
     //duk_xmove_top(ctx, new_ctx, 1);
 
-    dukx_sanitise_fixify_return_value(new_ctx, ctx);
+    dukx_sanitise_move_value(new_ctx, ctx, -1);
 
     ///remove thread
     ///[old -> return]
@@ -791,7 +791,7 @@ duk_ret_t dukx_proxy_get(duk_context* ctx)
 {
     //printf("get\n");
 
-    duk_pop(ctx);
+    //duk_pop(ctx);
 
     /*int top = duk_get_top(ctx);
 
@@ -819,17 +819,30 @@ duk_ret_t dukx_proxy_get(duk_context* ctx)
     duk_pop(ctx);*/
 
     ///return target
-    if(str == "toJSON")
+
+    ///is it safe to do this?
+    ///no
+    /*if(str == "toJSON")
     {
         duk_pop(ctx);
         return 1;
-    }
+    }*/
 
     if(str == "valueOf")
     {
-        duk_pop(ctx);
+        //duk_pop(ctx);
+        ///yup
+        ///yes
+        ///i know
+        ///yep
+        ///yeppers
+        ///i'm still aware
+        ///yes i know
+        duk_push_object(ctx);
         return 1;
     }
+
+    duk_pop(ctx);
 
     if(!duk_get_prop(ctx, 0))
         return 0;
@@ -922,9 +935,11 @@ duk_ret_t dukx_proxy_construct(duk_context* ctx)
 }
 
 inline
-void dukx_sanitise_fixify_return_value(duk_context* ctx, duk_context* dst_ctx)
+void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t idx)
 {
+    duk_dup(ctx, idx);
     duk_xmove_top(dst_ctx, ctx, 1);
+    duk_remove(ctx, idx);
 
     if(duk_is_primitive(dst_ctx, -1))
         return;
