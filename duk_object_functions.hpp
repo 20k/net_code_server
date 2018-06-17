@@ -695,8 +695,11 @@ duk_ret_t dukx_wrap_ctx(duk_context* ctx)
     duk_require_stack(new_ctx, top+1);
 
     duk_push_current_function(ctx);
-    duk_get_prop_string(ctx, -1, DUKX_HIDDEN_SYMBOL("WRAPPED").c_str());
-    duk_remove(ctx, -2);
+    duk_xmove_top(new_ctx, ctx, 1);
+    duk_get_prop_string(new_ctx, -1, DUKX_HIDDEN_SYMBOL("WRAPPED").c_str());
+    duk_remove(new_ctx, -2);
+
+    duk_xmove_top(ctx, new_ctx, 1);
 
     ///[thread, argstop, new_arg]
 
@@ -833,11 +836,21 @@ duk_ret_t dukx_proxy_get(duk_context* ctx)
 
     ///is it safe to do this?
     ///no
-    /*if(str == "toJSON")
+    if(str == "toJSON")
     {
         duk_pop(ctx);
+        duk_pop(ctx);
+
+        duk_json_encode(ctx, 0);
+        duk_json_decode(ctx, 0);
+
+        //duk_get_prop_string(ctx, 0, str.c_str());
+
+        printf("stringify\n");
+
+        //duk_pop(ctx);
         return 1;
-    }*/
+    }
 
     /*if(str == "valueOf")
     {

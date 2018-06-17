@@ -571,7 +571,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
             ///stack 2 now has [val]
             duk_int_t ret_val = duk_pcall(new_ctx, nargs);
 
-            if(ret_val == DUK_EXEC_SUCCESS)
+            //if(ret_val == DUK_EXEC_SUCCESS)
             {
                 try
                 {
@@ -582,10 +582,10 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
 
                 }
             }
-            else
+            /*else
             {
                 duk_xmove_top(sd.ctx, new_ctx, 1);
-            }
+            }*/
 
             ///stack 2 is now empty, and stack 1 now has [thread, val]
             //duk_xmove_top(sd.ctx, new_ctx, 1);
