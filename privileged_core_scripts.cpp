@@ -1145,9 +1145,9 @@ std::string format_item(item& i, bool is_short, user& usr, user_nodes& nodes)
 }
 
 
-duk_object_t get_item_raw(item& i, bool is_short, user& usr, user_nodes& nodes)
+nlohmann::json get_item_raw(item& i, bool is_short, user& usr, user_nodes& nodes)
 {
-    duk_object_t obj;
+    nlohmann::json obj;
 
     if(usr.has_loaded_item(i.get_prop("item_id")))
         obj["loaded"] = true;
@@ -1336,7 +1336,7 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
     }
     else
     {
-        std::vector<duk_object_t> objs;
+        std::vector<nlohmann::json> objs;
 
         for(std::string& item_id : to_ret)
         {

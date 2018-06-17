@@ -1,9 +1,9 @@
 #ifndef DUK_OBJECT_FUNCTIONS_HPP_INCLUDED
 #define DUK_OBJECT_FUNCTIONS_HPP_INCLUDED
 
-#include <utility>
-#include <variant>
-#include <map>
+//#include <utility>
+//#include <variant>
+//#include <map>
 #include <string>
 #include <vector>
 
@@ -12,16 +12,16 @@
 
 using duk_func_t = duk_ret_t (*)(duk_context*);
 using duk_placeholder_t = void*;
-using duk_variant_t = std::variant<bool, int, double, std::string, std::vector<std::string>, duk_placeholder_t, std::vector<duk_placeholder_t>>;
-using duk_object_t = std::map<std::string, duk_variant_t>;
+//using duk_variant_t = std::variant<bool, int, double, std::string, std::vector<std::string>, duk_placeholder_t, std::vector<duk_placeholder_t>>;
+//using duk_object_t = std::map<std::string, duk_variant_t>;
 
 void push_duk_val(duk_context* ctx, const duk_func_t& func);
 void push_duk_val(duk_context* ctx, const bool& t);
 void push_duk_val(duk_context* ctx, const int& t);
 void push_duk_val(duk_context* ctx, const double& t);
 void push_duk_val(duk_context* ctx, const std::string& t);
-void push_duk_val(duk_context* ctx, const duk_variant_t& t);
-void push_duk_val(duk_context* ctx, const duk_object_t& obj);
+//void push_duk_val(duk_context* ctx, const duk_variant_t& t);
+//void push_duk_val(duk_context* ctx, const duk_object_t& obj);
 void push_duk_val(duk_context* ctx, const duk_placeholder_t& t);
 
 inline
@@ -85,7 +85,7 @@ void push_duk_val(duk_context* ctx, const std::vector<T>& t)
     }
 }
 
-inline
+/*inline
 void push_duk_val(duk_context* ctx, const duk_variant_t& t)
 {
     if(std::holds_alternative<bool>(t))
@@ -108,9 +108,9 @@ void push_duk_val(duk_context* ctx, const duk_variant_t& t)
 
     if(std::holds_alternative<std::vector<duk_placeholder_t>>(t))
         return push_duk_val(ctx, std::get<std::vector<duk_placeholder_t>>(t));
-}
+}*/
 
-inline
+/*inline
 void push_duk_val(duk_context* ctx, const duk_object_t& obj)
 {
     duk_push_object(ctx);
@@ -120,9 +120,9 @@ void push_duk_val(duk_context* ctx, const duk_object_t& obj)
         push_duk_val(ctx, prop.second);
         duk_put_prop_string(ctx, -2, prop.first.c_str());
     }
-}
+}*/
 
-inline
+/*inline
 void push_duk_val(duk_context* ctx, const duk_placeholder_t& t)
 {
     ///found an object
@@ -130,7 +130,7 @@ void push_duk_val(duk_context* ctx, const duk_placeholder_t& t)
     duk_object_t* obj = (duk_object_t*)t;
 
     push_duk_val(ctx, *obj);
-}
+}*/
 
 template<typename T>
 inline
@@ -671,6 +671,8 @@ void dukx_push_c_function_with_hidden(duk_context* ctx, T& t, int nargs, U... u)
     duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("HIDDEN_OBJ").c_str());
 }
 
+void dukx_sanitise_fixify_return_value(duk_context* ctx, duk_context* dst_ctx);
+
 template<duk_c_function t>
 inline
 duk_ret_t dukx_wrap_ctx(duk_context* ctx)
@@ -703,7 +705,9 @@ duk_ret_t dukx_wrap_ctx(duk_context* ctx)
 
     ///[new -> empty]
     ///[old -> thread, return]
-    duk_xmove_top(ctx, new_ctx, 1);
+    //duk_xmove_top(ctx, new_ctx, 1);
+
+    dukx_sanitise_fixify_return_value(new_ctx, ctx);
 
     ///remove thread
     ///[old -> return]
@@ -785,11 +789,19 @@ duk_ret_t dukx_proxy_has(duk_context* ctx)
 inline
 duk_ret_t dukx_proxy_get(duk_context* ctx)
 {
-    //printf("get\n");
+    printf("get\n");
 
-    duk_dup(ctx, 1);
+    duk_pop(ctx);
+
+    //duk_dup(ctx, 1);
+
+    /*duk_dup(ctx, 1);
+    printf("%s get\n", duk_safe_to_string(ctx, duk_get_top(ctx)));
+    duk_pop(ctx);*/
 
     duk_get_prop(ctx, 0);
+
+    printf("pget\n");
 
     return 1;
 }
@@ -877,7 +889,7 @@ duk_ret_t dukx_proxy_construct(duk_context* ctx)
 }
 
 inline
-void dukx_sanitise_fixify_return_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t idx)
+void dukx_sanitise_fixify_return_value(duk_context* ctx, duk_context* dst_ctx)
 {
     duk_xmove_top(dst_ctx, ctx, 1);
 
