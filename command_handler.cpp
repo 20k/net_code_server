@@ -1467,7 +1467,7 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
             stack_duk csd;
             csd.ctx = js_interop_startup();
-            register_funcs(csd.ctx, 0);
+            register_funcs(csd.ctx, 0, "core");
 
 
             script_info script_inf;

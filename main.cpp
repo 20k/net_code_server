@@ -155,7 +155,7 @@ void debug_terminal()
 
             stack_duk csd;
             init_js_interop(csd, std::string());
-            register_funcs(csd.ctx, 0);
+            register_funcs(csd.ctx, 0, "core");
 
             script_inf.load_from_unparsed_source(csd.ctx, data_source, script, true, false);
 

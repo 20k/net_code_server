@@ -73,7 +73,7 @@ duk_ret_t db_update(duk_context* ctx)
 
     //std::cout << "update " << json_1 << " with " << json_2 << std::endl;
 
-    push_dukobject(ctx, "filter", json_1, "update", json_2, "error", error);
+    push_dukobject(ctx, "filter", json_1, "update", json_2, "error", error, "host", get_script_host(ctx));
 
     return 1;
 }
@@ -475,7 +475,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
     duk_context* new_ctx = duk_get_context(sd.ctx, thr_idx);
     //duk_pop(sd.ctx);
 
-    register_funcs(new_ctx, seclevel);
+    register_funcs(new_ctx, seclevel, get_script_host(sd.ctx));
 
     std::string wrapper;
 
@@ -855,7 +855,28 @@ void inject_hacky_Symbol(duk_context* ctx)
     duk_pop(ctx);
 }
 
-void register_funcs(duk_context* ctx, int seclevel)
+
+template<typename T>
+inline
+void inject_c_function(duk_context *ctx, T& t, const std::string& str, int nargs)
+{
+    duk_push_c_function(ctx, &t, nargs);
+
+	duk_put_global_string(ctx, str.c_str());
+}
+
+template<typename T, typename... U>
+inline
+void inject_c_function(duk_context *ctx, T& t, const std::string& str, int nargs, U... u)
+{
+    duk_push_c_function(ctx, &t, nargs);
+	push_dukobject(ctx, u...);
+    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("HIDDEN_OBJ").c_str());
+
+	duk_put_global_string(ctx, str.c_str());
+}
+
+void register_funcs(duk_context* ctx, int seclevel, const std::string& script_host)
 {
     remove_func(ctx, "fs_call");
     remove_func(ctx, "hs_call");
@@ -863,10 +884,10 @@ void register_funcs(duk_context* ctx, int seclevel)
     remove_func(ctx, "ls_call");
     remove_func(ctx, "ns_call");
 
-    remove_func(ctx, "db_insert");
+    /*remove_func(ctx, "db_insert");
     remove_func(ctx, "db_find");
     remove_func(ctx, "db_remove");
-    remove_func(ctx, "db_update");
+    remove_func(ctx, "db_update");*/
 
     if(seclevel <= 4)
         inject_c_function(ctx, sl_call<4>, "fs_call", 1);

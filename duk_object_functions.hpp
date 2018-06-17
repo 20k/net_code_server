@@ -644,4 +644,6 @@ bool dukx_is_prop_truthy(duk_context* ctx, duk_idx_t idx, const std::string& key
     return duk_safe_get_generic(dukx_is_truthy, ctx, idx, key, false);
 }
 
+#define DUKX_HIDDEN_SYMBOL(x) (std::string("\xFF") + x)
+
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED

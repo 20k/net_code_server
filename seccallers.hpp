@@ -53,7 +53,7 @@ duk_ret_t js_call(duk_context* ctx, int sl);
 
 std::string js_unified_force_call_data(duk_context* ctx, const std::string& data, const std::string& host);
 
-void register_funcs(duk_context* ctx, int seclevel);
+void register_funcs(duk_context* ctx, int seclevel, const std::string& script_host);
 
 template<int N>
 static
@@ -65,7 +65,10 @@ duk_ret_t jxs_call(duk_context* ctx)
 
     set_global_int(ctx, "last_seclevel", current_seclevel);
 
-    register_funcs(ctx, current_seclevel);
+    ///its now no longer necessary to reset the functions after a script call
+    ///as the global object can be only modified by us
+    ///in theory
+    //register_funcs(ctx, current_seclevel);
 
     return ret;
 }

@@ -50,8 +50,6 @@ bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out
 std::string attach_wrapper(const std::string& data_in, bool stringify, bool direct);
 std::string attach_unparsed_wrapper(std::string str);
 
-void register_funcs(duk_context* ctx, int seclevel);
-
 struct script_data
 {
     autos_t autocompletes;
