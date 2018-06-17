@@ -720,7 +720,7 @@ duk_ret_t dukx_wrap_ctx(duk_context* ctx)
 inline
 duk_ret_t dukx_proxy_get_prototype_of(duk_context* ctx)
 {
-    //printf("gproto\n");
+    printf("gproto\n");
 
     duk_get_prototype(ctx, 0);
 
@@ -732,7 +732,7 @@ duk_ret_t dukx_proxy_get_prototype_of(duk_context* ctx)
 inline
 duk_ret_t dukx_proxy_set_prototype_of(duk_context* ctx)
 {
-    //printf("sproto\n");
+    printf("sproto\n");
 
     duk_set_prototype(ctx, 0);
 
@@ -789,7 +789,26 @@ duk_ret_t dukx_proxy_has(duk_context* ctx)
 inline
 duk_ret_t dukx_proxy_get(duk_context* ctx)
 {
-    printf("get\n");
+    //printf("get\n");
+
+    duk_pop(ctx);
+
+    int top = duk_get_top(ctx);
+
+    /*for(int i=0; i < top; i++)
+    {
+        duk_dup(ctx, i);
+
+        //printf("stack top: %i\n", duk_get_top(ctx));
+
+        printf("%i val %s\n", i, duk_safe_to_string(ctx, -1));
+
+        duk_pop(ctx);
+    }*/
+
+    duk_dup(ctx, 1);
+
+    std::string str = duk_safe_to_std_string(ctx, -1);
 
     duk_pop(ctx);
 
@@ -799,9 +818,23 @@ duk_ret_t dukx_proxy_get(duk_context* ctx)
     printf("%s get\n", duk_safe_to_string(ctx, duk_get_top(ctx)));
     duk_pop(ctx);*/
 
-    duk_get_prop(ctx, 0);
+    ///return target
+    if(str == "toJSON")
+    {
+        duk_pop(ctx);
+        return 1;
+    }
 
-    printf("pget\n");
+    if(str == "valueOf")
+    {
+        duk_pop(ctx);
+        return 1;
+    }
+
+    if(!duk_get_prop(ctx, 0))
+        return 0;
+
+    //printf("pget\n");
 
     return 1;
 }
