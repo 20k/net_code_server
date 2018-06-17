@@ -571,13 +571,20 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
             ///stack 2 now has [val]
             duk_int_t ret_val = duk_pcall(new_ctx, nargs);
 
-            try
+            if(ret_val == DUK_EXEC_SUCCESS)
             {
-                dukx_sanitise_move_value(new_ctx, sd.ctx, -1);
-            }
-            catch(...)
-            {
+                try
+                {
+                    dukx_sanitise_move_value(new_ctx, sd.ctx, -1);
+                }
+                catch(...)
+                {
 
+                }
+            }
+            else
+            {
+                duk_xmove_top(sd.ctx, new_ctx, 1);
             }
 
             ///stack 2 is now empty, and stack 1 now has [thread, val]
@@ -594,9 +601,20 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
                     error_prop = std::to_string(duk_get_prop_string_as_int(sd.ctx, -1, "lineNumber", 0));
                 }
 
+                /*std::string error_stack;
+
+                if(duk_has_prop_string(sd.ctx, -1, "stack"))
+                {
+                    error_stack = std::to_string(duk_get_prop_string(sd.ctx, -1, "stack"));
+                }*/
+
                 std::string err = duk_safe_to_std_string(sd.ctx, -1);
 
                 duk_pop(sd.ctx);
+
+                /*#ifdef TESTING
+                error_prop += ". " + error_stack;
+                #endif // TESTING*/
 
                 if(error_prop == "")
                     push_dukobject(sd.ctx, "ok", false, "msg", err);
