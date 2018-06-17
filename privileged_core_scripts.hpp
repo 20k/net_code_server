@@ -2,7 +2,6 @@
 #define PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
 
 #include "user.hpp"
-#include "duk_object_functions.hpp"
 #include "memory_sandbox.hpp"
 #include "rate_limiting.hpp"
 #include "auth.hpp"
@@ -121,12 +120,11 @@ duk_ret_t sys__disown_upg(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t sys__xfer_upgrade_uid(priv_context& priv_ctx, duk_context* ctx, int sl);
 #endif // 0
 
-
 std::string escape_str(std::string in);
 
 std::string format_item(item& i, bool is_short, user& usr, user_nodes& nodes);
 
-duk_object_t get_item_raw(item& i, bool is_short, user& usr, user_nodes& nodes);
+//duk_object_t get_item_raw(item& i, bool is_short, user& usr, user_nodes& nodes);
 
 /*
 void change_item_raw(mongo_lock_proxy& mongo_ctx, int load_idx, int unload_idx, user& found_user);*/
