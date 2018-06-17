@@ -793,9 +793,9 @@ duk_ret_t dukx_proxy_get(duk_context* ctx)
 
     duk_pop(ctx);
 
-    int top = duk_get_top(ctx);
+    /*int top = duk_get_top(ctx);
 
-    /*for(int i=0; i < top; i++)
+    for(int i=0; i < top; i++)
     {
         duk_dup(ctx, i);
 
