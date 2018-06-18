@@ -26,7 +26,8 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-O2" />
+					<Add option="-O3" />
+					<Add option="-march=nehalem" />
 					<Add option="-DLOCAL_IP" />
 				</Compiler>
 			</Target>
@@ -36,8 +37,9 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-O2" />
+					<Add option="-O3" />
 					<Add option="-g" />
+					<Add option="-march=nehalem" />
 					<Add option="-DEXTERN_IP" />
 				</Compiler>
 				<ExtraCommands>
@@ -51,7 +53,8 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-O2" />
+					<Add option="-O3" />
+					<Add option="-march=nehalem" />
 					<Add option="-DLOCAL_IP" />
 					<Add option="-DTESTING" />
 				</Compiler>
@@ -84,6 +87,7 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wnon-virtual-dtor" />
+			<Add option="-Winit-self" />
 			<Add option="-Wall" />
 			<Add option="-std=c++1z" />
 			<Add option="-fexceptions" />
