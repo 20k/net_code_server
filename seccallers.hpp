@@ -61,6 +61,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
 duk_ret_t err(duk_context* ctx);
 std::string add_freeze(const std::string& name);
 
+#if 0
 void do_freeze(duk_context* ctx, const std::string& name, std::string& script_accumulate);
 
 inline
@@ -111,6 +112,7 @@ void fully_freeze(duk_context* ctx, T&&... args)
         duk_pop(ctx);
     }
 }
+#endif // 0
 
 void remove_func(duk_context* ctx, const std::string& name);
 

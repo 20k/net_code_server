@@ -749,7 +749,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
             teardown_state(ctx);
 
-            js_interop_shutdown(ctx);
+            duk_destroy_heap(ctx);
         }
         catch(...)
         {

@@ -483,20 +483,20 @@ std::string get_print_str(duk_context* ctx)
     return str;
 }
 
-std::string compile_and_call(stack_duk& sd, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script)
+std::string compile_and_call(duk_context* ctx, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script)
 {
     if(data.size() == 0)
     {
-        duk_push_undefined(sd.ctx);
+        duk_push_undefined(ctx);
 
         return "Script not found";
     }
 
-    duk_idx_t thr_idx = duk_push_thread_new_globalenv(sd.ctx);
-    duk_context* new_ctx = duk_get_context(sd.ctx, thr_idx);
-    //duk_pop(sd.ctx);
+    duk_idx_t thr_idx = duk_push_thread_new_globalenv(ctx);
+    duk_context* new_ctx = duk_get_context(ctx, thr_idx);
+    //duk_pop(ctx);
 
-    register_funcs(new_ctx, seclevel, get_script_host(sd.ctx));
+    register_funcs(new_ctx, seclevel, get_script_host(ctx));
 
     std::string wrapper;
 
@@ -524,7 +524,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
 
         printf("compile failed: %s\n", err.c_str());
 
-        duk_push_string(sd.ctx, "Syntax or Compile Error");
+        duk_push_string(ctx, "Syntax or Compile Error");
     }
     else
     {
@@ -537,7 +537,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
         duk_push_string(new_ctx, caller.c_str()); ///[object -> caller]
         duk_put_prop_string(new_ctx, id, "caller"); ///[object]
 
-        std::string script_host = get_script_host(sd.ctx);
+        std::string script_host = get_script_host(ctx);
 
         duk_push_string(new_ctx, script_host.c_str());
         duk_put_prop_string(new_ctx, id, "script_host");
@@ -554,14 +554,14 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
         int nargs = 2;
 
         ///[object] is on the stack, aka context
-        if(!duk_is_object(sd.ctx, -2))
+        if(!duk_is_object(ctx, -2))
             duk_push_undefined(new_ctx);
         else
         {
-            duk_dup(sd.ctx, -2);
+            duk_dup(ctx, -2);
             ///push args
             //duk_xmove_top(new_ctx, sd.ctx, 1);
-            dukx_sanitise_move_value(sd.ctx, new_ctx, -1);
+            dukx_sanitise_move_value(ctx, new_ctx, -1);
         }
 
         ///now we have [object, args] on the stack 2
@@ -575,7 +575,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
             {
                 try
                 {
-                    dukx_sanitise_move_value(new_ctx, sd.ctx, -1);
+                    dukx_sanitise_move_value(new_ctx, ctx, -1);
                     //duk_xmove_top(sd.ctx, new_ctx, 1);
                 }
                 catch(...)
@@ -591,15 +591,15 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
             ///stack 2 is now empty, and stack 1 now has [thread, val]
             //duk_xmove_top(sd.ctx, new_ctx, 1);
 
-            bool timeout = is_script_timeout(sd.ctx);
+            bool timeout = is_script_timeout(ctx);
 
             if(ret_val != DUK_EXEC_SUCCESS && !timeout)
             {
                 std::string error_prop;
 
-                if(duk_has_prop_string(sd.ctx, -1, "lineNumber"))
+                if(duk_has_prop_string(ctx, -1, "lineNumber"))
                 {
-                    error_prop = std::to_string(duk_get_prop_string_as_int(sd.ctx, -1, "lineNumber", 0));
+                    error_prop = std::to_string(duk_get_prop_string_as_int(ctx, -1, "lineNumber", 0));
                 }
 
                 /*std::string error_stack;
@@ -609,23 +609,23 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
                     error_stack = std::to_string(duk_get_prop_string(sd.ctx, -1, "stack"));
                 }*/
 
-                std::string err = duk_safe_to_std_string(sd.ctx, -1);
+                std::string err = duk_safe_to_std_string(ctx, -1);
 
-                duk_pop(sd.ctx);
+                duk_pop(ctx);
 
                 /*#ifdef TESTING
                 error_prop += ". " + error_stack;
                 #endif // TESTING*/
 
                 if(error_prop == "")
-                    push_dukobject(sd.ctx, "ok", false, "msg", err);
+                    push_dukobject(ctx, "ok", false, "msg", err);
                 else
-                    push_dukobject(sd.ctx, "ok", false, "msg", err + ". Line Number: " + error_prop);
+                    push_dukobject(ctx, "ok", false, "msg", err + ". Line Number: " + error_prop);
             }
 
             if(!is_top_level)
             {
-                duk_context* ctx = sd.ctx;
+                duk_context* ctx = ctx;
 
                 ///this essentially rethrows an exception
                 ///if we're not top level, and we've timedout
@@ -634,27 +634,27 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
 
             if(ret_val != DUK_EXEC_SUCCESS && is_top_level && timeout)
             {
-                duk_pop(sd.ctx);
+                duk_pop(ctx);
 
-                push_dukobject(sd.ctx, "ok", false, "msg", "Ran for longer than 5000ms and timed out");
+                push_dukobject(ctx, "ok", false, "msg", "Ran for longer than 5000ms and timed out");
             }
         }
     }
 
     ///removes the global
-    duk_remove(sd.ctx, -2);
+    duk_remove(ctx, -2);
 
-    std::string str = get_hash_d(sd.ctx);
+    std::string str = get_hash_d(ctx);
 
     ///only should do this if the caller is owner of script
     if(str != "" && is_top_level)
     {
-        duk_pop(sd.ctx);
+        duk_pop(ctx);
 
-        push_duk_val(sd.ctx, str);
+        push_duk_val(ctx, str);
     }
 
-    std::string extra = get_print_str(sd.ctx);
+    std::string extra = get_print_str(ctx);
 
     return extra;
 }
@@ -758,13 +758,10 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     duk_ret_t result = 1;
 
-    stack_duk sd;
-    sd.ctx = ctx;
-
     set_script_info(ctx, to_call_fullname);
 
     if(!script.is_c_shim)
-        compile_and_call(sd, load, get_caller(ctx), false, script.seclevel, false, full_script);
+        compile_and_call(ctx, load, get_caller(ctx), false, script.seclevel, false, full_script);
     else
     {
         duk_push_c_function(ctx, (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name], 1);
@@ -777,7 +774,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
         }
         else
         {
-            duk_dup(sd.ctx, -2);
+            duk_dup(ctx, -2);
         }
 
         duk_pcall(ctx, nargs);
@@ -794,9 +791,6 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
 {
     set_script_info(ctx, host + ".invoke");
 
-    stack_duk sd;
-    sd.ctx = ctx;
-
     script_info dummy;
     dummy.load_from_unparsed_source(ctx, data, host + ".invoke", false, true);
 
@@ -807,7 +801,7 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
 
     duk_push_undefined(ctx);
 
-    std::string extra = compile_and_call(sd, dummy.parsed_source, get_caller(ctx), false, dummy.seclevel, true, "core.invoke");
+    std::string extra = compile_and_call(ctx, dummy.parsed_source, get_caller(ctx), false, dummy.seclevel, true, "core.invoke");
 
     if(!duk_is_object_coercible(ctx, -1))
     {
@@ -858,6 +852,7 @@ std::string add_freeze(const std::string& name)
     return " global." + name + " = deepFreeze(global." + name + ");\n";
 }
 
+#if 0
 void do_freeze(duk_context* ctx, const std::string& name, std::string& script_accumulate)
 {
     duk_push_global_object(ctx);
@@ -873,6 +868,7 @@ void do_freeze(duk_context* ctx, const std::string& name, std::string& script_ac
 
     script_accumulate += add_freeze(name);
 }
+#endif // 0
 
 void remove_func(duk_context* ctx, const std::string& name)
 {
