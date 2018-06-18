@@ -3,12 +3,28 @@
 
 #include <cstring>
 
-typedef int duk_ret_t;
+#define DUK_SINGLE_FILE
+
+#define DUK_VERSION                       20200L
+
+#define DUK_GIT_COMMIT                    "external"
+#define DUK_GIT_DESCRIBE                  "external"
+#define DUK_GIT_BRANCH                    "external"
+
+//#include "duk_config.h"
+#include "duktape.h"
+
+struct duk_memory_functions;
+typedef struct duk_memory_functions duk_memory_functions;
+
+typedef unsigned int duk_small_uint_t;
+typedef duk_small_int_t duk_ret_t;
 typedef int duk_int_t;
 typedef unsigned int duk_uint_t;
 typedef size_t duk_size_t;
 struct duk_hthread;
-typedef int duk_bool_t;
+typedef struct duk_hthread duk_hthread;
+typedef duk_small_uint_t duk_bool_t;
 typedef int duk_idx_t;
 typedef double duk_double_t;
 typedef duk_uint_t duk_uarridx_t;
@@ -21,14 +37,17 @@ typedef void *(*duk_realloc_function) (void *udata, void *ptr, duk_size_t size);
 typedef void (*duk_free_function) (void *udata, void *ptr);
 typedef void (*duk_fatal_function) (void *udata, const char *msg);
 
-struct duk_memory_functions {
+/*struct duk_memory_functions {
 	duk_alloc_function alloc_func;
 	duk_realloc_function realloc_func;
 	duk_free_function free_func;
 	void *udata;
-};
+};*/
+
+DUK_EXTERNAL_DECL
 void duk_get_memory_functions(duk_context *ctx, duk_memory_functions *out_funcs);
 
+DUK_EXTERNAL_DECL
 duk_context *duk_create_heap(duk_alloc_function alloc_func,
                              duk_realloc_function realloc_func,
                              duk_free_function free_func,
@@ -40,89 +59,89 @@ typedef duk_ret_t (*duk_safe_call_function) (duk_context *ctx, void *udata);
 #define duk_create_heap_default() \
 	duk_create_heap(NULL, NULL, NULL, NULL, NULL)
 
-void duk_push_undefined(duk_context *ctx);
-void duk_push_boolean(duk_context *ctx, duk_bool_t val);
-void duk_push_int(duk_context *ctx, duk_int_t val);
+DUK_EXTERNAL_DECL void duk_push_undefined(duk_context *ctx);
+DUK_EXTERNAL_DECL void duk_push_boolean(duk_context *ctx, duk_bool_t val);
+DUK_EXTERNAL_DECL void duk_push_int(duk_context *ctx, duk_int_t val);
 
-void duk_push_this(duk_context *ctx);
-duk_idx_t duk_push_c_function(duk_context *ctx, duk_c_function func, duk_idx_t nargs);
-duk_idx_t duk_push_proxy(duk_context *ctx, duk_uint_t proxy_flags);
-const char *duk_push_string(duk_context *ctx, const char *str);
-void duk_push_current_function(duk_context *ctx);
-void duk_push_number(duk_context *ctx, duk_double_t val);
+DUK_EXTERNAL_DECL void duk_push_this(duk_context *ctx);
+DUK_EXTERNAL_DECL duk_idx_t duk_push_c_function(duk_context *ctx, duk_c_function func, duk_idx_t nargs);
+DUK_EXTERNAL_DECL duk_idx_t duk_push_proxy(duk_context *ctx, duk_uint_t proxy_flags);
+DUK_EXTERNAL_DECL const char *duk_push_string(duk_context *ctx, const char *str);
+DUK_EXTERNAL_DECL void duk_push_current_function(duk_context *ctx);
+DUK_EXTERNAL_DECL void duk_push_number(duk_context *ctx, duk_double_t val);
 
-duk_idx_t duk_push_object(duk_context *ctx);
-duk_idx_t duk_push_array(duk_context *ctx);
+DUK_EXTERNAL_DECL duk_idx_t duk_push_object(duk_context *ctx);
+DUK_EXTERNAL_DECL duk_idx_t duk_push_array(duk_context *ctx);
 
 
-void duk_destroy_heap(duk_context *ctx);
+DUK_EXTERNAL_DECL void duk_destroy_heap(duk_context *ctx);
 
-const char *duk_json_encode(duk_context *ctx, duk_idx_t idx);
-void duk_json_decode(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL const char *duk_json_encode(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL void duk_json_decode(duk_context *ctx, duk_idx_t idx);
 
-duk_bool_t duk_put_prop_index(duk_context *ctx, duk_idx_t obj_idx, duk_uarridx_t arr_idx);
+DUK_EXTERNAL_DECL duk_bool_t duk_put_prop_index(duk_context *ctx, duk_idx_t obj_idx, duk_uarridx_t arr_idx);
 
-duk_bool_t duk_get_boolean(duk_context *ctx, duk_idx_t idx);
-duk_double_t duk_get_number(duk_context *ctx, duk_idx_t idx);
-duk_int_t duk_get_int(duk_context *ctx, duk_idx_t idx);
-const char *duk_get_string(duk_context *ctx, duk_idx_t idx);
-duk_size_t duk_get_length(duk_context *ctx, duk_idx_t idx);
-duk_bool_t duk_get_prop_index(duk_context *ctx, duk_idx_t obj_idx, duk_uarridx_t arr_idx);
+DUK_EXTERNAL_DECL duk_bool_t duk_get_boolean(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL duk_double_t duk_get_number(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL duk_int_t duk_get_int(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL const char *duk_get_string(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL duk_size_t duk_get_length(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL duk_bool_t duk_get_prop_index(duk_context *ctx, duk_idx_t obj_idx, duk_uarridx_t arr_idx);
 
-void duk_pop(duk_context *ctx);
-void duk_pop_n(duk_context *ctx, duk_idx_t count);
+DUK_EXTERNAL_DECL void duk_pop(duk_context *ctx);
+DUK_EXTERNAL_DECL void duk_pop_n(duk_context *ctx, duk_idx_t count);
 
-duk_bool_t duk_put_prop(duk_context *ctx, duk_idx_t obj_idx);
-duk_bool_t duk_put_prop_string(duk_context *ctx, duk_idx_t obj_idx, const char *key);
-duk_bool_t duk_has_prop_string(duk_context *ctx, duk_idx_t obj_idx, const char *key);
-duk_bool_t duk_put_global_string(duk_context *ctx, const char *key);
+DUK_EXTERNAL_DECL duk_bool_t duk_put_prop(duk_context *ctx, duk_idx_t obj_idx);
+DUK_EXTERNAL_DECL duk_bool_t duk_put_prop_string(duk_context *ctx, duk_idx_t obj_idx, const char *key);
+DUK_EXTERNAL_DECL duk_bool_t duk_has_prop_string(duk_context *ctx, duk_idx_t obj_idx, const char *key);
+DUK_EXTERNAL_DECL duk_bool_t duk_put_global_string(duk_context *ctx, const char *key);
 
-duk_bool_t duk_get_prop_string(duk_context *ctx, duk_idx_t obj_idx, const char *key);
+DUK_EXTERNAL_DECL duk_bool_t duk_get_prop_string(duk_context *ctx, duk_idx_t obj_idx, const char *key);
 
-void duk_freeze(duk_context *ctx, duk_idx_t obj_idx);
+DUK_EXTERNAL_DECL void duk_freeze(duk_context *ctx, duk_idx_t obj_idx);
 
-void duk_push_heap_stash(duk_context *ctx);
+DUK_EXTERNAL_DECL void duk_push_heap_stash(duk_context *ctx);
 
-const char *duk_safe_to_lstring(duk_context *ctx, duk_idx_t idx, duk_size_t *out_len);
+DUK_EXTERNAL_DECL const char *duk_safe_to_lstring(duk_context *ctx, duk_idx_t idx, duk_size_t *out_len);
 
 #define duk_safe_to_string(ctx,idx) \
 	duk_safe_to_lstring((ctx), (idx), NULL)
 
-void duk_push_pointer(duk_context *ctx, void *p);
-void *duk_get_pointer(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL void duk_push_pointer(duk_context *ctx, void *p);
+DUK_EXTERNAL_DECL void *duk_get_pointer(duk_context *ctx, duk_idx_t idx);
 
-duk_idx_t duk_get_top(duk_context *ctx);
+DUK_EXTERNAL_DECL duk_idx_t duk_get_top(duk_context *ctx);
 
-duk_bool_t duk_is_undefined(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL duk_bool_t duk_is_undefined(duk_context *ctx, duk_idx_t idx);
 
-void duk_dup(duk_context *ctx, duk_idx_t from_idx);
+DUK_EXTERNAL_DECL void duk_dup(duk_context *ctx, duk_idx_t from_idx);
 
-duk_bool_t duk_to_boolean(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL duk_bool_t duk_to_boolean(duk_context *ctx, duk_idx_t idx);
 
-void duk_get_prototype(duk_context *ctx, duk_idx_t idx);
-void duk_set_prototype(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL void duk_get_prototype(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL void duk_set_prototype(duk_context *ctx, duk_idx_t idx);
 
-void duk_push_true(duk_context *ctx);
+DUK_EXTERNAL_DECL void duk_push_true(duk_context *ctx);
 
-void duk_get_prop_desc(duk_context *ctx, duk_idx_t obj_idx, duk_uint_t flags);
+DUK_EXTERNAL_DECL void duk_get_prop_desc(duk_context *ctx, duk_idx_t obj_idx, duk_uint_t flags);
 
-duk_bool_t duk_has_prop(duk_context *ctx, duk_idx_t obj_idx);
-duk_bool_t duk_get_prop(duk_context *ctx, duk_idx_t obj_idx);
-duk_bool_t duk_del_prop(duk_context *ctx, duk_idx_t obj_idx);
-
-
-void duk_remove(duk_context *ctx, duk_idx_t idx);
-
-void duk_enum(duk_context *ctx, duk_idx_t obj_idx, duk_uint_t enum_flags);
-duk_bool_t duk_next(duk_context *ctx, duk_idx_t enum_idx, duk_bool_t get_value);
-
-void duk_require_stack(duk_context *ctx, duk_idx_t extra);
-
-void duk_call(duk_context *ctx, duk_idx_t nargs);
-void duk_call_method(duk_context *ctx, duk_idx_t nargs);
+DUK_EXTERNAL_DECL duk_bool_t duk_has_prop(duk_context *ctx, duk_idx_t obj_idx);
+DUK_EXTERNAL_DECL duk_bool_t duk_get_prop(duk_context *ctx, duk_idx_t obj_idx);
+DUK_EXTERNAL_DECL duk_bool_t duk_del_prop(duk_context *ctx, duk_idx_t obj_idx);
 
 
-duk_idx_t duk_push_thread_raw(duk_context *ctx, duk_uint_t flags);
+DUK_EXTERNAL_DECL void duk_remove(duk_context *ctx, duk_idx_t idx);
+
+DUK_EXTERNAL_DECL void duk_enum(duk_context *ctx, duk_idx_t obj_idx, duk_uint_t enum_flags);
+DUK_EXTERNAL_DECL duk_bool_t duk_next(duk_context *ctx, duk_idx_t enum_idx, duk_bool_t get_value);
+
+DUK_EXTERNAL_DECL void duk_require_stack(duk_context *ctx, duk_idx_t extra);
+
+DUK_EXTERNAL_DECL void duk_call(duk_context *ctx, duk_idx_t nargs);
+DUK_EXTERNAL_DECL void duk_call_method(duk_context *ctx, duk_idx_t nargs);
+
+
+DUK_EXTERNAL_DECL duk_idx_t duk_push_thread_raw(duk_context *ctx, duk_uint_t flags);
 
 #define DUK_THREAD_NEW_GLOBAL_ENV         (1U << 0)
 
@@ -132,18 +151,18 @@ duk_idx_t duk_push_thread_raw(duk_context *ctx, duk_uint_t flags);
 #define duk_push_thread_new_globalenv(ctx) \
 	duk_push_thread_raw((ctx), DUK_THREAD_NEW_GLOBAL_ENV /*flags*/)
 
-duk_context *duk_get_context(duk_context *ctx, duk_idx_t idx);
-void duk_set_global_object(duk_context *ctx);
-void duk_insert(duk_context *ctx, duk_idx_t to_idx);
+DUK_EXTERNAL_DECL duk_context *duk_get_context(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL void duk_set_global_object(duk_context *ctx);
+DUK_EXTERNAL_DECL void duk_insert(duk_context *ctx, duk_idx_t to_idx);
 
-void duk_xcopymove_raw(duk_context *to_ctx, duk_context *from_ctx, duk_idx_t count, duk_bool_t is_copy);
+DUK_EXTERNAL_DECL void duk_xcopymove_raw(duk_context *to_ctx, duk_context *from_ctx, duk_idx_t count, duk_bool_t is_copy);
 
 #define duk_xmove_top(to_ctx,from_ctx,count) \
 	duk_xcopymove_raw((to_ctx), (from_ctx), (count), 0 /*is_copy*/)
 
-void duk_replace(duk_context *ctx, duk_idx_t to_idx);
+DUK_EXTERNAL_DECL void duk_replace(duk_context *ctx, duk_idx_t to_idx);
 
-duk_bool_t duk_check_type_mask(duk_context *ctx, duk_idx_t idx, duk_uint_t mask);
+DUK_EXTERNAL_DECL duk_bool_t duk_check_type_mask(duk_context *ctx, duk_idx_t idx, duk_uint_t mask);
 
 #define DUK_TYPE_NONE                     0U    /* no value, e.g. invalid index */
 #define DUK_TYPE_UNDEFINED                1U    /* Ecmascript undefined */
@@ -189,16 +208,16 @@ duk_bool_t duk_check_type_mask(duk_context *ctx, duk_idx_t idx, duk_uint_t mask)
 #define DUK_COMPILE_STRICT                (1U << 5)    /* use strict (outer) context for global, eval, or function code */
 #define DUK_COMPILE_SAFE                  (1U << 7)    /* (internal) catch compilation errors */
 
-duk_bool_t duk_is_function(duk_context *ctx, duk_idx_t idx);
-duk_bool_t duk_is_object(duk_context *ctx, duk_idx_t idx);
-duk_bool_t duk_is_array(duk_context *ctx, duk_idx_t idx);
-duk_bool_t duk_is_number(duk_context *ctx, duk_idx_t idx);
-duk_bool_t duk_is_string(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL duk_bool_t duk_is_function(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL duk_bool_t duk_is_object(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL duk_bool_t duk_is_array(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL duk_bool_t duk_is_number(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL duk_bool_t duk_is_string(duk_context *ctx, duk_idx_t idx);
 
 
-duk_int_t duk_safe_call(duk_context *ctx, duk_safe_call_function func, void *udata, duk_idx_t nargs, duk_idx_t nrets);
-duk_int_t duk_pcall_prop(duk_context *ctx, duk_idx_t obj_idx, duk_idx_t nargs);
-duk_int_t duk_pcall(duk_context *ctx, duk_idx_t nargs);
+DUK_EXTERNAL_DECL duk_int_t duk_safe_call(duk_context *ctx, duk_safe_call_function func, void *udata, duk_idx_t nargs, duk_idx_t nrets);
+DUK_EXTERNAL_DECL duk_int_t duk_pcall_prop(duk_context *ctx, duk_idx_t obj_idx, duk_idx_t nargs);
+DUK_EXTERNAL_DECL duk_int_t duk_pcall(duk_context *ctx, duk_idx_t nargs);
 
 
 #define DUK_EXEC_SUCCESS 0
@@ -206,10 +225,10 @@ duk_int_t duk_pcall(duk_context *ctx, duk_idx_t nargs);
 #define duk_pcompile(ctx,flags)  \
 	(duk_compile_raw((ctx), NULL, 0, 2 /*args*/ | (flags) | DUK_COMPILE_SAFE))
 
-duk_int_t duk_compile_raw(duk_context *ctx, const char *src_buffer, duk_size_t src_length, duk_uint_t flags);
-void duk_push_global_object(duk_context *ctx);
+DUK_EXTERNAL_DECL duk_int_t duk_compile_raw(duk_context *ctx, const char *src_buffer, duk_size_t src_length, duk_uint_t flags);
+DUK_EXTERNAL_DECL void duk_push_global_object(duk_context *ctx);
 
-const char *duk_require_string(duk_context *ctx, duk_idx_t idx);
+DUK_EXTERNAL_DECL const char *duk_require_string(duk_context *ctx, duk_idx_t idx);
 
 #define DUK_VARARGS                       ((duk_int_t) (-1))
 

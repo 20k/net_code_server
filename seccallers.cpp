@@ -625,8 +625,6 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
             if(!is_top_level)
             {
-                duk_context* ctx = ctx;
-
                 ///this essentially rethrows an exception
                 ///if we're not top level, and we've timedout
                 COOPERATE_KILL();
