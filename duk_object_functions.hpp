@@ -890,6 +890,8 @@ duk_ret_t dukx_proxy_apply(duk_context* ctx)
     for(int i=0; i < length; i++)
     {
         duk_get_prop_index(ctx, id, i);
+
+        dukx_sanitise_in_place(ctx, -1);
     }
 
     duk_remove(ctx, 2);
