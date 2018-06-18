@@ -374,7 +374,7 @@ int main()
     #endif // DELETE_BANNED
 
     #if 1
-    test_locking();
+    //test_locking();
 
     boot_connection_handlers();
 
@@ -423,9 +423,11 @@ int main()
                   });
     #endif // TESTING
 
+    #ifndef TESTING
     start_npc_thread();
     init_purple_whale();
     init_blue_mantis();
+    #endif // TESTING
 
     printf("post\n");
 

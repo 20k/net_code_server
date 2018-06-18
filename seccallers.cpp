@@ -560,8 +560,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
         {
             duk_dup(sd.ctx, -2);
             ///push args
-            //duk_xcopy_top(new_ctx, sd.ctx, 1);
-            //duk_pop(sd.ctx);
+            //duk_xmove_top(new_ctx, sd.ctx, 1);
             dukx_sanitise_move_value(sd.ctx, new_ctx, -1);
         }
 
@@ -577,6 +576,7 @@ std::string compile_and_call(stack_duk& sd, const std::string& data, std::string
                 try
                 {
                     dukx_sanitise_move_value(new_ctx, sd.ctx, -1);
+                    //duk_xmove_top(sd.ctx, new_ctx, 1);
                 }
                 catch(...)
                 {

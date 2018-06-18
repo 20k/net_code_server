@@ -120,6 +120,8 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
 
     duk_xmove_top(ctx, nctx, 1);
 
+    //duk_context* ctx = nctx;
+
     while(!state.should_terminate_any_realtime && !force_terminate)
     {
         try
