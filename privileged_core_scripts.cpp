@@ -81,7 +81,28 @@ std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_c
     ///STD::CHRONO PLS
     for(nlohmann::json& i : found)
     {
-        size_t time_code_ms = i["time_ms"];
+        size_t time_code_ms = 0;
+
+        if(i.find("time_ms") != i.end())
+        {
+            if(i["time_ms"].is_number())
+                time_code_ms = (size_t)i["time_ms"];
+            else if(i["time_ms"].is_string())
+                time_code_ms = std::stoll((std::string)i["time_ms"]);
+        }
+
+        std::string channel;
+        std::string usrname;
+        std::string msg;
+
+        if(i.find("channel") != i.end())
+            channel = i["channel"];
+
+        if(i.find("user") != i.end())
+            usrname = i["user"];
+
+        if(i.find("msg") != i.end())
+            msg = i["msg"];
 
         std::chrono::system_clock::time_point chron(std::chrono::seconds(time_code_ms / 1000));
 
@@ -102,16 +123,16 @@ std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_c
 
         std::string tstr = "`b" + format_time(std::to_string(hour)) + format_time(std::to_string(minute)) + "`";
 
-        std::string chan_str = " `P" + (std::string)i["channel"] + "`";
+        std::string chan_str = " `P" + channel + "`";
 
-        std::string msg;
+        std::string total_msg;
 
         if(use_channels)
-            msg = tstr + chan_str + " " + colour_string(i["user"]) + " "  + (std::string)i["msg"];
+            total_msg = tstr + chan_str + " " + colour_string(usrname) + " "  + msg;
         else
-            msg = tstr + " " + colour_string(i["user"]) + " "  + (std::string)i["msg"];
+            total_msg = tstr + " " + colour_string(usrname) + " "  + msg;
 
-        str = msg + "\n" + str;
+        str = total_msg + "\n" + str;
     }
 
     return str;
@@ -741,7 +762,7 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
             to_insert["time_ms"] = real_time;
             to_insert["processed"] = 0;
 
-            mongo_ctx->insert_json_1(current_user, to_insert.dump());
+            insert_in_db(mongo_ctx, to_insert);
         }
     }
 
@@ -762,6 +783,9 @@ duk_ret_t msg__tell(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(msg.size() > 10000)
         return push_error(ctx, "Too long msg, 10k is max");
+
+    if(!get_user(to, get_thread_id(ctx)))
+        return push_error(ctx, "Invalid User");
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
     mongo_ctx.change_collection(to);
@@ -784,7 +808,7 @@ duk_ret_t msg__tell(priv_context& priv_ctx, duk_context* ctx, int sl)
     to_insert["time_ms"] = real_time;
     to_insert["processed"] = 0;
 
-    mongo_ctx->insert_json_1(to, to_insert.dump());
+    insert_in_db(mongo_ctx, to_insert);
 
     return push_success(ctx);
 }
@@ -925,6 +949,8 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
+    if(channel.size() > 50)
+        channel.resize(50);
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
     mongo_ctx.change_collection(get_caller(ctx));
@@ -945,22 +971,29 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
         request["is_tell"] = 1;
     }
 
+    nlohmann::json time_opt;
+    time_opt["time_ms"] = -1;
+
     nlohmann::json opt;
-    opt["$sort"] = {"time_ms", -1};
-    opt["$limit"] = num;
+    opt["sort"] = time_opt;
+    opt["limit"] = num;
+
+    std::cout << "FETCH OPT " << opt.dump() << std::endl;
 
     //std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
 
-    std::vector<std::string> json_found = mongo_ctx->find_json(get_caller(ctx), request.dump(), opt.dump());
+    //std::vector<std::string> json_found = mongo_ctx->find_json(get_caller(ctx), request.dump(), opt.dump());
 
-    std::vector<nlohmann::json> found;
+    std::vector<nlohmann::json> found = fetch_from_db(mongo_ctx, request, opt);
 
-    for(auto& i : json_found)
+    //std::cout << "found size " << found.size() << std::endl;
+
+    /*for(auto& i : json_found)
     {
         nlohmann::json j = nlohmann::json::parse(i);
 
         found.push_back(j);
-    }
+    }*/
 
     if(!pretty)
     {

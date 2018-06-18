@@ -1720,7 +1720,15 @@ void strip_old_msg_or_notif(mongo_lock_proxy& ctx)
 
     for(auto& req : all)
     {
-        size_t found_time = (size_t)req["time_ms"];
+        size_t found_time = 0;
+
+        if(req.find("time_ms") != req.end())
+        {
+            if(req["time_ms"].is_number())
+                found_time = (size_t)req["time_ms"];
+            else if(req["time_ms"].is_string())
+                found_time = std::stoll((std::string)req["time_ms"]);
+        }
 
         size_t thirty_days = 1000ull * 60ull * 60ull * 24ull * 30ull;
 
@@ -1948,6 +1956,9 @@ std::string handle_client_poll_json(user& usr)
 
     for(nlohmann::json& req : found)
     {
+        if(req.count("channel") == 0 || req["channel"].is_string() == false)
+            continue;
+
         json api;
         std::string chan = req["channel"];
         std::vector<nlohmann::json> to_col{req};
