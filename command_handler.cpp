@@ -105,13 +105,20 @@ void sleep_thread_for(std::thread& t, int sleep_ms)
     ResumeThread(native_handle);
 }
 
-void async_realtime_script_handler(duk_context* ctx, shared_data& shared, command_handler_state& state, double& time_of_last_on_update, std::string& ret,
+void async_realtime_script_handler(duk_context* nctx, shared_data& shared, command_handler_state& state, double& time_of_last_on_update, std::string& ret,
                                    std::atomic_bool& terminated, std::atomic_bool& request_long_sleep, std::atomic_bool& fedback, int current_id,
                                    std::atomic_bool& force_terminate, std::atomic<double>& avg_exec_time)
 {
     sf::Clock clk;
 
     avg_exec_time = 4;
+
+    duk_push_thread_new_globalenv(nctx);
+    duk_context* ctx = duk_get_context(nctx, -1);
+
+    duk_dup(nctx, -2);
+
+    duk_xmove_top(ctx, nctx, 1);
 
     while(!state.should_terminate_any_realtime && !force_terminate)
     {
@@ -275,6 +282,8 @@ void async_realtime_script_handler(duk_context* ctx, shared_data& shared, comman
             break;
         }
     }
+
+    duk_pop(ctx);
 
     terminated = true;
 }
