@@ -672,7 +672,7 @@ void dukx_push_c_function_with_hidden(duk_context* ctx, T& t, int nargs, U... u)
 }
 
 void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t idx);
-void dukx_sanitise_in_place(duk_context* ctx);
+void dukx_sanitise_in_place(duk_context* ctx, duk_idx_t idx);
 
 inline
 duk_ret_t dukx_proxy_get_prototype_of(duk_context* ctx)
@@ -827,7 +827,7 @@ duk_ret_t dukx_proxy_get(duk_context* ctx)
     if(!duk_get_prop(ctx, 0))
         duk_push_undefined(ctx);
 
-    dukx_sanitise_in_place(ctx);
+    dukx_sanitise_in_place(ctx, -1);
 
     return 1;
 }
@@ -977,18 +977,18 @@ duk_ret_t dukx_wrap_ctx(duk_context* ctx)
     return 1;
 }
 
-#define DUKX_HIDE() duk_dup(dst_ctx, -4);\
-                    duk_put_prop_string(dst_ctx, -2, DUKX_HIDDEN_SYMBOL("WRAPPED").c_str());
+#define DUKX_HIDE() duk_dup(dst_ctx, -3 + idx);\
+                    duk_put_prop_string(dst_ctx, -1 + idx, DUKX_HIDDEN_SYMBOL("WRAPPED").c_str());
 
 inline
-void dukx_sanitise_in_place(duk_context* dst_ctx)
+void dukx_sanitise_in_place(duk_context* dst_ctx, duk_idx_t idx)
 {
-    if(duk_is_primitive(dst_ctx, -1))
+    if(duk_is_primitive(dst_ctx, idx))
         return;
 
-    if(duk_is_function(dst_ctx, -1))
+    if(duk_is_function(dst_ctx, idx))
         duk_push_c_function(dst_ctx, dukx_dummy, 0);
-    else if(duk_is_object(dst_ctx, -1))
+    else if(duk_is_object(dst_ctx, idx))
         duk_push_object(dst_ctx);
     else
         assert(false);
@@ -1002,56 +1002,56 @@ void dukx_sanitise_in_place(duk_context* dst_ctx)
 
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_get_prototype_of>, 1);
     DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -2, "getPrototypeOf");
+    duk_put_prop_string(dst_ctx, -1 + idx, "getPrototypeOf");
 
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_set_prototype_of>, 2);
     DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -2, "setPrototypeOf");
+    duk_put_prop_string(dst_ctx, -1 + idx, "setPrototypeOf");
 
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_is_extensible>, 1);
     DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -2, "isExtensible");
+    duk_put_prop_string(dst_ctx, -1 + idx, "isExtensible");
 
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_prevent_extension>, 1);
     DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -2, "preventExtension");
+    duk_put_prop_string(dst_ctx, -1 + idx, "preventExtension");
 
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_get_own_property>, 2);
     DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -2, "getOwnPropertyDescriptor");
+    duk_put_prop_string(dst_ctx, -1 + idx, "getOwnPropertyDescriptor");
 
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_define_property>, 3);
     DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -2, "defineProperty");
+    duk_put_prop_string(dst_ctx, -1 + idx, "defineProperty");
 
 
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_has>, 2);
     DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -2, "has");
+    duk_put_prop_string(dst_ctx, -1 + idx, "has");
 
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_get>, 3);  /* 'get' trap */
     DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -2, "get");
+    duk_put_prop_string(dst_ctx, -1 + idx, "get");
 
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_set>, 4);  /* 'set' trap */
     DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -2, "set");
+    duk_put_prop_string(dst_ctx, -1 + idx, "set");
 
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_delete_property>, 2);
     DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -2, "deleteProperty");
+    duk_put_prop_string(dst_ctx, -1 + idx, "deleteProperty");
 
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_own_keys>, 1);
     DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -2, "ownKeys");
+    duk_put_prop_string(dst_ctx, -1 + idx, "ownKeys");
 
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_apply>, 3);
     DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -2, "apply");
+    duk_put_prop_string(dst_ctx, -1 + idx, "apply");
 
     duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_construct>, 2);
     DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -2, "construct");
+    duk_put_prop_string(dst_ctx, -1 + idx, "construct");
 
     /*///[to_wrap, proxy_dummy, handler]
     duk_dup(ctx, -3);
@@ -1061,7 +1061,7 @@ void dukx_sanitise_in_place(duk_context* dst_ctx)
     duk_push_proxy(dst_ctx, 0);
 
     ///[to_wrap, proxy]
-    duk_remove(dst_ctx, -2);
+    duk_remove(dst_ctx, -1 + idx);
 
     ///[proxy] left on stack
 }
@@ -1075,7 +1075,7 @@ void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t 
     duk_xmove_top(dst_ctx, ctx, 1);
     duk_remove(ctx, idx);
 
-    dukx_sanitise_in_place(dst_ctx);
+    dukx_sanitise_in_place(dst_ctx, -1);
 }
 
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED
