@@ -1,9 +1,9 @@
 #ifndef MEMORY_SANDBOX_HPP_INCLUDED
 #define MEMORY_SANDBOX_HPP_INCLUDED
 
-#include "duktape.h"
+#include "scripting_api.hpp"
 
-#include <windows.h>
+//#include <windows.h>
 
 typedef struct
 {

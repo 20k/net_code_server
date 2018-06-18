@@ -1,5 +1,4 @@
 #include "command_handler.hpp"
-#include <js/js_interop.hpp>
 #include "seccallers.hpp"
 #include <thread>
 #include <chrono>
@@ -360,30 +359,30 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             exec_guard.unblock();
         }
 
-        stack_duk sd;
+        duk_context* ctx;
         //init_js_interop(sd, std::string());
-        sd.ctx = create_sandbox_heap();
+        ctx = create_sandbox_heap();
 
         duk_memory_functions funcs;
-        duk_get_memory_functions(sd.ctx, &funcs);
+        duk_get_memory_functions(ctx, &funcs);
 
         sandbox_data* sand_data = (sandbox_data*)funcs.udata;
 
-        //fully_freeze(sd.ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number", "Object", "Duktape");
+        //fully_freeze(ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number", "Object", "Duktape");
 
         usr.cleanup_call_stack(local_thread_id);
         std::string executing_under = usr.get_call_stack().back();
 
         shared_duk_worker_state* shared_duk_state = new shared_duk_worker_state;
 
-        startup_state(sd.ctx, executing_under, executing_under, "invoke", usr.get_call_stack(), shared_duk_state);
+        startup_state(ctx, executing_under, executing_under, "invoke", usr.get_call_stack(), shared_duk_state);
 
-        set_global_int(sd.ctx, "thread_id", local_thread_id);
+        set_global_int(ctx, "thread_id", local_thread_id);
 
         unsafe_info inf;
         inf.usr = &usr;
         inf.command = command;
-        inf.ctx = sd.ctx;
+        inf.ctx = ctx;
 
         std::thread* launch = new std::thread(managed_duktape_thread, &inf);
 
@@ -539,7 +538,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                 //double last_time = get_wall_time();
 
-                bool is_valid = !duk_is_undefined(sd.ctx, -1);
+                bool is_valid = !duk_is_undefined(ctx, -1);
 
                 std::atomic_bool request_going{false};
                 std::atomic_bool request_finished{true};
@@ -589,7 +588,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                         catch(...){}
                     }
 
-                    std::thread thrd = std::thread(async_realtime_script_handler, sd.ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf.ret),
+                    std::thread thrd = std::thread(async_realtime_script_handler, ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf.ret),
                                                    std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate),
                                                    std::ref(avg_exec_time));
 
@@ -748,9 +747,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             if(terminated)
                 printf("Attempting unsafe resource cleanup\n");
 
-            teardown_state(sd.ctx);
+            teardown_state(ctx);
 
-            js_interop_shutdown(sd.ctx);
+            js_interop_shutdown(ctx);
         }
         catch(...)
         {
@@ -1477,15 +1476,15 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
                     was_public = true;
             }
 
-            stack_duk csd;
-            csd.ctx = js_interop_startup();
-            register_funcs(csd.ctx, 0, "core");
+            duk_context* ctx;
+            ctx = duk_create_heap_default();
+            register_funcs(ctx, 0, "core");
 
 
             script_info script_inf;
-            std::string compile_error = script_inf.load_from_unparsed_source(csd.ctx, data_source, fullname, is_es6, false);
+            std::string compile_error = script_inf.load_from_unparsed_source(ctx, data_source, fullname, is_es6, false);
 
-            js_interop_shutdown(csd.ctx);
+            duk_destroy_heap(ctx);
 
             if(compile_error != "")
                 return compile_error;

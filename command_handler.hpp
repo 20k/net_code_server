@@ -5,7 +5,6 @@
 #include <optional>
 
 #include "user.hpp"
-#include <js/js_interop.hpp>
 #include "seccallers.hpp"
 #include "command_handler_state.hpp"
 #include <memory>
@@ -15,12 +14,6 @@ struct shared_command_handler_state;
 struct shared_data;
 struct command_handler_state;
 struct global_state;
-
-inline
-void init_js_interop(stack_duk& sd, const std::string& js_data)
-{
-    sd.ctx = js_interop_startup();
-}
 
 ///shared queue used for async responses from servers
 std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared, std::optional<float> custom_exec_time_s = std::nullopt, bool force_exec = false);

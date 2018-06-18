@@ -1,7 +1,8 @@
 #ifndef SECCALLERS_HPP_INCLUDED
 #define SECCALLERS_HPP_INCLUDED
 
-#include "duktape.h"
+//#include "duktape.h"
+#include "scripting_api.hpp"
 #include <string>
 #include <vector>
 

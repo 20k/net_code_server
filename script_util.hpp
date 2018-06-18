@@ -6,7 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
-#include <js/js_interop.hpp>
+#include "scripting_api.hpp"
 
 //#include <libncclient/nc_util.hpp>
 //#include "duk_object_functions.hpp"

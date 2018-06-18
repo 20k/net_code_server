@@ -1,5 +1,5 @@
 #include <iostream>
-#include "duktape.h"
+#include "scripting_api.hpp"
 #include "stacktrace.hpp"
 
 #include <iostream>
@@ -13,8 +13,6 @@
 #include <math.h>
 #include <js/font_renderer.hpp>
 //#include <4space_server/networking.hpp>
-
-#include <js/js_interop.hpp>
 
 #include <algorithm>
 #include "script_util.hpp"
@@ -153,18 +151,17 @@ void debug_terminal()
 
             std::string data_source = get_script_from_name_string(base_scripts_string, strip_whitespace(fullname));
 
-            stack_duk csd;
-            init_js_interop(csd, std::string());
-            register_funcs(csd.ctx, 0, "core");
+            duk_context* ctx = duk_create_heap_default();
+            register_funcs(ctx, 0, "core");
 
-            script_inf.load_from_unparsed_source(csd.ctx, data_source, script, true, false);
+            script_inf.load_from_unparsed_source(ctx, data_source, script, true, false);
 
             std::cout << script_inf.parsed_source << std::endl;
 
             mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
             script_inf.overwrite_in_db(mongo_ctx);
 
-            js_interop_shutdown(csd.ctx);
+            duk_destroy_heap(ctx);
 
             std::cout << "uploaded " << script << std::endl;
         }

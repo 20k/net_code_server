@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "duktape.h"
+#include "scripting_api.hpp"
 #include <json/json.hpp>
 
 using duk_func_t = duk_ret_t (*)(duk_context*);
