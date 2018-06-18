@@ -6,7 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
-#include "scripting_api.hpp"
+#include "scripting_api_fwrd.hpp"
 
 //#include <libncclient/nc_util.hpp>
 //#include "duk_object_functions.hpp"

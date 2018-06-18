@@ -13,23 +13,10 @@
 
 //#include "duk_config.h"
 #include "duktape.h"
+#include "scripting_api_fwrd.hpp"
 
 struct duk_memory_functions;
 typedef struct duk_memory_functions duk_memory_functions;
-
-typedef unsigned int duk_small_uint_t;
-typedef duk_small_int_t duk_ret_t;
-typedef int duk_int_t;
-typedef unsigned int duk_uint_t;
-typedef size_t duk_size_t;
-struct duk_hthread;
-typedef struct duk_hthread duk_hthread;
-typedef duk_small_uint_t duk_bool_t;
-typedef int duk_idx_t;
-typedef double duk_double_t;
-typedef duk_uint_t duk_uarridx_t;
-
-typedef struct duk_hthread duk_context;
 
 typedef duk_ret_t (*duk_c_function)(duk_context *ctx);
 typedef void *(*duk_alloc_function) (void *udata, duk_size_t size);
