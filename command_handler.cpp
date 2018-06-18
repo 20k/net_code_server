@@ -1713,28 +1713,28 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
 void strip_old_msg_or_notif(mongo_lock_proxy& ctx)
 {
-    mongo_requester to_fetch;
-    to_fetch.set_prop("processed", 1);
+    nlohmann::json to_fetch;
+    to_fetch["processed"] = 1;
 
-    auto all = to_fetch.fetch_from_db(ctx);
+    auto all = fetch_from_db(ctx, to_fetch);
 
     for(auto& req : all)
     {
-        size_t found_time = (size_t)std::stoll(req.get_prop("time_ms"));
+        size_t found_time = (size_t)req["time_ms"];
 
         size_t thirty_days = 1000ull * 60ull * 60ull * 24ull * 30ull;
 
         if(get_wall_time() >= found_time + thirty_days)
         {
-            req.set_prop("processed", 1);
-            req.remove_all_from_db(ctx);
+            req["processed"] = 1;
+            remove_all_from_db(ctx, req);
         }
     }
 }
 
-std::vector<mongo_requester> get_and_update_chat_msgs_for_user(user& usr)
+std::vector<nlohmann::json> get_and_update_chat_msgs_for_user(user& usr)
 {
-    std::vector<mongo_requester> found;
+    std::vector<nlohmann::json> found;
 
     usr.cleanup_call_stack(-2);
 
@@ -1742,17 +1742,17 @@ std::vector<mongo_requester> get_and_update_chat_msgs_for_user(user& usr)
         mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
         ctx.change_collection(usr.get_call_stack().back());
 
-        mongo_requester to_send;
-        to_send.set_prop("is_chat", 1);
-        to_send.set_prop("processed", 0);
+        nlohmann::json to_send;
+        to_send["is_chat"] = 1;
+        to_send["processed"] = 0;
 
-        found = to_send.fetch_from_db(ctx);
+        found = fetch_from_db(ctx, to_send);
 
-        mongo_requester old_search = to_send;
+        nlohmann::json old_search = to_send;
 
-        to_send.set_prop("processed", 1);
+        to_send["processed"] = 1;
 
-        old_search.update_in_db_if_exact(ctx, to_send);
+        update_in_db_if_exact(ctx, old_search, to_send);
     }
 
     if(found.size() > 1000)
@@ -1761,9 +1761,9 @@ std::vector<mongo_requester> get_and_update_chat_msgs_for_user(user& usr)
     return found;
 }
 
-std::vector<mongo_requester> get_and_update_tells_for_user(user& usr)
+std::vector<nlohmann::json> get_and_update_tells_for_user(user& usr)
 {
-    std::vector<mongo_requester> found;
+    std::vector<nlohmann::json> found;
 
     usr.cleanup_call_stack(-2);
 
@@ -1771,17 +1771,17 @@ std::vector<mongo_requester> get_and_update_tells_for_user(user& usr)
         mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
         ctx.change_collection(usr.get_call_stack().back());
 
-        mongo_requester to_send;
-        to_send.set_prop("is_tell", 1);
-        to_send.set_prop("processed", 0);
+        nlohmann::json to_send;
+        to_send["is_tell"] = 1;
+        to_send["processed"] = 0;
 
-        found = to_send.fetch_from_db(ctx);
+        found = fetch_from_db(ctx, to_send);
 
-        mongo_requester old_search = to_send;
+        nlohmann::json old_search = to_send;
 
-        to_send.set_prop("processed", 1);
+        to_send["processed"] = 1;
 
-        old_search.update_in_db_if_exact(ctx, to_send);
+        update_in_db_if_exact(ctx, old_search, to_send);
     }
 
     if(found.size() > 1000)
@@ -1790,9 +1790,9 @@ std::vector<mongo_requester> get_and_update_tells_for_user(user& usr)
     return found;
 }
 
-std::vector<mongo_requester> get_and_update_notifs_for_user(user& usr)
+std::vector<nlohmann::json> get_and_update_notifs_for_user(user& usr)
 {
-    std::vector<mongo_requester> found;
+    std::vector<nlohmann::json> found;
 
     usr.cleanup_call_stack(-2);
 
@@ -1800,17 +1800,17 @@ std::vector<mongo_requester> get_and_update_notifs_for_user(user& usr)
         mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
         ctx.change_collection(usr.get_call_stack().back());
 
-        mongo_requester to_send;
-        to_send.set_prop("is_notif", 1);
-        to_send.set_prop("processed", 0);
+        nlohmann::json to_send;
+        to_send["is_notif"] = 1;
+        to_send["processed"] = 0;
 
-        found = to_send.fetch_from_db(ctx);
+        found = fetch_from_db(ctx, to_send);
 
-        mongo_requester old_search = to_send;
+        nlohmann::json old_search = to_send;
 
-        to_send.set_prop("processed", 1);
+        to_send["processed"] = 1;
 
-        old_search.update_in_db_if_exact(ctx, to_send);
+        update_in_db_if_exact(ctx, old_search, to_send);
     }
 
     if(found.size() > 1000)
@@ -1883,6 +1883,7 @@ std::vector<std::string> get_channels_for_user(user& usr)
     return ret;
 }
 
+#if 0
 std::string handle_client_poll(user& usr)
 {
     std::vector<mongo_requester> found = get_and_update_chat_msgs_for_user(usr);
@@ -1920,14 +1921,15 @@ std::string handle_client_poll(user& usr)
 
     return "chat_api " + to_send;
 }
+#endif // 0
 
 std::string handle_client_poll_json(user& usr)
 {
-    std::vector<mongo_requester> found = get_and_update_chat_msgs_for_user(usr);
+    std::vector<nlohmann::json> found = get_and_update_chat_msgs_for_user(usr);
     std::vector<std::string> channels = get_channels_for_user(usr);
 
-    std::vector<mongo_requester> tells = get_and_update_tells_for_user(usr);
-    std::vector<mongo_requester> notifs = get_and_update_notifs_for_user(usr);
+    std::vector<nlohmann::json> tells = get_and_update_tells_for_user(usr);
+    std::vector<nlohmann::json> notifs = get_and_update_notifs_for_user(usr);
 
     using json = nlohmann::json;
 
@@ -1944,11 +1946,11 @@ std::string handle_client_poll_json(user& usr)
 
     std::vector<json> cdata;
 
-    for(mongo_requester& req : found)
+    for(nlohmann::json& req : found)
     {
         json api;
-        std::string chan = req.get_prop("channel");
-        std::vector<mongo_requester> to_col{req};
+        std::string chan = req["channel"];
+        std::vector<nlohmann::json> to_col{req};
         std::string pretty = prettify_chat_strings(to_col);
 
         api["channel"] = chan;
@@ -1959,21 +1961,23 @@ std::string handle_client_poll_json(user& usr)
 
     std::vector<json> tdata;
 
-    for(mongo_requester& req : tells)
+    for(nlohmann::json& req : tells)
     {
+        std::vector<nlohmann::json> all{req};
+
         json api;
 
-        api["user"] = req.get_prop("user");
-        api["text"] = prettify_chat_strings({req}, false);
+        api["user"] = req["user"];
+        api["text"] = prettify_chat_strings(all, false);
 
         tdata.push_back(api);
     }
 
     std::vector<std::string> ndata;
 
-    for(mongo_requester& req : notifs)
+    for(nlohmann::json& req : notifs)
     {
-        ndata.push_back(req.get_prop("msg"));
+        ndata.push_back(req["msg"]);
     }
 
     all["data"] = cdata;
@@ -2176,11 +2180,13 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
         }
         if(starts_with(str, client_poll))
         {
-            auto ret = handle_client_poll(cur);
+            /*auto ret = handle_client_poll(cur);
 
             all_shared->state.set_user(cur);
 
-            return ret;
+            return ret;*/
+
+            return "command client_poll unsupported";
         }
     }
 

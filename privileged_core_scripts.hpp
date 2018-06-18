@@ -107,7 +107,7 @@ void create_destroy_item_notif(duk_context* ctx, const std::string& to, const st
 
 ///formats time
 std::string format_time(const std::string& in);
-std::string prettify_chat_strings(const std::vector<mongo_requester>& found, bool use_channels = true);
+std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_channels = true);
 
 duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl);

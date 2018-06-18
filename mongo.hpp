@@ -11,7 +11,10 @@
 #include <atomic>
 #include <chrono>
 #include "logging.hpp"
+#ifdef DEADLOCK_DETECTION
 #include <boost/stacktrace.hpp>
+#endif // DEADLOCK_DETECTION
+#include <json/json.hpp>
 
 //#define DEADLOCK_DETECTION
 #ifdef DEADLOCK_DETECTION
@@ -1239,6 +1242,46 @@ struct mongo_requester
         bson_destroy(to_remove);
     }
 };
+
+inline
+std::vector<nlohmann::json> fetch_from_db(mongo_lock_proxy& ctx, nlohmann::json fnd, nlohmann::json proj = {})
+{
+    std::vector<nlohmann::json> ret;
+
+    auto found = ctx->find_json(ctx->last_collection, fnd.dump(), proj.dump());
+
+    for(auto& i : found)
+    {
+        ret.push_back(nlohmann::json::parse(i));
+    }
+
+    return ret;
+}
+
+inline
+void remove_all_from_db(mongo_lock_proxy& ctx, nlohmann::json rem)
+{
+    ctx->remove_json(ctx->last_collection, rem.dump());
+}
+
+inline
+void update_in_db_if_exact(mongo_lock_proxy& ctx, nlohmann::json to_select, nlohmann::json to_update)
+{
+    nlohmann::json to_set;
+
+    to_set["$set"] = to_update;
+
+    //std::cout << "TO SET " << to_set.dump() << std::endl;
+    //std::cout << "TO select " << to_select.dump() << std::endl;
+
+    ctx->update_json_many(ctx->last_collection, to_select.dump(), to_set.dump());
+}
+
+inline
+void insert_in_db(mongo_lock_proxy& ctx, nlohmann::json to_insert)
+{
+    ctx->insert_json_1(ctx->last_collection, to_insert.dump());
+}
 
 inline
 void mongo_tests(const std::string& coll)

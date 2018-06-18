@@ -74,14 +74,14 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     return ret;
 }
 
-std::string prettify_chat_strings(const std::vector<mongo_requester>& found, bool use_channels)
+std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_channels)
 {
     std::string str;
 
     ///STD::CHRONO PLS
-    for(const mongo_requester& i : found)
+    for(nlohmann::json& i : found)
     {
-        int64_t time_code_ms = i.get_prop_as_integer("time_ms");
+        size_t time_code_ms = i["time_ms"];
 
         std::chrono::system_clock::time_point chron(std::chrono::seconds(time_code_ms / 1000));
 
@@ -102,14 +102,14 @@ std::string prettify_chat_strings(const std::vector<mongo_requester>& found, boo
 
         std::string tstr = "`b" + format_time(std::to_string(hour)) + format_time(std::to_string(minute)) + "`";
 
-        std::string chan_str = " `P" + i.get_prop("channel") + "`";
+        std::string chan_str = " `P" + (std::string)i["channel"] + "`";
 
         std::string msg;
 
         if(use_channels)
-            msg = tstr + chan_str + " " + colour_string(i.get_prop("user")) + " "  + i.get_prop("msg");
+            msg = tstr + chan_str + " " + colour_string(i["user"]) + " "  + (std::string)i["msg"];
         else
-            msg = tstr + " " + colour_string(i.get_prop("user")) + " "  + i.get_prop("msg");
+            msg = tstr + " " + colour_string(i["user"]) + " "  + (std::string)i["msg"];
 
         str = msg + "\n" + str;
     }
@@ -733,16 +733,15 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             size_t real_time = get_wall_time();
 
-            mongo_requester to_insert;
-            to_insert.set_prop("user", get_caller(ctx));
-            to_insert.set_prop("is_chat", 1);
-            to_insert.set_prop("msg", msg);
-            to_insert.set_prop("channel", channel);
-            to_insert.set_prop_double("time_ms", real_time);
-            //to_insert.set_prop("to_user", current_user);
-            to_insert.set_prop("processed", 0);
+            nlohmann::json to_insert;
+            to_insert["user"] = get_caller(ctx);
+            to_insert["is_chat"] = 1;
+            to_insert["msg"] = msg;
+            to_insert["channel"] = channel;
+            to_insert["time_ms"] = real_time;
+            to_insert["processed"] = 0;
 
-            to_insert.insert_in_db(mongo_ctx);
+            mongo_ctx->insert_json_1(current_user, to_insert.dump());
         }
     }
 
@@ -769,14 +768,23 @@ duk_ret_t msg__tell(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     size_t real_time = get_wall_time();
 
-    mongo_requester to_insert;
+    /*mongo_requester to_insert;
     to_insert.set_prop("user", get_caller(ctx));
     to_insert.set_prop("is_tell", 1);
     to_insert.set_prop("msg", msg);
-    to_insert.set_prop_double("time_ms", real_time);
+    to_insert.set_prop("time_ms", real_time);
     to_insert.set_prop("processed", 0);
 
-    to_insert.insert_in_db(mongo_ctx);
+    to_insert.insert_in_db(mongo_ctx);*/
+
+    nlohmann::json to_insert;
+    to_insert["user"] = get_caller(ctx);
+    to_insert["is_tell"] = 1;
+    to_insert["msg"] = msg;
+    to_insert["time_ms"] = real_time;
+    to_insert["processed"] = 0;
+
+    mongo_ctx->insert_json_1(to, to_insert.dump());
 
     return push_success(ctx);
 }
@@ -796,14 +804,14 @@ void create_notification(duk_context* ctx, const std::string& to, const std::str
 
     size_t real_time = get_wall_time();
 
-    mongo_requester to_insert;
-    to_insert.set_prop("user", to);
-    to_insert.set_prop("is_notif", 1);
-    to_insert.set_prop("msg", notif_msg);
-    to_insert.set_prop_double("time_ms", real_time);
-    to_insert.set_prop("processed", 0);
+    nlohmann::json to_insert;
+    to_insert["user"] = to;
+    to_insert["is_notif"] = 1;
+    to_insert["msg"] = notif_msg;
+    to_insert["time_ms"] = real_time;
+    to_insert["processed"] = 0;
 
-    to_insert.insert_in_db(mongo_ctx);
+    insert_in_db(mongo_ctx, to_insert);
 }
 
 template<typename T>
@@ -923,40 +931,61 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     ///ALARM: ALARM: RATE LIMIT
 
-    mongo_requester request;
+    //mongo_requester request;
+
+    nlohmann::json request;
 
     if(!is_tell)
     {
-        request.set_prop("channel", channel);
-        request.set_prop("is_chat", 1);
+        request["channel"] =  channel;
+        request["is_chat"] = 1;
     }
     else
     {
-        request.set_prop("is_tell", 1);
+        request["is_tell"] = 1;
     }
 
-    request.set_prop_sort_on("time_ms", -1);
+    nlohmann::json opt;
+    opt["$sort"] = {"time_ms", -1};
+    opt["$limit"] = num;
 
-    request.set_limit(num);
+    //std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
 
-    std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
+    std::vector<std::string> json_found = mongo_ctx->find_json(get_caller(ctx), request.dump(), opt.dump());
+
+    std::vector<nlohmann::json> found;
+
+    for(auto& i : json_found)
+    {
+        nlohmann::json j = nlohmann::json::parse(i);
+
+        found.push_back(j);
+    }
 
     if(!pretty)
     {
         duk_push_array(ctx);
 
         int cur_count = 0;
-        for(mongo_requester& i : found)
+        for(nlohmann::json& i : found)
         {
             duk_push_object(ctx);
 
-            for(auto& kk : i.properties)
+            for(auto it = i.begin(); it != i.end(); it++)
+            {
+                if(it.key() == "_id")
+                    continue;
+
+                put_duk_keyvalue(ctx, (std::string)it.key(), (std::string)it.value());
+            }
+
+            /*for(auto& kk : i.properties)
             {
                 std::string key = kk.first;
                 std::string value = kk.second;
 
                 put_duk_keyvalue(ctx, key, value);
-            }
+            }*/
 
             duk_put_prop_index(ctx, -2, cur_count);
 
