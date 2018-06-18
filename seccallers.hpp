@@ -2,7 +2,7 @@
 #define SECCALLERS_HPP_INCLUDED
 
 //#include "duktape.h"
-#include "scripting_api.hpp"
+#include "scripting_api_fwrd.hpp"
 #include <string>
 #include <vector>
 
