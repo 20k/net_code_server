@@ -96,6 +96,7 @@
 			<Add option="-mmitigate-rop" />
 			<Add option="-pie -fPIE" />
 			<Add option="-fno-strict-aliasing" />
+			<Add option="-flto" />
 			<Add option="-D_FORTIFY_SOURCE=2" />
 			<Add option="-DBOOST_STACKTRACE_USE_WINDBG" />
 			<Add directory="deps" />
