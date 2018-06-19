@@ -2952,17 +2952,17 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             out_dir = fdiff.norm();
             out_num = fdiff.length();*/
 
+            std::string col = string_to_colour(name);
+
+            if((colour_offset_count % 2) == 1)
+                col = string_to_colour(conn);
+
             vec2f cur = (vec2f){pos.x(), pos.y()};
 
             for(int i=0; i < out_num; i++)
             {
                 vec2f rpos = round(cur);
                 vec2i ipos = clamp((vec2i){rpos.x(), rpos.y()}, (vec2i){0,0}, (vec2i){w-1, h-1});
-
-                std::string col = string_to_colour(name);
-
-                if((colour_offset_count % 2) == 1)
-                    col = string_to_colour(conn);
 
                 str[ipos.y() * w + ipos.x()] = "`" + col + ".`";
 
