@@ -53,7 +53,7 @@ void ascii_draw_line(vec2f start, vec2f finish, const std::string& colour, std::
         int clamped_y = clamp((int)rpos.y(), 0, height-1);
         int width = buffer[clamped_y].size();
 
-        vec2i ipos = clamp((vec2i){rpos.x(), rpos.y()}, (vec2i){0,0}, (vec2i){width-1, height-1});
+        vec2i ipos = clamp((vec2i){rpos.x(), rpos.y()}, (vec2i){0,0}, (vec2i){width-2, height-1});
 
         //str[ipos.y() * w + ipos.x()] = "`" + col + ".`";
 

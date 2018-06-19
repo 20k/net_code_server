@@ -2808,7 +2808,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     //int spacing = 3;
 
-    std::map<std::string, vec2f> offset_pos;
+    //std::map<std::string, vec2f> offset_pos;
 
     std::map<std::string, int> rings;
 
@@ -2943,7 +2943,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             vec2f out_dir;
             int out_num;
 
-            line_draw_helper((vec2f){pos.x(), pos.y()}, (vec2f){to_draw_pos.x(), to_draw_pos.y()}, out_dir, out_num);
+            line_draw_helper(pos, to_draw_pos, out_dir, out_num);
 
             /*vec2i idiff = to_draw_pos - pos;
 
