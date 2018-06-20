@@ -234,6 +234,7 @@ duk_ret_t cheats__salvage(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t cheats__task(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t cheats__disconnect(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t cheats__unlink(priv_context& priv_ctx, duk_context* ctx, int sl);
+duk_ret_t cheats__testloot(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 #endif
 
@@ -332,6 +333,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(cheats__task, 4),
     REGISTER_FUNCTION_PRIV(cheats__disconnect, 4),
     REGISTER_FUNCTION_PRIV(cheats__unlink, 4),
+    REGISTER_FUNCTION_PRIV(cheats__testloot, 4),
     #endif // TESTING
     #ifdef LIVE_DEBUGGING
     REGISTER_FUNCTION_PRIV(cheats__debug, 4),

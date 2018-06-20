@@ -1,6 +1,6 @@
 #include "ascii_helpers.hpp"
 
-std::vector<std::vector<std::string>> ascii_make_buffer(vec2i dim)
+std::vector<std::vector<std::string>> ascii_make_buffer(vec2i dim, bool add_newlines)
 {
     std::vector<std::vector<std::string>> rbuffer;
 
@@ -10,12 +10,13 @@ std::vector<std::vector<std::string>> ascii_make_buffer(vec2i dim)
     {
         rbuffer[i].resize(dim.x());
 
-        for(int x=0; x < (int)rbuffer[i].size() - 1; x++)
+        for(int x=0; x < (int)rbuffer[i].size(); x++)
         {
             rbuffer[i][x] = ' ';
         }
 
-        rbuffer[i][(int)rbuffer[i].size() -1] = '\n';
+        if(add_newlines)
+            rbuffer[i][(int)rbuffer[i].size() -1] = '\n';
     }
 
     return rbuffer;

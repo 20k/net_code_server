@@ -3907,6 +3907,31 @@ duk_ret_t cheats__unlink(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 0;
 }
 
+bool elegible_for_loot_gen(user& usr);
+
+duk_ret_t cheats__testloot(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string usr = duk_safe_get_prop_string(ctx, -1, "user");
+
+    if(usr == "")
+        return push_error(ctx, "ARGLBLARLGB");
+
+    user found;
+
+    {
+        mongo_lock_proxy mctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        if(!found.load_from_db(mctx, usr))
+            return push_error(ctx, "no user");
+    }
+
+    push_duk_val(ctx, std::to_string(elegible_for_loot_gen(found)));
+
+    return 1;
+}
+
 duk_ret_t gal__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     auto structs = get_global_structure();
