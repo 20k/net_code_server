@@ -66,6 +66,8 @@
 
 void async_command_handler(std::shared_ptr<shared_command_handler_state> all_shared, std::deque<std::string>& shared_queue, std::mutex& shared_lock)
 {
+    lg::log("async_queue\n");
+
     while(1)
     {
         if(all_shared->shared.should_terminate)
@@ -343,6 +345,8 @@ void read_queue(std::shared_ptr<shared_command_handler_state> all_shared,
 
     boost::system::error_code ec;
 
+    lg::log("read_queue\n");
+
     try
     {
         while(1)
@@ -411,6 +415,8 @@ void read_queue(std::shared_ptr<shared_command_handler_state> all_shared,
 
 void write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
 {
+    lg::log("write_queue\n");
+
     try
     {
         while(1)
@@ -467,13 +473,17 @@ void thread_session(
     int64_t my_id,
     connection_t conn_type)
 {
+    lg::log("preconstr\n");
+
     std::shared_ptr<shared_command_handler_state> all_shared = std::make_shared<shared_command_handler_state>(std::move(socket), conn_type);
 
     std::deque<std::string> shared_queue;
     std::mutex shared_lock;
 
-    global_shared_data* store = fetch_global_shared_data();
-    store->add(&all_shared->shared);
+    lg::log("thread_session\n");
+
+    //global_shared_data* store = fetch_global_shared_data();
+    //store->add(&all_shared->shared);
 
     std::thread(read_queue, all_shared, std::ref(shared_queue), std::ref(shared_lock)).detach();
     std::thread(write_queue, all_shared).detach();
@@ -489,7 +499,7 @@ void thread_session(
         Sleep(500);
     }
 
-    {
+    /*{
         safe_lock_guard guard(store->lock);
 
         for(int i=0; i < (int)store->data.size(); i++)
@@ -500,7 +510,7 @@ void thread_session(
                 break;
             }
         }
-    }
+    }*/
 
     Sleep(50);
 
@@ -619,11 +629,15 @@ void websocket_ssl_test_server(int in_port)
         tcp::acceptor acceptor{ioc, {address, port}};
         for(;;)
         {
+            lg::log("presock");
+
             // This will receive the new connection
             tcp::socket socket{ioc};
 
             // Block until we get a connection
             acceptor.accept(socket);
+
+            lg::log("postaccept\n");
 
             int id = glob.global_id++;
 

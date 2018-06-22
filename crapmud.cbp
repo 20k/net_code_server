@@ -37,7 +37,6 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-flto" />
 					<Add option="-O3" />
 					<Add option="-g" />
 					<Add option="-march=nehalem" />
@@ -45,9 +44,6 @@
 					<Add option="-DEXTERN_IP" />
 					<Add option="-D_FORTIFY_SOURCE=2" />
 				</Compiler>
-				<Linker>
-					<Add option="-flto" />
-				</Linker>
 				<ExtraCommands>
 					<Add after="deploy.bat" />
 					<Mode after="always" />
