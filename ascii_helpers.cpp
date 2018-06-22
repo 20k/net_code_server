@@ -63,3 +63,12 @@ void ascii_draw_line(vec2f start, vec2f finish, const std::string& colour, std::
         cur += out_dir;
     }
 }
+
+std::string ascii_index_to_character(int idx)
+{
+    std::string str = "0123456789abcdefghijklmnopqrstuvwxyz";
+
+    idx = idx % str.size();
+
+    return std::string(1, str[idx]);
+}

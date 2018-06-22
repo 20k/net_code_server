@@ -8,4 +8,6 @@ std::string ascii_stringify_buffer(const std::vector<std::vector<std::string>>& 
 
 void ascii_draw_line(vec2f start, vec2f finish, const std::string& colour, std::vector<std::vector<std::string>>& buffer_out);
 
+std::string ascii_index_to_character(int idx);
+
 #endif // ASCII_HELPERS_HPP_INCLUDED
