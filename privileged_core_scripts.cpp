@@ -2550,7 +2550,7 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool cheats = false;
 
     #ifdef TESTING
-    //cheats = true;
+    cheats = true;
     #endif // TESTING
 
     if(!cheats)

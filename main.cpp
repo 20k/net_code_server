@@ -35,6 +35,7 @@
 #include <secret/one_shot_core.hpp>
 
 #include <libncclient/nc_util.hpp>
+#include <secret/secret.hpp>
 
 #if 0
 void user_tests()
@@ -251,6 +252,10 @@ int main()
     stack_on_start();
 
     lg::set_logfile("./log.txt");
+
+    #ifdef TESTING
+    parse_source();
+    #endif // TESTING
 
     get_global_structure();
 
