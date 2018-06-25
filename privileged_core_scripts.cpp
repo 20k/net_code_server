@@ -2446,7 +2446,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
             if(it != secret_map.end())
             {
-                if(!it->second(priv_ctx, ctx, msg, i, name_of_person_being_attacked))
+                if(!it->second.ptr(priv_ctx, ctx, msg, i, name_of_person_being_attacked))
                 {
                     all_success = false;
 
