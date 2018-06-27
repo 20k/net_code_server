@@ -72,3 +72,15 @@ std::string ascii_index_to_character(int idx)
 
     return std::string(1, str[idx]);
 }
+
+std::string stolower(const std::string& in)
+{
+    std::string ret = in;
+
+    for(int i=0; i < (int)ret.size(); i++)
+    {
+        ret[i] = tolower(ret[i]);
+    }
+
+    return ret;
+}

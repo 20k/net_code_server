@@ -10,4 +10,6 @@ void ascii_draw_line(vec2f start, vec2f finish, const std::string& colour, std::
 
 std::string ascii_index_to_character(int idx);
 
+std::string stolower(const std::string& in);
+
 #endif // ASCII_HELPERS_HPP_INCLUDED

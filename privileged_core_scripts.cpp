@@ -5,6 +5,7 @@
 #include "scheduled_tasks.hpp"
 #include "command_handler.hpp"
 #include "duk_object_functions.hpp"
+#include "ascii_helpers.hpp"
 
 std::map<std::string, std::vector<script_arg>> privileged_args = construct_core_args();
 
@@ -1303,7 +1304,7 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
             usr.overwrite_user_in_db(mongo_ctx);
         }
 
-        accum += "Performed non lock item operation";
+        accum += "Success";
 
         return "";
     }
@@ -1321,6 +1322,20 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
         accum += "Loaded\n";
     }
 
+    if(which == to_load && node_idx != -1)
+    {
+        user_node* node = nodes.type_to_node((user_node_t)node_idx);
+
+        {
+            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
+
+            if(node->can_load_lock(item_ctx, to_load))
+            {
+                node->load_lock(to_load);
+            }
+        }
+    }
+
     /*if(which == to_load && node_idx >= 0)
     {
         nodes.load_lock_to_id(to_load, node_idx);
@@ -1329,6 +1344,15 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
     if(which == to_unload && node_idx == -1)
     {
         nodes.unload_lock_from_any(to_unload);
+
+        accum += "Unloaded\n";
+    }
+
+    if(which == to_unload && node_idx != -1)
+    {
+        user_node* node = nodes.type_to_node((user_node_t)node_idx);
+
+        node->unload_lock(to_load);
 
         accum += "Unloaded\n";
     }
@@ -1474,8 +1498,22 @@ duk_ret_t item__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     int unload_idx = duk_get_prop_string_as_int(ctx, -1, "unload", -1);
     int node_idx = duk_get_prop_string_as_int(ctx, -1, "node", -1);
 
+    std::string node_name = duk_safe_get_prop_string(ctx, -1, "node");
+
     if(load_idx >= 0 && unload_idx >= 0)
         return push_error(ctx, "Only one load/unload at a time");
+
+    if(node_name != "")
+    {
+        for(int i=0; i < user_node_info::TYPE_COUNT; i++)
+        {
+            if(stolower(user_node_info::short_name[i]) == stolower(node_name))
+            {
+                node_idx = i;
+                break;
+            }
+        }
+    }
 
     user found_user;
 
