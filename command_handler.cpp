@@ -1304,12 +1304,12 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
             if(should_set)
             {
-                all_shared->state.set_user(fnd);
-
                 if(fnd.auth != all_shared->state.get_auth())
                 {
                     return make_error_col("Incorrect Auth, someone else has registered this account or you are using a different pc and key.key file");
                 }
+
+                all_shared->state.set_user(fnd);
             }
 
             /*for(auto& i : allowed)
@@ -2124,6 +2124,33 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
 
     std::string current_user = all_shared->state.get_user().name;
     std::string current_auth = all_shared->state.get_auth();
+
+    user found;
+
+    if(current_user != "")
+    {
+        mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+        if(!found.load_from_db(ctx, current_user))
+        {
+            user usr;
+            usr.name = "";
+
+            all_shared->state.set_user(usr);
+
+            return "command Invalid User";
+        }
+
+        if(found.auth != current_auth)
+        {
+            user usr;
+            usr.name = "";
+
+            all_shared->state.set_user(usr);
+
+            return "Invalid Auth";
+        }
+    }
 
     if(starts_with(str, client_command))
     {
