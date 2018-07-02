@@ -80,8 +80,10 @@ std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_c
     std::string str;
 
     ///STD::CHRONO PLS
-    for(nlohmann::json& i : found)
+    for(int kk=0; kk < (int)found.size(); kk++)
     {
+        nlohmann::json& i = found[kk];
+
         size_t time_code_ms = 0;
 
         if(i.find("time_ms") != i.end())
@@ -133,7 +135,10 @@ std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_c
         else
             total_msg = tstr + " " + colour_string(usrname) + " "  + msg;
 
-        str = total_msg + "\n" + str;
+        if(kk != 0)
+            str = total_msg + "\n" + str;
+        else
+            str = total_msg;
     }
 
     return str;
