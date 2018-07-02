@@ -2115,6 +2115,7 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
     //lg::log("Log Command " + str);
 
     std::string client_command = "client_command ";
+    std::string client_command_tagged = "client_command_tagged ";
     std::string client_chat = "client_chat ";
     std::string client_poll = "client_poll";
     std::string client_poll_json = "client_poll_json";
@@ -2152,9 +2153,30 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
         }
     }
 
-    if(starts_with(str, client_command))
+    if(starts_with(str, client_command) || starts_with(str, client_command_tagged))
     {
-        std::string to_exec(str.begin() + client_command.size(), str.end());
+        std::string to_exec;
+        std::string tag;
+        bool tagged = starts_with(str, client_command_tagged);
+
+        if(tagged)
+        {
+            int idx = client_command_tagged.size();
+
+            for(int i=idx; i < (int)str.size() && str[i] != ' '; i++)
+            {
+                tag += str[i];
+            }
+
+            int total_size = client_command_tagged.size() + tag.size() + 1;
+
+            if(total_size >= str.size())
+                return "command_tagged " + tag + " invalid tag";
+
+            to_exec = std::string(str.begin() + client_command_tagged.size() + tag.size() + 1, str.end());
+        }
+        else
+            to_exec = std::string(str.begin() + client_command.size(), str.end());
 
         bool is_auth = false;
 
@@ -2165,7 +2187,14 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
             return "command_auth " + ret;
         }
 
-        return "command " + ret;
+        if(tagged)
+        {
+            return "command_tagged " + tag + " " + ret;
+        }
+        else
+        {
+            return "command " + ret;
+        }
     }
 
     if(starts_with(str, client_chat))
