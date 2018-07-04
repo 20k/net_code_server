@@ -29,6 +29,7 @@
 					<Add option="-O3" />
 					<Add option="-march=nehalem" />
 					<Add option="-DLOCAL_IP" />
+					<Add option="-D_GLIBCXX_DEBUG" />
 				</Compiler>
 			</Target>
 			<Target title="Deploy">
@@ -59,6 +60,7 @@
 					<Add option="-march=nehalem" />
 					<Add option="-DLOCAL_IP" />
 					<Add option="-DTESTING" />
+					<Add option="-D_GLIBCXX_DEBUG" />
 				</Compiler>
 			</Target>
 			<Target title="DebugBacktrace">
@@ -69,6 +71,7 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-DLOCAL_IP" />
+					<Add option="-D_GLIBCXX_DEBUG" />
 				</Compiler>
 				<ExtraCommands>
 					<Add after="debug_backtrace.bat" />
@@ -84,6 +87,7 @@
 					<Add option="-g" />
 					<Add option="-DLOCAL_IP" />
 					<Add option="-DTESTING" />
+					<Add option="-D_GLIBCXX_DEBUG" />
 				</Compiler>
 			</Target>
 		</Build>
@@ -142,6 +146,8 @@
 		<Unit filename="deps/secret/items_secret.hpp" />
 		<Unit filename="deps/secret/loot_gen.cpp" />
 		<Unit filename="deps/secret/loot_gen.hpp" />
+		<Unit filename="deps/secret/low_level_structure.cpp" />
+		<Unit filename="deps/secret/low_level_structure.hpp" />
 		<Unit filename="deps/secret/node.cpp" />
 		<Unit filename="deps/secret/node.hpp" />
 		<Unit filename="deps/secret/npc_manager.cpp" />
