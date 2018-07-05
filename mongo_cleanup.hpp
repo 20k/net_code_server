@@ -114,6 +114,14 @@ mongo_lock_proxy get_global_mongo_scheduled_task_context(int lock_id)
     return get_global_mongo_context(mongo_database_type::SCHEDULED_TASK, lock_id);
 }
 
+using mongo_lock_low_level = mongo_lock_proxy;
+
+inline
+mongo_lock_low_level get_global_mongo_low_level_structure_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::LOW_LEVEL_STRUCTURE, lock_id);
+}
+
 /*inline
 std::vector<int> any_mongo_locks()
 {

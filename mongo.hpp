@@ -30,6 +30,7 @@ enum class mongo_database_type
     NPC_PROPERTIES,
     NETWORK_PROPERTIES,
     SCHEDULED_TASK,
+    LOW_LEVEL_STRUCTURE,
     MONGO_COUNT
 };
 

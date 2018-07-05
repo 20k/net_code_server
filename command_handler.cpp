@@ -2171,7 +2171,7 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
 
             int total_size = client_command_tagged.size() + tag.size() + 1;
 
-            if(total_size >= str.size())
+            if(total_size >= (int)str.size())
                 return "command_tagged " + tag + " invalid tag";
 
             to_exec = std::string(str.begin() + client_command_tagged.size() + tag.size() + 1, str.end());

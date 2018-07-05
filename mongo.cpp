@@ -193,6 +193,7 @@ mongo_context::mongo_context(mongo_database_type type)
     std::map<mongo_database_type, std::string> procedural_dbs
     {
         {mongo_database_type::SCHEDULED_TASK, "SCHEDULED_TASK"},
+        {mongo_database_type::LOW_LEVEL_STRUCTURE, "LOW_LEVEL_STRUCTURE"},
     };
 
     for(auto& i : procedural_dbs)
