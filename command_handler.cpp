@@ -2,6 +2,7 @@
 #include "seccallers.hpp"
 #include <thread>
 #include <chrono>
+#include <set>
 #include "http_beast_server.hpp"
 #include "memory_sandbox.hpp"
 #include "auth.hpp"

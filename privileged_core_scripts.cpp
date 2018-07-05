@@ -1,6 +1,7 @@
 #include "privileged_core_scripts.hpp"
 
 #include <ratio>
+#include <set>
 
 #include "scheduled_tasks.hpp"
 #include "command_handler.hpp"
