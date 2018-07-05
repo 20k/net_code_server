@@ -84,3 +84,44 @@ std::string stolower(const std::string& in)
 
     return ret;
 }
+
+std::string id_to_roman_numeral(int x)
+{
+    if(x < 0)
+        return "";
+
+    if(x == 0)
+        return "";
+
+    if(x == 1)
+        return "i";
+
+    if(x == 2)
+        return "ii";
+
+    if(x == 3)
+        return "iii";
+
+    if(x == 4)
+        return "iv";
+
+    if(x == 5)
+        return "v";
+
+    if(x == 6)
+        return "vi";
+
+    if(x == 7)
+        return "vii";
+
+    if(x == 8)
+        return "viii";
+
+    if(x == 9)
+        return "ix";
+
+    if(x == 10)
+        return "x";
+
+    return "x" + id_to_roman_numeral(x-10);
+}

@@ -12,4 +12,6 @@ std::string ascii_index_to_character(int idx);
 
 std::string stolower(const std::string& in);
 
+std::string id_to_roman_numeral(int x);
+
 #endif // ASCII_HELPERS_HPP_INCLUDED

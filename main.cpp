@@ -280,6 +280,11 @@ int main()
     initialse_mongo_all();
     test_json();
 
+    low_level_structure_manager& manage = get_global_low_level_structure_manager();
+    manage.erase_all();
+    manage.generate_up_to(150);
+
+
     //#define REGEN_SCRIPTS
     #ifdef REGEN_SCRIPTS
     int nid = 0;
