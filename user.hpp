@@ -29,6 +29,9 @@ struct user
     std::string joined_channels;
 
     space_pos_t pos;
+    space_pos_t local_pos;
+
+    bool has_local_pos = false;
 
     bool valid = false;
 
