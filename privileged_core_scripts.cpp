@@ -2621,6 +2621,8 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
+    bool get_array = dukx_is_prop_truthy(ctx, -1, "array");
+
     user_nodes nodes;
 
     {
@@ -2642,30 +2644,40 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
 
-    std::string accum = "Node Key: ";
-
-    for(int i=0; i < (int)user_node_info::TYPE_COUNT; i++)
+    if(!get_array)
     {
-        accum += user_node_info::short_name[i] + ": " + user_node_info::long_names[i];
+        std::string accum = "Node Key: ";
 
-        if(i != user_node_info::TYPE_COUNT-1)
-            accum += ", ";
+        for(int i=0; i < (int)user_node_info::TYPE_COUNT; i++)
+        {
+            accum += user_node_info::short_name[i] + ": " + user_node_info::long_names[i];
+
+            if(i != user_node_info::TYPE_COUNT-1)
+                accum += ", ";
+        }
+
+        accum += "\n";
+
+        {
+            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+            ///this needs to take a user as well
+            ///so that we can display the indices of the items for easy load/unload
+            for(user_node& node : nodes.nodes)
+            {
+                accum += node.get_pretty(item_ctx, usr);
+            }
+        }
+
+        duk_push_string(ctx, accum.c_str());
     }
-
-    accum += "\n";
-
+    else
     {
         mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
-        ///this needs to take a user as well
-        ///so that we can display the indices of the items for easy load/unload
-        for(user_node& node : nodes.nodes)
-        {
-            accum += node.get_pretty(item_ctx, usr);
-        }
+        push_duk_val(ctx, nodes.get_as_json(item_ctx, usr));
     }
 
-    duk_push_string(ctx, accum.c_str());
     return 1;
 }
 
