@@ -1374,7 +1374,7 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
 }
 
 
-void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes& nodes, user& found_user)
+void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes& nodes, user& found_user, std::string preamble)
 {
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
@@ -1425,7 +1425,7 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
         if(full)
             formatted += "]";
 
-        push_duk_val(ctx, formatted);
+        push_duk_val(ctx, preamble + formatted);
     }
     else
     {
@@ -1509,6 +1509,8 @@ duk_ret_t item__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(load_idx >= 0 && unload_idx >= 0)
         return push_error(ctx, "Only one load/unload at a time");
 
+    std::string usage = "Usage: " + make_key_val("load", "idx") + " or " + make_key_val("unload", "idx") + ", and optionally " + make_key_val("node", "short_name");
+
     if(node_name != "")
     {
         for(int i=0; i < user_node_info::TYPE_COUNT; i++)
@@ -1552,7 +1554,7 @@ duk_ret_t item__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
     }
 
-    push_internal_items_view(ctx, pretty, full, nodes, found_user);
+    push_internal_items_view(ctx, pretty, full, nodes, found_user, usage + "\n");
 
     return 1;
 }

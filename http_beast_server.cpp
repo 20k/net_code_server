@@ -526,9 +526,13 @@ void session_wrapper(tcp::socket&& socket,
     {
         thread_session(std::move(socket), my_id, conn_type);
     }
+    catch(const std::exception& e)
+    {
+        std::cout << "e " << e.what() << std::endl;
+    }
     catch(...)
     {
-
+        std::cout << "threw error\n";
     }
 }
 
@@ -584,7 +588,7 @@ void websocket_test_server()
         std::string const doc_root = "./doc_root";
 
         // The io_context is required for all I/O
-        boost::asio::io_context ioc{2};
+        boost::asio::io_context ioc{1};
 
         // The acceptor receives incoming connections
         tcp::acceptor acceptor{ioc, {address, port}};
@@ -623,7 +627,7 @@ void websocket_ssl_test_server(int in_port)
         std::string const doc_root = "./doc_root";
 
         // The io_context is required for all I/O
-        boost::asio::io_context ioc{2};
+        boost::asio::io_context ioc{1};
 
         // The acceptor receives incoming connections
         tcp::acceptor acceptor{ioc, {address, port}};
