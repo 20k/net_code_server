@@ -359,6 +359,14 @@ void item::force_rotate()
     set_prop("lock_state", get_random_uint32_t());
 }
 
+/*void item::breach(mongo_lock_proxy& items_ctx)
+{
+    double time_s = get_wall_time_s();
+    double internal_time_s = get_prop_as_double("lock_last_rotate_s");
+
+    internal_time_s -=
+}*/
+
 item item_types::get_default_of(item_types::item_type type, const std::string& lock_name)
 {
     using namespace item_types;

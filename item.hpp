@@ -173,6 +173,10 @@ struct item : db_interfaceable<item, true, MACRO_GET_STR("item_id")>
     bool should_rotate();
     void handle_rotate();
     void force_rotate();
+    ///doesn't make sense
+    ///although its a fun idea
+    ///locks don't have state
+    //void breach(mongo_lock_proxy& items_ctx);
 };
 
 extern

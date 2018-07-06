@@ -2623,6 +2623,20 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     bool get_array = dukx_is_prop_truthy(ctx, -1, "array");
 
+    std::string usage = "Usage: " + make_key_val("swap", "[idx1, idx2]");
+
+    ///reorder
+    bool has_arr = dukx_is_prop_truthy(ctx, -1, "swap");
+
+    user usr;
+
+    {
+        mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        if(!usr.load_from_db(user_ctx, get_caller(ctx)))
+            return push_error(ctx, "No such user, really bad error");
+    }
+
     user_nodes nodes;
 
     {
@@ -2635,18 +2649,89 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         nodes.load_from_db(node_ctx, get_caller(ctx));
     }
 
-    user usr;
-
+    if(has_arr)
     {
-        mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        if(sl > 1)
+            return push_error(ctx, "Must be called with a sec level of 1 to swap");
 
-        usr.load_from_db(user_ctx, get_caller(ctx));
+        duk_get_prop_string(ctx, -1, "swap");
+        int len = duk_get_length(ctx, -1);
+
+        if(len != 2)
+            return push_error(ctx, "array len != 2");
+
+        std::vector<int> values;
+
+        ///iterate array, being extremely generous with what you can pass in
+        for(int i = 0; i < len; i++)
+        {
+            duk_get_prop_index(ctx, -1, i);
+
+            if(duk_is_number(ctx, -1))
+                values.push_back(duk_get_int(ctx, -1));
+
+            duk_pop(ctx);
+        }
+
+        duk_pop(ctx);
+
+        if(values.size() != 2)
+            return push_error(ctx, "array len != 2");
+
+        std::vector<std::string> items;
+
+        for(auto& i : values)
+        {
+            std::string item = usr.index_to_item(i);
+
+            if(item == "")
+                return push_error(ctx, "Item does not exist");
+
+            items.push_back(item);
+        }
+
+        auto u1 = nodes.lock_to_node(items[0]);
+        auto u2 = nodes.lock_to_node(items[1]);
+
+        if(!u1.has_value() || !u2.has_value())
+            return push_error(ctx, "Item not found on node");
+
+        auto p1 = u1.value()->lock_to_pointer(items[0]);
+        auto p2 = u2.value()->lock_to_pointer(items[1]);
+
+        if(!p1.has_value() || !p2.has_value())
+            return push_error(ctx, "Item not found on node");
+
+        ///can cause multiples to be loaded on one stack
+        std::swap(*p1.value(), *p2.value());
+
+        {
+            mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+
+            u1.value()->breach();
+            u2.value()->breach();
+
+            nodes.overwrite_in_db(node_ctx);
+        }
+
+        /*{
+            mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+            item i1, i2;
+            i1.load_from_db(items[0]);
+            i2.load_from_db(items[1]);
+
+            i1.breach(items_ctx);
+            i2.breach(items_ctx);
+        }*/
+
+        return push_success(ctx);
     }
 
 
     if(!get_array)
     {
-        std::string accum = "Node Key: ";
+        std::string accum = usage + "\n" + "Node Key: ";
 
         for(int i=0; i < (int)user_node_info::TYPE_COUNT; i++)
         {
