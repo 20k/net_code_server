@@ -127,6 +127,16 @@ struct db_val : db_common
     //operator T&() = delete;
     operator T() const { return val; }
     //operator T() const { return u->template get_as<T>(key); }
+
+    T* operator->()
+    {
+        return &val;
+    }
+
+    T& operator*()
+    {
+        return val;
+    }
 };
 
 #define DB_VAL(type, name) db_val<type> name{#name}
