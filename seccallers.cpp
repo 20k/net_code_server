@@ -261,6 +261,11 @@ duk_ret_t set_is_realtime_script(duk_context* ctx)
 
     shared_state->set_realtime();
 
+    std::string s1 = get_script_host(ctx);
+    std::string s2 = get_script_ending(ctx);
+
+    set_global_string(ctx, "realtime_script_name", s1 + "." + s2);
+
     return 0;
 }
 

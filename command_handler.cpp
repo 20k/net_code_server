@@ -583,6 +583,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                             j["id"] = current_id;
                             j["width"] = width;
                             j["height"] = height;
+                            j["script_name"] = get_global_string(ctx, "realtime_script_name");
 
                             all_shared.value()->shared.add_back_write("command_realtime_json " + j.dump());
                         }
