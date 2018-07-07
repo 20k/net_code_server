@@ -357,15 +357,18 @@ void item::force_rotate()
 {
     set_prop("lock_last_rotate_s", get_wall_time_s());
     set_prop("lock_state", get_random_uint32_t());
+    set_prop("lock_is_breached", 0);
 }
 
-/*void item::breach(mongo_lock_proxy& items_ctx)
+void item::breach()
 {
-    double time_s = get_wall_time_s();
-    double internal_time_s = get_prop_as_double("lock_last_rotate_s");
+    set_prop("lock_is_breached", 1);
+}
 
-    internal_time_s -=
-}*/
+bool item::is_breached()
+{
+    return get_prop("lock_is_breached") == "1";
+}
 
 item item_types::get_default_of(item_types::item_type type, const std::string& lock_name)
 {

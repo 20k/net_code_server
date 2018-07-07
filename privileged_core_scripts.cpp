@@ -1322,6 +1322,12 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
 
         {
             mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
+
+            item lock;
+            lock.load_from_db(item_ctx, to_load);
+            lock.breach();
+            lock.overwrite_in_db(item_ctx);
+
             nodes.load_lock_to_any(item_ctx, to_load);
         }
 
@@ -1337,6 +1343,11 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
 
             if(node->can_load_lock(item_ctx, to_load))
             {
+                item lock;
+                lock.load_from_db(item_ctx, to_load);
+                lock.breach();
+                lock.overwrite_in_db(item_ctx);
+
                 node->load_lock(to_load);
             }
         }
@@ -2484,12 +2495,18 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
                 mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
                 i.overwrite_in_db(item_ctx);
+
+                ///todo: send a chats.tell to victim here
             }
+
+            if(i.is_breached())
+                continue;
 
             std::string func = i.get_prop("lock_type");
 
             auto it = secret_map.find(func);
 
+            ///is a lock
             if(it != secret_map.end())
             {
                 if(!it->second.ptr(priv_ctx, ctx, msg, i, name_of_person_being_attacked))
@@ -2497,6 +2514,14 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
                     all_success = false;
 
                     break;
+                }
+                else
+                {
+                    ///todo: send a chats.tell to victim here
+                    i.breach();
+
+                    mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+                    i.overwrite_in_db(item_ctx);
                 }
             }
         }
@@ -2705,25 +2730,28 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         ///can cause multiples to be loaded on one stack
         std::swap(*p1.value(), *p2.value());
 
-        {
+        /*{
             mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
 
             u1.value()->breach();
             u2.value()->breach();
 
             nodes.overwrite_in_db(node_ctx);
-        }
+        }*/
 
-        /*{
+        {
             mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
             item i1, i2;
-            i1.load_from_db(items[0]);
-            i2.load_from_db(items[1]);
+            i1.load_from_db(items_ctx, items[0]);
+            i2.load_from_db(items_ctx, items[1]);
 
-            i1.breach(items_ctx);
-            i2.breach(items_ctx);
-        }*/
+            i1.breach();
+            i2.breach();
+
+            i1.overwrite_in_db(items_ctx);
+            i2.overwrite_in_db(items_ctx);
+        }
 
         return push_success(ctx);
     }
