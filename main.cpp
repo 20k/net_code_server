@@ -284,6 +284,10 @@ int main()
     //manage.erase_all();
     manage.generate_up_to(150);
 
+    #define NEW_GEN
+    #ifdef NEW_GEN
+    manage.harvest_existing_npcs();
+    #endif // NEW_GEN
 
     //#define REGEN_SCRIPTS
     #ifdef REGEN_SCRIPTS

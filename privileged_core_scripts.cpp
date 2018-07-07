@@ -73,6 +73,8 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["net.move"] = make_cary("user", "\"\"", "target", "\"\"");
     ret["net.path"] = make_cary("user", "\"\"", "target", "\"\"", "min_stability", "0");
 
+    ///we need sys.map
+
     return ret;
 }
 

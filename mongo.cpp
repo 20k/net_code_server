@@ -24,7 +24,11 @@ void lock_internal::lock(const std::string& debug_info, int who, mongoc_client_t
     sf::Clock clk;
     #endif // DEADLOCK_DETECTION
 
+    #ifdef SUPER_SAFE
     Sleep(1);
+    #else
+    std::this_thread::yield();
+    #endif
 
     #ifndef DEADLOCK_DETECTION
     while(locked.test_and_set(std::memory_order_acquire)){Sleep(1);}
