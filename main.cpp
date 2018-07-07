@@ -281,7 +281,7 @@ int main()
     test_json();
 
     low_level_structure_manager& manage = get_global_low_level_structure_manager();
-    //manage.erase_all();
+    manage.erase_all();
     manage.generate_up_to(150);
 
     #define NEW_GEN

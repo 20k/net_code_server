@@ -3056,7 +3056,9 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(!usr.load_from_db(user_info, i.first))
                 continue;
 
-            global_pos[usr.name] = (vec2f){usr.pos.v[0], usr.pos.v[1]} / 5.f;
+            std::cout << "pos " << usr.local_pos << std::endl;
+
+            global_pos[usr.name] = (vec2f){usr.local_pos.v[0], usr.local_pos.v[1]} / 5.f;
         }
     }
 
@@ -3316,7 +3318,7 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(!usr.load_from_db(user_info, i.first))
                 continue;
 
-            global_pos[usr.name] = usr.pos;
+            global_pos[usr.name] = usr.local_pos;
             ordered_names.push_back(usr.name);
         }
     }
