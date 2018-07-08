@@ -3065,6 +3065,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
                 continue;
 
             //std::cout << "pos " << usr.local_pos << std::endl;
+            //std::cout << "gpos " << usr.pos << std::endl;
 
             global_pos[usr.name] = (vec2f){usr.local_pos.v[0], usr.local_pos.v[1]} / 1.f;
         }

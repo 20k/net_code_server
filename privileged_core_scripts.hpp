@@ -336,9 +336,8 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(cheats__disconnect, 4),
     REGISTER_FUNCTION_PRIV(cheats__unlink, 4),
     REGISTER_FUNCTION_PRIV(cheats__testloot, 4),
-
-    REGISTER_FUNCTION_PRIV(sys__map, 1);
     #endif // TESTING
+    REGISTER_FUNCTION_PRIV(sys__map, 1),
     #ifdef LIVE_DEBUGGING
     REGISTER_FUNCTION_PRIV(cheats__debug, 4),
     #endif // LIVE_DEBUGGING

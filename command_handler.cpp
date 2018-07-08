@@ -20,6 +20,7 @@
 #include <SFML/System.hpp>
 #include "shared_command_handler_state.hpp"
 #include "duk_object_functions.hpp"
+#include <secret/low_level_structure.hpp>
 
 struct unsafe_info
 {
@@ -966,6 +967,32 @@ void delete_links_for(const std::string& name)
     }
 }
 
+void delete_structure_for(const std::string& name)
+{
+    {
+        low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+        for(low_level_structure& i : low_level_structure_manage.systems)
+        {
+            for(auto it = (*i.user_list).begin(); it != (*i.user_list).end();)
+            {
+                if(*it == name)
+                {
+                    it = i.user_list->erase(it);
+
+                    mongo_lock_low_level ctx = get_global_mongo_low_level_structure_context(-2);
+
+                    i.overwrite_in_db(ctx);
+                }
+                else
+                {
+                    it++;
+                }
+            }
+        }
+    }
+}
+
 ///ok
 ///things this function needs to do
 ///preserve items
@@ -975,6 +1002,8 @@ void delete_links_for(const std::string& name)
 ///fix up notifs (?)
 ///fix up user db
 ///fixup auth
+
+///NOT UPDATED FOR SYSTEM STUFF
 std::string rename_user_force(const std::string& from_name, const std::string& to_name)
 {
     user usr;
@@ -1237,6 +1266,7 @@ std::string delete_user(command_handler_state& state, const std::string& str, bo
 
     delete_links_for(name);
 
+    delete_structure_for(name);
 
     return "Deleted";
 }
