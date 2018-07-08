@@ -226,6 +226,8 @@ duk_ret_t net__modify(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t gal__map(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl);
 
+duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl);
+
 #ifdef TESTING
 
 duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl);
@@ -334,6 +336,8 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(cheats__disconnect, 4),
     REGISTER_FUNCTION_PRIV(cheats__unlink, 4),
     REGISTER_FUNCTION_PRIV(cheats__testloot, 4),
+
+    REGISTER_FUNCTION_PRIV(sys__map, 1);
     #endif // TESTING
     #ifdef LIVE_DEBUGGING
     REGISTER_FUNCTION_PRIV(cheats__debug, 4),

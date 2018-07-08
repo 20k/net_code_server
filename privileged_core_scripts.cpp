@@ -7,6 +7,7 @@
 #include "command_handler.hpp"
 #include "duk_object_functions.hpp"
 #include "ascii_helpers.hpp"
+#include <secret/low_level_structure.hpp>
 
 std::map<std::string, std::vector<script_arg>> privileged_args = construct_core_args();
 
@@ -72,6 +73,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["net.modify"] = make_cary("user", "\"\"", "target", "\"\"");
     ret["net.move"] = make_cary("user", "\"\"", "target", "\"\"");
     ret["net.path"] = make_cary("user", "\"\"", "target", "\"\"", "min_stability", "0");
+    ret["sys.map"] = make_cary("sys", "\"\"");
 
     ///we need sys.map
 
@@ -4263,6 +4265,42 @@ duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         duk_push_string(ctx, str.c_str());
     }
+
+    return 1;
+}
+
+duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    std::string str = duk_safe_get_prop_string(ctx, -1, "sys");
+
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+    user my_user;
+
+    {
+        mongo_lock_proxy lock = get_global_mongo_user_info_context(-2);
+
+        if(!my_user.load_from_db(lock, get_caller(ctx)))
+            return push_error(ctx, "Error: Does not exist");
+    }
+
+    std::optional<low_level_structure*> opt_structure;
+
+    if(str == "")
+        opt_structure = low_level_structure_manage.get_system_of(my_user);
+    else
+        opt_structure = low_level_structure_manage.get_system_from_name(str);
+
+    if(!opt_structure.has_value())
+        return push_error(ctx, "You are lost, there is no help for you now");
+
+    low_level_structure& found_structure = *opt_structure.value();
+
+    std::vector<std::vector<std::string>> buffer = ascii_make_buffer({80, 80}, false);
+
+    ///to go any further we need 2 things
+    ///one: how to represent the glob of npcs on the map
+    ///two: the system connecting npcs (spoilers)
 
     return 1;
 }
