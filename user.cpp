@@ -122,7 +122,7 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
         {
             if(req.has_prop("vector_pos_local" + std::to_string(i)))
             {
-                local_pos.v[i] = req.get_prop_as_double("vector_pos" + std::to_string(i));
+                local_pos.v[i] = req.get_prop_as_double("vector_pos_local" + std::to_string(i));
                 has_local_pos = true;
             }
         }

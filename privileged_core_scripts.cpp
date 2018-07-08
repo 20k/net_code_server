@@ -2932,6 +2932,12 @@ double npc_name_to_angle(const std::string& str)
     return ((double)val / (pow(2, 32)-1)) * 2 * M_PI;
 }
 
+///so
+///net.map is probably going to die (sadface)
+///because its no longer the main way of contenting your way around
+///instead npcs will be situated in a system
+///you'll get shown the door to it, but managing the complexity of the internal cloud is up to you
+///make sys.map
 duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -3056,9 +3062,9 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(!usr.load_from_db(user_info, i.first))
                 continue;
 
-            std::cout << "pos " << usr.local_pos << std::endl;
+            //std::cout << "pos " << usr.local_pos << std::endl;
 
-            global_pos[usr.name] = (vec2f){usr.local_pos.v[0], usr.local_pos.v[1]} / 5.f;
+            global_pos[usr.name] = (vec2f){usr.local_pos.v[0], usr.local_pos.v[1]} / 1.f;
         }
     }
 
