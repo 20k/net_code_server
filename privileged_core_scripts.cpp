@@ -4302,6 +4302,13 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///one: how to represent the glob of npcs on the map
     ///two: the system connecting npcs (spoilers)
 
+    ///alright ok
+    ///the game design can kind of get saved easily here
+    ///so we insert the special npcs into the system
+    ///connect them to the regular npc net
+    ///and that's the entrance
+    ///hooray!
+
     return 1;
 }
 
