@@ -4,7 +4,7 @@
 #include <secret/npc_manager.hpp>
 #include "rng.hpp"
 #include <secret/initial_link_setup.hpp>
-
+#include <secret/low_level_structure.hpp>
 
 void on_heal_network_link(int cnt, std::vector<std::string> data)
 {
@@ -14,6 +14,17 @@ void on_heal_network_link(int cnt, std::vector<std::string> data)
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
     //npc_generator::force_link_singular(playspace_network_manage, data[0], {data[1]});
+
+    auto u1 = get_user(data[0], -2);
+    auto u2 = get_user(data[1], -2);
+
+    if(!u1.has_value() || !u2.has_value())
+        return;
+
+    low_level_structure_manager& low_level_structure = get_global_low_level_structure_manager();
+
+    if(!low_level_structure.in_same_system(*u1, *u2))
+        return;
 
     playspace_network_manage.link(data[0], data[1]);
 
@@ -56,6 +67,11 @@ void on_finish_relink(int cnt, std::vector<std::string> data)
     auto u2 = get_user(data.back(), -2);
 
     if(!u1.has_value() || !u2.has_value())
+        return;
+
+    low_level_structure_manager& low_level_structure = get_global_low_level_structure_manager();
+
+    if(!low_level_structure.in_same_system(*u1, *u2))
         return;
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
