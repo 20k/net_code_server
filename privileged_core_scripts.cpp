@@ -2985,125 +2985,41 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx), path_info::VIEW_LINKS))
         return push_error(ctx, "Target Inaccessible");
 
-    //vec2i centre = {w/2, h/2};
+    network_accessibility_info info = playspace_network_manage.generate_network_accessibility_from(ctx, from, num);
 
-    //int spacing = 3;
+    vec3f cur_center = info.global_pos[from];
 
-    //std::map<std::string, vec2f> offset_pos;
+    vec3f accum = {0,0};
 
-    std::map<std::string, int> rings;
-
-    //auto links = playspace_network_manage.get_links(from)
-    std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-    std::set<std::string> accessible{from};
-    std::set<std::string> inaccessible;
-    std::vector<std::string> next_ring;
-    std::vector<std::string> current_ring{from};
-
-    ///eg f_12323, a
-    std::vector<std::pair<std::string, std::string>> keys;
-    std::map<std::string, std::string> display_string;
-    int overall_count = 0;
-
-    for(int ring = 0; ring < num; ring++)
+    for(auto& i : info.rings)
     {
-        next_ring.clear();
-
-        for(const std::string& str : current_ring)
-        {
-            if(rings.find(str) != rings.end())
-                continue;
-
-            rings[str] = ring;
-
-            display_string[str] = chars[overall_count];
-            keys.push_back({str, display_string[str]});
-            overall_count++;
-            overall_count %= chars.size();
-
-            auto connections = playspace_network_manage.get_links(str);
-
-            for(auto& i : connections)
-            {
-                if(rings.find(i) != rings.end())
-                    continue;
-
-                if(inaccessible.find(i) != inaccessible.end())
-                    continue;
-
-                if(accessible.find(i) == accessible.end())
-                {
-                    if(!playspace_network_manage.has_accessible_path_to(ctx, i, str, path_info::VIEW_LINKS))
-                    {
-                        inaccessible.insert(i);
-                        continue;
-                    }
-                    else
-                    {
-                        accessible.insert(i);
-                    }
-                }
-
-                next_ring.push_back(i);
-            }
-        }
-
-        current_ring = next_ring;
+        accum += info.global_pos[i.first];
     }
 
-    std::map<std::string, vec2f> global_pos;
-
-    for(auto& i : rings)
+    if(info.rings.size() > 0)
     {
-        user usr;
-
-        {
-            mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
-
-            if(!usr.load_from_db(user_info, i.first))
-                continue;
-
-            //std::cout << "pos " << usr.local_pos << std::endl;
-            //std::cout << "gpos " << usr.pos << std::endl;
-
-            global_pos[usr.name] = (vec2f){usr.local_pos.v[0], usr.local_pos.v[1]} / 1.f;
-        }
-    }
-
-    vec2f cur_center = global_pos[from];
-
-    vec2f accum = {0,0};
-
-    for(auto& i : rings)
-    {
-        accum += global_pos[i.first];
-    }
-
-    if(rings.size() > 0)
-    {
-        accum = accum / (float)rings.size();
+        accum = accum / (float)info.rings.size();
     }
 
     accum = (accum + cur_center)/2.f;
 
-    for(auto& i : global_pos)
+    for(auto& i : info.global_pos)
     {
         i.second = i.second - accum;
     }
 
-    for(auto& i : global_pos)
+    for(auto& i : info.global_pos)
     {
-        i.second += (vec2f){w/2.f, h/2.f};
+        i.second += (vec3f){w/2.f, h/2.f, 0.f};
 
         i.second = round(i.second);
     }
 
     std::map<std::string, vec2f> node_to_pos;
 
-    for(auto& i : rings)
+    for(auto& i : info.rings)
     {
-        node_to_pos[i.first] = global_pos[i.first];
+        node_to_pos[i.first] = info.global_pos[i.first].xy();
     }
 
     for(auto& i : node_to_pos)
@@ -3161,7 +3077,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         vec2i clamped = clamp((vec2i){i.second.x(), i.second.y()}, (vec2i){0, 0}, (vec2i){w-1, h-1});
 
-        std::string to_display = "`" + string_to_colour(i.first) + display_string[i.first] + "`";
+        std::string to_display = "`" + string_to_colour(i.first) + info.display_string[i.first] + "`";
 
         str[clamped.y() * w + clamped.x()] = to_display;
     }
@@ -3171,7 +3087,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         i.second = i.second + " " + std::to_string((int)global_pos[i.first].x()) + " " + std::to_string((int)global_pos[i.first].y());
     }*/
 
-    keys.insert(keys.begin(), {"", "Key"});
+    info.keys.insert(info.keys.begin(), {"", "Key"});
 
     std::string built;
 
@@ -3182,9 +3098,9 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             built += str[y * w + x];
         }
 
-        if(y < (int)keys.size())
+        if(y < (int)info.keys.size())
         {
-            std::string col = string_to_colour(keys[y].first);
+            std::string col = string_to_colour(info.keys[y].first);
 
             //#define ITEM_DEBUG
             #ifdef ITEM_DEBUG
@@ -3214,14 +3130,14 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             }
             #endif // ITEM_DEBUG
 
-            std::string name = keys[y].first;
+            std::string name = info.keys[y].first;
 
             //std::string extra_str = std::to_string((int)global_pos[name].x()) + ", " + std::to_string((int)global_pos[name].y());
 
-            built += "      `" + col + keys[y].second;
+            built += "      `" + col + info.keys[y].second;
 
-            if(keys[y].first.size() > 0)
-                built += " | " + keys[y].first;// + " | [" + extra_str + "]";
+            if(info.keys[y].first.size() > 0)
+                built += " | " + info.keys[y].first;// + " | [" + extra_str + "]";
 
             built += "`";
         }
@@ -3266,73 +3182,8 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!usr.is_allowed_user(get_caller(ctx)) && usr.name != get_caller(ctx) && !((hostile_actions & user_node_info::VIEW_LINKS) > 0))
         return push_error(ctx, "Node is Locked");
 
-    std::map<std::string, int> rings;
-    std::set<std::string> accessible{from};
-    std::set<std::string> inaccessible;
-    std::vector<std::string> next_ring;
-    std::vector<std::string> current_ring{from};
+    network_accessibility_info info = playspace_network_manage.generate_network_accessibility_from(ctx, from, num);
 
-    for(int ring = 0; ring < num; ring++)
-    {
-        next_ring.clear();
-
-        for(const std::string& str : current_ring)
-        {
-            if(rings.find(str) != rings.end())
-                continue;
-
-            rings[str] = ring;
-
-            auto connections = playspace_network_manage.get_links(str);
-
-            for(auto& i : connections)
-            {
-                if(rings.find(i) != rings.end())
-                    continue;
-
-                if(inaccessible.find(i) != inaccessible.end())
-                    continue;
-
-                if(accessible.find(i) == accessible.end())
-                {
-                    if(!playspace_network_manage.has_accessible_path_to(ctx, i, str, path_info::VIEW_LINKS))
-                    {
-                        inaccessible.insert(i);
-                        continue;
-                    }
-                    else
-                    {
-                        accessible.insert(i);
-                    }
-                }
-
-                next_ring.push_back(i);
-            }
-        }
-
-        current_ring = next_ring;
-    }
-
-    std::map<std::string, vec3f> global_pos;
-    std::vector<std::string> ordered_names;
-
-
-    for(auto& i : rings)
-    {
-        user usr;
-
-        {
-            mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
-
-            if(!usr.load_from_db(user_info, i.first))
-                continue;
-
-            global_pos[usr.name] = usr.local_pos;
-            ordered_names.push_back(usr.name);
-        }
-    }
-
-    std::sort(ordered_names.begin(), ordered_names.end(), [&](const auto& u1, const auto& u2){return rings[u1] < rings[u2];});
 
     ///so
     ///the information we want to give back to the client wants to be very rich
@@ -3340,15 +3191,14 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///path to original player? unsure on this
     ///position
 
-
     using nlohmann::json;
 
     std::vector<json> all_npc_data;
 
-    for(auto& i : ordered_names)
+    for(auto& i : info.ring_ordered_names)
     {
         const std::string& name = i;
-        vec3f pos = global_pos[name];
+        vec3f pos = info.global_pos[name];
 
         json j;
         j["name"] = name;
@@ -3360,7 +3210,7 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         for(auto it = connections.begin(); it != connections.end();)
         {
-            if(accessible.find(*it) == accessible.end())
+            if(info.accessible.find(*it) == info.accessible.end())
                 it = connections.erase(it);
             else
                 it++;

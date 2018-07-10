@@ -638,3 +638,22 @@ std::string user::fetch_sector()
 {
     return get_nearest_structure(pos).name;
 }
+
+std::vector<user> load_users(const std::vector<std::string>& names, int lock_id)
+{
+    std::vector<user> ret;
+
+    mongo_lock_proxy ctx = get_global_mongo_user_info_context(lock_id);
+
+    for(auto& i : names)
+    {
+        user usr;
+
+        if(!usr.load_from_db(ctx, i))
+            continue;
+
+        ret.push_back(usr);
+    }
+
+    return ret;
+}
