@@ -73,6 +73,15 @@ std::string ascii_index_to_character(int idx)
     return std::string(1, str[idx]);
 }
 
+std::string ascii_index_to_full_character(int idx)
+{
+    std::string str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    idx = idx % str.size();
+
+    return std::string(1, str[idx]);
+}
+
 std::string stolower(const std::string& in)
 {
     std::string ret = in;
