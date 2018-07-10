@@ -4125,6 +4125,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string str = duk_safe_get_prop_string(ctx, -1, "sys");
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
     user my_user;
 
@@ -4147,7 +4148,18 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     low_level_structure& found_structure = *opt_structure.value();
 
+    std::vector<user> special_users = found_structure.get_special_users(get_thread_id(ctx));
+
     std::vector<std::vector<std::string>> buffer = ascii_make_buffer({80, 80}, false);
+
+    network_accessibility_info info;
+
+    for(user& usr : special_users)
+    {
+        network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, 15);
+
+        info = network_accessibility_info::merge_together(info, cur);
+    }
 
     ///to go any further we need 2 things
     ///one: how to represent the glob of npcs on the map
