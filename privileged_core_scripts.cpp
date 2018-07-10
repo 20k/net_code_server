@@ -2989,7 +2989,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     vec3f cur_center = info.global_pos[from];
 
-    vec3f accum = {0,0};
+    vec3f accum = {0,0,0};
 
     for(auto& i : info.rings)
     {
