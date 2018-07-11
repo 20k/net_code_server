@@ -37,6 +37,13 @@ struct global_generic_cache
 
         cache.erase(name);
     }
+
+    void clear()
+    {
+        std::lock_guard guard(mut);
+
+        cache.clear();
+    }
 };
 
 #endif // GLOBAL_CACHING_HPP_INCLUDED

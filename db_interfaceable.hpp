@@ -298,6 +298,23 @@ struct db_interfaceable
         return ret;
     }
 
+    static
+    void remove_all_from_db(mongo_lock_proxy& ctx)
+    {
+        std::string static_key;
+        stringify_params(static_key, name...);
+
+        json exist;
+        exist["$exists"] = true;
+
+        json to_find;
+        to_find[static_key] = exist;
+
+        ctx->remove_json(ctx->last_collection, to_find.dump());
+
+        this_cache.clear();
+    }
+
     ///need a fetch all from db
     ///just returns a vector, and checks for $exists : id
     bool load_from_db(mongo_lock_proxy& ctx, const std::string& id)

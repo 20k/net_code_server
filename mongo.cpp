@@ -629,7 +629,8 @@ void mongo_interface::insert_bson_1(const std::string& script_host, bson_t* bs) 
 
     if(!mongoc_collection_insert_one(collection, bs, NULL, NULL, &error))
     {
-        fprintf (stderr, "err: %s\n", error.message);
+        printf("Error: %s\n", error.message);
+        //fprintf (stderr, "err: %s\n", error.message);
     }
 }
 
