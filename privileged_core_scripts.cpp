@@ -3973,6 +3973,14 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::optional<low_level_structure*> opt_structure;
 
+    /*for(low_level_structure& struc : low_level_structure_manage.systems)
+    {
+        for(std::string& usr : *struc.user_list)
+        {
+            std::cout << "asdf " << usr << std::endl;
+        }
+    }*/
+
     if(str == "")
         opt_structure = low_level_structure_manage.get_system_of(my_user);
     else
@@ -3985,7 +3993,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<user> special_users = found_structure.get_special_users(get_thread_id(ctx));
 
-    std::vector<std::vector<std::string>> buffer = ascii_make_buffer({80, 80}, false);
+    std::vector<std::vector<std::string>> buffer = ascii_make_buffer({80, 40}, false);
 
     network_accessibility_info info;
 
@@ -3995,6 +4003,12 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         info = network_accessibility_info::merge_together(info, cur);
     }
+
+    std::string from = get_caller(ctx);
+
+    std::string result = ascii_render_from_accessibility_info(info, buffer, info.global_pos[from]);
+
+    push_duk_val(ctx, result);
 
     ///to go any further we need 2 things
     ///one: how to represent the glob of npcs on the map
