@@ -1,4 +1,6 @@
 #include "ascii_helpers.hpp"
+#include <secret/npc_manager.hpp>
+#include <libncclient/nc_util.hpp>
 
 std::vector<std::vector<std::string>> ascii_make_buffer(vec2i dim, bool add_newlines)
 {
@@ -133,4 +135,178 @@ std::string id_to_roman_numeral(int x)
         return "x";
 
     return "x" + id_to_roman_numeral(x-10);
+}
+
+std::string ascii_render_from_accessibility_info(network_accessibility_info& info, std::vector<std::vector<std::string>>& buffer, vec3f centre)
+{
+    if(buffer.size() == 0)
+        return "";
+
+    if(buffer[0].size() == 0)
+        return "";
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    int h = buffer.size();
+    int w = buffer[0].size();
+
+    vec3f cur_center = centre;
+
+    vec3f accum = {0,0,0};
+
+    for(auto& i : info.rings)
+    {
+        accum += info.global_pos[i.first];
+    }
+
+    if(info.rings.size() > 0)
+    {
+        accum = accum / (float)info.rings.size();
+    }
+
+    accum = (accum + cur_center)/2.f;
+
+    for(auto& i : info.global_pos)
+    {
+        i.second = i.second - accum;
+    }
+
+    for(auto& i : info.global_pos)
+    {
+        i.second += (vec3f){w/2.f, h/2.f, 0.f};
+
+        i.second = round(i.second);
+    }
+
+    std::map<std::string, vec2f> node_to_pos;
+
+    for(auto& i : info.rings)
+    {
+        node_to_pos[i.first] = info.global_pos[i.first].xy();
+    }
+
+    for(auto& i : node_to_pos)
+    {
+        const std::string& name = i.first;
+        vec2f pos = i.second;
+
+        auto connections = playspace_network_manage.get_links(name);
+
+        int colour_offset_count = 0;
+
+        for(auto& conn : connections)
+        {
+            auto found = node_to_pos.find(conn);
+
+            if(found == node_to_pos.end())
+                continue;
+
+            vec2f to_draw_pos = found->second;
+
+            vec2f out_dir;
+            int out_num;
+
+            line_draw_helper(pos, to_draw_pos, out_dir, out_num);
+
+            /*vec2i idiff = to_draw_pos - pos;
+
+            vec2f fdiff = (vec2f){idiff.x(), idiff.y()};
+
+            out_dir = fdiff.norm();
+            out_num = fdiff.length();*/
+
+            std::string col = string_to_colour(name);
+
+            if((colour_offset_count % 2) == 1)
+                col = string_to_colour(conn);
+
+            vec2f cur = (vec2f){pos.x(), pos.y()};
+
+            for(int i=0; i < out_num; i++)
+            {
+                vec2f rpos = round(cur);
+                vec2i ipos = clamp((vec2i){rpos.x(), rpos.y()}, (vec2i){0,0}, (vec2i){w-1, h-1});
+
+                buffer[ipos.y()][ipos.x()] = "`" + col + ".`";
+
+                cur += out_dir;
+            }
+
+            colour_offset_count++;
+        }
+    }
+
+    for(auto& i : node_to_pos)
+    {
+        vec2i clamped = clamp((vec2i){i.second.x(), i.second.y()}, (vec2i){0, 0}, (vec2i){w-1, h-1});
+
+        std::string to_display = "`" + string_to_colour(i.first) + info.display_string[i.first] + "`";
+
+        buffer[clamped.y()][clamped.x()] = to_display;
+    }
+
+    /*for(auto& i : keys)
+    {
+        i.second = i.second + " " + std::to_string((int)global_pos[i.first].x()) + " " + std::to_string((int)global_pos[i.first].y());
+    }*/
+
+    info.keys.insert(info.keys.begin(), {"", "Key"});
+
+    std::string built;
+
+    for(int y=0; y < h; y++)
+    {
+        for(int x=0; x < w; x++)
+        {
+            built += buffer[y][x];
+        }
+
+        if(y < (int)info.keys.size())
+        {
+            std::string col = string_to_colour(info.keys[y].first);
+
+            //#define ITEM_DEBUG
+            #ifdef ITEM_DEBUG
+            std::optional user_and_nodes = get_user_and_nodes(keys[y].first, get_thread_id(ctx));
+
+            if(user_and_nodes.has_value())
+            {
+                user_nodes& nodes = user_and_nodes->second;
+
+                int num_items = 0;
+
+                for(user_node& node : nodes.nodes)
+                {
+                    num_items += node.attached_locks.size();
+                }
+
+                num_items = user_and_nodes->first.num_items();
+
+                if(num_items == 0)
+                {
+                    col = "L";
+                }
+                else
+                {
+                    col = "D";
+                }
+            }
+            #endif // ITEM_DEBUG
+
+            std::string name = info.keys[y].first;
+
+            //std::string extra_str = std::to_string((int)global_pos[name].x()) + ", " + std::to_string((int)global_pos[name].y());
+
+            built += "      `" + col + info.keys[y].second;
+
+            if(info.keys[y].first.size() > 0)
+                built += " | " + info.keys[y].first;// + " | [" + extra_str + "]";
+
+            built += "`";
+        }
+
+        built += "\n";
+    }
+
+    return built;
 }

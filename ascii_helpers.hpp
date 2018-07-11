@@ -15,4 +15,8 @@ std::string stolower(const std::string& in);
 
 std::string id_to_roman_numeral(int x);
 
+struct network_accessibility_info;
+
+std::string ascii_render_from_accessibility_info(network_accessibility_info& network_accessibility_inf, std::vector<std::vector<std::string>>& buffer, vec3f centre);
+
 #endif // ASCII_HELPERS_HPP_INCLUDED
