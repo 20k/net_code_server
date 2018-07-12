@@ -281,18 +281,18 @@ int main()
     test_json();
 
     low_level_structure_manager& manage = get_global_low_level_structure_manager();
-    //manage.erase_intersystem_specials();
-    //manage.for_each(low_level_structure::cleanup_invalid_users);
-    //manage.erase_all();
-    //manage.generate_up_to(150);
+    manage.erase_intersystem_specials();
+    manage.for_each(low_level_structure::cleanup_invalid_users);
+    manage.erase_all();
+    manage.generate_up_to(150);
 
-    //#define NEW_GEN
+    #define NEW_GEN
     #ifdef NEW_GEN
     manage.harvest_existing_npcs();
     #endif // NEW_GEN
 
-    //manage.erase_intersystem_specials();
-    //manage.for_each(low_level_structure::ensure_intersystem_npcs, 3);
+    manage.erase_intersystem_specials();
+    manage.for_each(low_level_structure::ensure_intersystem_npcs, 3);
     //manage.for_each(low_level_structure::layout_internal_users);
 
     //#define REGEN_SCRIPTS

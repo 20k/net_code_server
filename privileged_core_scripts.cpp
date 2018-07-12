@@ -4006,7 +4006,10 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string from = get_caller(ctx);
 
-    std::string result = ascii_render_from_accessibility_info(info, buffer, info.global_pos[from]);
+    vec3f pos = {0,0,0};
+    ///info.global_pos[from]
+
+    std::string result = ascii_render_from_accessibility_info(info, buffer, pos);
 
     push_duk_val(ctx, result);
 
