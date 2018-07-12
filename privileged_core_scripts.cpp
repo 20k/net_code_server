@@ -2744,6 +2744,11 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         }*/
 
         {
+            mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+            nodes.overwrite_in_db(node_ctx);
+        }
+
+        {
             mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
             item i1, i2;
