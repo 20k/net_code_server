@@ -282,9 +282,9 @@ int main()
 
     low_level_structure_manager& manage = get_global_low_level_structure_manager();
     //manage.erase_intersystem_specials();
-    manage.for_each(low_level_structure::cleanup_invalid_users);
+    //manage.for_each(low_level_structure::cleanup_invalid_users);
     //manage.erase_all();
-    manage.generate_up_to(150);
+    //manage.generate_up_to(150);
 
     //#define NEW_GEN
     #ifdef NEW_GEN
@@ -292,7 +292,8 @@ int main()
     #endif // NEW_GEN
 
     //manage.erase_intersystem_specials();
-    manage.for_each(low_level_structure::ensure_intersystem_npcs, 3);
+    //manage.for_each(low_level_structure::ensure_intersystem_npcs, 3);
+    //manage.for_each(low_level_structure::layout_internal_users);
 
     //#define REGEN_SCRIPTS
     #ifdef REGEN_SCRIPTS

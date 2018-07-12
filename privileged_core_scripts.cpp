@@ -4024,6 +4024,68 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    std::string str = duk_safe_get_prop_string(ctx, -1, "sys");
+
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    user my_user;
+
+    {
+        mongo_lock_proxy lock = get_global_mongo_user_info_context(-2);
+
+        if(!my_user.load_from_db(lock, get_caller(ctx)))
+            return push_error(ctx, "Error: Does not exist");
+    }
+
+    std::optional<low_level_structure*> opt_structure;
+
+    if(str == "")
+        opt_structure = low_level_structure_manage.get_system_of(my_user);
+    else
+        opt_structure = low_level_structure_manage.get_system_from_name(str);
+
+    if(!opt_structure.has_value())
+        return push_error(ctx, "You are lost, there is no help for you now");
+
+    low_level_structure& found_structure = *opt_structure.value();
+
+    std::vector<user> special_users = found_structure.get_special_users(get_thread_id(ctx));
+
+    std::vector<std::vector<std::string>> buffer = ascii_make_buffer({80, 40}, false);
+
+    network_accessibility_info info;
+
+    for(user& usr : special_users)
+    {
+        network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, 15);
+
+        info = network_accessibility_info::merge_together(info, cur);
+    }
+
+    std::string from = get_caller(ctx);
+
+    std::string result = ascii_render_from_accessibility_info(info, buffer, info.global_pos[from]);
+
+    push_duk_val(ctx, result);
+
+    ///to go any further we need 2 things
+    ///one: how to represent the glob of npcs on the map
+    ///two: the system connecting npcs (spoilers)
+
+    ///alright ok
+    ///the game design can kind of get saved easily here
+    ///so we insert the special npcs into the system
+    ///connect them to the regular npc net
+    ///and that's the entrance
+    ///hooray!
+
+    return 1;
+}
+
+
 #ifdef TESTING
 
 duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)
