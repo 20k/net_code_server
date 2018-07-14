@@ -620,6 +620,11 @@ int user::get_default_network_links(int thread_id)
                 else if(vals[i] < 0)
                     base--;
             }
+
+            if(enums[i] == npc_info::WARPY)
+            {
+                base += 4;
+            }
         }
     }
 
