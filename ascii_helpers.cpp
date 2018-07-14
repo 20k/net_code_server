@@ -137,7 +137,7 @@ std::string id_to_roman_numeral(int x)
     return "x" + id_to_roman_numeral(x-10);
 }
 
-std::string ascii_render_from_accessibility_info(network_accessibility_info& info, std::vector<std::vector<std::string>>& buffer, vec3f centre)
+std::string ascii_render_from_accessibility_info(network_accessibility_info& info, std::vector<std::vector<std::string>>& buffer, vec3f centre, bool average_camera, float mult)
 {
     if(buffer.size() == 0)
         return "";
@@ -164,7 +164,19 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
         accum = accum / (float)info.rings.size();
     }
 
-    accum = (accum + cur_center)/2.f;
+    if(average_camera)
+    {
+        accum = (accum + cur_center)/2.f;
+    }
+    else
+    {
+        accum = cur_center;
+    }
+
+    for(auto& i : info.global_pos)
+    {
+        i.second = i.second * mult;
+    }
 
     for(auto& i : info.global_pos)
     {

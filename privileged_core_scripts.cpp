@@ -4014,7 +4014,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     vec3f pos = {0,0,0};
     ///info.global_pos[from]
 
-    std::string result = ascii_render_from_accessibility_info(info, buffer, pos);
+    std::string result = ascii_render_from_accessibility_info(info, buffer, pos, false, 0.5f);
 
     push_duk_val(ctx, result);
 
@@ -4060,6 +4060,8 @@ duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     low_level_structure& found_structure = *opt_structure.value();
 
+    found_structure.layout_internal_users();
+
     std::vector<user> special_users = found_structure.get_special_users(get_thread_id(ctx));
 
     std::vector<std::vector<std::string>> buffer = ascii_make_buffer({80, 40}, false);
@@ -4075,7 +4077,10 @@ duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string from = get_caller(ctx);
 
-    std::string result = ascii_render_from_accessibility_info(info, buffer, info.global_pos[from]);
+    vec3f pos = {0,0,0};
+    ///info.global_pos[from]
+
+    std::string result = ascii_render_from_accessibility_info(info, buffer, pos, false, 0.5f);
 
     push_duk_val(ctx, result);
 
