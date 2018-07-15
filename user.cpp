@@ -634,7 +634,7 @@ int user::get_default_network_links(int thread_id)
     return base;
 }
 
-bool user::is_npc()
+bool user::is_npc() const
 {
     return auth == "";
 }

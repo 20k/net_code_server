@@ -80,7 +80,7 @@ struct user
     int find_num_scripts(mongo_lock_proxy& ctx);
     int find_num_public_scripts(mongo_lock_proxy& ctx);
 
-    bool is_npc();
+    bool is_npc() const;
 
     int get_default_network_links(int thread_id);
 
@@ -150,5 +150,22 @@ void for_each_auth(const T& t)
 }
 
 std::vector<user> load_users(const std::vector<std::string>& names, int lock_id);
+
+template<typename T>
+inline
+std::vector<user> filter_users(const std::vector<user>& users, int lock_id, const T& t)
+{
+    std::vector<user> ret;
+
+    for(auto& i : users)
+    {
+        if(t(i))
+        {
+            ret.push_back(i);
+        }
+    }
+
+    return ret;
+}
 
 #endif // USER_HPP_INCLUDED
