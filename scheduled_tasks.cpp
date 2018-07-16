@@ -21,9 +21,8 @@ void on_heal_network_link(int cnt, std::vector<std::string> data)
     if(!u1.has_value() || !u2.has_value())
         return;
 
-    low_level_structure_manager& low_level_structure = get_global_low_level_structure_manager();
-
-    if(!low_level_structure.in_same_system(*u1, *u2))
+    //if(!low_level_structure.in_same_system(*u1, *u2))
+    if(!playspace_network_manage.could_link(u1->name, u2->name))
         return;
 
     playspace_network_manage.link(data[0], data[1]);
@@ -69,12 +68,10 @@ void on_finish_relink(int cnt, std::vector<std::string> data)
     if(!u1.has_value() || !u2.has_value())
         return;
 
-    low_level_structure_manager& low_level_structure = get_global_low_level_structure_manager();
-
-    if(!low_level_structure.in_same_system(*u1, *u2))
-        return;
-
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    if(!playspace_network_manage.could_link(u1->name, u2->name))
+        return;
 
     if(playspace_network_manage.current_network_links(u2->name) >= playspace_network_manage.max_network_links(u2->name))
         return;
