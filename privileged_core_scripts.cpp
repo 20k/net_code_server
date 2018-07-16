@@ -378,7 +378,7 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, to, from, path_info::NONE, -1, amount / cash_to_destroy_link);
+    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, to, from, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY), -1, amount / cash_to_destroy_link);
 
     if(path.size() == 0)
         return push_error(ctx, "User does not exist or is disconnected");
@@ -1591,7 +1591,7 @@ duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::st
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, to, from, path_info::NONE, -1, 1.f / items_to_destroy_link);
+    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, to, from, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY), -1, 1.f / items_to_destroy_link);
 
     if(path.size() == 0)
         return push_error(ctx, "User does not exist or is disconnected");
@@ -3529,7 +3529,7 @@ duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
         viewable_distance = playspace_network_manage.get_accessible_path_to(ctx, target, start, path_info::USE_LINKS, -1, minimum_stability);
 
     ///STRANGER DANGER
-    std::vector<std::string> link_path = playspace_network_manage.get_accessible_path_to(ctx, target, start, path_info::NONE, -1, minimum_stability);
+    std::vector<std::string> link_path = playspace_network_manage.get_accessible_path_to(ctx, target, start, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY), -1, minimum_stability);
 
     //float total_path_strength = playspace_network_manage.get_total_path_link_strength(link_path);
 
