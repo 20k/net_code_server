@@ -3417,6 +3417,9 @@ duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
+    if(!playspace_network_manage.could_link(target, host))
+        return push_error(ctx, "User and Target not in the same system");
+
     float link_stability_cost = 50;
 
     std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, target, host, path_info::USE_LINKS, -1, link_stability_cost);
@@ -3613,6 +3616,9 @@ duk_ret_t net__modify(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(!opt_user_and_nodes_2.has_value())
         return push_error(ctx, "No such user (target)");
+
+    if(!playspace_network_manage.could_link(usr, target))
+        return push_error(ctx, "User and Target not in same system");
 
     bool confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
     bool create = dukx_is_prop_truthy(ctx, -1, "create");
