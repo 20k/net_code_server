@@ -283,6 +283,9 @@ int main()
     low_level_structure_manager& manage = get_global_low_level_structure_manager();
     //manage.erase_intersystem_specials();
     //manage.for_each(low_level_structure::cleanup_invalid_users);
+
+    manage.connect_systems_together();
+
     //manage.erase_all();
     //manage.generate_up_to(150);
 
