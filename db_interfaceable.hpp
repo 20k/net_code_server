@@ -31,7 +31,7 @@ struct db_common
 
     //virtual void extract_from(json& j){}
 
-    virtual void serialise(json& j, bool ser) {}
+    //virtual void serialise(json& j, bool ser) {}
 
     virtual ~db_common(){}
 };
@@ -91,11 +91,12 @@ struct db_val : db_common
         //u->template set_as<T>(key, other.u->template get_as<T>(other.key));
     }*/
 
-    virtual void serialise(json& j, bool ser) override
+    template<typename U = T>
+    void serialise(json& j, bool ser)
     {
         if(ser)
         {
-            j[key] = val;
+            j[key] = (U)val;
         }
         else
         {
@@ -104,11 +105,11 @@ struct db_val : db_common
 
             try
             {
-                val = j[key].get<T>();
+                val = j[key].get<U>();
             }
             catch(...)
             {
-                j[key] = val;
+                j[key] = (U)val;
             }
         }
     }
