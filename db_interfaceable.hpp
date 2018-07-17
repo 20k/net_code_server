@@ -115,10 +115,12 @@ struct db_val : db_common
     }
 
     template<typename V>
-    void operator=(const V& other)
+    db_val<T>& operator=(const V& other)
     {
         //u->template set_as<T>(key, other);
         val = other;
+
+        return *this;
     }
 
     T& value() {return val;};
