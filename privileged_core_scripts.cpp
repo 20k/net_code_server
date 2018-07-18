@@ -73,9 +73,8 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["net.modify"] = make_cary("user", "\"\"", "target", "\"\"");
     ret["net.move"] = make_cary("user", "\"\"", "target", "\"\"");
     ret["net.path"] = make_cary("user", "\"\"", "target", "\"\"", "min_stability", "0");
-    ret["sys.map"] = make_cary("sys", "\"\"");
-
-    ///we need sys.map
+    ret["sys.view"] = make_cary("sys", "\"\"");
+    ret["sys.map"] = make_cary("centre", "true");
 
     return ret;
 }
@@ -3969,6 +3968,8 @@ duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl)
 ///need to centre sys.map on player by default
 duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    bool centre = dukx_is_prop_truthy(ctx, -1, "centre");
+
     user my_user;
 
     {
@@ -4013,9 +4014,14 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     low_level_structure& structure = *opt_sys.value();
 
+    vec3f pos = {0,0,0};
+
+    if(centre)
+        pos = structure.get_pos();
+
     //std::cout << *low_level_structure_manage.get_system_of(my_user).value()->name << std::endl;
 
-    std::string result = ascii_render_from_accessibility_info(info, buffer, structure.get_pos(), false, 0.07f, true);
+    std::string result = ascii_render_from_accessibility_info(info, buffer, pos, false, 0.07f, true);
 
     push_duk_val(ctx, result);
 
