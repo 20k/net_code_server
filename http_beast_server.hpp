@@ -3,6 +3,8 @@
 
 #include <atomic>
 
+#define MAX_MESSAGE_SIZE 200*200
+
 struct global_state
 {
     //std::map<std::string, int> auth_locks;

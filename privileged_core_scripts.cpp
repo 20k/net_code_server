@@ -3981,7 +3981,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<low_level_structure>& systems = low_level_structure_manage.systems;
 
-    auto buffer = ascii_make_buffer({160, 80}, false);
+    auto buffer = ascii_make_buffer({160, 140}, false);
 
     network_accessibility_info info;
 
@@ -4005,7 +4005,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         count++;
     }
 
-    std::string result = ascii_render_from_accessibility_info(info, buffer, {0,0,0}, false, 0.1f, true);
+    std::string result = ascii_render_from_accessibility_info(info, buffer, {0,0,0}, false, 0.07f, true);
 
     push_duk_val(ctx, result);
 

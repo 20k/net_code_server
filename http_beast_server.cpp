@@ -437,11 +437,11 @@ void write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
                 if(next_command == "" && all_shared->type!= connection_type::HTTP)
                     continue;
 
-                if(next_command.size() > 100*100)
+                if(next_command.size() > MAX_MESSAGE_SIZE)
                 {
-                    next_command.resize(100*100);
+                    next_command.resize(MAX_MESSAGE_SIZE);
 
-                    next_command += " [Truncated, > 100 * 100]";
+                    next_command += " [Truncated, > " + std::to_string(MAX_MESSAGE_SIZE) + "]";
                 }
 
                 if(all_shared->msock->write(next_command))

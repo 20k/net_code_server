@@ -6,6 +6,7 @@
 #include "privileged_core_scripts.hpp"
 #include "shared_duk_worker_state.hpp"
 #include "duk_object_functions.hpp"
+#include "http_beast_server.hpp"
 
 int my_timeout_check(void* udata)
 {
@@ -277,11 +278,11 @@ duk_ret_t async_pipe(duk_context* ctx)
 
     std::string str = duk_safe_to_std_string(ctx, -1);
 
-    if(str.size() > 100*100)
+    if(str.size() > MAX_MESSAGE_SIZE)
     {
-        str.resize(100*100);
+        str.resize(MAX_MESSAGE_SIZE);
 
-        str = str + " [Truncated, > 100 * 100]";
+        str = str + " [Truncated, > " + std::to_string(MAX_MESSAGE_SIZE) + "]";;
     }
 
     shared_state->set_output_data(str);

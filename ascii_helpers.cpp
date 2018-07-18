@@ -226,6 +226,9 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
             if(found == node_to_pos.end())
                 continue;
 
+            if(conn < name)
+                continue;
+
             vec2f to_draw_pos = found->second;
 
             vec2f out_dir;
