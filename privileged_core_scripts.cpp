@@ -3966,6 +3966,7 @@ duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+///need to centre sys.map on player by default
 duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     user my_user;
@@ -3981,7 +3982,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<low_level_structure>& systems = low_level_structure_manage.systems;
 
-    auto buffer = ascii_make_buffer({160, 140}, false);
+    auto buffer = ascii_make_buffer({160, 80}, false);
 
     network_accessibility_info info;
 
@@ -4005,7 +4006,16 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         count++;
     }
 
-    std::string result = ascii_render_from_accessibility_info(info, buffer, {0,0,0}, false, 0.07f, true);
+    auto opt_sys = low_level_structure_manage.get_system_of(my_user);
+
+    if(!opt_sys.has_value())
+        return push_error(ctx, "Well then, you are lost!");
+
+    low_level_structure& structure = *opt_sys.value();
+
+    //std::cout << *low_level_structure_manage.get_system_of(my_user).value()->name << std::endl;
+
+    std::string result = ascii_render_from_accessibility_info(info, buffer, structure.get_pos(), false, 0.07f, true);
 
     push_duk_val(ctx, result);
 

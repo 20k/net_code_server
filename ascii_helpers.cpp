@@ -182,7 +182,7 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
 
     for(auto& i : info.global_pos)
     {
-        i.second = i.second - accum;
+        i.second = i.second - accum * mult;
     }
 
     for(auto& i : info.global_pos)
