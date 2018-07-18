@@ -134,7 +134,9 @@
 		<Unit filename="command_handler_state.hpp" />
 		<Unit filename="db_interfaceable.cpp" />
 		<Unit filename="db_interfaceable.hpp" />
-		<Unit filename="deps/json/json.hpp" />
+		<Unit filename="deps/json/json.hpp">
+			<Option compile="1" />
+		</Unit>
 		<Unit filename="deps/secret/common.cpp" />
 		<Unit filename="deps/secret/common.hpp" />
 		<Unit filename="deps/secret/initial_link_setup.cpp" />

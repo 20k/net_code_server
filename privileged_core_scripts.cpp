@@ -3968,6 +3968,26 @@ duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl)
 
 duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    user my_user;
+
+    {
+        mongo_lock_proxy lock = get_global_mongo_user_info_context(-2);
+
+        if(!my_user.load_from_db(lock, get_caller(ctx)))
+            return push_error(ctx, "Error: Does not exist");
+    }
+
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+    std::vector<low_level_structure>& systems = low_level_structure_manage.systems;
+
+    auto buffer = ascii_make_buffer({80, 40}, false);
+
+    return 1;
+}
+
+duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
     std::string str = duk_safe_get_prop_string(ctx, -1, "sys");
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
@@ -3983,14 +4003,6 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     std::optional<low_level_structure*> opt_structure;
-
-    /*for(low_level_structure& struc : low_level_structure_manage.systems)
-    {
-        for(std::string& usr : *struc.user_list)
-        {
-            std::cout << "asdf " << usr << std::endl;
-        }
-    }*/
 
     if(str == "")
         opt_structure = low_level_structure_manage.get_system_of(my_user);
