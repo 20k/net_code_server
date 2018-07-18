@@ -3981,7 +3981,33 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<low_level_structure>& systems = low_level_structure_manage.systems;
 
-    auto buffer = ascii_make_buffer({80, 40}, false);
+    auto buffer = ascii_make_buffer({160, 80}, false);
+
+    network_accessibility_info info;
+
+    for(auto& i : systems)
+    {
+        info.rings[*i.name] = 0;
+        info.global_pos[*i.name] = i.get_pos();
+        info.ring_ordered_names.push_back(*i.name);
+    }
+
+    info.keys.clear();
+    info.display_string.clear();
+
+    int count = 0;
+    for(auto& i : info.ring_ordered_names)
+    {
+        ///name, character
+        info.keys.push_back({i, ascii_index_to_full_character(count)});
+        info.display_string[i] = ascii_index_to_full_character(count);
+
+        count++;
+    }
+
+    std::string result = ascii_render_from_accessibility_info(info, buffer, {0,0,0}, false, 0.1f, true);
+
+    push_duk_val(ctx, result);
 
     return 1;
 }

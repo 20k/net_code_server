@@ -1,5 +1,6 @@
 #include "ascii_helpers.hpp"
 #include <secret/npc_manager.hpp>
+#include <secret/low_level_structure.hpp>
 #include <libncclient/nc_util.hpp>
 
 std::vector<std::vector<std::string>> ascii_make_buffer(vec2i dim, bool add_newlines)
@@ -137,7 +138,7 @@ std::string id_to_roman_numeral(int x)
     return "x" + id_to_roman_numeral(x-10);
 }
 
-std::string ascii_render_from_accessibility_info(network_accessibility_info& info, std::vector<std::vector<std::string>>& buffer, vec3f centre, bool average_camera, float mult)
+std::string ascii_render_from_accessibility_info(network_accessibility_info& info, std::vector<std::vector<std::string>>& buffer, vec3f centre, bool average_camera, float mult, bool use_sys_connections)
 {
     if(buffer.size() == 0)
         return "";
@@ -146,6 +147,7 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
         return "";
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 
     int h = buffer.size();
     int w = buffer[0].size();
@@ -202,7 +204,18 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
         const std::string& name = i.first;
         vec2f pos = i.second;
 
-        auto connections = playspace_network_manage.get_links(name);
+        std::vector<std::string> connections;
+
+        if(!use_sys_connections)
+            connections = playspace_network_manage.get_links(name);
+        else
+        {
+            std::optional<low_level_structure*> str_opt = low_level_structure_manage.get_system_from_name(name);
+
+            low_level_structure& str = *str_opt.value();
+
+            connections = str.get_connected_systems();
+        }
 
         int colour_offset_count = 0;
 
