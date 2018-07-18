@@ -138,7 +138,7 @@ std::string id_to_roman_numeral(int x)
     return "x" + id_to_roman_numeral(x-10);
 }
 
-std::string ascii_render_from_accessibility_info(network_accessibility_info& info, std::vector<std::vector<std::string>>& buffer, vec3f centre, bool average_camera, float mult, bool use_sys_connections)
+std::string ascii_render_from_accessibility_info(network_accessibility_info& info, std::vector<std::vector<std::string>>& buffer, vec3f centre, bool average_camera, float mult, bool use_sys_connections, bool fit_to_area)
 {
     if(buffer.size() == 0)
         return "";
@@ -191,6 +191,22 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
 
         i.second = round(i.second);
     }
+
+    if(fit_to_area)
+    {
+        vec2f tl = {FLT_MAX, FLT_MAX};
+
+        for(auto& i : info.global_pos)
+        {
+            tl = min(i.second.xy(), tl);
+        }
+
+        for(auto& i : info.global_pos)
+        {
+            i.second.xy() = i.second.xy() - tl;
+        }
+    }
+
 
     std::map<std::string, vec2f> node_to_pos;
 

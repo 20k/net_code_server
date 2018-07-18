@@ -4021,7 +4021,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     //std::cout << *low_level_structure_manage.get_system_of(my_user).value()->name << std::endl;
 
-    std::string result = ascii_render_from_accessibility_info(info, buffer, pos, false, 0.07f, true);
+    std::string result = ascii_render_from_accessibility_info(info, buffer, pos, false, 0.07f, true, !centre);
 
     push_duk_val(ctx, result);
 
