@@ -2622,6 +2622,19 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(name_of_person_being_attacked == "")
         return push_error(ctx, "Usage: net.hack({user:<name>})");
 
+    if(!get_user(name_of_person_being_attacked, get_thread_id(ctx)))
+        return push_error(ctx, "No such user");
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(ctx));
+
+        if(npc_info::has_type(mongo_ctx, npc_info::WARPY, name_of_person_being_attacked))
+        {
+            push_duk_val(ctx, make_error_col("-Access Denied-"));
+            return 1;
+        }
+    }
+
     bool cheats = false;
 
     #ifdef TESTING
