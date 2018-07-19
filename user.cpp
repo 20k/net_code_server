@@ -621,10 +621,12 @@ int user::get_default_network_links(int thread_id)
                     base--;
             }
 
+            #ifdef EXTRA_WARPY
             if(enums[i] == npc_info::WARPY)
             {
                 base += 4;
             }
+            #endif // EXTRA_WARPY
         }
     }
 
