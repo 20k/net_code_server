@@ -4016,11 +4016,6 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             info.global_pos[next->name] = next->get_pos();
             info.ring_ordered_names.push_back(next->name);
 
-            /*if(explored[next])
-            {
-                to_test[current_ring].pop_front();
-                continue;
-            }*/
             to_test[current_ring].pop_front();
 
             std::vector<std::string> found = next->get_connected_systems();
