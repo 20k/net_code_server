@@ -2,6 +2,7 @@
 
 #include <ratio>
 #include <set>
+#include <deque>
 
 #include "scheduled_tasks.hpp"
 #include "command_handler.hpp"
@@ -3979,7 +3980,16 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             return push_error(ctx, "Error: Does not exist");
     }
 
+    int n_val = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", -1);
+
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+    auto opt_sys = low_level_structure_manage.get_system_of(my_user);
+
+    if(!opt_sys.has_value())
+        return push_error(ctx, "Well then, you are lost!");
+
+    low_level_structure& structure = *opt_sys.value();
 
     std::vector<low_level_structure>& systems = low_level_structure_manage.systems;
 
@@ -3987,11 +3997,61 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     network_accessibility_info info;
 
-    for(auto& i : systems)
+    if(n_val > 0 && n_val < 25)
     {
-        info.rings[*i.name] = 0;
-        info.global_pos[*i.name] = i.get_pos();
-        info.ring_ordered_names.push_back(*i.name);
+        std::map<int, std::deque<low_level_structure*>> to_test{{0, {&structure}}};
+        std::map<std::string, bool> explored;
+
+        int current_ring = 0;
+
+        printf("hi!\n");
+
+        while(current_ring < n_val && to_test[current_ring].size() > 0)
+        {
+            low_level_structure* next = to_test[current_ring].front();
+
+            explored[next->name] = true;
+
+            info.rings[next->name] = current_ring;
+            info.global_pos[next->name] = next->get_pos();
+            info.ring_ordered_names.push_back(next->name);
+
+            /*if(explored[next])
+            {
+                to_test[current_ring].pop_front();
+                continue;
+            }*/
+            to_test[current_ring].pop_front();
+
+            std::vector<std::string> found = next->get_connected_systems();
+
+            for(auto& name : found)
+            {
+                if(explored[name])
+                    continue;
+
+                auto opt_structure = low_level_structure_manage.get_system_from_name(name);
+
+                if(!opt_structure.has_value())
+                    continue;
+
+                to_test[current_ring + 1].push_back(opt_structure.value());
+            }
+
+            if(to_test[current_ring].size() == 0)
+            {
+                current_ring++;
+            }
+        }
+    }
+    else
+    {
+        for(auto& i : systems)
+        {
+            info.rings[*i.name] = 0;
+            info.global_pos[*i.name] = i.get_pos();
+            info.ring_ordered_names.push_back(*i.name);
+        }
     }
 
     info.keys.clear();
@@ -4006,13 +4066,6 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         count++;
     }
-
-    auto opt_sys = low_level_structure_manage.get_system_of(my_user);
-
-    if(!opt_sys.has_value())
-        return push_error(ctx, "Well then, you are lost!");
-
-    low_level_structure& structure = *opt_sys.value();
 
     vec3f pos = {0,0,0};
 
