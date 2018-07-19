@@ -75,7 +75,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["net.move"] = make_cary("user", "\"\"", "target", "\"\"");
     ret["net.path"] = make_cary("user", "\"\"", "target", "\"\"", "min_stability", "0");
     ret["sys.view"] = make_cary("sys", "\"\"");
-    ret["sys.map"] = make_cary("centre", "true");
+    ret["sys.map"] = make_cary("n", "-1", "centre", "true");
 
     return ret;
 }
@@ -3997,8 +3997,11 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     network_accessibility_info info;
 
-    if(n_val > 0 && n_val < 25)
+    if(n_val > 0)
     {
+        if(n_val > 50)
+            n_val = 50;
+
         std::map<int, std::deque<low_level_structure*>> to_test{{0, {&structure}}};
         std::map<std::string, bool> explored;
 
