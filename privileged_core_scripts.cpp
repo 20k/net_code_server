@@ -4026,7 +4026,9 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!centre)
         flags = (ascii::ascii_render_flags)(flags | ascii::FIT_TO_AREA);
 
-    std::string result = ascii_render_from_accessibility_info(info, buffer, pos, 0.07f, flags);
+    flags = (ascii::ascii_render_flags)(flags | ascii::HIGHLIGHT_USER);
+
+    std::string result = ascii_render_from_accessibility_info(info, buffer, pos, 0.07f, flags, *structure.name);
 
     push_duk_val(ctx, result);
 

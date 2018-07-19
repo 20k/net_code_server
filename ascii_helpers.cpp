@@ -138,7 +138,7 @@ std::string id_to_roman_numeral(int x)
     return "x" + id_to_roman_numeral(x-10);
 }
 
-std::string ascii_render_from_accessibility_info(network_accessibility_info& info, std::vector<std::vector<std::string>>& buffer, vec3f centre, float mult, ascii::ascii_render_flags flags)
+std::string ascii_render_from_accessibility_info(network_accessibility_info& info, std::vector<std::vector<std::string>>& buffer, vec3f centre, float mult, ascii::ascii_render_flags flags, std::string user_name)
 {
     if(buffer.size() == 0)
         return "";
@@ -287,6 +287,42 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
         std::string to_display = "`" + string_to_colour(i.first) + info.display_string[i.first] + "`";
 
         buffer[clamped.y()][clamped.x()] = to_display;
+    }
+
+    if((flags & ascii::HIGHLIGHT_USER) > 0)
+    {
+        for(auto& i : node_to_pos)
+        {
+            std::string my_name = i.first;
+
+            if(my_name != user_name)
+                continue;
+
+            char arr[9] = {' ', 'v', ' ',
+                           '>', ' ', '<',
+                           ' ', '^', ' '};
+
+            //for(int y=-1; y <= 1; y++)
+            {
+                int y = 0;
+
+                for(int x=-1; x <= 1; x++)
+                {
+                    if(abs(x) == abs(y))
+                        continue;
+
+                    int real_x = x + i.second.x();
+                    int real_y = y + i.second.y();
+
+                    if(real_x < 0 || real_x >= w-1 || real_y < 0 || real_y >= h-1)
+                        continue;
+
+                    int offset = (y+1) * 3 + (x+1);
+
+                    buffer[real_y][real_x] = std::string(1, arr[offset]);
+                }
+            }
+        }
     }
 
     /*for(auto& i : keys)

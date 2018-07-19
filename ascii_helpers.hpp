@@ -25,9 +25,10 @@ namespace ascii
         AVERAGE = 1,
         USE_SYS = 2,
         FIT_TO_AREA = 4,
+        HIGHLIGHT_USER = 8,
     };
 }
 
-std::string ascii_render_from_accessibility_info(network_accessibility_info& network_accessibility_inf, std::vector<std::vector<std::string>>& buffer, vec3f centre, float mult = 1.f, ascii::ascii_render_flags flags = ascii::AVERAGE);
+std::string ascii_render_from_accessibility_info(network_accessibility_info& network_accessibility_inf, std::vector<std::vector<std::string>>& buffer, vec3f centre, float mult = 1.f, ascii::ascii_render_flags flags = ascii::AVERAGE, std::string user_name = "");
 
 #endif // ASCII_HELPERS_HPP_INCLUDED
