@@ -17,6 +17,17 @@ std::string id_to_roman_numeral(int x);
 
 struct network_accessibility_info;
 
-std::string ascii_render_from_accessibility_info(network_accessibility_info& network_accessibility_inf, std::vector<std::vector<std::string>>& buffer, vec3f centre, bool average_camera = true, float mult = 1.f, bool use_sys_connections = false, bool fit_to_area = false);
+namespace ascii
+{
+    enum ascii_render_flags
+    {
+        NONE = 0,
+        AVERAGE = 1,
+        USE_SYS = 2,
+        FIT_TO_AREA = 4,
+    };
+}
+
+std::string ascii_render_from_accessibility_info(network_accessibility_info& network_accessibility_inf, std::vector<std::vector<std::string>>& buffer, vec3f centre, float mult = 1.f, ascii::ascii_render_flags flags = ascii::AVERAGE);
 
 #endif // ASCII_HELPERS_HPP_INCLUDED

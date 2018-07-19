@@ -4021,7 +4021,12 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     //std::cout << *low_level_structure_manage.get_system_of(my_user).value()->name << std::endl;
 
-    std::string result = ascii_render_from_accessibility_info(info, buffer, pos, false, 0.07f, true, !centre);
+    ascii::ascii_render_flags flags = ascii::USE_SYS;
+
+    if(!centre)
+        flags = (ascii::ascii_render_flags)(flags | ascii::FIT_TO_AREA);
+
+    std::string result = ascii_render_from_accessibility_info(info, buffer, pos, 0.07f, flags);
 
     push_duk_val(ctx, result);
 
@@ -4074,7 +4079,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     vec3f pos = {0,0,0};
     ///info.global_pos[from]
 
-    std::string result = ascii_render_from_accessibility_info(info, buffer, pos, false, 0.5f);
+    std::string result = ascii_render_from_accessibility_info(info, buffer, pos, 0.5f, ascii::NONE);
 
     push_duk_val(ctx, result);
 
@@ -4140,7 +4145,7 @@ duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
     vec3f pos = {0,0,0};
     ///info.global_pos[from]
 
-    std::string result = ascii_render_from_accessibility_info(info, buffer, pos, false, 0.5f);
+    std::string result = ascii_render_from_accessibility_info(info, buffer, pos, 0.5f, ascii::NONE);
 
     push_duk_val(ctx, result);
 

@@ -138,7 +138,7 @@ std::string id_to_roman_numeral(int x)
     return "x" + id_to_roman_numeral(x-10);
 }
 
-std::string ascii_render_from_accessibility_info(network_accessibility_info& info, std::vector<std::vector<std::string>>& buffer, vec3f centre, bool average_camera, float mult, bool use_sys_connections, bool fit_to_area)
+std::string ascii_render_from_accessibility_info(network_accessibility_info& info, std::vector<std::vector<std::string>>& buffer, vec3f centre, float mult, ascii::ascii_render_flags flags)
 {
     if(buffer.size() == 0)
         return "";
@@ -166,7 +166,7 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
         accum = accum / (float)info.rings.size();
     }
 
-    if(average_camera)
+    if((flags & ascii::AVERAGE) > 0)
     {
         accum = (accum + cur_center)/2.f;
     }
@@ -192,7 +192,7 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
         i.second = round(i.second);
     }
 
-    if(fit_to_area)
+    if((flags & ascii::FIT_TO_AREA) > 0)
     {
         vec2f tl = {FLT_MAX, FLT_MAX};
 
@@ -222,7 +222,7 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
 
         std::vector<std::string> connections;
 
-        if(!use_sys_connections)
+        if((flags & ascii::USE_SYS) == 0)
             connections = playspace_network_manage.get_links(name);
         else
         {
