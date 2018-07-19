@@ -4030,6 +4030,8 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string result = ascii_render_from_accessibility_info(info, buffer, pos, 0.07f, flags, *structure.name);
 
+    result = "Current Sys: " + colour_string(*structure.name) + "\n" + result;
+
     push_duk_val(ctx, result);
 
     return 1;
@@ -4061,9 +4063,9 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!opt_structure.has_value())
         return push_error(ctx, "You are lost, there is no help for you now");
 
-    low_level_structure& found_structure = *opt_structure.value();
+    low_level_structure& structure = *opt_structure.value();
 
-    std::vector<user> special_users = found_structure.get_special_users(get_thread_id(ctx));
+    std::vector<user> special_users = structure.get_special_users(get_thread_id(ctx));
 
     std::vector<std::vector<std::string>> buffer = ascii_make_buffer({80, 40}, false);
 
@@ -4082,6 +4084,8 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///info.global_pos[from]
 
     std::string result = ascii_render_from_accessibility_info(info, buffer, pos, 0.5f, ascii::NONE);
+
+    result = "Current Sys: " + colour_string(*structure.name) + "\n" + result;
 
     push_duk_val(ctx, result);
 
