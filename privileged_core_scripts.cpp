@@ -149,13 +149,15 @@ std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_c
     return str;
 }
 
+///https://stackoverflow.com/questions/16177295/get-time-since-epoch-in-milliseconds-preferably-using-c11-chrono
+///thanks stack overflow
 size_t get_wall_time()
 {
-    auto now = std::chrono::system_clock::now();
-    std::chrono::duration<double, std::milli> duration = now.time_since_epoch();
-    size_t real_time = duration.count();
+    size_t milliseconds_since_epoch =
+    std::chrono::duration_cast<std::chrono::milliseconds>
+        (std::chrono::system_clock::now().time_since_epoch()).count();
 
-    return real_time;
+    return milliseconds_since_epoch;
 }
 
 double get_wall_time_s()
