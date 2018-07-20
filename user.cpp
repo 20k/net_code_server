@@ -39,7 +39,7 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     //for(int i=0; i < decltype(local_pos)::DIM; i++)
     //    to_set.set_prop("vector_pos_local" + std::to_string(i), local_pos.v[i]);
 
-    to_set.set_prop("move_queue", nlohmann::json{move_queue}.dump());
+    to_set.set_prop("move_queue", nlohmann::json(move_queue).dump());
 
     to_set.set_prop("joined_channels", joined_channels);
 
@@ -131,7 +131,16 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
 
         if(req.has_prop("move_queue"))
         {
-            move_queue = nlohmann::json::parse(req.get_prop("move_queue"));
+            //std::cout << "hello " << req.get_prop("move_queue") << std::endl;
+
+            try
+            {
+                move_queue = nlohmann::json::parse(req.get_prop("move_queue"));
+            }
+            catch(...)
+            {
+                std::cout << "caught error in move queue\n";
+            }
         }
 
         if(req.has_prop("joined_channels"))
@@ -672,6 +681,8 @@ void user::set_local_pos(space_pos_t pos)
     timestamped_position tstamp;
     tstamp.position = pos;
     tstamp.timestamp = get_wall_time();
+
+    move_queue.timestamp_queue.clear();
 
     move_queue.add_queue_element(tstamp);
     has_local_pos = true;

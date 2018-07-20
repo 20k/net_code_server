@@ -111,7 +111,7 @@ struct timestamp_move_queue
 inline
 void to_json(nlohmann::json& j, const timestamp_move_queue& p)
 {
-    j = nlohmann::json{{"q", p.timestamp_queue}};
+    j["q"] = p.timestamp_queue;
 }
 
 inline

@@ -243,6 +243,20 @@ void test_locking()
     safe_lock_guard guard(mut);
 }
 
+void dump_test()
+{
+    timestamp_move_queue q;
+
+    nlohmann::json fun;
+    fun = q;
+
+    std::string str = fun.dump();
+
+    std::cout << "test dump " << str << " sep dump " << nlohmann::json(q).dump() << " incorrect dump " << nlohmann::json{q} << std::endl;
+
+    exit(0);
+}
+
 ///making sure this ends up in the right repo
 int main()
 {
@@ -279,6 +293,15 @@ int main()
     test_hexbin();
     initialse_mongo_all();
     test_json();
+
+    //dump_test();
+
+    /*for_each_npc([](user& usr)
+                 {
+                    mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+                    usr.overwrite_user_in_db(ctx);
+                 });*/
 
     low_level_structure_manager& manage = get_global_low_level_structure_manager();
     manage.erase_intersystem_specials();
