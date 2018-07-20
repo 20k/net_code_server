@@ -6,6 +6,7 @@
 #include "item.hpp"
 
 #include <secret/structure.hpp>
+#include "timestamped_position.hpp"
 
 ///ok. Need to fetch users out of the db
 struct user

@@ -4183,7 +4183,11 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!has_to)
     {
         space_pos_t pos = my_user.get_local_pos();
+
+
     }
+
+    return 1;
 }
 
 duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
