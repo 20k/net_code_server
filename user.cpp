@@ -39,7 +39,7 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     //for(int i=0; i < decltype(local_pos)::DIM; i++)
     //    to_set.set_prop("vector_pos_local" + std::to_string(i), local_pos.v[i]);
 
-    to_set.set_prop("move_queue", nlohmann::json{move_queue});
+    to_set.set_prop("move_queue", nlohmann::json{move_queue}.dump());
 
     to_set.set_prop("joined_channels", joined_channels);
 
