@@ -92,7 +92,8 @@ struct user
     virtual ~user(){}
 
 protected:
-    space_pos_t local_pos;
+    //space_pos_t local_pos;
+    timestamp_move_queue move_queue;
 };
 
 template<typename T>

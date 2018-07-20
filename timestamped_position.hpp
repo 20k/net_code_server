@@ -60,7 +60,7 @@ struct timestamp_move_queue
 {
     std::vector<timestamped_position> timestamp_queue;
 
-    timestamped_position get_position_at(size_t timestamp)
+    timestamped_position get_position_at(size_t timestamp) const
     {
         if(timestamp_queue.size() == 0)
             return timestamped_position();
@@ -70,8 +70,8 @@ struct timestamp_move_queue
 
         for(int i=0; i < (int)timestamp_queue.size() - 1; i++)
         {
-            timestamped_position& p1 = timestamp_queue[0];
-            timestamped_position& p2 = timestamp_queue[1];
+            const timestamped_position& p1 = timestamp_queue[0];
+            const timestamped_position& p2 = timestamp_queue[1];
 
             if(timestamp >= p1.timestamp && timestamp < p2.timestamp)
             {

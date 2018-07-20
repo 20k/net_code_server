@@ -36,8 +36,10 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     for(int i=0; i < decltype(pos)::DIM; i++)
         to_set.set_prop("vector_pos" + std::to_string(i), pos.v[i]);
 
-    for(int i=0; i < decltype(local_pos)::DIM; i++)
-        to_set.set_prop("vector_pos_local" + std::to_string(i), local_pos.v[i]);
+    //for(int i=0; i < decltype(local_pos)::DIM; i++)
+    //    to_set.set_prop("vector_pos_local" + std::to_string(i), local_pos.v[i]);
+
+    to_set.set_prop("move_queue", nlohmann::json{move_queue});
 
     to_set.set_prop("joined_channels", joined_channels);
 
@@ -118,13 +120,18 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
             }
         }
 
-        for(int i=0; i < decltype(local_pos)::DIM; i++)
+        /*for(int i=0; i < decltype(local_pos)::DIM; i++)
         {
             if(req.has_prop("vector_pos_local" + std::to_string(i)))
             {
                 local_pos.v[i] = req.get_prop_as_double("vector_pos_local" + std::to_string(i));
                 has_local_pos = true;
             }
+        }*/
+
+        if(req.has_prop("move_queue"))
+        {
+            move_queue = nlohmann::json::parse(req.get_prop("move_queue"));
         }
 
         if(req.has_prop("joined_channels"))
@@ -149,10 +156,12 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
         overwrite_user_in_db(ctx);
     }
 
-    if(local_pos == nv)
+    /*if(local_pos == nv)
     {
         has_local_pos = false;
-    }
+    }*/
+
+    has_local_pos = move_queue.timestamp_queue.size() > 0;
 
     #ifdef USE_LOCS
     if(user_port == "")
@@ -646,14 +655,26 @@ std::string user::fetch_sector()
     return get_nearest_structure(pos).name;
 }
 
+extern size_t get_wall_time();
+
 space_pos_t user::get_local_pos() const
 {
-    return local_pos;
+    size_t current_time = get_wall_time();
+
+    ///not necessary to actually update db
+    //move_queue.cleanup_old_elements(current_time);
+
+    return move_queue.get_position_at(current_time).position;
 }
 
 void user::set_local_pos(space_pos_t pos)
 {
-    local_pos = pos;
+    timestamped_position tstamp;
+    tstamp.position = pos;
+    tstamp.timestamp = get_wall_time();
+
+    move_queue.add_queue_element(tstamp);
+    has_local_pos = true;
 }
 
 std::vector<user> load_users(const std::vector<std::string>& names, int lock_id)
