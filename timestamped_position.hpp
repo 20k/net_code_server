@@ -3,6 +3,8 @@
 
 #include <vec/vec.hpp>
 
+#include <json/json.hpp>
+
 struct timestamped_position
 {
     size_t timestamp = 0;
@@ -37,6 +39,22 @@ struct timestamped_position
         return ret;
     }
 };
+
+inline
+void to_json(nlohmann::json& j, const timestamped_position& p)
+{
+    j = nlohmann::json{{"x", p.position.x()}, {"y", p.position.y()}, {"z", p.position.z()}, {"ts", p.timestamp}};
+}
+
+inline
+void from_json(const json& j, timestamped_position& p)
+{
+    p.timestamp = j.at("ts");
+
+    p.position.x() = j.at("x");
+    p.position.y() = j.at("y");
+    p.position.z() = j.at("z");
+}
 
 struct timestamp_move_queue
 {
@@ -88,5 +106,18 @@ struct timestamp_move_queue
         }
     }
 };
+
+
+inline
+void to_json(nlohmann::json& j, const timestamp_move_queue& p)
+{
+    j = nlohmann::json{{"q", p.timestamp_queue}};
+}
+
+inline
+void from_json(const json& j, timestamp_move_queue& p)
+{
+    p.timestamp_queue = j.at("q").get<std::vector<timestamped_position>>();
+}
 
 #endif // TIMESTAMPED_POSITION_HPP_INCLUDED
