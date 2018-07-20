@@ -646,6 +646,16 @@ std::string user::fetch_sector()
     return get_nearest_structure(pos).name;
 }
 
+space_pos_t user::get_local_pos() const
+{
+    return local_pos;
+}
+
+void user::set_local_pos(space_pos_t pos)
+{
+    local_pos = pos;
+}
+
 std::vector<user> load_users(const std::vector<std::string>& names, int lock_id)
 {
     std::vector<user> ret;

@@ -4169,6 +4169,23 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    bool has_to = dukx_is_prop_truthy(ctx, -1, "to");
+
+    std::optional<user> my_user_opt = get_user(get_caller(ctx), get_thread_id(ctx));
+
+    if(!my_user_opt.has_value())
+        return push_error(ctx, "No User, really bad error");
+
+    user& my_user = *my_user_opt;
+
+    if(!has_to)
+    {
+        space_pos_t pos = my_user.get_local_pos();
+    }
+}
+
 duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     std::string str = duk_safe_get_prop_string(ctx, -1, "sys");

@@ -29,7 +29,6 @@ struct user
     std::string joined_channels;
 
     space_pos_t pos;
-    space_pos_t local_pos;
 
     bool has_local_pos = false;
 
@@ -86,7 +85,13 @@ struct user
 
     std::string fetch_sector();
 
+    space_pos_t get_local_pos() const;
+    void set_local_pos(space_pos_t pos);
+
     virtual ~user(){}
+
+protected:
+    space_pos_t local_pos;
 };
 
 template<typename T>
