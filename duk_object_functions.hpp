@@ -856,23 +856,46 @@ duk_ret_t dukx_proxy_delete_property(duk_context* ctx)
 }
 
 inline
-duk_ret_t dukx_proxy_own_keys(duk_context* ctx)
+std::vector<std::string> dukx_get_keys(duk_context* ctx)
 {
-    //printf("keys\n");
-
-    duk_enum(ctx, 0, 0);
-
     std::vector<std::string> keys;
 
+    duk_enum(ctx, -1, 0);
     while(duk_next(ctx, -1, 0))
     {
         keys.push_back(duk_safe_to_std_string(ctx, -1));
         duk_pop(ctx);
     }
 
+    //std::cout << "fnum keys " << keys.size() << std::endl;
+
     duk_pop(ctx);
 
+    return keys;
+}
+
+inline
+void dukx_hack_in_keys(duk_context* ctx, duk_idx_t idx, const std::vector<std::string>& keys)
+{
+    for(auto& i : keys)
+    {
+        duk_push_number(ctx, 0.f);
+        duk_put_prop_string(ctx, -1 + idx, i.c_str());
+    }
+}
+
+inline
+duk_ret_t dukx_proxy_own_keys(duk_context* ctx)
+{
+    auto keys = dukx_get_keys(ctx);
+
+    //duk_push_array(ctx);
+
+    ///duk_proxy_ownkeys_postprocess
+    ///seems to filter out keys not in the underlying object
+
     push_duk_val(ctx, keys);
+
     return 1;
 }
 
@@ -967,7 +990,7 @@ duk_ret_t dukx_wrap_ctx(duk_context* ctx)
 
     ///get is special cased because
     ///it can let unsanitised values out
-    if(t != dukx_proxy_get)
+    if(t != dukx_proxy_get && t != dukx_proxy_own_keys)
         dukx_sanitise_move_value(new_ctx, ctx, -1);
     else
         duk_xmove_top(ctx, new_ctx, 1);
@@ -988,12 +1011,16 @@ void dukx_sanitise_in_place(duk_context* dst_ctx, duk_idx_t idx)
     if(duk_is_primitive(dst_ctx, idx))
         return;
 
+    std::vector<std::string> rkeys = dukx_get_keys(dst_ctx);
+
     if(duk_is_function(dst_ctx, idx))
         duk_push_c_function(dst_ctx, dukx_dummy, 0);
     else if(duk_is_object(dst_ctx, idx))
         duk_push_object(dst_ctx);
     else
         assert(false);
+
+    dukx_hack_in_keys(dst_ctx, -1, rkeys);
 
     duk_push_object(dst_ctx);  /* handler */
 
