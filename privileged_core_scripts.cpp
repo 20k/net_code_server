@@ -76,6 +76,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["net.path"] = make_cary("user", "\"\"", "target", "\"\"", "min_stability", "0");
     ret["sys.view"] = make_cary("sys", "\"\"");
     ret["sys.map"] = make_cary("n", "-1", "centre", "true");
+    ret["sys.move"] = make_cary("to", "\"\"");
 
     return ret;
 }
@@ -4184,7 +4185,14 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         space_pos_t pos = my_user.get_local_pos();
 
+        std::string str = "x: " + to_string_with_enforced_variable_dp(pos.x(), 2) +
+                          " | y: " + to_string_with_enforced_variable_dp(pos.y(), 2) +
+                          " | z: " + to_string_with_enforced_variable_dp(pos.z(), 2);
 
+        std::string msg = "Please specify to:\"user\", to:\"system\", or to:[x, y, z]";
+
+        push_duk_val(ctx, str + "\n" + msg);
+        return 1;
     }
 
     return 1;
