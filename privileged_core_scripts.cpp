@@ -4179,8 +4179,14 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!my_user_opt.has_value())
         return push_error(ctx, "No User, really bad error");
 
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    bool is_anchored = playspace_network_manage.current_network_links(get_caller(ctx)) > 0;
+
     user& my_user = *my_user_opt;
 
+    ///needs to return if we're anchored or not
+    ///maybe we have the concept of dropping anchor, which connects us into the network
     if(!has_to)
     {
         space_pos_t pos = my_user.get_local_pos();
@@ -4193,6 +4199,10 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         push_duk_val(ctx, str + "\n" + msg);
         return 1;
+    }
+    else
+    {
+
     }
 
     return 1;
