@@ -231,6 +231,7 @@ duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl);
+duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl);
 #endif // TESTING
 
@@ -347,6 +348,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(sys__map, 1),
     REGISTER_FUNCTION_PRIV(sys__view, 1),
     REGISTER_FUNCTION_PRIV(sys__move, 0),
+    REGISTER_FUNCTION_PRIV(sys__access, 0),
     REGISTER_FUNCTION_PRIV(sys__debug, 1),
     #endif // TESTING
     #ifdef LIVE_DEBUGGING

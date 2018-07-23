@@ -4294,6 +4294,14 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     return push_error(ctx, "Impossible");
 }
 
+
+duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    return 0;
+}
+
 duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
