@@ -4291,7 +4291,7 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
         return push_success(ctx, "Travel time of " + to_string_with_enforced_variable_dp(time_to_travel_distance_s, 2) + "s");
     }
 
-    return 1;
+    return push_error(ctx, "Impossible");
 }
 
 duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
