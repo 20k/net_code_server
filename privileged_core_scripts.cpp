@@ -4137,6 +4137,12 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     low_level_structure& structure = *opt_structure.value();
 
     std::vector<user> special_users = structure.get_special_users(get_thread_id(ctx));
+    std::vector<user> all_users;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        all_users = structure.get_all_users(mongo_ctx);
+    }
 
     std::vector<std::vector<std::string>> buffer = ascii_make_buffer({80, 40}, false);
 
@@ -4145,8 +4151,30 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     for(user& usr : special_users)
     {
         network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, 15);
+        info = network_accessibility_info::merge_together(info, cur);
+    }
+
+    for(user& usr : all_users)
+    {
+        if(playspace_network_manage.current_network_links(usr.name) > 0)
+            continue;
+
+        network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, 15);
+
+        auto old_names = cur.ring_ordered_names;
 
         info = network_accessibility_info::merge_together(info, cur);
+
+        /*for(auto& i : old_names)
+        {
+            for(auto& j : info.keys)
+            {
+                if(j.first == i)
+                {
+                    j.first += " (free)";
+                }
+            }
+        }*/
     }
 
     std::string from = get_caller(ctx);
