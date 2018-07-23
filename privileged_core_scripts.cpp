@@ -4294,10 +4294,38 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     return push_error(ctx, "Impossible");
 }
 
-
 duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
+
+    if(!dukx_is_prop_truthy(ctx, -1, "user"))
+        return push_error(ctx, "Takes a user parameter");
+
+    std::string target_name = duk_safe_get_prop_string(ctx, -1, "user");
+
+    user target;
+    user my_user;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        if(!target.load_from_db(mongo_ctx, target_name))
+            return push_error(ctx, "Invalid user");
+
+        if(!my_user.load_from_db(mongo_ctx, get_caller(ctx)))
+            return push_error(ctx, "Invalid host, really bad");
+    }
+
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+    auto target_sys_opt = low_level_structure_manage.get_system_of(target.name);
+    auto my_sys_opt = low_level_structure_manage.get_system_of(my_user.name);
+
+    if(!target_sys_opt.has_value() || !my_sys_opt.has_value())
+        return push_error(ctx, "Well then you are lost (high ground!)");
+
+    if(target_sys_opt.value() != my_sys_opt.value())
+        return push_error(ctx, "Not in the same system");
 
     return 0;
 }
