@@ -88,6 +88,7 @@ struct user
 
     space_pos_t get_local_pos() const;
     void set_local_pos(space_pos_t pos);
+    void add_position_target(space_pos_t pos, size_t arrive_when_ms);
 
     virtual ~user(){}
 

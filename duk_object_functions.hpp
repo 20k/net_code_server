@@ -612,6 +612,44 @@ nlohmann::json dukx_get_as_json(duk_context* ctx, int offset)
     return j;
 }
 
+template<typename T>
+inline
+T dukx_get_as(duk_context* ctx, duk_idx_t idx)
+{
+    duk_dup(ctx, idx);
+
+    const char* ptr = duk_json_encode(ctx, -1);
+
+    if(ptr == nullptr)
+    {
+        duk_pop(ctx);
+        return T();
+    }
+
+    nlohmann::json j = nlohmann::json::parse(ptr);
+
+    return (T)j;
+}
+
+template<typename T>
+inline
+T dukx_get_prop_as(duk_context* ctx, duk_idx_t idx, const std::string& prop)
+{
+    duk_get_prop_string(ctx, idx, prop.c_str());
+
+    const char* ptr = duk_json_encode(ctx, -1);
+
+    if(ptr == nullptr)
+    {
+        duk_pop(ctx);
+        return T();
+    }
+
+    nlohmann::json j = nlohmann::json::parse(ptr);
+
+    return (T)j;
+}
+
 inline
 void quick_register(duk_context* ctx, const std::string& key, const std::string& value)
 {

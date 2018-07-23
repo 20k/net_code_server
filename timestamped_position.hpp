@@ -30,7 +30,7 @@ struct timestamped_position
 
         __float128 val = timestamp;
 
-        __float128 fraction = (t1 - val) / (t2 - t1);
+        __float128 fraction = (val - t1) / (t2 - t1);
 
         timestamped_position ret;
         ret.timestamp = (size_t)((t1 * (1 - fraction)) + (t2 * fraction));
@@ -70,8 +70,8 @@ struct timestamp_move_queue
 
         for(int i=0; i < (int)timestamp_queue.size() - 1; i++)
         {
-            const timestamped_position& p1 = timestamp_queue[0];
-            const timestamped_position& p2 = timestamp_queue[1];
+            const timestamped_position& p1 = timestamp_queue[i];
+            const timestamped_position& p2 = timestamp_queue[i+1];
 
             if(timestamp >= p1.timestamp && timestamp < p2.timestamp)
             {

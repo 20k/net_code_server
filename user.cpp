@@ -688,6 +688,16 @@ void user::set_local_pos(space_pos_t pos)
     has_local_pos = true;
 }
 
+void user::add_position_target(space_pos_t pos, size_t arrive_when_ms)
+{
+    timestamped_position tstamp;
+    tstamp.position = pos;
+    tstamp.timestamp = arrive_when_ms;
+
+    move_queue.add_queue_element(tstamp);
+    has_local_pos = true;
+}
+
 std::vector<user> load_users(const std::vector<std::string>& names, int lock_id)
 {
     std::vector<user> ret;

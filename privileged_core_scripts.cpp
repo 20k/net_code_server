@@ -3985,6 +3985,8 @@ duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl)
 ///need to centre sys.map on player by default
 duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     bool centre = dukx_is_prop_truthy(ctx, -1, "centre");
 
     user my_user;
@@ -4106,6 +4108,8 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
 duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     std::string str = duk_safe_get_prop_string(ctx, -1, "sys");
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
@@ -4172,7 +4176,10 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
 duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     bool has_to = dukx_is_prop_truthy(ctx, -1, "to");
+    bool has_confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
 
     std::optional<user> my_user_opt = get_user(get_caller(ctx), get_thread_id(ctx));
 
@@ -4202,7 +4209,58 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
     else
     {
+        if(is_anchored && !has_confirm)
+        {
+            std::string str = "Please " + make_key_val("confirm", "true") + " to disconnect from the network";
 
+            push_duk_val(ctx, str);
+            return 1;
+        }
+
+        std::string total_msg = "";
+
+        if(is_anchored && has_confirm)
+        {
+            total_msg += "Disconnected\n";
+
+            playspace_network_manage.unlink_all(my_user.name);
+        }
+
+        ///perform move
+        std::vector<double> values = dukx_get_prop_as<std::vector<double>>(ctx, -1, "to");
+
+        if(values.size() == 2)
+            values.push_back(0);
+
+        if(values.size() != 3)
+        {
+            push_duk_val(ctx, total_msg + "Requires [x, y] or [x, y, z]");
+            return 1;
+        }
+
+        size_t current_time = get_wall_time();
+
+        double units_per_second = 10;
+
+        vec3f end_pos = {values[0], values[1], values[2]};
+
+        vec3f distance = (end_pos - my_user.get_local_pos());
+
+        double linear_distance = distance.length();
+
+        double time_to_travel_distance_s = linear_distance / units_per_second;
+
+        size_t travel_offset = time_to_travel_distance_s * 1000;
+
+        my_user.add_position_target(end_pos, current_time + travel_offset);
+
+        {
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+            my_user.overwrite_user_in_db(mongo_ctx);
+        }
+
+        return push_success(ctx, "Travel time of " + to_string_with_enforced_variable_dp(time_to_travel_distance_s, 2) + "s");
     }
 
     return 1;
@@ -4210,6 +4268,8 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
 duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    COOPERATE_KILL();
+
     std::string str = duk_safe_get_prop_string(ctx, -1, "sys");
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
