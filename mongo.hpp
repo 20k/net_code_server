@@ -228,9 +228,17 @@ struct mongo_lock_proxy
         if(ctx == nullptr)
             return;*/
 
-        size_t my_id = (size_t)&thread_id_storage_hack;
+        /*size_t my_id = (size_t)&thread_id_storage_hack;
+        static_assert(sizeof(my_id) == sizeof(&thread_id_storage_hack));*/
 
-        static_assert(sizeof(my_id) == sizeof(&thread_id_storage_hack));
+        ///ids don't need to be unique
+        ///we just need to know what they are, and guarantee that in the command handler
+        ///they aren't reused
+        ///thread_id_storage_hack will default to 0
+        ///except in the command handler we set this to be higher
+        ///the *only* reason these ids exist is for external unlocking of locked resources in the context of
+        ///uncooperative thread termination
+        size_t my_id = thread_id_storage_hack;
 
         if(fctx == nullptr)
             return;
@@ -240,8 +248,6 @@ struct mongo_lock_proxy
 
         if(fctx->default_collection != "")
             ctx.ctx->make_lock(fctx->last_db, fctx->default_collection, ilock_id, ctx.client);
-
-        //ilock_id = lock_id;
 
         ctx.last_collection = fctx->default_collection;
 

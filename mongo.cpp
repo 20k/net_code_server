@@ -14,7 +14,7 @@
 #endif // DEADLOCK_DETECTION
 #include <thread>
 
-thread_local int mongo_lock_proxy::thread_id_storage_hack;
+thread_local int mongo_lock_proxy::thread_id_storage_hack = -2;
 
 void lock_internal::lock(const std::string& debug_info, size_t who, mongoc_client_t* emergency)
 {

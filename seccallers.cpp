@@ -489,6 +489,20 @@ std::string get_print_str(duk_context* ctx)
     return str;
 }
 
+duk_ret_t deliberate_hang(duk_context* ctx)
+{
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+    std::cout << "my id " << mongo_lock_proxy::thread_id_storage_hack << std::endl;
+
+    while(1)
+    {
+
+    }
+
+    return 0;
+}
+
 std::string compile_and_call(duk_context* ctx, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script)
 {
     if(data.size() == 0)
@@ -1014,6 +1028,10 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     inject_c_function(ctx, is_key_down, "is_key_down", 1);
     inject_c_function(ctx, mouse_get_position, "mouse_get_position", 0);
     inject_c_function(ctx, get_string_col, "get_string_col", 1);
+
+    #ifdef TESTING
+    inject_c_function(ctx, deliberate_hang, "deliberate_hang", 0);
+    #endif // TESTING
 
     inject_hacky_Symbol(ctx);
 

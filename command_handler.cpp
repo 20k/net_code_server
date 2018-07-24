@@ -46,6 +46,10 @@ duk_ret_t unsafe_wrapper(duk_context* ctx, void* udata)
 
 void managed_duktape_thread(unsafe_info* info)
 {
+    int id = get_thread_id(info->ctx);
+
+    mongo_lock_proxy::thread_id_storage_hack = id;
+
     if(duk_safe_call(info->ctx, unsafe_wrapper, (void*)info, 0, 1) != 0)
     {
         duk_dup(info->ctx, -1);
@@ -398,11 +402,11 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         bool terminated = false;
 
         //sf::Clock clk;
-        #ifdef TESTING
-        float max_time_ms = 50000;
-        #else
+        //#ifdef TESTING
+        //float max_time_ms = 50000;
+        //#else
         float max_time_ms = 5000;
-        #endif
+        //#endif
         float db_grace_time_ms = 2000;
 
         if(custom_exec_time_s.has_value())
@@ -738,6 +742,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                 printf("Ended realtime\n");
             }
         }
+
         if(terminated)
         {
             for(auto& i : mongo_databases)
