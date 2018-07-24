@@ -4352,6 +4352,8 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
         std::vector<user> connected_users = load_users(connected, get_thread_id(ctx));
 
         std::string connected_system;
+        low_level_structure* found_system = nullptr;
+        user* destination_user = nullptr;
 
         for(user& usr : connected_users)
         {
@@ -4367,6 +4369,8 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 low_level_structure& structure = *connected_sys_opt.value();
 
                 connected_system = *structure.name;
+                found_system = connected_sys_opt.value();
+                destination_user = &usr;
 
                 break;
             }
@@ -4380,13 +4384,15 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             total_msg += "Please " + make_key_val("activate", "true") + " to engage (" + connected_system + ")\n";
         }
 
-        if(has_activate)
+        if(has_activate && found_system != nullptr)
         {
             playspace_network_manage.unlink_all(my_user.name);
 
             total_msg +=  "Engaged. Travelling to " + connected_system + "\n";
 
+            found_system->steal_user(my_user, current_sys, destination_user->get_local_pos(), target.get_local_pos());
 
+            ///should also print sys.view map
         }
     }
 
