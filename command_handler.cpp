@@ -336,7 +336,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         static std::mutex id_mut;
 
         static std::map<std::string, int> auth_guard;
-        static int32_t gthread_id = 0;
+        static int32_t gthread_id = 1;
         int32_t local_thread_id;
 
         {

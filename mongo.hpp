@@ -38,7 +38,7 @@ std::string strip_whitespace(std::string);
 
 struct lock_internal
 {
-    int locked_by = -1;
+    size_t locked_by = -1;
     #ifdef DEADLOCK_DETECTION
     std::thread::id locked_by_tid;
     std::string locked_by_debug;
@@ -46,7 +46,7 @@ struct lock_internal
     std::atomic_flag locked = ATOMIC_FLAG_INIT;
     mongoc_client_t* in_case_of_emergency = nullptr;
 
-    void lock(const std::string& debug_info, int who, mongoc_client_t* emergency);
+    void lock(const std::string& debug_info, size_t who, mongoc_client_t* emergency);
     void unlock();
 };
 
@@ -85,11 +85,11 @@ struct mongo_context
 
     void map_lock_for();
 
-    void make_lock(const std::string& debug_info, const std::string& collection, int who, mongoc_client_t* in_case_of_emergency);
+    void make_lock(const std::string& debug_info, const std::string& collection, size_t who, mongoc_client_t* in_case_of_emergency);
 
     void make_unlock(const std::string& collection);
 
-    void unlock_if(int who);
+    void unlock_if(size_t who);
 
     #if 0
     void ping()
@@ -214,9 +214,12 @@ struct mongo_interface
 
 struct mongo_lock_proxy
 {
+    static thread_local int thread_id_storage_hack;
+
     mongo_interface ctx;
 
-    int ilock_id = -1;
+    size_t ilock_id = 0;
+    int friendly_id = -1;
 
     mongo_lock_proxy(mongo_context* fctx, int lock_id) : ctx(fctx)
     {
@@ -225,13 +228,21 @@ struct mongo_lock_proxy
         if(ctx == nullptr)
             return;*/
 
+        size_t my_id = (size_t)&thread_id_storage_hack;
+
+        static_assert(sizeof(my_id) == sizeof(&thread_id_storage_hack));
+
         if(fctx == nullptr)
             return;
 
-        if(fctx->default_collection != "")
-            ctx.ctx->make_lock(fctx->last_db, fctx->default_collection, lock_id, ctx.client);
+        friendly_id = lock_id;
+        ilock_id = my_id;
 
-        ilock_id = lock_id;
+        if(fctx->default_collection != "")
+            ctx.ctx->make_lock(fctx->last_db, fctx->default_collection, ilock_id, ctx.client);
+
+        //ilock_id = lock_id;
+
         ctx.last_collection = fctx->default_collection;
 
         if(ctx.ctx->default_collection != "")

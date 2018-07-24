@@ -14,7 +14,9 @@
 #endif // DEADLOCK_DETECTION
 #include <thread>
 
-void lock_internal::lock(const std::string& debug_info, int who, mongoc_client_t* emergency)
+thread_local int mongo_lock_proxy::thread_id_storage_hack;
+
+void lock_internal::lock(const std::string& debug_info, size_t who, mongoc_client_t* emergency)
 {
     #ifdef DEADLOCK_DETECTION
     static std::atomic_int is_deadlocked{0};
@@ -103,7 +105,7 @@ void lock_internal::unlock()
     #ifdef DEADLOCK_DETECTION
     locked_by_debug = "";
     #endif // DEADLOCK_DETECTION
-    locked_by = -1;
+    locked_by = 0;
     locked.clear(std::memory_order_release);
 }
 
@@ -364,7 +366,7 @@ void mongo_context::map_lock_for()
     while(!map_lock.try_lock_for(std::chrono::milliseconds(time_ms))){}
 }
 
-void mongo_context::make_lock(const std::string& debug_info, const std::string& collection, int who, mongoc_client_t* in_case_of_emergency)
+void mongo_context::make_lock(const std::string& debug_info, const std::string& collection, size_t who, mongoc_client_t* in_case_of_emergency)
 {
     map_lock_for();
 
@@ -424,7 +426,7 @@ void mongo_context::make_unlock(const std::string& collection)
     lock.unlock();*/
 }
 
-void mongo_context::unlock_if(int who)
+void mongo_context::unlock_if(size_t who)
 {
     //if(who == locked_by)
     {
