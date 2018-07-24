@@ -4025,8 +4025,6 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         int current_ring = 0;
 
-        printf("hi!\n");
-
         while(current_ring < n_val && to_test[current_ring].size() > 0)
         {
             low_level_structure* next = to_test[current_ring].front();
@@ -4268,7 +4266,7 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         size_t current_time = get_wall_time();
 
-        double units_per_second = 10;
+        double units_per_second = 4;
 
         vec3f end_pos = {values[0], values[1], values[2]};
 
@@ -4294,6 +4292,8 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     return push_error(ctx, "Impossible");
 }
 
+///will replace #net.access
+///but for the moment lets just implement long distance travel
 duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -4302,6 +4302,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
         return push_error(ctx, "Takes a user parameter");
 
     std::string target_name = duk_safe_get_prop_string(ctx, -1, "user");
+    bool has_activate = dukx_is_prop_truthy(ctx, -1, "activate");
 
     user target;
     user my_user;
@@ -4317,6 +4318,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
     auto target_sys_opt = low_level_structure_manage.get_system_of(target.name);
     auto my_sys_opt = low_level_structure_manage.get_system_of(my_user.name);
@@ -4327,7 +4329,63 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(target_sys_opt.value() != my_sys_opt.value())
         return push_error(ctx, "Not in the same system");
 
-    return 0;
+
+    low_level_structure& current_sys = *my_sys_opt.value();
+
+    bool is_warpy = false;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(ctx));
+
+        is_warpy = npc_info::has_type(mongo_ctx, npc_info::WARPY, target.name);
+    }
+
+    std::string total_msg;
+
+    double maximum_warp_distance = 5;
+
+    float distance = (target.get_local_pos() - my_user.get_local_pos()).length();
+
+    if(is_warpy)
+    {
+        std::vector<std::string> connected = playspace_network_manage.get_links(target.name);
+        std::vector<user> connected_users = load_users(connected, get_thread_id(ctx));
+
+        std::string connected_system;
+
+        for(user& usr : connected_users)
+        {
+            mongo_lock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(ctx));
+
+            if(npc_info::has_type(mongo_ctx, npc_info::WARPY, usr.name))
+            {
+                auto connected_sys_opt = low_level_structure_manage.get_system_of(usr);
+
+                if(!connected_sys_opt.has_value() || connected_sys_opt.value() == target_sys_opt.value())
+                    continue;
+
+                low_level_structure& structure = *connected_sys_opt.value();
+
+                connected_system = *structure.name;
+
+                break;
+            }
+        }
+
+        if(distance > maximum_warp_distance)
+            return push_error(ctx, "Target out of range, max range is " + to_string_with_enforced_variable_dp(maximum_warp_distance, 2) + ", found range " + to_string_with_enforced_variable_dp(distance, 2));
+
+        if(connected_system != "")
+        {
+            total_msg += "Please " + make_key_val("activate", "true") + " to engage (" + connected_system + ")";
+        }
+    }
+
+    if(total_msg == "")
+        return 0;
+
+    push_duk_val(ctx, total_msg);
+    return 1;
 }
 
 duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
