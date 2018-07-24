@@ -4340,6 +4340,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string target_name = duk_safe_get_prop_string(ctx, -1, "user");
     bool has_activate = dukx_is_prop_truthy(ctx, -1, "activate");
+    bool has_connect = dukx_is_prop_truthy(ctx, -1, "connect");
 
     user target;
     user my_user;
@@ -4380,8 +4381,6 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string total_msg;
 
     space_pos_t my_local_pos = my_user.get_local_pos();
-
-
 
     std::string situation_string = "Location: [" +
                                         to_string_with_enforced_variable_dp(my_local_pos.x(), 2) + ", " +
@@ -4448,6 +4447,15 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             ///should also print sys.view map
         }
+    }
+
+    ///handle connection
+    ///should be able to connect to a visible npc
+    ///we need a more general way to define this visibility rule as its not uncommon now
+    ///maybe should handle this in playspace_network_manager?
+    if(!is_warpy)
+    {
+
     }
 
     if(total_msg == "")
