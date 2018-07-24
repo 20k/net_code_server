@@ -4379,6 +4379,23 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string total_msg;
 
+    space_pos_t my_local_pos = my_user.get_local_pos();
+
+
+
+    std::string situation_string = "Location: [" +
+                                        to_string_with_enforced_variable_dp(my_local_pos.x(), 2) + ", " +
+                                        to_string_with_enforced_variable_dp(my_local_pos.y(), 2) + ", " +
+                                        to_string_with_enforced_variable_dp(my_local_pos.z(), 2) + "]\n";
+
+    total_msg += situation_string;
+
+    //std::string sector_string = "Sector: " + usr.fetch_sector();
+    //total_msg += sector_string;
+
+    std::string system_string = "System: " + *current_sys.name;;
+    total_msg += system_string + "\n";
+
     double maximum_warp_distance = 5;
 
     float distance = (target.get_local_pos() - my_user.get_local_pos()).length();
@@ -4418,7 +4435,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         if(connected_system != "")
         {
-            total_msg += "Please " + make_key_val("activate", "true") + " to engage (" + connected_system + ")\n";
+            total_msg += "Please " + make_key_val("activate", "true") + " to travel to " + connected_system + "\n";
         }
 
         if(has_activate && found_system != nullptr)
@@ -4435,6 +4452,9 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(total_msg == "")
         return 0;
+
+    if(total_msg.size() > 0 && total_msg.back() == '\n')
+        total_msg.pop_back();
 
     push_duk_val(ctx, total_msg);
     return 1;
