@@ -4213,6 +4213,7 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
         return push_error(ctx, "No User, really bad error");
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 
     bool is_anchored = playspace_network_manage.current_network_links(get_caller(ctx)) > 0;
 
@@ -4252,23 +4253,59 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
             playspace_network_manage.unlink_all(my_user.name);
         }
 
-        ///perform move
-        std::vector<double> values = dukx_get_prop_as<std::vector<double>>(ctx, -1, "to");
+        vec3f end_pos;
 
-        if(values.size() == 2)
-            values.push_back(0);
+        ///should really cancel the last move that was made and then make queue optional
+        duk_get_prop_string(ctx, -1, "to");
 
-        if(values.size() != 3)
+        if(duk_is_array(ctx, -1))
         {
-            push_duk_val(ctx, total_msg + "Requires [x, y] or [x, y, z]");
-            return 1;
+            duk_pop(ctx);
+
+            ///perform move
+            std::vector<double> values = dukx_get_prop_as<std::vector<double>>(ctx, -1, "to");
+
+            if(values.size() == 2)
+                values.push_back(0);
+
+            if(values.size() != 3)
+            {
+                push_duk_val(ctx, total_msg + "Requires [x, y] or [x, y, z]");
+                return 1;
+            }
+
+            end_pos = {values[0], values[1], values[2]};
+        }
+        else if(duk_is_string(ctx, -1))
+        {
+            duk_pop(ctx);
+
+            std::string str = dukx_get_prop_as<std::string>(ctx, -1, "to");
+
+            user targeting_user;
+
+            {
+                mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+                if(!targeting_user.load_from_db(mongo_ctx, str))
+                    return push_error(ctx, "Invalid user");
+            }
+
+            if(!low_level_structure_manage.in_same_system(targeting_user, my_user))
+                return push_error(ctx, "Not in the current system");
+
+            end_pos = targeting_user.get_local_pos();
+        }
+        else
+        {
+            duk_pop(ctx);
+
+            return push_error(ctx, "Requires string or array");
         }
 
         size_t current_time = get_wall_time();
 
         double units_per_second = 4;
-
-        vec3f end_pos = {values[0], values[1], values[2]};
 
         vec3f distance = (end_pos - my_user.get_local_pos());
 
