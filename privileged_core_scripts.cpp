@@ -4377,7 +4377,16 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         if(connected_system != "")
         {
-            total_msg += "Please " + make_key_val("activate", "true") + " to engage (" + connected_system + ")";
+            total_msg += "Please " + make_key_val("activate", "true") + " to engage (" + connected_system + ")\n";
+        }
+
+        if(has_activate)
+        {
+            playspace_network_manage.unlink_all(my_user.name);
+
+            total_msg +=  "Engaged. Travelling to " + connected_system + "\n";
+
+
         }
     }
 
