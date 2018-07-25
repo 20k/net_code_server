@@ -3609,6 +3609,73 @@ duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+#if 0
+duk_ret_t try_create_new_link(duk_context* ctx, const std::string& user_1, const std::string& user_2, double stab, double price)
+{
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    auto opt_user_and_nodes_1 = get_user_and_nodes(user_1, get_thread_id(ctx));
+    auto opt_user_and_nodes_2 = get_user_and_nodes(user_2, get_thread_id(ctx));
+
+    if(!opt_user_and_nodes_1.has_value() || !opt_user_and_nodes_2.has_value())
+        return push_error(ctx, "Invalid User");
+
+    user_nodes& n1 = opt_user_and_nodes_1->second;
+    user_nodes& n2 = opt_user_and_nodes_2->second;
+
+    user& u1 = opt_user_and_nodes_1->first;
+    user& u2 = opt_user_and_nodes_2->first;
+
+    bool invalid_1 = !n1.is_valid_hostile_action(user_node_info::hostile_actions::USE_LINKS) && !u1.is_allowed_user(get_caller(ctx)) && u1.name != get_caller(ctx);
+    bool invalid_2 = !n2.is_valid_hostile_action(user_node_info::hostile_actions::USE_LINKS) && !u2.is_allowed_user(get_caller(ctx)) && u2.name != get_caller(ctx);
+
+    if(invalid_1 || invalid_2)
+        return push_error(ctx, "Breach Node Secured");
+
+    if(stab <= 0)
+        return push_error(ctx, "Cannot create a new link with stability <= 0");
+
+    std::string rstr;
+
+    if(price <= 0)
+    {
+        rstr += stab_str;
+        rstr += no_stab_str;
+
+        push_duk_val(ctx, rstr);
+        return 1;
+    }
+    else
+    {
+        vec3f vdist = (u2.pos - u1.pos);
+
+        double dist = vdist.length();
+
+        ///30 cash per network unit
+        price += (dist / ESEP) * 30.f;
+    }
+
+    if(price != 0)
+    {
+        if(handle_confirmed(ctx, confirm, get_caller(ctx), price))
+            return 1;
+
+        if(playspace_network_manage.current_network_links(usr) >= playspace_network_manage.max_network_links(usr) ||
+           playspace_network_manage.current_network_links(target) >= playspace_network_manage.max_network_links(target))
+            return push_error(ctx, "No spare links");
+
+        scheduled_tasks& task_sched = get_global_scheduled_tasks();
+
+        task_sched.task_register(task_type::ON_HEAL_NETWORK, 10.f, {usr, target, std::to_string(stab)}, get_thread_id(ctx));
+
+        //return push_success(ctx, "Link creation scheduled in 10s");
+        return 0;
+    }
+
+    return push_error(ctx, "Nothing To Do");
+}
+#endif // 0
+
 duk_ret_t net__modify(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -4464,6 +4531,13 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(!has_connect)
             {
                 total_msg += "Pass " + make_key_val("connect", "true") + " to attempt a connection\n";
+            }
+            else
+            {
+
+                total_msg + "Linked " + my_user.name + " to " + target.name + "\n";
+
+                playspace_network_manage.link(target.name, my_user.name);
             }
         }
     }
