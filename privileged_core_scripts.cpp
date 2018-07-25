@@ -3676,7 +3676,7 @@ duk_ret_t try_create_new_link(duk_context* ctx, const std::string& user_1, const
 }
 #endif // 0
 
-duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, const std::string& user_1, const std::string& target, bool create, double stab, bool confirm, std::string path_type = "use")
+duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, const std::string& user_1, const std::string& target, bool create, double stab, bool confirm, bool enforce_connectivity, std::string path_type = "use")
 {
     std::optional opt_user_and_nodes_1 = get_user_and_nodes(user_1, get_thread_id(ctx));
     std::optional opt_user_and_nodes_2 = get_user_and_nodes(target, get_thread_id(ctx));
@@ -3705,6 +3705,12 @@ duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, cons
 
     if(path_type == "")
         path_type = "use";
+
+    if(enforce_connectivity)
+    {
+        if(!playspace_network_manage.has_accessible_path_to(ctx, target, user_1, (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
+            return push_error(ctx, "No path from user to target");
+    }
 
     float link_stability_for_one_cash = 1.f;
     float link_stability_to_cash = 1.f/link_stability_for_one_cash;
