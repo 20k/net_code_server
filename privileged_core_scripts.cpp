@@ -3676,6 +3676,138 @@ duk_ret_t try_create_new_link(duk_context* ctx, const std::string& user_1, const
 }
 #endif // 0
 
+duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, const std::string& user_1, const std::string& target, bool create, double stab, bool confirm, std::string path_type = "use")
+{
+    std::optional opt_user_and_nodes_1 = get_user_and_nodes(user_1, get_thread_id(ctx));
+    std::optional opt_user_and_nodes_2 = get_user_and_nodes(target, get_thread_id(ctx));
+
+    if(!opt_user_and_nodes_1.has_value())
+        return push_error(ctx, "No such user (user)");
+
+    if(!opt_user_and_nodes_2.has_value())
+        return push_error(ctx, "No such user (target)");
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    if(!create && !playspace_network_manage.has_accessible_path_to(ctx, user_1, from, path_info::VIEW_LINKS))
+        return push_error(ctx, "No currently visible path to user");
+
+    //double stab = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "delta", 0);
+    //std::string path_type = duk_safe_get_prop_string(ctx, -1, "type");
+
+    if(isnanf(stab))
+        stab = 0;
+
+    for(auto& i : path_type)
+    {
+        i = std::tolower(i);
+    }
+
+    if(path_type == "")
+        path_type = "use";
+
+    float link_stability_for_one_cash = 1.f;
+    float link_stability_to_cash = 1.f/link_stability_for_one_cash;
+
+    std::string stab_str = "1 link stability : " + std::to_string(link_stability_to_cash) + " cash\n";
+    std::string no_stab_str = "No stability delta requested, please input " + make_key_col("delta") + ":" + make_val_col("num");
+    float price = fabs(stab * link_stability_to_cash);
+
+    if(!create)
+    {
+        std::string rstr = "Change connection strength or pass " + make_key_col("create") + ":" + make_val_col("true") + " to attempt new linkage\n";
+
+        if(price == 0)
+        {
+            rstr += stab_str;
+            rstr += "Select Path " + make_key_col("type") + ":" + make_val_col("view") + " or " + make_val_col("use") + " (selected " + path_type + ")\n";
+            rstr += no_stab_str;
+        }
+
+        if(price != 0)
+        {
+            if(handle_confirmed(ctx, confirm, get_caller(ctx), price))
+                return 1;
+
+            std::vector<std::string> path;
+
+            //if(path_type == "direct")
+            //    path = playspace_network_manage.get_accessible_path_to(ctx, target, usr, path_info::NONE);
+            if(path_type == "view")
+                path = playspace_network_manage.get_accessible_path_to(ctx, target, user_1, path_info::VIEW_LINKS);
+            if(path_type == "use")
+                path = playspace_network_manage.get_accessible_path_to(ctx, target, user_1, path_info::USE_LINKS);
+
+            if(path.size() == 0)
+                return push_error(ctx, "No path");
+
+            playspace_network_manage.modify_path_per_link_strength_with_logs(path, stab / ((float)path.size() - 1.f) , {"Path Fortify"}, get_thread_id(ctx));
+
+            return push_success(ctx, "Distributed " + std::to_string(stab) + " across " + std::to_string((int)path.size() - 1) + " links");
+        }
+
+        push_duk_val(ctx, rstr);
+    }
+    else
+    {
+        user_nodes& n1 = opt_user_and_nodes_1->second;
+        user_nodes& n2 = opt_user_and_nodes_2->second;
+
+        user& u1 = opt_user_and_nodes_1->first;
+        user& u2 = opt_user_and_nodes_2->first;
+
+        bool invalid_1 = !n1.is_valid_hostile_action(user_node_info::hostile_actions::USE_LINKS) && !u1.is_allowed_user(get_caller(ctx)) && u1.name != get_caller(ctx);
+        bool invalid_2 = !n2.is_valid_hostile_action(user_node_info::hostile_actions::USE_LINKS) && !u2.is_allowed_user(get_caller(ctx)) && u2.name != get_caller(ctx);
+
+        if(invalid_1 || invalid_2)
+            return push_error(ctx, "Breach Node Secured");
+
+        if(stab <= 0)
+            return push_error(ctx, "Cannot create a new link with stability <= 0");
+
+        std::string rstr;
+
+        if(price <= 0)
+        {
+            rstr += stab_str;
+            rstr += no_stab_str;
+
+            push_duk_val(ctx, rstr);
+            return 1;
+        }
+        else
+        {
+            vec3f vdist = (u2.pos - u1.pos);
+
+            double dist = vdist.length();
+
+            ///30 cash per network unit
+            price += (dist / ESEP) * 30.f;
+        }
+
+        if(price != 0)
+        {
+            if(handle_confirmed(ctx, confirm, get_caller(ctx), price))
+                return 1;
+
+            if(playspace_network_manage.current_network_links(user_1) >= playspace_network_manage.max_network_links(user_1) ||
+               playspace_network_manage.current_network_links(target) >= playspace_network_manage.max_network_links(target))
+                return push_error(ctx, "No spare links");
+
+            scheduled_tasks& task_sched = get_global_scheduled_tasks();
+
+            task_sched.task_register(task_type::ON_HEAL_NETWORK, 10.f, {user_1, target, std::to_string(stab)}, get_thread_id(ctx));
+
+            return push_success(ctx, "Link creation scheduled in 10s");
+        }
+
+        push_duk_val(ctx, "Schedule new connection?");
+        return 1;
+    }
+
+    return 0;
+}
+
 duk_ret_t net__modify(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
