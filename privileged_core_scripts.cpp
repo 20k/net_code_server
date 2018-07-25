@@ -2640,9 +2640,9 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     bool cheats = false;
 
-    #ifdef TESTING
+    /*#ifdef TESTING
     cheats = true;
-    #endif // TESTING
+    #endif // TESTING*/
 
     if(!cheats)
     {
@@ -2650,7 +2650,7 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         float hack_cost = 0.25f;
 
-        auto path = playspace_network_manage.get_accessible_path_to(ctx, name_of_person_being_attacked, get_caller(ctx), path_info::USE_LINKS, -1, hack_cost);
+        auto path = playspace_network_manage.get_accessible_path_to(ctx, name_of_person_being_attacked, get_caller(ctx), (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, hack_cost);
 
         if(path.size() == 0)
             return push_error(ctx, "No Path");
