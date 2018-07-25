@@ -4441,7 +4441,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
         {
             playspace_network_manage.unlink_all(my_user.name);
 
-            total_msg +=  "Engaged. Travelling to " + connected_system + "\n";
+            total_msg += "Engaged. Travelling to " + connected_system + "\n";
 
             found_system->steal_user(my_user, current_sys, destination_user->get_local_pos(), target.get_local_pos());
 
@@ -4455,7 +4455,17 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///maybe should handle this in playspace_network_manager?
     if(!is_warpy)
     {
+        std::string connections = "Target Links: " + std::to_string(playspace_network_manage.current_network_links(target.name)) + "/" + std::to_string(playspace_network_manage.max_network_links(target.name)) + "\n";
+        total_msg += connections;
 
+        if(playspace_network_manage.current_network_links(target.name) < playspace_network_manage.max_network_links(target.name) &&
+           playspace_network_manage.current_network_links(my_user.name) < playspace_network_manage.max_network_links(my_user.name))
+        {
+            if(!has_connect)
+            {
+                total_msg += "Pass " + make_key_val("connect", "true") + " to attempt a connection\n";
+            }
+        }
     }
 
     if(total_msg == "")
