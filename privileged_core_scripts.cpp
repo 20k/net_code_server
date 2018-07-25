@@ -4546,6 +4546,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string target_name = duk_safe_get_prop_string(ctx, -1, "user");
     bool has_activate = dukx_is_prop_truthy(ctx, -1, "activate");
     bool has_connect = dukx_is_prop_truthy(ctx, -1, "connect");
+    bool has_confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
 
     user target;
     user my_user;
@@ -4675,7 +4676,10 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
                 total_msg + "Linked " + my_user.name + " to " + target.name + "\n";
 
-                playspace_network_manage.link(target.name, my_user.name);
+                duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, true, 10.f, has_confirm, true);
+
+                if(found == 1)
+                    return 1;
             }
         }
     }
