@@ -876,8 +876,9 @@ std::string hex_to_binary(const std::string& in)
 
 void on_create_user(user& usr)
 {
-    run_in_user_context(usr.name, "#msg.manage({join:\"0000\"})", std::nullopt);
-    run_in_user_context(usr.name, "#msg.manage({join:\"7001\"})", std::nullopt);
+    run_in_user_context(usr.name, "#msg.manage({join:\"local\"})", std::nullopt);
+    run_in_user_context(usr.name, "#msg.manage({join:\"global\"})", std::nullopt);
+    run_in_user_context(usr.name, "#msg.manage({join:\"help\"})", std::nullopt);
     run_in_user_context(usr.name, "#msg.manage({join:\"memes\"})", std::nullopt);
 
     {
