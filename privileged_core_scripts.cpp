@@ -742,18 +742,25 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
     }
 
+    channel = strip_whitespace(channel);
+
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 
     std::vector<std::string> users;
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+        {
+            mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
 
-        if(!user_in_channel(mongo_ctx, ctx, get_caller(ctx), channel))
-            return push_error(ctx, "User not in channel or doesn't exist");
+            if(!user_in_channel(mongo_ctx, ctx, get_caller(ctx), channel))
+                return push_error(ctx, "User not in channel or doesn't exist");
+        }
 
-        if(channel == "local")
+        if(channel != "local")
+        {
+            mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
             users = get_users_in_channel(mongo_ctx, channel);
+        }
         else
         {
             std::optional<low_level_structure*> system_opt = low_level_structure_manage.get_system_of(get_caller(ctx));
@@ -764,6 +771,18 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
             low_level_structure& structure = *system_opt.value();
 
             users = structure.get_all_users();
+
+            mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+
+            for(int i=0; i < (int)users.size(); i++)
+            {
+                if(!user_in_channel(mongo_ctx, ctx, users[i], channel))
+                {
+                    users.erase(users.begin() + i);
+                    i--;
+                    continue;
+                }
+            }
         }
     }
 
