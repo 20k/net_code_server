@@ -6,7 +6,6 @@
 #include <SFML/System.hpp>
 #include <vector>
 #include <mutex>
-#include <functional>
 #include <thread>
 #include <json/json.hpp>
 #include "db_interfaceable.hpp"
