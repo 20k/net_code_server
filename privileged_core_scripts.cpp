@@ -709,6 +709,24 @@ duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     return push_success(ctx);
 }
 
+std::vector<std::string> get_users_in_channel(mongo_lock_proxy& mongo_ctx, const std::string& channel)
+{
+    mongo_requester request;
+    request.set_prop("channel_name", channel);
+
+    auto found = request.fetch_from_db(mongo_ctx);
+
+    if(found.size() != 1)
+        return {};
+
+        //return push_error(ctx, "Something real weird happened: Orange Canary");
+
+    mongo_requester& chan = found[0];
+
+    std::vector<std::string> users = str_to_array(chan.get_prop("user_list"));
+
+    return users;
+}
 
 duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
@@ -724,6 +742,8 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
     }
 
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
     std::vector<std::string> users;
 
     {
@@ -732,17 +752,19 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(!user_in_channel(mongo_ctx, ctx, get_caller(ctx), channel))
             return push_error(ctx, "User not in channel or doesn't exist");
 
-        mongo_requester request;
-        request.set_prop("channel_name", channel);
+        if(channel == "local")
+            users = get_users_in_channel(mongo_ctx, channel);
+        else
+        {
+            std::optional<low_level_structure*> system_opt = low_level_structure_manage.get_system_of(get_caller(ctx));
 
-        auto found = request.fetch_from_db(mongo_ctx);
+            if(!system_opt.has_value())
+                return push_error(ctx, "Dust is coarse and irritating and gets everywhere (no system)");
 
-        if(found.size() != 1)
-            return push_error(ctx, "Something real weird happened: Orange Canary");
+            low_level_structure& structure = *system_opt.value();
 
-        mongo_requester& chan = found[0];
-
-        users = str_to_array(chan.get_prop("user_list"));
+            users = structure.get_all_users();
+        }
     }
 
     bool found = false;
