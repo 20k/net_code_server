@@ -3069,7 +3069,7 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx), path_info::VIEW_LINKS))
+    if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx), (path_info::path_info)(path_info::VIEW_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
         return push_error(ctx, "Target Inaccessible");
 
     user& usr = opt_user_and_nodes->first;
@@ -4377,6 +4377,15 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(!opt_structure.has_value())
         return push_error(ctx, "You are lost, there is no help for you now");
+
+    /*std::cout <<" tlkinks " << playspace_network_manage.current_network_links(my_user.name) << std::endl;
+
+    auto my_links = playspace_network_manage.get_links(my_user.name);
+
+    for(auto& i : my_links)
+    {
+        std::cout << "fl " << i << std::endl;
+    }*/
 
     low_level_structure& structure = *opt_structure.value();
 

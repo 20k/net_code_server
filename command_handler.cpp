@@ -404,11 +404,11 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         bool terminated = false;
 
         //sf::Clock clk;
-        //#ifdef TESTING
-        //float max_time_ms = 50000;
-        //#else
+        #ifdef TESTING
+        float max_time_ms = 50000;
+        #else
         float max_time_ms = 5000;
-        //#endif
+        #endif
         float db_grace_time_ms = 2000;
 
         if(custom_exec_time_s.has_value())
