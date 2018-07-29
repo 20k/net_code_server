@@ -4246,6 +4246,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     int n_val = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", -1);
+    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 
@@ -4335,18 +4336,57 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     //std::cout << *low_level_structure_manage.get_system_of(my_user).value()->name << std::endl;
 
-    ascii::ascii_render_flags flags = ascii::USE_SYS;
+    if(!is_arr)
+    {
+        ascii::ascii_render_flags flags = ascii::USE_SYS;
 
-    if(!centre)
-        flags = (ascii::ascii_render_flags)(flags | ascii::FIT_TO_AREA);
+        if(!centre)
+            flags = (ascii::ascii_render_flags)(flags | ascii::FIT_TO_AREA);
 
-    flags = (ascii::ascii_render_flags)(flags | ascii::HIGHLIGHT_USER);
+        flags = (ascii::ascii_render_flags)(flags | ascii::HIGHLIGHT_USER);
 
-    std::string result = ascii_render_from_accessibility_info(info, buffer, pos, 0.07f, flags, *structure.name);
+        std::string result = ascii_render_from_accessibility_info(info, buffer, pos, 0.07f, flags, *structure.name);
 
-    result = "Current Sys: " + colour_string(*structure.name) + "\n" + result;
+        result = "Current Sys: " + colour_string(*structure.name) + "\n" + result;
 
-    push_duk_val(ctx, result);
+        push_duk_val(ctx, result);
+    }
+    else
+    {
+        nlohmann::json all_data;
+
+        std::vector<nlohmann::json> data;
+
+        for(auto& i : info.ring_ordered_names)
+        {
+            nlohmann::json j;
+
+            std::string name = i;
+
+            auto opt_structure = low_level_structure_manage.get_system_from_name(name);
+
+            if(!opt_structure.has_value())
+                continue;
+
+            low_level_structure& structure = *opt_structure.value();
+
+            vec3f pos = info.global_pos[i];
+            std::vector<std::string> links = structure.get_connected_systems();
+
+            j["name"] = name;
+            j["x"] = pos.x();
+            j["y"] = pos.y();
+            j["z"] = pos.z();
+            j["links"] = links;
+
+            data.push_back(j);
+        }
+
+        all_data = data;
+
+        push_duk_val(ctx, all_data);
+        return 1;
+    }
 
     return 1;
 }
