@@ -4385,7 +4385,6 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         all_data = data;
 
         push_duk_val(ctx, all_data);
-        return 1;
     }
 
     return 1;
@@ -4396,6 +4395,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     COOPERATE_KILL();
 
     std::string str = duk_safe_get_prop_string(ctx, -1, "sys");
+    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
@@ -4479,16 +4479,67 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         }*/
     }
 
-    std::string from = get_caller(ctx);
+    if(!is_arr)
+    {
+        std::string from = get_caller(ctx);
 
-    vec3f pos = {0,0,0};
-    ///info.global_pos[from]
+        vec3f pos = {0,0,0};
+        ///info.global_pos[from]
 
-    std::string result = ascii_render_from_accessibility_info(info, buffer, pos, 0.5f, ascii::NONE);
+        std::string result = ascii_render_from_accessibility_info(info, buffer, pos, 0.5f, ascii::NONE);
 
-    result = "Current Sys: " + colour_string(*structure.name) + "\n" + result;
+        result = "Current Sys: " + colour_string(*structure.name) + "\n" + result;
 
-    push_duk_val(ctx, result);
+        push_duk_val(ctx, result);
+    }
+    else
+    {
+        std::vector<json> all_npc_data;
+
+        for(auto& i : info.ring_ordered_names)
+        {
+            const std::string& name = i;
+            vec3f pos = info.global_pos[name];
+
+            json j;
+            j["name"] = name;
+            j["x"] = pos.x();
+            j["y"] = pos.y();
+            j["z"] = pos.z();
+
+            auto connections = playspace_network_manage.get_links(name);
+
+            for(auto it = connections.begin(); it != connections.end();)
+            {
+                if(info.accessible.find(*it) == info.accessible.end())
+                    it = connections.erase(it);
+                else
+                    it++;
+            }
+
+            std::vector<float> stabs;
+
+            for(int i=0; i < (int)connections.size(); i++)
+            {
+                auto val = playspace_network_manage.get_neighbour_link_strength(name, connections[i]);
+
+                if(val.has_value())
+                    stabs.push_back(val.value());
+                else
+                    stabs.push_back(-1.f);
+            }
+
+
+            j["links"] = connections;
+            j["stabilities"] = stabs;
+
+            all_npc_data.push_back(j);
+        }
+
+        json final_data = all_npc_data;
+
+        push_duk_val(ctx, final_data);
+    }
 
     ///to go any further we need 2 things
     ///one: how to represent the glob of npcs on the map
