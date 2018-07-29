@@ -4369,6 +4369,14 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
             return push_error(ctx, "Error: Does not exist");
     }
 
+    int n_count = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", -1);
+
+    if(n_count < -1)
+        n_count = -1;
+
+    if(n_count > 99)
+        n_count = 99;
+
     std::optional<low_level_structure*> opt_structure;
 
     if(str == "")
@@ -4404,7 +4412,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     for(user& usr : special_users)
     {
-        network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, 15);
+        network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, n_count);
         info = network_accessibility_info::merge_together(info, cur);
     }
 
@@ -4413,7 +4421,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(playspace_network_manage.current_network_links(usr.name) > 0)
             continue;
 
-        network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, 15);
+        network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, n_count);
 
         auto old_names = cur.ring_ordered_names;
 
