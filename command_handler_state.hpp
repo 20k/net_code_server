@@ -40,6 +40,7 @@ struct command_handler_state
 
     int number_of_running_realtime_scripts();
     int number_of_running_oneshot_scripts();
+    float number_of_running_realtime_work_units();
 
     bool has_new_width_height(int script_id);
     void set_width_height(int script_id, int width, int height);
@@ -53,7 +54,7 @@ struct command_handler_state
 
     void add_realtime_script(int script_id);
     void remove_realtime_script(int script_id);
-    void set_realtime_script_delta(int script_id, float delta);
+    void set_realtime_script_delta(int script_id, float work_units);
 
 private:
     std::string auth;

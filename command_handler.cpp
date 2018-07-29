@@ -667,6 +667,12 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                                 current_goodwill_ms -= current_frame_time_ms - max_allowed_frame_time_ms;
                             }
 
+
+                            double work_units = current_frame_time_ms / (max_allowed_frame_time_ms);
+                            work_units = clamp(work_units, 0., 1.);
+                            all_shared.value()->state.set_realtime_script_delta(current_id, work_units);
+
+
                             ///THIS ISNT QUITE CORRECT
                             ///it makes the graphics programmer sad as frames will come out IRREGULARLY
                             ///needs to take into account the extra time we've elapsed for
@@ -675,6 +681,8 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                             to_sleep = clamp(floor(to_sleep), 0., 200.);
 
                             to_sleep = to_sleep * all_shared.value()->live_work_units();
+
+                            //std::cout << "live work units " << all_shared.value()->live_work_units() << std::endl;
 
                             //printf("%f sleeping for\n", to_sleep);
 

@@ -64,6 +64,20 @@ int command_handler_state::number_of_running_oneshot_scripts()
     return number_of_oneshot_scripts - number_of_oneshot_scripts_terminated;
 }
 
+float command_handler_state::number_of_running_realtime_work_units()
+{
+    std::lock_guard guard(realtime_script_deltas_lock);
+
+    double amount = 0;
+
+    for(auto& i : realtime_script_deltas_ms)
+    {
+        amount += i.second;
+    }
+
+    return amount;
+}
+
 bool command_handler_state::has_new_width_height(int script_id)
 {
     safe_lock_guard guard(size_lock);
@@ -142,7 +156,7 @@ void command_handler_state::add_realtime_script(int script_id)
 {
     std::lock_guard guard(realtime_script_deltas_lock);
 
-    realtime_script_deltas_ms[script_id] = 16;
+    realtime_script_deltas_ms[script_id] = 1;
 }
 
 void command_handler_state::remove_realtime_script(int script_id)
@@ -152,9 +166,9 @@ void command_handler_state::remove_realtime_script(int script_id)
     realtime_script_deltas_ms.erase(script_id);
 }
 
-void command_handler_state::set_realtime_script_delta(int script_id, float delta)
+void command_handler_state::set_realtime_script_delta(int script_id, float work_units)
 {
     std::lock_guard guard(realtime_script_deltas_lock);
 
-    realtime_script_deltas_ms[script_id] = delta;
+    realtime_script_deltas_ms[script_id] = work_units;
 }

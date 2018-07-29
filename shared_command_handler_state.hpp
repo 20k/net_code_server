@@ -45,7 +45,7 @@ struct shared_command_handler_state
         float async_script_invocation_cost = 1;
 
         float value = blocking_script_invocation_cost * state.number_of_running_oneshot_scripts() +
-                      async_script_invocation_cost * state.number_of_running_realtime_scripts();
+                      async_script_invocation_cost * state.number_of_running_realtime_work_units();
 
         if(value < 1)
             return 1;
