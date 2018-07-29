@@ -539,7 +539,7 @@ size_t get_wall_time();
 double get_wall_time_s();
 
 
-bool user_in_channel(mongo_lock_proxy& mongo_ctx, duk_context* ctx, const std::string& username, const std::string& channel)
+bool user_in_channel(mongo_lock_proxy& mongo_ctx, const std::string& username, const std::string& channel)
 {
     mongo_requester request;
     request.set_prop("channel_name", channel);
@@ -752,7 +752,7 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         {
             mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
 
-            if(!user_in_channel(mongo_ctx, ctx, get_caller(ctx), channel))
+            if(!user_in_channel(mongo_ctx, get_caller(ctx), channel))
                 return push_error(ctx, "User not in channel or doesn't exist");
         }
 
@@ -776,7 +776,7 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             for(int i=0; i < (int)users.size(); i++)
             {
-                if(!user_in_channel(mongo_ctx, ctx, users[i], channel))
+                if(!user_in_channel(mongo_ctx, users[i], channel))
                 {
                     users.erase(users.begin() + i);
                     i--;
