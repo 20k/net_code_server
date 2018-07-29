@@ -4869,6 +4869,14 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 }
                 #endif // 0
 
+                my_user.set_local_pos(my_user.get_local_pos());
+
+                {
+                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+
+                    my_user.overwrite_user_in_db(mongo_ctx);
+                }
+
                 duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, true, 10.f, has_confirm, true);
 
                 if(found == 1)
