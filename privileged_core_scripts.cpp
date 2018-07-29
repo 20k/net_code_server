@@ -4584,7 +4584,9 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
                           " | y: " + to_string_with_enforced_variable_dp(pos.y(), 2) +
                           " | z: " + to_string_with_enforced_variable_dp(pos.z(), 2);
 
-        std::string msg = "Please specify to:\"user\", to:\"system\", or to:[x, y, z]";
+        std::string msg = "Please specify " + make_key_val("to", "\"user\"") + ", " +
+                                              make_key_val("to", "\"system\"") + ", or " +
+                                              make_key_val("to", "[x, y, z]");
 
         push_duk_val(ctx, str + "\n" + msg);
         return 1;
@@ -4814,8 +4816,34 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
         std::string connections = "Target Links: " + std::to_string(playspace_network_manage.current_network_links(target.name)) + "/" + std::to_string(playspace_network_manage.max_network_links(target.name)) + "\n";
         total_msg += connections;
 
+        ///leaving the debugging here because inevitably itll be necessary
+        /*auto flinks = playspace_network_manage.get_links(target.name);
+
+        for(auto& i : flinks)
+        {
+            std::cout << i << std::endl;
+        }*/
+
+        bool is_valid = true;
+
+        //if(playspace_network_manage.current_network_links(my_user.name) == 0)
+        {
+            vec3f current_local = my_user.get_local_pos();
+            vec3f target_local = target.get_local_pos();
+
+            vec3f diff = current_local - target_local;
+
+            float length = diff.length();
+
+            if(length > ESEP * 2)
+            {
+                is_valid = false;
+                total_msg += make_error_col("Out of Range") + " to " + make_key_col("connect") + "\n";
+            }
+        }
+
         if(playspace_network_manage.current_network_links(target.name) < playspace_network_manage.max_network_links(target.name) &&
-           playspace_network_manage.current_network_links(my_user.name) < playspace_network_manage.max_network_links(my_user.name))
+           playspace_network_manage.current_network_links(my_user.name) < playspace_network_manage.max_network_links(my_user.name) && is_valid)
         {
             if(!has_connect)
             {
@@ -4823,8 +4851,23 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             }
             else
             {
-
                 total_msg + "Linked " + my_user.name + " to " + target.name + "\n";
+
+                ///code for moving stuff around in a hypothetical impl
+                #if 0
+                if(playspace_network_manage.current_network_links(my_user.name) == 0)
+                {
+                    vec3f current_local = my_user.get_local_pos();
+                    vec3f target_local = target.get_local_pos();
+
+                    vec3f relative = (current_local - target_local).norm();
+                    vec3f absolute = relative * ESEP + target_local;
+
+                    my_user.set_local_pos(absolute);
+
+                    ///would need to flush to db here
+                }
+                #endif // 0
 
                 duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, true, 10.f, has_confirm, true);
 
