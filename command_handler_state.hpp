@@ -21,6 +21,9 @@ struct command_handler_state
     std::atomic_int number_of_realtime_scripts{0};
     std::atomic_int number_of_realtime_scripts_terminated{0};
 
+    std::mutex realtime_script_deltas_lock;
+    std::map<int, float> realtime_script_deltas_ms;
+
     std::atomic_int number_of_oneshot_scripts{0};
     std::atomic_int number_of_oneshot_scripts_terminated{0};
 
@@ -47,6 +50,10 @@ struct command_handler_state
 
     vec2f consume_mousewheel_state(int script_id);
     bool has_mousewheel_state(int script_id);
+
+    void add_realtime_script(int script_id);
+    void remove_realtime_script(int script_id);
+    void set_realtime_script_delta(int script_id, float delta);
 
 private:
     std::string auth;

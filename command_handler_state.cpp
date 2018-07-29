@@ -135,3 +135,24 @@ bool command_handler_state::has_mousewheel_state(int script_id)
 
     return scrollwheel.x() != 0 || scrollwheel.y() != 0;
 }
+
+void command_handler_state::add_realtime_script(int script_id)
+{
+    std::lock_guard guard(realtime_script_deltas_lock);
+
+    realtime_script_deltas_ms[script_id] = 16;
+}
+
+void command_handler_state::remove_realtime_script(int script_id)
+{
+    std::lock_guard guard(realtime_script_deltas_lock);
+
+    realtime_script_deltas_ms.erase(script_id);
+}
+
+void command_handler_state::set_realtime_script_delta(int script_id, float delta)
+{
+    std::lock_guard guard(realtime_script_deltas_lock);
+
+    realtime_script_deltas_ms[script_id] = delta;
+}
