@@ -77,6 +77,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["sys.view"] = make_cary("sys", "\"\"");
     ret["sys.map"] = make_cary("n", "-1", "centre", "true");
     ret["sys.move"] = make_cary("to", "\"\"");
+    ret["sys.access"] = make_cary("user", "\"\"");
 
     return ret;
 }
