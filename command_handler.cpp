@@ -503,6 +503,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         }
 
         bool launched_realtime = false;
+        int launched_realtime_id = 0;
 
         if(inf.finished && !terminated)
         {
@@ -514,7 +515,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                 exec_guard.unblock();
                 cleanup.unblock();
 
-                all_shared.value()->state.number_of_realtime_scripts++;
+                //all_shared.value()->state.number_of_realtime_scripts++;
 
                 launched_realtime = true;
 
@@ -547,6 +548,10 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                     printf("%i cid\n", current_id);
                 }
+
+                launched_realtime_id = current_id;
+
+                all_shared.value()->state.add_realtime_script(current_id);
 
                 //double last_time = get_wall_time();
 
@@ -775,7 +780,8 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
         if(launched_realtime)
         {
-            all_shared.value()->state.number_of_realtime_scripts_terminated++;
+            all_shared.value()->state.remove_realtime_script(launched_realtime_id);;
+            //all_shared.value()->state.number_of_realtime_scripts_terminated++;
         }
 
         std::string ret = inf.ret;

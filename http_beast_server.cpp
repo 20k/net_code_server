@@ -489,9 +489,9 @@ void thread_session(
     std::thread(write_queue, all_shared).detach();
 
     ///3rd thread is the js exec context
-    while(all_shared->shared.termination_count != 3 || all_shared->state.number_of_realtime_scripts_terminated != all_shared->state.number_of_realtime_scripts)
+    while(all_shared->shared.termination_count != 3 || all_shared->state.number_of_running_realtime_scripts() != 0)
     {
-        if(all_shared->state.number_of_realtime_scripts_terminated == all_shared->state.number_of_realtime_scripts)
+        if(all_shared->state.number_of_running_realtime_scripts() == 0)
         {
             all_shared->state.should_terminate_any_realtime = false;
         }

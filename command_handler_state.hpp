@@ -18,8 +18,8 @@ struct command_handler_state
     std::map<int, std::map<std::string, bool>> key_states;
 
     std::atomic_bool should_terminate_any_realtime{false};
-    std::atomic_int number_of_realtime_scripts{0};
-    std::atomic_int number_of_realtime_scripts_terminated{0};
+    /*std::atomic_int number_of_realtime_scripts{0};
+    std::atomic_int number_of_realtime_scripts_terminated{0};*/
 
     std::mutex realtime_script_deltas_lock;
     std::map<int, float> realtime_script_deltas_ms;
