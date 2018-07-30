@@ -3731,7 +3731,7 @@ duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, cons
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    if(!create && !playspace_network_manage.has_accessible_path_to(ctx, user_1, from, path_info::VIEW_LINKS))
+    if(!create && !playspace_network_manage.has_accessible_path_to(ctx, user_1, from, (path_info::path_info)(path_info::VIEW_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
         return push_error(ctx, "No currently visible path to user");
 
     //double stab = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "delta", 0);
@@ -4698,6 +4698,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string target_name = duk_safe_get_prop_string(ctx, -1, "user");
     bool has_activate = dukx_is_prop_truthy(ctx, -1, "activate");
     bool has_connect = dukx_is_prop_truthy(ctx, -1, "connect");
+    bool has_disconnect = dukx_is_prop_truthy(ctx, -1, "disconnect");
     bool has_confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
 
     user target;
@@ -4725,6 +4726,8 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(target_sys_opt.value() != my_sys_opt.value())
         return push_error(ctx, "Not in the same system");
 
+    if(!playspace_network_manage.has_accessible_path_to(ctx, target.name, my_user.name, (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
+        return push_error(ctx, "No path");
 
     low_level_structure& current_sys = *my_sys_opt.value();
 
@@ -4824,63 +4827,86 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             std::cout << i << std::endl;
         }*/
 
-        bool is_valid = true;
-
-        //if(playspace_network_manage.current_network_links(my_user.name) == 0)
+        if(!playspace_network_manage.is_linked(my_user.name, target.name))
         {
-            vec3f current_local = my_user.get_local_pos();
-            vec3f target_local = target.get_local_pos();
+            bool is_valid = true;
 
-            vec3f diff = current_local - target_local;
-
-            float length = diff.length();
-
-            if(length > ESEP * 2)
+            //if(playspace_network_manage.current_network_links(my_user.name) == 0)
             {
-                is_valid = false;
-                total_msg += make_error_col("Out of Range") + " to " + make_key_col("connect") + "\n";
+                vec3f current_local = my_user.get_local_pos();
+                vec3f target_local = target.get_local_pos();
+
+                vec3f diff = current_local - target_local;
+
+                float length = diff.length();
+
+                if(length > ESEP * 2)
+                {
+                    is_valid = false;
+                    total_msg += make_error_col("Out of Range") + " to " + make_key_col("connect") + "\n";
+                }
+            }
+
+            if(playspace_network_manage.current_network_links(target.name) < playspace_network_manage.max_network_links(target.name) &&
+               playspace_network_manage.current_network_links(my_user.name) < playspace_network_manage.max_network_links(my_user.name) && is_valid)
+            {
+                if(!has_connect)
+                {
+                    total_msg += "Pass " + make_key_val("connect", "true") + " to attempt a connection\n";
+                }
+                else
+                {
+                    ///not being used yet
+                    total_msg + make_success_col("Linked " + my_user.name + " to " + target.name) + "\n";
+
+                    ///code for moving stuff around in a hypothetical impl
+                    #if 0
+                    if(playspace_network_manage.current_network_links(my_user.name) == 0)
+                    {
+                        vec3f current_local = my_user.get_local_pos();
+                        vec3f target_local = target.get_local_pos();
+
+                        vec3f relative = (current_local - target_local).norm();
+                        vec3f absolute = relative * ESEP + target_local;
+
+                        my_user.set_local_pos(absolute);
+
+                        ///would need to flush to db here
+                    }
+                    #endif // 0
+
+                    my_user.set_local_pos(my_user.get_local_pos());
+
+                    {
+                        mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+
+                        my_user.overwrite_user_in_db(mongo_ctx);
+                    }
+
+                    duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, true, 10.f, has_confirm, true);
+
+                    if(found == 1)
+                        return 1;
+                }
             }
         }
-
-        if(playspace_network_manage.current_network_links(target.name) < playspace_network_manage.max_network_links(target.name) &&
-           playspace_network_manage.current_network_links(my_user.name) < playspace_network_manage.max_network_links(my_user.name) && is_valid)
+        else
         {
-            if(!has_connect)
+            if(!has_disconnect)
             {
-                total_msg += "Pass " + make_key_val("connect", "true") + " to attempt a connection\n";
+                total_msg += "Pass " + make_key_val("disconnect", "true") + " to disconnect from this target\n";
             }
-            else
+
+            if(has_disconnect && !has_confirm)
             {
-                total_msg + "Linked " + my_user.name + " to " + target.name + "\n";
+                total_msg += "Please " + make_key_val("confirm", "true") + " to confirm disconnection\n";
+            }
 
-                ///code for moving stuff around in a hypothetical impl
-                #if 0
-                if(playspace_network_manage.current_network_links(my_user.name) == 0)
-                {
-                    vec3f current_local = my_user.get_local_pos();
-                    vec3f target_local = target.get_local_pos();
+            if(has_disconnect && has_confirm)
+            {
+                total_msg += make_error_col("Disconnected " + my_user.name + " from " + target.name) + "\n";
 
-                    vec3f relative = (current_local - target_local).norm();
-                    vec3f absolute = relative * ESEP + target_local;
-
-                    my_user.set_local_pos(absolute);
-
-                    ///would need to flush to db here
-                }
-                #endif // 0
-
-                my_user.set_local_pos(my_user.get_local_pos());
-
-                {
-                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
-
-                    my_user.overwrite_user_in_db(mongo_ctx);
-                }
-
-                duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, true, 10.f, has_confirm, true);
-
-                if(found == 1)
-                    return 1;
+                playspace_network_manage.unlink(my_user.name, target.name);
             }
         }
     }
