@@ -4887,6 +4887,8 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
                     if(found == 1)
                         return 1;
+                    else
+                        return push_error(ctx, "Could not Link");
                 }
             }
         }
