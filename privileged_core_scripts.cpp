@@ -4699,6 +4699,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool has_activate = dukx_is_prop_truthy(ctx, -1, "activate");
     bool has_connect = dukx_is_prop_truthy(ctx, -1, "connect");
     bool has_disconnect = dukx_is_prop_truthy(ctx, -1, "disconnect");
+    bool has_modify = duk_has_prop_string(ctx, -1, "modify");
     bool has_confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
 
     user target;
@@ -4909,6 +4910,30 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 total_msg += make_error_col("Disconnected " + my_user.name + " from " + target.name) + "\n";
 
                 playspace_network_manage.unlink(my_user.name, target.name);
+            }
+        }
+
+        ///must have a path for us to be able to access the npc
+        if(!has_modify)
+        {
+            total_msg += "Pass " + make_key_val("modify", "num") + " to strengthen or weaken the path to this target\n";
+        }
+        else
+        {
+            double amount = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "modify", 0);
+
+            if(amount == 0)
+            {
+                total_msg += "Modify should be greater or less than 0\n";
+            }
+            else
+            {
+                duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, false, amount, has_confirm, true);
+
+                if(found == 1)
+                    return 1;
+                else
+                    return push_error(ctx, "Could not modify link");
             }
         }
     }
