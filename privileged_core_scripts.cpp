@@ -3048,48 +3048,9 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
-duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
+std::vector<nlohmann::json> get_net_view_data_arr(network_accessibility_info& info)
 {
-    COOPERATE_KILL();
-
-    std::string from = duk_safe_get_prop_string(ctx, -1, "user");
-    int num = duk_get_prop_string_as_int(ctx, -1, "n", 2);
-
-    bool arr = dukx_is_prop_truthy(ctx, -1, "array");
-
-    if(from == "")
-        return push_error(ctx, "usage: net.view({user:<username>, n:6})");
-
-    if(num < 0 || num > 15)
-        return push_error(ctx, "n out of range [1,15]");
-
-    auto opt_user_and_nodes = get_user_and_nodes(from, get_thread_id(ctx));
-
-    if(!opt_user_and_nodes.has_value())
-        return push_error(ctx, "User does not exist");
-
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
-
-    if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx), (path_info::path_info)(path_info::VIEW_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
-        return push_error(ctx, "Target Inaccessible");
-
-    user& usr = opt_user_and_nodes->first;
-
-    auto hostile_actions = opt_user_and_nodes->second.valid_hostile_actions();
-
-    if(!usr.is_allowed_user(get_caller(ctx)) && usr.name != get_caller(ctx) && !((hostile_actions & user_node_info::VIEW_LINKS) > 0))
-        return push_error(ctx, "Node is Locked");
-
-    network_accessibility_info info = playspace_network_manage.generate_network_accessibility_from(ctx, from, num);
-
-
-    ///so
-    ///the information we want to give back to the client wants to be very rich
-    ///we need the connections of every npc if we have permission
-    ///path to original player? unsure on this
-    ///position
-
-    using nlohmann::json;
 
     std::vector<json> all_npc_data;
 
@@ -3133,77 +3094,141 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         all_npc_data.push_back(j);
     }
 
+    return all_npc_data;
+}
+
+std::string get_net_view_data_str(std::vector<nlohmann::json>& all_npc_data, bool include_position = true)
+{
+    std::string str;
+
+    std::vector<std::string> all_names{"Name"};
+    std::vector<std::string> all_positions{"Position"};
+    std::vector<std::string> all_links{"Links"};
+
+    for(json& j : all_npc_data)
+    {
+        std::string name = j["name"];
+        vec3f pos = (vec3f){j["x"], j["y"], j["z"]};
+        std::vector<std::string> links = j["links"];
+        std::vector<float> stabs = j["stabilities"];
+
+        std::string pos_str = std::to_string(pos.x()) + " " + std::to_string(pos.y()) + " " + std::to_string(pos.z());
+
+        std::string link_str = "[";
+
+        for(int i=0; i < (int)links.size(); i++)
+        {
+            std::string stab_str = "`c" + to_string_with_enforced_variable_dp(stabs[i], 2) + "`";
+
+            if(i != (int)links.size()-1)
+                link_str += colour_string(links[i]) + " " + stab_str + ", ";
+            else
+                link_str += colour_string(links[i]) + " " + stab_str;
+        }
+
+        link_str += "]";
+
+        all_names.push_back(name);
+        all_positions.push_back(pos_str);
+        all_links.push_back(link_str);
+    }
+
+    for(int i=0; i < (int)all_names.size(); i++)
+    {
+        std::string formatted_name = format_by_vector(all_names[i], all_names);
+        std::string formatted_pos = format_by_vector(all_positions[i], all_positions);
+        //std::string formatted_link = format_by_vector(all_links[i], all_links);
+
+        std::string formatted_link = all_links[i];
+
+        std::string rname = formatted_name;
+
+        int pnum = 0;
+        while(rname.size() > 0 && rname.back() == ' ')
+        {
+            rname.pop_back();
+            pnum++;
+        }
+
+        if(i != 0)
+        {
+            rname = colour_string(rname);
+
+            for(int kk=0; kk < pnum; kk++)
+            {
+                rname += " ";
+            }
+
+            formatted_name = rname;
+        }
+
+        if(include_position)
+            str += formatted_name + " | " + formatted_pos + " | " + formatted_link + "\n";
+        else
+            str += formatted_name + " | " + formatted_link + "\n";
+    }
+
+    ///only one link
+    if(all_names.size() == 2 && !include_position)
+    {
+        return all_links[1];
+    }
+
+    return str;
+}
+
+duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string from = duk_safe_get_prop_string(ctx, -1, "user");
+    int num = duk_get_prop_string_as_int(ctx, -1, "n", 2);
+
+    bool arr = dukx_is_prop_truthy(ctx, -1, "array");
+
+    if(from == "")
+        return push_error(ctx, "usage: net.view({user:<username>, n:6})");
+
+    if(num < 0 || num > 15)
+        return push_error(ctx, "n out of range [1,15]");
+
+    auto opt_user_and_nodes = get_user_and_nodes(from, get_thread_id(ctx));
+
+    if(!opt_user_and_nodes.has_value())
+        return push_error(ctx, "User does not exist");
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx), (path_info::path_info)(path_info::VIEW_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
+        return push_error(ctx, "Target Inaccessible");
+
+    user& usr = opt_user_and_nodes->first;
+
+    auto hostile_actions = opt_user_and_nodes->second.valid_hostile_actions();
+
+    if(!usr.is_allowed_user(get_caller(ctx)) && usr.name != get_caller(ctx) && !((hostile_actions & user_node_info::VIEW_LINKS) > 0))
+        return push_error(ctx, "Node is Locked");
+
+    network_accessibility_info info = playspace_network_manage.generate_network_accessibility_from(ctx, from, num);
+
+
+    ///so
+    ///the information we want to give back to the client wants to be very rich
+    ///we need the connections of every npc if we have permission
+    ///path to original player? unsure on this
+    ///position
+
+    using nlohmann::json;
+
+    std::vector<json> all_npc_data = get_net_view_data_arr(info);
+
     json final_data = all_npc_data;
 
     if(arr)
         push_duk_val(ctx, final_data);
     else
     {
-        std::string str;
-
-        std::vector<std::string> all_names{"Name"};
-        std::vector<std::string> all_positions{"Position"};
-        std::vector<std::string> all_links{"Links"};
-
-        for(json& j : all_npc_data)
-        {
-            std::string name = j["name"];
-            vec3f pos = (vec3f){j["x"], j["y"], j["z"]};
-            std::vector<std::string> links = j["links"];
-            std::vector<float> stabs = j["stabilities"];
-
-            std::string pos_str = std::to_string(pos.x()) + " " + std::to_string(pos.y()) + " " + std::to_string(pos.z());
-
-            std::string link_str = "[";
-
-            for(int i=0; i < (int)links.size(); i++)
-            {
-                std::string stab_str = "`c" + to_string_with_enforced_variable_dp(stabs[i], 2) + "`";
-
-                if(i != (int)links.size()-1)
-                    link_str += colour_string(links[i]) + " " + stab_str + ", ";
-                else
-                    link_str += colour_string(links[i]) + " " + stab_str;
-            }
-
-            link_str += "]";
-
-            all_names.push_back(name);
-            all_positions.push_back(pos_str);
-            all_links.push_back(link_str);
-        }
-
-        for(int i=0; i < (int)all_names.size(); i++)
-        {
-            std::string formatted_name = format_by_vector(all_names[i], all_names);
-            std::string formatted_pos = format_by_vector(all_positions[i], all_positions);
-            //std::string formatted_link = format_by_vector(all_links[i], all_links);
-
-            std::string formatted_link = all_links[i];
-
-            std::string rname = formatted_name;
-
-            int pnum = 0;
-            while(rname.size() > 0 && rname.back() == ' ')
-            {
-                rname.pop_back();
-                pnum++;
-            }
-
-            if(i != 0)
-            {
-                rname = colour_string(rname);
-
-                for(int kk=0; kk < pnum; kk++)
-                {
-                    rname += " ";
-                }
-
-                formatted_name = rname;
-            }
-
-            str += formatted_name + " | " + formatted_pos + " | " + formatted_link + "\n";
-        }
+        std::string str = get_net_view_data_str(all_npc_data);
 
         push_duk_val(ctx, str);
     }
@@ -4701,6 +4726,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool has_disconnect = dukx_is_prop_truthy(ctx, -1, "disconnect");
     bool has_modify = duk_has_prop_string(ctx, -1, "modify");
     bool has_confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
+    bool has_arr = dukx_is_prop_truthy(ctx, -1, "array");
 
     user target;
     user my_user;
@@ -4754,12 +4780,18 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     //std::string sector_string = "Sector: " + usr.fetch_sector();
     //total_msg += sector_string;
 
-    std::string system_string = "System: " + *current_sys.name;;
+    std::string system_string = "System: " + colour_string(*current_sys.name);
     total_msg += system_string + "\n";
 
     double maximum_warp_distance = 5;
 
     float distance = (target.get_local_pos() - my_user.get_local_pos()).length();
+
+    nlohmann::json array_data;
+
+    array_data["distance"] = distance;
+
+    array_data["is_long_distance_traveller"] = is_warpy;
 
     if(is_warpy)
     {
@@ -4797,6 +4829,8 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(connected_system != "")
         {
             total_msg += "Please " + make_key_val("activate", "true") + " to travel to " + connected_system + "\n";
+
+            array_data["can_activate"] = true;
         }
 
         if(has_activate && found_system != nullptr)
@@ -4807,8 +4841,22 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             found_system->steal_user(my_user, current_sys, destination_user->get_local_pos(), target.get_local_pos());
 
+            array_data["engaged"] = true;
+
             ///should also print sys.view map
         }
+    }
+
+    std::string links_string = "";
+
+    {
+        network_accessibility_info info = playspace_network_manage.generate_network_accessibility_from(ctx, target.name, 1);
+
+        std::vector<json> all_npc_data = get_net_view_data_arr(info);
+
+        array_data["links"] = all_npc_data;
+
+        links_string = get_net_view_data_str(all_npc_data, false);
     }
 
     ///handle connection
@@ -4817,8 +4865,11 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///maybe should handle this in playspace_network_manager?
     if(!is_warpy)
     {
-        std::string connections = "Target Links: " + std::to_string(playspace_network_manage.current_network_links(target.name)) + "/" + std::to_string(playspace_network_manage.max_network_links(target.name)) + "\n";
+        std::string connections = "Target Links: " + std::to_string(playspace_network_manage.current_network_links(target.name)) + "/" + std::to_string(playspace_network_manage.max_network_links(target.name))
+                                + " " + links_string + "\n";
         total_msg += connections;
+
+        array_data["max_links"] = playspace_network_manage.max_network_links(target.name);
 
         ///leaving the debugging here because inevitably itll be necessary
         /*auto flinks = playspace_network_manage.get_links(target.name);
@@ -4845,6 +4896,8 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 {
                     is_valid = false;
                     total_msg += make_error_col("Out of Range") + " to " + make_key_col("connect") + "\n";
+
+                    array_data["out_of_range"] = true;
                 }
             }
 
@@ -4854,11 +4907,15 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 if(!has_connect)
                 {
                     total_msg += "Pass " + make_key_val("connect", "true") + " to attempt a connection\n";
+
+                    array_data["can_connect"] = true;
                 }
                 else
                 {
                     ///not being used yet
                     total_msg + make_success_col("Linked " + my_user.name + " to " + target.name) + "\n";
+
+                    array_data["linked"] = true;
 
                     ///code for moving stuff around in a hypothetical impl
                     #if 0
@@ -4898,11 +4955,15 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(!has_disconnect)
             {
                 total_msg += "Pass " + make_key_val("disconnect", "true") + " to disconnect from this target\n";
+
+                array_data["can_disconnect"] = true;
             }
 
             if(has_disconnect && !has_confirm)
             {
                 total_msg += "Please " + make_key_val("confirm", "true") + " to confirm disconnection\n";
+
+                array_data["confirm_disconnect"] = true;
             }
 
             if(has_disconnect && has_confirm)
@@ -4910,32 +4971,42 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 total_msg += make_error_col("Disconnected " + my_user.name + " from " + target.name) + "\n";
 
                 playspace_network_manage.unlink(my_user.name, target.name);
+
+                array_data["disconnected"] = true;
             }
         }
+    }
 
-        ///must have a path for us to be able to access the npc
-        if(!has_modify)
+    ///must have a path for us to be able to access the npc
+    if(!has_modify)
+    {
+        total_msg += "Pass " + make_key_val("modify", "num") + " to strengthen or weaken the path to this target\n";
+
+        array_data["can_modify"] = true;
+    }
+    else
+    {
+        double amount = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "modify", 0);
+
+        if(amount == 0)
         {
-            total_msg += "Pass " + make_key_val("modify", "num") + " to strengthen or weaken the path to this target\n";
+            total_msg += "Modify should be greater or less than 0\n";
         }
         else
         {
-            double amount = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "modify", 0);
+            duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, false, amount, has_confirm, true);
 
-            if(amount == 0)
-            {
-                total_msg += "Modify should be greater or less than 0\n";
-            }
+            if(found == 1)
+                return 1;
             else
-            {
-                duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, false, amount, has_confirm, true);
-
-                if(found == 1)
-                    return 1;
-                else
-                    return push_error(ctx, "Could not modify link");
-            }
+                return push_error(ctx, "Could not modify link");
         }
+    }
+
+    if(has_arr)
+    {
+        push_duk_val(ctx, array_data);
+        return 1;
     }
 
     if(total_msg == "")
