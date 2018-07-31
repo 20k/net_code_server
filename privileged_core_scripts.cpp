@@ -4727,6 +4727,11 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool has_modify = duk_has_prop_string(ctx, -1, "modify");
     bool has_confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
     bool has_arr = dukx_is_prop_truthy(ctx, -1, "array");
+    /*int n_count = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", 1);
+
+    n_count = clamp(n_count, 1, 100);*/
+
+    int n_count = 1;
 
     user target;
     user my_user;
@@ -4850,7 +4855,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string links_string = "";
 
     {
-        network_accessibility_info info = playspace_network_manage.generate_network_accessibility_from(ctx, target.name, 1);
+        network_accessibility_info info = playspace_network_manage.generate_network_accessibility_from(ctx, target.name, n_count);
 
         std::vector<json> all_npc_data = get_net_view_data_arr(info);
 
@@ -4866,7 +4871,9 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!is_warpy)
     {
         std::string connections = "Target Links: " + std::to_string(playspace_network_manage.current_network_links(target.name)) + "/" + std::to_string(playspace_network_manage.max_network_links(target.name))
+                                //+ "\n";
                                 + " " + links_string + "\n";
+
         total_msg += connections;
 
         array_data["max_links"] = playspace_network_manage.max_network_links(target.name);
@@ -5008,6 +5015,8 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
         push_duk_val(ctx, array_data);
         return 1;
     }
+
+    //total_msg += links_string;
 
     if(total_msg == "")
         return 0;
