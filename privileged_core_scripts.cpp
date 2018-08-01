@@ -5041,17 +5041,19 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             std::string str_remove = "Pass " + make_key_val("remove", "\"\"") + " to remove a user";
             std::string str_view = "Pass " + make_key_val("view", "true") + " to view allowed user list";
 
+            int add_price = 200;
+            int remove_price = 100;
             int view_price = 20;
-            int insert_price = 200;
 
             if(target.is_allowed_user(get_caller(ctx)))
             {
+                add_price = 0;
+                remove_price = 0;
                 view_price = 0;
-                insert_price = 0;
             }
 
-            total_msg += str_add + " " + price_to_string(insert_price) + "\n";
-            total_msg += str_remove + " " + price_to_string(insert_price) + "\n";
+            total_msg += str_add + " " + price_to_string(add_price) + "\n";
+            total_msg += str_remove + " " + price_to_string(remove_price) + "\n";
             total_msg += str_view + " " + price_to_string(view_price) + "\n";
 
             std::vector<std::string> allowed_users = target.get_allowed_users();
@@ -5093,7 +5095,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
                 if(user_is_valid)
                 {
-                    if(!target.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, has_confirm, get_caller(ctx), insert_price))
+                    if(!target.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, has_confirm, get_caller(ctx), add_price))
                         return 1;
 
                     total_msg += make_success_col("Added User") + ": " + colour_string(get_caller(ctx)) + "\n";
@@ -5121,7 +5123,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
                 if(user_is_valid)
                 {
-                    if(!target.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, has_confirm, get_caller(ctx), insert_price))
+                    if(!target.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, has_confirm, get_caller(ctx), remove_price))
                         return 1;
 
                     total_msg += make_success_col("Added User") + ": " + colour_string(get_caller(ctx)) + "\n";
