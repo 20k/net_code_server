@@ -253,6 +253,8 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
 
         //int colour_offset_count = 0;
 
+        std::string col = string_to_colour(name);
+
         ///alright so
         ///need to keep track of the first time we've seen something
         ///in a position
@@ -281,8 +283,6 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
 
             out_dir = fdiff.norm();
             out_num = fdiff.length();*/
-
-            std::string col = string_to_colour(name);
 
             //if((colour_offset_count % 2) == 1)
             //    col = string_to_colour(conn);
