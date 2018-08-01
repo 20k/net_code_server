@@ -61,59 +61,6 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
 duk_ret_t err(duk_context* ctx);
 std::string add_freeze(const std::string& name);
 
-#if 0
-void do_freeze(duk_context* ctx, const std::string& name, std::string& script_accumulate);
-
-inline
-void fully_freeze_recurse(duk_context* ctx, std::string& accum){}
-
-template<typename U, typename... T>
-inline
-void fully_freeze_recurse(duk_context* ctx, std::string& accum, const U& arg, T&&... args)
-{
-    do_freeze(ctx, arg, accum);
-
-    fully_freeze_recurse(ctx, accum, args...);
-}
-
-template<typename... T>
-inline
-void fully_freeze(duk_context* ctx, T&&... args)
-{
-    std::string get_global = "var global = new Function(\'return this;\')();";
-
-    std::string freeze_script = get_global + "\nfunction deepFreeze(o) {\n"
-          "Object.freeze(o);\n"
-
-          "Object.getOwnPropertyNames(o).forEach(function(prop) {\n"
-            "if (o.hasOwnProperty(prop)\n"
-            "&& o[prop] !== null\n"
-            "&& (typeof o[prop] === \"object\" || typeof o[prop] === \"function\")\n"
-            "&& !Object.isFrozen(o[prop])) {\n"
-                "deepFreeze(o[prop]);\n"
-              "}\n"
-          "});\n"
-
-         "return o;\n"
-        "};\n\n";
-
-    fully_freeze_recurse(ctx, freeze_script, args...);
-
-    duk_int_t res = duk_peval_string(ctx, freeze_script.c_str());
-
-    if(res != 0)
-    {
-        std::string err = duk_safe_to_string(ctx, -1);
-
-        printf("freeze eval failed: %s\n", err.c_str());
-    }
-    else
-    {
-        duk_pop(ctx);
-    }
-}
-#endif // 0
-
 void remove_func(duk_context* ctx, const std::string& name);
 
 #endif // SECCALLERS_HPP_INCLUDED
