@@ -331,7 +331,9 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(net__view, 1),
     REGISTER_FUNCTION_PRIV(net__map, 1),
     REGISTER_FUNCTION_PRIV(net__hack, 0),
+    #ifdef OLD_DEPRECATED
     REGISTER_FUNCTION_PRIV(net__access, 0),
+    #endif // OLD_DEPRECATED
     REGISTER_FUNCTION_PRIV(net__switch, 0),
     REGISTER_FUNCTION_PRIV(net__move, 0),
     REGISTER_FUNCTION_PRIV(net__path, 0),

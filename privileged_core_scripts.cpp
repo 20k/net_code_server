@@ -3236,6 +3236,7 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+#ifdef OLD_DEPRECATED
 duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -3355,7 +3356,7 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return 0;
 }
-
+#endif // 0
 
 duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
@@ -4722,8 +4723,10 @@ std::string price_to_string(int price)
     return "[" + std::to_string(price) + "]";
 }
 
-///will replace #net.access
-///but for the moment lets just implement long distance travel
+///so this function is acquiring a few if(not_user){do_some_display_thing}
+///aka a bunch of conditional logic which is really just display logic
+///what should do instead is build the logic for everything separately then merge together stuff
+///that actually is to be displayed at the end
 duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -4907,127 +4910,133 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             std::cout << i << std::endl;
         }*/
 
-        if(!playspace_network_manage.is_linked(my_user.name, target.name))
+        if(!has_users)
         {
-            bool is_valid = true;
-
-            //if(playspace_network_manage.current_network_links(my_user.name) == 0)
+            if(!playspace_network_manage.is_linked(my_user.name, target.name))
             {
-                vec3f current_local = my_user.get_local_pos();
-                vec3f target_local = target.get_local_pos();
+                bool is_valid = true;
 
-                vec3f diff = current_local - target_local;
-
-                float length = diff.length();
-
-                if(length > ESEP * 2)
+                //if(playspace_network_manage.current_network_links(my_user.name) == 0)
                 {
-                    is_valid = false;
-                    total_msg += make_error_col("Out of Range") + " to " + make_key_col("connect") + "\n";
+                    vec3f current_local = my_user.get_local_pos();
+                    vec3f target_local = target.get_local_pos();
 
-                    array_data["out_of_range"] = true;
-                }
-            }
+                    vec3f diff = current_local - target_local;
 
-            if(playspace_network_manage.current_network_links(target.name) < playspace_network_manage.max_network_links(target.name) &&
-               playspace_network_manage.current_network_links(my_user.name) < playspace_network_manage.max_network_links(my_user.name) && is_valid)
-            {
-                if(!has_connect)
-                {
-                    total_msg += "Pass " + make_key_val("connect", "true") + " to attempt a connection\n";
+                    float length = diff.length();
 
-                    array_data["can_connect"] = true;
-                }
-                else
-                {
-                    ///not being used yet
-                    total_msg + make_success_col("Linked " + my_user.name + " to " + target.name) + "\n";
-
-                    array_data["linked"] = true;
-
-                    ///code for moving stuff around in a hypothetical impl
-                    #if 0
-                    if(playspace_network_manage.current_network_links(my_user.name) == 0)
+                    if(length > ESEP * 2)
                     {
-                        vec3f current_local = my_user.get_local_pos();
-                        vec3f target_local = target.get_local_pos();
+                        is_valid = false;
+                        total_msg += make_error_col("Out of Range") + " to " + make_key_col("connect") + "\n";
 
-                        vec3f relative = (current_local - target_local).norm();
-                        vec3f absolute = relative * ESEP + target_local;
-
-                        my_user.set_local_pos(absolute);
-
-                        ///would need to flush to db here
+                        array_data["out_of_range"] = true;
                     }
-                    #endif // 0
+                }
 
-                    my_user.set_local_pos(my_user.get_local_pos());
-
+                if(playspace_network_manage.current_network_links(target.name) < playspace_network_manage.max_network_links(target.name) &&
+                   playspace_network_manage.current_network_links(my_user.name) < playspace_network_manage.max_network_links(my_user.name) && is_valid)
+                {
+                    if(!has_connect)
                     {
-                        mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+                        total_msg += "Pass " + make_key_val("connect", "true") + " to attempt a connection\n";
 
-                        my_user.overwrite_user_in_db(mongo_ctx);
+                        array_data["can_connect"] = true;
                     }
-
-                    duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, true, 10.f, has_confirm, true);
-
-                    if(found == 1)
-                        return 1;
                     else
-                        return push_error(ctx, "Could not Link");
+                    {
+                        ///not being used yet
+                        total_msg + make_success_col("Linked " + my_user.name + " to " + target.name) + "\n";
+
+                        array_data["linked"] = true;
+
+                        ///code for moving stuff around in a hypothetical impl
+                        #if 0
+                        if(playspace_network_manage.current_network_links(my_user.name) == 0)
+                        {
+                            vec3f current_local = my_user.get_local_pos();
+                            vec3f target_local = target.get_local_pos();
+
+                            vec3f relative = (current_local - target_local).norm();
+                            vec3f absolute = relative * ESEP + target_local;
+
+                            my_user.set_local_pos(absolute);
+
+                            ///would need to flush to db here
+                        }
+                        #endif // 0
+
+                        my_user.set_local_pos(my_user.get_local_pos());
+
+                        {
+                            mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+
+                            my_user.overwrite_user_in_db(mongo_ctx);
+                        }
+
+                        duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, true, 10.f, has_confirm, true);
+
+                        if(found == 1)
+                            return 1;
+                        else
+                            return push_error(ctx, "Could not Link");
+                    }
+                }
+            }
+            else
+            {
+                if(!has_disconnect)
+                {
+                    total_msg += "Pass " + make_key_val("disconnect", "true") + " to disconnect from this target\n";
+
+                    array_data["can_disconnect"] = true;
+                }
+
+                if(has_disconnect && !has_confirm)
+                {
+                    total_msg += "Please " + make_key_val("confirm", "true") + " to confirm disconnection\n";
+
+                    array_data["confirm_disconnect"] = true;
+                }
+
+                if(has_disconnect && has_confirm)
+                {
+                    total_msg += make_error_col("Disconnected " + my_user.name + " from " + target.name) + "\n";
+
+                    playspace_network_manage.unlink(my_user.name, target.name);
+
+                    array_data["disconnected"] = true;
                 }
             }
         }
-        else
-        {
-            if(!has_disconnect)
-            {
-                total_msg += "Pass " + make_key_val("disconnect", "true") + " to disconnect from this target\n";
-
-                array_data["can_disconnect"] = true;
-            }
-
-            if(has_disconnect && !has_confirm)
-            {
-                total_msg += "Please " + make_key_val("confirm", "true") + " to confirm disconnection\n";
-
-                array_data["confirm_disconnect"] = true;
-            }
-
-            if(has_disconnect && has_confirm)
-            {
-                total_msg += make_error_col("Disconnected " + my_user.name + " from " + target.name) + "\n";
-
-                playspace_network_manage.unlink(my_user.name, target.name);
-
-                array_data["disconnected"] = true;
-            }
-        }
     }
 
-    ///must have a path for us to be able to access the npc
-    if(!has_modify)
+    if(!has_users)
     {
-        total_msg += "Pass " + make_key_val("modify", "num") + " to strengthen or weaken the path to this target\n";
-
-        array_data["can_modify_links"] = true;
-    }
-    else
-    {
-        double amount = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "modify", 0);
-
-        if(amount == 0)
+        ///must have a path for us to be able to access the npc
+        if(!has_modify)
         {
-            total_msg += "Modify should be greater or less than 0\n";
+            total_msg += "Pass " + make_key_val("modify", "num") + " to strengthen or weaken the path to this target\n";
+
+            array_data["can_modify_links"] = true;
         }
         else
         {
-            duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, false, amount, has_confirm, true);
+            double amount = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "modify", 0);
 
-            if(found == 1)
-                return 1;
+            if(amount == 0)
+            {
+                total_msg += "Modify should be greater or less than 0\n";
+            }
             else
-                return push_error(ctx, "Could not modify link");
+            {
+                duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, false, amount, has_confirm, true);
+
+                if(found == 1)
+                    return 1;
+                else
+                    return push_error(ctx, "Could not modify link");
+            }
         }
     }
 
@@ -5041,6 +5050,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             std::string str_remove = "Pass " + make_key_val("remove", "\"\"") + " to remove a user";
             std::string str_view = "Pass " + make_key_val("view", "true") + " to view allowed user list";
 
+
             int add_price = 200;
             int remove_price = 100;
             int view_price = 20;
@@ -5051,6 +5061,11 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 remove_price = 0;
                 view_price = 0;
             }
+
+            array_data["add_price"] = add_price;
+            array_data["remove_price"] = remove_price;
+            array_data["view_price"] = view_price;
+
 
             total_msg += str_add + " " + price_to_string(add_price) + "\n";
             total_msg += str_remove + " " + price_to_string(remove_price) + "\n";
@@ -5083,6 +5098,8 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 ret += "]\n";
 
                 total_msg += ret;
+
+                array_data["viewed_users"] = allowed_users;
             }
 
             if(add_user != "")
@@ -5109,6 +5126,8 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
                     target.add_allowed_user(add_user, mongo_ctx);
                     target.overwrite_user_in_db(mongo_ctx);
+
+                    array_data["added_user"] = add_user;
                 }
                 else
                 {
@@ -5137,94 +5156,14 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
                     target.remove_allowed_user(remove_user, mongo_ctx);
                     target.overwrite_user_in_db(mongo_ctx);
+
+                    array_data["removed_user"] = remove_user;
                 }
                 else
                 {
                     return push_error(ctx, "Remove User is not valid (" + remove_user + ")");
                 }
             }
-
-            #if 0
-            std::vector<std::string> allowed_users = opt_user_and_nodes->first.get_allowed_users();
-
-            std::string price_str = "Price: 200\n";
-
-            if(usr.is_allowed_user(get_caller(ctx)))
-                price_str = "Price: Free\n";
-
-            std::string commands = "Usage: add_user:<username>, remove_user:<username>, view_users:true\n" + price_str;
-
-            std::string situation_string = "Location: [" + std::to_string((int)usr.pos.v[0]) + ", " + std::to_string((int)usr.pos.v[1]) + ", " + std::to_string((int)usr.pos.v[2]) + "]\n";
-
-            commands += situation_string;
-
-            std::string sector_string = "Sector: " + usr.fetch_sector();
-
-            commands += sector_string;
-
-            if(add_user.size() == 0 && remove_user.size() == 0 && view_users)
-            {
-                if(!usr.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, confirm, get_caller(ctx), 200))
-                    return 1;
-
-                std::string ret;
-
-                ret += "Authed Users:\n";
-
-                for(auto& i : allowed_users)
-                {
-                    ret += i + "\n";
-                }
-
-                push_duk_val(ctx, ret);
-
-                return 1;
-            }
-
-            if(add_user.size() > 0 || remove_user.size() > 0)
-            {
-                if(add_user.size() > 0)
-                {
-                    if(!get_user(add_user, get_thread_id(ctx)).has_value())
-                        return push_error(ctx, "Invalid add_user username");
-                }
-
-                if(remove_user.size() > 0)
-                {
-                    if(!get_user(remove_user, get_thread_id(ctx)).has_value())
-                        return push_error(ctx, "Invalid remove_user username");
-                }
-
-                if(add_user.size() > 0 && (usr.all_found_props.get_prop_as_integer("is_user") == 1 || usr.auth != ""))
-                    return push_error(ctx, "Cannot take over a user");
-
-                ///should be free if we're an allowed user
-                if(!usr.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, confirm, get_caller(ctx), 200))
-                    return 1;
-
-                mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-
-                if(add_user.size() > 0)
-                {
-                    usr.add_allowed_user(add_user, mongo_ctx);
-                }
-
-                if(remove_user.size() > 0)
-                {
-                    usr.remove_allowed_user(remove_user, mongo_ctx);
-                }
-
-                usr.overwrite_user_in_db(mongo_ctx);
-
-                return push_success(ctx, "Success");
-            }
-
-            if(add_user.size() == 0 && remove_user.size() == 0 && !view_users)
-            {
-                push_duk_val(ctx, commands);
-                return 1;
-            }
-            #endif
         }
         else
         {
