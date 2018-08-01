@@ -3881,6 +3881,8 @@ duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, cons
     return 0;
 }
 
+
+#ifdef OLD_DEPRECATED
 duk_ret_t net__modify(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -4030,6 +4032,7 @@ duk_ret_t net__modify(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return 1;
 }
+#endif // OLD_DEPRECATED
 
 duk_ret_t cheats__task(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
