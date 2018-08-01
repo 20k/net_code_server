@@ -284,9 +284,6 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
             out_dir = fdiff.norm();
             out_num = fdiff.length();*/
 
-            //if((colour_offset_count % 2) == 1)
-            //    col = string_to_colour(conn);
-
             vec2f cur = (vec2f){pos.x(), pos.y()};
 
             for(int i=0; i < out_num; i++)
