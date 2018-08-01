@@ -5088,6 +5088,9 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                     user_is_valid = user().load_from_db(mongo_ctx, add_user);
                 }
 
+                if(!target.is_npc())
+                    return push_error(ctx, "Cannot take over a user");
+
                 if(user_is_valid)
                 {
                     if(!target.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, has_confirm, get_caller(ctx), insert_price))
