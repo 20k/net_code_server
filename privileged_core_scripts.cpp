@@ -938,8 +938,8 @@ void create_xfer_notif(duk_context* ctx, const std::string& xfer_from, const std
     if(xfer_from == "" || xfer_to == "")
         return;
 
-    std::string notif_from = "`e-Sent " + to_string_with_enforced_variable_dp(amount, 2) + " (xfer)-`";
-    std::string notif_to = "`e-Received " + to_string_with_enforced_variable_dp(amount, 2) + " (xfer)-`";
+    std::string notif_from = make_notif_col("-Sent " + to_string_with_enforced_variable_dp(amount, 2) + " (xfer)-");
+    std::string notif_to = make_notif_col("-Received " + to_string_with_enforced_variable_dp(amount, 2) + " (xfer)-");
 
     create_notification(ctx, xfer_from, notif_from);
     create_notification(ctx, xfer_to, notif_to);
@@ -952,8 +952,8 @@ void create_xfer_item_notif(duk_context* ctx, const std::string& xfer_from, cons
     if(xfer_from == "" || xfer_to == "")
         return;
 
-    std::string notif_from = "`e-Lost " + item_name + " (xfer)-`";
-    std::string notif_to = "`e-Received " + item_name + " (xfer)-`";
+    std::string notif_from = make_notif_col("-Lost " + item_name + " (xfer)-");
+    std::string notif_to = make_notif_col("-Received " + item_name + " (xfer)-");
 
     create_notification(ctx, xfer_from, notif_from);
     create_notification(ctx, xfer_to, notif_to);
@@ -966,7 +966,7 @@ void create_destroy_item_notif(duk_context* ctx, const std::string& to, const st
     if(item_name == "")
         return;
 
-    std::string cull_msg = "`e-Destroyed " + item_name + "-`";
+    std::string cull_msg = make_notif_col("-Destroyed " + item_name + "-");
 
     create_notification(ctx, to, cull_msg);
 }
