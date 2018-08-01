@@ -4717,7 +4717,7 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 std::string price_to_string(int price)
 {
     if(price == 0)
-        return "[free]";
+        return "[" + make_success_col("free") + "]";
 
     return "[" + std::to_string(price) + "]";
 }
@@ -5065,14 +5065,19 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
                 std::string ret;
 
-                ret += "Authed Users: [";
+                if(target.is_allowed_user(get_caller(ctx)))
+                    ret += make_success_col("Authed Users");
+                else
+                    ret += make_error_col("Authed Users");
+
+                ret += ": [";
 
                 for(int i=0; i < (int)allowed_users.size(); i++)
                 {
                     if(i != (int)allowed_users.size()-1)
-                        ret += allowed_users[i] + ", ";
+                        ret += colour_string(allowed_users[i]) + ", ";
                     else
-                        ret += allowed_users[i];
+                        ret += colour_string(allowed_users[i]);
                 }
 
                 ret += "]\n";
@@ -5126,7 +5131,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                     if(!target.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, has_confirm, get_caller(ctx), remove_price))
                         return 1;
 
-                    total_msg += make_success_col("Added User") + ": " + colour_string(get_caller(ctx)) + "\n";
+                    total_msg += make_success_col("Removed User") + ": " + colour_string(get_caller(ctx)) + "\n";
 
                     mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
 
@@ -5135,7 +5140,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 }
                 else
                 {
-                    return push_error(ctx, "Add User is not valid (" + remove_user + ")");
+                    return push_error(ctx, "Remove User is not valid (" + remove_user + ")");
                 }
             }
 
