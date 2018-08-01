@@ -5078,6 +5078,61 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 total_msg += ret;
             }
 
+            if(add_user != "")
+            {
+                bool user_is_valid = false;
+
+                {
+                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+                    user_is_valid = user().load_from_db(mongo_ctx, add_user);
+                }
+
+                if(user_is_valid)
+                {
+                    if(!target.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, has_confirm, get_caller(ctx), insert_price))
+                        return 1;
+
+                    total_msg += make_success_col("Added User") + ": " + colour_string(get_caller(ctx)) + "\n";
+
+                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+                    target.add_allowed_user(add_user, mongo_ctx);
+                    target.overwrite_user_in_db(mongo_ctx);
+                }
+                else
+                {
+                    return push_error(ctx, "Add User is not valid (" + add_user + ")");
+                }
+            }
+
+            if(remove_user != "")
+            {
+                bool user_is_valid = false;
+
+                {
+                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+                    user_is_valid = user().load_from_db(mongo_ctx, remove_user);
+                }
+
+                if(user_is_valid)
+                {
+                    if(!target.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, has_confirm, get_caller(ctx), insert_price))
+                        return 1;
+
+                    total_msg += make_success_col("Added User") + ": " + colour_string(get_caller(ctx)) + "\n";
+
+                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+                    target.remove_allowed_user(remove_user, mongo_ctx);
+                    target.overwrite_user_in_db(mongo_ctx);
+                }
+                else
+                {
+                    return push_error(ctx, "Add User is not valid (" + remove_user + ")");
+                }
+            }
 
             #if 0
             std::vector<std::string> allowed_users = opt_user_and_nodes->first.get_allowed_users();
