@@ -387,6 +387,17 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
         set_global_int(ctx, "thread_id", local_thread_id);
 
+        if(all_shared.has_value())
+        {
+            shared_data& shared = all_shared.value()->shared;
+
+            dukx_put_pointer(ctx, &shared, "shared_data_ptr");
+        }
+        else
+        {
+            dukx_put_pointer(ctx, nullptr, "shared_data_ptr");
+        }
+
         unsafe_info inf;
         inf.usr = &usr;
         inf.command = command;

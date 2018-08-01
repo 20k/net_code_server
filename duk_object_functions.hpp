@@ -375,11 +375,24 @@ std::string get_script_ending(duk_context* ctx)
 }
 
 template<typename T>
+inline
 void dukx_put_pointer(duk_context* ctx, T* ptr, const std::string& key)
 {
     duk_push_heap_stash(ctx); ///[stash]
 
     duk_push_pointer(ctx, (void*)ptr); ///[stash, pointer]
+
+    duk_put_prop_string(ctx, -2, key.c_str());
+
+    duk_pop(ctx);
+}
+
+inline
+void dukx_put_pointer(duk_context* ctx, std::nullptr_t, const std::string& key)
+{
+    duk_push_heap_stash(ctx); ///[stash]
+
+    duk_push_pointer(ctx, nullptr); ///[stash, pointer]
 
     duk_put_prop_string(ctx, -2, key.c_str());
 
