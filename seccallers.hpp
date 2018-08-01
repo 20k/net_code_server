@@ -52,6 +52,8 @@ std::string get_hash_d(duk_context* ctx);
 
 std::string get_print_str(duk_context* ctx);
 
+void send_async_message(duk_context* ctx, const std::string& message);
+
 duk_ret_t js_call(duk_context* ctx, int sl);
 
 std::string js_unified_force_call_data(duk_context* ctx, const std::string& data, const std::string& host);

@@ -7,6 +7,7 @@
 #include "shared_duk_worker_state.hpp"
 #include "duk_object_functions.hpp"
 #include "http_beast_server.hpp"
+#include "shared_data.hpp"
 
 int my_timeout_check(void* udata)
 {
@@ -487,6 +488,16 @@ std::string get_print_str(duk_context* ctx)
     duk_pop_n(ctx, 2);
 
     return str;
+}
+
+void send_async_message(duk_context* ctx, const std::string& message)
+{
+    shared_data* shared = dukx_get_pointer<shared_data>(ctx, "shared_data_ptr");
+
+    if(shared == nullptr)
+        return;
+
+    shared->add_back_write("command " + message);
 }
 
 duk_ret_t deliberate_hang(duk_context* ctx)
