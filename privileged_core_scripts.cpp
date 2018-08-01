@@ -4714,6 +4714,14 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     return push_error(ctx, "Impossible");
 }
 
+std::string price_to_string(int price)
+{
+    if(price == 0)
+        return "[free]";
+
+    return "[" + std::to_string(price) + "]";
+}
+
 ///will replace #net.access
 ///but for the moment lets just implement long distance travel
 duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
@@ -4731,6 +4739,10 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool has_confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
     bool has_arr = dukx_is_prop_truthy(ctx, -1, "array");
     bool has_users = dukx_is_prop_truthy(ctx, -1, "users");
+
+    std::string add_user = duk_safe_get_prop_string(ctx, -1, "add");
+    std::string remove_user = duk_safe_get_prop_string(ctx, -1, "remove");
+    bool view_users = dukx_is_prop_truthy(ctx, -1, "view");
 
     /*int n_count = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", 1);
     n_count = clamp(n_count, 1, 100);*/
@@ -4998,7 +5010,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         total_msg += "Pass " + make_key_val("modify", "num") + " to strengthen or weaken the path to this target\n";
 
-        array_data["can_modify"] = true;
+        array_data["can_modify_links"] = true;
     }
     else
     {
@@ -5016,6 +5028,142 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 return 1;
             else
                 return push_error(ctx, "Could not modify link");
+        }
+    }
+
+    array_data["can_modify_users"] = can_modify_users;
+
+    if(can_modify_users)
+    {
+        if(has_users)
+        {
+            std::string str_add = "Pass " + make_key_val("add", "\"\"") + " to add a user";
+            std::string str_remove = "Pass " + make_key_val("remove", "\"\"") + " to remove a user";
+            std::string str_view = "Pass " + make_key_val("view", "true") + " to view allowed user list";
+
+            int view_price = 20;
+            int insert_price = 200;
+
+            if(target.is_allowed_user(get_caller(ctx)))
+            {
+                view_price = 0;
+                insert_price = 0;
+            }
+
+            total_msg += str_add + " " + price_to_string(insert_price) + "\n";
+            total_msg += str_remove + " " + price_to_string(insert_price) + "\n";
+            total_msg += str_view + " " + price_to_string(view_price) + "\n";
+
+            std::vector<std::string> allowed_users = target.get_allowed_users();
+
+            if(view_users)
+            {
+                if(!target.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, has_confirm, get_caller(ctx), view_price))
+                    return 1;
+
+                std::string ret;
+
+                ret += "Authed Users: [";
+
+                for(int i=0; i < (int)allowed_users.size(); i++)
+                {
+                    if(i != (int)allowed_users.size()-1)
+                        ret += allowed_users[i] + ", ";
+                    else
+                        ret += allowed_users[i];
+                }
+
+                ret += "]\n";
+
+                total_msg += ret;
+            }
+
+
+            #if 0
+            std::vector<std::string> allowed_users = opt_user_and_nodes->first.get_allowed_users();
+
+            std::string price_str = "Price: 200\n";
+
+            if(usr.is_allowed_user(get_caller(ctx)))
+                price_str = "Price: Free\n";
+
+            std::string commands = "Usage: add_user:<username>, remove_user:<username>, view_users:true\n" + price_str;
+
+            std::string situation_string = "Location: [" + std::to_string((int)usr.pos.v[0]) + ", " + std::to_string((int)usr.pos.v[1]) + ", " + std::to_string((int)usr.pos.v[2]) + "]\n";
+
+            commands += situation_string;
+
+            std::string sector_string = "Sector: " + usr.fetch_sector();
+
+            commands += sector_string;
+
+            if(add_user.size() == 0 && remove_user.size() == 0 && view_users)
+            {
+                if(!usr.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, confirm, get_caller(ctx), 200))
+                    return 1;
+
+                std::string ret;
+
+                ret += "Authed Users:\n";
+
+                for(auto& i : allowed_users)
+                {
+                    ret += i + "\n";
+                }
+
+                push_duk_val(ctx, ret);
+
+                return 1;
+            }
+
+            if(add_user.size() > 0 || remove_user.size() > 0)
+            {
+                if(add_user.size() > 0)
+                {
+                    if(!get_user(add_user, get_thread_id(ctx)).has_value())
+                        return push_error(ctx, "Invalid add_user username");
+                }
+
+                if(remove_user.size() > 0)
+                {
+                    if(!get_user(remove_user, get_thread_id(ctx)).has_value())
+                        return push_error(ctx, "Invalid remove_user username");
+                }
+
+                if(add_user.size() > 0 && (usr.all_found_props.get_prop_as_integer("is_user") == 1 || usr.auth != ""))
+                    return push_error(ctx, "Cannot take over a user");
+
+                ///should be free if we're an allowed user
+                if(!usr.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, confirm, get_caller(ctx), 200))
+                    return 1;
+
+                mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+                if(add_user.size() > 0)
+                {
+                    usr.add_allowed_user(add_user, mongo_ctx);
+                }
+
+                if(remove_user.size() > 0)
+                {
+                    usr.remove_allowed_user(remove_user, mongo_ctx);
+                }
+
+                usr.overwrite_user_in_db(mongo_ctx);
+
+                return push_success(ctx, "Success");
+            }
+
+            if(add_user.size() == 0 && remove_user.size() == 0 && !view_users)
+            {
+                push_duk_val(ctx, commands);
+                return 1;
+            }
+            #endif
+        }
+        else
+        {
+            total_msg += "Pass " + make_key_val("users", "true") + " to perform user management\n";
         }
     }
 
