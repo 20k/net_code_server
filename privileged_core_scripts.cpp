@@ -2607,6 +2607,8 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
     if(all_success && !current_node->is_breached())
     {
         msg += current_node->get_breach_message(nodes);
+
+        create_notification(ctx, name_of_person_being_attacked, make_error_col("-" + user_node_info::long_names[current_node->type] + " Node Compromised-"));
     }
 
     if(all_success)
