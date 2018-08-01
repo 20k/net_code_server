@@ -2580,6 +2580,8 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
                     ///todo: send a chats.tell to victim here
                     i.breach();
 
+                    create_notification(ctx, name_of_person_being_attacked, make_notif_col("-" + i.get_prop("short_name") + " breached-"));
+
                     mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
                     i.overwrite_in_db(item_ctx);
                 }
@@ -2650,6 +2652,9 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
         }
         //std::cout << "srun\n";
     }
+
+    while(msg.size() > 0 && msg.back() == '\n')
+        msg.pop_back();
 
     duk_push_string(ctx, msg.c_str());
 
