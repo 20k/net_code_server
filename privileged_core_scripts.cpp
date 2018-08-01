@@ -4730,8 +4730,9 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool has_modify = duk_has_prop_string(ctx, -1, "modify");
     bool has_confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
     bool has_arr = dukx_is_prop_truthy(ctx, -1, "array");
-    /*int n_count = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", 1);
+    bool has_users = dukx_is_prop_truthy(ctx, -1, "users");
 
+    /*int n_count = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", 1);
     n_count = clamp(n_count, 1, 100);*/
 
     int n_count = 1;
@@ -4773,6 +4774,11 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         is_warpy = npc_info::has_type(mongo_ctx, npc_info::WARPY, target.name);
     }
+
+    user_nodes target_nodes = get_nodes(target.name, get_thread_id(ctx));
+
+    auto valid_actions = target_nodes.valid_hostile_actions();
+    bool can_modify_users = (target.is_allowed_user(get_caller(ctx)) || ((valid_actions & user_node_info::CLAIM_NPC) > 0)) && target.is_npc() && !is_warpy;
 
     std::string total_msg;
 
