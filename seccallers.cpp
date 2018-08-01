@@ -497,7 +497,7 @@ void send_async_message(duk_context* ctx, const std::string& message)
     if(shared == nullptr)
         return;
 
-    shared->add_back_write("command " + message);
+    shared->add_back_write(message);
 }
 
 duk_ret_t deliberate_hang(duk_context* ctx)

@@ -743,6 +743,15 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
     }
 
+    user my_user;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        if(!my_user.load_from_db(mongo_ctx, get_caller(ctx)))
+            return push_error(ctx, "No such user");
+    }
+
     channel = strip_whitespace(channel);
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
@@ -821,6 +830,8 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
             insert_in_db(mongo_ctx, to_insert);
         }
     }
+
+    send_async_message(ctx, handle_client_poll_json(my_user));
 
     return push_success(ctx);
 }

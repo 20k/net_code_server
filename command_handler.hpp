@@ -30,6 +30,7 @@ std::string hex_to_binary(const std::string& in);
 std::string delete_user(command_handler_state& state, const std::string& str, bool cli_force = false);
 std::string rename_user_force(const std::string& from_name, const std::string& to_name);
 
+std::string handle_client_poll_json(user& usr);
 void strip_old_msg_or_notif(mongo_lock_proxy& ctx);
 
 namespace connection_type
