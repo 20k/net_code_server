@@ -4910,7 +4910,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             std::cout << i << std::endl;
         }*/
 
-        if(!has_users)
+        if(!has_users && get_caller(ctx) != target.name)
         {
             if(!playspace_network_manage.is_linked(my_user.name, target.name))
             {
