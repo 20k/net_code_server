@@ -207,6 +207,8 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
         }
     }
 
+    std::map<int, std::string> id_to_override;
+    std::map<std::string, std::string> name_to_override;
 
     std::map<std::string, vec2f> node_to_pos;
 
@@ -214,6 +216,8 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
     {
         node_to_pos[i.first] = info.global_pos[i.first].xy();
     }
+
+    int hacky_id = 1;
 
     for(auto& i : node_to_pos)
     {
@@ -233,8 +237,27 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
             connections = str.get_connected_systems();
         }
 
-        int colour_offset_count = 0;
+        vec2f rounded_pos = round(pos);
 
+        int map_id = ((int)rounded_pos.y()) * w + (int)rounded_pos.x();
+
+        if(id_to_override[map_id] == "")
+        {
+            id_to_override[map_id] = name;
+            //name_to_override[name] = name;
+        }
+        else
+        {
+            name_to_override[name] = id_to_override[map_id];
+        }
+
+        //int colour_offset_count = 0;
+
+        ///alright so
+        ///need to keep track of the first time we've seen something
+        ///in a position
+        ///if we're the second+ instance of something (aka its non zero)
+        ///we should replace our key
         for(auto& conn : connections)
         {
             auto found = node_to_pos.find(conn);
@@ -261,8 +284,8 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
 
             std::string col = string_to_colour(name);
 
-            if((colour_offset_count % 2) == 1)
-                col = string_to_colour(conn);
+            //if((colour_offset_count % 2) == 1)
+            //    col = string_to_colour(conn);
 
             vec2f cur = (vec2f){pos.x(), pos.y()};
 
@@ -276,12 +299,24 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
                 cur += out_dir;
             }
 
-            colour_offset_count++;
+            //colour_offset_count++;
         }
+
+        hacky_id++;
     }
+
+    auto local_display_string = info.display_string;
 
     for(auto& i : node_to_pos)
     {
+        const std::string& name = i.first;
+
+        if(name_to_override[name] != name && name_to_override[name].size() > 0)
+        {
+            local_display_string[name] = info.display_string[name_to_override[name]];
+            continue;
+        }
+
         vec2i clamped = clamp((vec2i){i.second.x(), i.second.y()}, (vec2i){0, 0}, (vec2i){w-1, h-1});
 
         std::string to_display = "`" + string_to_colour(i.first) + info.display_string[i.first] + "`";
@@ -343,7 +378,13 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
 
         if(y < (int)info.keys.size())
         {
-            std::string col = string_to_colour(info.keys[y].first);
+            std::string col_name = string_to_colour(info.keys[y].first);
+            std::string col_char = string_to_colour(info.keys[y].first);
+
+            if(name_to_override[info.keys[y].first] != "")
+            {
+                col_char = string_to_colour(name_to_override[info.keys[y].first]);
+            }
 
             //#define ITEM_DEBUG
             #ifdef ITEM_DEBUG
@@ -373,16 +414,16 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
             }
             #endif // ITEM_DEBUG
 
-            std::string name = info.keys[y].first;
+            std::string name = "`" + col_name + info.keys[y].first + "`";
 
             //std::string extra_str = std::to_string((int)global_pos[name].x()) + ", " + std::to_string((int)global_pos[name].y());
 
-            built += "      `" + col + info.keys[y].second;
+            built += "      `" + col_char + local_display_string[info.keys[y].first] + "`";
 
             if(info.keys[y].first.size() > 0)
-                built += " | " + info.keys[y].first;// + " | [" + extra_str + "]";
+                built += " | " + name;// + " | [" + extra_str + "]";
 
-            built += "`";
+            //built += "`";
         }
 
         built += "\n";
