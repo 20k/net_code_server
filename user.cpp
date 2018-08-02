@@ -688,20 +688,34 @@ void user::set_local_pos(space_pos_t pos)
     has_local_pos = true;
 }
 
-void user::add_position_target(space_pos_t pos, size_t arrive_when_ms)
+void user::add_position_target(space_pos_t pos, size_t time_when_delta)
 {
+    timestamped_position tstamp;
+
     if(move_queue.timestamp_queue.size() > 0)
     {
+        size_t last_tstamp = get_wall_time();
+
+        ///if the last timestamp we have is into the future
+        ///is that timestamp
+        ///otherwise use current time
+        if(move_queue.timestamp_queue.back().timestamp > last_tstamp)
+            last_tstamp = move_queue.timestamp_queue.back().timestamp;
+
         timestamped_position replicated;
         replicated.position = move_queue.timestamp_queue.back().position;
-        replicated.timestamp = get_wall_time();
+        replicated.timestamp = last_tstamp;
 
         move_queue.add_queue_element(replicated);
-    }
 
-    timestamped_position tstamp;
-    tstamp.position = pos;
-    tstamp.timestamp = arrive_when_ms;
+        tstamp.position = pos;
+        tstamp.timestamp = time_when_delta + move_queue.timestamp_queue.back().timestamp;
+    }
+    else
+    {
+        tstamp.position = pos;
+        tstamp.timestamp = time_when_delta + get_wall_time();
+    }
 
     move_queue.add_queue_element(tstamp);
     has_local_pos = true;

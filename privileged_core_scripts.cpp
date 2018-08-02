@@ -4608,6 +4608,7 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     bool has_to = dukx_is_prop_truthy(ctx, -1, "to");
     bool has_confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
+    bool has_stop = dukx_is_prop_truthy(ctx, -1, "stop");
 
     std::optional<user> my_user_opt = get_user(get_caller(ctx), get_thread_id(ctx));
 
@@ -4620,6 +4621,20 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool is_anchored = playspace_network_manage.current_network_links(get_caller(ctx)) > 0;
 
     user& my_user = *my_user_opt;
+
+    if(has_stop && !is_anchored)
+    {
+        my_user.set_local_pos(my_user.get_local_pos());
+
+        {
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+            my_user.overwrite_user_in_db(mongo_ctx);
+        }
+
+        push_duk_val(ctx, "Stopped");
+        return 1;
+    }
 
     ///needs to return if we're anchored or not
     ///maybe we have the concept of dropping anchor, which connects us into the network
@@ -4720,7 +4735,7 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         size_t current_time = get_wall_time();
 
-        double units_per_second = 1;
+        double units_per_second = 2;
 
         vec3f distance = (end_pos - my_user.get_local_pos());
 
@@ -4730,7 +4745,7 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         size_t travel_offset = time_to_travel_distance_s * 1000;
 
-        my_user.add_position_target(end_pos, current_time + travel_offset);
+        my_user.add_position_target(end_pos, travel_offset);
 
         {
             mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
