@@ -4698,7 +4698,18 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(!low_level_structure_manage.in_same_system(targeting_user, my_user))
                 return push_error(ctx, "Not in the current system");
 
+            vec3f current_pos = my_user.get_local_pos();
+
+            float min_distance = 1.f;
+
             end_pos = targeting_user.get_local_pos();
+
+            vec3f diff = current_pos - end_pos;
+
+            if(diff.length() > MINSEP)
+            {
+                end_pos += diff.norm() * MINSEP * 2;
+            }
         }
         else
         {
@@ -4949,6 +4960,14 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                         total_msg += make_error_col("Out of Range") + " to " + make_key_col("connect") + "\n";
 
                         array_data["out_of_range"] = true;
+                    }
+
+                    if(length < MINSEP)
+                    {
+                        is_valid = false;
+                        total_msg += make_error_col("Too close ") + " to " + make_key_col("connect") + "\n";
+
+                        array_data["too_close"] = true;
                     }
                 }
 
