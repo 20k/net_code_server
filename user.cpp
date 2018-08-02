@@ -688,9 +688,10 @@ void user::set_local_pos(space_pos_t pos)
     has_local_pos = true;
 }
 
-void user::add_position_target(space_pos_t pos, size_t time_when_delta)
+void user::add_position_target(space_pos_t pos, size_t time_when_delta, std::string notif_on_finish)
 {
     timestamped_position tstamp;
+    tstamp.notif_on_finish = notif_on_finish;
 
     if(move_queue.timestamp_queue.size() > 0)
     {

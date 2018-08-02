@@ -4771,7 +4771,7 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         size_t travel_offset = time_to_travel_distance_s * 1000;
 
-        my_user.add_position_target(end_pos, travel_offset);
+        my_user.add_position_target(end_pos, travel_offset, "-Arrived at destination-");
 
         {
             mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));

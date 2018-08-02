@@ -9,6 +9,7 @@ struct timestamped_position
 {
     size_t timestamp = 0;
     vec3f position;
+    std::string notif_on_finish;
 
     static
     timestamped_position get_position_at(const timestamped_position& p1, const timestamped_position& p2, size_t timestamp)
@@ -43,7 +44,7 @@ struct timestamped_position
 inline
 void to_json(nlohmann::json& j, const timestamped_position& p)
 {
-    j = nlohmann::json{{"x", p.position.x()}, {"y", p.position.y()}, {"z", p.position.z()}, {"ts", p.timestamp}};
+    j = nlohmann::json{{"x", p.position.x()}, {"y", p.position.y()}, {"z", p.position.z()}, {"ts", p.timestamp}, {"nt", p.notif_on_finish}};
 }
 
 inline
@@ -54,6 +55,16 @@ void from_json(const json& j, timestamped_position& p)
     p.position.x() = j.at("x");
     p.position.y() = j.at("y");
     p.position.z() = j.at("z");
+
+    ///sigh lack of schema
+    try
+    {
+        p.notif_on_finish = j.at("nt");
+    }
+    catch(...)
+    {
+
+    }
 }
 
 struct timestamp_move_queue
