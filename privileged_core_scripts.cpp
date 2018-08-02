@@ -4942,6 +4942,8 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             array_data["engaged"] = true;
 
+            create_notification(ctx, my_user.name, make_notif_col("-Arrived at " + connected_system + "-"));
+
             ///should also print sys.view map
         }
     }
