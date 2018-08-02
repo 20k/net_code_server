@@ -9,6 +9,11 @@
 #include "duk_object_functions.hpp"
 #include "ascii_helpers.hpp"
 #include <secret/low_level_structure.hpp>
+#include <secret/npc_manager.hpp>
+#include "rate_limiting.hpp"
+#include "memory_sandbox.hpp"
+#include "auth.hpp"
+#include <secret/secret.hpp>
 
 std::map<std::string, std::vector<script_arg>> privileged_args = construct_core_args();
 
@@ -880,9 +885,9 @@ duk_ret_t msg__tell(priv_context& priv_ctx, duk_context* ctx, int sl)
     return push_success(ctx);
 }
 
-void create_notification(duk_context* ctx, const std::string& to, const std::string& notif_msg)
+void create_notification(int lock_id, const std::string& to, const std::string& notif_msg)
 {
-    COOPERATE_KILL();
+    //COOPERATE_KILL();
 
     if(to == "")
         return;
@@ -890,7 +895,7 @@ void create_notification(duk_context* ctx, const std::string& to, const std::str
     if(notif_msg.size() > 10000)
         return;
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
+    mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(lock_id);
     mongo_ctx.change_collection(to);
 
     size_t real_time = get_wall_time();
@@ -941,8 +946,8 @@ void create_xfer_notif(duk_context* ctx, const std::string& xfer_from, const std
     std::string notif_from = make_notif_col("-Sent " + to_string_with_enforced_variable_dp(amount, 2) + " (xfer)-");
     std::string notif_to = make_notif_col("-Received " + to_string_with_enforced_variable_dp(amount, 2) + " (xfer)-");
 
-    create_notification(ctx, xfer_from, notif_from);
-    create_notification(ctx, xfer_to, notif_to);
+    create_notification(get_thread_id(ctx), xfer_from, notif_from);
+    create_notification(get_thread_id(ctx), xfer_to, notif_to);
 }
 
 void create_xfer_item_notif(duk_context* ctx, const std::string& xfer_from, const std::string& xfer_to, const std::string& item_name)
@@ -955,8 +960,8 @@ void create_xfer_item_notif(duk_context* ctx, const std::string& xfer_from, cons
     std::string notif_from = make_notif_col("-Lost " + item_name + " (xfer)-");
     std::string notif_to = make_notif_col("-Received " + item_name + " (xfer)-");
 
-    create_notification(ctx, xfer_from, notif_from);
-    create_notification(ctx, xfer_to, notif_to);
+    create_notification(get_thread_id(ctx), xfer_from, notif_from);
+    create_notification(get_thread_id(ctx), xfer_to, notif_to);
 }
 
 void create_destroy_item_notif(duk_context* ctx, const std::string& to, const std::string& item_name)
@@ -968,7 +973,7 @@ void create_destroy_item_notif(duk_context* ctx, const std::string& to, const st
 
     std::string cull_msg = make_notif_col("-Destroyed " + item_name + "-");
 
-    create_notification(ctx, to, cull_msg);
+    create_notification(get_thread_id(ctx), to, cull_msg);
 }
 
 std::string format_time(const std::string& in)
@@ -2580,7 +2585,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
                     ///todo: send a chats.tell to victim here
                     i.breach();
 
-                    create_notification(ctx, name_of_person_being_attacked, make_notif_col("-" + i.get_prop("short_name") + " breached-"));
+                    create_notification(get_thread_id(ctx), name_of_person_being_attacked, make_notif_col("-" + i.get_prop("short_name") + " breached-"));
 
                     mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
                     i.overwrite_in_db(item_ctx);
@@ -2608,7 +2613,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
     {
         msg += current_node->get_breach_message(nodes);
 
-        create_notification(ctx, name_of_person_being_attacked, make_error_col("-" + user_node_info::long_names[current_node->type] + " Node Compromised-"));
+        create_notification(get_thread_id(ctx), name_of_person_being_attacked, make_error_col("-" + user_node_info::long_names[current_node->type] + " Node Compromised-"));
     }
 
     if(all_success)
@@ -4942,7 +4947,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             array_data["engaged"] = true;
 
-            create_notification(ctx, my_user.name, make_notif_col("-Arrived at " + connected_system + "-"));
+            create_notification(get_thread_id(ctx), my_user.name, make_notif_col("-Arrived at " + connected_system + "-"));
 
             ///should also print sys.view map
         }

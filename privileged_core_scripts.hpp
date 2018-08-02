@@ -1,23 +1,12 @@
 #ifndef PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
 #define PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
 
-#include "user.hpp"
-#include "memory_sandbox.hpp"
-#include "rate_limiting.hpp"
-#include "auth.hpp"
-#include "item.hpp"
-#include <libncclient/nc_util.hpp>
-#include "logging.hpp"
 #include "unified_scripts.hpp"
+#include <string>
 
-#include <vec/vec.hpp>
-
-#define USE_SECRET_CONTENT
-#ifdef USE_SECRET_CONTENT
-#include <secret/secret.hpp>
-#include <secret/node.hpp>
-#include <secret/npc_manager.hpp>
-#endif // USE_SECRET_CONTENT
+struct user;
+struct item;
+struct user_nodes;
 
 struct priv_context
 {
@@ -100,7 +89,7 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t msg__tell(priv_context& priv_ctx, duk_context* ctx, int sl);
 
-void create_notification(duk_context* ctx, const std::string& to, const std::string& notif_msg);
+void create_notification(int lock_id, const std::string& to, const std::string& notif_msg);
 void create_xfer_notif(duk_context* ctx, const std::string& xfer_from, const std::string& xfer_to, double amount);
 void create_xfer_item_notif(duk_context* ctx, const std::string& xfer_from, const std::string& xfer_to, const std::string& item_name);
 void create_destroy_item_notif(duk_context* ctx, const std::string& to, const std::string& item_name);

@@ -4,6 +4,7 @@
 #include <secret/node.hpp>
 #include "global_caching.hpp"
 #include <secret/npc_manager.hpp>
+#include "privileged_core_scripts.hpp"
 
 using global_user_cache = global_generic_cache<user>;
 
@@ -720,6 +721,34 @@ void user::add_position_target(space_pos_t pos, size_t time_when_delta, std::str
 
     move_queue.add_queue_element(tstamp);
     has_local_pos = true;
+}
+
+void user::pump_notifications(int lock_id)
+{
+    bool any_pumped = false;
+
+    size_t current_time = get_wall_time();
+
+    for(int i=0; i < (int)move_queue.timestamp_queue.size(); i++)
+    {
+        timestamped_position& q = move_queue.timestamp_queue[i];
+
+        if(current_time >= q.timestamp)
+        {
+            create_notification(lock_id, name, q.notif_on_finish);
+
+            q.notif_on_finish = "";
+
+            any_pumped = true;
+        }
+    }
+
+    if(any_pumped)
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(lock_id);
+
+        overwrite_user_in_db(mongo_ctx);
+    }
 }
 
 std::vector<user> load_users(const std::vector<std::string>& names, int lock_id)

@@ -90,6 +90,9 @@ struct user
     void set_local_pos(space_pos_t pos);
     void add_position_target(space_pos_t pos, size_t time_delta_ms, std::string notif_on_finish = "");
 
+    ///currently used for move notifs
+    void pump_notifications(int lock_id);
+
     virtual ~user(){}
 
 protected:
