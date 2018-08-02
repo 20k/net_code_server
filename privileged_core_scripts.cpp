@@ -4720,7 +4720,7 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         size_t current_time = get_wall_time();
 
-        double units_per_second = 4;
+        double units_per_second = 1;
 
         vec3f distance = (end_pos - my_user.get_local_pos());
 
