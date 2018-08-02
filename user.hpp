@@ -95,6 +95,8 @@ struct user
 
     virtual ~user(){}
 
+    static void launch_pump_events_thread();
+
 protected:
     //space_pos_t local_pos;
     timestamp_move_queue move_queue;

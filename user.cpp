@@ -725,6 +725,9 @@ void user::add_position_target(space_pos_t pos, size_t time_when_delta, std::str
 
 void user::pump_notifications(int lock_id)
 {
+    if(move_queue.timestamp_queue.size() == 0)
+        return;
+
     bool any_pumped = false;
 
     size_t current_time = get_wall_time();
@@ -733,7 +736,7 @@ void user::pump_notifications(int lock_id)
     {
         timestamped_position& q = move_queue.timestamp_queue[i];
 
-        if(current_time >= q.timestamp)
+        if(current_time >= q.timestamp && q.notif_on_finish != "")
         {
             create_notification(lock_id, name, q.notif_on_finish);
 
@@ -749,6 +752,31 @@ void user::pump_notifications(int lock_id)
 
         overwrite_user_in_db(mongo_ctx);
     }
+}
+
+void event_pumper()
+{
+    while(1)
+    {
+        for_each_user([](user& usr)
+                      {
+                        usr.pump_notifications(-2);
+                        Sleep(1);
+                      });
+
+        for_each_npc([](user& usr)
+                     {
+                        usr.pump_notifications(-2);
+                        Sleep(1);
+                     });
+
+        Sleep(1);
+    }
+}
+
+void user::launch_pump_events_thread()
+{
+    std::thread(event_pumper).detach();
 }
 
 std::vector<user> load_users(const std::vector<std::string>& names, int lock_id)
