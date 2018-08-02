@@ -81,7 +81,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["net.path"] = make_cary("user", "\"\"", "target", "\"\"", "min_stability", "0");
     ret["sys.view"] = make_cary("sys", "\"\"");
     ret["sys.map"] = make_cary("n", "-1", "centre", "true");
-    ret["sys.move"] = make_cary("to", "\"\"");
+    ret["sys.move"] = make_cary("to", "\"\"", "queue", "false");
     ret["sys.access"] = make_cary("user", "\"\"");
 
     return ret;
@@ -4640,6 +4640,7 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool has_to = dukx_is_prop_truthy(ctx, -1, "to");
     bool has_confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
     bool has_stop = dukx_is_prop_truthy(ctx, -1, "stop");
+    bool has_queue = dukx_is_prop_truthy(ctx, -1, "queue");
 
     std::optional<user> my_user_opt = get_user(get_caller(ctx), get_thread_id(ctx));
 
@@ -4762,6 +4763,11 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
             duk_pop(ctx);
 
             return push_error(ctx, "Requires string or array");
+        }
+
+        if(!has_queue)
+        {
+            my_user.set_local_pos(my_user.get_local_pos());
         }
 
         size_t current_time = get_wall_time();
