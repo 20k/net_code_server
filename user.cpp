@@ -690,6 +690,15 @@ void user::set_local_pos(space_pos_t pos)
 
 void user::add_position_target(space_pos_t pos, size_t arrive_when_ms)
 {
+    if(move_queue.timestamp_queue.size() > 0)
+    {
+        timestamped_position replicated;
+        replicated.position = move_queue.timestamp_queue.back().position;
+        replicated.timestamp = get_wall_time();
+
+        move_queue.add_queue_element(replicated);
+    }
+
     timestamped_position tstamp;
     tstamp.position = pos;
     tstamp.timestamp = arrive_when_ms;
