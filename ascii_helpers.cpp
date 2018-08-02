@@ -378,6 +378,8 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
             std::string col_name = string_to_colour(info.keys[y].first);
             std::string col_char = string_to_colour(info.keys[y].first);
 
+            std::string extra_data = info.extra_data_map[info.keys[y].first];
+
             if(name_to_override[info.keys[y].first] != "")
             {
                 col_char = string_to_colour(name_to_override[info.keys[y].first]);
@@ -419,6 +421,11 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
 
             if(info.keys[y].first.size() > 0)
                 built += " | " + name;// + " | [" + extra_str + "]";
+
+            if(extra_data.size() != 0)
+            {
+                built += " " + extra_data;
+            }
 
             //built += "`";
         }

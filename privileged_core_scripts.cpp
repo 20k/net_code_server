@@ -4500,6 +4500,27 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     for(user& usr : special_users)
     {
         network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, n_count);
+
+        std::vector<std::string> connected = structure.get_connected_systems_from(usr.name);
+
+        if(connected.size() > 0)
+        {
+            cur.extra_data_map[usr.name] += "(";
+        }
+
+        for(int i=0; i < (int)connected.size(); i++)
+        {
+            if(i != (int)connected.size() - 1)
+                cur.extra_data_map[usr.name] += colour_string(connected[i]) + ", ";
+            else
+                cur.extra_data_map[usr.name] += colour_string(connected[i]);
+        }
+
+        if(connected.size() > 0)
+        {
+            cur.extra_data_map[usr.name] += ")";
+        }
+
         info = network_accessibility_info::merge_together(info, cur);
     }
 
@@ -4511,6 +4532,11 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, n_count);
 
         auto old_names = cur.ring_ordered_names;
+
+        if(playspace_network_manage.current_network_links(usr.name) == 0)
+        {
+            cur.extra_data_map[usr.name] = "(free)";
+        }
 
         info = network_accessibility_info::merge_together(info, cur);
 
