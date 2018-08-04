@@ -4952,9 +4952,9 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
 
         if(distance > maximum_warp_distance && !has_queue)
-            return push_error(ctx, "Target out of range, max range is " + to_string_with_enforced_variable_dp(maximum_warp_distance, 2) + ", found range " + to_string_with_enforced_variable_dp(distance, 2));
+            return push_error(ctx, "Target out of range, max range is " + to_string_with_enforced_variable_dp(maximum_warp_distance, 2) + ", found range " + to_string_with_enforced_variable_dp(distance, 2) + ". queue:true?");
 
-        if(connected_system != "")
+        if(connected_system != "" && !has_activate)
         {
             total_msg += "Please " + make_key_val("activate", "true") + " to travel to " + connected_system + ". You may " + make_key_val("queue", "true") +" to queue after current moves are finished\n";
 
@@ -4979,14 +4979,13 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
                 create_notification(get_thread_id(ctx), my_user.name, make_notif_col("-Arrived at " + connected_system + "-"));
             }
+        }
 
-            {
-                mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        ///should also print sys.view map
+        {
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
 
-                my_user.overwrite_user_in_db(mongo_ctx);
-            }
-
-            ///should also print sys.view map
+            my_user.overwrite_user_in_db(mongo_ctx);
         }
     }
 
