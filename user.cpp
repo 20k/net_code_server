@@ -744,6 +744,11 @@ void user::add_activate_target(size_t current_time, const std::string& destinati
     move_queue.add_activate_element(current_time, destination_sys);
 }
 
+void user::reset_internal_queue()
+{
+    set_local_pos(get_local_pos());
+}
+
 void user::pump_notifications(int lock_id)
 {
     if(move_queue.timestamp_queue.size() == 0)
@@ -773,11 +778,17 @@ void user::pump_notifications(int lock_id)
         ///handle any activation requests
         if(current_time >= q.timestamp && q.is_activate())
         {
+            bool needs_erase = false;
+
+            std::cout <<" hi there! " << name << std::endl;
+
             std::optional<low_level_structure*> current_sys_opt = low_level_structure_manage.get_system_of(name);
             std::optional<low_level_structure*> target_sys_opt = low_level_structure_manage.get_system_from_name(q.system_to_arrive_at);
 
             if(current_sys_opt.has_value() && target_sys_opt.has_value())
             {
+                std::cout << "happy-1" << std::endl;
+
                 low_level_structure& current_system = *current_sys_opt.value();
                 low_level_structure& target_system = *target_sys_opt.value();
 
@@ -785,6 +796,8 @@ void user::pump_notifications(int lock_id)
 
                 if(opt_users.has_value())
                 {
+                    std::cout << "happy-2" << std::endl;
+
                     user& u1 = opt_users.value().first;
                     user& u2 = opt_users.value().second;
 
@@ -792,6 +805,8 @@ void user::pump_notifications(int lock_id)
 
                     if(my_dist <= MAXIMUM_WARP_DISTANCE * 1.2f)
                     {
+                        std::cout << "happy-3" << std::endl;
+
                         playspace_network_manage.unlink_all(name);
 
                         target_system.steal_user(*this, current_system, u2.get_local_pos(), u1.get_local_pos(), i);
@@ -804,7 +819,26 @@ void user::pump_notifications(int lock_id)
 
                         //std::cout << "move queue size " <<
                     }
+                    else
+                    {
+                        reset_internal_queue();
+
+                        std::cout << "max warp distance exceeded " << my_dist << std::endl;
+                        std::cout << "attempted to warp from " << u1.name << " to " << u2.name << std::endl;
+                    }
                 }
+                else
+                {
+                    reset_internal_queue();
+
+                    std::cout << "no opt user " << std::endl;
+                }
+            }
+            else
+            {
+                reset_internal_queue();
+
+                std::cout << "error, you are lost " << name << std::endl;
             }
 
             any_pumped = true;

@@ -170,7 +170,7 @@ struct timestamp_move_queue
                 return timestamped_position::get_position_at(p1, p2, timestamp);
             }
 
-            if(i + 1 == (int)timestamp_queue.size())
+            if(i + 1 == (int)timestamp_queue.size() - 1)
             {
                 if(timestamp >= p2.timestamp)
                     return p2;
