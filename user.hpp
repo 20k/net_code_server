@@ -87,8 +87,9 @@ struct user
     std::string fetch_sector();
 
     space_pos_t get_local_pos() const;
-    void set_local_pos(space_pos_t pos);
+    void set_local_pos(space_pos_t pos, int replace_item_at = -1);
     void add_position_target(space_pos_t pos, size_t time_delta_ms, std::string notif_on_finish = "");
+    void add_activate_target(size_t current_time, const std::string& destination_sys);
 
     ///currently used for move notifs
     void pump_notifications(int lock_id);

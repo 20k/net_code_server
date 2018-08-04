@@ -678,15 +678,30 @@ space_pos_t user::get_local_pos() const
     return move_queue.get_position_at(current_time).position;
 }
 
-void user::set_local_pos(space_pos_t pos)
+void user::set_local_pos(space_pos_t pos, int replace_item_at)
 {
     timestamped_position tstamp;
     tstamp.position = pos;
     tstamp.timestamp = get_wall_time();
 
-    move_queue.timestamp_queue.clear();
+    if(replace_item_at == -1)
+    {
+        move_queue.timestamp_queue.clear();
 
-    move_queue.add_queue_element(tstamp);
+        move_queue.add_queue_element(tstamp);
+    }
+    else
+    {
+        if(replace_item_at >= 0 && replace_item_at < (int)move_queue.timestamp_queue.size())
+        {
+            move_queue.timestamp_queue[replace_item_at] = tstamp;
+        }
+        else
+        {
+            std::cout << "set local pos replace item warning at " << replace_item_at << " with user " << name << std::endl;
+        }
+    }
+
     has_local_pos = true;
 }
 
@@ -724,6 +739,11 @@ void user::add_position_target(space_pos_t pos, size_t time_when_delta, std::str
     has_local_pos = true;
 }
 
+void user::add_activate_target(size_t current_time, const std::string& destination_sys)
+{
+    move_queue.add_activate_element(current_time, destination_sys);
+}
+
 void user::pump_notifications(int lock_id)
 {
     if(move_queue.timestamp_queue.size() == 0)
@@ -734,11 +754,13 @@ void user::pump_notifications(int lock_id)
     size_t current_time = get_wall_time();
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
     for(int i=0; i < (int)move_queue.timestamp_queue.size(); i++)
     {
         timestamped_position& q = move_queue.timestamp_queue[i];
 
+        ///handle any notifs
         if(current_time >= q.timestamp && q.notif_on_finish != "")
         {
             create_notification(lock_id, name, q.notif_on_finish);
@@ -748,6 +770,7 @@ void user::pump_notifications(int lock_id)
             any_pumped = true;
         }
 
+        ///handle any activation requests
         if(current_time >= q.timestamp && q.is_activate())
         {
             std::optional<low_level_structure*> current_sys_opt = low_level_structure_manage.get_system_of(name);
@@ -765,15 +788,31 @@ void user::pump_notifications(int lock_id)
                     user& u1 = opt_users.value().first;
                     user& u2 = opt_users.value().second;
 
-                    target_system.steal_user(*this, current_system, u2.get_local_pos(), u1.get_local_pos());
+                    float my_dist = (get_local_pos() - u1.get_local_pos()).length();
+
+                    if(my_dist <= MAXIMUM_WARP_DISTANCE * 1.2f)
+                    {
+                        playspace_network_manage.unlink_all(name);
+
+                        target_system.steal_user(*this, current_system, u2.get_local_pos(), u1.get_local_pos(), i);
+
+                        create_notification(lock_id, name, make_notif_col("-Arrived at " + *target_system.name + "-"));
+
+                        ///the problem is that we reset the move queue in steal user
+                        ///which alters the queue
+                        std::cout << "set pos " << get_local_pos() << std::endl;
+
+                        //std::cout << "move queue size " <<
+                    }
                 }
             }
 
             any_pumped = true;
 
-            move_queue.timestamp_queue.erase(move_queue.timestamp_queue.begin() + i);
+            ///no need to erase here, as we update this element to be a new item type
+            /*move_queue.timestamp_queue.erase(move_queue.timestamp_queue.begin() + i);
             i--;
-            continue;
+            continue;*/
         }
     }
 

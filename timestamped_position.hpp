@@ -169,6 +169,12 @@ struct timestamp_move_queue
             {
                 return timestamped_position::get_position_at(p1, p2, timestamp);
             }
+
+            if(i + 1 == (int)timestamp_queue.size())
+            {
+                if(timestamp >= p2.timestamp)
+                    return p2;
+            }
         }
 
         printf("Warning 3 in timestamped move queue\n");
@@ -181,6 +187,16 @@ struct timestamp_move_queue
     void add_queue_element(timestamped_position& pos)
     {
         timestamp_queue.push_back(pos);
+    }
+
+    void add_activate_element(size_t timestamp, const std::string& system_to_arrive_at)
+    {
+        timestamped_position tpos;
+        tpos.type = timestamped_move_type::ACTIVATE;
+        tpos.system_to_arrive_at = system_to_arrive_at;
+        tpos.timestamp = timestamp;
+
+        timestamp_queue.push_back(tpos);
     }
 
     void cleanup_old_elements(size_t timestamp)

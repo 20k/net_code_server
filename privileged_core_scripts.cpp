@@ -4945,7 +4945,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         if(has_activate && found_system != nullptr)
         {
-            playspace_network_manage.unlink_all(my_user.name);
+            /*playspace_network_manage.unlink_all(my_user.name);
 
             total_msg += "Engaged. Travelling to " + connected_system + "\n";
 
@@ -4953,7 +4953,15 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             array_data["engaged"] = true;
 
-            create_notification(get_thread_id(ctx), my_user.name, make_notif_col("-Arrived at " + connected_system + "-"));
+            create_notification(get_thread_id(ctx), my_user.name, make_notif_col("-Arrived at " + connected_system + "-"));*/
+
+            my_user.add_activate_target(get_wall_time(), connected_system);
+
+            {
+                mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+                my_user.overwrite_user_in_db(mongo_ctx);
+            }
 
             ///should also print sys.view map
         }
