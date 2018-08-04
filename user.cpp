@@ -6,6 +6,7 @@
 #include <secret/npc_manager.hpp>
 #include "privileged_core_scripts.hpp"
 #include <secret/low_level_structure.hpp>
+#include "logging.hpp"
 
 using global_user_cache = global_generic_cache<user>;
 
@@ -678,6 +679,23 @@ space_pos_t user::get_local_pos() const
     return move_queue.get_position_at(current_time).position;
 }
 
+timestamped_position user::get_final_pos() const
+{
+    timestamped_position pos;
+
+    for(int i=0; i < (int)move_queue.timestamp_queue.size(); i++)
+    {
+        const timestamped_position& q = move_queue.timestamp_queue[i];
+
+        if(q.is_blocking())
+            continue;
+
+        pos = q;
+    }
+
+    return pos;
+}
+
 void user::set_local_pos(space_pos_t pos, int replace_item_at)
 {
     timestamped_position tstamp;
@@ -780,14 +798,18 @@ void user::pump_notifications(int lock_id)
         {
             bool needs_erase = false;
 
+            #ifdef DEBUG_WARP
             std::cout <<" hi there! " << name << std::endl;
+            #endif // DEBUG_WARP
 
             std::optional<low_level_structure*> current_sys_opt = low_level_structure_manage.get_system_of(name);
             std::optional<low_level_structure*> target_sys_opt = low_level_structure_manage.get_system_from_name(q.system_to_arrive_at);
 
             if(current_sys_opt.has_value() && target_sys_opt.has_value())
             {
+                #ifdef DEBUG_WARP
                 std::cout << "happy-1" << std::endl;
+                #endif // DEBUG_WARP
 
                 low_level_structure& current_system = *current_sys_opt.value();
                 low_level_structure& target_system = *target_sys_opt.value();
@@ -796,18 +818,24 @@ void user::pump_notifications(int lock_id)
 
                 if(opt_users.has_value())
                 {
+                    #ifdef DEBUG_WARP
                     std::cout << "happy-2" << std::endl;
+                    #endif // DEBUG_WARP
 
                     user& u1 = opt_users.value().first;
                     user& u2 = opt_users.value().second;
 
+                    #ifdef DEBUG_WARP
                     std::cout << "attempted to warp from " << u1.name << " to " << u2.name << std::endl;
+                    #endif // DEBUG_WARP
 
                     float my_dist = (get_local_pos() - u1.get_local_pos()).length();
 
                     if(my_dist <= MAXIMUM_WARP_DISTANCE * 1.2f)
                     {
+                        #ifdef DEBUG_WARP
                         std::cout << "happy-3" << std::endl;
+                        #endif // DEBUG_WARP
 
                         playspace_network_manage.unlink_all(name);
 
@@ -815,32 +843,38 @@ void user::pump_notifications(int lock_id)
 
                         create_notification(lock_id, name, make_notif_col("-Arrived at " + *target_system.name + "-"));
 
+                        #ifdef DEBUG_WARP
                         ///the problem is that we reset the move queue in steal user
                         ///which alters the queue
                         std::cout << "set pos " << get_local_pos() << std::endl;
-
-                        //std::cout << "move queue size " <<
+                        #endif // DEBUG_WARP
                     }
                     else
                     {
+                        create_notification(lock_id, name, make_notif_col("-Could not activate, out of range-"));
+
                         reset_internal_queue();
 
+                        #ifdef DEBUG_WARP
                         std::cout << "max warp distance exceeded " << my_dist << std::endl;
                         std::cout << "attempted to warp from " << u1.name << " to " << u2.name << std::endl;
+                        #endif // DEBUG_WARP
                     }
                 }
                 else
                 {
+                    create_notification(lock_id, name, make_notif_col("-Could not establish link between systems (internal server error?)-"));
+
                     reset_internal_queue();
 
-                    std::cout << "no opt user " << std::endl;
+                    lg::log("no opt user");
                 }
             }
             else
             {
                 reset_internal_queue();
 
-                std::cout << "error, you are lost " << name << std::endl;
+                lg::log("error, you are lost ", name);
             }
 
             any_pumped = true;

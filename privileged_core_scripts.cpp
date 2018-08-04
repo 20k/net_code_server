@@ -4817,6 +4817,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string target_name = duk_safe_get_prop_string(ctx, -1, "user");
     bool has_activate = dukx_is_prop_truthy(ctx, -1, "activate");
+    bool has_queue = dukx_is_prop_truthy(ctx, -1, "queue");
     bool has_connect = dukx_is_prop_truthy(ctx, -1, "connect");
     bool has_disconnect = dukx_is_prop_truthy(ctx, -1, "disconnect");
     bool has_modify = duk_has_prop_string(ctx, -1, "modify");
@@ -4933,29 +4934,34 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             }
         }
 
-        if(distance > maximum_warp_distance)
+        if(distance > maximum_warp_distance && !has_queue)
             return push_error(ctx, "Target out of range, max range is " + to_string_with_enforced_variable_dp(maximum_warp_distance, 2) + ", found range " + to_string_with_enforced_variable_dp(distance, 2));
 
         if(connected_system != "")
         {
-            total_msg += "Please " + make_key_val("activate", "true") + " to travel to " + connected_system + "\n";
+            total_msg += "Please " + make_key_val("activate", "true") + " to travel to " + connected_system + ". You may " + make_key_val("queue", "true") +" to queue after current moves are finished\n";
 
             array_data["can_activate"] = true;
         }
 
         if(has_activate && found_system != nullptr)
         {
-            /*playspace_network_manage.unlink_all(my_user.name);
+            if(has_queue)
+            {
+                my_user.add_activate_target(my_user.get_final_pos().timestamp, connected_system);
+            }
+            else
+            {
+                playspace_network_manage.unlink_all(my_user.name);
 
-            total_msg += "Engaged. Travelling to " + connected_system + "\n";
+                total_msg += "Engaged. Travelling to " + connected_system + "\n";
 
-            found_system->steal_user(my_user, current_sys, destination_user->get_local_pos(), target.get_local_pos());
+                found_system->steal_user(my_user, current_sys, destination_user->get_local_pos(), target.get_local_pos());
 
-            array_data["engaged"] = true;
+                array_data["engaged"] = true;
 
-            create_notification(get_thread_id(ctx), my_user.name, make_notif_col("-Arrived at " + connected_system + "-"));*/
-
-            my_user.add_activate_target(get_wall_time(), connected_system);
+                create_notification(get_thread_id(ctx), my_user.name, make_notif_col("-Arrived at " + connected_system + "-"));
+            }
 
             {
                 mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
