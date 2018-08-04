@@ -4745,7 +4745,12 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(!low_level_structure_manage.in_same_system(targeting_user, my_user))
                 return push_error(ctx, "Not in the current system");
 
-            vec3f current_pos = my_user.get_local_pos();
+            vec3f current_pos;
+
+            if(!has_queue)
+                current_pos = my_user.get_local_pos();
+            else
+                current_pos = my_user.get_final_pos().position;
 
             float min_distance = 1.f;
 
@@ -4770,11 +4775,18 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
             my_user.set_local_pos(my_user.get_local_pos());
         }
 
-        size_t current_time = get_wall_time();
-
         double units_per_second = 2;
 
-        vec3f distance = (end_pos - my_user.get_local_pos());
+        vec3f distance;
+
+        if(!has_queue)
+        {
+            distance = (end_pos - my_user.get_local_pos());
+        }
+        else
+        {
+            distance = (end_pos - my_user.get_final_pos().position);
+        }
 
         double linear_distance = distance.length();
 
@@ -4782,7 +4794,12 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         size_t travel_offset = time_to_travel_distance_s * 1000;
 
-        my_user.add_position_target(end_pos, travel_offset, make_success_col("-Move Completed-"));
+        timestamped_position move_to;
+
+        move_to.timestamp = travel_offset;
+        move_to.position = end_pos;
+
+        my_user.add_position_target(move_to.position, move_to.timestamp, make_success_col("-Move Completed-"));
 
         {
             mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
