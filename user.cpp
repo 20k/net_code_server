@@ -801,6 +801,8 @@ void user::pump_notifications(int lock_id)
                     user& u1 = opt_users.value().first;
                     user& u2 = opt_users.value().second;
 
+                    std::cout << "attempted to warp from " << u1.name << " to " << u2.name << std::endl;
+
                     float my_dist = (get_local_pos() - u1.get_local_pos()).length();
 
                     if(my_dist <= MAXIMUM_WARP_DISTANCE * 1.2f)
