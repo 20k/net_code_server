@@ -4893,7 +4893,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string system_string = "System: " + colour_string(*current_sys.name);
     total_msg += system_string + "\n";
 
-    double maximum_warp_distance = 5;
+    double maximum_warp_distance = MAXIMUM_WARP_DISTANCE;
 
     float distance = (target.get_local_pos() - my_user.get_local_pos()).length();
 

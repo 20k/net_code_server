@@ -5,6 +5,7 @@
 #include "global_caching.hpp"
 #include <secret/npc_manager.hpp>
 #include "privileged_core_scripts.hpp"
+#include <secret/low_level_structure.hpp>
 
 using global_user_cache = global_generic_cache<user>;
 
@@ -732,6 +733,8 @@ void user::pump_notifications(int lock_id)
 
     size_t current_time = get_wall_time();
 
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
     for(int i=0; i < (int)move_queue.timestamp_queue.size(); i++)
     {
         timestamped_position& q = move_queue.timestamp_queue[i];
@@ -743,6 +746,34 @@ void user::pump_notifications(int lock_id)
             q.notif_on_finish = "";
 
             any_pumped = true;
+        }
+
+        if(current_time >= q.timestamp && q.is_activate())
+        {
+            std::optional<low_level_structure*> current_sys_opt = low_level_structure_manage.get_system_of(name);
+            std::optional<low_level_structure*> target_sys_opt = low_level_structure_manage.get_system_from_name(q.system_to_arrive_at);
+
+            if(current_sys_opt.has_value() && target_sys_opt.has_value())
+            {
+                low_level_structure& current_system = *current_sys_opt.value();
+                low_level_structure& target_system = *target_sys_opt.value();
+
+                auto opt_users = low_level_structure_manage.get_connecting_npcs(current_system, target_system);
+
+                if(opt_users.has_value())
+                {
+                    user& u1 = opt_users.value().first;
+                    user& u2 = opt_users.value().second;
+
+                    target_system.steal_user(*this, current_system, u2.get_local_pos(), u1.get_local_pos());
+                }
+            }
+
+            any_pumped = true;
+
+            move_queue.timestamp_queue.erase(move_queue.timestamp_queue.begin() + i);
+            i--;
+            continue;
         }
     }
 

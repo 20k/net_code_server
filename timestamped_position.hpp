@@ -5,11 +5,43 @@
 
 #include <json/json.hpp>
 
+namespace timestamped_move_type
+{
+    enum timestamped_move_type
+    {
+        MOVE,
+        ACTIVATE,
+    };
+}
+
+using timestamped_move_t = timestamped_move_type::timestamped_move_type;
+
 struct timestamped_position
 {
+    timestamped_move_t type = timestamped_move_type::MOVE;
+
+    ///general data
     size_t timestamp = 0;
     vec3f position;
     std::string notif_on_finish;
+
+    ///data for activate
+    std::string system_to_arrive_at;
+
+    bool is_move() const
+    {
+        return type == timestamped_move_type::MOVE;
+    }
+
+    bool is_activate() const
+    {
+        return type == timestamped_move_type::ACTIVATE;
+    }
+
+    bool is_blocking() const
+    {
+        return is_activate();
+    }
 
     static
     timestamped_position get_position_at(const timestamped_position& p1, const timestamped_position& p2, size_t timestamp)
@@ -44,12 +76,29 @@ struct timestamped_position
 inline
 void to_json(nlohmann::json& j, const timestamped_position& p)
 {
-    j = nlohmann::json{{"x", p.position.x()}, {"y", p.position.y()}, {"z", p.position.z()}, {"ts", p.timestamp}, {"nt", p.notif_on_finish}};
+    j = nlohmann::json{
+        {"tp", p.type},
+        {"ts", p.timestamp},
+        {"x", p.position.x()},
+        {"y", p.position.y()},
+        {"z", p.position.z()},
+        {"nt", p.notif_on_finish},
+        {"sys", p.system_to_arrive_at},
+        };
 }
 
 inline
 void from_json(const json& j, timestamped_position& p)
 {
+    try
+    {
+        p.type = j.at("tp");
+    }
+    catch(...)
+    {
+
+    }
+
     p.timestamp = j.at("ts");
 
     p.position.x() = j.at("x");
@@ -65,6 +114,16 @@ void from_json(const json& j, timestamped_position& p)
     {
 
     }
+
+    ///sigh lack of schema
+    try
+    {
+        p.system_to_arrive_at = j.at("sys");
+    }
+    catch(...)
+    {
+
+    }
 }
 
 struct timestamp_move_queue
@@ -74,21 +133,45 @@ struct timestamp_move_queue
     timestamped_position get_position_at(size_t timestamp) const
     {
         if(timestamp_queue.size() == 0)
+        {
+            printf("Warning in timestamped move queue\n");
             return timestamped_position();
+        }
 
         if(timestamp_queue.size() == 1)
+        {
+            if(timestamp_queue[0].is_blocking())
+            {
+                printf("warning 2 in timestamped move queue\n");
+                return timestamped_position();
+            }
+
             return timestamp_queue[0];
+        }
+
+        for(int i=1; i < (int)timestamp_queue.size(); i++)
+        {
+            if(timestamp_queue[i].is_blocking() && timestamp >= timestamp_queue[i-1].timestamp)
+            {
+                return timestamp_queue[i-1];
+            }
+        }
 
         for(int i=0; i < (int)timestamp_queue.size() - 1; i++)
         {
             const timestamped_position& p1 = timestamp_queue[i];
             const timestamped_position& p2 = timestamp_queue[i+1];
 
+            if(p2.is_blocking())
+                return p1;
+
             if(timestamp >= p1.timestamp && timestamp < p2.timestamp)
             {
                 return timestamped_position::get_position_at(p1, p2, timestamp);
             }
         }
+
+        printf("Warning 3 in timestamped move queue\n");
 
         return timestamped_position::get_position_at(timestamp_queue[(int)timestamp_queue.size() - 2],
                                                      timestamp_queue[(int)timestamp_queue.size() - 1],
