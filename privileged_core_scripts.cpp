@@ -4752,8 +4752,6 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
             else
                 current_pos = my_user.get_final_pos().position;
 
-            float min_distance = 1.f;
-
             end_pos = targeting_user.get_local_pos();
 
             vec3f diff = current_pos - end_pos;
