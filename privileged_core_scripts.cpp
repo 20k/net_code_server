@@ -4956,7 +4956,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         if(connected_system != "" && !has_activate)
         {
-            total_msg += "Please " + make_key_val("activate", "true") + " to travel to " + connected_system + ". You may " + make_key_val("queue", "true") +" to queue after current moves are finished\n";
+            total_msg += "Please " + make_key_val("activate", "true") + " to travel to " + connected_system + ". Pass " + make_key_val("queue", "true") +" to execute after current moves are finished, instead of immediately\n";
 
             array_data["can_activate"] = true;
         }
@@ -4966,6 +4966,10 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(has_queue)
             {
                 my_user.add_activate_target(my_user.get_final_pos().timestamp, connected_system);
+
+                array_data["queued_engaged"] = true;
+
+                total_msg += "Queued. Travelling to " + connected_system + " after current move queue is complete\n";
             }
             else
             {
