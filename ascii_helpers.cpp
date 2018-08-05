@@ -195,16 +195,29 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
     if((flags & ascii::FIT_TO_AREA) > 0)
     {
         vec2f tl = {FLT_MAX, FLT_MAX};
+        vec2f br = {-FLT_MAX, -FLT_MAX};
 
         for(auto& i : info.global_pos)
         {
             tl = min(i.second.xy(), tl);
+            br = max(i.second.xy(), br);
         }
 
         for(auto& i : info.global_pos)
         {
             i.second.xy() = i.second.xy() - tl;
         }
+
+        int new_w = fabs(br.x() - tl.x()) + 2;
+        int new_h = fabs(br.y() - tl.y()) + 2;
+
+        new_w = clamp(new_w, 5, 200);
+        new_h = clamp(new_h, 5, 100);
+
+        w = new_w;
+        h = new_h;
+
+        buffer = ascii_make_buffer({w, h}, false);
     }
 
     std::map<int, std::string> id_to_override;
