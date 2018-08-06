@@ -80,7 +80,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["net.move"] = make_cary("user", "\"\"", "target", "\"\"");
     ret["net.path"] = make_cary("user", "\"\"", "target", "\"\"", "min_stability", "0");
     ret["sys.view"] = make_cary("user", "\"\"", "n", "-1");
-    ret["sys.map"] = make_cary("n", "-1", "centre", "false", "w", "100", "h", "50");
+    ret["sys.map"] = make_cary("n", "-1", "centre", "false");
     ret["sys.move"] = make_cary("to", "\"\"", "queue", "false");
     ret["sys.access"] = make_cary("user", "\"\"");
 
@@ -4301,6 +4301,12 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
     //int found_width = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", -1);
 
+    int found_w = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "w", 160);
+    int found_h = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "h", 80);
+
+    found_w = clamp(found_w, 5, 300);
+    found_h = clamp(found_h, 5, 200);
+
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 
     auto opt_sys = low_level_structure_manage.get_system_of(my_user);
@@ -4312,7 +4318,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<low_level_structure>& systems = low_level_structure_manage.systems;
 
-    auto buffer = ascii_make_buffer({160, 80}, false);
+    auto buffer = ascii_make_buffer({found_w, found_h}, false);
 
     network_accessibility_info info;
 
@@ -4451,6 +4457,12 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
     std::string found_target = duk_safe_get_prop_string(ctx, -1, "user");
 
+    int found_w = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "w", 80);
+    int found_h = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "h", 40);
+
+    found_w = clamp(found_w, 5, 300);
+    found_h = clamp(found_h, 5, 200);
+
     bool has_target = found_target.size() > 0;
 
     if(found_target == "")
@@ -4514,7 +4526,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         all_users = structure.get_all_users(mongo_ctx);
     }
 
-    std::vector<std::vector<std::string>> buffer = ascii_make_buffer({80, 40}, false);
+    std::vector<std::vector<std::string>> buffer = ascii_make_buffer({found_w, found_h}, false);
 
     network_accessibility_info info;
 
