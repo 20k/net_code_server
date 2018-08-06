@@ -433,7 +433,11 @@ struct db_interfaceable
             return true;
 
         json to_find;
-        to_find[key_name] = id;
+
+        if(!has("_id"))
+            to_find[key_name] = id;
+        else
+            to_find["_id"] = data["_id"];
 
         auto found = ctx->find_json(ctx->last_collection, to_find.dump(), "{}");
 
