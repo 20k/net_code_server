@@ -79,7 +79,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["net.modify"] = make_cary("user", "\"\"", "target", "\"\"");
     ret["net.move"] = make_cary("user", "\"\"", "target", "\"\"");
     ret["net.path"] = make_cary("user", "\"\"", "target", "\"\"", "min_stability", "0");
-    ret["sys.view"] = make_cary("user", "\"\"", "n", "-1");
+    ret["sys.view"] = make_cary("user", "\"\"", "n", "-1", "fit", "false");
     ret["sys.map"] = make_cary("n", "-1", "centre", "false");
     ret["sys.move"] = make_cary("to", "\"\"", "queue", "false");
     ret["sys.access"] = make_cary("user", "\"\"");
@@ -4457,8 +4457,12 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
     std::string found_target = duk_safe_get_prop_string(ctx, -1, "user");
 
+    bool has_fit = dukx_is_prop_truthy(ctx, -1, "fit");
+
     int found_w = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "w", 80);
     int found_h = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "h", 40);
+
+    float found_scale = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "scale", 1.f);
 
     found_w = clamp(found_w, 5, 300);
     found_h = clamp(found_h, 5, 200);
@@ -4467,6 +4471,16 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(found_target == "")
         found_target = get_caller(ctx);
+
+    if(!dukx_is_prop_truthy(ctx, -1, "scale"))
+    {
+        if(has_target)
+            found_scale = 1.f;
+        else
+            found_scale = 0.5f;
+    }
+
+    found_scale = clamp(found_scale, 0.1f, 10.f);
 
     user target_user;
 
@@ -4600,12 +4614,17 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         vec3f pos = {0,0,0};
         ///info.global_pos[from]
 
-        float current_scale = 0.5f;
-
         if(has_target)
-            current_scale = 1.f;
+            pos = info.global_pos[target_user.name];
 
-        std::string result = ascii_render_from_accessibility_info(info, buffer, pos, current_scale, ascii::NONE);
+        ascii::ascii_render_flags flags = ascii::NONE;
+
+        if(has_fit)
+        {
+            flags = (ascii::ascii_render_flags)(flags | ascii::FIT_TO_AREA | ascii::HIGHLIGHT_USER);
+        }
+
+        std::string result = ascii_render_from_accessibility_info(info, buffer, pos, found_scale, flags, target_user.name);
 
         result = "Current Sys: " + colour_string(*structure.name) + "\n" + result;
 
