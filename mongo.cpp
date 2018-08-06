@@ -35,7 +35,7 @@ void lock_internal::lock(const std::string& debug_info, size_t who, mongoc_clien
     //constexpr size_t max_retry = 500;
     //size_t cur_retry = 0;
 
-    ///20 ms;
+    ///200 ms
     constexpr size_t max_microseconds_elapsed = 1000 * 200;
     bool sleeptime = false;
 
