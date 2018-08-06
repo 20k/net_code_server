@@ -80,7 +80,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["net.move"] = make_cary("user", "\"\"", "target", "\"\"");
     ret["net.path"] = make_cary("user", "\"\"", "target", "\"\"", "min_stability", "0");
     ret["sys.view"] = make_cary("sys", "\"\"");
-    ret["sys.map"] = make_cary("n", "-1", "centre", "true");
+    ret["sys.map"] = make_cary("n", "-1", "centre", "false", "w", "100", "h", "50");
     ret["sys.move"] = make_cary("to", "\"\"", "queue", "false");
     ret["sys.access"] = make_cary("user", "\"\"");
 
@@ -4299,6 +4299,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     int n_val = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", -1);
     bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
+    //int found_width = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", -1);
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 
@@ -4448,6 +4449,19 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string str = duk_safe_get_prop_string(ctx, -1, "sys");
     bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
+    std::string found_target = duk_safe_get_prop_string(ctx, -1, "user");
+
+    if(found_target == "")
+        found_target = get_caller(ctx);
+
+    user target_user;
+
+    {
+        mongo_lock_proxy lock = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        if(!target_user.load_from_db(lock, found_target))
+            return push_error(ctx, "Error: Target does not exist");
+    }
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
@@ -4455,7 +4469,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     user my_user;
 
     {
-        mongo_lock_proxy lock = get_global_mongo_user_info_context(-2);
+        mongo_lock_proxy lock = get_global_mongo_user_info_context(get_thread_id(ctx));
 
         if(!my_user.load_from_db(lock, get_caller(ctx)))
             return push_error(ctx, "Error: Does not exist");
@@ -4529,6 +4543,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         info = network_accessibility_info::merge_together(info, cur);
     }
 
+    ///investigate this for being incredibly terrible
     for(user& usr : all_users)
     {
         if(playspace_network_manage.current_network_links(usr.name) > 0)
@@ -4641,7 +4656,6 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool has_confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
     bool has_stop = dukx_is_prop_truthy(ctx, -1, "stop");
     bool has_queue = dukx_is_prop_truthy(ctx, -1, "queue");
-
     std::optional<user> my_user_opt = get_user(get_caller(ctx), get_thread_id(ctx));
 
     if(!my_user_opt.has_value())
