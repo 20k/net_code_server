@@ -4600,7 +4600,12 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         vec3f pos = {0,0,0};
         ///info.global_pos[from]
 
-        std::string result = ascii_render_from_accessibility_info(info, buffer, pos, 0.5f, ascii::NONE);
+        float current_scale = 0.5f;
+
+        if(has_target)
+            current_scale = 1.f;
+
+        std::string result = ascii_render_from_accessibility_info(info, buffer, pos, current_scale, ascii::NONE);
 
         result = "Current Sys: " + colour_string(*structure.name) + "\n" + result;
 
@@ -4985,36 +4990,43 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
 
         if(distance > maximum_warp_distance && !has_queue)
-            return push_error(ctx, "Target out of range, max range is " + to_string_with_enforced_variable_dp(maximum_warp_distance, 2) + ", found range " + to_string_with_enforced_variable_dp(distance, 2) + ". queue:true?");
-
-        if(connected_system != "" && !has_activate)
         {
-            total_msg += "Please " + make_key_val("activate", "true") + " to travel to " + connected_system + ". Pass " + make_key_val("queue", "true") +" to execute after current moves are finished, instead of immediately\n";
+            total_msg += "Target out of range to " + make_key_col("activate") + ", max range is " + to_string_with_enforced_variable_dp(maximum_warp_distance, 2) + ", found range " + to_string_with_enforced_variable_dp(distance, 2) + ". " + make_key_val("queue", "true") + "?\n";
 
-            array_data["can_activate"] = true;
+            array_data["can_activate"] = false;
+            array_data["out_of_range_to_activate"] = true;
         }
-
-        if(has_activate && found_system != nullptr)
+        else
         {
-            if(has_queue)
+            if(connected_system != "" && !has_activate)
             {
-                my_user.add_activate_target(my_user.get_final_pos().timestamp, connected_system);
+                total_msg += "Please " + make_key_val("activate", "true") + " to travel to " + connected_system + ". Pass " + make_key_val("queue", "true") +" to execute after current moves are finished, instead of immediately\n";
 
-                array_data["queued_engaged"] = true;
-
-                total_msg += "Queued. Travelling to " + connected_system + " after current move queue is complete\n";
+                array_data["can_activate"] = true;
             }
-            else
+
+            if(has_activate && found_system != nullptr)
             {
-                playspace_network_manage.unlink_all(my_user.name);
+                if(has_queue)
+                {
+                    my_user.add_activate_target(my_user.get_final_pos().timestamp, connected_system);
 
-                total_msg += "Engaged. Travelling to " + connected_system + "\n";
+                    array_data["queued_engaged"] = true;
 
-                found_system->steal_user(my_user, current_sys, destination_user->get_local_pos(), target.get_local_pos());
+                    total_msg += "Queued. Travelling to " + connected_system + " after current move queue is complete\n";
+                }
+                else
+                {
+                    playspace_network_manage.unlink_all(my_user.name);
 
-                array_data["engaged"] = true;
+                    total_msg += "Engaged. Travelling to " + connected_system + "\n";
 
-                create_notification(get_thread_id(ctx), my_user.name, make_notif_col("-Arrived at " + connected_system + "-"));
+                    found_system->steal_user(my_user, current_sys, destination_user->get_local_pos(), target.get_local_pos());
+
+                    array_data["engaged"] = true;
+
+                    create_notification(get_thread_id(ctx), my_user.name, make_notif_col("-Arrived at " + connected_system + "-"));
+                }
             }
         }
 
