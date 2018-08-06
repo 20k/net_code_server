@@ -79,7 +79,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["net.modify"] = make_cary("user", "\"\"", "target", "\"\"");
     ret["net.move"] = make_cary("user", "\"\"", "target", "\"\"");
     ret["net.path"] = make_cary("user", "\"\"", "target", "\"\"", "min_stability", "0");
-    ret["sys.view"] = make_cary("sys", "\"\"");
+    ret["sys.view"] = make_cary("user", "\"\"", "n", "-1");
     ret["sys.map"] = make_cary("n", "-1", "centre", "false", "w", "100", "h", "50");
     ret["sys.move"] = make_cary("to", "\"\"", "queue", "false");
     ret["sys.access"] = make_cary("user", "\"\"");
