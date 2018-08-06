@@ -9,9 +9,7 @@
 #include <boost/stacktrace.hpp>
 #endif // DEADLOCK_DETECTION
 
-#ifdef DEADLOCK_DETECTION
 #include <SFML/System.hpp>
-#endif // DEADLOCK_DETECTION
 #include <thread>
 
 thread_local int mongo_lock_proxy::thread_id_storage_hack = -2;
@@ -32,23 +30,33 @@ void lock_internal::lock(const std::string& debug_info, size_t who, mongoc_clien
     std::this_thread::yield();
     #endif
 
+    #define ATTEMPT_FASTER
     #ifdef ATTEMPT_FASTER
-    constexpr size_t max_retry = 5;
-    size_t cur_retry = 0;
+    //constexpr size_t max_retry = 500;
+    //size_t cur_retry = 0;
+
+    ///20 ms;
+    constexpr size_t max_microseconds_elapsed = 1000 * 200;
+    bool sleeptime = false;
+
+    sf::Clock clk;
 
     while(locked.test_and_set(std::memory_order_acquire))
     {
-        if(cur_retry >= max_retry)
+        if(sleeptime || clk.getElapsedTime().asMicroseconds() >= max_microseconds_elapsed)
+        {
+            sleeptime = true;
             Sleep(1);
+        }
         else
         {
-            cur_retry++;
             std::this_thread::yield();
         }
     }
 
     #endif // ATTEMPT_FASTER
 
+    #ifndef ATTEMPT_FASTER
     #ifndef DEADLOCK_DETECTION
     while(locked.test_and_set(std::memory_order_acquire))
     {
@@ -111,6 +119,7 @@ void lock_internal::lock(const std::string& debug_info, size_t who, mongoc_clien
         }
     }
     #endif // DEADLOCK_DETECTION
+    #endif // 0
 
     locked_by = who;
     #ifdef DEADLOCK_DETECTION
