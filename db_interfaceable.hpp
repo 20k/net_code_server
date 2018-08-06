@@ -408,7 +408,7 @@ struct db_interfaceable
             json to_set;
             to_set["$set"] = data;
 
-            ctx->update_json_many(ctx->last_collection, selector.dump(), to_set.dump());
+            ctx->update_json_one(selector.dump(), to_set.dump());
         }
     }
 

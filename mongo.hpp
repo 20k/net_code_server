@@ -196,6 +196,9 @@ struct mongo_interface
     std::string update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update) const;
     std::string update_json_many(const std::string& script_host, const std::string& selector, const std::string& update) const;
 
+    std::string update_bson_one(bson_t* selector, bson_t* update) const;
+    std::string update_json_one(const std::string& selector, const std::string& update) const;
+
     /*bool has_collection(const std::string& coll)
     {
         return !mongoc_database_has_collection()
@@ -512,6 +515,7 @@ struct mongo_requester
     }*/
 
     void update_in_db_if_exact(mongo_lock_proxy& ctx, mongo_requester& set_to);
+    void update_one_in_db_if_exact(mongo_lock_proxy& ctx, mongo_requester& set_to);
 
     void remove_all_from_db(mongo_lock_proxy& ctx);
 };

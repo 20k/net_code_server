@@ -722,6 +722,56 @@ std::string mongo_interface::update_json_many(const std::string& script_host, co
     return update_err;
 }
 
+std::string mongo_interface::update_bson_one(bson_t* selector, bson_t* update) const
+{
+    if(selector == nullptr || update == nullptr)
+        return "Null pointer";
+
+    if(contains_banned_query(selector) || contains_banned_query(update))
+    {
+        //printf("banned\n");
+        return "Contains banned query";
+    }
+
+    bson_error_t error;
+
+    if(!mongoc_collection_update_one(collection, selector, update, nullptr, nullptr, &error))
+    {
+        fprintf (stderr, "err: %s\n", error.message);
+
+        return error.message;
+    }
+
+    return "";
+}
+
+
+std::string mongo_interface::update_json_one(const std::string& selector, const std::string& update) const
+{
+    std::string err;
+
+    bson_t* bs = make_bson_from_json_err(selector, err);
+
+    if(bs == nullptr)
+        return err;
+
+    bson_t* us = make_bson_from_json_err(update, err);
+
+    if(us == nullptr)
+    {
+        bson_destroy(bs);
+        return err;
+    }
+
+    std::string update_err = update_bson_one(bs, us);
+
+    bson_destroy(bs);
+    bson_destroy(us);
+
+    return update_err;
+}
+
+
 /*bool has_collection(const std::string& coll)
 {
     return !mongoc_database_has_collection()
@@ -855,307 +905,328 @@ mongo_interface::~mongo_interface()
     mongoc_database_destroy (database);
 }
 
+std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ctx)
+{
+    std::vector<mongo_requester> ret;
 
-    std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ctx)
+    bson_t* to_find = bson_new();
+
+    append_properties_all_to(to_find);
+
+    for(auto& i : exists_check)
     {
-        std::vector<mongo_requester> ret;
+        if(!i.second)
+            continue;
 
-        bson_t* to_find = bson_new();
+        bson_t child;
 
-        append_properties_all_to(to_find);
+        bson_append_document_begin(to_find, i.first.c_str(), strlen(i.first.c_str()), &child);
 
-        for(auto& i : exists_check)
+        BSON_APPEND_INT32(&child, "$exists", 1);
+
+        bson_append_document_end(to_find, &child);
+    }
+
+    //if(lt_than.size() != 0 && gt_than.size() != 0)
+    {
+        bson_t child;
+
+        std::set<std::string> keys_check;
+
+        for(auto& i : lt_than)
+            keys_check.insert(i.first);
+
+        for(auto& i : gt_than)
+            keys_check.insert(i.first);
+
+        for(auto& i : lt_than_i)
+            keys_check.insert(i.first);
+
+        for(auto& i : gt_than_i)
+            keys_check.insert(i.first);
+
+        for(auto& i : keys_check)
         {
-            if(!i.second)
-                continue;
+            std::string key = i;
 
-            bson_t child;
+            bool has_lt_than = lt_than.find(key) != lt_than.end();
+            bool has_gt_than = gt_than.find(key) != gt_than.end();
 
-            bson_append_document_begin(to_find, i.first.c_str(), strlen(i.first.c_str()), &child);
+            std::string lt_val = has_lt_than ? lt_than[key] : "";
+            std::string gt_val = has_gt_than ? gt_than[key] : "";
 
-            BSON_APPEND_INT32(&child, "$exists", 1);
+            bson_append_document_begin(to_find, key.c_str(), key.size(), &child);
+
+            if(gt_val != "")
+                BSON_APPEND_UTF8(&child, "$gt", gt_val.c_str());
+
+            if(lt_val != "")
+                BSON_APPEND_UTF8(&child, "$lt", lt_val.c_str());
+
+            if(lt_than_i.find(key) != lt_than_i.end())
+                BSON_APPEND_INT32(&child, "$lt", lt_than_i[key]);
+
+            if(gt_than_i.find(key) != gt_than_i.end())
+                BSON_APPEND_INT32(&child, "$gt", gt_than_i[key]);
+
+            //std::cout << "$gt " << gt_val << " $lt " << lt_val << std::endl;
 
             bson_append_document_end(to_find, &child);
         }
+    }
 
-        //if(lt_than.size() != 0 && gt_than.size() != 0)
+
+    bson_t* to_opt = nullptr;
+
+    if(limit >= 0)
+    {
+        if(to_opt == nullptr)
+            to_opt = bson_new();
+
+        BSON_APPEND_INT64(to_opt, "limit", limit);
+    }
+
+    if(sort_on.size() != 0)
+    {
+        if(to_opt == nullptr)
+            to_opt = bson_new();
+
+        bson_t child;
+
+        bson_append_document_begin(to_opt, "sort", 4, &child);
+
+        for(auto& i : sort_on)
         {
-            bson_t child;
-
-            std::set<std::string> keys_check;
-
-            for(auto& i : lt_than)
-                keys_check.insert(i.first);
-
-            for(auto& i : gt_than)
-                keys_check.insert(i.first);
-
-            for(auto& i : lt_than_i)
-                keys_check.insert(i.first);
-
-            for(auto& i : gt_than_i)
-                keys_check.insert(i.first);
-
-            for(auto& i : keys_check)
-            {
-                std::string key = i;
-
-                bool has_lt_than = lt_than.find(key) != lt_than.end();
-                bool has_gt_than = gt_than.find(key) != gt_than.end();
-
-                std::string lt_val = has_lt_than ? lt_than[key] : "";
-                std::string gt_val = has_gt_than ? gt_than[key] : "";
-
-                bson_append_document_begin(to_find, key.c_str(), key.size(), &child);
-
-                if(gt_val != "")
-                    BSON_APPEND_UTF8(&child, "$gt", gt_val.c_str());
-
-                if(lt_val != "")
-                    BSON_APPEND_UTF8(&child, "$lt", lt_val.c_str());
-
-                if(lt_than_i.find(key) != lt_than_i.end())
-                    BSON_APPEND_INT32(&child, "$lt", lt_than_i[key]);
-
-                if(gt_than_i.find(key) != gt_than_i.end())
-                    BSON_APPEND_INT32(&child, "$gt", gt_than_i[key]);
-
-                //std::cout << "$gt " << gt_val << " $lt " << lt_val << std::endl;
-
-                bson_append_document_end(to_find, &child);
-            }
+            BSON_APPEND_INT64(&child, i.first.c_str(), i.second);
         }
 
+        bson_append_document_end(to_opt, &child);
+    }
 
-        bson_t* to_opt = nullptr;
+    std::vector<std::string> json_found = ctx->find_bson(ctx->last_collection, to_find, to_opt);
 
-        if(limit >= 0)
+    for(auto& i : json_found)
+    {
+        mongo_requester found;
+
+        bson_t* next = bson_new_from_json((const uint8_t*)i.c_str(), i.size(), nullptr);
+
+        if(next == nullptr)
         {
-            if(to_opt == nullptr)
-                to_opt = bson_new();
-
-            BSON_APPEND_INT64(to_opt, "limit", limit);
+            printf("invalid json in find\n");
+            continue;
         }
 
-        if(sort_on.size() != 0)
+        bson_iter_t iter;
+        bson_iter_init(&iter, next);
+
+        while (bson_iter_next (&iter))
         {
-            if(to_opt == nullptr)
-                to_opt = bson_new();
+            std::string key = bson_iter_key(&iter);
 
-            bson_t child;
-
-            bson_append_document_begin(to_opt, "sort", 4, &child);
-
-            for(auto& i : sort_on)
+            if(BSON_ITER_HOLDS_BINARY(&iter))
             {
-                BSON_APPEND_INT64(&child, i.first.c_str(), i.second);
-            }
-
-            bson_append_document_end(to_opt, &child);
-        }
-
-        std::vector<std::string> json_found = ctx->find_bson(ctx->last_collection, to_find, to_opt);
-
-        for(auto& i : json_found)
-        {
-            mongo_requester found;
-
-            bson_t* next = bson_new_from_json((const uint8_t*)i.c_str(), i.size(), nullptr);
-
-            if(next == nullptr)
-            {
-                printf("invalid json in find\n");
+                found.set_prop_bin(key, bson_iter_binary_std_string(&iter));
                 continue;
             }
 
-            bson_iter_t iter;
-            bson_iter_init(&iter, next);
-
-            while (bson_iter_next (&iter))
+            if(BSON_ITER_HOLDS_UTF8(&iter))
             {
-                std::string key = bson_iter_key(&iter);
+                found.set_prop(key, bson_iter_utf8_easy(&iter));
+                continue;
+            }
 
-                if(BSON_ITER_HOLDS_BINARY(&iter))
+            if(BSON_ITER_HOLDS_INT32(&iter))
+            {
+                found.set_prop_int(key, bson_iter_int32(&iter));
+                continue;
+            }
+
+            if(BSON_ITER_HOLDS_DOUBLE(&iter))
+            {
+                found.set_prop_double(key, bson_iter_double(&iter));
+                continue;
+            }
+
+            ///if we'd done this right, this would compose
+            ///sadly it is not done right
+            if(BSON_ITER_HOLDS_ARRAY(&iter))
+            {
+                std::vector<std::string> arr;
+
+                bson_iter_t child;
+
+                bson_iter_recurse(&iter, &child);
+
+                while(bson_iter_next(&child))
                 {
-                    found.set_prop_bin(key, bson_iter_binary_std_string(&iter));
-                    continue;
-                }
-
-                if(BSON_ITER_HOLDS_UTF8(&iter))
-                {
-                    found.set_prop(key, bson_iter_utf8_easy(&iter));
-                    continue;
-                }
-
-                if(BSON_ITER_HOLDS_INT32(&iter))
-                {
-                    found.set_prop_int(key, bson_iter_int32(&iter));
-                    continue;
-                }
-
-                if(BSON_ITER_HOLDS_DOUBLE(&iter))
-                {
-                    found.set_prop_double(key, bson_iter_double(&iter));
-                    continue;
-                }
-
-                ///if we'd done this right, this would compose
-                ///sadly it is not done right
-                if(BSON_ITER_HOLDS_ARRAY(&iter))
-                {
-                    std::vector<std::string> arr;
-
-                    bson_iter_t child;
-
-                    bson_iter_recurse(&iter, &child);
-
-                    while(bson_iter_next(&child))
+                    if(BSON_ITER_HOLDS_UTF8(&child))
                     {
-                        if(BSON_ITER_HOLDS_UTF8(&child))
-                        {
-                            arr.push_back(bson_iter_utf8_easy(&child));
-                        }
+                        arr.push_back(bson_iter_utf8_easy(&child));
                     }
-
-                    found.set_prop_array(key, arr);
-                    continue;
                 }
+
+                found.set_prop_array(key, arr);
+                continue;
             }
-
-            bson_destroy(next);
-
-            ret.push_back(found);
         }
 
-        if(to_opt != nullptr)
-            bson_destroy(to_opt);
+        bson_destroy(next);
 
-        bson_destroy(to_find);
-
-        return ret;
+        ret.push_back(found);
     }
 
-    void mongo_requester::insert_in_db(mongo_lock_proxy& ctx)
+    if(to_opt != nullptr)
+        bson_destroy(to_opt);
+
+    bson_destroy(to_find);
+
+    return ret;
+}
+
+void mongo_requester::insert_in_db(mongo_lock_proxy& ctx)
+{
+    bson_t* to_insert = bson_new();
+
+    append_properties_all_to(to_insert);
+
+    ctx->insert_bson_1(ctx->last_collection, to_insert);
+
+    bson_destroy(to_insert);
+}
+
+void mongo_requester::append_property_to(bson_t* bson, const std::string& key)
+{
+    std::string val = properties[key];
+
+    if(is_binary[key])
+        bson_append_binary(bson, key.c_str(), key.size(), BSON_SUBTYPE_BINARY, (const uint8_t*)val.c_str(), val.size());
+    else if(is_integer[key])
+        BSON_APPEND_INT32(bson, key.c_str(), get_prop_as_integer(key));
+    else if(is_double[key])
+        BSON_APPEND_DOUBLE(bson, key.c_str(), get_prop_as_double(key));
+    else if(is_arr[key])
     {
-        bson_t* to_insert = bson_new();
-
-        append_properties_all_to(to_insert);
-
-        ctx->insert_bson_1(ctx->last_collection, to_insert);
-
-        bson_destroy(to_insert);
-    }
-
-    void mongo_requester::append_property_to(bson_t* bson, const std::string& key)
-    {
-        std::string val = properties[key];
-
-        if(is_binary[key])
-            bson_append_binary(bson, key.c_str(), key.size(), BSON_SUBTYPE_BINARY, (const uint8_t*)val.c_str(), val.size());
-        else if(is_integer[key])
-            BSON_APPEND_INT32(bson, key.c_str(), get_prop_as_integer(key));
-        else if(is_double[key])
-            BSON_APPEND_DOUBLE(bson, key.c_str(), get_prop_as_double(key));
-        else if(is_arr[key])
-        {
-            bson_t child;
-            bson_append_array_begin(bson, key.c_str(), key.size(), &child);
-
-            for(int i=0; i < (int)arr_props[key].size(); i++)
-            {
-                std::string arr_key = std::to_string(i);
-
-                bson_append_utf8(&child, arr_key.c_str(), arr_key.size(), arr_props[key][i].c_str(), arr_props[key][i].size());
-            }
-
-            bson_append_array_end(bson, &child);
-        }
-        else
-            bson_append_utf8(bson, key.c_str(), key.size(), val.c_str(), val.size());
-    }
-
-    void mongo_requester::append_properties_all_to(bson_t* bson)
-    {
-        for(auto& i : properties)
-        {
-            append_property_to(bson, i.first);
-        }
-
-        for(auto& i : arr_props)
-        {
-            append_property_to(bson, i.first);
-        }
-    }
-
-    /*void update_in_db_if_exists(mongo_lock_proxy& ctx, mongo_requester& set_to)
-    {
-        bson_t* to_select = bson_new();
-
         bson_t child;
+        bson_append_array_begin(bson, key.c_str(), key.size(), &child);
 
-        for(auto& i : properties)
+        for(int i=0; i < (int)arr_props[key].size(); i++)
         {
-            bson_append_document_begin(to_select, i.first.c_str(), i.first.size(), &child);
+            std::string arr_key = std::to_string(i);
 
-            BSON_APPEND_BOOL(&child, "$exists", true);
-
-            bson_append_document_end(to_select, &child);
+            bson_append_utf8(&child, arr_key.c_str(), arr_key.size(), arr_props[key][i].c_str(), arr_props[key][i].size());
         }
 
-        for(auto& i : arr_props)
-        {
-            bson_append_document_begin(to_select, i.first.c_str(), i.first.size(), &child);
+        bson_append_array_end(bson, &child);
+    }
+    else
+        bson_append_utf8(bson, key.c_str(), key.size(), val.c_str(), val.size());
+}
 
-            BSON_APPEND_BOOL(&child, "$exists", true);
-
-            bson_append_document_end(to_select, &child);
-        }
-
-        bson_t* to_update = bson_new();
-
-        BSON_APPEND_DOCUMENT_BEGIN(to_update, "$set", &child);
-
-        set_to.append_properties_all_to(&child);
-
-        bson_append_document_end(to_update, &child);
-
-        //std::cout << "JSON " << bson_as_json(to_select, nullptr) << " selector " << bson_as_json(to_update, nullptr) << std::endl;
-
-        ctx->update_bson_many(ctx->last_collection, to_select, to_update);
-
-        bson_destroy(to_update);
-        bson_destroy(to_select);
-    }*/
-
-    void mongo_requester::update_in_db_if_exact(mongo_lock_proxy& ctx, mongo_requester& set_to)
+void mongo_requester::append_properties_all_to(bson_t* bson)
+{
+    for(auto& i : properties)
     {
-        bson_t* to_select = bson_new();
-
-        append_properties_all_to(to_select);
-
-        bson_t* to_update = bson_new();
-
-        bson_t child;
-
-        BSON_APPEND_DOCUMENT_BEGIN(to_update, "$set", &child);
-
-        set_to.append_properties_all_to(&child);
-
-        bson_append_document_end(to_update, &child);
-
-        ctx->update_bson_many(ctx->last_collection, to_select, to_update);
-
-        bson_destroy(to_update);
-        bson_destroy(to_select);
+        append_property_to(bson, i.first);
     }
 
-    void mongo_requester::remove_all_from_db(mongo_lock_proxy& ctx)
+    for(auto& i : arr_props)
     {
-        bson_t* to_remove = bson_new();
-
-        append_properties_all_to(to_remove);
-
-        ctx->remove_bson(ctx->last_collection, to_remove);
-
-        bson_destroy(to_remove);
+        append_property_to(bson, i.first);
     }
+}
+
+/*void update_in_db_if_exists(mongo_lock_proxy& ctx, mongo_requester& set_to)
+{
+    bson_t* to_select = bson_new();
+
+    bson_t child;
+
+    for(auto& i : properties)
+    {
+        bson_append_document_begin(to_select, i.first.c_str(), i.first.size(), &child);
+
+        BSON_APPEND_BOOL(&child, "$exists", true);
+
+        bson_append_document_end(to_select, &child);
+    }
+
+    for(auto& i : arr_props)
+    {
+        bson_append_document_begin(to_select, i.first.c_str(), i.first.size(), &child);
+
+        BSON_APPEND_BOOL(&child, "$exists", true);
+
+        bson_append_document_end(to_select, &child);
+    }
+
+    bson_t* to_update = bson_new();
+
+    BSON_APPEND_DOCUMENT_BEGIN(to_update, "$set", &child);
+
+    set_to.append_properties_all_to(&child);
+
+    bson_append_document_end(to_update, &child);
+
+    //std::cout << "JSON " << bson_as_json(to_select, nullptr) << " selector " << bson_as_json(to_update, nullptr) << std::endl;
+
+    ctx->update_bson_many(ctx->last_collection, to_select, to_update);
+
+    bson_destroy(to_update);
+    bson_destroy(to_select);
+}*/
+
+void mongo_requester::update_in_db_if_exact(mongo_lock_proxy& ctx, mongo_requester& set_to)
+{
+    bson_t* to_select = bson_new();
+
+    append_properties_all_to(to_select);
+
+    bson_t* to_update = bson_new();
+
+    bson_t child;
+
+    BSON_APPEND_DOCUMENT_BEGIN(to_update, "$set", &child);
+
+    set_to.append_properties_all_to(&child);
+
+    bson_append_document_end(to_update, &child);
+
+    ctx->update_bson_many(ctx->last_collection, to_select, to_update);
+
+    bson_destroy(to_update);
+    bson_destroy(to_select);
+}
+
+void mongo_requester::update_one_in_db_if_exact(mongo_lock_proxy& ctx, mongo_requester& set_to)
+{
+    bson_t* to_select = bson_new();
+
+    append_properties_all_to(to_select);
+
+    bson_t* to_update = bson_new();
+
+    bson_t child;
+
+    BSON_APPEND_DOCUMENT_BEGIN(to_update, "$set", &child);
+
+    set_to.append_properties_all_to(&child);
+
+    bson_append_document_end(to_update, &child);
+
+    ctx->update_bson_one(to_select, to_update);
+
+    bson_destroy(to_update);
+    bson_destroy(to_select);
+}
+
+void mongo_requester::remove_all_from_db(mongo_lock_proxy& ctx)
+{
+    bson_t* to_remove = bson_new();
+
+    append_properties_all_to(to_remove);
+
+    ctx->remove_bson(ctx->last_collection, to_remove);
+
+    bson_destroy(to_remove);
+}

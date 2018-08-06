@@ -46,7 +46,7 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
 
     to_set.set_prop("joined_channels", joined_channels);
 
-    filter.update_in_db_if_exact(ctx, to_set);
+    filter.update_one_in_db_if_exact(ctx, to_set);
 
     global_user_cache& cache = get_global_user_cache();
     cache.overwrite_in_cache(name, *this);
