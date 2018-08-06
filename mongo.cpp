@@ -32,8 +32,28 @@ void lock_internal::lock(const std::string& debug_info, size_t who, mongoc_clien
     std::this_thread::yield();
     #endif
 
+    #ifdef ATTEMPT_FASTER
+    constexpr size_t max_retry = 5;
+    size_t cur_retry = 0;
+
+    while(locked.test_and_set(std::memory_order_acquire))
+    {
+        if(cur_retry >= max_retry)
+            Sleep(1);
+        else
+        {
+            cur_retry++;
+            std::this_thread::yield();
+        }
+    }
+
+    #endif // ATTEMPT_FASTER
+
     #ifndef DEADLOCK_DETECTION
-    while(locked.test_and_set(std::memory_order_acquire)){Sleep(1);}
+    while(locked.test_and_set(std::memory_order_acquire))
+    {
+        Sleep(1);
+    }
     #else
 
     {
