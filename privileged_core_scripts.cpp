@@ -4516,6 +4516,8 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     network_accessibility_info info;
 
+    bool visited_host_user = false;
+
     for(user& usr : special_users)
     {
         network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, n_count);
@@ -4541,6 +4543,9 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
 
         info = network_accessibility_info::merge_together(info, cur);
+
+        if(usr.name == target_user.name)
+            visited_host_user = true;
     }
 
     ///investigate this for being incredibly terrible
@@ -4560,16 +4565,15 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         info = network_accessibility_info::merge_together(info, cur);
 
-        /*for(auto& i : old_names)
-        {
-            for(auto& j : info.keys)
-            {
-                if(j.first == i)
-                {
-                    j.first += " (free)";
-                }
-            }
-        }*/
+        if(usr.name == target_user.name)
+            visited_host_user = true;
+    }
+
+    if(!visited_host_user)
+    {
+        network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, target_user.name, n_count);
+
+        info = network_accessibility_info::merge_together(info, cur);
     }
 
     if(!is_arr)
