@@ -4451,6 +4451,8 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
     std::string found_target = duk_safe_get_prop_string(ctx, -1, "user");
 
+    bool has_target = found_target.size() > 0;
+
     if(found_target == "")
         found_target = get_caller(ctx);
 
@@ -4518,55 +4520,58 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     bool visited_host_user = false;
 
-    for(user& usr : special_users)
+    if(!has_target)
     {
-        network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, n_count);
-
-        std::vector<std::string> connected = structure.get_connected_systems_from(usr.name);
-
-        if(connected.size() > 0)
+        for(user& usr : special_users)
         {
-            cur.extra_data_map[usr.name] += "(";
+            network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, n_count);
+
+            std::vector<std::string> connected = structure.get_connected_systems_from(usr.name);
+
+            if(connected.size() > 0)
+            {
+                cur.extra_data_map[usr.name] += "(";
+            }
+
+            for(int i=0; i < (int)connected.size(); i++)
+            {
+                if(i != (int)connected.size() - 1)
+                    cur.extra_data_map[usr.name] += colour_string(connected[i]) + ", ";
+                else
+                    cur.extra_data_map[usr.name] += colour_string(connected[i]);
+            }
+
+            if(connected.size() > 0)
+            {
+                cur.extra_data_map[usr.name] += ")";
+            }
+
+            info = network_accessibility_info::merge_together(info, cur);
+
+            if(usr.name == target_user.name)
+                visited_host_user = true;
         }
 
-        for(int i=0; i < (int)connected.size(); i++)
+        ///investigate this for being incredibly terrible
+        for(user& usr : all_users)
         {
-            if(i != (int)connected.size() - 1)
-                cur.extra_data_map[usr.name] += colour_string(connected[i]) + ", ";
-            else
-                cur.extra_data_map[usr.name] += colour_string(connected[i]);
+            if(playspace_network_manage.current_network_links(usr.name) > 0)
+                continue;
+
+            network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, n_count);
+
+            auto old_names = cur.ring_ordered_names;
+
+            if(playspace_network_manage.current_network_links(usr.name) == 0)
+            {
+                cur.extra_data_map[usr.name] = "(free)";
+            }
+
+            info = network_accessibility_info::merge_together(info, cur);
+
+            if(usr.name == target_user.name)
+                visited_host_user = true;
         }
-
-        if(connected.size() > 0)
-        {
-            cur.extra_data_map[usr.name] += ")";
-        }
-
-        info = network_accessibility_info::merge_together(info, cur);
-
-        if(usr.name == target_user.name)
-            visited_host_user = true;
-    }
-
-    ///investigate this for being incredibly terrible
-    for(user& usr : all_users)
-    {
-        if(playspace_network_manage.current_network_links(usr.name) > 0)
-            continue;
-
-        network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, n_count);
-
-        auto old_names = cur.ring_ordered_names;
-
-        if(playspace_network_manage.current_network_links(usr.name) == 0)
-        {
-            cur.extra_data_map[usr.name] = "(free)";
-        }
-
-        info = network_accessibility_info::merge_together(info, cur);
-
-        if(usr.name == target_user.name)
-            visited_host_user = true;
     }
 
     if(!visited_host_user)
