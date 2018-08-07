@@ -4710,6 +4710,22 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool has_queue = dukx_is_prop_truthy(ctx, -1, "queue");
     std::optional<user> my_user_opt = get_user(get_caller(ctx), get_thread_id(ctx));
 
+    double fraction = 1.f;
+
+    if(duk_has_prop_string(ctx, -1, "fraction"))
+        fraction = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "fraction", 1);
+    if(duk_has_prop_string(ctx, -1, "frac"))
+        fraction = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "frac", 1);
+    if(duk_has_prop_string(ctx, -1, "f"))
+        fraction = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "f", 1);
+
+    double move_offset = 0.f;
+
+    if(duk_has_prop_string(ctx, -1, "offset"))
+        move_offset = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "offset", 1);
+    if(duk_has_prop_string(ctx, -1, "o"))
+        move_offset = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "o", 1);
+
     if(!my_user_opt.has_value())
         return push_error(ctx, "No User, really bad error");
 
@@ -4770,6 +4786,14 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
             playspace_network_manage.unlink_all(my_user.name);
         }
 
+
+        vec3f current_pos;
+
+        if(!has_queue)
+            current_pos = my_user.get_local_pos();
+        else
+            current_pos = my_user.get_final_pos().position;
+
         vec3f end_pos;
 
         ///should really cancel the last move that was made and then make queue optional
@@ -4811,13 +4835,6 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(!low_level_structure_manage.in_same_system(targeting_user, my_user))
                 return push_error(ctx, "Not in the current system");
 
-            vec3f current_pos;
-
-            if(!has_queue)
-                current_pos = my_user.get_local_pos();
-            else
-                current_pos = my_user.get_final_pos().position;
-
             end_pos = targeting_user.get_local_pos();
 
             vec3f diff = current_pos - end_pos;
@@ -4833,6 +4850,12 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             return push_error(ctx, "Requires string or array");
         }
+
+        end_pos = (end_pos - current_pos) * fraction + current_pos;
+        vec3f diff = (end_pos - current_pos).norm();
+
+        ///move away from end pos
+        end_pos = end_pos - diff * move_offset;
 
         if(!has_queue)
         {
