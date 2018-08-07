@@ -294,6 +294,31 @@ int main()
     initialse_mongo_all();
     test_json();
 
+    //#define SERVER_FIRST_TIME_EVER_RELEASE
+    #ifdef SERVER_FIRST_TIME_EVER_RELEASE
+    #define FIXJOIN_CHANNELS
+    #define REGENERATE_LINKS_AND_USERS
+    #endif // SERVER_FIRST_TIME_EVER_RELEASE
+
+    //#define FIXJOIN_CHANNELS
+    #ifdef FIXJOIN_CHANNELS
+    run_in_user_context("core", "#msg.manage({create:\"local\"})", std::nullopt);
+    run_in_user_context("core", "#msg.manage({create:\"global\"})", std::nullopt);
+    run_in_user_context("core", "#msg.manage({create:\"help\"})", std::nullopt);
+    run_in_user_context("core", "#msg.manage({create:\"memes\"})", std::nullopt);
+
+    for_each_user([](user& usr)
+                  {
+                        run_in_user_context(usr.name, "#msg.manage({leave:\"0000\"})", std::nullopt);
+                        //run_in_user_context(usr.name, "#msg.manage({leave:\"memes\"})", std::nullopt);
+                        run_in_user_context(usr.name, "#msg.manage({leave:\"7001\"})", std::nullopt);
+                        run_in_user_context(usr.name, "#msg.manage({join:\"local\"})", std::nullopt);
+                        run_in_user_context(usr.name, "#msg.manage({join:\"global\"})", std::nullopt);
+                        run_in_user_context(usr.name, "#msg.manage({join:\"help\"})", std::nullopt);
+                        run_in_user_context(usr.name, "#msg.manage({join:\"memes\"})", std::nullopt);
+                  });
+    #endif // FIXJOIN_CHANNELS
+
     //dump_test();
 
     /*for_each_npc([](user& usr)
@@ -320,6 +345,14 @@ int main()
     //manage.erase_intersystem_specials();
     //manage.for_each(low_level_structure::ensure_intersystem_npcs, 3);
     //manage.for_each(low_level_structure::layout_internal_users);
+
+    #ifdef REGENERATE_LINKS_AND_USERS
+    manage.erase_intersystem_specials();
+    manage.for_each(low_level_structure::cleanup_invalid_users);
+
+    manage.harvest_existing_npcs();
+    manage.connect_systems_together();
+    #endif // REGENERATE_LINKS_AND_USERS
 
     //#define REGEN_SCRIPTS
     #ifdef REGEN_SCRIPTS
