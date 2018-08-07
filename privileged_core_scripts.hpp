@@ -206,18 +206,17 @@ duk_ret_t nodes__port(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl);
 //duk_ret_t net__links(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 #ifdef OLD_DEPRECATED
 duk_ret_t net__modify(priv_context& priv_ctx, duk_context* ctx, int sl);
-#endif // OLD_DEPRECATED
+duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl);
+duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t gal__map(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl);
-
+#endif // OLD_DEPRECATED
 
 #ifdef TESTING
 duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl);
@@ -322,15 +321,15 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(net__hack, 0),
     #ifdef OLD_DEPRECATED
     REGISTER_FUNCTION_PRIV(net__access, 0),
+    REGISTER_FUNCTION_PRIV(net__move, 0),
     #endif // OLD_DEPRECATED
     REGISTER_FUNCTION_PRIV(net__switch, 0),
-    REGISTER_FUNCTION_PRIV(net__move, 0),
     REGISTER_FUNCTION_PRIV(net__path, 0),
     #ifdef OLD_DEPRECATED
     REGISTER_FUNCTION_PRIV(net__modify, 0),
-    #endif // OLD_DEPRECATED
     REGISTER_FUNCTION_PRIV(gal__map, 1),
     REGISTER_FUNCTION_PRIV(gal__list, 4),
+    #endif // OLD_DEPRECATED
     #ifdef TESTING
     REGISTER_FUNCTION_PRIV(cheats__arm, 4),
     REGISTER_FUNCTION_PRIV(cheats__salvage, 4),
@@ -350,6 +349,13 @@ std::map<std::string, priv_func_info> privileged_functions
     #ifdef LIVE_DEBUGGING
     REGISTER_FUNCTION_PRIV(cheats__debug, 4),
     #endif // LIVE_DEBUGGING
+};
+
+///functions that are not displayed in scripts.core
+inline
+std::vector<std::string> hidden_functions
+{
+    {"net.map"},
 };
 
 std::map<std::string, std::vector<script_arg>> construct_core_args();

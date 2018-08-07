@@ -524,6 +524,9 @@ duk_ret_t scripts__core(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     for(auto& i : privileged_functions)
     {
+        if(std::find(hidden_functions.begin(), hidden_functions.end(), i.first) != hidden_functions.end())
+            continue;
+
         names.push_back("#" + i.first);
     }
 
@@ -3028,6 +3031,7 @@ double npc_name_to_angle(const std::string& str)
 ///make sys.map
 duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
+    #ifdef OLD_DEPRECATED
     COOPERATE_KILL();
 
     int w = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "w", 40);
@@ -3069,6 +3073,9 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     push_duk_val(ctx, built);
 
     return 1;
+    #else
+    return sys__view(priv_ctx, ctx, sl);
+    #endif
 }
 
 std::vector<nlohmann::json> get_net_view_data_arr(network_accessibility_info& info)
@@ -3636,7 +3643,7 @@ duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
         viewable_distance = playspace_network_manage.get_accessible_path_to(ctx, target, start, path_info::USE_LINKS, -1, minimum_stability);
 
     ///STRANGER DANGER
-    std::vector<std::string> link_path = playspace_network_manage.get_accessible_path_to(ctx, target, start, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY), -1, minimum_stability);
+    std::vector<std::string> link_path = playspace_network_manage.get_accessible_path_to(ctx, target, start, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, minimum_stability);
 
     //float total_path_strength = playspace_network_manage.get_total_path_link_strength(link_path);
 
