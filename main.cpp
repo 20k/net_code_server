@@ -349,13 +349,16 @@ int main()
 
     //manage.erase_intersystem_specials();
     //manage.for_each(low_level_structure::ensure_intersystem_npcs, 3);
-    //manage.for_each(low_level_structure::layout_internal_users);
 
+    //#define REGENERATE_LINKS_AND_USERS
     #ifdef REGENERATE_LINKS_AND_USERS
     manage.erase_intersystem_specials();
     manage.for_each(low_level_structure::cleanup_invalid_users);
 
     manage.harvest_existing_npcs();
+
+    manage.for_each(low_level_structure::layout_internal_users);
+
     manage.connect_systems_together();
     #endif // REGENERATE_LINKS_AND_USERS
 
