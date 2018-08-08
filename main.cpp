@@ -294,7 +294,7 @@ int main()
     initialse_mongo_all();
     test_json();
 
-    //#define SERVER_FIRST_TIME_EVER_RELEASE
+    #define SERVER_FIRST_TIME_EVER_RELEASE
     #ifdef SERVER_FIRST_TIME_EVER_RELEASE
     #define FIXJOIN_CHANNELS
     #define REGENERATE_LINKS_AND_USERS

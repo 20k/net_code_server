@@ -4460,7 +4460,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    std::string str = duk_safe_get_prop_string(ctx, -1, "sys");
+    //std::string str = duk_safe_get_prop_string(ctx, -1, "sys");
     bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
     std::string found_target = duk_safe_get_prop_string(ctx, -1, "user");
 
@@ -4482,7 +4482,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!dukx_is_prop_truthy(ctx, -1, "scale"))
     {
         if(has_target)
-            found_scale = 1.f;
+            found_scale = 0.5f;
         else
             found_scale = 0.5f;
     }
@@ -4520,10 +4520,10 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::optional<low_level_structure*> opt_structure;
 
-    if(str == "")
+    //if(str == "")
         opt_structure = low_level_structure_manage.get_system_of(my_user);
-    else
-        opt_structure = low_level_structure_manage.get_system_from_name(str);
+    /*else
+        opt_structure = low_level_structure_manage.get_system_from_name(str);*/
 
     if(!opt_structure.has_value())
         return push_error(ctx, "You are lost, there is no help for you now");

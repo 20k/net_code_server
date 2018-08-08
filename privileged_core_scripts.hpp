@@ -218,11 +218,12 @@ duk_ret_t gal__map(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl);
 #endif // OLD_DEPRECATED
 
-#ifdef TESTING
 duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl);
+
+#ifdef TESTING
 duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl);
 #endif // TESTING
 
