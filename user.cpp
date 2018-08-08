@@ -796,7 +796,7 @@ void user::pump_notifications(int lock_id)
         ///handle any activation requests
         if(current_time >= q.timestamp && q.is_activate())
         {
-            bool needs_erase = false;
+            //bool needs_erase = false;
 
             #ifdef DEBUG_WARP
             std::cout <<" hi there! " << name << std::endl;

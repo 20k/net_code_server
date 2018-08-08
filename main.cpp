@@ -331,6 +331,8 @@ int main()
     npc_manager& npc_manage = get_global_npc_manager();
     npc_manage.create_npcs_up_to(MAX_NPC_COUNT);
 
+    //npc_manage.delete_npcs_over(MAX_NPC_COUNT);
+
     low_level_structure_manager& manage = get_global_low_level_structure_manager();
     //manage.erase_intersystem_specials();
     //manage.for_each(low_level_structure::cleanup_invalid_users);
