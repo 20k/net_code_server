@@ -385,6 +385,7 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
         return 1;
     }
 
+    #ifdef XFER_PATHS
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
     std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, to, from, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, amount / cash_to_destroy_link);
@@ -395,6 +396,7 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
     std::string leak_msg = "Xfer'd " + std::to_string(amount);
 
     playspace_network_manage.modify_path_per_link_strength_with_logs(path, -amount / cash_to_destroy_link, {leak_msg}, get_thread_id(ctx));
+    #endif // 0
 
     {
         mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
@@ -1655,16 +1657,20 @@ duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::st
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
+    #ifdef XFER_PATHS
     std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, to, from, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, 1.f / items_to_destroy_link);
 
     if(path.size() == 0)
         return push_error(ctx, "User does not exist or is disconnected");
+    #endif // XFER_PATHS
 
     item placeholder;
 
     if(placeholder.transfer_from_to_by_index(item_idx, from, to, get_thread_id(ctx)))
     {
+        #ifdef XFER_PATHS
         playspace_network_manage.modify_path_per_link_strength_with_logs(path, -1.f / items_to_destroy_link, {"Xfer'd Item"}, get_thread_id(ctx));
+        #endif // XFER_PATHS
 
         std::string xfer = "`NItem xfer` | from: " + from  + ", to: " + to + ", index: " + std::to_string(item_idx);
 
@@ -2739,7 +2745,7 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string usage = "Usage: " + make_key_val("swap", "[idx1, idx2]");
 
     ///reorder
-    bool has_arr = dukx_is_prop_truthy(ctx, -1, "swap");
+    bool has_swap = dukx_is_prop_truthy(ctx, -1, "swap");
 
     user usr;
 
@@ -2762,7 +2768,7 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         nodes.load_from_db(node_ctx, get_caller(ctx));
     }
 
-    if(has_arr)
+    if(has_swap)
     {
         if(sl > 1)
             return push_error(ctx, "Must be called with a sec level of 1 to swap");
@@ -2857,6 +2863,13 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         for(int i=0; i < (int)user_node_info::TYPE_COUNT; i++)
         {
             accum += user_node_info::short_name[i] + ": " + user_node_info::long_names[i];
+
+            user_node* node = nodes.type_to_node((user_node_t)i);
+
+            if(node != nullptr)
+            {
+                accum += " (" + node->get_NID() + ")";
+            }
 
             if(i != user_node_info::TYPE_COUNT-1)
                 accum += ", ";
