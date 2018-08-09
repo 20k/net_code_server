@@ -438,7 +438,7 @@ void write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
                 //if(next_command != "")
                 //    printf("sending test write\n");
 
-                if(next_command == "" && all_shared->type!= connection_type::HTTP)
+                if(next_command == "" && all_shared->type != connection_type::HTTP)
                     continue;
 
                 ping_clock.restart();
@@ -462,7 +462,8 @@ void write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
             {
                 ping_clock.restart();
 
-                all_shared->msock->ping("client_ping {ping:1}");
+                if(all_shared->msock->write("command_ping"))
+                    break;
             }
 
             if(!all_shared->msock->is_open())
