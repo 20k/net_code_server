@@ -4960,11 +4960,16 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!target_sys_opt.has_value() || !my_sys_opt.has_value())
         return push_error(ctx, "Well then you are lost (high ground!)");
 
-    if(target_sys_opt.value() != my_sys_opt.value())
-        return push_error(ctx, "Not in the same system");
+    if(!(target.is_npc() && target.is_allowed_user(get_caller(ctx))))
+    {
+        if(target_sys_opt.value() != my_sys_opt.value())
+            return push_error(ctx, "Not in the same system");
 
-    if(!playspace_network_manage.has_accessible_path_to(ctx, target.name, my_user.name, (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
-        return push_error(ctx, "No path");
+        if(!playspace_network_manage.has_accessible_path_to(ctx, target.name, my_user.name, (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
+            return push_error(ctx, "No path");
+    }
+
+    bool in_same_system = target_sys_opt.value() == my_sys_opt.value();
 
     low_level_structure& current_sys = *my_sys_opt.value();
 
@@ -5008,7 +5013,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     array_data["is_long_distance_traveller"] = is_warpy;
 
-    if(is_warpy)
+    if(is_warpy && in_same_system)
     {
         std::vector<std::string> connected = playspace_network_manage.get_links(target.name);
         std::vector<user> connected_users = load_users(connected, get_thread_id(ctx));
@@ -5121,7 +5126,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             std::cout << i << std::endl;
         }*/
 
-        if(!has_users && get_caller(ctx) != target.name)
+        if(!has_users && get_caller(ctx) != target.name && in_same_system)
         {
             if(!playspace_network_manage.is_linked(my_user.name, target.name))
             {
@@ -5230,7 +5235,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
-    if(!has_users)
+    if(!has_users && in_same_system)
     {
         ///must have a path for us to be able to access the npc
         if(!has_modify)
@@ -5339,7 +5344,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                     if(!target.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, has_confirm, get_caller(ctx), add_price))
                         return 1;
 
-                    total_msg += make_success_col("Added User") + ": " + colour_string(get_caller(ctx)) + "\n";
+                    total_msg += make_success_col("Added User") + ": " + colour_string(add_user) + "\n";
 
                     mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
 
@@ -5369,7 +5374,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                     if(!target.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, has_confirm, get_caller(ctx), remove_price))
                         return 1;
 
-                    total_msg += make_success_col("Removed User") + ": " + colour_string(get_caller(ctx)) + "\n";
+                    total_msg += make_success_col("Removed User") + ": " + colour_string(remove_user) + "\n";
 
                     mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
 
