@@ -417,6 +417,10 @@ void write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
 {
     lg::log("write_queue\n");
 
+    sf::Clock ping_clock;
+    ///time after which i should ping
+    double ping_time_ms = 2000;
+
     try
     {
         while(1)
@@ -437,6 +441,8 @@ void write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
                 if(next_command == "" && all_shared->type!= connection_type::HTTP)
                     continue;
 
+                ping_clock.restart();
+
                 if(next_command.size() > MAX_MESSAGE_SIZE)
                 {
                     next_command.resize(MAX_MESSAGE_SIZE);
@@ -450,6 +456,13 @@ void write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
             else
             {
                 Sleep(1);
+            }
+
+            if(ping_clock.getElapsedTime().asMilliseconds() > ping_time_ms)
+            {
+                ping_clock.restart();
+
+                all_shared->msock->ping("client_ping {ping:1}");
             }
 
             if(!all_shared->msock->is_open())
