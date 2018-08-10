@@ -4658,6 +4658,14 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
             j["links"] = connections;
             j["stabilities"] = stabs;
 
+            bool is_special = std::find_if(special_users.begin(), special_users.end(), [&](user& u1){return u1.name == name;}) != special_users.end();
+
+            if(is_special)
+            {
+                j["is_long_distance_traveller"] = true;
+                j["connected_systems"] = structure.get_connected_systems_from(name);
+            }
+
             all_npc_data.push_back(j);
         }
 
