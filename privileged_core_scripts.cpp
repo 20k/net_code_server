@@ -3384,6 +3384,7 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
     COOPERATE_KILL();
 
     std::string target = duk_safe_get_prop_string(ctx, -1, "user");
+    bool has_local = dukx_is_prop_truthy(ctx, -1, "local");
 
     if(target == "")
         return push_error(ctx, "Usage: net.switch({user:<username>})");
@@ -3457,6 +3458,7 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     usr.call_stack = call_stack;
 
+    if(!has_local)
     {
         mongo_lock_proxy user_db = get_global_mongo_user_info_context(get_thread_id(ctx));
 

@@ -888,9 +888,15 @@ std::string hex_to_binary(const std::string& in)
 
     int len = in.size();
 
+    if((len % 2) != 0)
+        return "Invalid Hex (non even size)";
+
     for(int i=0; i < len; i+=2)
     {
         int next = i + 1;
+
+        if(next >= len)
+            return "Invalid Hex (non even size)";
 
         char cchar = in[i];
         char nchar = next < len ? in[next] : '0';
