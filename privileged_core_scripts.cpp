@@ -1057,6 +1057,14 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<nlohmann::json> found = fetch_from_db(mongo_ctx, request, opt);
 
+    for(nlohmann::json& j : found)
+    {
+        if(j.find("_id") != j.end())
+        {
+            j.erase(j.find("_id"));
+        }
+    }
+
     if(!pretty)
     {
         push_duk_val(ctx, found);
