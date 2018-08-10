@@ -1336,20 +1336,6 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
     printf("yay command\n");
 
-    {
-        mongo_lock_proxy debug_ctx = get_global_mongo_user_info_context(-2);
-
-        user usr;
-        usr.load_from_db(debug_ctx, all_shared->state.get_user_name());
-
-        auto call_stack = usr.get_call_stack();
-
-        for(auto& i : call_stack)
-        {
-            std::cout << i << std::endl;
-        }
-    }
-
     if(starts_with(str, "user "))
     {
         if(all_shared->state.get_auth() == "")
