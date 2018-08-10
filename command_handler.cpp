@@ -392,10 +392,14 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             shared_data& shared = all_shared.value()->shared;
 
             dukx_put_pointer(ctx, &shared, "shared_data_ptr");
+            ///taking a pointer to a shared pointer passed in by value is a great idea
+            ///right?
+            dukx_put_pointer(ctx, &all_shared.value()->state, "command_handler_state_pointer");
         }
         else
         {
             dukx_put_pointer(ctx, nullptr, "shared_data_ptr");
+            dukx_put_pointer(ctx, nullptr, "command_handler_state_pointer");
         }
 
         unsafe_info inf;
@@ -1331,6 +1335,20 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
     is_auth = false;
 
     printf("yay command\n");
+
+    {
+        mongo_lock_proxy debug_ctx = get_global_mongo_user_info_context(-2);
+
+        user usr;
+        usr.load_from_db(debug_ctx, all_shared->state.get_user_name());
+
+        auto call_stack = usr.get_call_stack();
+
+        for(auto& i : call_stack)
+        {
+            std::cout << i << std::endl;
+        }
+    }
 
     if(starts_with(str, "user "))
     {
