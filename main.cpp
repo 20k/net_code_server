@@ -554,6 +554,30 @@ int main()
             continue;
         }
 
+        if(starts_with(command, "#down"))
+        {
+            std::string item_id;
+
+            std::cout << "enter full item id, eg phobetor.hack\n";
+
+            std::getline(std::cin, item_id);
+
+            item id;
+
+            {
+                mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
+
+                if(!id.load_from_db(mongo_ctx, item_id))
+                {
+                    std::cout << "no such item with id " << item_id << std::endl;
+                    continue;
+                }
+            }
+
+            write_all_bin(item_id, id.get_prop("unparsed_source"));
+            continue;
+        }
+
         std::cout << "Are you sure? y/n" << std::endl;
 
         std::string sure;
