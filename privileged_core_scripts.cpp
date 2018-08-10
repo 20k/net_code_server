@@ -747,6 +747,9 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
     std::string msg = duk_safe_get_prop_string(ctx, -1, "msg");
 
+    if(channel == "")
+        channel = "global";
+
     if(channel == "" || msg == "" || channel.size() >= 10 || msg.size() >= 10000)
     {
         push_error(ctx, "Usage: #hs.msg.send({channel:\"<name>\", msg:\"msg\"})");
@@ -1005,14 +1008,12 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
         num = 10;
 
     if(channel.size() == 0)
-        channel = "0000";
+        channel = "global";
 
     if(num >= 100)
     {
         return push_error(ctx, "Count cannot be >= than 100");
     }
-
-    std::cout << "fchannel " << channel << std::endl;
 
     if(!is_tell)
     {
@@ -1028,6 +1029,13 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(channel.size() > 50)
         channel.resize(50);
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+
+        if(!user_in_channel(mongo_ctx, get_caller(ctx), channel))
+            return push_error(ctx, "User not in channel or doesn't exist");
+    }
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
     mongo_ctx.change_collection(get_caller(ctx));
