@@ -32,8 +32,8 @@ struct command_handler_state
     std::string get_auth();
     void set_auth(const std::string& str);
 
-    void set_user(const user& usr);
-    user get_user();
+    void set_user_name(const std::string& usr);
+    std::string get_user_name();
 
     void set_key_state(int script_id, const std::string& str, bool is_down);
     std::map<std::string, bool> get_key_state(int script_id);
@@ -58,7 +58,8 @@ struct command_handler_state
 
 private:
     std::string auth;
-    user current_user;
+    //user current_user;
+    std::string current_user_name;
 
     std::map<int, std::pair<int, int>> received_sizes;
     std::mutex size_lock;

@@ -14,18 +14,18 @@ void command_handler_state::set_auth(const std::string& str)
     auth = str;
 }
 
-void command_handler_state::set_user(const user& usr)
+void command_handler_state::set_user_name(const std::string& usr)
 {
     safe_lock_guard guard(command_lock);
 
-    current_user = usr;
+    current_user_name = usr;
 }
 
-user command_handler_state::get_user()
+std::string command_handler_state::get_user_name()
 {
     safe_lock_guard guard(command_lock);
 
-    return current_user;
+    return current_user_name;
 }
 
 void command_handler_state::set_key_state(int script_id, const std::string& str, bool is_down)

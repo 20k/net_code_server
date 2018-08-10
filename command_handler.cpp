@@ -899,24 +899,24 @@ std::string hex_to_binary(const std::string& in)
     return ret;
 }
 
-void on_create_user(user& usr)
+void on_create_user(const std::string& usr)
 {
-    run_in_user_context(usr.name, "#msg.manage({join:\"local\"})", std::nullopt);
-    run_in_user_context(usr.name, "#msg.manage({join:\"global\"})", std::nullopt);
-    run_in_user_context(usr.name, "#msg.manage({join:\"help\"})", std::nullopt);
-    run_in_user_context(usr.name, "#msg.manage({join:\"memes\"})", std::nullopt);
+    run_in_user_context(usr, "#msg.manage({join:\"local\"})", std::nullopt);
+    run_in_user_context(usr, "#msg.manage({join:\"global\"})", std::nullopt);
+    run_in_user_context(usr, "#msg.manage({join:\"help\"})", std::nullopt);
+    run_in_user_context(usr, "#msg.manage({join:\"memes\"})", std::nullopt);
 
-    {
+    /*{
         mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
-        usr.load_from_db(ctx, usr.name);
-    }
+        usr.load_from_db(ctx, name);
+    }*/
 
     user_first_time_network_setup(get_global_playspace_network_manager(), usr);
 
-    {
+    /*{
         mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
         usr.load_from_db(ctx, usr.name);
-    }
+    }*/
 }
 
 std::string get_update_message()
@@ -1378,7 +1378,7 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
                     return make_error_col("Incorrect Auth, someone else has registered this account or you are using a different pc and key.key file");
                 }
 
-                all_shared->state.set_user(fnd);
+                all_shared->state.set_user_name(fnd.name);
             }
 
             /*for(auto& i : allowed)
@@ -1430,7 +1430,7 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
         }
         else
         {
-            all_shared->state.set_user(user());
+            all_shared->state.set_user_name("");
 
             {
                 auto fauth = all_shared->state.get_auth();
@@ -1470,14 +1470,14 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
                     new_user.overwrite_user_in_db(mongo_user_info);
                 }
 
-                all_shared->state.set_user(new_user);
+                all_shared->state.set_user_name(new_user.name);
             }
 
-            user cur = all_shared->state.get_user();
+            std::string cur_name = all_shared->state.get_user_name();
 
-            on_create_user(cur);
+            on_create_user(cur_name);
 
-            all_shared->state.set_user(cur);
+            all_shared->state.set_user_name(cur_name);
 
             return make_success_col("Constructed new User");
         }
@@ -1505,7 +1505,7 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
         std::string scriptname = strip_whitespace(split_string[1]);
 
-        std::string fullname = all_shared->state.get_user().name + "." + scriptname;
+        std::string fullname = all_shared->state.get_user_name() + "." + scriptname;
 
         if(!is_valid_full_name_string(fullname))
         {
@@ -1561,7 +1561,7 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
             user cur;
 
             {
-                auto uname = all_shared->state.get_user().name;
+                auto uname = all_shared->state.get_user_name();
 
                 mongo_lock_proxy user_locks = get_global_mongo_user_info_context(-2);
 
@@ -1608,13 +1608,13 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
         std::string scriptname = strip_whitespace(split_string[1]);
 
-        std::string fullname = all_shared->state.get_user().name + "." + scriptname;
+        std::string fullname = all_shared->state.get_user_name() + "." + scriptname;
 
         if(!is_valid_full_name_string(fullname))
             return make_error_col("Invalid script name " + fullname);
 
         {
-            auto uname = all_shared->state.get_user().name;
+            auto uname = all_shared->state.get_user_name();
 
             mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
@@ -1648,13 +1648,13 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
         std::string scriptname = strip_whitespace(split_string[1]);
 
-        std::string fullname = all_shared->state.get_user().name + "." + scriptname;
+        std::string fullname = all_shared->state.get_user_name() + "." + scriptname;
 
         if(!is_valid_full_name_string(fullname))
             return make_error_col("Invalid script name " + fullname);
 
         {
-            auto uname = all_shared->state.get_user().name;
+            auto uname = all_shared->state.get_user_name();
 
             mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
@@ -1765,7 +1765,7 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
     }
     else
     {
-        auto name = all_shared->state.get_user().name;
+        auto name = all_shared->state.get_user_name();
 
         {
             mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
@@ -2192,7 +2192,7 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
     std::string client_scriptargs = "client_scriptargs ";
     std::string client_scriptargs_json = "client_scriptargs_json ";
 
-    std::string current_user = all_shared->state.get_user().name;
+    std::string current_user = all_shared->state.get_user_name();
     std::string current_auth = all_shared->state.get_auth();
 
     user found;
@@ -2203,22 +2203,16 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
 
         if(!found.load_from_db(ctx, current_user))
         {
-            user usr;
-            usr.name = "";
-
-            all_shared->state.set_user(usr);
+            all_shared->state.set_user_name("");
 
             return "command Invalid User";
         }
 
         if(found.auth != current_auth)
         {
-            user usr;
-            usr.name = "";
+            all_shared->state.set_user_name("");
 
-            all_shared->state.set_user(usr);
-
-            return "Invalid Auth";
+            return "command Invalid Auth";
         }
     }
 
@@ -2290,31 +2284,34 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
             return "";
 
         {
-            auto ut = all_shared->state.get_user();
-
             mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
-            if(!ut.exists(mongo_user_info, current_user))
+            user u1;
+
+            if(!u1.load_from_db(mongo_user_info, current_user))
                 return "";
 
-            //state.current_user.load_from_db(mongo_user_info, state.current_user.name);
-
-            user u1;
-            u1.load_from_db(mongo_user_info, current_user);
-
-            all_shared->state.set_user(u1);
+            all_shared->state.set_user_name(u1.name);
         }
 
-        user cur = all_shared->state.get_user();
+        std::string cur_name = all_shared->state.get_user_name();
 
         if(starts_with(str, client_poll_json))
         {
-             auto ret = handle_client_poll_json(cur);
+            user usr;
 
-             all_shared->state.set_user(cur);
+            {
+                mongo_lock_proxy user_info = get_global_mongo_user_info_context(-2);
 
-             return ret;
+                if(!usr.load_from_db(user_info, cur_name))
+                    return "command error invalid username in client_poll_json";
+            }
+
+            auto ret = handle_client_poll_json(usr);
+
+            return ret;
         }
+
         if(starts_with(str, client_poll))
         {
             /*auto ret = handle_client_poll(cur);
