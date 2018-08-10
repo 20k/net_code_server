@@ -1055,52 +1055,11 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
     opt["sort"] = time_opt;
     opt["limit"] = num;
 
-    //std::cout << "FETCH OPT " << opt.dump() << std::endl;
-
-    //std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
-
-    //std::vector<std::string> json_found = mongo_ctx->find_json(get_caller(ctx), request.dump(), opt.dump());
-
     std::vector<nlohmann::json> found = fetch_from_db(mongo_ctx, request, opt);
-
-    //std::cout << "found size " << found.size() << std::endl;
-
-    /*for(auto& i : json_found)
-    {
-        nlohmann::json j = nlohmann::json::parse(i);
-
-        found.push_back(j);
-    }*/
 
     if(!pretty)
     {
-        duk_push_array(ctx);
-
-        int cur_count = 0;
-        for(nlohmann::json& i : found)
-        {
-            duk_push_object(ctx);
-
-            for(auto it = i.begin(); it != i.end(); it++)
-            {
-                if(it.key() == "_id")
-                    continue;
-
-                put_duk_keyvalue(ctx, (std::string)it.key(), (std::string)it.value());
-            }
-
-            /*for(auto& kk : i.properties)
-            {
-                std::string key = kk.first;
-                std::string value = kk.second;
-
-                put_duk_keyvalue(ctx, key, value);
-            }*/
-
-            duk_put_prop_index(ctx, -2, cur_count);
-
-            cur_count++;
-        }
+        push_duk_val(ctx, found);
     }
     else
     {
