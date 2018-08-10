@@ -1055,7 +1055,7 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
     opt["sort"] = time_opt;
     opt["limit"] = num;
 
-    std::cout << "FETCH OPT " << opt.dump() << std::endl;
+    //std::cout << "FETCH OPT " << opt.dump() << std::endl;
 
     //std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
 
