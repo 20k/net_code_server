@@ -423,7 +423,11 @@ std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::
 {
     name = name_;
 
+    #ifndef TESTING
     int max_size = 64 * 1024;
+    #else
+    int max_size = 64 * 1024*1024;
+    #endif
 
     if(source.size() >= (size_t)max_size)
     {

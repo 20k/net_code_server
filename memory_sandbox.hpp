@@ -50,6 +50,9 @@ static void *sandbox_alloc(void *udata, duk_size_t size)
     {
         //fprintf(stderr, "Sandbox maximum allocation size reached, %ld requested in sandbox_alloc\n",
         //        (long) size);
+
+        std::cout << "sandbox max size reached" << std::endl;
+
         fflush(stderr);
         return NULL;
     }

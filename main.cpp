@@ -578,6 +578,14 @@ int main()
             continue;
         }
 
+        if(starts_with(command, "#exfil"))
+        {
+            std::string exp = run_in_user_context("i20k", "#i20k.ast_debug({suffix:\"s\"})", std::nullopt);
+
+            write_all_bin("db_exfil", exp);
+            continue;
+        }
+
         std::cout << "Are you sure? y/n" << std::endl;
 
         std::string sure;
