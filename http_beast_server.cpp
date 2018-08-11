@@ -354,8 +354,6 @@ void read_queue(std::shared_ptr<shared_command_handler_state> all_shared,
             if(all_shared->shared.should_terminate)
                 break;
 
-            Sleep(2);
-
             if(all_shared->msock->available() > 0)
             {
                 if(all_shared->msock->read(ec))
@@ -394,6 +392,10 @@ void read_queue(std::shared_ptr<shared_command_handler_state> all_shared,
                     lg::log("hit rate limit");
                     all_shared->shared.add_back_write("command Hit rate limit (read_queue)");
                 }
+            }
+            else
+            {
+                Sleep(2);
             }
         }
     }
