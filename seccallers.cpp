@@ -225,8 +225,6 @@ duk_ret_t db_find(duk_context* ctx)
     duk_push_c_function(ctx, db_find_one, 0);
     duk_put_prop_string(ctx, -2, "first");*/
 
-
-
     dukx_push_c_function_with_hidden(ctx, db_find_all, 0, "script_host", dukx_get_hidden_prop_on_this(ctx, "script_host"));
     duk_put_prop_string(ctx, -2, "array");
 

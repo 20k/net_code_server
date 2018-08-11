@@ -5,7 +5,7 @@
 
 #define DUK_SINGLE_FILE
 
-#define DUK_VERSION                       20200L
+#define DUK_VERSION                       20300L
 
 #define DUK_GIT_COMMIT                    "external"
 #define DUK_GIT_DESCRIBE                  "external"
