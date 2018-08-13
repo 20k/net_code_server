@@ -3880,12 +3880,16 @@ duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, cons
         }
         else
         {
-            vec3f vdist = (u2.pos - u1.pos);
+            vec3f vdist = (u2.get_local_pos() - u1.get_local_pos());
 
             double dist = vdist.length();
 
+            //std::cout << dist << std::endl;
+
             ///30 cash per network unit
             price += (dist / ESEP) * 30.f;
+
+            //std::cout << "price " << price << std::endl;
         }
 
         if(price != 0)
