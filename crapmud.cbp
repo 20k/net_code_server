@@ -26,7 +26,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-O2" />
+					<Add option="-O3" />
 					<Add option="-march=nehalem" />
 					<Add option="-DLOCAL_IP" />
 				</Compiler>
@@ -37,7 +37,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-O2" />
+					<Add option="-O3" />
 					<Add option="-g" />
 					<Add option="-march=nehalem" />
 					<Add option="-DEXTERN_IP" />
@@ -54,7 +54,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-O2" />
+					<Add option="-O3" />
 					<Add option="-march=nehalem" />
 					<Add option="-DLOCAL_IP" />
 					<Add option="-DTESTING" />
@@ -157,6 +157,7 @@
 		<Unit filename="deps/secret/secret.hpp" />
 		<Unit filename="deps/secret/structure.cpp" />
 		<Unit filename="deps/secret/structure.hpp" />
+		<Unit filename="duk_object_functions.cpp" />
 		<Unit filename="duk_object_functions.hpp" />
 		<Unit filename="duktape.cpp" />
 		<Unit filename="global_caching.hpp" />
