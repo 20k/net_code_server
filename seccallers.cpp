@@ -331,6 +331,23 @@ duk_ret_t set_start_window_size(duk_context* ctx)
     return 0;
 }
 
+duk_ret_t set_realtime_framerate_limit(duk_context* ctx)
+{
+    COOPERATE_KILL();
+
+    if(!duk_is_number(ctx, -1))
+        return push_error(ctx, "Usage: set_realtime_framerate_limit(limit)");
+
+    double val = duk_get_number(ctx, -1);
+
+    if(!isfinite(val))
+        return push_error(ctx, "Must be finite");
+
+    set_global_number(ctx, "framerate_limit", val);
+
+    return 0;
+}
+
 duk_ret_t is_key_down(duk_context* ctx)
 {
     COOPERATE_KILL();
@@ -375,6 +392,7 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
     quick_register_generic(ctx, "caller_stack", caller_stack);
     quick_register(ctx, "script_host", script_host.c_str());
     quick_register(ctx, "script_ending", script_ending.c_str());
+    set_global_number(ctx, "framerate_limit", 60);
 
     {
         safe_lock_guard guard(shim_lock);
@@ -1049,6 +1067,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     inject_c_function(ctx, is_key_down, "is_key_down", 1);
     inject_c_function(ctx, mouse_get_position, "mouse_get_position", 0);
     inject_c_function(ctx, get_string_col, "get_string_col", 1);
+    inject_c_function(ctx, set_realtime_framerate_limit, "set_realtime_framerate_limit", 1);
 
     #ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);

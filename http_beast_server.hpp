@@ -3,7 +3,7 @@
 
 #include <atomic>
 
-#define MAX_MESSAGE_SIZE 200*200
+#define MAX_MESSAGE_SIZE 400*400
 
 struct global_state
 {

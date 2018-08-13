@@ -312,6 +312,31 @@ void set_global_int(duk_context* ctx, const std::string& name, int32_t val)
 }
 
 inline
+void set_global_number(duk_context* ctx, const std::string& name, double val)
+{
+    duk_push_heap_stash(ctx);
+
+    duk_push_number(ctx, val);
+    duk_put_prop_string(ctx, -2, name.c_str());
+
+    duk_pop_n(ctx, 1);
+}
+
+inline
+double get_global_number(duk_context* ctx, const std::string& name)
+{
+    duk_push_heap_stash(ctx);
+
+    duk_get_prop_string(ctx, -1, name.c_str());
+
+    double val = duk_require_number(ctx, -1);
+
+    duk_pop_n(ctx, 2);
+
+    return val;
+}
+
+inline
 void set_global_string(duk_context* ctx, const std::string& name, const std::string& val)
 {
     duk_push_heap_stash(ctx);
