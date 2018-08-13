@@ -86,6 +86,7 @@ struct user
 
     std::string fetch_sector();
 
+    timestamp_move_queue get_timestamp_queue();
     space_pos_t get_local_pos() const;
     timestamped_position get_final_pos() const;
     void set_local_pos(space_pos_t pos, int replace_item_at = -1);

@@ -4715,6 +4715,7 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool has_confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
     bool has_stop = dukx_is_prop_truthy(ctx, -1, "stop");
     bool has_queue = dukx_is_prop_truthy(ctx, -1, "queue");
+    bool has_array = dukx_is_prop_truthy(ctx, -1, "array");
     std::optional<user> my_user_opt = get_user(get_caller(ctx), get_thread_id(ctx));
 
     double fraction = 1.f;
@@ -4771,7 +4772,87 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
                                               make_key_val("to", "\"system\"") + ", or " +
                                               make_key_val("to", "[x, y, z]");
 
-        push_duk_val(ctx, str + "\n" + msg);
+
+        std::vector<nlohmann::json> found_json;
+
+        nlohmann::json all_json;
+
+        size_t current_time = get_wall_time();
+
+        {
+            nlohmann::json j;
+            j["x"] = pos.x();
+            j["y"] = pos.y();
+            j["z"] = pos.z();
+            j["timestamp_ms"] = current_time;
+
+            all_json["current"] = j;
+        }
+
+        std::string remaining_string;
+
+        timestamp_move_queue my_queue = my_user.get_timestamp_queue();
+        my_queue.cleanup_old_elements(current_time);
+
+        for(int i=0; i < (int)my_queue.timestamp_queue.size(); i++)
+        {
+            timestamped_position& position = my_queue.timestamp_queue[i];
+
+            if(current_time >= position.timestamp)
+                continue;
+
+            nlohmann::json j;
+
+            if(position.is_move())
+            {
+                remaining_string += "Position: " +
+                                                to_string_with_enforced_variable_dp(position.position.x(), 2) + " " +
+                                                to_string_with_enforced_variable_dp(position.position.y(), 2) + " " +
+                                                to_string_with_enforced_variable_dp(position.position.z(), 2) + " in " +
+                                                to_string_with_enforced_variable_dp((position.timestamp - current_time) / 1000., 2) + + "s";
+
+                j["type"] = "move";
+
+                j["x"] = position.position.x();
+                j["y"] = position.position.y();
+                j["z"] = position.position.z();
+
+                j["timestamp_ms"] = position.timestamp;
+                j["finish_in_ms"] = position.timestamp - current_time;
+
+                found_json.push_back(j);
+            }
+
+            if(position.is_activate())
+            {
+                remaining_string += "Move to System: " + position.system_to_arrive_at;
+
+                j["type"] = "activate";
+                j["system_to_arrive_at"] = position.system_to_arrive_at;
+
+                found_json.push_back(j);
+            }
+
+            if(i != (int)my_queue.timestamp_queue.size()-1)
+                remaining_string += "\n";
+        }
+
+        if(remaining_string != "")
+        {
+            remaining_string = "\nMove Queue:\n" + remaining_string;
+        }
+
+        all_json["queue"] = found_json;
+
+        if(!has_array)
+        {
+            push_duk_val(ctx, str + "\n" + msg + remaining_string);
+        }
+        else
+        {
+            push_duk_val(ctx, all_json);
+        }
+
         return 1;
     }
     else

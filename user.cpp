@@ -669,6 +669,11 @@ std::string user::fetch_sector()
 
 extern size_t get_wall_time();
 
+timestamp_move_queue user::get_timestamp_queue()
+{
+    return move_queue;
+}
+
 space_pos_t user::get_local_pos() const
 {
     size_t current_time = get_wall_time();
