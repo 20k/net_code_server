@@ -3208,6 +3208,9 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool arr = dukx_is_prop_truthy(ctx, -1, "array");
 
     if(from == "")
+        from = get_caller(ctx);
+
+    if(from == "")
         return push_error(ctx, "usage: net.view({user:<username>, n:6})");
 
     if(num < 0 || num > 15)
