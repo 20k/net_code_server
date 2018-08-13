@@ -3884,12 +3884,8 @@ duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, cons
 
             double dist = vdist.length();
 
-            //std::cout << dist << std::endl;
-
             ///30 cash per network unit
-            price += (dist / ESEP) * 30.f;
-
-            //std::cout << "price " << price << std::endl;
+            price += (dist / ESEP) * 20.f;
         }
 
         if(price != 0)
@@ -5199,7 +5195,41 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         std::vector<json> all_npc_data = get_net_view_data_arr(info);
 
-        array_data["links"] = all_npc_data;
+        //array_data["links"] = all_npc_data;
+
+        const std::string& name = target_name;
+        vec3f pos = info.global_pos[name];
+
+        array_data["name"] = name;
+        array_data["x"] = pos.x();
+        array_data["y"] = pos.y();
+        array_data["z"] = pos.z();
+
+        auto connections = playspace_network_manage.get_links(name);
+
+        for(auto it = connections.begin(); it != connections.end();)
+        {
+            if(info.accessible.find(*it) == info.accessible.end())
+                it = connections.erase(it);
+            else
+                it++;
+        }
+
+        std::vector<float> stabs;
+
+        for(int i=0; i < (int)connections.size(); i++)
+        {
+            auto val = playspace_network_manage.get_neighbour_link_strength(name, connections[i]);
+
+            if(val.has_value())
+                stabs.push_back(val.value());
+            else
+                stabs.push_back(-1.f);
+        }
+
+
+        array_data["links"] = connections;
+        array_data["stabilities"] = stabs;
 
         links_string = get_net_view_data_str(all_npc_data, false);
     }
@@ -5298,7 +5328,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                             my_user.overwrite_user_in_db(mongo_ctx);
                         }
 
-                        duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, true, 10.f, has_confirm, true);
+                        duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, true, 15.f, has_confirm, true);
 
                         if(found == 1)
                             return 1;
