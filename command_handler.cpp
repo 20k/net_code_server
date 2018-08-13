@@ -580,8 +580,13 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                 ///so that we dont execute more than one whole sequence in a frame
                 std::atomic_bool finished_last{false};
 
-                const double max_frame_time_ms = 16;
-                const double max_allowed_frame_time_ms = 4; ///before we sleep for (max_frame - max_allowed)
+                ///default is 60
+                double current_framerate = get_global_number(ctx, "framerate_limit");
+
+                current_framerate = clamp(current_framerate, 1., 60.);
+
+                const double max_frame_time_ms = (1./current_framerate) * 1000.;
+                const double max_allowed_frame_time_ms = max_frame_time_ms/4; ///before we sleep for (max_frame - max_allowed)
                 double current_frame_time_ms = 0;
                 double current_goodwill_ms = 0;
                 double max_goodwill_ms = 6;

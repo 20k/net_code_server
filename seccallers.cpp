@@ -343,6 +343,8 @@ duk_ret_t set_realtime_framerate_limit(duk_context* ctx)
     if(!isfinite(val))
         return push_error(ctx, "Must be finite");
 
+    val = clamp(val, 1, 60);
+
     set_global_number(ctx, "framerate_limit", val);
 
     return 0;
