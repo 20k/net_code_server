@@ -70,7 +70,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["nodes.manage"] = make_cary();
     ret["nodes.port"] = make_cary();
     ret["nodes.view_log"] = make_cary("user", "\"\"", "NID", "-1");
-    ret["net.view"] = make_cary("user", "\"\"", "n", "6");
+    ret["net.view"] = make_cary("user", "\"\"", "n", "-1");
     ret["net.map"] = make_cary("user", "\"\"", "n", "6");
     //ret["net.links"] = make_cary("user", "\"\"", "n", "6");
     ret["net.hack"] = make_cary("user", "\"\"", "NID", "-1");
@@ -3203,7 +3203,7 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     COOPERATE_KILL();
 
     std::string from = duk_safe_get_prop_string(ctx, -1, "user");
-    int num = duk_get_prop_string_as_int(ctx, -1, "n", 2);
+    int num = duk_get_prop_string_as_int(ctx, -1, "n", -1);
 
     bool arr = dukx_is_prop_truthy(ctx, -1, "array");
 
@@ -3211,7 +3211,10 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         from = get_caller(ctx);
 
     if(from == "")
-        return push_error(ctx, "usage: net.view({user:<username>, n:6})");
+        return push_error(ctx, "usage: net.view({user:<username>, n:-1})");
+
+    if(num < 0)
+        num = 15;
 
     if(num < 0 || num > 15)
         return push_error(ctx, "n out of range [1,15]");
