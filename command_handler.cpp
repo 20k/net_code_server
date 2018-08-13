@@ -589,7 +589,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                 const double max_allowed_frame_time_ms = max_frame_time_ms/4; ///before we sleep for (max_frame - max_allowed)
                 double current_frame_time_ms = 0;
                 double current_goodwill_ms = 0;
-                double max_goodwill_ms = 6;
+                double max_goodwill_ms = (6./16.) * max_frame_time_ms;
 
                 std::atomic<double> avg_exec_time = 0;
                 double estimated_time_remaining = max_allowed_frame_time_ms;
