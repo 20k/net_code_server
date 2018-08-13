@@ -4822,6 +4822,14 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
                 return 1;
             }
 
+            for(auto& i : values)
+            {
+                if(!isfinite(i))
+                {
+                    return push_error(ctx, "Values must be finite");
+                }
+            }
+
             end_pos = {values[0], values[1], values[2]};
         }
         else if(duk_is_string(ctx, -1))
