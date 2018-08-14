@@ -257,6 +257,18 @@ void dump_test()
     exit(0);
 }
 
+void tickle_cache()
+{
+    for_each_npc([](npc_user& usr)
+    {
+        npc_prop_list props;
+
+        mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
+
+        props.load_from_db(ctx, usr.name);
+    });
+}
+
 ///making sure this ends up in the right repo
 int main()
 {
@@ -463,6 +475,7 @@ int main()
 
     boot_connection_handlers();
 
+    tickle_cache();
 
     //#define PROVOKE_CRASH
     #ifdef PROVOKE_CRASH
