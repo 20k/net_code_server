@@ -4768,8 +4768,8 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
                           " | y: " + to_string_with_enforced_variable_dp(pos.y(), 2) +
                           " | z: " + to_string_with_enforced_variable_dp(pos.z(), 2);
 
-        std::string msg = "Please specify " + make_key_val("to", "\"user\"") + ", " +
-                                              make_key_val("to", "\"system\"") + ", or " +
+        std::string msg = "Please specify " + make_key_val("to", "\"user\"") + " or " +
+                                              //make_key_val("to", "\"system\"") + ", or " +
                                               make_key_val("to", "[x, y, z]");
 
 
