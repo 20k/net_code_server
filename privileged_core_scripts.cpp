@@ -15,7 +15,7 @@
 #include "auth.hpp"
 #include <secret/secret.hpp>
 
-//#define XFER_PATHS
+#define XFER_PATHS
 
 std::map<std::string, std::vector<script_arg>> privileged_args = construct_core_args();
 
