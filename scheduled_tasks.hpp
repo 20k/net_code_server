@@ -17,6 +17,7 @@ void task_thread(scheduled_tasks& tasks);
 void on_finish_relink(int cnt, std::vector<std::string> data);
 void on_disconnect_link(int cnt, std::vector<std::string> data);
 void on_heal_network_link(int cnt, std::vector<std::string> data);
+void on_force_disconnect_link(int cnt, std::vector<std::string> data);
 
 extern double get_wall_time_s();
 
@@ -27,6 +28,7 @@ namespace task_type
         ON_RELINK,
         ON_DISCONNECT,
         ON_HEAL_NETWORK,
+        ON_FORCE_DISCONNECT,
     };
 }
 
@@ -105,6 +107,11 @@ struct scheduled_tasks
         if(d.type == task_type::ON_HEAL_NETWORK)
         {
              std::thread(on_heal_network_link, d.count_offset, (std::vector<std::string>)d.udata).detach();
+        }
+
+        if(d.type == task_type::ON_FORCE_DISCONNECT)
+        {
+             std::thread(on_force_disconnect_link, d.count_offset, (std::vector<std::string>)d.udata).detach();
         }
 
         {

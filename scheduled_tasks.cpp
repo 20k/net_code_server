@@ -147,3 +147,21 @@ void on_disconnect_link(int cnt, std::vector<std::string> data)
 
     printf("unlink\n");
 }
+
+
+void on_force_disconnect_link(int cnt, std::vector<std::string> data)
+{
+    if(data.size() != 2)
+        return;
+
+    std::string s1 = data[0];
+    std::string s2 = data[1];
+
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    playspace_network_manage.unlink(s1, s2);
+
+    printf("force unlink\n");
+}
+
+
