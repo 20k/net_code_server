@@ -266,6 +266,8 @@ void tickle_cache()
         mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
 
         props.load_from_db(ctx, usr.name);
+
+        get_user_and_nodes(usr.name, -2);
     });
 }
 
