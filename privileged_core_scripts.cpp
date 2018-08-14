@@ -2103,18 +2103,20 @@ duk_ret_t handle_confirmed(duk_context* ctx, bool confirm, const std::string& us
     if(!opt_user.has_value())
         return push_error(ctx, "No such user");
 
-    if(isnanf(price))
+    if(isnan(price))
         return push_error(ctx, "NaN");
 
-    if(!confirm)
-        return push_error(ctx, "Please confirm:true to pay " + std::to_string((int)price));
+    int iprice = price;
 
-    if(opt_user->cash < price)
+    if(!confirm)
+        return push_error(ctx, "Please confirm:true to pay " + std::to_string(iprice));
+
+    if(opt_user->cash < iprice)
         return push_error(ctx, "Please acquire more wealth");
 
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-        opt_user->cash -= price;
+        opt_user->cash -= iprice;
 
         opt_user->overwrite_user_in_db(mongo_ctx);
     }
