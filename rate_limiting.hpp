@@ -134,6 +134,10 @@ struct rate_limit
                          if(sand_data->terminate_semi_gracefully) \
                          { printf("Cooperating with kill\n");\
                              throw std::runtime_error("Script ran for more than 5000ms and was cooperatively terminated");\
+                         } \
+                         if(sand_data->terminate_realtime_gracefully) \
+                         { printf("Cooperating with kill realtime\n"); \
+                            throw std::runtime_error("Terminated realtime script"); \
                          }
 
 typedef struct duk_hthread duk_context;

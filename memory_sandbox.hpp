@@ -33,6 +33,7 @@ struct sandbox_data
 {
     size_t total_allocated = 0;
     volatile bool terminate_semi_gracefully = false;
+    volatile bool terminate_realtime_gracefully = false;
 };
 
 static void *sandbox_alloc(void *udata, duk_size_t size)
