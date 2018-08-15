@@ -354,9 +354,9 @@ int main()
     //manage.erase_all();
     manage.generate_up_to(150);
 
-    #ifndef TESTING
+    /*#ifndef TESTING
     tickle_cache();
-    #endif // TESTING
+    #endif // TESTING*/
 
     //#define NEW_GEN
     #ifdef NEW_GEN
