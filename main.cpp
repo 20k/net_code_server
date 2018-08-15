@@ -354,6 +354,8 @@ int main()
     //manage.erase_all();
     manage.generate_up_to(150);
 
+    tickle_cache();
+
     //#define NEW_GEN
     #ifdef NEW_GEN
     manage.harvest_existing_npcs();
@@ -476,8 +478,6 @@ int main()
     //test_locking();
 
     boot_connection_handlers();
-
-    tickle_cache();
 
     //#define PROVOKE_CRASH
     #ifdef PROVOKE_CRASH
