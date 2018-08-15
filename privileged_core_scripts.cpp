@@ -2704,7 +2704,7 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-        float hack_cost = 0.25f;
+        float hack_cost = 0.1f;
 
         auto path = playspace_network_manage.get_accessible_path_to(ctx, name_of_person_being_attacked, get_caller(ctx), (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, hack_cost);
 
