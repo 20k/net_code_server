@@ -525,7 +525,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             launch->join();
             delete launch;
 
-            if(current_mode == script_management_mode::REALTIME && all_shared.has_value() && !sand_data->terminate_semi_gracefully)
+            if(current_mode == script_management_mode::REALTIME && all_shared.has_value() && !sand_data->terminate_semi_gracefully && !sand_data->terminate_realtime_gracefully)
             {
                 exec_guard.unblock();
                 cleanup.unblock();
@@ -746,7 +746,8 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                     Sleep(50);
 
-                    sand_data->terminate_semi_gracefully = true;
+                    //sand_data->terminate_semi_gracefully = true;
+                    sand_data->terminate_realtime_gracefully = true;
 
                     thrd.join();
 
