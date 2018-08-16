@@ -779,11 +779,11 @@ duk_ret_t js_call(duk_context* ctx, int sl)
         ///use ORIGINAL script host
         priv_context priv_ctx(get_script_host(ctx), to_call_fullname);
 
-        set_script_info(ctx, to_call_fullname);
+        //set_script_info(ctx, to_call_fullname);
 
         duk_ret_t result = privileged_functions[to_call_fullname].func(priv_ctx, ctx, sl);
 
-        set_script_info(ctx, full_script);
+        //set_script_info(ctx, full_script);
 
         return result;
     }
