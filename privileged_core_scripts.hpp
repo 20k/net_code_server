@@ -285,10 +285,10 @@ inline
 std::map<std::string, priv_func_info> privileged_functions
 {
     REGISTER_FUNCTION_PRIV(cash__balance, 3),
-    REGISTER_FUNCTION_PRIV(cash__expose, 4),
+    REGISTER_FUNCTION_PRIV(cash__expose, 3),
     REGISTER_FUNCTION_PRIV(cash__xfer_to, 2),
     REGISTER_FUNCTION_PRIV(cash__xfer_to_caller, 4),
-    REGISTER_FUNCTION_PRIV(cash__steal, 4),
+    REGISTER_FUNCTION_PRIV(cash__steal, 2),
     REGISTER_FUNCTION_PRIV(scripts__get_level, 4),
     REGISTER_FUNCTION_PRIV(scripts__core, 4),
     REGISTER_FUNCTION_PRIV(scripts__me, 2),
@@ -301,8 +301,8 @@ std::map<std::string, priv_func_info> privileged_functions
     #ifdef TESTING
     REGISTER_FUNCTION_PRIV(item__create, 0),
     #endif // TESTING
-    REGISTER_FUNCTION_PRIV(item__steal, 4),
-    REGISTER_FUNCTION_PRIV(item__expose, 4),
+    REGISTER_FUNCTION_PRIV(item__steal, 1),
+    REGISTER_FUNCTION_PRIV(item__expose, 3),
     //REGISTER_FUNCTION_PRIV(sys__disown_upg, 0),
     //REGISTER_FUNCTION_PRIV(sys__xfer_upgrade_uid, 0),
     REGISTER_FUNCTION_PRIV(item__xfer_to, 1),
