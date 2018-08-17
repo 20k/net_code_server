@@ -187,7 +187,7 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
 
             if(duk_has_prop_string(ctx, -1, "on_input"))
             {
-                std::vector<std::string> unprocessed_keystrokes;
+                std::vector<unprocessed_key_info> unprocessed_keystrokes;
 
                 {
                     safe_lock_guard guard(state.lock);
@@ -199,15 +199,17 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
 
                 while(unprocessed_keystrokes.size() > 0)
                 {
-                    std::string c = unprocessed_keystrokes[0];
+                    std::string c = unprocessed_keystrokes[0].key;
+                    bool is_repeat = unprocessed_keystrokes[0].is_repeat;
                     unprocessed_keystrokes.erase(unprocessed_keystrokes.begin());
 
                     //std::cout << "called on_input " << get_wall_time() << " " << c << std::endl;
 
                     duk_push_string(ctx, "on_input");
                     duk_push_string(ctx, c.c_str());
+                    push_duk_val(ctx, is_repeat);
 
-                    if(duk_pcall_prop(ctx, -3, 1) != DUK_EXEC_SUCCESS)
+                    if(duk_pcall_prop(ctx, -4, 2) != DUK_EXEC_SUCCESS)
                     {
                         ret = duk_safe_to_std_string(ctx, -1);
                         force_terminate = true;

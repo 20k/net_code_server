@@ -8,13 +8,19 @@
 #include <vector>
 #include "user.hpp"
 
+struct unprocessed_key_info
+{
+    std::string key;
+    bool is_repeat = false;
+};
+
 struct command_handler_state
 {
     std::mutex command_lock;
     std::mutex lock;
     std::mutex key_lock;
 
-    std::map<int, std::vector<std::string>> unprocessed_keystrokes;
+    std::map<int, std::vector<unprocessed_key_info>> unprocessed_keystrokes;
     std::map<int, std::map<std::string, bool>> key_states;
 
     std::atomic_bool should_terminate_any_realtime{false};

@@ -97,6 +97,7 @@
 			<Add option="-pie -fPIE" />
 			<Add option="-fno-strict-aliasing" />
 			<Add option="-DBOOST_STACKTRACE_USE_WINDBG" />
+			<Add option="-DSERVER" />
 			<Add directory="deps" />
 		</Compiler>
 		<Linker>

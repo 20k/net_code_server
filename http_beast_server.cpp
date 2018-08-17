@@ -203,7 +203,13 @@ bool handle_termination_shortcircuit(std::shared_ptr<shared_command_handler_stat
                         safe_lock_guard guard(all_shared->state.lock);
 
                         for(auto& i : str)
-                            all_shared->state.unprocessed_keystrokes[id].push_back(i);
+                        {
+                            unprocessed_key_info info;
+                            info.key = i;
+                            info.is_repeat = all_shared->state.get_key_state(id)[i];
+
+                            all_shared->state.unprocessed_keystrokes[id].push_back(info);
+                        }
 
                         while(all_shared->state.unprocessed_keystrokes[id].size() > 200)
                         {
