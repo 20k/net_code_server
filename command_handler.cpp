@@ -150,6 +150,7 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
                     {
                         ret = duk_safe_to_std_string(ctx, -1);
                         force_terminate = true;
+                        duk_pop(ctx);
                         break;
                     }
 
@@ -175,6 +176,7 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
                     {
                         ret = duk_safe_to_std_string(ctx, -1);
                         force_terminate = true;
+                        duk_pop(ctx);
                         break;
                     }
 
@@ -213,6 +215,7 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
                     {
                         ret = duk_safe_to_std_string(ctx, -1);
                         force_terminate = true;
+                        duk_pop(ctx);
                         break;
                     }
 
@@ -236,6 +239,7 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
                 {
                     ret = duk_safe_to_std_string(ctx, -1);
                     force_terminate = true;
+                    duk_pop(ctx);
                     break;
                 }
 
@@ -252,6 +256,7 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
                 {
                     ret = duk_safe_to_std_string(ctx, -1);
                     force_terminate = true;
+                    duk_pop(ctx);
                     break;
                 }
 
