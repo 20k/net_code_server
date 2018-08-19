@@ -105,7 +105,10 @@ std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_c
             if(i["time_ms"].is_number())
                 time_code_ms = (size_t)i["time_ms"];
             else if(i["time_ms"].is_string())
-                time_code_ms = std::stoll((std::string)i["time_ms"]);
+            {
+                std::string str = i["time_ms"];
+                time_code_ms = std::stoll((std::string)str);
+            }
         }
 
         std::string channel;
@@ -4269,7 +4272,9 @@ duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         for(auto& i : data)
         {
-            names.push_back("Name: " + (std::string)i["name"]);
+            std::string str = i["name"];
+
+            names.push_back("Name: " + (std::string)str);
 
             float x = i["x"];
             float y = i["y"];

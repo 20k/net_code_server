@@ -685,7 +685,7 @@ T dukx_get_prop_as(duk_context* ctx, duk_idx_t idx, const std::string& prop)
 
     nlohmann::json j = nlohmann::json::parse(ptr);
 
-    return (T)j;
+    return j;
 }
 
 inline
