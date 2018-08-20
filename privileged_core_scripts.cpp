@@ -5414,7 +5414,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             std::string str_view = "Pass " + make_key_val("view", "true") + " to view allowed user list";
 
 
-            int add_price = 200;
+            int add_price = 800;
             int remove_price = 100;
             int view_price = 20;
 
