@@ -5415,7 +5415,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
 
             int add_price = 800;
-            int remove_price = 100;
+            int remove_price = 200;
             int view_price = 20;
 
             if(target.is_allowed_user(get_caller(ctx)))
