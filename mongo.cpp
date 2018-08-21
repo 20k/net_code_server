@@ -953,11 +953,11 @@ mongo_lock_proxy::mongo_lock_proxy(mongo_context* fctx, int lock_id) : ctx(fctx)
 void mongo_lock_proxy::change_collection(const std::string& coll, bool force_change)
 {
     ///need to alter locks
-    //unlock();
+    unlock();
 
     ctx.change_collection_unsafe(coll, force_change);
 
-    //lock();
+    lock();
 }
 
 void mongo_lock_proxy::lock()

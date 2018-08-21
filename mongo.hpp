@@ -234,7 +234,7 @@ struct mongo_lock_proxy
     virtual void lock();
     void unlock();
 
-    ~mongo_lock_proxy();
+    virtual ~mongo_lock_proxy();
 
     mongo_interface* operator->();
 };
