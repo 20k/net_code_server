@@ -167,6 +167,7 @@ void for_each_auth(const T& t)
 }
 
 std::vector<user> load_users(const std::vector<std::string>& names, int lock_id);
+std::vector<user> load_users_nolock(const std::vector<std::string>& names);
 
 template<typename T>
 inline

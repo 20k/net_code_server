@@ -23,7 +23,7 @@ void initialse_mongo_all()
 ///if a script were terminated while fetching the global mongo context, everything would break
 ///ALARM: ALARM:
 inline
-mongo_lock_proxy get_global_mongo_context(mongo_database_type type, int lock_id, bool destroy = false)
+mongo_shim get_global_mongo_context(mongo_database_type type, int lock_id, bool destroy = false)
 {
     if(destroy)
     {
@@ -33,10 +33,10 @@ mongo_lock_proxy get_global_mongo_context(mongo_database_type type, int lock_id,
             i = nullptr;
         }
 
-        return mongo_lock_proxy(nullptr, lock_id);
+        return mongo_shim(nullptr, lock_id);
     }
 
-    return mongo_lock_proxy(mongo_databases[(int)type], lock_id);
+    return mongo_shim(mongo_databases[(int)type], lock_id);
 }
 
 inline
@@ -49,25 +49,25 @@ void cleanup_mongo_all()
 }
 
 inline
-mongo_lock_proxy get_global_mongo_user_accessible_context(int lock_id)
+mongo_shim get_global_mongo_user_accessible_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::USER_ACCESSIBLE, lock_id);
 }
 
 inline
-mongo_lock_proxy get_global_mongo_user_info_context(int lock_id)
+mongo_shim get_global_mongo_user_info_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::USER_PROPERTIES, lock_id);
 }
 
 inline
-mongo_lock_proxy get_global_mongo_user_items_context(int lock_id)
+mongo_shim get_global_mongo_user_items_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::USER_ITEMS, lock_id);
 }
 
 inline
-mongo_lock_proxy get_global_mongo_global_properties_context(int lock_id)
+mongo_shim get_global_mongo_global_properties_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::GLOBAL_PROPERTIES, lock_id);
 }
@@ -79,37 +79,37 @@ mongo_lock_proxy get_global_mongo_chat_channels_context(int lock_id)
 }*/
 
 inline
-mongo_lock_proxy get_global_mongo_pending_notifs_context(int lock_id)
+mongo_shim get_global_mongo_pending_notifs_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::PENDING_NOTIFS, lock_id);
 }
 
 inline
-mongo_lock_proxy get_global_mongo_chat_channel_propeties_context(int lock_id)
+mongo_shim get_global_mongo_chat_channel_propeties_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::CHAT_CHANNEL_PROPERTIES, lock_id);
 }
 
 inline
-mongo_lock_proxy get_global_mongo_node_properties_context(int lock_id)
+mongo_shim get_global_mongo_node_properties_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::NODE_PROPERTIES, lock_id);
 }
 
 inline
-mongo_lock_proxy get_global_mongo_npc_properties_context(int lock_id)
+mongo_shim get_global_mongo_npc_properties_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::NPC_PROPERTIES, lock_id);
 }
 
 inline
-mongo_lock_proxy get_global_mongo_network_properties_context(int lock_id)
+mongo_shim get_global_mongo_network_properties_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::NETWORK_PROPERTIES, lock_id);
 }
 
 inline
-mongo_lock_proxy get_global_mongo_scheduled_task_context(int lock_id)
+mongo_shim get_global_mongo_scheduled_task_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::SCHEDULED_TASK, lock_id);
 }
@@ -117,7 +117,7 @@ mongo_lock_proxy get_global_mongo_scheduled_task_context(int lock_id)
 using mongo_lock_low_level = mongo_lock_proxy;
 
 inline
-mongo_lock_low_level get_global_mongo_low_level_structure_context(int lock_id)
+mongo_shim get_global_mongo_low_level_structure_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::LOW_LEVEL_STRUCTURE, lock_id);
 }

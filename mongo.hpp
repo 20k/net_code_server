@@ -210,9 +210,17 @@ struct mongo_interface
     void remove_bson(const std::string& script_host, bson_t* bs);
     void remove_json(const std::string& script_host, const std::string& json);
 
+    //mongo_interface(mongo_interface&&);
     mongo_interface(mongo_context* fctx);
-
     ~mongo_interface();
+};
+
+struct mongo_shim
+{
+    mongo_context* ctx = nullptr;
+    int lock_id = -1;
+
+    mongo_shim(mongo_context* fctx, int lock_id);
 };
 
 struct mongo_lock_proxy
@@ -226,7 +234,7 @@ struct mongo_lock_proxy
 
     bool has_lock = false;
 
-    mongo_lock_proxy(mongo_context* fctx, int lock_id);
+    mongo_lock_proxy(const mongo_shim& shim);
     mongo_lock_proxy(const mongo_lock_proxy&) = delete;
 
     void change_collection(const std::string& coll, bool force_change = false);
@@ -241,6 +249,8 @@ struct mongo_lock_proxy
 
 struct mongo_nolock_proxy : mongo_lock_proxy
 {
+    mongo_nolock_proxy(const mongo_shim& shim);
+
     void lock() override
     {
 

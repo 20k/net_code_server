@@ -4306,7 +4306,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     user my_user;
 
     {
-        mongo_lock_proxy lock = get_global_mongo_user_info_context(-2);
+        mongo_nolock_proxy lock = get_global_mongo_user_info_context(-2);
 
         if(!my_user.load_from_db(lock, get_caller(ctx)))
             return push_error(ctx, "Error: Does not exist");

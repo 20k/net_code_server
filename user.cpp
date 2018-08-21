@@ -942,3 +942,22 @@ std::vector<user> load_users(const std::vector<std::string>& names, int lock_id)
 
     return ret;
 }
+
+std::vector<user> load_users_nolock(const std::vector<std::string>& names)
+{
+    std::vector<user> ret;
+
+    mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+    for(auto& i : names)
+    {
+        user usr;
+
+        if(!usr.load_from_db(ctx, i))
+            continue;
+
+        ret.push_back(usr);
+    }
+
+    return ret;
+}

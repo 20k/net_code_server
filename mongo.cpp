@@ -904,8 +904,23 @@ mongo_interface::mongo_interface(mongo_context* fctx)
     database = mongoc_client_get_database(client, ctx->last_db.c_str());
 }
 
+/*mongo_interface::mongo_interface(mongo_interface&& other)
+{
+    client = other.client;
+    ctx = other.ctx;
+    database = other.database;
+    collection = other.collection;
+    last_collection = other.last_collection;
+    moved_from = other.moved_from;
+
+    other.moved_from = true;
+}*/
+
 mongo_interface::~mongo_interface()
 {
+    if(moved_from)
+        return;
+
     ctx->return_client(client);
 
     if(collection)
@@ -914,7 +929,13 @@ mongo_interface::~mongo_interface()
     mongoc_database_destroy (database);
 }
 
-mongo_lock_proxy::mongo_lock_proxy(mongo_context* fctx, int lock_id) : ctx(fctx)
+mongo_shim::mongo_shim(mongo_context* fctx, int plock_id)
+{
+    ctx = fctx;
+    lock_id = plock_id;
+}
+
+mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim) : ctx(shim.ctx)
 {
     /*ctx = fctx;
 
@@ -933,16 +954,16 @@ mongo_lock_proxy::mongo_lock_proxy(mongo_context* fctx, int lock_id) : ctx(fctx)
     ///uncooperative thread termination
     size_t my_id = thread_id_storage_hack;
 
-    if(fctx == nullptr)
+    if(shim.ctx == nullptr)
         return;
 
-    friendly_id = lock_id;
+    friendly_id = shim.lock_id;
     ilock_id = my_id;
 
     //if(fctx->default_collection != "")
     //    ctx.ctx->make_lock(fctx->last_db, fctx->default_collection, ilock_id, ctx.client);
 
-    ctx.last_collection = fctx->default_collection;
+    ctx.last_collection = shim.ctx->default_collection;
 
     if(ctx.ctx->default_collection != "")
     {
@@ -983,6 +1004,24 @@ void mongo_lock_proxy::unlock()
 mongo_lock_proxy::~mongo_lock_proxy()
 {
     unlock();
+}
+
+mongo_nolock_proxy::mongo_nolock_proxy(const mongo_shim& shim) : mongo_lock_proxy(shim)
+{
+    /*size_t my_id = thread_id_storage_hack;
+
+    if(fctx == nullptr)
+        return;
+
+    friendly_id = shim.lock_id;
+    ilock_id = my_id;
+
+    ctx.last_collection = fctx->default_collection;
+
+    if(ctx.ctx->default_collection != "")
+    {
+        change_collection(ctx.ctx->default_collection, true);
+    }*/
 }
 
 mongo_interface* mongo_lock_low_level::operator->()
