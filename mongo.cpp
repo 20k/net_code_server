@@ -914,6 +914,84 @@ mongo_interface::~mongo_interface()
     mongoc_database_destroy (database);
 }
 
+mongo_lock_proxy::mongo_lock_proxy(mongo_context* fctx, int lock_id) : ctx(fctx)
+{
+    /*ctx = fctx;
+
+    if(ctx == nullptr)
+        return;*/
+
+    /*size_t my_id = (size_t)&thread_id_storage_hack;
+    static_assert(sizeof(my_id) == sizeof(&thread_id_storage_hack));*/
+
+    ///ids don't need to be unique
+    ///we just need to know what they are, and guarantee that in the command handler
+    ///they aren't reused
+    ///thread_id_storage_hack will default to 0
+    ///except in the command handler we set this to be higher
+    ///the *only* reason these ids exist is for external unlocking of locked resources in the context of
+    ///uncooperative thread termination
+    size_t my_id = thread_id_storage_hack;
+
+    if(fctx == nullptr)
+        return;
+
+    friendly_id = lock_id;
+    ilock_id = my_id;
+
+    //if(fctx->default_collection != "")
+    //    ctx.ctx->make_lock(fctx->last_db, fctx->default_collection, ilock_id, ctx.client);
+
+    ctx.last_collection = fctx->default_collection;
+
+    if(ctx.ctx->default_collection != "")
+    {
+        change_collection(ctx.ctx->default_collection, true);
+    }
+}
+
+void mongo_lock_proxy::change_collection(const std::string& coll, bool force_change)
+{
+    ///need to alter locks
+    //unlock();
+
+    ctx.change_collection_unsafe(coll, force_change);
+
+    //lock();
+}
+
+void mongo_lock_proxy::lock()
+{
+    if(!has_lock)
+    {
+        ctx.ctx->make_lock(ctx.ctx->last_db, ctx.last_collection, ilock_id, ctx.client);
+    }
+
+    has_lock = true;
+}
+
+void mongo_lock_proxy::unlock()
+{
+    if(has_lock)
+    {
+        ctx.ctx->make_unlock(ctx.last_collection);
+    }
+
+    has_lock = false;
+}
+
+mongo_lock_proxy::~mongo_lock_proxy()
+{
+    unlock();
+}
+
+mongo_interface* mongo_lock_low_level::operator->()
+{
+    lock();
+
+    return &ctx;
+}
+
 std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ctx)
 {
     std::vector<mongo_requester> ret;

@@ -224,63 +224,19 @@ struct mongo_lock_proxy
     size_t ilock_id = 0;
     int friendly_id = -1;
 
-    mongo_lock_proxy(mongo_context* fctx, int lock_id) : ctx(fctx)
-    {
-        /*ctx = fctx;
+    bool has_lock = false;
 
-        if(ctx == nullptr)
-            return;*/
-
-        /*size_t my_id = (size_t)&thread_id_storage_hack;
-        static_assert(sizeof(my_id) == sizeof(&thread_id_storage_hack));*/
-
-        ///ids don't need to be unique
-        ///we just need to know what they are, and guarantee that in the command handler
-        ///they aren't reused
-        ///thread_id_storage_hack will default to 0
-        ///except in the command handler we set this to be higher
-        ///the *only* reason these ids exist is for external unlocking of locked resources in the context of
-        ///uncooperative thread termination
-        size_t my_id = thread_id_storage_hack;
-
-        if(fctx == nullptr)
-            return;
-
-        friendly_id = lock_id;
-        ilock_id = my_id;
-
-        if(fctx->default_collection != "")
-            ctx.ctx->make_lock(fctx->last_db, fctx->default_collection, ilock_id, ctx.client);
-
-        ctx.last_collection = fctx->default_collection;
-
-        if(ctx.ctx->default_collection != "")
-        {
-            change_collection(ctx.ctx->default_collection, true);
-        }
-    }
-
+    mongo_lock_proxy(mongo_context* fctx, int lock_id);
     mongo_lock_proxy(const mongo_lock_proxy&) = delete;
 
-    void change_collection(const std::string& coll, bool force_change = false)
-    {
-        ///need to alter locks
-        if(ctx.last_collection != "")
-            ctx.ctx->make_unlock(ctx.last_collection);
+    void change_collection(const std::string& coll, bool force_change = false);
 
-        ctx.change_collection_unsafe(coll, force_change);
-        ctx.ctx->make_lock(ctx.ctx->last_db, coll, ilock_id, ctx.client);
-    }
+    void lock();
+    void unlock();
 
-    ~mongo_lock_proxy()
-    {
-        ctx.ctx->make_unlock(ctx.last_collection);
-    }
+    ~mongo_lock_proxy();
 
-    mongo_interface* operator->()
-    {
-        return &ctx;
-    }
+    mongo_interface* operator->();
 };
 
 #include "mongo_cleanup.hpp"
