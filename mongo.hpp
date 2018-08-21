@@ -231,12 +231,20 @@ struct mongo_lock_proxy
 
     void change_collection(const std::string& coll, bool force_change = false);
 
-    void lock();
+    virtual void lock();
     void unlock();
 
     ~mongo_lock_proxy();
 
     mongo_interface* operator->();
+};
+
+struct mongo_nolock_proxy : mongo_lock_proxy
+{
+    void lock() override
+    {
+
+    }
 };
 
 #include "mongo_cleanup.hpp"
