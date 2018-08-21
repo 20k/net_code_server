@@ -4956,6 +4956,8 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
             return push_error(ctx, "Requires string or array");
         }
 
+        end_pos = clamp(end_pos, -1000.f, 1000.f);
+
         end_pos = (end_pos - current_pos) * fraction + current_pos;
         vec3f diff = (end_pos - current_pos).norm();
 
@@ -5374,7 +5376,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
-    if(!has_users && in_same_system)
+    if(!has_users && in_same_system && target.name != my_user.name)
     {
         ///must have a path for us to be able to access the npc
         if(!has_modify)

@@ -1348,6 +1348,8 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
     printf("yay command\n");
 
+    lg::log(str);
+
     if(starts_with(str, "user "))
     {
         if(all_shared->state.get_auth() == "")
