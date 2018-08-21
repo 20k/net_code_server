@@ -918,9 +918,6 @@ mongo_interface::mongo_interface(mongo_context* fctx)
 
 mongo_interface::~mongo_interface()
 {
-    if(moved_from)
-        return;
-
     ctx->return_client(client);
 
     if(collection)
