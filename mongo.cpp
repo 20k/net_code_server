@@ -960,7 +960,7 @@ mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim) : ctx(shim.ctx)
     //if(fctx->default_collection != "")
     //    ctx.ctx->make_lock(fctx->last_db, fctx->default_collection, ilock_id, ctx.client);
 
-    ctx.last_collection = shim.ctx->default_collection;
+    ctx.last_collection = ctx.ctx->default_collection;
 
     if(ctx.ctx->default_collection != "")
     {
