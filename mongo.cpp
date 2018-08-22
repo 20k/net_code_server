@@ -957,8 +957,10 @@ mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim) : ctx(shim.ctx)
     friendly_id = shim.lock_id;
     ilock_id = my_id;
 
-    //if(fctx->default_collection != "")
-    //    ctx.ctx->make_lock(fctx->last_db, fctx->default_collection, ilock_id, ctx.client);
+    if(ctx.ctx->default_collection != "")
+        lock();
+
+        //ctx.ctx->make_lock(fctx->last_db, fctx->default_collection, ilock_id, ctx.client);
 
     ctx.last_collection = ctx.ctx->default_collection;
 
@@ -1023,7 +1025,7 @@ mongo_nolock_proxy::mongo_nolock_proxy(const mongo_shim& shim) : mongo_lock_prox
 
 mongo_interface* mongo_lock_low_level::operator->()
 {
-    lock();
+    //lock();
 
     return &ctx;
 }
