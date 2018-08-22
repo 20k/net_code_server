@@ -46,6 +46,7 @@ duk_ret_t unsafe_wrapper(duk_context* ctx, void* udata)
 
 void managed_duktape_thread(unsafe_info* info)
 {
+    try{
     int id = get_thread_id(info->ctx);
 
     ///set thread storage hack
@@ -64,6 +65,11 @@ void managed_duktape_thread(unsafe_info* info)
     //duk_pop(info->ctx);
 
     info->finished = 1;
+    }
+    catch(...)
+    {
+        std::cout << "what?\n";
+    }
 }
 
 struct cleanup_auth_at_exit
@@ -116,6 +122,7 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
                                    std::atomic_bool& terminated, std::atomic_bool& request_long_sleep, std::atomic_bool& fedback, int current_id,
                                    std::atomic_bool& force_terminate, std::atomic<double>& avg_exec_time)
 {
+    try{
     sf::Clock clk;
 
     avg_exec_time = 4;
@@ -302,6 +309,11 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
     duk_pop(ctx);
 
     terminated = true;
+    }
+    catch(...)
+    {
+        terminated = true;
+    }
 }
 
 struct execution_blocker_guard
@@ -2375,6 +2387,7 @@ void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shar
 {
     std::thread([=]()
                 {
+                    try{
                     std::string result = handle_command(all_shared, str);
 
                     if(result == "")
@@ -2382,6 +2395,11 @@ void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shar
 
                     shared_data& shared = all_shared->shared;
                     shared.add_back_write(result);
+                    }
+                    catch(...)
+                    {
+                        std::cout << "caught exception in async handle command\n";
+                    }
 
                 }).detach();
 }

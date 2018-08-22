@@ -901,6 +901,9 @@ void user::pump_notifications(int lock_id)
 
 void event_pumper()
 {
+    std::cout << "event pumper begin\n";
+    try
+    {
     while(1)
     {
         for_each_user([](user& usr)
@@ -916,6 +919,11 @@ void event_pumper()
                      });
 
         Sleep(1);
+    }
+    }
+    catch(...)
+    {
+        std::cout << "pump exception\n";
     }
 }
 

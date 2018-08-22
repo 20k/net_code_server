@@ -68,6 +68,8 @@ void async_command_handler(std::shared_ptr<shared_command_handler_state> all_sha
 {
     lg::log("async_queue\n");
 
+    try
+    {
     while(1)
     {
         if(all_shared->shared.should_terminate)
@@ -106,6 +108,11 @@ void async_command_handler(std::shared_ptr<shared_command_handler_state> all_sha
         async_handle_command(all_shared, to_exec);
 
         Sleep(5);
+    }
+    }
+    catch(...)
+    {
+        std::cout << "async command handler" << std::endl;
     }
 
     std::cout << "shutdown async" << std::endl;

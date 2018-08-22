@@ -8,6 +8,8 @@
 
 void on_heal_network_link(int cnt, std::vector<std::string> data)
 {
+    try
+    {
     if(data.size() != 2 && data.size() != 3)
         return;
 
@@ -38,10 +40,17 @@ void on_heal_network_link(int cnt, std::vector<std::string> data)
     }
 
     printf("heal\n");
+    }
+    catch(...)
+    {
+        std::cout << "on heal" << std::endl;
+    }
 }
 
 void task_thread(scheduled_tasks& tasks)
 {
+    try
+    {
     sf::Clock clk;
 
     while(1)
@@ -50,10 +59,17 @@ void task_thread(scheduled_tasks& tasks)
 
         Sleep(1000);
     }
+    }
+    catch(...)
+    {
+        std::cout << "tasks exception\n";
+    }
 }
 
 void on_finish_relink(int cnt, std::vector<std::string> data)
 {
+    try
+    {
     /*if(data.size() != 2)
         return;
 
@@ -123,10 +139,17 @@ void on_finish_relink(int cnt, std::vector<std::string> data)
     ///need to also modify its position in global space
 
     printf("relinked\n");
+    }
+    catch(...)
+    {
+        std::cout << "relink caught" << std::endl;
+    }
 }
 
 void on_disconnect_link(int cnt, std::vector<std::string> data)
 {
+    try
+    {
     if(data.size() != 2)
         return;
 
@@ -146,11 +169,18 @@ void on_disconnect_link(int cnt, std::vector<std::string> data)
     playspace_network_manage.unlink(s1, s2);
 
     printf("unlink\n");
+    }
+    catch(...)
+    {
+        std::cout << "on disco exp\n";
+    }
 }
 
 
 void on_force_disconnect_link(int cnt, std::vector<std::string> data)
 {
+    try
+    {
     if(data.size() != 2)
         return;
 
@@ -162,6 +192,11 @@ void on_force_disconnect_link(int cnt, std::vector<std::string> data)
     playspace_network_manage.unlink(s1, s2);
 
     printf("force unlink\n");
+    }
+    catch(...)
+    {
+        std::cout << "on force disco\n";
+    }
 }
 
 

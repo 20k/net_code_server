@@ -144,6 +144,8 @@ extern size_t get_wall_time();
 
 void bot_thread()
 {
+    try
+    {
     while(1)
     {
         Sleep(1000);
@@ -206,6 +208,11 @@ void bot_thread()
 
         for_each_npc(check_autorun);
     }
+    }
+    catch(...)
+    {
+        std::cout << "bot thread err\n";
+    }
 }
 
 void run_non_user_tasks()
@@ -213,6 +220,9 @@ void run_non_user_tasks()
     //auto now = std::chrono::high_resolution_clock::now();
     //auto duration = now.time_since_epoch();
     //size_t real_time = duration.count();
+
+    try
+    {
 
     while(1)
     {
@@ -292,6 +302,11 @@ void run_non_user_tasks()
 
         real_time = next_real_time;
         #endif // 0
+    }
+    }
+    catch(...)
+    {
+        std::cout << "nonuser tasks\n";
     }
 }
 
