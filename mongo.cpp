@@ -957,8 +957,8 @@ mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim) : ctx(shim.ctx)
     friendly_id = shim.lock_id;
     ilock_id = my_id;
 
-    if(ctx.ctx->default_collection != "")
-        lock();
+    //if(ctx.ctx->default_collection != "")
+    //    lock();
 
         //ctx.ctx->make_lock(fctx->last_db, fctx->default_collection, ilock_id, ctx.client);
 

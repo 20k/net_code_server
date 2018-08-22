@@ -251,10 +251,10 @@ struct mongo_nolock_proxy : mongo_lock_proxy
 {
     mongo_nolock_proxy(const mongo_shim& shim);
 
-    /*void lock() override
+    void lock() override
     {
 
-    }*/
+    }
 };
 
 #include "mongo_cleanup.hpp"
