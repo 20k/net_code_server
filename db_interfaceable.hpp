@@ -118,7 +118,14 @@ struct db_val : db_common
     db_val<T>& operator=(const V& other)
     {
         //u->template set_as<T>(key, other);
+        try
+        {
         val = other;
+        }
+        catch(...)
+        {
+
+        }
 
         return *this;
     }
@@ -322,30 +329,38 @@ struct db_interfaceable
     ///just returns a vector, and checks for $exists : id
     bool load_from_db(mongo_lock_proxy& ctx, const std::string& id)
     {
-        data[key_name] = id;
-
-        if(!exists(ctx, id))
-            return false;
-
-        if(cacheable && this_cache.exists_in_cache(id))
-        {
-            *this = this_cache.load_from_cache(id);
-
-            if(cacheable)
-            {
-                this_cache.overwrite_in_cache(id, *(concrete*)this);
-            }
-
-            if(handle_serialise(data, false))
-            {
-                overwrite_in_db(ctx);
-            }
-
-            return true;
-        }
-
         json to_find;
-        to_find[key_name] = id;
+
+        try
+        {
+            data[key_name] = id;
+
+            if(!exists(ctx, id))
+                return false;
+
+            if(cacheable && this_cache.exists_in_cache(id))
+            {
+                *this = this_cache.load_from_cache(id);
+
+                if(cacheable)
+                {
+                    this_cache.overwrite_in_cache(id, *(concrete*)this);
+                }
+
+                if(handle_serialise(data, false))
+                {
+                    overwrite_in_db(ctx);
+                }
+
+                return true;
+            }
+
+            to_find[key_name] = id;
+        }
+        catch(...)
+        {
+            return false;
+        }
 
         try
         {
@@ -380,6 +395,7 @@ struct db_interfaceable
 
     void overwrite_in_db(mongo_lock_proxy& ctx)
     {
+        try{
         handle_serialise(data, true);
 
         if(!exists(ctx, data[key_name].get<std::string>()))
@@ -410,10 +426,17 @@ struct db_interfaceable
 
             ctx->update_json_one(selector.dump(), to_set.dump());
         }
+        }
+        catch(...)
+        {
+            std::cout << "nope in overwrite\n";
+        }
     }
 
     void remove_from_db(mongo_lock_proxy& ctx)
     {
+        try
+        {
         handle_serialise(data, false);
 
         json j;
@@ -425,10 +448,17 @@ struct db_interfaceable
         {
             this_cache.delete_from_cache(data[key_name].get<std::string>());
         }
+        }
+        catch(...)
+        {
+
+        }
     }
 
     bool exists(mongo_lock_proxy& ctx, const std::string& id)
     {
+        try
+        {
         if(cacheable && this_cache.exists_in_cache(id))
             return true;
 
@@ -442,6 +472,11 @@ struct db_interfaceable
         auto found = ctx->find_json(ctx->last_collection, to_find.dump(), "{}");
 
         return found.size() >= 1;
+        }
+        catch(...)
+        {
+            return false;
+        }
     }
 
     virtual bool is_valid(){return true;}

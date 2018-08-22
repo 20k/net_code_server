@@ -4301,13 +4301,20 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     bool centre = dukx_is_prop_truthy(ctx, -1, "centre");
 
+    try
+    {
     user my_user;
 
+    try
     {
         mongo_lock_proxy lock = get_global_mongo_user_info_context(-2);
 
         if(!my_user.load_from_db(lock, get_caller(ctx)))
             return push_error(ctx, "Error: Does not exist");
+    }
+    catch(...)
+    {
+        std::cout << "load user err\n";
     }
 
     int n_val = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", -1);
@@ -4322,10 +4329,19 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 
-    auto opt_sys = low_level_structure_manage.get_system_of(my_user);
+    std::optional<low_level_structure*> opt_sys;
+
+
+    try{
+    opt_sys = low_level_structure_manage.get_system_of(my_user);
 
     if(!opt_sys.has_value())
         return push_error(ctx, "Well then, you are lost!");
+    }
+    catch(...)
+    {
+        std::cout << "get system of\n";
+    }
 
     low_level_structure& structure = *opt_sys.value();
 
@@ -4334,6 +4350,10 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     auto buffer = ascii_make_buffer({found_w, found_h}, false);
 
     network_accessibility_info info;
+
+
+    try
+    {
 
     if(n_val > 0)
     {
@@ -4347,7 +4367,11 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         while(current_ring < n_val && to_test[current_ring].size() > 0)
         {
-            low_level_structure* next = to_test[current_ring].front();
+            low_level_structure* next = nullptr;
+
+            try
+            {
+            next = to_test[current_ring].front();
 
             explored[next->name] = true;
 
@@ -4356,20 +4380,43 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             info.ring_ordered_names.push_back(next->name);
 
             to_test[current_ring].pop_front();
+            }
+            catch(...)
+            {
+                std::cout << "half 11111111\n";
+            }
 
-            std::vector<std::string> found = next->get_connected_systems();
+            std::vector<std::string> found;
+
+
+            try
+            {
+
+            found = next->get_connected_systems();
+
+            }
+            catch(...)
+            {
+                std::cout <<" hello get connected\n";
+            }
 
             for(auto& name : found)
             {
                 if(explored[name])
                     continue;
 
+                try{
                 auto opt_structure = low_level_structure_manage.get_system_from_name(name);
 
                 if(!opt_structure.has_value())
                     continue;
 
                 to_test[current_ring + 1].push_back(opt_structure.value());
+                }
+                catch(...)
+                {
+                    std::cout << "system from name\n";
+                }
             }
 
             if(to_test[current_ring].size() == 0)
@@ -4387,6 +4434,15 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             info.ring_ordered_names.push_back(*i.name);
         }
     }
+
+    }
+    catch(...)
+    {
+        std::cout << "first half\n";
+    }
+
+    try
+    {
 
     info.keys.clear();
     info.display_string.clear();
@@ -4457,6 +4513,18 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         all_data = data;
 
         push_duk_val(ctx, all_data);
+    }
+
+    }
+    catch(...)
+    {
+        std::cout << "second half\n";
+    }
+
+    }
+    catch(...)
+    {
+        std::cout << "caught sys map except\n";
     }
 
     return 1;

@@ -69,6 +69,8 @@ bool user::exists(mongo_lock_proxy& ctx, const std::string& name_)
 
 bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
 {
+    try
+    {
     global_user_cache& cache = get_global_user_cache();
 
     if(cache.exists_in_cache(name_))
@@ -185,6 +187,11 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
     cache.overwrite_in_cache(name_, *this);
 
     return true;
+    }
+    catch(...)
+    {
+        return false;
+    }
 }
 
 bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, const std::string& auth)

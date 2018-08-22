@@ -124,15 +124,23 @@ struct scheduled_tasks
     int task_register(const task_type::task_type& task, double time_s, const std::vector<std::string>& data, int thread_id)
     {
         task_data_db tdd;
+        try
+        {
         tdd.start_time_s = get_wall_time_s();
         tdd.end_time_s = tdd.start_time_s + time_s;
         tdd.type = task;
         tdd.udata = data;
+        }
+        catch(...)
+        {
+            std::cout << "task sched 33333333333333\n";
+        }
 
         //std::cout << "register task " << tdd.type.value() << " " << tdd.start_time_s.value() << " " << tdd.end_time_s.value() << std::endl;
 
         int cnt = 0;
 
+        try
         {
             safe_lock_guard guard(mut);
 
@@ -142,11 +150,20 @@ struct scheduled_tasks
 
             task_data[cnt] = tdd;
         }
+        catch(...)
+        {
+            std::cout << "task sched 44444444444\n";
+        }
 
+        try
         {
             mongo_lock_proxy ctx = get_global_mongo_scheduled_task_context(thread_id);
 
             tdd.overwrite_in_db(ctx);
+        }
+        catch(...)
+        {
+            std::cout << "broke during task sched\n";
         }
 
         return cnt;
