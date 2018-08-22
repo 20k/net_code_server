@@ -1694,9 +1694,7 @@ duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
         {
             mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
 
-            found_user.load_from_db(mongo_ctx, get_caller(ctx));
-
-            if(!found_user.valid)
+            if(!found_user.load_from_db(mongo_ctx, get_caller(ctx)))
             {
                 push_error(ctx, "No such user/really catastrophic error");
                 return 1;

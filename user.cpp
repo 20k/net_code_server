@@ -84,8 +84,6 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
 
     bool has_pos = false;
 
-    valid = true;
-
     mongo_requester request;
     request.set_prop("name", name_);
 
@@ -200,8 +198,6 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
 
     if(exists(ctx, name))
         return false;
-
-    valid = true;
 
     mongo_requester request;
     request.set_prop("name", name);
