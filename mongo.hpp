@@ -9,6 +9,7 @@
 #include <map>
 #include <atomic>
 #include <thread>
+#include "perfmon.hpp"
 
 #include <json/json.hpp>
 
@@ -226,6 +227,7 @@ struct mongo_shim
 struct mongo_lock_proxy
 {
     static thread_local int thread_id_storage_hack;
+    static thread_local int print_performance_diagnostics;
 
     mongo_interface ctx;
 
@@ -233,6 +235,8 @@ struct mongo_lock_proxy
     int friendly_id = -1;
 
     bool has_lock = false;
+
+    perfmon perf;
 
     mongo_lock_proxy(const mongo_shim& shim);
     mongo_lock_proxy(const mongo_lock_proxy&) = delete;

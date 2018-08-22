@@ -14,6 +14,7 @@
 #include "memory_sandbox.hpp"
 #include "auth.hpp"
 #include <secret/secret.hpp>
+#include "perfmon.hpp"
 
 //#define XFER_PATHS
 
@@ -4470,6 +4471,11 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
+
+    #ifdef TESTING
+    MAKE_PERF_COUNTER();
+    mongo_diagnostics diagnostic_scope;
+    #endif // TESTING
 
     //std::string str = duk_safe_get_prop_string(ctx, -1, "sys");
     bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");

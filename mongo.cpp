@@ -11,8 +11,10 @@
 
 #include <SFML/System.hpp>
 #include <thread>
+#include "stacktrace.hpp"
 
 thread_local int mongo_lock_proxy::thread_id_storage_hack = -2;
+thread_local int mongo_lock_proxy::print_performance_diagnostics = 0;
 
 void lock_internal::lock(const std::string& debug_info, size_t who, mongoc_client_t* emergency)
 {
@@ -951,6 +953,8 @@ mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim) : ctx(shim.ctx)
     ///uncooperative thread termination
     size_t my_id = thread_id_storage_hack;
 
+    perf.enabled = print_performance_diagnostics > 0;
+
     if(shim.ctx == nullptr)
         return;
 
@@ -985,6 +989,11 @@ void mongo_lock_proxy::lock()
     if(!has_lock)
     {
         ctx.ctx->make_lock(ctx.ctx->last_db, ctx.last_collection, ilock_id, ctx.client);
+
+        perf.locks++;
+
+        if(perf.enabled)
+            perf.lock_stacktraces.push_back(get_stacktrace());
     }
 
     has_lock = true;

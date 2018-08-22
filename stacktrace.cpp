@@ -34,3 +34,12 @@ void signal_handler(int signum)
     boost::stacktrace::safe_dump_to("./backtrace.dump");
     ::raise(SIGABRT);
 }
+
+std::string get_stacktrace()
+{
+    std::stringstream stream;
+
+    stream << boost::stacktrace::stacktrace();
+
+    return stream.str();
+}
