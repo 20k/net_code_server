@@ -4454,6 +4454,11 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             data.push_back(j);
         }
 
+        if(data.size() == 0 && n_val > 0)
+        {
+            std::cout << "repro ghamb bug\n";
+        }
+
         all_data = data;
 
         push_duk_val(ctx, all_data);
@@ -4515,6 +4520,10 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(!my_user.load_from_db(lock, get_caller(ctx)))
             return push_error(ctx, "Error: Does not exist");
     }
+
+    ///disables cross system stuff
+    if(!target_user.is_allowed_user(my_user.name) && !low_level_structure_manage.in_same_system(target_user.name, my_user.name))
+        return push_error(ctx, "Cannot sys.view cross systems on non owned users");
 
     int n_count = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", -1);
 
