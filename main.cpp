@@ -509,6 +509,19 @@ int main()
                         props.force_conversion<std::vector<std::string>>("vals", from_string<float>);
                         props.force_conversion<std::vector<std::string>>("props", from_string<int>);
 
+                        try
+                        {
+                            props.get_as<std::vector<float>>("vals");
+                            props.get_as<std::vector<int>>("props");
+                        }
+                        catch(...)
+                        {
+                            std::cout << "npc " << npc.name << " broken " << std::endl;
+
+                            props.set_as<std::vector<int>>("props", {});
+                            props.set_as<std::vector<float>>("vals", {});
+                        }
+
                         {
                             mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
 
