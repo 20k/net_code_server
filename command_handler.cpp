@@ -21,6 +21,7 @@
 #include "shared_command_handler_state.hpp"
 #include "duk_object_functions.hpp"
 #include <secret/low_level_structure.hpp>
+#include "safe_thread.hpp"
 
 struct unsafe_info
 {
@@ -414,7 +415,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         inf.command = command;
         inf.ctx = ctx;
 
-        std::thread* launch = new std::thread(managed_duktape_thread, &inf);
+        sthread* launch = new sthread(managed_duktape_thread, &inf);
 
         if(all_shared.has_value())
         {
