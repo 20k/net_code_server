@@ -718,6 +718,8 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
+    std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
+
     std::string to_call_fullname;
 
     duk_push_current_function(ctx);
@@ -738,7 +740,9 @@ duk_ret_t js_call(duk_context* ctx, int sl)
         return push_error(ctx, "Bad script name, don't do this :)");
 
     ///current script
-    std::string full_script = get_script_host(ctx) + "." + get_script_ending(ctx);
+    //std::string full_script = get_script_host(ctx) + "." + get_script_ending(ctx);
+
+    std::string full_script = secret_script_host + "." + get_script_ending(ctx);
 
     #ifdef USE_LOCS
     {
@@ -1014,6 +1018,9 @@ duk_ret_t sl_call(duk_context* ctx)
     put_duk_keyvalue(ctx, "FUNCTION_NAME", str);
     put_duk_keyvalue(ctx, "call", err);
 
+    std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
+    dukx_put_hidden_prop(ctx, -1, "script_host", secret_script_host);
+
     freeze_duk(ctx);
 
     return 1;
@@ -1033,19 +1040,19 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     remove_func(ctx, "db_update");*/
 
     if(seclevel <= 4)
-        inject_c_function(ctx, sl_call<4>, "fs_call", 1);
+        inject_c_function(ctx, sl_call<4>, "fs_call", 1, "script_host", script_host);
 
     if(seclevel <= 3)
-        inject_c_function(ctx, sl_call<3>, "hs_call", 1);
+        inject_c_function(ctx, sl_call<3>, "hs_call", 1, "script_host", script_host);
 
     if(seclevel <= 2)
-        inject_c_function(ctx, sl_call<2>, "ms_call", 1);
+        inject_c_function(ctx, sl_call<2>, "ms_call", 1, "script_host", script_host);
 
     if(seclevel <= 1)
-        inject_c_function(ctx, sl_call<1>, "ls_call", 1);
+        inject_c_function(ctx, sl_call<1>, "ls_call", 1, "script_host", script_host);
 
     if(seclevel <= 0)
-        inject_c_function(ctx, sl_call<0>, "ns_call", 1);
+        inject_c_function(ctx, sl_call<0>, "ns_call", 1, "script_host", script_host);
 
     inject_c_function(ctx, hash_d, "hash_d", 1);
 

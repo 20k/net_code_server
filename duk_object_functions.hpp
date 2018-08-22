@@ -738,6 +738,14 @@ std::string dukx_get_hidden_prop_on_this(duk_context* ctx, const std::string& ke
     return str;
 }
 
+template<typename T>
+inline
+void dukx_put_hidden_prop(duk_context* ctx, int offset, const std::string& key, const T& val)
+{
+    push_dukobject(ctx, key, val);
+    duk_put_prop_string(ctx, -1 + offset, DUKX_HIDDEN_SYMBOL("HIDDEN_OBJ").c_str());
+}
+
 template<typename T, typename... U>
 inline
 void dukx_push_c_function_with_hidden(duk_context* ctx, T& t, int nargs, U... u)
