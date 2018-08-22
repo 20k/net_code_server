@@ -4500,7 +4500,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     user target_user;
 
     {
-        mongo_lock_proxy lock = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy lock = get_global_mongo_user_info_context(get_thread_id(ctx));
 
         if(!target_user.load_from_db(lock, found_target))
             return push_error(ctx, "Error: Target does not exist");
@@ -4512,7 +4512,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     user my_user;
 
     {
-        mongo_lock_proxy lock = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy lock = get_global_mongo_user_info_context(get_thread_id(ctx));
 
         if(!my_user.load_from_db(lock, get_caller(ctx)))
             return push_error(ctx, "Error: Does not exist");
@@ -4551,7 +4551,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::vector<user> all_users;
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
         all_users = structure.get_all_users(mongo_ctx);
     }
 
