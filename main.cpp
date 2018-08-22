@@ -527,11 +527,9 @@ int main()
 
     //#ifndef TESTING
     start_npc_thread();
-    #if 0
     init_purple_whale();
     init_blue_mantis();
     user::launch_pump_events_thread();
-    #endif // 0
     //#endif // TESTING
 
     printf("post\n");
