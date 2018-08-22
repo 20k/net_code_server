@@ -27,7 +27,8 @@ struct shared_command_handler_state
 
     ~shared_command_handler_state()
     {
-        delete msock;
+        if(msock)
+            delete msock;
     }
 
     command_handler_state state;
