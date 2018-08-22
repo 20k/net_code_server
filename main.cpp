@@ -631,9 +631,8 @@ int main()
         }*/
 
         user usr;
-        usr.load_from_db(lock, command);
 
-        if(!usr.valid)
+        if(!usr.load_from_db(lock, command))
             continue;
 
         std::cout << "found" << std::endl;

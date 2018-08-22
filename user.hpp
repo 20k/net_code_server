@@ -33,8 +33,6 @@ struct user
 
     bool has_local_pos = false;
 
-    bool valid = false;
-
     void overwrite_user_in_db(mongo_lock_proxy& ctx);
     bool exists(mongo_lock_proxy& ctx, const std::string& name_);
     bool load_from_db(mongo_lock_proxy& ctx, const std::string& name_);
@@ -133,9 +131,7 @@ void for_each_user(const T& t)
             {
                 mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
 
-                usr.load_from_db(ctx, usrname);
-
-                if(!usr.valid)
+                if(!usr.load_from_db(ctx, usrname))
                     continue;
             }
 

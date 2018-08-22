@@ -125,9 +125,8 @@ bool item::transfer_to_user(const std::string& username, int thread_id)
         mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
 
         user temp;
-        temp.load_from_db(user_ctx, username);
 
-        if(!temp.valid)
+        if(!temp.load_from_db(user_ctx, username))
             return false;
 
         if(temp.num_items() >= MAX_ITEMS)
@@ -290,12 +289,13 @@ bool item::transfer_from_to_by_index(int index, const std::string& from, const s
 
     {
         mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
-        u1.load_from_db(user_ctx, from);
-        u2.load_from_db(user_ctx, to);
-    }
 
-    if(!u1.valid || !u2.valid)
-        return false;
+        if(!u1.load_from_db(user_ctx, from))
+            return false;
+
+        if(!u2.load_from_db(user_ctx, to))
+            return false;
+    }
 
     std::string item_id = u1.index_to_item(index);
 
