@@ -130,7 +130,7 @@ bool item::transfer_to_user(const std::string& username, int thread_id)
             return false;
 
         ///NON BLOCKING
-        int max_items = temp.get_total_user_properties(-2)["max_items"];
+        int max_items = temp.get_total_user_properties(thread_id)["max_items"];
 
         if(temp.num_items() >= max_items)
             return false;
