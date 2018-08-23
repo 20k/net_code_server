@@ -934,8 +934,10 @@ mongo_shim::mongo_shim(mongo_context* fctx, int plock_id)
     lock_id = plock_id;
 }
 
-mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim) : ctx(shim.ctx)
+mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim, bool lock) : ctx(shim.ctx)
 {
+    should_lock = lock;
+
     /*ctx = fctx;
 
     if(ctx == nullptr)
@@ -986,6 +988,9 @@ void mongo_lock_proxy::change_collection(const std::string& coll, bool force_cha
 
 void mongo_lock_proxy::lock()
 {
+    if(!should_lock)
+        return;
+
     if(!has_lock)
     {
         ctx.ctx->make_lock(ctx.ctx->last_db, ctx.last_collection, ilock_id, ctx.client);
@@ -1014,22 +1019,9 @@ mongo_lock_proxy::~mongo_lock_proxy()
     unlock();
 }
 
-mongo_nolock_proxy::mongo_nolock_proxy(const mongo_shim& shim) : mongo_lock_proxy(shim)
+mongo_nolock_proxy::mongo_nolock_proxy(const mongo_shim& shim) : mongo_lock_proxy(shim, false)
 {
-    /*size_t my_id = thread_id_storage_hack;
 
-    if(fctx == nullptr)
-        return;
-
-    friendly_id = shim.lock_id;
-    ilock_id = my_id;
-
-    ctx.last_collection = fctx->default_collection;
-
-    if(ctx.ctx->default_collection != "")
-    {
-        change_collection(ctx.ctx->default_collection, true);
-    }*/
 }
 
 mongo_interface* mongo_lock_low_level::operator->()

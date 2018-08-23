@@ -235,10 +235,11 @@ struct mongo_lock_proxy
     int friendly_id = -1;
 
     bool has_lock = false;
+    bool should_lock = true;
 
     perfmon perf;
 
-    mongo_lock_proxy(const mongo_shim& shim);
+    mongo_lock_proxy(const mongo_shim& shim, bool lock = true);
     mongo_lock_proxy(const mongo_lock_proxy&) = delete;
 
     void change_collection(const std::string& coll, bool force_change = false);
@@ -254,11 +255,6 @@ struct mongo_lock_proxy
 struct mongo_nolock_proxy : mongo_lock_proxy
 {
     mongo_nolock_proxy(const mongo_shim& shim);
-
-    void lock() override
-    {
-
-    }
 };
 
 #include "mongo_cleanup.hpp"

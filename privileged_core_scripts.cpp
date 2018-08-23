@@ -4473,8 +4473,8 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     COOPERATE_KILL();
 
     #ifdef TESTING
-    MAKE_PERF_COUNTER();
-    mongo_diagnostics diagnostic_scope;
+    /*MAKE_PERF_COUNTER();
+    mongo_diagnostics diagnostic_scope;*/
     #endif // TESTING
 
     //std::string str = duk_safe_get_prop_string(ctx, -1, "sys");
@@ -4560,7 +4560,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     low_level_structure& structure = *opt_structure.value();
 
-    std::vector<user> special_users = structure.get_special_users(get_thread_id(ctx));
+    std::vector<user> special_users = load_users_nolock(structure.get_special_users());
     std::vector<user> all_users;
 
     {

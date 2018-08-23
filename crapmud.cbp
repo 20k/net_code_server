@@ -41,7 +41,6 @@
 					<Add option="-g" />
 					<Add option="-march=nehalem" />
 					<Add option="-DEXTERN_IP" />
-					<Add option="-D_FORTIFY_SOURCE=2" />
 				</Compiler>
 				<ExtraCommands>
 					<Add after="deploy.bat" />
@@ -56,6 +55,7 @@
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-march=nehalem" />
+					<Add option="-g" />
 					<Add option="-DLOCAL_IP" />
 					<Add option="-DTESTING" />
 				</Compiler>
@@ -85,6 +85,22 @@
 					<Add option="-DTESTING" />
 				</Compiler>
 			</Target>
+			<Target title="DMimic">
+				<Option output="bin/DeployM/crapmud" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/DeployM/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O3" />
+					<Add option="-g" />
+					<Add option="-march=nehalem" />
+					<Add option="-DEXTERN_IP" />
+				</Compiler>
+				<ExtraCommands>
+					<Add after="deploy.bat" />
+					<Mode after="always" />
+				</ExtraCommands>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wnon-virtual-dtor" />
@@ -96,23 +112,19 @@
 			<Add option="-Wno-narrowing" />
 			<Add option="-pie -fPIE" />
 			<Add option="-fno-strict-aliasing" />
-			<Add option="-DBOOST_STACKTRACE_USE_WINDBG" />
+			<Add option="-DBOOST_STACKTRACE_USE_BACKTRACE" />
 			<Add option="-DSERVER" />
 			<Add directory="deps" />
 		</Compiler>
 		<Linker>
 			<Add option="-lmingw32" />
 			<Add option="-lsfml-graphics" />
-			<Add option="-lsfml-audio" />
 			<Add option="-lsfml-network" />
 			<Add option="-lsfml-window" />
 			<Add option="-lsfml-system" />
 			<Add option="-lfreetype" />
 			<Add option="-lopengl32" />
 			<Add option="-lws2_32" />
-			<Add option="-lflac" />
-			<Add option="-lopenal32" />
-			<Add option="-logg" />
 			<Add option="-lmongoc-1.0.dll" />
 			<Add option="-lbson-1.0.dll" />
 			<Add option="-lboost_system-mgw73-mt-x64-1_67" />
@@ -123,6 +135,7 @@
 			<Add option="-lboost_stacktrace_windbg-mgw73-mt-x64-1_67" />
 			<Add option="-lcrypto" />
 			<Add option="-lssl" />
+			<Add option="-lbacktrace" />
 		</Linker>
 		<Unit filename="ascii_helpers.cpp" />
 		<Unit filename="ascii_helpers.hpp" />
@@ -175,12 +188,15 @@
 		<Unit filename="mongo_cleanup.hpp" />
 		<Unit filename="non_user_task_thread.cpp" />
 		<Unit filename="non_user_task_thread.hpp" />
+		<Unit filename="perfmon.cpp" />
+		<Unit filename="perfmon.hpp" />
 		<Unit filename="privileged_core_scripts.cpp" />
 		<Unit filename="privileged_core_scripts.hpp" />
 		<Unit filename="rate_limiting.cpp" />
 		<Unit filename="rate_limiting.hpp" />
 		<Unit filename="rng.cpp" />
 		<Unit filename="rng.hpp" />
+		<Unit filename="safe_thread.hpp" />
 		<Unit filename="scheduled_tasks.cpp" />
 		<Unit filename="scheduled_tasks.hpp" />
 		<Unit filename="script_util.cpp" />
