@@ -4300,6 +4300,11 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
+    #ifdef TESTING
+    /*MAKE_PERF_COUNTER();
+    mongo_diagnostics diagnostic_scope;*/
+    #endif // TESTING
+
     bool centre = dukx_is_prop_truthy(ctx, -1, "centre");
 
     user my_user;
