@@ -1648,6 +1648,32 @@ duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::st
         return push_error(ctx, "User does not exist or is disconnected");
     #endif // XFER_PATHS
 
+    std::string found_item_description;
+
+    {
+        user usr;
+
+        {
+            mongo_nolock_proxy mongo_context = get_global_mongo_user_info_context(-2);
+
+            if(!usr.load_from_db(mongo_context, from))
+                return push_error(ctx, "No user from");
+        }
+
+        std::string item_id = usr.index_to_item(item_idx);
+
+        {
+            item it;
+
+            mongo_nolock_proxy mongo_context = get_global_mongo_user_items_context(-2);
+
+            if(!it.load_from_db(mongo_context, item_id))
+                return push_error(ctx, "No such item");
+
+            found_item_description = it.get_prop("short_name");
+        }
+    }
+
     item placeholder;
 
     if(placeholder.transfer_from_to_by_index(item_idx, from, to, get_thread_id(ctx)))
@@ -1656,7 +1682,7 @@ duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::st
         playspace_network_manage.modify_path_per_link_strength_with_logs(path, -1.f / items_to_destroy_link, {"Xfer'd Item"}, get_thread_id(ctx));
         #endif // XFER_PATHS
 
-        std::string xfer = "`NItem xfer` | from: " + from  + ", to: " + to + ", index: " + std::to_string(item_idx);
+        std::string xfer = "`NItem xfer` | from: " + from  + ", to: " + to + ", name: " + found_item_description;
 
         make_logs_on(ctx, from, user_node_info::ITEM_LOG, {xfer});
         make_logs_on(ctx, to, user_node_info::ITEM_LOG, {xfer});
