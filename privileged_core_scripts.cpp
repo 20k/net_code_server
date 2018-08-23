@@ -2471,7 +2471,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
     user usr;
 
     {
-        mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
 
         if(!usr.load_from_db(user_info, name_of_person_being_attacked))
             return push_error(ctx, "No such user");
@@ -2480,7 +2480,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
     user_nodes nodes;
 
     {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+        mongo_nolock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
 
         nodes.ensure_exists(node_ctx, name_of_person_being_attacked);
         nodes.load_from_db(node_ctx, name_of_person_being_attacked);
@@ -2499,7 +2499,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
         current_node = nodes.name_to_node(name_of_person_being_attacked + "_" + node_fullname);
 
         {
-            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+            mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
             attackables = current_node->get_locks(item_ctx);
         }
@@ -2521,7 +2521,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
         user attacker;
 
         {
-            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+            mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
 
             attacker.load_from_db(mongo_ctx, get_caller(ctx));
         }
@@ -2530,7 +2530,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
         ///hmm, we are actually double overwriting here
         {
-            mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+            mongo_nolock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
 
             nodes.overwrite_in_db(node_ctx);
         }
@@ -2551,6 +2551,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
             {
                 i.handle_rotate();
 
+                ///synchronous so that multiple things don't rotate
                 mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
                 i.overwrite_in_db(item_ctx);
 
@@ -2580,6 +2581,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
                     create_notification(get_thread_id(ctx), name_of_person_being_attacked, make_notif_col("-" + i.get_prop("short_name") + " breached-"));
 
+                    ///wants to be synchronous so that we don't overlap writes
                     mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
                     i.overwrite_in_db(item_ctx);
                 }
@@ -2623,7 +2625,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
         std::vector<item> all_items;
 
         {
-            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+            mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
             all_items = usr.get_all_items(item_ctx);
         }
@@ -2678,6 +2680,11 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
+    #ifdef TESTING
+    /*MAKE_PERF_COUNTER();
+    mongo_diagnostics diagnostic_scope;*/
+    #endif // TESTING
+
     std::string name_of_person_being_attacked = duk_safe_get_prop_string(ctx, -1, "user");
 
     if(name_of_person_being_attacked == "")
@@ -2687,7 +2694,7 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
         return push_error(ctx, "No such user");
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(ctx));
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(ctx));
 
         if(npc_info::has_type(mongo_ctx, npc_info::WARPY, name_of_person_being_attacked))
         {
