@@ -2552,7 +2552,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
                 i.handle_rotate();
 
                 ///synchronous so that multiple things don't rotate
-                mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+                mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
                 i.overwrite_in_db(item_ctx);
 
                 ///todo: send a chats.tell to victim here
