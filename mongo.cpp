@@ -1028,6 +1028,8 @@ mongo_interface* mongo_lock_low_level::operator->()
 {
     //lock();
 
+    perf.db_hits++;
+
     return &ctx;
 }
 

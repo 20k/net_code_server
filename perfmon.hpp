@@ -16,6 +16,7 @@ struct perfmon
 
     bool enabled = true;
     int locks = 0;
+    int db_hits = 0;
     std::vector<std::string> lock_stacktraces;
 
     perfmon(int pline, const std::string& pfile, const std::string& pfunc)
@@ -41,7 +42,7 @@ struct perfmon
             else
                 std::cout << clk.getElapsedTime().asMicroseconds() / 1000.;
 
-            std::cout << " locks " << locks << std::endl;
+            std::cout << " locks " << locks << " db hits " << db_hits << std::endl;
 
             if(lock_stacktraces.size() > 0)
             {
