@@ -134,7 +134,7 @@ struct timestamp_move_queue
     {
         if(timestamp_queue.size() == 0)
         {
-            printf("Warning in timestamped move queue\n");
+            //printf("Warning in timestamped move queue\n");
             return timestamped_position();
         }
 
