@@ -273,6 +273,38 @@ std::map<std::string, double> user::get_total_user_properties(int thread_id)
         found["network_links"] = get_default_network_links(-2);
     }
 
+    found["max_items"] = MAX_ITEMS;
+
+    if(is_npc())
+    {
+        npc_prop_list props;
+
+        bool valid = false;
+
+        {
+            mongo_nolock_proxy ctx = get_global_mongo_npc_properties_context(thread_id);
+
+            valid = props.load_from_db(ctx, name);
+        }
+
+        if(valid && props.has("vals") && props.has("props"))
+        {
+            std::vector<int> enums = props.get_as<std::vector<int>>("props");
+            std::vector<float> vals = props.get_as<std::vector<float>>("vals");
+
+            for(int i=0; i < (int)enums.size(); i++)
+            {
+                if(enums[i] == npc_info::ITEM_CAP)
+                {
+                    if(vals[i] > 0)
+                        found["max_items"] = MAX_ITEMS * 4;
+                    else if(vals[i] < 0)
+                        found["max_items"] = MAX_ITEMS / 2;
+                }
+            }
+        }
+    }
+
     return found;
 }
 
@@ -299,7 +331,8 @@ bool user::load_item(const std::string& id)
 
     std::vector<std::string> items = str_to_array(loaded_upgr_idx);
 
-    if(items.size() >= MAX_ITEMS)
+    ///non blocking get total user properties
+    if(items.size() >= get_total_user_properties(-2)["max_items"])
         return false;
 
     items.push_back(id);

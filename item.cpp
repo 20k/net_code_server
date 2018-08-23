@@ -129,7 +129,10 @@ bool item::transfer_to_user(const std::string& username, int thread_id)
         if(!temp.load_from_db(user_ctx, username))
             return false;
 
-        if(temp.num_items() >= MAX_ITEMS)
+        ///NON BLOCKING
+        int max_items = temp.get_total_user_properties(-2)["max_items"];
+
+        if(temp.num_items() >= max_items)
             return false;
 
         std::string my_id = get_prop("item_id");
@@ -302,7 +305,7 @@ bool item::transfer_from_to_by_index(int index, const std::string& from, const s
     if(item_id == "")
         return false;
 
-    if(u2.num_items() >= MAX_ITEMS)
+    if(u2.num_items() >= u2.get_total_user_properties(thread_id)["max_items"])
         return false;
 
     u1.remove_item(item_id);
