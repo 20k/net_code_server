@@ -1670,7 +1670,7 @@ duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::st
             if(!it.load_from_db(mongo_context, item_id))
                 return push_error(ctx, "No such item");
 
-            found_item_description = it.get_prop("short_name");
+            found_item_description = it.get_prop("short_name") + "/" + item_id;
         }
     }
 
