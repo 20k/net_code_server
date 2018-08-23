@@ -5041,6 +5041,11 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
+    #ifdef TESTING
+    /*MAKE_PERF_COUNTER();
+    mongo_diagnostics diagnostic_scope;*/
+    #endif // TESTING
+
     if(!dukx_is_prop_truthy(ctx, -1, "user"))
         return push_error(ctx, "Takes a user parameter");
 
@@ -5067,7 +5072,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     user my_user;
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
 
         if(!target.load_from_db(mongo_ctx, target_name))
             return push_error(ctx, "Invalid user");
@@ -5101,7 +5106,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool is_warpy = false;
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(ctx));
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(ctx));
 
         is_warpy = npc_info::has_type(mongo_ctx, npc_info::WARPY, target.name);
     }
@@ -5141,7 +5146,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(is_warpy && in_same_system)
     {
         std::vector<std::string> connected = playspace_network_manage.get_links(target.name);
-        std::vector<user> connected_users = load_users(connected, get_thread_id(ctx));
+        std::vector<user> connected_users = load_users_nolock(connected);
 
         std::string connected_system;
         low_level_structure* found_system = nullptr;
@@ -5149,9 +5154,15 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         for(user& usr : connected_users)
         {
-            mongo_lock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(ctx));
+            bool of_type = false;
 
-            if(npc_info::has_type(mongo_ctx, npc_info::WARPY, usr.name))
+            {
+                mongo_nolock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(ctx));
+
+                of_type = npc_info::has_type(mongo_ctx, npc_info::WARPY, usr.name);
+            }
+
+            if(of_type)
             {
                 auto connected_sys_opt = low_level_structure_manage.get_system_of(usr);
 
@@ -5211,7 +5222,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         ///should also print sys.view map
         {
-            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+            mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
 
             my_user.overwrite_user_in_db(mongo_ctx);
         }

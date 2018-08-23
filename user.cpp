@@ -260,7 +260,7 @@ std::map<std::string, double> user::get_total_user_properties(int thread_id)
 
 
     {
-        mongo_lock_proxy ctx = get_global_mongo_user_items_context(thread_id);
+        mongo_nolock_proxy ctx = get_global_mongo_user_items_context(thread_id);
 
         found = get_properties_from_loaded_items(ctx);
     }
@@ -617,7 +617,7 @@ int user::get_default_network_links(int thread_id)
     npc_prop_list props;
 
     {
-        mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(thread_id);
+        mongo_nolock_proxy ctx = get_global_mongo_npc_properties_context(thread_id);
 
         if(!props.load_from_db(ctx, name))
             return 4;
