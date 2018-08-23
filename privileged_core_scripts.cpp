@@ -243,12 +243,6 @@ std::string format_pretty_names(const std::vector<std::string>& names)
 {
     std::string ret;
 
-    /*for(auto& i : names)
-    {
-        ret.append(i);
-        ret += "\n";
-    }*/
-
     for(int i=0; i < (int)names.size(); i++)
     {
         if(i != (int)names.size()-1)
