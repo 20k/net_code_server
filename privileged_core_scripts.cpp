@@ -2582,7 +2582,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
                     create_notification(get_thread_id(ctx), name_of_person_being_attacked, make_notif_col("-" + i.get_prop("short_name") + " breached-"));
 
                     ///wants to be synchronous so that we don't overlap writes
-                    mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+                    mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
                     i.overwrite_in_db(item_ctx);
                 }
             }
