@@ -1587,6 +1587,9 @@ duk_ret_t item__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(ret != "")
             return push_error(ctx, ret);
 
+        if(accum.size() > 0 && accum.back() == '\n')
+            accum.pop_back();
+
         push_duk_val(ctx, accum);
         return 1;
     }
