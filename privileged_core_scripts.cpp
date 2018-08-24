@@ -15,6 +15,7 @@
 #include "auth.hpp"
 #include <secret/secret.hpp>
 #include "perfmon.hpp"
+#include "time.hpp"
 
 //#define XFER_PATHS
 
@@ -160,26 +161,6 @@ std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_c
     }
 
     return str;
-}
-
-///https://stackoverflow.com/questions/16177295/get-time-since-epoch-in-milliseconds-preferably-using-c11-chrono
-///thanks stack overflow
-size_t get_wall_time()
-{
-    size_t milliseconds_since_epoch =
-    std::chrono::duration_cast<std::chrono::milliseconds>
-        (std::chrono::system_clock::now().time_since_epoch()).count();
-
-    return milliseconds_since_epoch;
-}
-
-double get_wall_time_s()
-{
-    auto now = std::chrono::system_clock::now();
-    std::chrono::duration<double, std::ratio<1, 1>> duration = now.time_since_epoch();
-    double real_time = duration.count();
-
-    return real_time;
 }
 
 duk_ret_t cash__balance(priv_context& priv_ctx, duk_context* ctx, int sl)
