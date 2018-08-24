@@ -4446,6 +4446,19 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         std::vector<nlohmann::json> data;
 
+        if(info.ring_ordered_names.size() == 0 && n_val > 0)
+        {
+            std::cout << "repro ghamb bug\n";
+
+            auto low_level_opt = low_level_structure_manage.get_system_of(my_user);
+
+            if(low_level_opt.has_value())
+            {
+                info.ring_ordered_names.push_back(low_level_opt.value()->name);
+                info.global_pos[low_level_opt.value()->name] = low_level_opt.value()->get_pos();
+            }
+        }
+
         for(auto& i : info.ring_ordered_names)
         {
             nlohmann::json j;
@@ -4473,7 +4486,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         if(data.size() == 0 && n_val > 0)
         {
-            std::cout << "repro ghamb bug\n";
+            std::cout << "repro ghamb bug pt 2\n";
         }
 
         all_data = data;
