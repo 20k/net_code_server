@@ -405,6 +405,46 @@ int main()
     manage.connect_systems_together();
     #endif // REGEN_W
 
+    #define FIX_BAD_ITEMS
+    #ifdef FIX_BAD_ITEMS
+
+    for_each_npc([](npc_user& usr)
+                 {
+                    std::vector<std::string> items = usr.get_all_items();
+
+                    bool any = false;
+
+                    for(int i=0; i < (int)items.size(); i++)
+                    {
+                        mongo_lock_proxy ctx = get_global_mongo_user_items_context(-2);
+
+                        if(!item().load_from_db(ctx, items[i]))
+                        {
+                            std::cout << "bad item " << items[i] << " on " << usr.name << std::endl;
+
+                            any = true;
+
+                            items.erase(items.begin() + i);
+                            i--;
+                            continue;
+                        }
+                    }
+
+                    if(any)
+                    {
+                        usr.upgr_idx = array_to_str(items);
+                        usr.loaded_upgr_idx = "";
+
+                        {
+                            mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+                            usr.overwrite_user_in_db(ctx);
+                        }
+                    }
+                 });
+
+    #endif // FIX_BAD_ITEMS
+
     //#define REGEN_SCRIPTS
     #ifdef REGEN_SCRIPTS
     int nid = 0;

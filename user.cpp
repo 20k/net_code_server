@@ -408,12 +408,19 @@ std::vector<item> user::get_all_items(mongo_lock_proxy& ctx)
     for(auto& id : all_items)
     {
         item next;
-        next.load_from_db(ctx, id);
+
+        if(!next.load_from_db(ctx, id))
+            continue;
 
         ret.push_back(next);
     }
 
     return ret;
+}
+
+std::vector<std::string> user::get_all_items()
+{
+    return str_to_array(upgr_idx);
 }
 
 std::string user::index_to_item(int index)
