@@ -14,7 +14,7 @@ void time_structure::from_time_ms(size_t time_code_ms)
     localtime_r(&tt, &local_tm);*/
 
     hours = utc_tm.tm_hour;
-    minutes = utc_tm.tm_hour;
+    minutes = utc_tm.tm_min;
     seconds = utc_tm.tm_sec;
     days = utc_tm.tm_mday;
 }
