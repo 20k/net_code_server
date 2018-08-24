@@ -343,7 +343,7 @@ int main()
                  });*/
 
     npc_manager& npc_manage = get_global_npc_manager();
-    //npc_manage.create_npcs_up_to(MAX_NPC_COUNT);
+    npc_manage.create_npcs_up_to(MAX_NPC_COUNT);
 
     //npc_manage.delete_npcs_over(MAX_NPC_COUNT);
 
@@ -405,7 +405,7 @@ int main()
     manage.connect_systems_together();
     #endif // REGEN_W
 
-    #define FIX_BAD_ITEMS
+    //#define FIX_BAD_ITEMS
     #ifdef FIX_BAD_ITEMS
 
     for_each_npc([](npc_user& usr)
