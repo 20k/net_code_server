@@ -2,6 +2,7 @@
 #define TIME_HPP_INCLUDED
 
 #include <stddef.h>
+#include <string>
 
 struct time_structure
 {
@@ -11,6 +12,8 @@ struct time_structure
     int seconds = 0;
 
     void from_time_ms(size_t time_point_ms);
+
+    static std::string format(int unit);
 };
 
 size_t get_wall_time();

@@ -5,27 +5,31 @@ void time_structure::from_time_ms(size_t time_code_ms)
 {
     std::chrono::system_clock::time_point chron(std::chrono::seconds(time_code_ms / 1000));
 
-    typedef std::chrono::duration<int, std::ratio_multiply<std::chrono::hours::period, std::ratio<24> >::type> chrono_days;
+    time_t tt = std::chrono::system_clock::to_time_t(chron);
 
-    std::chrono::system_clock::duration tp = chron.time_since_epoch();
-    chrono_days d = std::chrono::duration_cast<chrono_days>(tp);
-    tp -= d;
-    std::chrono::hours h = std::chrono::duration_cast<std::chrono::hours>(tp);
-    tp -= h;
-    std::chrono::minutes m = std::chrono::duration_cast<std::chrono::minutes>(tp);
-    tp -= m;
-    std::chrono::seconds s = std::chrono::duration_cast<std::chrono::seconds>(tp);
-    tp -= s;
+    tm utc_tm;
+    gmtime_r(&tt, &utc_tm);
 
-    int hour = h.count() % 24;
-    int minute = m.count() % 60;
-    int second = s.count() % 60;
-    int day = d.count();
+    /*tm local_tm;
+    localtime_r(&tt, &local_tm);*/
 
-    hours = hour;
-    minutes = minute;
-    seconds = second;
-    days = day;
+    hours = utc_tm.tm_hour;
+    minutes = utc_tm.tm_hour;
+    seconds = utc_tm.tm_sec;
+    days = utc_tm.tm_mday;
+}
+
+std::string time_structure::format(int unit)
+{
+    std::string str = std::to_string(unit);
+
+    if(str.size() == 0)
+        return "00";
+
+    if(str.size() == 1)
+        return "0" + str;
+
+    return str;
 }
 
 ///https://stackoverflow.com/questions/16177295/get-time-since-epoch-in-milliseconds-preferably-using-c11-chrono
