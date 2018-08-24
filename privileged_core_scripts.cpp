@@ -126,22 +126,11 @@ std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_c
         if(i.find("msg") != i.end())
             msg = i["msg"];
 
-        std::chrono::system_clock::time_point chron(std::chrono::seconds(time_code_ms / 1000));
+        time_structure time_s;
+        time_s.from_time_ms(time_code_ms);
 
-        typedef std::chrono::duration<int, std::ratio_multiply<std::chrono::hours::period, std::ratio<24> >::type> days;
-
-        std::chrono::system_clock::duration tp = chron.time_since_epoch();
-        days d = std::chrono::duration_cast<days>(tp);
-        tp -= d;
-        std::chrono::hours h = std::chrono::duration_cast<std::chrono::hours>(tp);
-        tp -= h;
-        std::chrono::minutes m = std::chrono::duration_cast<std::chrono::minutes>(tp);
-        tp -= m;
-        std::chrono::seconds s = std::chrono::duration_cast<std::chrono::seconds>(tp);
-        tp -= s;
-
-        int hour = h.count() % 24;
-        int minute = m.count() % 60;
+        int hour = time_s.hours;
+        int minute = time_s.minutes;
 
         std::string tstr = "`b" + format_time(std::to_string(hour)) + format_time(std::to_string(minute)) + "`";
 
