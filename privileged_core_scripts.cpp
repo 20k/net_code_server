@@ -2877,6 +2877,9 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
             }
         }
 
+        if(accum.size() > 0 && accum.back() == '\n')
+            accum.pop_back();
+
         duk_push_string(ctx, accum.c_str());
     }
     else
