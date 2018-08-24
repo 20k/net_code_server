@@ -343,7 +343,7 @@ int main()
                  });*/
 
     npc_manager& npc_manage = get_global_npc_manager();
-    npc_manage.create_npcs_up_to(MAX_NPC_COUNT);
+    //npc_manage.create_npcs_up_to(MAX_NPC_COUNT);
 
     //npc_manage.delete_npcs_over(MAX_NPC_COUNT);
 
@@ -379,6 +379,31 @@ int main()
 
     manage.connect_systems_together();
     #endif // REGENERATE_LINKS_AND_USERS
+
+    //#define DELETE_ANY_W
+    #ifdef DELETE_ANY_W
+    for_each_npc([](npc_user& npc)
+    {
+        std::string name = npc.name;
+
+        if(name.size() < 2)
+            return;
+
+        if(name.back() == 'w' && name[(int)name.size() - 2] == '_')
+        {
+            std::cout << "name " << name << std::endl;
+
+            command_handler_state state;
+            delete_user(state, name, true);
+        }
+    });
+    #endif // DELETE_ANY_W
+
+    //#define REGEN_W
+    #ifdef REGEN_W
+    manage.erase_intersystem_specials();
+    manage.connect_systems_together();
+    #endif // REGEN_W
 
     //#define REGEN_SCRIPTS
     #ifdef REGEN_SCRIPTS
@@ -518,8 +543,11 @@ int main()
                         {
                             std::cout << "npc " << npc.name << " broken " << std::endl;
 
-                            props.set_as<std::vector<int>>("props", {});
-                            props.set_as<std::vector<float>>("vals", {});
+                            /*props.set_as<std::vector<int>>("props", {});
+                            props.set_as<std::vector<float>>("vals", {});*/
+
+                            command_handler_state temp;
+                            delete_user(temp, npc.name, true);
                         }
 
                         {
