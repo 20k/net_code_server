@@ -4603,13 +4603,13 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     bool visited_host_user = false;
 
-    if(!has_target)
+    if(playspace_network_manage.current_network_links(my_user.name) == 0)
     {
         for(user& usr : special_users)
         {
             network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, n_count);
 
-            std::vector<std::string> connected = structure.get_connected_systems_from(usr.name);
+            /*std::vector<std::string> connected = structure.get_connected_systems_from(usr.name);
 
             if(connected.size() > 0)
             {
@@ -4627,7 +4627,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(connected.size() > 0)
             {
                 cur.extra_data_map[usr.name] += ")";
-            }
+            }*/
 
             info = network_accessibility_info::merge_together(info, cur);
 
@@ -4643,12 +4643,12 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, n_count);
 
-            auto old_names = cur.ring_ordered_names;
+            /*auto old_names = cur.ring_ordered_names;
 
             if(playspace_network_manage.current_network_links(usr.name) == 0)
             {
                 cur.extra_data_map[usr.name] = "(free)";
-            }
+            }*/
 
             info = network_accessibility_info::merge_together(info, cur);
 
@@ -4662,6 +4662,37 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, target_user.name, n_count);
 
         info = network_accessibility_info::merge_together(info, cur);
+    }
+
+    for(auto& user_name : info.ring_ordered_names)
+    {
+        if(npc_info::has_type_fast_locking(npc_info::WARPY, user_name))
+        {
+            std::vector<std::string> connected = structure.get_connected_systems_from(user_name);
+
+            if(connected.size() > 0)
+            {
+                info.extra_data_map[user_name] += "(";
+            }
+
+            for(int i=0; i < (int)connected.size(); i++)
+            {
+                if(i != (int)connected.size() - 1)
+                    info.extra_data_map[user_name] += colour_string(connected[i]) + ", ";
+                else
+                    info.extra_data_map[user_name] += colour_string(connected[i]);
+            }
+
+            if(connected.size() > 0)
+            {
+                info.extra_data_map[user_name] += ")";
+            }
+        }
+
+        if(playspace_network_manage.current_network_links(user_name) == 0)
+        {
+            info.extra_data_map[user_name] += "(free)";
+        }
     }
 
     if(!is_arr)
