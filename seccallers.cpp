@@ -719,10 +719,16 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     COOPERATE_KILL();
 
     std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
-
     std::string to_call_fullname;
 
     duk_push_current_function(ctx);
+
+    bool is_async = false;
+
+    if(!get_duk_keyvalue(ctx, "is_async", is_async))
+        return push_error(ctx, "Missing is_async flag");
+
+    std::cout << "is_async " << is_async << std::endl;
 
     if(!get_duk_keyvalue(ctx, "FUNCTION_NAME", to_call_fullname))
     {
@@ -1014,6 +1020,8 @@ duk_ret_t sl_call(duk_context* ctx)
     std::string str = duk_require_string(ctx, -2);
 
     bool async_launch = dukx_is_truthy(ctx, -1);
+
+    //std::cout << "truthy " << async_launch << std::endl;
 
     duk_push_c_function(ctx, &jxs_call<N>, 1);
 

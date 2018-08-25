@@ -127,12 +127,12 @@
 			<Add option="-lws2_32" />
 			<Add option="-lmongoc-1.0.dll" />
 			<Add option="-lbson-1.0.dll" />
-			<Add option="-lboost_system-mgw73-mt-x64-1_67" />
+			<Add option="-lboost_system-mt" />
 			<Add option="-lmswsock" />
 			<Add option="-lole32" />
-			<Add option="-lboost_filesystem-mgw73-mt-x64-1_67" />
+			<Add option="-lboost_filesystem-mt" />
 			<Add option="-ldbgeng" />
-			<Add option="-lboost_stacktrace_windbg-mgw73-mt-x64-1_67" />
+			<Add option="-lboost_stacktrace_windbg-mt" />
 			<Add option="-lcrypto" />
 			<Add option="-lssl" />
 			<Add option="-lbacktrace" />

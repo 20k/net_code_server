@@ -4,6 +4,7 @@
 #include <boost/stacktrace.hpp>
 #include <boost/filesystem.hpp>
 #include <iostream>
+#include <sstream>
 
 void stack_on_start()
 {

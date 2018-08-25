@@ -454,6 +454,11 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             if(all_shared.has_value())
             {
                 sleep_mult = all_shared.value()->live_work_units();
+
+                if(all_shared.value()->live_work_units() > 10)
+                {
+                    max_time_ms = 0.f;
+                }
             }
 
             #ifdef ACTIVE_TIME_MANAGEMENT
