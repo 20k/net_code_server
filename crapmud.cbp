@@ -210,6 +210,8 @@
 		<Unit filename="shared_duk_worker_state.hpp" />
 		<Unit filename="stacktrace.cpp" />
 		<Unit filename="stacktrace.hpp" />
+		<Unit filename="time.cpp" />
+		<Unit filename="time.hpp" />
 		<Unit filename="timestamped_position.hpp" />
 		<Unit filename="unified_scripts.hpp" />
 		<Unit filename="user.cpp" />
