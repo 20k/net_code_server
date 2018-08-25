@@ -5002,6 +5002,12 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
             return push_error(ctx, "Requires string or array");
         }
 
+        for(int i=0; i < 3; i++)
+        {
+            if(!isfinite(end_pos.v[i]))
+                return push_error(ctx, "Not a finite value");
+        }
+
         end_pos = clamp(end_pos, -1000.f, 1000.f);
 
         end_pos = (end_pos - current_pos) * fraction + current_pos;
