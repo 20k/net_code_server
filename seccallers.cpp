@@ -751,7 +751,7 @@ void async_launch_script_name(duk_context* ctx, int sl, const std::string& sname
     if(sl == 0)
         seclevel = "n";
 
-    std::cout <<" running " << seclevel + call_end << std::endl;
+    //std::cout <<" running " << seclevel + call_end << std::endl;
 
     sthread sthr(run_in_user_context, get_caller(ctx), seclevel + call_end, ptr, std::nullopt, true);
 
@@ -772,7 +772,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     if(!get_duk_keyvalue(ctx, "is_async", is_async))
         return push_error(ctx, "Missing is_async flag");
 
-    std::cout << "is_async " << is_async << std::endl;
+    //std::cout << "is_async " << is_async << std::endl;
 
     if(!get_duk_keyvalue(ctx, "FUNCTION_NAME", to_call_fullname))
     {
