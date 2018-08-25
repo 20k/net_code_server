@@ -1011,12 +1011,15 @@ duk_ret_t sl_call(duk_context* ctx)
 {
     static_assert(N >= 0 && N <= 4);
 
-    std::string str = duk_require_string(ctx, -1);
+    std::string str = duk_require_string(ctx, -2);
+
+    bool async_launch = dukx_is_truthy(ctx, -1);
 
     duk_push_c_function(ctx, &jxs_call<N>, 1);
 
     put_duk_keyvalue(ctx, "FUNCTION_NAME", str);
     put_duk_keyvalue(ctx, "call", err);
+    put_duk_keyvalue(ctx, "is_async", async_launch);
 
     std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
     dukx_put_hidden_prop(ctx, -1, "script_host", secret_script_host);
@@ -1040,19 +1043,19 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     remove_func(ctx, "db_update");*/
 
     if(seclevel <= 4)
-        inject_c_function(ctx, sl_call<4>, "fs_call", 1, "script_host", script_host);
+        inject_c_function(ctx, sl_call<4>, "fs_call", 2, "script_host", script_host);
 
     if(seclevel <= 3)
-        inject_c_function(ctx, sl_call<3>, "hs_call", 1, "script_host", script_host);
+        inject_c_function(ctx, sl_call<3>, "hs_call", 2, "script_host", script_host);
 
     if(seclevel <= 2)
-        inject_c_function(ctx, sl_call<2>, "ms_call", 1, "script_host", script_host);
+        inject_c_function(ctx, sl_call<2>, "ms_call", 2, "script_host", script_host);
 
     if(seclevel <= 1)
-        inject_c_function(ctx, sl_call<1>, "ls_call", 1, "script_host", script_host);
+        inject_c_function(ctx, sl_call<1>, "ls_call", 2, "script_host", script_host);
 
     if(seclevel <= 0)
-        inject_c_function(ctx, sl_call<0>, "ns_call", 1, "script_host", script_host);
+        inject_c_function(ctx, sl_call<0>, "ns_call", 2, "script_host", script_host);
 
     inject_c_function(ctx, hash_d, "hash_d", 1);
 
