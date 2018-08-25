@@ -453,6 +453,27 @@ T* get_shim_pointer(duk_context* ctx)
 }
 
 template<typename T>
+inline
+void dukx_allocate_in_heap(duk_context* ctx, const T& t, const std::string& key)
+{
+    T* nptr = new T(t);
+
+    dukx_put_pointer(ctx, nptr, key);
+}
+
+template<typename T>
+inline
+void dukx_free_in_heap(duk_context* ctx, const std::string& key)
+{
+    T* ptr = (T*)dukx_get_pointer<T>(ctx, key);
+
+    if(ptr != nullptr)
+        delete ptr;
+
+    dukx_put_pointer(ctx, nullptr, key);
+}
+
+template<typename T>
 void set_copy_allocate_shim_pointer(duk_context* ctx, const T& t)
 {
     T* new_shim = new T(t);

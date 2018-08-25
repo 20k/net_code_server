@@ -403,11 +403,14 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             ///taking a pointer to a shared pointer passed in by value is a great idea
             ///right?
             dukx_put_pointer(ctx, &all_shared.value()->state, "command_handler_state_pointer");
+
+            dukx_allocate_in_heap(ctx, all_shared.value(), "all_shared_data");
         }
         else
         {
             dukx_put_pointer(ctx, nullptr, "shared_data_ptr");
             dukx_put_pointer(ctx, nullptr, "command_handler_state_pointer");
+            dukx_put_pointer(ctx, nullptr, "all_shared_data");
         }
 
         unsafe_info inf;
@@ -808,6 +811,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             if(terminated)
                 printf("Attempting unsafe resource cleanup\n");
 
+            dukx_free_in_heap<std::shared_ptr<shared_command_handler_state>>(ctx, "all_shared_data");
             teardown_state(ctx);
 
             duk_destroy_heap(ctx);

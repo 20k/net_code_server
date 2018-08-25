@@ -8,6 +8,8 @@
 #include "duk_object_functions.hpp"
 #include "http_beast_server.hpp"
 #include "shared_data.hpp"
+#include "shared_command_handler_state.hpp"
+#include "safe_thread.hpp"
 
 int my_timeout_check(void* udata)
 {
@@ -714,6 +716,30 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
     return extra;
 }
 
+void async_launch_script_name(duk_context* ctx, int sl, const std::string& sname, std::shared_ptr<shared_command_handler_state>& ptr)
+{
+    std::string call_end = "s_call(\"" + sname + "\")({});";
+
+    std::string seclevel = "f";
+
+    if(sl == 4)
+        seclevel = "f";
+    if(sl == 3)
+        seclevel = "h";
+    if(sl == 2)
+        seclevel = "m";
+    if(sl == 1)
+        seclevel = "l";
+    if(sl == 0)
+        seclevel = "n";
+
+    std::cout <<" running " << seclevel + call_end << std::endl;
+
+    sthread sthr(run_in_user_context, get_caller(ctx), seclevel + call_end, ptr, std::nullopt, true);
+
+    sthr.detach();
+}
+
 duk_ret_t js_call(duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -830,7 +856,25 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     set_script_info(ctx, to_call_fullname);
 
     if(!script.is_c_shim)
-        compile_and_call(ctx, load, get_caller(ctx), false, script.seclevel, false, full_script);
+    {
+        if(is_async)
+        {
+            std::shared_ptr<shared_command_handler_state>* shared_state = dukx_get_pointer<std::shared_ptr<shared_command_handler_state>>(ctx, "all_shared_data");
+
+            if(shared_state == nullptr)
+                return push_error(ctx, "Cannot launch async scripts in this context (bot brain, on_breach, or other throwaway script?)");
+
+            std::cout << "launched async\n";
+
+            async_launch_script_name(ctx, sl, to_call_fullname, *shared_state);
+
+            push_success(ctx, "Launched async script");
+        }
+        else
+        {
+            compile_and_call(ctx, load, get_caller(ctx), false, script.seclevel, false, full_script);
+        }
+    }
     else
     {
         duk_push_c_function(ctx, (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name], 1);
