@@ -295,7 +295,7 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
         {
             force_terminate = true;
 
-            printf("Caugh exception in async\n");
+            printf("Caught exception in async\n");
             break;
         }
     }
