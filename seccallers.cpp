@@ -52,7 +52,7 @@ duk_ret_t db_insert(duk_context* ctx)
 
     std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx.change_collection(secret_script_host);
 
     std::string json = duk_json_encode(ctx, -1);
@@ -72,7 +72,7 @@ duk_ret_t db_update(duk_context* ctx)
 
     //std::cout << "SECRET HOST " << secret_script_host << std::endl;
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx.change_collection(secret_script_host);
 
     std::string json_1 = duk_json_encode(ctx, 0);
@@ -106,7 +106,7 @@ duk_ret_t db_find_all(duk_context* ctx)
 
     std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx.change_collection(secret_script_host);
 
     duk_push_this(ctx);
@@ -144,7 +144,7 @@ duk_ret_t db_find_one(duk_context* ctx)
 
     std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx.change_collection(secret_script_host);
 
     duk_push_this(ctx);
@@ -243,7 +243,7 @@ duk_ret_t db_remove(duk_context* ctx)
 
     std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
     mongo_ctx.change_collection(secret_script_host);
 
     std::string json = duk_json_encode(ctx, -1);
