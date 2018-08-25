@@ -41,6 +41,22 @@ duk_ret_t native_print(duk_context *ctx)
 	return 0;
 }
 
+duk_ret_t async_print(duk_context* ctx)
+{
+    COOPERATE_KILL();
+
+    std::string str = duk_safe_to_std_string(ctx, -1);
+
+    command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(ctx, "command_handler_state_pointer");
+
+    if(found_ptr && found_ptr->get_user_name() == get_caller(ctx))
+    {
+        send_async_message(ctx, "command " + str);
+    }
+
+	return 0;
+}
+
 duk_ret_t timeout_yield(duk_context* ctx)
 {
     COOPERATE_KILL();
@@ -1120,6 +1136,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     }
 
     inject_c_function(ctx, native_print, "print", DUK_VARARGS);
+    inject_c_function(ctx, async_print, "async_print", DUK_VARARGS);
 
     inject_c_function(ctx, timeout_yield, "timeout_yield",  0);
     inject_c_function(ctx, async_pipe, "async_pipe",  1);
