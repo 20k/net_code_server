@@ -44,6 +44,7 @@ duk_ret_t native_print(duk_context *ctx)
 duk_ret_t async_print(duk_context* ctx)
 {
     COOPERATE_KILL();
+    RATELIMIT_DUK(ASYNC_PRINT);
 
     std::string str = duk_safe_to_std_string(ctx, -1);
 
@@ -52,9 +53,10 @@ duk_ret_t async_print(duk_context* ctx)
     if(found_ptr && found_ptr->get_user_name() == get_caller(ctx))
     {
         send_async_message(ctx, "command " + str);
+        return push_success(ctx);
     }
 
-	return 0;
+	return push_error(ctx, "No pointer or wrong user");
 }
 
 duk_ret_t timeout_yield(duk_context* ctx)
