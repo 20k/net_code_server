@@ -26,6 +26,7 @@ struct user
     ///stack of users, used for changing cli context
     std::vector<std::string> call_stack;
     std::vector<std::string> owner_list;
+    std::vector<std::string> users_i_have_access_to;
 
     std::string joined_channels;
 
@@ -71,6 +72,7 @@ struct user
 
     ///manually injects self
     std::vector<std::string> get_allowed_users();
+    std::vector<std::string> get_users_i_have_access_to();
 
     bool is_allowed_user(const std::string& usr); ///returns true for self
     void add_allowed_user(const std::string& usr, mongo_lock_proxy& ctx);

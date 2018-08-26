@@ -35,6 +35,7 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     to_set.set_prop("initial_connection_setup", initial_connection_setup);
     to_set.set_prop_array("owner_list", owner_list);
     to_set.set_prop_array("call_stack", call_stack);
+    to_set.set_prop_array("users_i_have_access_to", users_i_have_access_to);
 
     for(int i=0; i < decltype(pos)::DIM; i++)
         to_set.set_prop("vector_pos" + std::to_string(i), pos.v[i]);
@@ -111,6 +112,8 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
             owner_list = req.get_prop_as_array("owner_list");
         if(req.has_prop("call_stack"))
             call_stack = req.get_prop_as_array("call_stack");
+        if(req.has_prop("users_i_have_access_to"))
+            users_i_have_access_to = req.get_prop_as_array("users_i_have_access_to");
 
         for(int i=0; i < decltype(pos)::DIM; i++)
         {
@@ -211,6 +214,7 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
     request.set_prop("initial_connection_setup", initial_connection_setup);
     request.set_prop_array("owner_list", std::vector<std::string>());
     request.set_prop_array("call_stack", std::vector<std::string>());
+    request.set_prop_array("users_i_have_access_to", std::vector<std::string>());
 
     pos = sample_game_structure();
 
@@ -567,6 +571,11 @@ std::vector<std::string> user::get_allowed_users()
     return usrs;
 }
 
+std::vector<std::string> user::get_users_i_have_access_to()
+{
+    return users_i_have_access_to;
+}
+
 bool user::is_allowed_user(const std::string& usr)
 {
     if(!is_npc())
@@ -600,6 +609,15 @@ void user::add_allowed_user(const std::string& usr, mongo_lock_proxy& ctx)
     to_set.set_prop_array("owner_list", owner_list);
 
     filter.update_in_db_if_exact(ctx, to_set);
+
+    user found_user;
+
+    if(found_user.load_from_db(ctx, usr))
+    {
+        found_user.users_i_have_access_to.push_back(name);
+
+        found_user.overwrite_user_in_db(ctx);
+    }
 }
 
 void user::remove_allowed_user(const std::string& usr, mongo_lock_proxy& ctx)
@@ -622,6 +640,23 @@ void user::remove_allowed_user(const std::string& usr, mongo_lock_proxy& ctx)
     to_set.set_prop_array("owner_list", owner_list);
 
     filter.update_in_db_if_exact(ctx, to_set);
+
+    user found_user;
+
+    if(found_user.load_from_db(ctx, usr))
+    {
+        ///find my name in their access list
+        //auto found_it = found_user.users_i_have_access_to.find(name);
+
+        auto found_it = std::find(found_user.users_i_have_access_to.begin(), found_user.users_i_have_access_to.end(), name);
+
+        ///if not the end iterator, erase my name from their access list
+        if(found_it != found_user.users_i_have_access_to.end())
+        {
+            found_user.users_i_have_access_to.erase(found_it);
+            found_user.overwrite_user_in_db(ctx);
+        }
+    }
 }
 
 int user::find_num_scripts(mongo_lock_proxy& ctx)
