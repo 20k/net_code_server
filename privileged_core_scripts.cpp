@@ -209,16 +209,45 @@ duk_ret_t scripts__get_level(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 
-std::string format_pretty_names(const std::vector<std::string>& names)
+std::string format_pretty_names(const std::vector<std::string>& names, bool colour)
 {
     std::string ret;
 
     for(int i=0; i < (int)names.size(); i++)
     {
+        std::string name = names[i];
+
+        if(colour)
+        {
+            std::vector<std::string> post_split = no_ss_split(name, ".");
+
+            if(post_split.size() > 0)
+            {
+                name = "";
+
+                for(int i=0; i < (int)post_split.size(); i++)
+                {
+                    if(i == 0)
+                    {
+                        name += colour_string_only_alnum(post_split[i]);
+                    }
+                    else
+                    {
+                        name += post_split[i];
+                    }
+
+                    if(i != (int)post_split.size() - 1)
+                    {
+                        name += ".";
+                    }
+                }
+            }
+        }
+
         if(i != (int)names.size()-1)
-            ret.append(names[i] + "\n");
+            ret.append(name + "\n");
         else
-            ret.append(names[i]);
+            ret.append(name);
     }
 
     return ret;
@@ -291,7 +320,7 @@ duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
     else
     {
-        std::string str = format_pretty_names(names);
+        std::string str = format_pretty_names(names, true);
 
         duk_push_string(ctx, str.c_str());
     }
@@ -332,7 +361,7 @@ duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(pretty)
     {
-        std::string str = format_pretty_names(names);
+        std::string str = format_pretty_names(names, true);
 
         duk_push_string(ctx, str.c_str());
     }
@@ -516,7 +545,7 @@ duk_ret_t scripts__core(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
     else
     {
-        std::string str = format_pretty_names(names);
+        std::string str = format_pretty_names(names, false);
 
         duk_push_string(ctx, str.c_str());
     }
@@ -1105,7 +1134,7 @@ duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///so have to revisit updating auth
     if(pretty)
     {
-        std::string str = format_pretty_names(names);
+        std::string str = format_pretty_names(names, true);
 
         push_duk_val(ctx, str);
     }
@@ -1146,7 +1175,7 @@ duk_ret_t users__accessible(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///so have to revisit updating auth
     if(pretty)
     {
-        std::string str = format_pretty_names(names);
+        std::string str = format_pretty_names(names, true);
 
         push_duk_val(ctx, str);
     }
@@ -2554,7 +2583,7 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
     else
     {
-        std::string str = format_pretty_names(logs);
+        std::string str = format_pretty_names(logs, false);
 
         push_duk_val(ctx, str);
         return 1;
