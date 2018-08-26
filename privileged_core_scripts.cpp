@@ -2183,7 +2183,7 @@ std::vector<int> check_get_index_property(duk_context* ctx)
 
     duk_pop(ctx);
 
-    std::sort(ret.begin(), ret.end());
+    //std::sort(ret.begin(), ret.end());
 
     return ret;
 }
@@ -2254,6 +2254,9 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         if(it.get_prop_as_integer("item_type") == item_types::LOCK && nodes.any_contains_lock(item_id))
         {
+            if(loaded_lock)
+                return push_error(ctx, "Cannot steal more than one loaded lock");
+
             cost += 50;
             loaded_lock = true;
         }
@@ -2307,9 +2310,11 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
             return push_error(ctx, ret);
 
         push_xfer_item_id_with_logs(ctx, item_id, from, get_caller(ctx));
+        duk_put_prop_index(ctx, -2, idx);
         idx++;
 
-        duk_put_prop_index(ctx, -2, idx);
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        found_user.load_from_db(mongo_ctx, from);
     }
 
     return 1;
