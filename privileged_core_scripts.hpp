@@ -100,6 +100,7 @@ std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_c
 
 duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl);
+duk_ret_t users__accessible(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 #if 0
 ///pretty tired when i wrote this check it for mistakes
@@ -298,6 +299,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(msg__tell, 3),
     REGISTER_FUNCTION_PRIV(msg__recent, 2),
     REGISTER_FUNCTION_PRIV(users__me, 0),
+    REGISTER_FUNCTION_PRIV(users__accessible, 0),
     #ifdef TESTING
     REGISTER_FUNCTION_PRIV(item__create, 0),
     #endif // TESTING

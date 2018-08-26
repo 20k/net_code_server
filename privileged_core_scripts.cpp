@@ -1117,6 +1117,47 @@ duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+duk_ret_t users__accessible(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    int pretty = !dukx_is_prop_truthy(ctx, -1, "array");
+
+    std::string caller = get_caller(ctx);
+
+    user current_user;
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        if(!current_user.exists(mongo_ctx, caller))
+        {
+            push_error(ctx, "Yeah you really broke something here");
+            return 1;
+        }
+
+        current_user.load_from_db(mongo_ctx, caller);
+    }
+
+    std::vector<std::string> names = current_user.users_i_have_access_to;
+
+    ///users in user db don't know about the other users
+    ///and we can't perform a query across multiple collections, quite rightly
+    ///so have to revisit updating auth
+    if(pretty)
+    {
+        std::string str = format_pretty_names(names);
+
+        push_duk_val(ctx, str);
+    }
+    else
+    {
+        push_duk_val(ctx, names);
+    }
+
+    return 1;
+}
+
 #if 0
 ///pretty tired when i wrote this check it for mistakes
 
