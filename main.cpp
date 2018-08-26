@@ -354,6 +354,59 @@ int main()
     //manage.erase_all();
     manage.generate_up_to(150);
 
+    #define FIXY_FIX_NPCS
+    #ifdef FIXY_FIX_NPCS
+
+    std::vector<std::string> all_users_and_npcs;
+
+    for_each_user([&](user& usr)
+                  {
+                    mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+                    all_users_and_npcs.push_back(usr.name);
+
+                    usr.users_i_have_access_to.clear();
+
+                    usr.overwrite_user_in_db(ctx);
+                  });
+
+    for_each_npc([&](npc_user& usr)
+                 {
+                    mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+                    all_users_and_npcs.push_back(usr.name);
+
+                    usr.users_i_have_access_to.clear();
+
+                    usr.overwrite_user_in_db(ctx);
+                 });
+
+    for(std::string& user_name : all_users_and_npcs)
+    {
+        mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+        user usr;
+
+        if(!usr.load_from_db(ctx, user_name))
+            continue;
+
+        std::vector<std::string> owner_list = usr.owner_list;
+
+        for(std::string& owner : owner_list)
+        {
+            user owned_user;
+
+            if(!owned_user.load_from_db(ctx, owner))
+                continue;
+
+            owned_user.users_i_have_access_to.push_back(user_name);
+
+            owned_user.overwrite_user_in_db(ctx);
+        }
+    }
+
+    #endif // FIXY_FIX_NPCS
+
     /*#ifndef TESTING
     tickle_cache();
     #endif // TESTING*/
