@@ -2199,9 +2199,6 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(indices.size() == 0)
         return push_error(ctx, "Pass idx:item_offset or idx:[offset1, offset2]");
 
-    ///if you pass in an array we get nan, which seems to convert to 0
-    //int item_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
-
     if(from == "")
         return push_error(ctx, "Args: user:<username>, idx:item_offset");
 
@@ -2221,23 +2218,6 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     //std::string item_id = found_user.index_to_item(item_idx);
     int cost = 0;
     bool loaded_lock = false;
-
-    ///make sure to move this check way below so it cant be exploited
-    /*if(item_id == "")
-        return push_error(ctx, "No such item");
-
-    {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
-
-        item it;
-        it.load_from_db(mongo_ctx, item_id);
-
-        if(it.get_prop_as_integer("item_type") == item_types::LOCK && nodes.any_contains_lock(item_id))
-        {
-            cost = 50;
-            loaded_lock = true;
-        }
-    }*/
 
     std::vector<std::string> item_ids;
 
