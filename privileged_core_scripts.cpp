@@ -1599,16 +1599,8 @@ duk_ret_t item__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
-
-duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::string& from, const std::string& to)
+duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, const std::string& from, const std::string& to)
 {
-    ///TODO: Implement and test this below here when i'm less tired
-    /*std::string accum;
-    auto ret = load_item_raw(-1, -1, item_idx, found_user, nodes, accum, get_thread_id(ctx));
-
-    if(ret != "")
-        return push_error(ctx, ret);*/
-
     if(from == to)
         return push_success(ctx, "Item definitely transferred to a different user");
 
@@ -1625,33 +1617,29 @@ duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::st
 
     std::string found_item_description;
 
+    user usr;
+
     {
-        user usr;
+        mongo_nolock_proxy mongo_context = get_global_mongo_user_info_context(-2);
 
-        {
-            mongo_nolock_proxy mongo_context = get_global_mongo_user_info_context(-2);
+        if(!usr.load_from_db(mongo_context, from))
+            return push_error(ctx, "No user from");
+    }
 
-            if(!usr.load_from_db(mongo_context, from))
-                return push_error(ctx, "No user from");
-        }
+    {
+        item it;
 
-        std::string item_id = usr.index_to_item(item_idx);
+        mongo_nolock_proxy mongo_context = get_global_mongo_user_items_context(-2);
 
-        {
-            item it;
+        if(!it.load_from_db(mongo_context, item_id))
+            return push_error(ctx, "No such item");
 
-            mongo_nolock_proxy mongo_context = get_global_mongo_user_items_context(-2);
-
-            if(!it.load_from_db(mongo_context, item_id))
-                return push_error(ctx, "No such item");
-
-            found_item_description = it.get_prop("short_name") + "/" + item_id;
-        }
+        found_item_description = it.get_prop("short_name") + "/" + item_id;
     }
 
     item placeholder;
 
-    if(placeholder.transfer_from_to_by_index(item_idx, from, to, get_thread_id(ctx)))
+    if(placeholder.transfer_from_to_by_index(usr.item_to_index(item_id), from, to, get_thread_id(ctx)))
     {
         #ifdef XFER_PATHS
         playspace_network_manage.modify_path_per_link_strength_with_logs(path, -1.f / items_to_destroy_link, {"Xfer'd Item"}, get_thread_id(ctx));
@@ -1674,6 +1662,19 @@ duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::st
     return 1;
 }
 
+duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::string& from, const std::string& to)
+{
+    user usr;
+
+    {
+        mongo_nolock_proxy mongo_context = get_global_mongo_user_info_context(-2);
+
+        if(!usr.load_from_db(mongo_context, from))
+            return push_error(ctx, "No user from");
+    }
+
+    return push_xfer_item_id_with_logs(ctx, usr.index_to_item(item_idx), from, to);
+}
 
 duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
@@ -2149,16 +2150,59 @@ duk_ret_t take_cash(duk_context* ctx, const std::string& username, double price)
     return 0;
 }
 
+std::vector<int> check_get_index_property(duk_context* ctx)
+{
+    if(!dukx_is_prop_truthy(ctx, -1, "idx"))
+        return std::vector<int>();
+
+    std::vector<int> ret;
+
+    duk_get_prop_string(ctx, -1, "idx");
+
+    if(duk_is_number(ctx, -1))
+    {
+        ret.push_back(duk_get_int(ctx, -1));
+    }
+
+    if(duk_is_array(ctx, -1))
+    {
+        duk_size_t n = duk_get_length(ctx, -1);
+
+        for(int i=0; i < (int)n && i < 1000; i++)
+        {
+            duk_get_prop_index(ctx, -1, i);
+
+            if(duk_is_number(ctx, -1))
+            {
+                ret.push_back(duk_get_number(ctx, -1));
+            }
+
+            duk_pop(ctx);
+        }
+    }
+
+    duk_pop(ctx);
+
+    std::sort(ret.begin(), ret.end());
+
+    return ret;
+}
+
 ///have item__steal reset internal node structure
 
 duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     std::string from = duk_safe_get_prop_string(ctx, -1, "user");
 
-    ///if you pass in an array we get nan, which seems to convert to 0
-    int item_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
+    std::vector<int> indices = check_get_index_property(ctx);
 
-    if(from == "" || item_idx < 0)
+    if(indices.size() == 0)
+        return push_error(ctx, "Pass idx:item_offset or idx:[offset1, offset2]");
+
+    ///if you pass in an array we get nan, which seems to convert to 0
+    //int item_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
+
+    if(from == "")
         return push_error(ctx, "Args: user:<username>, idx:item_offset");
 
     auto found = get_user_and_nodes(from, get_thread_id(ctx));
@@ -2174,21 +2218,12 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!((hostile & user_node_info::XFER_ITEM_FROM) > 0))
         return push_error(ctx, "System Breach Node Secured");
 
-    ///unloads item if loaded
-    #if 0
-    std::string accum;
-    auto ret = load_item_raw(-1, -1, item_idx, found_user, nodes, accum, get_thread_id(ctx));
-
-    if(ret != "")
-        return push_error(ctx, ret);
-    #endif // 0
-
-    std::string item_id = found_user.index_to_item(item_idx);
-    int cost = 20;
+    //std::string item_id = found_user.index_to_item(item_idx);
+    int cost = 0;
     bool loaded_lock = false;
 
     ///make sure to move this check way below so it cant be exploited
-    if(item_id == "")
+    /*if(item_id == "")
         return push_error(ctx, "No such item");
 
     {
@@ -2202,6 +2237,32 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
             cost = 50;
             loaded_lock = true;
         }
+    }*/
+
+    std::vector<std::string> item_ids;
+
+    for(int i=0; i < (int)indices.size(); i++)
+    {
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+        std::string item_id = found_user.index_to_item(indices[i]);
+
+        item it;
+
+        if(!it.load_from_db(mongo_ctx, item_id))
+            continue;
+
+        if(it.get_prop_as_integer("item_type") == item_types::LOCK && nodes.any_contains_lock(item_id))
+        {
+            cost += 50;
+            loaded_lock = true;
+        }
+        else
+        {
+            cost += 20;
+        }
+
+        item_ids.push_back(item_id);
     }
 
     bool confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
@@ -2233,13 +2294,24 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
-    std::string accum;
-    auto ret = load_item_raw(-1, -1, item_idx, found_user, nodes, accum, get_thread_id(ctx));
+    duk_push_array(ctx);
 
-    if(ret != "")
-        return push_error(ctx, ret);
+    int idx = 0;
 
-    push_xfer_item_with_logs(ctx, item_idx, from, get_caller(ctx));
+    for(auto& item_id : item_ids)
+    {
+        std::string accum;
+        auto ret = load_item_raw(-1, -1, found_user.item_to_index(item_id), found_user, nodes, accum, get_thread_id(ctx));
+
+        if(ret != "")
+            return push_error(ctx, ret);
+
+        push_xfer_item_id_with_logs(ctx, item_id, from, get_caller(ctx));
+        idx++;
+
+        duk_put_prop_index(ctx, -2, idx);
+    }
+
     return 1;
 }
 
