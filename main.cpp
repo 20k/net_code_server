@@ -354,7 +354,7 @@ int main()
     //manage.erase_all();
     manage.generate_up_to(150);
 
-    #define FIXY_FIX_NPCS
+    //#define FIXY_FIX_NPCS
     #ifdef FIXY_FIX_NPCS
 
     std::vector<std::string> all_users_and_npcs;
