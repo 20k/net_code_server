@@ -12,6 +12,7 @@
 #include <SFML/System.hpp>
 #include <thread>
 #include "stacktrace.hpp"
+#include "safe_thread.hpp"
 
 thread_local int mongo_lock_proxy::thread_id_storage_hack = -2;
 thread_local int mongo_lock_proxy::print_performance_diagnostics = 0;
@@ -29,7 +30,7 @@ void lock_internal::lock(const std::string& debug_info, size_t who, mongoc_clien
     #ifdef SUPER_SAFE
     Sleep(1);
     #else
-    std::this_thread::yield();
+    sthread::this_yield();
     #endif
 
     #define ATTEMPT_FASTER
@@ -38,7 +39,7 @@ void lock_internal::lock(const std::string& debug_info, size_t who, mongoc_clien
     //size_t cur_retry = 0;
 
     ///200 ms
-    constexpr size_t max_microseconds_elapsed = 1000 * 200;
+    constexpr size_t max_microseconds_elapsed = 1000 * 20;
     bool sleeptime = false;
 
     sf::Clock clk;
@@ -52,7 +53,7 @@ void lock_internal::lock(const std::string& debug_info, size_t who, mongoc_clien
         }
         else
         {
-            std::this_thread::yield();
+            sthread::this_yield();
         }
     }
 

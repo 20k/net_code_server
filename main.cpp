@@ -613,6 +613,7 @@ int main()
     #endif
 
     ///fix db screwup
+    #if 0
     #ifndef TESTING
     for_each_npc([](npc_user& npc)
                      {
@@ -636,8 +637,14 @@ int main()
                         {
                             std::cout << "npc " << npc.name << " broken " << std::endl;
 
-                            /*props.set_as<std::vector<int>>("props", {});
-                            props.set_as<std::vector<float>>("vals", {});*/
+                            props.set_as<std::vector<int>>("props", {});
+                            props.set_as<std::vector<float>>("vals", {});
+
+                            {
+                                mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
+
+                                props.overwrite_in_db(ctx);
+                            }
 
                             command_handler_state temp;
                             delete_user(temp, npc.name, true);
@@ -658,6 +665,7 @@ int main()
                         strip_old_msg_or_notif(ctx);
                   });
     #endif // TESTING
+    #endif // 0
 
     //#ifndef TESTING
     start_npc_thread();

@@ -37,6 +37,46 @@ struct sthread
     {
         return thrd.native_handle();
     }
+
+    static void this_yield()
+    {
+        Sleep(0);
+
+        #ifndef __WIN32__
+        #error("doesn't work on linux");
+        #endif // __WIN32__
+    }
+
+    static void low_yield()
+    {
+        std::this_thread::yield();
+    }
+
+    static void increase_priority()
+    {
+        SetThreadPriority(pthread_gethandle(pthread_self()), THREAD_PRIORITY_HIGHEST);
+    }
+
+    static void normal_priority()
+    {
+        SetThreadPriority(pthread_gethandle(pthread_self()), THREAD_PRIORITY_NORMAL);
+    }
+
+    static void increase_priority(std::thread& t)
+    {
+        pthread_t thread = t.native_handle();
+        void* native_handle = pthread_gethandle(thread);
+
+        SetThreadPriority(native_handle, THREAD_PRIORITY_HIGHEST);
+    }
+
+    static void normal_priority(std::thread& t)
+    {
+        pthread_t thread = t.native_handle();
+        void* native_handle = pthread_gethandle(thread);
+
+        SetThreadPriority(native_handle, THREAD_PRIORITY_NORMAL);
+    }
 };
 
 

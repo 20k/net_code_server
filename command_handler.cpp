@@ -108,9 +108,60 @@ void sleep_thread_for(std::thread& t, int sleep_ms)
 {
     pthread_t thread = t.native_handle();
     void* native_handle = pthread_gethandle(thread);
+
+    #if 0
+    pthread_t my_handle = pthread_self();
+    void* my_native_handle = pthread_gethandle(my_handle);
+
+    pthread_t thread = t.native_handle();
+    void* native_handle = pthread_gethandle(thread);
+
+    SetThreadPriority(my_native_handle, THREAD_PRIORITY_ABOVE_NORMAL);
+    SetThreadPriority(native_handle, THREAD_PRIORITY_ABOVE_NORMAL);
+
     SuspendThread(native_handle);
+
     Sleep(sleep_ms);
+
+    /*if(sleep_ms > 1)
+        Sleep(sleep_ms - 1);
+
+    sf::Clock clk;
+
+    while(clk.getElapsedTime().asMilliseconds() < 1)
+    {
+    }*/
+
+    /*sf::Clock clk;
+
+    while(clk.getElapsedTime().asMicroseconds() / 1000. < sleep_ms)
+    {
+        if(sleep_ms - (int)clk.getElapsedTime().asMilliseconds() > 1)
+            Sleep(1);
+    }*/
+
     ResumeThread(native_handle);
+
+
+    SetThreadPriority(my_native_handle, THREAD_PRIORITY_NORMAL);
+    SetThreadPriority(native_handle, THREAD_PRIORITY_NORMAL);
+    #endif // 0
+
+    sthread::increase_priority();
+    SuspendThread(native_handle);
+
+    Sleep(sleep_ms);
+
+    ResumeThread(native_handle);
+    sthread::normal_priority();
+
+
+    /*sf::Clock clk;
+
+    while(clk.getElapsedTime().asMicroseconds() / 1000. < sleep_ms)
+    {
+        //sthread::this_yield();
+    }*/
 }
 
 void async_realtime_script_handler(duk_context* nctx, shared_data& shared, command_handler_state& state, double& time_of_last_on_update, std::string& ret,
@@ -280,6 +331,8 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
                 break;
             }
 
+            sthread::increase_priority();
+
             request_long_sleep = true;
 
             //std::cout << "Full frame too " << elapsed.getElapsedTime().asMicroseconds() / 1000. << std::endl;
@@ -289,8 +342,10 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
 
             while(!fedback)
             {
-                std::this_thread::yield();
+                //sthread::low_yield();
             }
+
+            sthread::normal_priority();
 
             fedback = false;
         }
@@ -756,11 +811,14 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                             current_frame_time_ms = 0;
                         }
 
+                        sthread::increase_priority();
 
                         if(estimated_time_remaining >= 1.5f)
                             Sleep(1);
                         else
-                            std::this_thread::yield();
+                            sthread::this_yield();
+
+                        sthread::normal_priority();
                     }
 
                     force_terminate = true;
