@@ -130,6 +130,9 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
 
     //duk_context* ctx = nctx;
 
+    /*MAKE_PERF_COUNTER();
+    mongo_diagnostics diagnostic_scope;*/
+
     while(!state.should_terminate_any_realtime && !force_terminate)
     {
         try
@@ -543,6 +546,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
             if(current_mode == script_management_mode::REALTIME && all_shared.has_value() && !sand_data->terminate_semi_gracefully && !sand_data->terminate_realtime_gracefully)
             {
+                /*MAKE_PERF_COUNTER();
+                mongo_diagnostics diagnostic_scope;*/
+
                 exec_guard.unblock();
                 cleanup.unblock();
 
