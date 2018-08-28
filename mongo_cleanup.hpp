@@ -122,6 +122,12 @@ mongo_shim get_global_mongo_low_level_structure_context(int lock_id)
     return get_global_mongo_context(mongo_database_type::LOW_LEVEL_STRUCTURE, lock_id);
 }
 
+inline
+mongo_shim get_global_mongo_quest_manager_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::QUEST_MANAGER, lock_id);
+}
+
 /*inline
 std::vector<int> any_mongo_locks()
 {

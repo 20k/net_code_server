@@ -613,7 +613,6 @@ int main()
     #endif
 
     ///fix db screwup
-    #if 0
     #ifndef TESTING
     for_each_npc([](npc_user& npc)
                      {
@@ -665,7 +664,6 @@ int main()
                         strip_old_msg_or_notif(ctx);
                   });
     #endif // TESTING
-    #endif // 0
 
     //#ifndef TESTING
     start_npc_thread();

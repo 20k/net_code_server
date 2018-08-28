@@ -147,13 +147,13 @@ void sleep_thread_for(std::thread& t, int sleep_ms)
     SetThreadPriority(native_handle, THREAD_PRIORITY_NORMAL);
     #endif // 0
 
-    sthread::increase_priority();
+    //sthread::increase_priority();
     SuspendThread(native_handle);
 
     Sleep(sleep_ms);
 
     ResumeThread(native_handle);
-    sthread::normal_priority();
+    //sthread::normal_priority();
 
 
     /*sf::Clock clk;
@@ -331,7 +331,7 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
                 break;
             }
 
-            sthread::increase_priority();
+            //sthread::increase_priority();
 
             request_long_sleep = true;
 
@@ -342,10 +342,10 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
 
             while(!fedback)
             {
-                //sthread::low_yield();
+                sthread::low_yield();
             }
 
-            sthread::normal_priority();
+            //sthread::normal_priority();
 
             fedback = false;
         }
@@ -811,14 +811,14 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                             current_frame_time_ms = 0;
                         }
 
-                        sthread::increase_priority();
+                        //sthread::increase_priority();
 
                         if(estimated_time_remaining >= 1.5f)
                             Sleep(1);
                         else
-                            sthread::this_yield();
+                            sthread::low_yield();
 
-                        sthread::normal_priority();
+                        //sthread::normal_priority();
                     }
 
                     force_terminate = true;

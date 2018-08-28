@@ -32,6 +32,7 @@ enum class mongo_database_type
     NETWORK_PROPERTIES,
     SCHEDULED_TASK,
     LOW_LEVEL_STRUCTURE,
+    QUEST_MANAGER,
     MONGO_COUNT
 };
 
