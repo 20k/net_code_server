@@ -964,7 +964,7 @@ void user::pump_notifications(int lock_id)
 
     if(any_pumped)
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(lock_id);
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(lock_id);
 
         overwrite_user_in_db(mongo_ctx);
     }
