@@ -790,6 +790,7 @@ std::string mongo_interface::update_json_one(const std::string& selector, const 
     return !mongoc_database_has_collection()
 }*/
 
+///https://jira.mongodb.org/browse/SERVER-4462
 std::vector<std::string> mongo_interface::find_bson(const std::string& script_host, bson_t* bs, bson_t* ps)
 {
     std::vector<std::string> results;
@@ -811,6 +812,14 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
         return std::vector<std::string>();
     }
 
+    /*if(last_collection == "all_npcs")
+    {
+        std::cout << "last db " << ctx->last_db << std::endl;
+
+        mongoc_collection_destroy(collection);
+        collection = mongoc_client_get_collection(client, ctx->last_db.c_str(), last_collection.c_str());
+    }*/
+
     const bson_t *doc;
 
     ///hmm. for .first() we should limit to one doc
@@ -818,17 +827,25 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
     ///for array, we need to do everythang
     mongoc_cursor_t* cursor = mongoc_collection_find_with_opts(collection, bs, ps, nullptr);
 
-    while(mongoc_cursor_more(cursor) && mongoc_cursor_next (cursor, &doc))
+    int skipped = 0;
+
+    while(mongoc_cursor_next (cursor, &doc))
     {
         char* str = bson_as_json(doc, NULL);
 
         if(str == nullptr)
+        {
+            skipped++;
             continue;
+        }
 
         results.push_back(str);
 
         bson_free(str);
     }
+
+    //if(skipped != 0)
+    //    std::cout << "skipped " << skipped << std::endl;
 
     mongoc_cursor_destroy(cursor);
 
