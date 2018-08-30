@@ -171,6 +171,8 @@
 		<Unit filename="deps/secret/secret.hpp" />
 		<Unit filename="deps/secret/structure.cpp" />
 		<Unit filename="deps/secret/structure.hpp" />
+		<Unit filename="deps/secret/tutorial.cpp" />
+		<Unit filename="deps/secret/tutorial.hpp" />
 		<Unit filename="duk_object_functions.cpp" />
 		<Unit filename="duk_object_functions.hpp" />
 		<Unit filename="duktape.cpp" />
@@ -192,6 +194,8 @@
 		<Unit filename="perfmon.hpp" />
 		<Unit filename="privileged_core_scripts.cpp" />
 		<Unit filename="privileged_core_scripts.hpp" />
+		<Unit filename="quest_manager.cpp" />
+		<Unit filename="quest_manager.hpp" />
 		<Unit filename="rate_limiting.cpp" />
 		<Unit filename="rate_limiting.hpp" />
 		<Unit filename="rng.cpp" />

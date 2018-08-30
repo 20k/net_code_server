@@ -871,10 +871,10 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     duk_ret_t result = 1;
 
-    set_script_info(ctx, to_call_fullname);
-
     if(!script.is_c_shim)
     {
+        set_script_info(ctx, to_call_fullname);
+
         if(is_async)
         {
             std::shared_ptr<shared_command_handler_state>* shared_state = dukx_get_pointer<std::shared_ptr<shared_command_handler_state>>(ctx, "all_shared_data");
@@ -892,6 +892,8 @@ duk_ret_t js_call(duk_context* ctx, int sl)
         {
             compile_and_call(ctx, load, get_caller(ctx), false, script.seclevel, false, full_script);
         }
+
+        set_script_info(ctx, full_script);
     }
     else
     {
@@ -912,8 +914,6 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
         //result = (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name](sd.ctx, sl);
     }
-
-    set_script_info(ctx, full_script);
 
     return result;
 }

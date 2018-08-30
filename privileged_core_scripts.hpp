@@ -1,6 +1,7 @@
 #ifndef PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
 #define PRIVILEGED_CORE_SCRIPTS_HPP_INCLUDED
 
+#include <secret/tutorial.hpp>
 #include "unified_scripts.hpp"
 #include <string>
 
@@ -346,6 +347,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(sys__view, 1),
     REGISTER_FUNCTION_PRIV(sys__move, 0),
     REGISTER_FUNCTION_PRIV(sys__access, 0),
+    REGISTER_FUNCTION_PRIV(ada__access, 4),
     #ifdef TESTING
     REGISTER_FUNCTION_PRIV(sys__debug, 1),
     #endif // TESTING

@@ -345,6 +345,11 @@ int main()
     npc_manager& npc_manage = get_global_npc_manager();
     npc_manage.create_npcs_up_to(MAX_NPC_COUNT);
 
+    /*{
+        mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
+        std::cout << "num_npcs " << npc_manage.npc_number(ctx) << std::endl;
+    }*/
+
     //npc_manage.delete_npcs_over(MAX_NPC_COUNT);
 
     low_level_structure_manager& manage = get_global_low_level_structure_manager();
