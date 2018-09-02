@@ -348,6 +348,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(sys__move, 0),
     REGISTER_FUNCTION_PRIV(sys__access, 0),
     REGISTER_FUNCTION_PRIV(ada__access, 4),
+    REGISTER_FUNCTION_PRIV(able__help, 4),
     #ifdef TESTING
     REGISTER_FUNCTION_PRIV(sys__debug, 1),
     #endif // TESTING
@@ -361,6 +362,8 @@ inline
 std::vector<std::string> hidden_functions
 {
     {"net.map"},
+    {"ada.access"},
+    {"able.help"},
 };
 
 std::map<std::string, std::vector<script_arg>> construct_core_args();
