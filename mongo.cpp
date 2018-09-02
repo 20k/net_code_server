@@ -249,6 +249,7 @@ mongo_context::mongo_context(mongo_database_type type)
 
             std::cout << "curi " << uri_str << std::endl;
 
+            #ifndef TESTING
             mongoc_client_t* tclient = mongoc_client_new(turi.c_str());
 
             char** strv;
@@ -332,6 +333,8 @@ mongo_context::mongo_context(mongo_database_type type)
             }
 
             mongoc_client_destroy(tclient);
+
+            #endif // TESTING
 
             client = mongoc_client_new(uri_str.c_str());
         }

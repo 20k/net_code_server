@@ -357,7 +357,7 @@ int main()
     //manage.for_each(low_level_structure::cleanup_invalid_users);
 
     //manage.erase_all();
-    manage.generate_up_to(150);
+    //manage.generate_up_to(150);
 
     //#define FIXY_FIX_NPCS
     #ifdef FIXY_FIX_NPCS
@@ -748,6 +748,11 @@ int main()
             continue;
         }
 
+        if(starts_with(command, "#shutdown"))
+        {
+            break;
+        }
+
         std::cout << "Are you sure? y/n" << std::endl;
 
         std::string sure;
@@ -792,7 +797,7 @@ int main()
     return 0;
     #endif
 
-    debug_terminal();
+    //debug_terminal();
 
     //user test_user;
     //test_user.construct_new_user("test_user2");
