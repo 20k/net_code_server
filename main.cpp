@@ -300,10 +300,6 @@ int main()
 
     printf("\n");
 
-    #ifdef TESTING
-    system("start test_launch.bat");
-    #endif // TESTING
-
     test_hexbin();
     initialse_mongo_all();
     //test_json();
@@ -597,12 +593,18 @@ int main()
         std::cout << "deleted " << i << std::endl;
     }
 
+
     #endif // DELETE_BANNED
 
     #if 1
     //test_locking();
 
     boot_connection_handlers();
+
+
+    #ifdef TESTING
+    system("start test_launch.bat");
+    #endif // TESTING
 
     //#define PROVOKE_CRASH
     #ifdef PROVOKE_CRASH
