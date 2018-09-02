@@ -241,7 +241,7 @@ mongo_context::mongo_context(mongo_database_type type)
         {
             uri_str = "mongodb://" + i.second + ":" + i.second + "handlermongofun@localhost:27017/?authSource=" + i.second;
 
-            std::string turi = "mongodb://20k_admin:james20kcaterpillarmongofun@localhost:27017";
+            std::string turi = "mongodb://20k_admin:james20kcaterpillarmongofun@localhost:27017/?authSource=admin";
 
             db = i.second;
             default_collection = "all_" + i.second;
@@ -295,13 +295,29 @@ mongo_context::mongo_context(mongo_database_type type)
 
                     bson_t* bson = bson_new_from_json((const uint8_t*)str.c_str(), str.size(), nullptr);
 
-                    mongoc_database_add_user(ldb, name.c_str(), (name + "handlermongofun").c_str(), bson, nullptr, nullptr);
 
-                    auto coll = mongoc_database_create_collection(ldb, default_collection.c_str(), nullptr, nullptr);
-                    mongoc_collection_destroy(coll);
+                    bson_error_t add_error;
+                    bool add_success = mongoc_database_add_user(ldb, name.c_str(), (name + "handlermongofun").c_str(), bson, nullptr, &add_error);
 
-                    //mongoc_collection_t* col = mongoc_database_create_collection(ldb, default_collection.c_str(), nullptr, nullptr);
-                    //mongoc_collection_destroy(col);
+                    if(!add_success)
+                    {
+                        std::cout << "failed to add user to db " << add_error.message << std::endl;
+                    }
+
+                    mongoc_client_t* aclient = mongoc_client_new(uri_str.c_str());
+                    mongoc_database_t* new_db = mongoc_client_get_database(aclient, name.c_str());
+
+                    bson_error_t err;
+
+                    auto coll = mongoc_database_create_collection(new_db, default_collection.c_str(), nullptr, &err);
+
+                    if(coll != nullptr)
+                        mongoc_collection_destroy(coll);
+                    else
+                        std::cout << "Error creating database of default coll " << default_collection << " " << err.message << std::endl;
+
+                    mongoc_database_destroy(new_db);
+                    mongoc_client_destroy(aclient);
 
                     mongoc_database_destroy(ldb);
 
