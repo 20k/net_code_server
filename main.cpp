@@ -306,7 +306,7 @@ int main()
 
     test_hexbin();
     initialse_mongo_all();
-    test_json();
+    //test_json();
 
     //#define SERVER_FIRST_TIME_EVER_RELEASE
     #ifdef SERVER_FIRST_TIME_EVER_RELEASE
@@ -343,7 +343,7 @@ int main()
                  });*/
 
     npc_manager& npc_manage = get_global_npc_manager();
-    npc_manage.create_npcs_up_to(MAX_NPC_COUNT);
+    //npc_manage.create_npcs_up_to(MAX_NPC_COUNT);
 
     /*{
         mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
