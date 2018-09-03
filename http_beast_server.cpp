@@ -358,11 +358,9 @@ bool handle_write(const std::shared_ptr<shared_command_handler_state>& all_share
     return false;
 }
 
-void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared,
-                std::deque<std::string>& shared_queue)
+void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
 {
-    //std::thread(async_command_handler, all_shared, std::ref(shared_queue), std::ref(shared_lock)).detach();
-
+    std::deque<std::string> shared_queue;
 
     sf::Clock ping_clock;
     ///time after which i should ping
@@ -374,9 +372,6 @@ void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared,
     {
         while(1)
         {
-            if(all_shared->shared.should_terminate)
-                break;
-
             if(all_shared->msock->timed_out())
                 break;
 
@@ -438,13 +433,9 @@ void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared,
 
     all_shared->state.should_terminate_any_realtime = true;
 
-    all_shared->shared.should_terminate = true;
-
     all_shared->msock->shutdown();
 
     std::cout << "shutdown read/write/async" << std::endl;
-
-    all_shared->shared.termination_count++;
 }
 
 void thread_session(
@@ -456,21 +447,19 @@ void thread_session(
 
     std::shared_ptr<shared_command_handler_state> all_shared = std::make_shared<shared_command_handler_state>(std::move(socket), conn_type);
 
-    std::deque<std::string> shared_queue;
-
     lg::log("thread_session\n");
 
     //global_shared_data* store = fetch_global_shared_data();
     //store->add(&all_shared->shared);
 
-    std::thread(read_write_queue, all_shared, std::ref(shared_queue)).detach();
+    read_write_queue(all_shared);
 
-    ///2nd thread is the js exec context
-    while(all_shared->shared.termination_count != 1 || all_shared->state.number_of_running_realtime_scripts() != 0)
+    while(all_shared->state.number_of_running_realtime_scripts() != 0)
     {
         if(all_shared->state.number_of_running_realtime_scripts() == 0)
         {
             all_shared->state.should_terminate_any_realtime = false;
+            break;
         }
 
         Sleep(500);

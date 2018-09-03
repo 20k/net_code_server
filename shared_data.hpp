@@ -14,8 +14,6 @@ struct shared_data
 
     std::string auth;
     bool send_auth = false;
-    volatile bool should_terminate = false;
-    std::atomic_int termination_count{0};
 
     std::mutex ilock;
 
