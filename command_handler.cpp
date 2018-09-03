@@ -1873,7 +1873,7 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
         auto name = all_shared->state.get_user_name();
 
         {
-            mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
+            mongo_nolock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
             if(!user().exists(mongo_user_info, name))
                 return "No account or not logged in";
@@ -2287,7 +2287,7 @@ std::string handle_autocompletes_json(const std::string& username, const std::st
     return intro + obj.dump();
 }
 
-std::string handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str)
+std::string handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str, bool conditional_async)
 {
     //lg::log("Log Command " + str);
 
@@ -2307,7 +2307,7 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
 
     if(current_user != "")
     {
-        mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+        mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
 
         if(!found.load_from_db(ctx, current_user))
         {
@@ -2349,22 +2349,43 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
         else
             to_exec = std::string(str.begin() + client_command.size(), str.end());
 
-        bool is_auth = false;
-
-        std::string ret = handle_command_impl(all_shared, to_exec, is_auth);
-
-        if(is_auth)
+        auto func = [=]()
         {
-            return "command_auth " + ret;
-        }
+            bool is_auth = false;
 
-        if(tagged)
+            std::string ret = handle_command_impl(all_shared, to_exec, is_auth);
+
+            if(is_auth)
+            {
+                return "command_auth " + ret;
+            }
+
+            if(tagged)
+            {
+                return "command_tagged " + tag + " " + ret;
+            }
+            else
+            {
+                return "command " + ret;
+            }
+        };
+
+        if(conditional_async)
         {
-            return "command_tagged " + tag + " " + ret;
+            sthread([=]()
+                         {
+                            auto result = func();
+
+                            shared_data& shared = all_shared->shared;
+                            shared.add_back_write(result);
+
+                         }).detach();
+
+            return "";
         }
         else
         {
-            return "command " + ret;
+            return func();
         }
     }
 
@@ -2372,9 +2393,19 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
     {
         std::string to_exec(str.begin() + client_chat.size(), str.end());
 
-        bool is_auth = false;
-
-        handle_command_impl(all_shared, to_exec, is_auth);
+        if(conditional_async)
+        {
+            sthread([=]()
+            {
+                bool is_auth = false;
+                handle_command_impl(all_shared, to_exec, is_auth);
+            }).detach();
+        }
+        else
+        {
+            bool is_auth = false;
+            handle_command_impl(all_shared, to_exec, is_auth);
+        }
 
         return "";
     }
@@ -2466,4 +2497,17 @@ void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shar
                     shared.add_back_write(result);
 
                 }).detach();
+}
+
+void conditional_async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str)
+{
+    std::string result = handle_command(all_shared, str, true);
+
+    all_shared->execution_requested = false;
+
+    if(result == "")
+        return;
+
+    shared_data& shared = all_shared->shared;
+    shared.add_back_write(result);
 }

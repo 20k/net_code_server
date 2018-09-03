@@ -409,7 +409,7 @@ void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared,
                 {
                     all_shared->execution_requested = true;
 
-                    async_handle_command(all_shared, shared_queue.front());
+                    conditional_async_handle_command(all_shared, shared_queue.front());
 
                     shared_queue.pop_front();
                 }

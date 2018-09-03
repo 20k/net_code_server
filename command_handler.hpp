@@ -20,8 +20,9 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 void throwaway_user_thread(const std::string& username, const std::string& command, std::optional<float> custom_exec_time_s = std::nullopt, bool force_exec = false);
 
 ///context?
-std::string handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str);
+std::string handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str, bool conditional_async = false);
 void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str);
+void conditional_async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str);
 
 std::string handle_autocompletes_json(const std::string& username, const std::string& in);
 
