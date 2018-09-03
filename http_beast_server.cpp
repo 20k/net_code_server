@@ -64,55 +64,6 @@
 
 #include "command_handler.hpp"
 
-void async_command_handler(std::shared_ptr<shared_command_handler_state> all_shared, std::deque<std::string>& shared_queue, std::mutex& shared_lock)
-{
-    lg::log("async_queue\n");
-
-    while(1)
-    {
-        if(all_shared->shared.should_terminate)
-            break;
-
-        std::string to_exec = "";
-        bool found_command = false;
-
-        {
-            safe_lock_guard lg(shared_lock);
-
-            if(shared_queue.size() > 0)
-            {
-                to_exec = shared_queue.front();
-                shared_queue.pop_front();
-                found_command = true;
-            }
-        }
-
-        if(to_exec == "" && !found_command)
-        {
-            Sleep(5);
-            continue;
-        }
-
-
-
-        //std::string to_pipe = handle_command(all_shared, to_exec);
-        //all_shared->shared.add_back_write(to_pipe);
-
-        while(all_shared->execution_is_blocked)
-        {
-            Sleep(5);
-        }
-
-        async_handle_command(all_shared, to_exec);
-
-        Sleep(5);
-    }
-
-    std::cout << "shutdown async" << std::endl;
-
-    all_shared->shared.termination_count++;
-}
-
 std::vector<std::string> sanitise_input_vec(std::vector<std::string> vec)
 {
     if(vec.size() > 10)
@@ -342,7 +293,7 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
     return false;
 }
 
-bool handle_read(const std::shared_ptr<shared_command_handler_state>& all_shared, std::deque<std::string>& shared_queue, std::mutex& shared_lock)
+bool handle_read(const std::shared_ptr<shared_command_handler_state>& all_shared, std::deque<std::string>& shared_queue)
 {
     boost::system::error_code ec;
 
@@ -364,8 +315,6 @@ bool handle_read(const std::shared_ptr<shared_command_handler_state>& all_shared
     bool rate_hit = true;
 
     {
-        safe_lock_guard lg(shared_lock);
-
         len = shared_queue.size();
 
         std::string str = next_command;
@@ -410,17 +359,16 @@ bool handle_write(const std::shared_ptr<shared_command_handler_state>& all_share
 }
 
 void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared,
-                std::deque<std::string>& shared_queue,
-                std::mutex& shared_lock)
+                std::deque<std::string>& shared_queue)
 {
-    std::thread(async_command_handler, all_shared, std::ref(shared_queue), std::ref(shared_lock)).detach();
+    //std::thread(async_command_handler, all_shared, std::ref(shared_queue), std::ref(shared_lock)).detach();
 
 
     sf::Clock ping_clock;
     ///time after which i should ping
     double ping_time_ms = 2000;
 
-    lg::log("read_write_queue\n");
+    lg::log("read_write_async_queue\n");
 
     try
     {
@@ -441,7 +389,7 @@ void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared,
             {
                 found_any = true;
 
-                if(handle_read(all_shared, shared_queue, shared_lock))
+                if(handle_read(all_shared, shared_queue))
                     break;
             }
 
@@ -453,6 +401,16 @@ void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared,
 
                 if(handle_write(all_shared))
                     break;
+            }
+
+            if(shared_queue.size() > 0)
+            {
+                if(!all_shared->execution_is_blocked)
+                {
+                    async_handle_command(all_shared, shared_queue.front());
+
+                    shared_queue.pop_front();
+                }
             }
 
             if(ping_clock.getElapsedTime().asMilliseconds() > ping_time_ms)
@@ -480,7 +438,7 @@ void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared,
 
     all_shared->msock->shutdown();
 
-    std::cout << "shutdown read/write" << std::endl;
+    std::cout << "shutdown read/write/async" << std::endl;
 
     all_shared->shared.termination_count++;
 }
@@ -495,17 +453,16 @@ void thread_session(
     std::shared_ptr<shared_command_handler_state> all_shared = std::make_shared<shared_command_handler_state>(std::move(socket), conn_type);
 
     std::deque<std::string> shared_queue;
-    std::mutex shared_lock;
 
     lg::log("thread_session\n");
 
     //global_shared_data* store = fetch_global_shared_data();
     //store->add(&all_shared->shared);
 
-    std::thread(read_write_queue, all_shared, std::ref(shared_queue), std::ref(shared_lock)).detach();
+    std::thread(read_write_queue, all_shared, std::ref(shared_queue)).detach();
 
     ///2nd thread is the js exec context
-    while(all_shared->shared.termination_count != 2 || all_shared->state.number_of_running_realtime_scripts() != 0)
+    while(all_shared->shared.termination_count != 1 || all_shared->state.number_of_running_realtime_scripts() != 0)
     {
         if(all_shared->state.number_of_running_realtime_scripts() == 0)
         {
