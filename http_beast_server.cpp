@@ -407,6 +407,8 @@ void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared,
             {
                 if(!all_shared->execution_is_blocked && !all_shared->execution_requested)
                 {
+                    found_any = true;
+
                     all_shared->execution_requested = true;
 
                     conditional_async_handle_command(all_shared, shared_queue.front());
