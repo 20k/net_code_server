@@ -377,7 +377,10 @@ struct execution_blocker_guard
     void unblock()
     {
         if(shared)
+        {
             shared.value()->execution_is_blocked = false;
+            shared.value()->execution_requested = false;
+        }
 
         blocked = false;
     }
@@ -385,7 +388,10 @@ struct execution_blocker_guard
     ~execution_blocker_guard()
     {
         if(shared && blocked)
+        {
             shared.value()->execution_is_blocked = false;
+            shared.value()->execution_requested = false;
+        }
     }
 };
 
@@ -2450,6 +2456,8 @@ void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shar
     std::thread([=]()
                 {
                     std::string result = handle_command(all_shared, str);
+
+                    all_shared->execution_requested = false;
 
                     if(result == "")
                         return;

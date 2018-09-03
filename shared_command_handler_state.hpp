@@ -39,6 +39,7 @@ struct shared_command_handler_state
     shared_data shared;
 
     std::atomic_bool execution_is_blocked{false};
+    std::atomic_bool execution_requested{false};
 
     float live_work_units()
     {

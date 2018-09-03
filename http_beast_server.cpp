@@ -405,8 +405,10 @@ void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared,
 
             if(shared_queue.size() > 0)
             {
-                if(!all_shared->execution_is_blocked)
+                if(!all_shared->execution_is_blocked && !all_shared->execution_requested)
                 {
+                    all_shared->execution_requested = true;
+
                     async_handle_command(all_shared, shared_queue.front());
 
                     shared_queue.pop_front();
