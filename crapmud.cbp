@@ -118,11 +118,8 @@
 		</Compiler>
 		<Linker>
 			<Add option="-lmingw32" />
-			<Add option="-lsfml-graphics" />
-			<Add option="-lsfml-window" />
 			<Add option="-lsfml-system" />
 			<Add option="-lfreetype" />
-			<Add option="-lopengl32" />
 			<Add option="-lmongoc-static-1.0" />
 			<Add option="-lbson-static-1.0" />
 			<Add option="-lDnsapi" />

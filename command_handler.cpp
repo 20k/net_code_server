@@ -489,7 +489,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
         //sf::Clock clk;
         #ifdef TESTING
-        float max_time_ms = 50000;
+        float max_time_ms = 5000;
         #else
         float max_time_ms = 5000;
         #endif
