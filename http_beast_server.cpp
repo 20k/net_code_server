@@ -127,7 +127,7 @@ std::vector<std::string> sanitise_input_vec(std::vector<std::string> vec)
     return vec;
 }
 
-bool handle_termination_shortcircuit(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str)
+bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handler_state>& all_shared, const std::string& str)
 {
     std::string tstr = "client_terminate_scripts ";
 
@@ -342,16 +342,85 @@ bool handle_termination_shortcircuit(std::shared_ptr<shared_command_handler_stat
     return false;
 }
 
-// Handles an HTTP server connection
-void read_queue(std::shared_ptr<shared_command_handler_state> all_shared,
+bool handle_read(const std::shared_ptr<shared_command_handler_state>& all_shared, std::deque<std::string>& shared_queue, std::mutex& shared_lock)
+{
+    boost::system::error_code ec;
+
+    if(all_shared->msock->read(ec))
+        return true;
+
+    std::string next_command = all_shared->msock->get_read();
+
+    if(next_command.size() > 400000)
+        return false;
+
+    lg::log(next_command);
+
+    if(handle_termination_shortcircuit(all_shared, next_command))
+        return false;
+
+    int len;
+
+    bool rate_hit = true;
+
+    {
+        safe_lock_guard lg(shared_lock);
+
+        len = shared_queue.size();
+
+        std::string str = next_command;
+
+        if(len <= 20 || starts_with(str, "client_poll"))
+        {
+            shared_queue.push_back(next_command);
+            rate_hit = false;
+        }
+    }
+
+    if(rate_hit)
+    {
+        lg::log("hit rate limit");
+        all_shared->shared.add_back_write("command Hit rate limit (read_queue)");
+    }
+
+    return false;
+}
+
+bool handle_write(const std::shared_ptr<shared_command_handler_state>& all_shared)
+{
+    std::string next_command = all_shared->shared.get_front_write();
+
+    //if(next_command != "")
+    //    printf("sending test write\n");
+
+    if(next_command == "" && all_shared->type != connection_type::HTTP)
+        return false;
+
+    if(next_command.size() > MAX_MESSAGE_SIZE)
+    {
+        next_command.resize(MAX_MESSAGE_SIZE);
+
+        next_command += " [Truncated, > " + std::to_string(MAX_MESSAGE_SIZE) + "]";
+    }
+
+    if(all_shared->msock->write(next_command))
+        return true;
+
+    return false;
+}
+
+void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared,
                 std::deque<std::string>& shared_queue,
                 std::mutex& shared_lock)
 {
     std::thread(async_command_handler, all_shared, std::ref(shared_queue), std::ref(shared_lock)).detach();
 
-    boost::system::error_code ec;
 
-    lg::log("read_queue\n");
+    sf::Clock ping_clock;
+    ///time after which i should ping
+    double ping_time_ms = 2000;
+
+    lg::log("read_write_queue\n");
 
     try
     {
@@ -360,46 +429,41 @@ void read_queue(std::shared_ptr<shared_command_handler_state> all_shared,
             if(all_shared->shared.should_terminate)
                 break;
 
-            if(all_shared->msock->available() > 0)
+            if(all_shared->msock->timed_out())
+                break;
+
+            if(!all_shared->msock->is_open())
+                break;
+
+            bool found_any = false;
+
+            while(all_shared->msock->available() > 0)
             {
-                if(all_shared->msock->read(ec))
+                found_any = true;
+
+                if(handle_read(all_shared, shared_queue, shared_lock))
                     break;
-
-                std::string next_command = all_shared->msock->get_read();
-
-                if(next_command.size() > 200000)
-                    continue;
-
-                lg::log(next_command);
-
-                if(handle_termination_shortcircuit(all_shared, next_command))
-                    continue;
-
-                int len;
-
-                bool rate_hit = true;
-
-                {
-                    safe_lock_guard lg(shared_lock);
-
-                    len = shared_queue.size();
-
-                    std::string str = next_command;
-
-                    if(len <= 20 || starts_with(str, "client_poll"))
-                    {
-                        shared_queue.push_back(next_command);
-                        rate_hit = false;
-                    }
-                }
-
-                if(rate_hit)
-                {
-                    lg::log("hit rate limit");
-                    all_shared->shared.add_back_write("command Hit rate limit (read_queue)");
-                }
             }
-            else
+
+            while(all_shared->shared.has_front_write())
+            {
+                found_any = true;
+
+                ping_clock.restart();
+
+                if(handle_write(all_shared))
+                    break;
+            }
+
+            if(ping_clock.getElapsedTime().asMilliseconds() > ping_time_ms)
+            {
+                ping_clock.restart();
+
+                if(all_shared->msock->write("command_ping"))
+                    break;
+            }
+
+            if(!found_any)
             {
                 Sleep(2);
             }
@@ -416,78 +480,9 @@ void read_queue(std::shared_ptr<shared_command_handler_state> all_shared,
 
     all_shared->msock->shutdown();
 
-    std::cout << "shutdown read" << std::endl;
+    std::cout << "shutdown read/write" << std::endl;
 
     all_shared->shared.termination_count++;
-}
-
-void write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
-{
-    lg::log("write_queue\n");
-
-    sf::Clock ping_clock;
-    ///time after which i should ping
-    double ping_time_ms = 2000;
-
-    try
-    {
-        while(1)
-        {
-            if(all_shared->shared.should_terminate)
-                break;
-
-            if(all_shared->msock->timed_out())
-                break;
-
-            if(all_shared->shared.has_front_write())
-            {
-                std::string next_command = all_shared->shared.get_front_write();
-
-                //if(next_command != "")
-                //    printf("sending test write\n");
-
-                if(next_command == "" && all_shared->type != connection_type::HTTP)
-                    continue;
-
-                ping_clock.restart();
-
-                if(next_command.size() > MAX_MESSAGE_SIZE)
-                {
-                    next_command.resize(MAX_MESSAGE_SIZE);
-
-                    next_command += " [Truncated, > " + std::to_string(MAX_MESSAGE_SIZE) + "]";
-                }
-
-                if(all_shared->msock->write(next_command))
-                    break;
-            }
-            else
-            {
-                Sleep(1);
-            }
-
-            if(ping_clock.getElapsedTime().asMilliseconds() > ping_time_ms)
-            {
-                ping_clock.restart();
-
-                if(all_shared->msock->write("command_ping"))
-                    break;
-            }
-
-            if(!all_shared->msock->is_open())
-                break;
-        }
-    }
-    catch(...)
-    {
-
-    }
-
-    all_shared->shared.should_terminate = true;
-
-    all_shared->shared.termination_count++;
-
-    std::cout << "shutdown write" << std::endl;
 }
 
 void thread_session(
@@ -507,11 +502,10 @@ void thread_session(
     //global_shared_data* store = fetch_global_shared_data();
     //store->add(&all_shared->shared);
 
-    std::thread(read_queue, all_shared, std::ref(shared_queue), std::ref(shared_lock)).detach();
-    std::thread(write_queue, all_shared).detach();
+    std::thread(read_write_queue, all_shared, std::ref(shared_queue), std::ref(shared_lock)).detach();
 
-    ///3rd thread is the js exec context
-    while(all_shared->shared.termination_count != 3 || all_shared->state.number_of_running_realtime_scripts() != 0)
+    ///2nd thread is the js exec context
+    while(all_shared->shared.termination_count != 2 || all_shared->state.number_of_running_realtime_scripts() != 0)
     {
         if(all_shared->state.number_of_running_realtime_scripts() == 0)
         {
