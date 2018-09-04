@@ -367,9 +367,13 @@ std::vector<std::string> hidden_functions
 };
 
 std::map<std::string, std::vector<script_arg>> construct_core_args();
+std::map<std::string, script_metadata> construct_core_metadata();
 
 extern
 std::map<std::string, std::vector<script_arg>> privileged_args;
+
+extern
+std::map<std::string, script_metadata> privileged_metadata;
 
 std::string sec_level_of(function_priv_t func);
 

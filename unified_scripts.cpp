@@ -58,6 +58,13 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
             }
         }
 
+        auto it2 = privileged_metadata.find(full_scriptname);
+
+        if(it2 != privileged_metadata.end())
+        {
+            ret.metadata = it2->second;
+        }
+
         return ret;
     }
 

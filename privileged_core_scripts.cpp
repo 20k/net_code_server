@@ -20,6 +20,7 @@
 //#define XFER_PATHS
 
 std::map<std::string, std::vector<script_arg>> privileged_args = construct_core_args();
+std::map<std::string, script_metadata> privileged_metadata = construct_core_metadata();
 
 std::vector<script_arg> make_cary()
 {
@@ -90,6 +91,13 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["sys.access"] = make_cary("user", "\"\"");
     ret["ada.access"] = make_cary();
     ret["able.help"] = make_cary();
+
+    return ret;
+}
+
+std::map<std::string, script_metadata> construct_core_metadata()
+{
+    std::map<std::string, script_metadata> ret;
 
     return ret;
 }
