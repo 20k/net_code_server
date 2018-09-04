@@ -28,6 +28,8 @@ struct unified_script_info
     bool is_c_shim = false;
     std::string c_shim_name;
 
+    script_metadata metadata;
+
     void make_from(item& t)
     {
         valid = t.get_prop("valid") == "1";
@@ -38,6 +40,7 @@ struct unified_script_info
 
         args = t.get_prop_as_array("args");
         params = t.get_prop_as_array("params");
+        metadata.load_from_string(t.get_prop("metadata"));
     }
 
     void make_from(script_info& sinfo)
@@ -50,6 +53,7 @@ struct unified_script_info
 
         args = sinfo.args;
         params = sinfo.params;
+        metadata = sinfo.metadata;
     }
 };
 

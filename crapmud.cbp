@@ -206,6 +206,8 @@
 		<Unit filename="safe_thread.hpp" />
 		<Unit filename="scheduled_tasks.cpp" />
 		<Unit filename="scheduled_tasks.hpp" />
+		<Unit filename="script_metadata.cpp" />
+		<Unit filename="script_metadata.hpp" />
 		<Unit filename="script_util.cpp" />
 		<Unit filename="script_util.hpp" />
 		<Unit filename="scripting_api.hpp" />

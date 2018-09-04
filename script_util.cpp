@@ -463,6 +463,7 @@ std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::
     parsed_source = sdata.parsed_source;
     seclevel = sdata.seclevel;
     valid = sdata.valid;
+    metadata = decltype(metadata)();
 
     std::string err;
 
@@ -511,6 +512,8 @@ bool script_info::load_from_db(mongo_lock_proxy& ctx)
     seclevel = my_script.get_prop_as_integer("seclevel");
     valid = my_script.get_prop_as_integer("valid");
 
+    metadata.load_from_string(my_script.get_prop("metadata"));
+
     if(!valid || parsed_source.size() == 0)
     {
         args = decltype(args)();
@@ -554,6 +557,7 @@ void script_info::overwrite_in_db(mongo_lock_proxy& ctx)
     my_script.set_prop("parsed_source", parsed_source);
     my_script.set_prop_int("seclevel", seclevel);
     my_script.set_prop_int("valid", valid);
+    my_script.set_prop("metadata", metadata.dump());
 
     //mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
 
@@ -580,6 +584,7 @@ void script_info::fill_as_bundle_compatible_item(item& my_script)
     my_script.set_prop("parsed_source", parsed_source);
     my_script.set_prop_int("seclevel", seclevel);
     my_script.set_prop_int("valid", valid);
+    my_script.set_prop("metadata", metadata.dump());
 }
 
 bool script_info::exists_in_db(mongo_lock_proxy& ctx)

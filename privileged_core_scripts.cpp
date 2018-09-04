@@ -5930,3 +5930,26 @@ duk_ret_t cheats__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 }
 #endif // LIVE_DEBUGGING
+
+std::string sec_level_of(function_priv_t func)
+{
+    for(auto& i : privileged_functions)
+    {
+        priv_func_info inf = i.second;
+
+        int sl = inf.sec_level;
+
+        if(sl == 4)
+            return "Fullsec";
+        if(sl == 3)
+            return "Highsec";
+        if(sl == 2)
+            return "Midsec";
+        if(sl == 1)
+            return "Lowsec";
+        if(sl == 0)
+            return "Nullsec";
+    }
+
+    return "Nullsec";
+}

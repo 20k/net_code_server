@@ -371,6 +371,8 @@ std::map<std::string, std::vector<script_arg>> construct_core_args();
 extern
 std::map<std::string, std::vector<script_arg>> privileged_args;
 
+std::string sec_level_of(function_priv_t func);
+
 #ifdef USE_LOCS
 inline
 priv_func_info user_port_descriptor = {&user__port, 0};

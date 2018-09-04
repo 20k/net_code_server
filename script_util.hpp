@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <iostream>
 #include "scripting_api_fwrd.hpp"
+#include "script_metadata.hpp"
 
 //#include <libncclient/nc_util.hpp>
 //#include "duk_object_functions.hpp"
@@ -34,6 +35,8 @@ struct script_info
     bool in_public = false;
 
     //void load_from_disk_with_db_metadata(const std::string& name);
+
+    script_metadata metadata;
 
     ///typescript support is heavy, so disable for cli invocation
     std::string load_from_unparsed_source(duk_context* ctx, const std::string& unparsed, const std::string& name, bool enable_typescript, bool is_cli);
