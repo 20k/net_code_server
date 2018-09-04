@@ -26,6 +26,7 @@ struct arg_metadata
 struct script_metadata
 {
     std::vector<arg_metadata> data;
+    std::string description;
 
     std::string dump();
     void load_from_string(const std::string& str);
