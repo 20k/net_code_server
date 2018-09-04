@@ -43,6 +43,20 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
         ret.is_c_shim = false;
         ret.valid = true;
         ret.parsed_source = "function(context, args){\n    return \"This script is a fake shim to c++ and this source is fake, sorry <3\";\n}";
+        ret.in_public = true;
+
+        auto it = privileged_args.find(full_scriptname);
+
+        if(it != privileged_args.end())
+        {
+            std::vector<script_arg> args = it->second;
+
+            for(script_arg& arg : args)
+            {
+                ret.args.push_back(arg.key);
+                ret.params.push_back(arg.val);
+            }
+        }
 
         return ret;
     }
