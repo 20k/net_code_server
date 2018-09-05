@@ -46,3 +46,41 @@ void script_metadata::load_from_string(const std::string& in)
 {
     *this = nlohmann::json::parse(in);
 }
+
+std::string arg_metadata::get_example()
+{
+    if((type & NODE_IDX) > 0)
+        return enum_examples[NODE_IDX];
+    if((type & USER) > 0)
+        return enum_examples[USER];
+    if((type & CASH) > 0)
+        return enum_examples[CASH];
+
+    if((type & OK) > 0)
+        return enum_examples[OK];
+    if((type & SCRIPT) > 0)
+        return enum_examples[SCRIPT];
+    if((type & SECURITY_LEVEL) > 0)
+        return enum_examples[SECURITY_LEVEL];
+
+    if((type & CHANNEL) > 0)
+        return enum_examples[CHANNEL];
+    if((type & ITEM_IDX) > 0)
+        return enum_examples[ITEM_IDX];
+    if((type & SCRIPTABLE) > 0)
+        return enum_examples[SCRIPTABLE];
+
+    if((type & INTEGER) > 0)
+        return enum_examples[INTEGER];
+    if((type & NUMERIC) > 0)
+        return enum_examples[NUMERIC];
+    if((type & ARRAY) > 0)
+        return enum_examples[ARRAY];
+
+    if((type & STRING) > 0)
+        return enum_examples[STRING];
+    if((type & BOOLEAN) > 0)
+        return enum_examples[BOOLEAN];
+
+    return enum_examples[UNKNOWN];
+}

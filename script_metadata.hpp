@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 struct arg_metadata
 {
@@ -25,10 +26,31 @@ struct arg_metadata
         NODE_IDX = 8192,
     };
 
+    static inline std::map<arg_type, std::string> enum_examples
+    {
+        {UNKNOWN, ""},
+        {STRING, "some_string"},
+        {INTEGER, "5"},
+        {USER, "\"core\""},
+        {NUMERIC, "12.7"},
+        {CASH, "12.7"},
+        {ITEM_IDX, "2"},
+        {OK, "{ok:true}"},
+        {SCRIPT, "\"scripts.core\""},
+        {SECURITY_LEVEL, "3"},
+        {ARRAY, "[]"},
+        {SCRIPTABLE, "array:true"},
+        {CHANNEL, "\"global\""},
+        {BOOLEAN, "true"},
+        {NODE_IDX, "-1"},
+    };
+
     std::string key_name;
     std::string val_text;
 
     arg_type type = arg_type::UNKNOWN;
+
+    std::string get_example();
 };
 
 struct script_metadata

@@ -162,7 +162,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
 
     ret["cash.steal"].description = "Xfers cash from a hostile user";
     ret["cash.steal"].return_data = make_met(ok_arg);
-    ret["cash.steal"].param_data = make_met("user", "User to steal from", arg_metadata::CASH | arg_metadata::NUMERIC, "amount", "Amount to xfer", arg_metadata::CASH | arg_metadata::NUMERIC);
+    ret["cash.steal"].param_data = make_met("user", "User to steal from", arg_metadata::USER, "amount", "Amount to xfer", arg_metadata::CASH | arg_metadata::NUMERIC);
     ret["cash.steal"].requires_breach = true;
 
     ret["scripts.get_level"].description = "Gets the security level of a script";
