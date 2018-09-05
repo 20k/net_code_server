@@ -212,7 +212,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
 
     ret["item.expose"].description = "Shows a list of items on a user";
     ret["item.expose"].return_data = make_met("", "Stringified items", arg_metadata::STRING, "", "Array of Items", arg_metadata::ARRAY, ok_arg);
-    ret["item.expose"].param_data = make_met("user", "User to Expose Items on", arg_metadata::USER, "full", "Should expose item properties", arg_metadata::BOOLEAN);
+    ret["item.expose"].param_data = make_met("user", "User to Expose Items on", arg_metadata::USER, "full", "Should expose item properties", arg_metadata::BOOLEAN, array_arg);
     ret["item.expose"].requires_breach = true;
 
     ret["item.xfer_to"].description = "Transfers an item to another player";
