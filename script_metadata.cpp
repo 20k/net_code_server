@@ -21,15 +21,19 @@ void from_json(const nlohmann::json& j, arg_metadata& p)
 void to_json(nlohmann::json& j, const script_metadata& p)
 {
     j = nlohmann::json{
-        {"a", p.data},
+        {"p", p.param_data},
+        {"r", p.return_data},
         {"d", p.description},
+        {"b", p.requires_breach},
         };
 }
 
 void from_json(const nlohmann::json& j, script_metadata& p)
 {
-    p.data = j.at("a").get<decltype(p.data)>();
+    p.param_data = j.at("p").get<decltype(p.param_data)>();
+    p.return_data = j.at("r").get<decltype(p.return_data)>();
     p.description = j.at("d");
+    p.requires_breach = j.at("b");
 }
 
 

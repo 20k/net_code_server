@@ -15,6 +15,9 @@ struct arg_metadata
         NUMERIC = 8,
         CASH = 16,
         ITEM_IDX = 32,
+        OK = 64,
+        SCRIPT = 128,
+        SECURITY_LEVEL = 256,
     };
 
     std::string key_name;
@@ -25,8 +28,10 @@ struct arg_metadata
 
 struct script_metadata
 {
-    std::vector<arg_metadata> data;
+    std::vector<arg_metadata> param_data;
+    std::vector<arg_metadata> return_data;
     std::string description;
+    bool requires_breach = false;
 
     std::string dump();
     void load_from_string(const std::string& str);

@@ -1,6 +1,5 @@
 #include "privileged_core_scripts.hpp"
 
-#include <ratio>
 #include <set>
 #include <deque>
 
@@ -44,6 +43,42 @@ std::vector<script_arg> make_carg(T&&... t)
 {
     return make_cary(t...);
 }
+
+std::vector<arg_metadata> make_met()
+{
+    return std::vector<arg_metadata>();
+}
+
+template<typename T, typename U, typename V, typename... W>
+std::vector<arg_metadata> make_met(T&& t, U&& u, V&& v, W&&... w)
+{
+    arg_metadata arg;
+    arg.key_name = t;
+    arg.val_text = u;
+    arg.type = (arg_metadata::arg_type)v;
+
+    std::vector<arg_metadata> ret{arg};
+
+    auto next = make_met(w...);
+
+    ret.insert(ret.end(), next.begin(), next.end());
+
+    return ret;
+}
+
+template<typename... T>
+std::vector<arg_metadata> make_met(const arg_metadata& arg, T&&... t)
+{
+    std::vector<arg_metadata> ret{arg};
+
+    auto next = make_met(t...);
+
+    ret.insert(ret.end(), next.begin(), next.end());
+
+    return ret;
+}
+
+///make a new one that also takes a whole arg
 
 std::map<std::string, std::vector<script_arg>> construct_core_args()
 {
@@ -98,6 +133,27 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
 std::map<std::string, script_metadata> construct_core_metadata()
 {
     std::map<std::string, script_metadata> ret;
+
+    arg_metadata ok_arg;
+    ok_arg.key_name = "ok";
+    ok_arg.val_text = "error code";
+    ok_arg.type = arg_metadata::OK;
+
+    ret["cash.balance"].description = "Gives your current cash balance";
+    ret["cash.balance"].return_data = make_met("", "Cash Balance", arg_metadata::CASH | arg_metadata::NUMERIC);
+
+    ret["cash.expose"].description = "Displays a hostile targets cash balance";
+    ret["cash.expose"].return_data = make_met("", "Cash Balance", arg_metadata::CASH | arg_metadata::NUMERIC, ok_arg);
+    ret["cash.expose"].requires_breach = true;
+
+    ret["cash.xfer_to"].description = "Sends cash to someone else";
+    ret["cash.xfer_to"].return_data = make_met(ok_arg);
+
+    ret["scripts.get_level"].description = "Gets the security level of a script";
+    ret["scripts.get_level"].return_data = make_met("", "Security Level", arg_metadata::SECURITY_LEVEL, ok_arg);
+    ret["scripts.get_level"].param_data = make_met("name", "script name", arg_metadata::SCRIPT);
+
+
 
     return ret;
 }
