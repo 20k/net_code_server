@@ -115,10 +115,10 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["net.map"] = make_cary("user", "\"\"", "n", "6");
     //ret["net.links"] = make_cary("user", "\"\"", "n", "6");
     ret["net.hack"] = make_cary("user", "\"\"", "NID", "-1");
-    ret["net.access"] = make_cary("user", "\"\"");
+    //ret["net.access"] = make_cary("user", "\"\"");
     ret["net.switch"] = make_cary("user", "\"\"");
-    ret["net.modify"] = make_cary("user", "\"\"", "target", "\"\"");
-    ret["net.move"] = make_cary("user", "\"\"", "target", "\"\"");
+    //ret["net.modify"] = make_cary("user", "\"\"", "target", "\"\"");
+    //ret["net.move"] = make_cary("user", "\"\"", "target", "\"\"");
     ret["net.path"] = make_cary("user", "\"\"", "target", "\"\"", "min_stability", "0");
     ret["sys.view"] = make_cary("user", "\"\"", "n", "-1", "fit", "false");
     ret["sys.map"] = make_cary("n", "-1", "centre", "false");
@@ -139,6 +139,11 @@ std::map<std::string, script_metadata> construct_core_metadata()
     ok_arg.val_text = "error code";
     ok_arg.type = arg_metadata::OK;
 
+    arg_metadata array_arg;
+    array_arg.key_name = "array";
+    array_arg.val_text = "Asks for scriptable output";
+    array_arg.type = arg_metadata::SCRIPTABLE;
+
     ret["cash.balance"].description = "Gives your current cash balance";
     ret["cash.balance"].return_data = make_met("", "Cash Balance", arg_metadata::CASH | arg_metadata::NUMERIC);
 
@@ -153,7 +158,9 @@ std::map<std::string, script_metadata> construct_core_metadata()
     ret["scripts.get_level"].return_data = make_met("", "Security Level", arg_metadata::SECURITY_LEVEL, ok_arg);
     ret["scripts.get_level"].param_data = make_met("name", "script name", arg_metadata::SCRIPT);
 
-
+    ret["scripts.me"].description = "Gets a list of your own scripts";
+    ret["scripts.me"].return_data = make_met("", "Stringified result", arg_metadata::STRING, "", "Array Result", arg_metadata::ARRAY);
+    ret["scripts.me"].param_data = make_met(array_arg);
 
     return ret;
 }

@@ -18,6 +18,8 @@ struct arg_metadata
         OK = 64,
         SCRIPT = 128,
         SECURITY_LEVEL = 256,
+        ARRAY = 512,
+        SCRIPTABLE = 1024,
     };
 
     std::string key_name;
