@@ -22,6 +22,7 @@ struct arg_metadata
         SCRIPTABLE = 1024,
         CHANNEL = 2048,
         BOOLEAN = 4096,
+        NODE_IDX = 8192,
     };
 
     std::string key_name;

@@ -142,7 +142,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
     arg_metadata array_arg;
     array_arg.key_name = "array";
     array_arg.val_text = "Asks for scriptable output";
-    array_arg.type = arg_metadata::SCRIPTABLE;
+    array_arg.type = arg_metadata::SCRIPTABLE | arg_metadata::BOOLEAN;
 
     ret["cash.balance"].description = "Gives your current cash balance";
     ret["cash.balance"].return_data = make_met("", "Cash Balance", arg_metadata::CASH | arg_metadata::NUMERIC);
@@ -200,6 +200,64 @@ std::map<std::string, script_metadata> construct_core_metadata()
     ret["users.me"].return_data = make_met("", "Stringified list of users", arg_metadata::STRING, "", "Array of Users", arg_metadata::ARRAY, ok_arg);
     ret["users.me"].param_data = make_met(array_arg);
 
+    ret["users.accessible"].description = "Get a list of npcs you have access to";
+    ret["users.accessible"].return_data = make_met("", "Stringified list of users", arg_metadata::STRING, "", "Array of Users", arg_metadata::ARRAY, ok_arg);
+    ret["users.accessible"].param_data = make_met(array_arg);
+
+    ret["item.steal"].description = "Steals an item from a user";
+    ret["item.steal"].return_data = make_met("", "Array of return messages", arg_metadata::ARRAY, ok_arg);
+    ret["item.steal"].param_data = make_met("user", "User to Steal from", arg_metadata::USER, "idx", "Item Index/Indices", arg_metadata::ITEM_IDX | arg_metadata::ARRAY);
+    ret["item.steal"].requires_breach = true;
+
+    ret["item.expose"].description = "Shows a list of items on a user";
+    ret["item.expose"].return_data = make_met("", "Stringified items", arg_metadata::STRING, "", "Array of Items", arg_metadata::ARRAY, ok_arg);
+    ret["item.expose"].param_data = make_met("user", "User to Expose Items on", arg_metadata::USER, "full", "Should expose item properties", arg_metadata::BOOLEAN);
+    ret["item.expose"].requires_breach = true;
+
+    ret["item.xfer_to"].description = "Transfers an item to another player";
+    ret["item.xfer_to"].return_data = make_met(ok_arg);
+    ret["item.xfer_to"].param_data = make_met("user", "User to Xfer to", arg_metadata::USER, "idx", "Item Index to Xfer", arg_metadata::ITEM_IDX);
+
+    ret["item.manage"].description = "Load, unload, or swap items. With no arguments, views items";
+    ret["item.manage"].return_data = make_met("", "Stringified list of items", arg_metadata::STRING, "", "Stringified Operation Result", arg_metadata::STRING, ok_arg);
+    ret["item.manage"].param_data = make_met("load", "Item Idx to load", arg_metadata::ITEM_IDX, "unload", "Item Idx to unload", arg_metadata::ITEM_IDX, "full", "Displays all item properties", arg_metadata::BOOLEAN, "node", "Loads to a specific node", arg_metadata::NODE_IDX, array_arg);
+
+    ///bundle script
+    ///register bundle
+    ///configure on breach
+    ///nodes manage
+    ///nodes view log
+
+    ///deprecated net view and map
+
+    ret["net.hack"].description = "Hack another user or npc";
+    ret["net.hack"].return_data = make_met("", "Hacking Output", arg_metadata::STRING, ok_arg);
+    ret["net.hack"].param_data = make_met("user", "User to Hack", arg_metadata::USER);
+
+    ///net.switch
+    ///net.path
+
+    ret["sys.map"].description = "Shows a map of all systems, from your perspective";
+    ret["sys.map"].return_data = make_met("", "Ascii Map of Systems", arg_metadata::STRING, "", "Array of System Objects", arg_metadata::ARRAY);
+    ret["sys.map"].param_data = make_met("centre", "Should Centre Map", arg_metadata::BOOLEAN,
+                                         "n", "Number of systems depthwise to display from location", arg_metadata::INTEGER,
+                                         "w", "Map Width", arg_metadata::INTEGER,
+                                         "h", "Map Height", arg_metadata::INTEGER,
+                                         array_arg);
+    ///centre, n, w, h, and array
+
+    ret["sys.view"].description = "Shows a map of the local system, from your perspective"
+    ret["sys.view"].return_data = make_met("", "Ascii Map of the local System", arg_metadata::STRING, "", "Array of NPC Objects", arg_metadata::ARRAY);
+    ret["sys.view"].param_data = make_met("fit", "Should Fit Map", arg_metadata::BOOLEAN,
+                                         "n", "Number of NPCs depthwise to display from location", arg_metadata::INTEGER,
+                                         "w", "Map Width", arg_metadata::INTEGER,
+                                         "h", "Map Height", arg_metadata::INTEGER,
+                                         "user", "User to display from", arg_metadata::USER,
+                                         "scale", "Map Scale", arg_metadata::NUMERIC,
+                                         array_arg);
+
+    ret["sys.move"].description = "Moves you from A to B in a system";
+    //ret["sys.move"].return_data
 
     return ret;
 }
