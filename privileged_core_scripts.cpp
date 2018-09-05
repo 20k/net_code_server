@@ -177,7 +177,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
 
     ret["scripts.public"].description = "Gets a list of public scripts";
     ret["scripts.public"].return_data = make_met("", "Stringified result", arg_metadata::STRING, "", "Array Result", arg_metadata::ARRAY);
-    ret["scripts.public"].param_data = make_met("seclevel", "Filter By Seclevel", arg_metadata::SECURITY_LEVEL);
+    ret["scripts.public"].param_data = make_met("seclevel", "Filter By Seclevel", arg_metadata::SECURITY_LEVEL, array_arg);
 
     ret["msg.manage"].description = "Join, Leave, or Create a channel";
     ret["msg.manage"].return_data = make_met(ok_arg);

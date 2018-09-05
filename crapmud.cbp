@@ -222,6 +222,7 @@
 		<Unit filename="time.cpp" />
 		<Unit filename="time.hpp" />
 		<Unit filename="timestamped_position.hpp" />
+		<Unit filename="unified_scripts.cpp" />
 		<Unit filename="unified_scripts.hpp" />
 		<Unit filename="user.cpp" />
 		<Unit filename="user.hpp" />
