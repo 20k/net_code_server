@@ -142,7 +142,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
     arg_metadata array_arg;
     array_arg.key_name = "array";
     array_arg.val_text = "Asks for scriptable output";
-    array_arg.type = arg_metadata::SCRIPTABLE | arg_metadata::BOOLEAN;
+    array_arg.type = (arg_metadata::arg_type)(arg_metadata::SCRIPTABLE | arg_metadata::BOOLEAN);
 
     ret["cash.balance"].description = "Gives your current cash balance";
     ret["cash.balance"].return_data = make_met("", "Cash Balance", arg_metadata::CASH | arg_metadata::NUMERIC);
@@ -246,7 +246,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
                                          array_arg);
     ///centre, n, w, h, and array
 
-    ret["sys.view"].description = "Shows a map of the local system, from your perspective"
+    ret["sys.view"].description = "Shows a map of the local system, from your perspective";
     ret["sys.view"].return_data = make_met("", "Ascii Map of the local System", arg_metadata::STRING, "", "Array of NPC Objects", arg_metadata::ARRAY);
     ret["sys.view"].param_data = make_met("fit", "Should Fit Map", arg_metadata::BOOLEAN,
                                          "n", "Number of NPCs depthwise to display from location", arg_metadata::INTEGER,
