@@ -168,9 +168,38 @@ std::map<std::string, script_metadata> construct_core_metadata()
     ret["scripts.get_level"].return_data = make_met("", "Security Level", arg_metadata::SECURITY_LEVEL, ok_arg);
     ret["scripts.get_level"].param_data = make_met("name", "script name", arg_metadata::SCRIPT);
 
+    ret["scripts.core"].description = "List of Core game scripts";
+    ret["scripts.core"].return_data = make_met("", "List of Scripts", arg_metadata::ARRAY);
+
     ret["scripts.me"].description = "Gets a list of your own scripts";
     ret["scripts.me"].return_data = make_met("", "Stringified result", arg_metadata::STRING, "", "Array Result", arg_metadata::ARRAY);
     ret["scripts.me"].param_data = make_met(array_arg);
+
+    ret["scripts.public"].description = "Gets a list of public scripts";
+    ret["scripts.public"].return_data = make_met("", "Stringified result", arg_metadata::STRING, "", "Array Result", arg_metadata::ARRAY);
+    ret["scripts.public"].param_data = make_met("seclevel", "Filter By Seclevel", arg_metadata::SECURITY_LEVEL);
+
+    ret["msg.manage"].description = "Join, Leave, or Create a channel";
+    ret["msg.manage"].return_data = make_met(ok_arg);
+    ret["msg.manage"].param_data = make_met("join", "Channel to Join", arg_metadata::CHANNEL, "leave", "Channel to Leave", arg_metadata::CHANNEL, "create", "Channel to Create", arg_metadata::CHANNEL);
+
+    ret["msg.send"].description = "Send a message in a channel, or in the local system";
+    ret["msg.send"].return_data = make_met(ok_arg);
+    ret["msg.send"].param_data = make_met("channel", "Channel to send in", arg_metadata::CHANNEL, "msg", "Message", arg_metadata::STRING);
+
+    ret["msg.tell"].description = "Send a whisper to a specific person";
+    ret["msg.tell"].return_data = make_met(ok_arg);
+    ret["msg.tell"].param_data = make_met("user", "User to Whisper", arg_metadata::USER, "msg", "Message", arg_metadata::STRING);
+
+    ret["msg.recent"].description = "Get a list of recent messages in a channel";
+    ret["msg.recent"].return_data = make_met("", "Stringified list of messages", arg_metadata::STRING, "", "Array of objects containing messages", arg_metadata::ARRAY, ok_arg);
+    ret["msg.recent"].param_data = make_met("channel", "Channel to Retrieve", arg_metadata::CHANNEL, "count", "Number of Messages to fetch", arg_metadata::INTEGER,
+                                            "tell", "Set to retrieve tells instead", arg_metadata::INTEGER, array_arg);
+
+    ret["users.me"].description = "Get a list of your own users, excluding npcs";
+    ret["users.me"].return_data = make_met("", "Stringified list of users", arg_metadata::STRING, "", "Array of Users", arg_metadata::ARRAY, ok_arg);
+    ret["users.me"].param_data = make_met(array_arg);
+
 
     return ret;
 }

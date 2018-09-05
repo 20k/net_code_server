@@ -20,6 +20,8 @@ struct arg_metadata
         SECURITY_LEVEL = 256,
         ARRAY = 512,
         SCRIPTABLE = 1024,
+        CHANNEL = 2048,
+        BOOLEAN = 4096,
     };
 
     std::string key_name;
