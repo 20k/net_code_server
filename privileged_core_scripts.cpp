@@ -149,6 +149,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
 
     ret["cash.expose"].description = "Displays a hostile targets cash balance";
     ret["cash.expose"].return_data = make_met("", "Cash Balance", arg_metadata::CASH | arg_metadata::NUMERIC, ok_arg);
+    ret["cash.expose"].param_data = make_met("user", "User to Expose", arg_metadata::USER);
     ret["cash.expose"].requires_breach = true;
 
     ret["cash.xfer_to"].description = "Sends cash to someone else";
