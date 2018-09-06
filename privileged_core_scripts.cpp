@@ -274,7 +274,15 @@ std::map<std::string, script_metadata> construct_core_metadata()
                                          array_arg);
 
     ret["sys.move"].description = "Moves you from A to B in a system";
-    //ret["sys.move"].return_data
+    ret["sys.move"].param_data = make_met(
+                                            "to", "User to move to, or array of [x, y, z]", arg_metadata::USER
+                                         );
+
+    ret["sys.access"].description = "Accesses a users control panel. Can be used to claim NPCs";
+    ret["sys.access"].param_data = make_met(
+                                                "user", "User to access", arg_metadata::USER
+                                           );
+    ret["sys.access"].requires_breach = true;
 
     return ret;
 }
