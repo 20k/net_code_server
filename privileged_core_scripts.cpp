@@ -198,7 +198,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
     ret["msg.recent"].description = "Get a list of recent messages in a channel";
     ret["msg.recent"].return_data = make_met("", "Stringified list of messages", arg_metadata::STRING, "", "Array of objects containing messages", arg_metadata::ARRAY, ok_arg);
     ret["msg.recent"].param_data = make_met("channel", "Channel to Retrieve", arg_metadata::CHANNEL, "count", "Number of Messages to fetch", arg_metadata::INTEGER,
-                                            "tell", "Set to retrieve tells instead", arg_metadata::INTEGER, array_arg);
+                                            "tell", "Set to retrieve tells instead", arg_metadata::INTEGER | arg_metadata::OPT, array_arg);
 
     ret["users.me"].description = "Get a list of your own users, excluding npcs";
     ret["users.me"].return_data = make_met("", "Stringified list of users", arg_metadata::STRING, "", "Array of Users", arg_metadata::ARRAY, ok_arg);
@@ -215,7 +215,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
 
     ret["item.expose"].description = "Shows a list of items on a user";
     ret["item.expose"].return_data = make_met("", "Stringified items", arg_metadata::STRING, "", "Array of Items", arg_metadata::ARRAY, ok_arg);
-    ret["item.expose"].param_data = make_met("user", "User to Expose Items on", arg_metadata::USER, "full", "Should expose item properties", arg_metadata::BOOLEAN, array_arg);
+    ret["item.expose"].param_data = make_met("user", "User to Expose Items on", arg_metadata::USER, "full", "Should expose item properties", arg_metadata::BOOLEAN | arg_metadata::OPT, array_arg);
     ret["item.expose"].requires_breach = true;
 
     ret["item.xfer_to"].description = "Transfers an item to another player";
@@ -228,7 +228,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
 
     ret["item.list"].description = "Returns a list of items";
     ret["item.list"].return_data = make_met("", "Stringified list of items", arg_metadata::STRING, ok_arg);
-    ret["item.list"].param_data = make_met("full", "Displays all item properties", arg_metadata::BOOLEAN, array_arg);
+    ret["item.list"].param_data = make_met("full", "Displays all item properties", arg_metadata::BOOLEAN | arg_metadata::OPT, array_arg);
 
     ret["item.load"].description = "Loads an item or lock";
     ret["item.load"].return_data = make_met("", "Status Message", arg_metadata::STRING, ok_arg);
