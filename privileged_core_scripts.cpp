@@ -232,7 +232,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
 
     ret["item.load"].description = "Loads an item or lock";
     ret["item.load"].return_data = make_met("", "Status Message", arg_metadata::STRING, ok_arg);
-    ret["item.load"].param_data = make_met("idx", "Item Idx to load", arg_metadata::ITEM_IDX, "node", "Loads to a specific node", arg_metadata::NODE_IDX | arg_metadata::NODE_STRING);
+    ret["item.load"].param_data = make_met("idx", "Item Idx to load", arg_metadata::ITEM_IDX, "node", "Loads to a specific node. Only for locks", arg_metadata::NODE_IDX | arg_metadata::NODE_STRING);
 
     ret["item.unload"].description = "Unloads an item or lock";
     ret["item.unload"].return_data = make_met("", "Status Message", arg_metadata::STRING, ok_arg);

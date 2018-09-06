@@ -40,11 +40,11 @@ struct arg_metadata
         {SCRIPT, "\"scripts.core\""},
         {SECURITY_LEVEL, "3"},
         {ARRAY, "[]"},
-        {SCRIPTABLE, "array:true"},
+        {SCRIPTABLE, "true"},
         {CHANNEL, "\"global\""},
         {BOOLEAN, "true"},
         {NODE_IDX, "-1"},
-        {NODE_STRING, "F"},
+        {NODE_STRING, "\"F\""},
     };
 
     std::string key_name;
