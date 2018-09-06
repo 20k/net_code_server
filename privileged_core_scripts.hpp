@@ -133,6 +133,8 @@ duk_ret_t item__list(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl);
 
+duk_ret_t item__unload(priv_context& priv_ctx, duk_context* ctx, int sl);
+
 duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::string& from, const std::string& to);
 
 duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl);
@@ -316,6 +318,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(item__manage, 2),
     REGISTER_FUNCTION_PRIV(item__list, 2),
     REGISTER_FUNCTION_PRIV(item__load, 2),
+    REGISTER_FUNCTION_PRIV(item__unload, 2),
     REGISTER_FUNCTION_PRIV(item__cull, 1),
     REGISTER_FUNCTION_PRIV(item__bundle_script, 1),
     REGISTER_FUNCTION_PRIV(item__register_bundle, 0),
