@@ -524,7 +524,7 @@ void user::cleanup_call_stack(int thread_id)
 
     for(int i=0; i < (int)stk.size(); i++)
     {
-        mongo_lock_proxy ctx = get_global_mongo_user_info_context(thread_id);
+        mongo_nolock_proxy ctx = get_global_mongo_user_info_context(thread_id);
 
         user usr;
 
@@ -545,7 +545,7 @@ void user::cleanup_call_stack(int thread_id)
 
     if(start_valid != last_valid)
     {
-        mongo_lock_proxy ctx = get_global_mongo_user_info_context(thread_id);
+        mongo_nolock_proxy ctx = get_global_mongo_user_info_context(thread_id);
 
         overwrite_user_in_db(ctx);
     }
