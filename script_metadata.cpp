@@ -49,6 +49,9 @@ void script_metadata::load_from_string(const std::string& in)
 
 std::string arg_metadata::get_example()
 {
+    if((type & NODE_STRING) > 0)
+        return enum_examples[NODE_STRING];
+
     if((type & NODE_IDX) > 0)
         return enum_examples[NODE_IDX];
     if((type & USER) > 0)

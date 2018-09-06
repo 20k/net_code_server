@@ -224,7 +224,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
 
     ret["item.manage"].description = "Load, unload, or swap items. With no arguments, views items";
     ret["item.manage"].return_data = make_met("", "Stringified list of items", arg_metadata::STRING, "", "Stringified Operation Result", arg_metadata::STRING, ok_arg);
-    ret["item.manage"].param_data = make_met("load", "Item Idx to load", arg_metadata::ITEM_IDX, "unload", "Item Idx to unload", arg_metadata::ITEM_IDX, "full", "Displays all item properties", arg_metadata::BOOLEAN, "node", "Loads to a specific node", arg_metadata::NODE_IDX, array_arg);
+    ret["item.manage"].param_data = make_met("load", "Item Idx to load", arg_metadata::ITEM_IDX, "unload", "Item Idx to unload", arg_metadata::ITEM_IDX, "full", "Displays all item properties", arg_metadata::BOOLEAN, "node", "Loads to a specific node", arg_metadata::NODE_IDX | arg_metadata::NODE_STRING, array_arg);
 
     ret["item.list"].description = "Returns a list of items";
     ret["item.list"].return_data = make_met("", "Stringified list of items", arg_metadata::STRING, ok_arg);
@@ -232,7 +232,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
 
     ret["item.load"].description = "Loads an item or lock";
     ret["item.load"].return_data = make_met("", "Status Message", arg_metadata::STRING, ok_arg);
-    ret["item.load"].param_data = make_met("idx", "Item Idx to load", arg_metadata::ITEM_IDX, "node", "Loads to a specific node", arg_metadata::NODE_IDX);
+    ret["item.load"].param_data = make_met("idx", "Item Idx to load", arg_metadata::ITEM_IDX, "node", "Loads to a specific node", arg_metadata::NODE_IDX | arg_metadata::NODE_STRING);
 
     ret["item.unload"].description = "Unloads an item or lock";
     ret["item.unload"].return_data = make_met("", "Status Message", arg_metadata::STRING, ok_arg);

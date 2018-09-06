@@ -24,6 +24,7 @@ struct arg_metadata
         CHANNEL = 2048,
         BOOLEAN = 4096,
         NODE_IDX = 8192,
+        NODE_STRING = 16384,
     };
 
     static inline std::map<arg_type, std::string> enum_examples
@@ -43,6 +44,7 @@ struct arg_metadata
         {CHANNEL, "\"global\""},
         {BOOLEAN, "true"},
         {NODE_IDX, "-1"},
+        {NODE_STRING, "F"},
     };
 
     std::string key_name;
