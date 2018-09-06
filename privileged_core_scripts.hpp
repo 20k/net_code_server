@@ -371,6 +371,7 @@ inline
 std::vector<std::string> hidden_functions
 {
     {"net.map"},
+    {"item.manage"},
     {"ada.access"},
     {"able.help"},
 };
