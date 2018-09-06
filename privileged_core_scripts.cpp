@@ -145,7 +145,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
     arg_metadata array_arg;
     array_arg.key_name = "array";
     array_arg.val_text = "Asks for scriptable output";
-    array_arg.type = (arg_metadata::arg_type)(arg_metadata::SCRIPTABLE | arg_metadata::BOOLEAN);
+    array_arg.type = (arg_metadata::arg_type)(arg_metadata::SCRIPTABLE | arg_metadata::BOOLEAN | arg_metadata::OPT);
 
     ret["cash.balance"].description = "Gives your current cash balance";
     ret["cash.balance"].return_data = make_met("", "Cash Balance", arg_metadata::CASH | arg_metadata::NUMERIC);
@@ -232,7 +232,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
 
     ret["item.load"].description = "Loads an item or lock";
     ret["item.load"].return_data = make_met("", "Status Message", arg_metadata::STRING, ok_arg);
-    ret["item.load"].param_data = make_met("idx", "Item Idx to load", arg_metadata::ITEM_IDX, "node", "Loads to a specific node. Only for locks", arg_metadata::NODE_IDX | arg_metadata::NODE_STRING);
+    ret["item.load"].param_data = make_met("idx", "Item Idx to load", arg_metadata::ITEM_IDX, "node", "Loads to a specific node. Only for locks", arg_metadata::NODE_IDX | arg_metadata::NODE_STRING | arg_metadata::OPT);
 
     ret["item.unload"].description = "Unloads an item or lock";
     ret["item.unload"].return_data = make_met("", "Status Message", arg_metadata::STRING, ok_arg);
@@ -255,21 +255,22 @@ std::map<std::string, script_metadata> construct_core_metadata()
 
     ret["sys.map"].description = "Shows a map of all systems, from your perspective";
     ret["sys.map"].return_data = make_met("", "Ascii Map of Systems", arg_metadata::STRING, "", "Array of System Objects", arg_metadata::ARRAY);
-    ret["sys.map"].param_data = make_met("centre", "Should Centre Map", arg_metadata::BOOLEAN,
-                                         "n", "Number of systems depthwise to display from location", arg_metadata::INTEGER,
-                                         "w", "Map Width", arg_metadata::INTEGER,
-                                         "h", "Map Height", arg_metadata::INTEGER,
+    ret["sys.map"].param_data = make_met("centre", "Should Centre Map", arg_metadata::BOOLEAN | arg_metadata::OPT,
+                                         "n", "Number of systems depthwise to display from location", arg_metadata::INTEGER | arg_metadata::OPT,
+                                         "w", "Map Width", arg_metadata::INTEGER | arg_metadata::OPT,
+                                         "h", "Map Height", arg_metadata::INTEGER | arg_metadata::OPT,
                                          array_arg);
     ///centre, n, w, h, and array
 
     ret["sys.view"].description = "Shows a map of the local system, from your perspective";
     ret["sys.view"].return_data = make_met("", "Ascii Map of the local System", arg_metadata::STRING, "", "Array of NPC Objects", arg_metadata::ARRAY);
-    ret["sys.view"].param_data = make_met("fit", "Should Fit Map", arg_metadata::BOOLEAN,
-                                         "n", "Number of NPCs depthwise to display from location", arg_metadata::INTEGER,
-                                         "w", "Map Width", arg_metadata::INTEGER,
-                                         "h", "Map Height", arg_metadata::INTEGER,
-                                         "user", "User to display from", arg_metadata::USER,
-                                         "scale", "Map Scale", arg_metadata::NUMERIC,
+    ret["sys.view"].param_data = make_met(
+                                         "user", "User to display from", arg_metadata::USER | arg_metadata::OPT,
+                                         "fit", "Should Fit Map", arg_metadata::BOOLEAN | arg_metadata::OPT,
+                                         "n", "Number of NPCs depthwise to display from location", arg_metadata::INTEGER | arg_metadata::OPT,
+                                         "w", "Map Width", arg_metadata::INTEGER | arg_metadata::OPT,
+                                         "h", "Map Height", arg_metadata::INTEGER | arg_metadata::OPT,
+                                         "scale", "Map Scale", arg_metadata::NUMERIC | arg_metadata::OPT,
                                          array_arg);
 
     ret["sys.move"].description = "Moves you from A to B in a system";
