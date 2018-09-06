@@ -1841,6 +1841,31 @@ duk_ret_t item__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+
+duk_ret_t item__list(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
+    bool full = dukx_is_prop_truthy(ctx, -1, "full");
+
+    std::optional<std::pair<user, user_nodes>> user_and_node_opt = get_user_and_nodes(get_caller(ctx), get_thread_id(ctx));
+
+    if(!user_and_node_opt.has_value())
+    {
+        return push_error(ctx, "User does not exist");
+    }
+
+    push_internal_items_view(ctx, !is_arr, full, user_and_node_opt->second, user_and_node_opt->first, "");
+
+    return 1;
+}
+
+
+
+
+
+
 duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, const std::string& from, const std::string& to)
 {
     if(from == to)
