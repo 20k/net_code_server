@@ -102,6 +102,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["item.expose"] = make_cary("user", "\"\"");
     ret["item.manage"] = make_cary();
     ret["item.list"] = make_cary();
+    ret["item.load"] = make_cary("idx", "0");
     ret["item.cull"] = make_cary("idx", "0");
     ret["item.xfer_to"] = make_cary("idx", "0", "user", "\"\"");
     ret["item.bundle_script"] = make_cary("idx", "0", "name", "\"\"", "tag", "\"\"");
@@ -227,6 +228,10 @@ std::map<std::string, script_metadata> construct_core_metadata()
     ret["item.list"].description = "Returns a list of items";
     ret["item.list"].return_data = make_met("", "Stringified list of items", arg_metadata::STRING, ok_arg);
     ret["item.list"].param_data = make_met("full", "Displays all item properties", arg_metadata::BOOLEAN, array_arg);
+
+    ret["item.load"].description = "Loads an item or lock";
+    ret["item.load"].return_data = make_met("", "Status Message", arg_metadata::STRING, ok_arg);
+    ret["item.load"].param_data = make_met("load", "Item Idx to load", arg_metadata::ITEM_IDX, "node", "Loads to a specific node", arg_metadata::NODE_IDX);
 
     ///bundle script
     ///register bundle
@@ -1624,6 +1629,8 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
                 node->load_lock(to_load);
             }
         }
+
+        accum += "Loaded\n";
     }
 
     /*if(which == to_load && node_idx >= 0)
@@ -1862,6 +1869,61 @@ duk_ret_t item__list(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     push_internal_items_view(ctx, !is_arr, full, user_and_node_opt->second, user_and_node_opt->first, "");
+
+    return 1;
+}
+
+
+duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    int load_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
+    int node_idx = duk_get_prop_string_as_int(ctx, -1, "node", -1);
+
+    std::optional<std::pair<user, user_nodes>> user_and_node_opt = get_user_and_nodes(get_caller(ctx), get_thread_id(ctx));
+
+    std::string node_name = duk_safe_get_prop_string(ctx, -1, "node");
+
+    if(!user_and_node_opt.has_value())
+    {
+        return push_error(ctx, "User does not exist");
+    }
+
+
+    if(node_name != "")
+    {
+        for(int i=0; i < user_node_info::TYPE_COUNT; i++)
+        {
+            if(stolower(user_node_info::short_name[i]) == stolower(node_name))
+            {
+                node_idx = i;
+                break;
+            }
+        }
+    }
+
+    std::string usage = "Usage: " + make_key_val("load", "idx") + ", and optionally " + make_key_val("node", "short_name");
+
+    if(load_idx >= 0)
+    {
+        std::string accum;
+
+        auto ret = load_item_raw(node_idx, load_idx, -1, user_and_node_opt->first, user_and_node_opt->second, accum, get_thread_id(ctx));
+
+        if(ret != "")
+            return push_error(ctx, ret);
+
+        if(accum.size() > 0 && accum.back() == '\n')
+            accum.pop_back();
+
+        push_duk_val(ctx, accum);
+        return 1;
+    }
+    else
+    {
+        return push_error(ctx, "Needs idx >= 0");
+    }
 
     return 1;
 }
