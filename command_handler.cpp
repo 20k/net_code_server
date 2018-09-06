@@ -1924,7 +1924,7 @@ std::vector<nlohmann::json> get_and_update_chat_msgs_for_user(user& usr)
     usr.cleanup_call_stack(-2);
 
     {
-        mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
+        mongo_nolock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
         ctx.change_collection(usr.get_call_stack().back());
 
         nlohmann::json to_send;
@@ -1953,7 +1953,7 @@ std::vector<nlohmann::json> get_and_update_tells_for_user(user& usr)
     usr.cleanup_call_stack(-2);
 
     {
-        mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
+        mongo_nolock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
         ctx.change_collection(usr.get_call_stack().back());
 
         nlohmann::json to_send;
@@ -1982,7 +1982,7 @@ std::vector<nlohmann::json> get_and_update_notifs_for_user(user& usr)
     usr.cleanup_call_stack(-2);
 
     {
-        mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
+        mongo_nolock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
         ctx.change_collection(usr.get_call_stack().back());
 
         nlohmann::json to_send;
@@ -2033,7 +2033,7 @@ std::vector<std::string> get_channels_for_user(user& usr)
 
     if(clk.getElapsedTime().asSeconds() > 1)
     {
-        mongo_lock_proxy ctx = get_global_mongo_chat_channel_propeties_context(-2);
+        mongo_nolock_proxy ctx = get_global_mongo_chat_channel_propeties_context(-2);
 
         found = all.fetch_from_db(ctx);
         clk.restart();
@@ -2423,7 +2423,7 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
             return "";
 
         {
-            mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
+            mongo_nolock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
             user u1;
 
@@ -2440,7 +2440,7 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
             user usr;
 
             {
-                mongo_lock_proxy user_info = get_global_mongo_user_info_context(-2);
+                mongo_nolock_proxy user_info = get_global_mongo_user_info_context(-2);
 
                 if(!usr.load_from_db(user_info, cur_name))
                     return "command error invalid username in client_poll_json";
