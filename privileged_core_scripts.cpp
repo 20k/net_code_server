@@ -101,6 +101,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["item.steal"] = make_cary("user", "\"\"", "idx", "0");
     ret["item.expose"] = make_cary("user", "\"\"");
     ret["item.manage"] = make_cary();
+    ret["item.list"] = make_cary();
     ret["item.cull"] = make_cary("idx", "0");
     ret["item.xfer_to"] = make_cary("idx", "0", "user", "\"\"");
     ret["item.bundle_script"] = make_cary("idx", "0", "name", "\"\"", "tag", "\"\"");
@@ -222,6 +223,10 @@ std::map<std::string, script_metadata> construct_core_metadata()
     ret["item.manage"].description = "Load, unload, or swap items. With no arguments, views items";
     ret["item.manage"].return_data = make_met("", "Stringified list of items", arg_metadata::STRING, "", "Stringified Operation Result", arg_metadata::STRING, ok_arg);
     ret["item.manage"].param_data = make_met("load", "Item Idx to load", arg_metadata::ITEM_IDX, "unload", "Item Idx to unload", arg_metadata::ITEM_IDX, "full", "Displays all item properties", arg_metadata::BOOLEAN, "node", "Loads to a specific node", arg_metadata::NODE_IDX, array_arg);
+
+    ret["item.list"].description = "Returns a list of items";
+    ret["item.list"].return_data = make_met("", "Stringified list of items", arg_metadata::STRING, ok_arg);
+    ret["item.list"].param_data = make_met("full", "Displays all item properties", arg_metadata::BOOLEAN, array_arg);
 
     ///bundle script
     ///register bundle
