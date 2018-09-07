@@ -44,7 +44,14 @@ std::string script_metadata::dump()
 
 void script_metadata::load_from_string(const std::string& in)
 {
-    *this = nlohmann::json::parse(in);
+    try
+    {
+        *this = nlohmann::json::parse(in);
+    }
+    catch(...)
+    {
+
+    }
 }
 
 std::string arg_metadata::get_example()
