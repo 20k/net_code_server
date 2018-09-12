@@ -285,6 +285,7 @@ int main()
     #endif // TESTING
 
     get_global_structure();
+    get_global_structure_info();
 
     sample_game_structure();
 
