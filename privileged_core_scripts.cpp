@@ -1124,32 +1124,6 @@ void create_notification(int lock_id, const std::string& to, const std::string& 
     insert_in_db(mongo_ctx, to_insert);
 }
 
-template<typename T>
-inline
-std::string to_string_with_enforced_variable_dp(T a_value, int forced_dp = 1)
-{
-    if(fabs(a_value) <= 0.0999999 && fabs(a_value) >= 0.0001)
-        forced_dp++;
-
-    std::string fstr = std::to_string(a_value);
-
-    auto found = fstr.find('.');
-
-    if(found == std::string::npos)
-    {
-        return fstr + ".0";
-    }
-
-    found += forced_dp + 1;
-
-    if(found >= fstr.size())
-        return fstr;
-
-    fstr.resize(found);
-
-    return fstr;
-}
-
 void create_xfer_notif(duk_context* ctx, const std::string& xfer_from, const std::string& xfer_to, double amount)
 {
     COOPERATE_KILL();
@@ -4939,6 +4913,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             j["y"] = pos.y();
             j["z"] = pos.z();
             j["links"] = links;
+            j["seclevel"] = structure.calculate_seclevel();
 
             data.push_back(j);
         }

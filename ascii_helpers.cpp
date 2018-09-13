@@ -248,6 +248,8 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
             low_level_structure& str = *str_opt.value();
 
             connections = str.get_connected_systems();
+
+            info.extra_data_map[name] += "(" + to_string_with_enforced_variable_dp(str.calculate_seclevel(), 2) + ")";
         }
 
         vec2f rounded_pos = round(pos);
