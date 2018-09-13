@@ -255,7 +255,15 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
 
             connections = str.get_connected_systems();
 
-            info.extra_data_map[name] += "(" + to_string_with_enforced_variable_dp(str.calculate_seclevel(), 2) + ")";
+            float fractional_seclevel = str.calculate_seclevel();
+
+            int seclevel = seclevel_fraction_to_seclevel(fractional_seclevel);
+
+            std::string sstring = seclevel_to_string(seclevel);
+
+            std::string seclevel_colour = string_to_colour(sstring);
+
+            info.extra_data_map[name] += "(`" + seclevel_colour + to_string_with_enforced_variable_dp(str.calculate_seclevel(), 2) + "`)";
 
             if((flags & ascii::COLOUR_BY_SECLEVEL) == 0)
             {
@@ -263,13 +271,7 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
             }
             else
             {
-                float fractional_seclevel = str.calculate_seclevel();
-
-                int seclevel = seclevel_fraction_to_seclevel(fractional_seclevel);
-
-                std::string sstring = seclevel_to_string(seclevel);
-
-                col = string_to_colour(sstring);
+                col = seclevel_colour;
             }
         }
 

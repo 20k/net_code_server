@@ -4767,6 +4767,8 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     int found_w = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "w", 160);
     int found_h = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "h", 80);
 
+    bool by_seclevel = dukx_is_prop_truthy(ctx, -1, "seclevels") || dukx_is_prop_truthy(ctx, -1, "seclevel") || dukx_is_prop_truthy(ctx, -1, "s");
+
     found_w = clamp(found_w, 5, 300);
     found_h = clamp(found_h, 5, 200);
 
@@ -4866,6 +4868,11 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             flags = (ascii::ascii_render_flags)(flags | ascii::FIT_TO_AREA);
 
         flags = (ascii::ascii_render_flags)(flags | ascii::HIGHLIGHT_USER);
+
+        if(by_seclevel)
+        {
+            flags = (ascii::ascii_render_flags)(flags | ascii::COLOUR_BY_SECLEVEL);
+        }
 
         std::string result = ascii_render_from_accessibility_info(info, buffer, pos, 0.07f, flags, *structure.name);
 
