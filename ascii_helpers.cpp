@@ -224,13 +224,14 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
     std::map<std::string, std::string> name_to_override;
 
     std::map<std::string, vec2f> node_to_pos;
+    std::map<std::string, std::string> name_to_colour;
 
     for(auto& i : info.rings)
     {
         node_to_pos[i.first] = info.global_pos[i.first].xy();
     }
 
-    int hacky_id = 1;
+    //int hacky_id = 1;
 
     for(auto& i : node_to_pos)
     {
@@ -239,8 +240,13 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
 
         std::vector<std::string> connections;
 
+        std::string col;
+
         if((flags & ascii::USE_SYS) == 0)
+        {
             connections = playspace_network_manage.get_links(name);
+            col = string_to_colour(name);
+        }
         else
         {
             std::optional<low_level_structure*> str_opt = low_level_structure_manage.get_system_from_name(name);
@@ -250,6 +256,15 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
             connections = str.get_connected_systems();
 
             info.extra_data_map[name] += "(" + to_string_with_enforced_variable_dp(str.calculate_seclevel(), 2) + ")";
+
+            if((flags & ascii::COLOUR_BY_SECLEVEL) == 0)
+            {
+                col = string_to_colour(name);
+            }
+            else
+            {
+                col = 'A';
+            }
         }
 
         vec2f rounded_pos = round(pos);
@@ -264,11 +279,15 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
         else
         {
             name_to_override[name] = id_to_override[map_id];
+            //name_to_colour[name] = colour_string(id_to_override[map_id]);
+            col = string_to_colour(id_to_override[map_id]);
         }
 
         //int colour_offset_count = 0;
 
-        std::string col = string_to_colour(name);
+        //std::string col = string_to_colour(name);
+
+        name_to_colour[name] = col;
 
         ///alright so
         ///need to keep track of the first time we've seen something
@@ -314,7 +333,7 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
             //colour_offset_count++;
         }
 
-        hacky_id++;
+        //hacky_id++;
     }
 
     auto local_display_string = info.display_string;
@@ -331,7 +350,7 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
 
         vec2i clamped = clamp((vec2i){i.second.x(), i.second.y()}, (vec2i){0, 0}, (vec2i){w-1, h-1});
 
-        std::string to_display = "`" + string_to_colour(i.first) + info.display_string[i.first] + "`";
+        std::string to_display = "`" + name_to_colour[i.first] + info.display_string[i.first] + "`";
 
         buffer[clamped.y()][clamped.x()] = to_display;
     }
@@ -390,14 +409,16 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
 
         if(y < (int)info.keys.size())
         {
-            std::string col_name = string_to_colour(info.keys[y].first);
-            std::string col_char = string_to_colour(info.keys[y].first);
+            std::string col_char = name_to_colour[info.keys[y].first];
+
+            if(col_char == "")
+                col_char = "A";
 
             std::string extra_data = info.extra_data_map[info.keys[y].first];
 
             if(name_to_override[info.keys[y].first] != "")
             {
-                col_char = string_to_colour(name_to_override[info.keys[y].first]);
+                col_char = name_to_colour[name_to_override[info.keys[y].first]];
             }
 
             //#define ITEM_DEBUG
@@ -428,7 +449,7 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
             }
             #endif // ITEM_DEBUG
 
-            std::string name = "`" + col_name + info.keys[y].first + "`";
+            std::string name = "`" + col_char + info.keys[y].first + "`";
 
             //std::string extra_str = std::to_string((int)global_pos[name].x()) + ", " + std::to_string((int)global_pos[name].y());
 

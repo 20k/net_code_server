@@ -26,6 +26,7 @@ namespace ascii
         USE_SYS = 2,
         FIT_TO_AREA = 4,
         HIGHLIGHT_USER = 8,
+        COLOUR_BY_SECLEVEL = 16, ///for systems
     };
 }
 
