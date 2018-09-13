@@ -263,7 +263,13 @@ std::string ascii_render_from_accessibility_info(network_accessibility_info& inf
             }
             else
             {
-                col = 'A';
+                float fractional_seclevel = str.calculate_seclevel();
+
+                int seclevel = seclevel_fraction_to_seclevel(fractional_seclevel);
+
+                std::string sstring = seclevel_to_string(seclevel);
+
+                col = string_to_colour(sstring);
             }
         }
 
