@@ -569,7 +569,7 @@ duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
-duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const std::string& to, double amount)
+duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const std::string& to, double amount, bool pvp_action)
 {
     COOPERATE_KILL();
 
@@ -691,7 +691,7 @@ duk_ret_t cash__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
     amount = duk_get_number(ctx, -1);
     duk_pop(ctx);
 
-    return cash_internal_xfer(ctx, get_caller(ctx), destination_name, amount);
+    return cash_internal_xfer(ctx, get_caller(ctx), destination_name, amount, false);
 }
 
 
@@ -714,7 +714,7 @@ duk_ret_t cash__xfer_to_caller(priv_context& priv_ctx, duk_context* ctx, int sl)
     amount = duk_get_number(ctx, -1);
     duk_pop(ctx);
 
-    return cash_internal_xfer(ctx, priv_ctx.original_host, destination_name, amount);
+    return cash_internal_xfer(ctx, priv_ctx.original_host, destination_name, amount, false);
 }
 
 ///this is only valid currently, will need to expand to hardcode in certain folders
@@ -2713,7 +2713,7 @@ duk_ret_t cash__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if((hostile & user_node_info::XFER_GC_FROM) > 0)
     {
-        return cash_internal_xfer(ctx, from, get_caller(ctx), amount);
+        return cash_internal_xfer(ctx, from, get_caller(ctx), amount, true);
     }
     else
     {

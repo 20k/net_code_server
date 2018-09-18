@@ -67,7 +67,7 @@ std::string format_pretty_names(const std::vector<std::string>& names);
 duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl);
 
-duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const std::string& to, double amount);
+duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const std::string& to, double amount, bool pvp_action);
 ///TODO: TRANSACTION HISTORY
 
 duk_ret_t cash__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl);
