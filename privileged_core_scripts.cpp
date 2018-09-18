@@ -640,11 +640,11 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
             if(&from_system != &to_system)
             {
                 ///we use the ratelimits of the greater seclevel system
-                double system_ratelimit_max_cash_percentage = get_most_secure_seclevel_of(from_system, to_system).get_ratelimit_max_cash_percentage_steal();
+                double system_ratelimit_max_cash_send = get_most_secure_seclevel_of(from_system, to_system).get_ratelimit_max_cash_send();
 
                 user_limit& lim = from_user.user_limits[user_limit::CASH_SEND];
 
-                double real_cash_limit = from_user.cash * system_ratelimit_max_cash_percentage * lim.calculate_current_data(current_time);
+                double real_cash_limit = system_ratelimit_max_cash_send * lim.calculate_current_data(current_time);
 
                 if(real_cash_limit < amount)
                     return push_error(ctx, "Cannot send " + to_string_with_enforced_variable_dp(amount, 2) + " between these systems (limited due to your or their system's security level)");
