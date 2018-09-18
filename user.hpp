@@ -23,6 +23,12 @@ struct user
     #endif // USE_LOCS
     bool initial_connection_setup = false;
 
+    double ratelimit_cash_send_frac = 1;
+    double ratelimit_item_send_frac = 1;
+
+    double ratelimit_cash_stolen_frac = 0;
+    double ratelimit_item_stolen_frac = 0;
+
     ///stack of users, used for changing cli context
     std::vector<std::string> call_stack;
     std::vector<std::string> owner_list;

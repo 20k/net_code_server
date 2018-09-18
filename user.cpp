@@ -47,6 +47,12 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
 
     to_set.set_prop("joined_channels", joined_channels);
 
+    to_set.set_prop("ratelimit_cash_send_frac", ratelimit_cash_send_frac);
+    to_set.set_prop("ratelimit_item_send_frac", ratelimit_item_send_frac);
+
+    to_set.set_prop("ratelimit_cash_stolen_frac", ratelimit_cash_stolen_frac);
+    to_set.set_prop("ratelimit_item_stolen_frac", ratelimit_item_stolen_frac);
+
     filter.update_one_in_db_if_exact(ctx, to_set);
 
     global_user_cache& cache = get_global_user_cache();
@@ -149,6 +155,18 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
 
         if(req.has_prop("joined_channels"))
             joined_channels = req.get_prop("joined_channels");
+
+        if(req.has_prop("ratelimit_cash_send_frac"))
+            ratelimit_cash_send_frac = req.get_prop_as_double("ratelimit_cash_send_frac");
+
+        if(req.has_prop("ratelimit_item_send_frac"))
+            ratelimit_item_send_frac = req.get_prop_as_double("ratelimit_item_send_frac");
+
+        if(req.has_prop("ratelimit_cash_stolen_frac"))
+            ratelimit_cash_stolen_frac = req.get_prop_as_double("ratelimit_cash_stolen_frac");
+
+        if(req.has_prop("ratelimit_item_stolen_frac"))
+            ratelimit_item_stolen_frac = req.get_prop_as_double("ratelimit_item_stolen_frac");
 
         all_found_props = req;
     }
