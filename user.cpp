@@ -31,6 +31,7 @@ void from_json(const nlohmann::json& j, user_limit& limit)
     limit.time_at = j.at("t");
 }
 
+///could probably use this to implement the hour long window eh
 double user_limit::calculate_current_data(size_t time_ms)
 {
     double hours_to_refill = 2;
