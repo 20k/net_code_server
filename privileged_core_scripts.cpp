@@ -590,6 +590,8 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
         return 1;
     }
 
+    std::string msg;
+
     #ifdef XFER_PATHS
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
@@ -656,6 +658,8 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
 
                 lim.data = clamp(lim.data - fraction_removed, 0., 1.);
                 lim.time_at = current_time;
+
+                msg += to_string_with_enforced_variable_dp(lim.data*100, 1) + " remaining";
             }
         }
         #endif // SECLEVEL_FUNCTIONS
@@ -692,7 +696,10 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
 
     create_xfer_notif(ctx, from, to, amount);
 
-    push_success(ctx);
+    if(msg == "")
+        push_success(ctx);
+    else
+        push_success(ctx, msg);
 
     return 1;
 }
