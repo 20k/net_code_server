@@ -647,7 +647,7 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
                 double real_cash_limit = system_ratelimit_max_cash_send * lim.calculate_current_data(current_time);
 
                 if(real_cash_limit < amount)
-                    return push_error(ctx, "Cannot send " + to_string_with_enforced_variable_dp(amount, 2) + " between these systems (limited due to your or their system's security level)");
+                    return push_error(ctx, "Cannot send " + to_string_with_enforced_variable_dp(amount, 2) + " cash between these systems (limited due to your or their system's security level)");
 
                 if(fabs(real_cash_limit) < 0.0001)
                     return push_error(ctx, "Some sort of calculation error (cash xfer seclevel rlimit)");
