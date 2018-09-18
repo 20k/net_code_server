@@ -8,6 +8,22 @@
 #include <secret/structure.hpp>
 #include "timestamped_position.hpp"
 
+struct user_limit
+{
+    enum limit_type
+    {
+        CASH_STEAL,
+        CASH_SEND,
+        ITEM_STEAL,
+        ITEM_SEND,
+        COUNT
+    };
+
+    //limit_type type = limit_type::COUNT;
+    double data = 1;
+    size_t time_at = 0;
+};
+
 ///ok. Need to fetch users out of the db
 struct user
 {
@@ -23,22 +39,27 @@ struct user
     #endif // USE_LOCS
     bool initial_connection_setup = false;
 
-    double ratelimit_cash_send_frac = 1;
+    ///this is incorrect because we need a time based scheme so it is implicit
+    /*double ratelimit_cash_send_frac = 1;
     double ratelimit_item_send_frac = 1;
 
     double ratelimit_cash_stolen_frac = 0;
-    double ratelimit_item_stolen_frac = 0;
+    double ratelimit_item_stolen_frac = 0;*/
 
     ///stack of users, used for changing cli context
     std::vector<std::string> call_stack;
     std::vector<std::string> owner_list;
     std::vector<std::string> users_i_have_access_to;
 
+    std::array<user_limit, user_limit::COUNT> user_limits;
+
     std::string joined_channels;
 
     space_pos_t pos;
 
     bool has_local_pos = false;
+
+    user();
 
     void overwrite_user_in_db(mongo_lock_proxy& ctx);
     bool exists(mongo_lock_proxy& ctx, const std::string& name_);
