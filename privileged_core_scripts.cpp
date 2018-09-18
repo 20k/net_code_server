@@ -16,6 +16,8 @@
 #include "perfmon.hpp"
 #include "time.hpp"
 
+#define SECLEVEL_FUNCTIONS
+
 //#define XFER_PATHS
 
 std::map<std::string, std::vector<script_arg>> privileged_args = construct_core_args();
@@ -600,7 +602,6 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
 
     playspace_network_manage.modify_path_per_link_strength_with_logs(path, -amount / cash_to_destroy_link, {leak_msg}, get_thread_id(ctx));
     #endif // 0
-
     {
         mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
 
@@ -612,15 +613,54 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
             return 1;
         }
 
-        user caller_usr;
+        user from_user;
 
-        if(!caller_usr.load_from_db(mongo_user_info, from))
+        if(!from_user.load_from_db(mongo_user_info, from))
         {
             push_error(ctx, "From user does not exist");
             return 1;
         }
 
-        double remaining = caller_usr.cash - amount;
+        #ifdef SECLEVEL_FUNCTIONS
+        if(!pvp_action)
+        {
+            size_t current_time = get_wall_time();
+
+            low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+            std::optional<low_level_structure*> from_system_opt = low_level_structure_manage.get_system_of(from);
+            std::optional<low_level_structure*> to_system_opt = low_level_structure_manage.get_system_of(to);
+
+            if(!from_system_opt.has_value() || !to_system_opt.has_value())
+                return push_error(ctx, "Should be impossible (i love podracing)");
+
+            low_level_structure& from_system = *from_system_opt.value();
+            low_level_structure& to_system = *to_system_opt.value();
+
+            if(&from_system != &to_system)
+            {
+                ///we use the ratelimits of the greater seclevel system
+                double system_ratelimit_max_cash_percentage = get_most_secure_seclevel_of(from_system, to_system).get_ratelimit_max_cash_percentage_steal();
+
+                user_limit& lim = from_user.user_limits[user_limit::CASH_SEND];
+
+                double real_cash_limit = from_user.cash * system_ratelimit_max_cash_percentage * lim.calculate_current_data(current_time);
+
+                if(real_cash_limit < amount)
+                    return push_error(ctx, "Cannot send " + to_string_with_enforced_variable_dp(amount, 2) + " between these systems (limited due to your or their system's security level)");
+
+                if(fabs(real_cash_limit) < 0.0001)
+                    return push_error(ctx, "Some sort of calculation error (cash xfer seclevel rlimit)");
+
+                double fraction_removed = amount / real_cash_limit;
+
+                lim.data = clamp(lim.data - fraction_removed, 0., 1.);
+                lim.time_at = current_time;
+            }
+        }
+        #endif // SECLEVEL_FUNCTIONS
+
+        double remaining = from_user.cash - amount;
 
         if(remaining < 0)
         {
@@ -629,10 +669,10 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
         }
 
         ///need to check destination usr can handle amount
-        caller_usr.cash -= amount;
+        from_user.cash -= amount;
         destination_usr.cash += amount;
 
-        caller_usr.overwrite_user_in_db(mongo_user_info);
+        from_user.overwrite_user_in_db(mongo_user_info);
         destination_usr.overwrite_user_in_db(mongo_user_info);
     }
 

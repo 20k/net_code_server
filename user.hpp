@@ -22,6 +22,8 @@ struct user_limit
     //limit_type type = limit_type::COUNT;
     double data = 1;
     size_t time_at = 0;
+
+    double calculate_current_data(size_t time_ms);
 };
 
 ///ok. Need to fetch users out of the db

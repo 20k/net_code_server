@@ -31,6 +31,25 @@ void from_json(const nlohmann::json& j, user_limit& limit)
     limit.time_at = j.at("t");
 }
 
+double user_limit::calculate_current_data(size_t time_ms)
+{
+    double hours_to_refill = 2;
+    double ms_to_refill = hours_to_refill * 60 * 60 * 1000;
+
+    if(time_ms < time_at)
+    {
+        printf("Warning, time error in calculate current data\n");
+
+        return data;
+    }
+
+    size_t diff_ms = time_ms - time_at;
+
+    double fraction = diff_ms / ms_to_refill;
+
+    return clamp(mix(data, 1., fraction), 0., 1.);
+}
+
 user::user()
 {
     /*for(int i=0; i < user_limit::limit_type::COUNT; i++)
