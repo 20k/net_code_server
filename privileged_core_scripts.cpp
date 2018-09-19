@@ -665,6 +665,59 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
                 msg += to_string_with_enforced_variable_dp(lim.data*100, 1) + " remaining";
             }
         }
+        ///this is the pvp case
+        ///must be in the same system to steal so no need to find both systems
+        ///i think this is incorrect as it isn't handling the 50% of 50% problem
+        ///need to calculate fraction properly assuming the original amount of cash
+        ///and then work out if thats correct
+        else
+        {
+            size_t current_time = get_wall_time();
+
+            low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+            std::optional<low_level_structure*> from_system_opt = low_level_structure_manage.get_system_of(from);
+
+            if(!from_system_opt.has_value())
+                return push_error(ctx, "Target is not in a system (from) (insert anakin sand meme)");
+
+            user_limit& lim = from_user.user_limits[user_limit::CASH_STEAL];
+
+            low_level_structure& from_system = *from_system_opt.value();
+
+            double system_ratelimit_max_cash_steal_percentage = from_system.get_ratelimit_max_cash_percentage_steal();
+
+            ///ok so say we have 0.7 cash fraction
+            ///that means that we *used* to have current_cash / cash_fraction cash
+
+            double current_frac = lim.calculate_current_data(current_time);
+
+            if(current_frac >= 0.01)
+            {
+                current_frac = clamp(current_frac, 0.01, 1.);
+
+                double old_cash = from_user.cash / current_frac;
+
+                double real_cash_steal_limit = old_cash * system_ratelimit_max_cash_steal_percentage * lim.calculate_current_data(current_time);
+
+                if(real_cash_steal_limit < amount)
+                    return push_error(ctx, "Cannot steal this much cash currently due to seclevel restrictions. Max currently sendable is " + to_string_with_enforced_variable_dp(real_cash_steal_limit, 2));
+
+                if(fabs(real_cash_steal_limit) < 0.0001)
+                    return push_error(ctx, "Cash xfer limit < 0.0001");
+
+                double fraction_removed = amount / real_cash_steal_limit;
+
+                lim.data = clamp(lim.data - fraction_removed, 0., 1.);
+                lim.time_at = current_time;
+
+                msg += to_string_with_enforced_variable_dp(lim.data*100, 1) + " remaining";
+            }
+            else
+            {
+                return push_error(ctx, "Target has had too much stolen in a short period of time, please wait or move everyone involved to a lower security level. " + to_string_with_enforced_variable_dp(current_frac*100, 1) + "% steal power remaining");
+            }
+        }
         #endif // SECLEVEL_FUNCTIONS
 
         double remaining = from_user.cash - amount;
@@ -2473,6 +2526,11 @@ duk_ret_t cash__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!opt_user_and_nodes.has_value())
         return push_error(ctx, "No such user");
 
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+    if(!low_level_structure_manage.in_same_system(get_caller(ctx), from))
+        return push_error(ctx, "Must be in same system to expose cash");
+
     auto hostile = opt_user_and_nodes->second.valid_hostile_actions();
 
     if((hostile & user_node_info::XFER_GC_FROM) > 0)
@@ -2505,6 +2563,11 @@ duk_ret_t item__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(!opt_user_and_nodes.has_value())
         return push_error(ctx, "No such user");
+
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+    if(!low_level_structure_manage.in_same_system(get_caller(ctx), from))
+        return push_error(ctx, "Must be in same system to expose items");
 
     //user& usr = opt_user_and_nodes->first;
 
@@ -2633,6 +2696,12 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!found.has_value())
         return push_error(ctx, "Error or no such user");
 
+
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+    if(!low_level_structure_manage.in_same_system(get_caller(ctx), from))
+        return push_error(ctx, "Must be in same system to steal items");
+
     user& found_user = found->first;
     user_nodes& nodes = found->second;
 
@@ -2758,6 +2827,11 @@ duk_ret_t cash__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
         nodes.ensure_exists(node_ctx, from);
         nodes.load_from_db(node_ctx, from);
     }
+
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+    if(!low_level_structure_manage.in_same_system(get_caller(ctx), from))
+        return push_error(ctx, "Must be in same system to steal cash");
 
     auto hostile = nodes.valid_hostile_actions();
 
