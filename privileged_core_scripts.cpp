@@ -692,7 +692,7 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
 
             double current_frac = lim.calculate_current_data(current_time);
 
-            std::cout << " raw lim data " << lim.data << std::endl;
+            //std::cout << " raw lim data " << lim.data << std::endl;
 
             ///ok this isn't working
             ///Lets say i have 8000 cash
@@ -737,7 +737,7 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
 
                 double fraction_removed = amount / old_cash;
 
-                std::cout << "amt " << amount << " rcsl " << real_cash_steal_limit << " frac " << fraction_removed << std::endl;
+                //std::cout << "amt " << amount << " rcsl " << real_cash_steal_limit << " frac " << fraction_removed << std::endl;
 
                 lim.data = clamp(lim.calculate_current_data(current_time) - fraction_removed, 0., 1.);
                 lim.time_at = current_time;
