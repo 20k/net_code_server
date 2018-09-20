@@ -48,6 +48,8 @@ double user_limit::calculate_current_data(size_t time_ms)
 
     double fraction = diff_ms / ms_to_refill;
 
+    //fraction = 1;
+
     return clamp(mix(data, 1., fraction), 0., 1.);
 }
 

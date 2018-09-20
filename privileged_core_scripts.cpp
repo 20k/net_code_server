@@ -692,13 +692,42 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
 
             double current_frac = lim.calculate_current_data(current_time);
 
+            std::cout << " raw lim data " << lim.data << std::endl;
+
+            ///ok this isn't working
+            ///Lets say i have 8000 cash
+            ///and i'm in mediumsec and 50% of it is allowed to be stolen. That's system_ratelimit_max_cash_whatever
+            ///stealable cash constant is 4000
+            ///2000 gets stolen, which is 50% of our cash stealing limit, and 25% of our overall cash
+            ///frac is set to 0.75
+
+            ///next iteration, old cash is 6000 / 0.75 which is 8000 - correct
+            ///stealable cash constant is 4000
+            ///real cash steal limit is 4000 * (frac = 0.75) = 3000, which is incorrect
+            ///real cash stolen is frac * 8000 = 2000
+            ///so stealable cash is stealable_cash_constant - frac * old_cash = 2000
+
+
+            ///ok, try alternate solution based on how much of the real cash steal limit is based on
+            ///start: cash is 8000, real cash steal limit is 8000 * 0.5 = 4000
+            ///we steal 50% of that, frac = 50%
+            ///start: cash is 6000, frac = 50%, real cash steal limit is 3000,
+            ///we know that current cash = old_cash - old steal limit * seclevel * frac
+            ///current cash = 6000, seclevel = 0.5, frac = 0.5
+            ///trying to work out new cash steal limit, which is current cash * seclevel * frac
+            ///don't think this works
+
             if(current_frac >= 0.01)
             {
                 current_frac = clamp(current_frac, 0.01, 1.);
 
                 double old_cash = from_user.cash / current_frac;
 
-                double real_cash_steal_limit = old_cash * system_ratelimit_max_cash_steal_percentage * lim.calculate_current_data(current_time);
+                double stealable_cash_constant = old_cash * system_ratelimit_max_cash_steal_percentage;
+
+                //double real_cash_steal_limit = stealable_cash_constant * lim.calculate_current_data(current_time);
+
+                double real_cash_steal_limit = stealable_cash_constant - (1.f - current_frac) * old_cash;
 
                 if(real_cash_steal_limit < amount)
                     return push_error(ctx, "Cannot steal this much cash currently due to seclevel restrictions. Max currently sendable is " + to_string_with_enforced_variable_dp(real_cash_steal_limit, 2));
@@ -706,9 +735,11 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
                 if(fabs(real_cash_steal_limit) < 0.0001)
                     return push_error(ctx, "Cash xfer limit < 0.0001");
 
-                double fraction_removed = amount / real_cash_steal_limit;
+                double fraction_removed = amount / old_cash;
 
-                lim.data = clamp(lim.data - fraction_removed, 0., 1.);
+                std::cout << "amt " << amount << " rcsl " << real_cash_steal_limit << " frac " << fraction_removed << std::endl;
+
+                lim.data = clamp(lim.calculate_current_data(current_time) - fraction_removed, 0., 1.);
                 lim.time_at = current_time;
 
                 msg += to_string_with_enforced_variable_dp(lim.data*100, 1) + " remaining";
