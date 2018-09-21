@@ -1770,11 +1770,11 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
 
     if(pretty)
     {
-        std::string formatted = "Currently Stealable: ";
+        std::string formatted = "available: ";
 
         int currently_stealable = found_user.get_max_stealable_items(current_time, sys);
 
-        formatted += currently_stealable + "\n";
+        formatted += std::to_string(currently_stealable) + "\n";
 
         if(full)
            formatted = "[\n";
@@ -1821,6 +1821,10 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
     }
     else
     {
+        int currently_stealable = found_user.get_max_stealable_items(current_time, sys);
+
+        nlohmann::json ret;
+
         std::vector<nlohmann::json> objs;
 
         for(std::string& item_id : to_ret)
@@ -1831,7 +1835,10 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
             objs.push_back(get_item_raw(next, !full, found_user, nodes));
         }
 
-        push_duk_val(ctx, objs);
+        ret["available"] = currently_stealable;
+        ret["exposed"] = objs;
+
+        push_duk_val(ctx, ret);
     }
 }
 
@@ -2510,7 +2517,6 @@ duk_ret_t item__configure_on_breach(priv_context& priv_ctx, duk_context* ctx, in
 }
 
 #ifdef TESTING
-
 duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -2582,6 +2588,7 @@ duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl)
 duk_ret_t cash__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     std::string from = duk_safe_get_prop_string(ctx, -1, "user");
+    bool arr = dukx_is_prop_truthy(ctx, -1, "array");
 
     if(from == "")
         return push_error(ctx, "Args: user:<username>");
@@ -2598,9 +2605,38 @@ duk_ret_t cash__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     auto hostile = opt_user_and_nodes->second.valid_hostile_actions();
 
+    size_t current_time = get_wall_time();
+
     if((hostile & user_node_info::XFER_GC_FROM) > 0)
     {
         push_duk_val(ctx, opt_user_and_nodes->first.cash);
+
+        user& usr = opt_user_and_nodes->first;
+
+        auto sys_opt = low_level_structure_manage.get_system_of(usr);
+
+        if(!sys_opt.has_value())
+            return push_error(ctx, "Error in cash expose (system)");
+
+        low_level_structure& sys = *sys_opt.value();
+
+        if(!arr)
+        {
+            std::string str =
+            "exposed: " + to_string_with_enforced_variable_dp(usr.cash, 2) + "\n" +
+            "available: " + to_string_with_enforced_variable_dp(usr.get_max_stealable_cash(current_time, sys), 2);
+
+            push_duk_val(ctx, str);
+        }
+        else
+        {
+            nlohmann::json ret;
+            ret["exposed"] = usr.cash;
+            ret["available"] = usr.get_max_stealable_cash(current_time, sys);
+
+            push_duk_val(ctx, ret);
+        }
+
         return 1;
     }
     else
@@ -2795,7 +2831,7 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     int max_stealable = found_user.get_max_stealable_items(current_time, sys_from);
 
-    if(max_stealable < indices.size())
+    if(max_stealable < (int)indices.size())
     {
         return push_error(ctx, "You may only steal at most " + std::to_string(max_stealable) + " items");
     }
