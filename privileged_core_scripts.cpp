@@ -2068,7 +2068,7 @@ duk_ret_t item__unload(priv_context& priv_ctx, duk_context* ctx, int sl)
 
 
 
-duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, const std::string& from, const std::string& to)
+duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, const std::string& from, const std::string& to, bool is_pvp)
 {
     if(from == to)
         return push_success(ctx, "Item definitely transferred to a different user");
@@ -2086,13 +2086,17 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
 
     std::string found_item_description;
 
-    user usr;
+    user from_user;
+    user to_user;
 
     {
         mongo_nolock_proxy mongo_context = get_global_mongo_user_info_context(-2);
 
-        if(!usr.load_from_db(mongo_context, from))
+        if(!from_user.load_from_db(mongo_context, from))
             return push_error(ctx, "No user from");
+
+        if(!to_user.load_from_db(mongo_context, to))
+            return push_error(ctx, "No user to");
     }
 
     {
@@ -2106,9 +2110,54 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
         found_item_description = it.get_prop("short_name") + "/" + item_id;
     }
 
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+    auto sys_from_opt = low_level_structure_manage.get_system_of(from_user);
+    auto sys_to_opt = low_level_structure_manage.get_system_of(to_user);
+
+    if(!sys_from_opt.has_value() || !sys_to_opt.has_value())
+        return push_error(ctx, "Really bad error: not in a system in push_xfer_item_id_with_logs");
+
+    low_level_structure& sys_from = *sys_from_opt.value();
+    low_level_structure& sys_to = *sys_to_opt.value();
+
+    size_t current_time = get_wall_time();
+
+    if(is_pvp)
+    {
+        //std::cout << "max steal " << from_user.get_max_stealable_items(current_time, sys_from) << std::endl;
+
+        if(from_user.get_max_stealable_items(current_time, sys_from) < 1)
+        {
+            return push_error(ctx, "User has had too many items stolen from them recently and can lose no more currently. Please wait");
+        }
+        else
+        {
+            from_user.deplete_max_stealable_items(1, current_time, sys_from);
+        }
+    }
+    else
+    {
+        if(from_user.get_max_sendable_items(current_time, sys_from, sys_to) < 1)
+        {
+            return push_error(ctx, "User has transferred too many items and transfer no more at the moment. Please wait");
+        }
+        else
+        {
+            from_user.deplete_max_sendable_items(1, current_time, sys_from, sys_to);
+        }
+    }
+
+    {
+        mongo_nolock_proxy mongo_context = get_global_mongo_user_info_context(-2);
+
+        from_user.overwrite_user_in_db(mongo_context);
+        to_user.overwrite_user_in_db(mongo_context);
+    }
+
     item placeholder;
 
-    if(placeholder.transfer_from_to_by_index(usr.item_to_index(item_id), from, to, get_thread_id(ctx)))
+    if(placeholder.transfer_from_to_by_index(from_user.item_to_index(item_id), from, to, get_thread_id(ctx)))
     {
         #ifdef XFER_PATHS
         playspace_network_manage.modify_path_per_link_strength_with_logs(path, -1.f / items_to_destroy_link, {"Xfer'd Item"}, get_thread_id(ctx));
@@ -2131,7 +2180,7 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
     return 1;
 }
 
-duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::string& from, const std::string& to)
+duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::string& from, const std::string& to, bool is_pvp)
 {
     user usr;
 
@@ -2142,7 +2191,7 @@ duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::st
             return push_error(ctx, "No user from");
     }
 
-    return push_xfer_item_id_with_logs(ctx, usr.index_to_item(item_idx), from, to);
+    return push_xfer_item_id_with_logs(ctx, usr.index_to_item(item_idx), from, to, is_pvp);
 }
 
 duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
@@ -2191,7 +2240,7 @@ duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
             return push_error(ctx, ret);
     }
 
-    push_xfer_item_with_logs(ctx, item_idx, from, to);
+    push_xfer_item_with_logs(ctx, item_idx, from, to, false);
 
     return 1;
 }
@@ -2632,7 +2681,7 @@ duk_ret_t take_cash(duk_context* ctx, const std::string& username, double price)
 
 std::vector<int> check_get_index_property(duk_context* ctx)
 {
-    if(!dukx_is_prop_truthy(ctx, -1, "idx"))
+    if(!duk_has_prop_string(ctx, -1, "idx") && !dukx_is_prop_truthy(ctx, -1, "idx"))
         return std::vector<int>();
 
     std::vector<int> ret;
@@ -2692,6 +2741,13 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(!low_level_structure_manage.in_same_system(get_caller(ctx), from))
         return push_error(ctx, "Must be in same system to steal items");
+
+    //#define STEALDEBUG
+    #ifdef STEALDEBUG
+    low_level_structure& sys_1 = *low_level_structure_manage.get_system_of(from).value();
+
+    std::cout << sys_1.get_ratelimit_max_item_steal() << std::endl;
+    #endif // STEALDEBUG
 
     user& found_user = found->first;
     user_nodes& nodes = found->second;
@@ -2775,7 +2831,7 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(ret != "")
             return push_error(ctx, ret);
 
-        push_xfer_item_id_with_logs(ctx, item_id, from, get_caller(ctx));
+        push_xfer_item_id_with_logs(ctx, item_id, from, get_caller(ctx), true);
         duk_put_prop_index(ctx, -2, idx);
         idx++;
 

@@ -857,6 +857,46 @@ double user::get_max_sendable_items(size_t current_time, low_level_structure& sy
     return real_item_limit;
 }
 
+void user::deplete_max_stealable_items(double amount, size_t current_time, low_level_structure& sys)
+{
+    double real_stealable = get_max_stealable_items(current_time, sys);
+
+    if(amount > real_stealable)
+        return;
+
+    if(fabs(real_stealable) < 0.001)
+        return;
+
+    double fraction_removed = amount / real_stealable;
+
+    user_limit& lim = user_limits[user_limit::ITEM_STEAL];
+
+    lim.data = clamp(lim.calculate_current_data(current_time) - fraction_removed, 0., 1.);
+    lim.time_at = current_time;
+}
+
+void user::deplete_max_sendable_items(double amount, size_t current_time, low_level_structure& sys_1, low_level_structure& sys_2)
+{
+    if(&sys_1 == &sys_2)
+        return;
+
+    double real_sendable = get_max_sendable_items(current_time, sys_1, sys_2);
+
+    if(amount > real_sendable)
+        return;
+
+    if(fabs(real_sendable) < 0.001)
+        return;
+
+    double fraction_removed = amount / real_sendable;
+
+    user_limit& lim = user_limits[user_limit::ITEM_SEND];
+
+    lim.data = clamp(lim.calculate_current_data(current_time) - fraction_removed, 0., 1.);
+    lim.time_at = current_time;
+}
+
+
 extern size_t get_wall_time();
 
 timestamp_move_queue user::get_timestamp_queue()

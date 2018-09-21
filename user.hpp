@@ -125,6 +125,9 @@ struct user
     double get_max_stealable_items(size_t current_time, low_level_structure& sys);
     double get_max_sendable_items(size_t current_time, low_level_structure& sys_1, low_level_structure& sys_2);
 
+    void deplete_max_stealable_items(double amount, size_t current_time, low_level_structure& sys);
+    void deplete_max_sendable_items(double amount, size_t current_time, low_level_structure& sys_1, low_level_structure& sys_2);
+
     timestamp_move_queue get_timestamp_queue();
     space_pos_t get_local_pos() const;
     timestamped_position get_final_pos() const;
