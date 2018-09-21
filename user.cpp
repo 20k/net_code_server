@@ -826,9 +826,9 @@ double user::get_max_stealable_cash(size_t current_time, low_level_structure& sy
 
 double user::get_max_sendable_cash(size_t current_time, low_level_structure& sys_1, low_level_structure& sys_2)
 {
-    double system_ratelimit_max_cash_send = get_most_secure_seclevel_of(from_system, to_system).get_ratelimit_max_cash_send();
+    double system_ratelimit_max_cash_send = get_most_secure_seclevel_of(sys_1, sys_2).get_ratelimit_max_cash_send();
 
-    user_limit& lim = from_user.user_limits[user_limit::CASH_SEND];
+    user_limit& lim = user_limits[user_limit::CASH_SEND];
 
     double real_cash_limit = system_ratelimit_max_cash_send * lim.calculate_current_data(current_time);
 
