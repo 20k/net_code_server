@@ -604,6 +604,9 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
 
     playspace_network_manage.modify_path_per_link_strength_with_logs(path, -amount / cash_to_destroy_link, {leak_msg}, get_thread_id(ctx));
     #endif // 0
+
+    size_t current_time = get_wall_time();
+
     {
         mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
 
@@ -624,6 +627,8 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
         }
 
         #ifdef SECLEVEL_FUNCTIONS
+        ///TODO ALARM:
+        ///need to make it so that when you xfer cash to someone it updates how much can be stolen from them
         if(!pvp_action)
         {
             size_t current_time = get_wall_time();
@@ -664,16 +669,21 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
 
                 msg += to_string_with_enforced_variable_dp(lim.data*100, 1) + " remaining";
             }
+
+            ///work out old cash
+            ///work out stolen cash
+            ///add new cash to dest, and remove from from
+            ///update pvp balances for both
         }
         ///this is the pvp case
         ///must be in the same system to steal so no need to find both systems
         ///i think this is incorrect as it isn't handling the 50% of 50% problem
         ///need to calculate fraction properly assuming the original amount of cash
         ///and then work out if thats correct
+
+        ///need to update pvp balance for person receiving cash
         else
         {
-            size_t current_time = get_wall_time();
-
             low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 
             std::optional<low_level_structure*> from_system_opt = low_level_structure_manage.get_system_of(from);
@@ -758,6 +768,83 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
             push_error(ctx, "Can't send this amount");
             return 1;
         }
+
+        #ifdef SECLEVEL_FUNCTIONS
+        ///person receiving cash needs to have their pvp steal from power updated
+        ///cash sender probably doesn't need it?
+        user_limit& lim = destination_usr.user_limits[user_limit::CASH_STEAL];
+
+        double current_frac = lim.calculate_current_data(current_time);
+
+        ///say they have 6000 cash
+        ///frac is 0.5
+        ///we send them 2000
+        ///old cash is 12000
+        ///so new cash is 14000
+        ///new frac is 0.428
+
+        #if 0
+        if(current_frac >= 0.01)
+        {
+            current_frac = clamp(current_frac, 0.01, 1.);
+
+            ///calculate pvp cash
+            /*double old_cash = destination_usr.cash / current_frac;
+
+            ///how much cash hasn't been stolen
+            double cash_unstolen = current_frac * old_cash;
+
+            double new_cash = old_cash + amount;
+
+            ///the fraction we need to calculate is how much of our cash has not been stolen overall
+            double new_frac = cash_unstolen / new_cash;*/
+
+            double old_cash = destination_usr.cash / current_frac;
+
+            ///ok so: if i send someone 1000, i shouldn't be able to steal more from them
+            ///so (cash + amount) / new_frac = (cash / current_frac)
+
+            ///new frac = (cash / current_frac) / (cash + amount)
+
+            ///(cash / current_frac) * (1.f / (cash + amount))
+
+            ///hmm. If i send someone 1000 cash in nullsec i should be able to steal it back
+            ///so stealable cash is (cash / current_frac) * seclevel - (1.f - current_frac) * (cash / current_frac)
+            ///so lets set seclevel multiplier to 1
+
+            ///stealable cash is (cash / current_frac) - (1.f - current_frac) * (cash / current_frac)
+
+            ///we want that equation to increase by amount, by setting current frac
+
+            ///((cash + amount) / new_frac) - (1.f - new_frac) * ((cash + amount) / new_frac) = (cash / current_frac) - (1.f - current_frac) * (cash / current_frac)
+
+            double stealable_cash = (destination_usr.cash / current_frac) - (1.f - current_frac) * (cash / current_frac);
+
+            double new_cash_amount = destination_usr.cash + amount;
+
+            ///(new_cash / new_frac) - (1.f - new_frac) * new_cash / new_frac = stealable
+
+            ///new_cash - (1.f - new_frac) * new_cash = stealable * new_frac
+            ///new_cash - new_cash + new_frac * new_cash = stealable * new_frac
+            ///new_frac * new_cash = stealable * new_frac
+
+
+            /*double divisor = current_frac * (destination_usr.cash + amount);
+            double top = destination_usr.cash;
+
+            double new_frac = 0;
+
+            if(divisor >= 0.001)
+            {
+                new_frac = top / divisor;
+            }*/
+
+            lim.data = clamp(new_frac, 0., 1.);
+            lim.time_at = current_time;
+        }
+        #endif // 0
+
+        #endif // SECLEVEL_FUNCTIONS
 
         ///need to check destination usr can handle amount
         from_user.cash -= amount;
