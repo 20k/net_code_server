@@ -846,7 +846,7 @@ double user::get_max_stealable_items(size_t current_time, low_level_structure& s
     return real_item_limit;
 }
 
-double user::get_max_sendable_items(size_t current_time, low_level_structure& sys)
+double user::get_max_sendable_items(size_t current_time, low_level_structure& sys_1, low_level_structure& sys_2)
 {
     double system_ratelimit_max_item_send = get_most_secure_seclevel_of(sys_1, sys_2).get_ratelimit_max_item_send();
 
