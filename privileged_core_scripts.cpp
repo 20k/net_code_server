@@ -2789,12 +2789,18 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!sys_from_opt.has_value())
         return push_error(ctx, "Catastrophic error, lost in item.steal");
 
+    #ifdef SECLEVEL_FUNCTIONS
+
     low_level_structure& sys_from = *low_level_structure_manage.get_system_of(from).value();
 
-    if(found_user.get_max_stealable_items(current_time, sys_from) < indices.size())
+    int max_stealable = found_user.get_max_stealable_items(current_time, sys_from);
+
+    if(max_stealable < indices.size())
     {
-        return push_error(ctx, "User has had too many items stolen from them recently. Please wait");
+        return push_error(ctx, "You may only steal at most " + std::to_string(max_stealable) + " items");
     }
+
+    #endif // SECLEVEL_FUNCTIONS
 
     //std::string item_id = found_user.index_to_item(item_idx);
     int cost = 0;
