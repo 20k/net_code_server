@@ -8,6 +8,8 @@
 #include <secret/structure.hpp>
 #include "timestamped_position.hpp"
 
+struct low_level_structure;
+
 struct user_limit
 {
     enum limit_type
@@ -115,6 +117,9 @@ struct user
     int get_default_network_links(int thread_id);
 
     std::string fetch_sector();
+
+    double get_pvp_old_cash_estimate(size_t current_time);
+    double get_max_stealable_cash(size_t current_time, low_level_structure& sys);
 
     timestamp_move_queue get_timestamp_queue();
     space_pos_t get_local_pos() const;

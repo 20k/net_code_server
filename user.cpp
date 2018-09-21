@@ -796,6 +796,34 @@ std::string user::fetch_sector()
     return get_nearest_structure(pos).name;
 }
 
+double user::get_pvp_old_cash_estimate(size_t current_time)
+{
+    user_limit& lim = user_limits[user_limit::CASH_STEAL];
+
+    double current_frac = lim.calculate_current_data(current_time);
+
+    if(current_frac < 0.01)
+        return 0.;
+
+    current_frac = clamp(current_frac, 0.01, 1.);
+
+    return cash / current_frac;
+}
+
+double user::get_max_stealable_cash(size_t current_time, low_level_structure& sys)
+{
+    double old_cash = get_pvp_old_cash_estimate(current_time);
+
+    double system_ratelimit_max_cash_steal_percentage = sys.get_ratelimit_max_cash_percentage_steal();
+    double stealable_cash_constant = old_cash * system_ratelimit_max_cash_steal_percentage;
+
+    user_limit& lim = user_limits[user_limit::CASH_STEAL];
+
+    double real_cash_steal_limit = stealable_cash_constant - (1.f - lim.calculate_current_data(current_time)) * old_cash;
+
+    return real_cash_steal_limit;
+}
+
 extern size_t get_wall_time();
 
 timestamp_move_queue user::get_timestamp_queue()
