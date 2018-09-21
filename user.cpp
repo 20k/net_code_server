@@ -835,6 +835,28 @@ double user::get_max_sendable_cash(size_t current_time, low_level_structure& sys
     return real_cash_limit;
 }
 
+double user::get_max_stealable_items(size_t current_time, low_level_structure& sys)
+{
+    double system_ratelimit_max_item_steal = get_most_secure_seclevel_of(sys_1, sys_2).get_ratelimit_max_item_steal();
+
+    user_limit& lim = user_limits[user_limit::ITEM_STEAL];
+
+    double real_item_limit = floor(system_ratelimit_max_item_steal * lim.calculate_current_data(current_time));
+
+    return real_item_limit;
+}
+
+double user::get_max_sendable_items(size_t current_time, low_level_structure& sys)
+{
+    double system_ratelimit_max_item_send = get_most_secure_seclevel_of(sys_1, sys_2).get_ratelimit_max_item_send();
+
+    user_limit& lim = user_limits[user_limit::ITEM_SEND];
+
+    double real_item_limit = floor(system_ratelimit_max_item_send * lim.calculate_current_data(current_time));
+
+    return real_item_limit;
+}
+
 extern size_t get_wall_time();
 
 timestamp_move_queue user::get_timestamp_queue()
