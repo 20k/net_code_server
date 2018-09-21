@@ -2791,7 +2791,7 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     low_level_structure& sys_from = *low_level_structure_manage.get_system_of(from).value();
 
-    if(from_user.get_max_stealable_items(current_time, sys_from) < indices.size())
+    if(found_user.get_max_stealable_items(current_time, sys_from) < indices.size())
     {
         return push_error(ctx, "User has had too many items stolen from them recently. Please wait");
     }
