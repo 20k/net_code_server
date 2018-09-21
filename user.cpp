@@ -867,7 +867,7 @@ void user::deplete_max_stealable_items(double amount, size_t current_time, low_l
     if(fabs(real_stealable) < 0.001)
         return;
 
-    double fraction_removed = amount / real_stealable;
+    double fraction_removed = amount / sys.get_ratelimit_max_item_steal();
 
     user_limit& lim = user_limits[user_limit::ITEM_STEAL];
 
@@ -888,7 +888,7 @@ void user::deplete_max_sendable_items(double amount, size_t current_time, low_le
     if(fabs(real_sendable) < 0.001)
         return;
 
-    double fraction_removed = amount / real_sendable;
+    double fraction_removed = amount / get_most_secure_seclevel_of(sys_1, sys_2).get_ratelimit_max_item_send();
 
     user_limit& lim = user_limits[user_limit::ITEM_SEND];
 

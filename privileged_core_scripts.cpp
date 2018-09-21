@@ -650,6 +650,8 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
 
                 double real_cash_limit = from_user.get_max_sendable_cash(current_time, from_system, to_system);
 
+                //std::cout << "real cash limit " << real_cash_limit << std::endl;
+
                 if(real_cash_limit < amount)
                     return push_error(ctx, "Cannot send " + to_string_with_enforced_variable_dp(amount, 2) + " cash between these systems (limited due to your or their system's security level). Max currently sendable is " + to_string_with_enforced_variable_dp(real_cash_limit, 2) + " cash");
 
@@ -659,7 +661,7 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
                 if(fabs(real_cash_limit) < 0.0001)
                     return push_error(ctx, "Cash xfer limit < 0.0001");
 
-                double fraction_removed = amount / real_cash_limit;
+                double fraction_removed = amount / get_most_secure_seclevel_of(from_system, to_system).get_ratelimit_max_cash_send();
 
                 lim.data = clamp(lim.calculate_current_data(current_time) - fraction_removed, 0., 1.);
                 lim.time_at = current_time;
@@ -2123,9 +2125,13 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
 
     size_t current_time = get_wall_time();
 
+    #ifdef SECLEVEL_FUNCTIONS
     if(is_pvp)
     {
         //std::cout << "max steal " << from_user.get_max_stealable_items(current_time, sys_from) << std::endl;
+
+        //std::cout << from_user.user_limits[user_limit::ITEM_STEAL].calculate_current_data(current_time) << std::endl;
+        //std::cout << "max " << from_user.get_max_stealable_items(current_time, sys_from) << std::endl;
 
         if(from_user.get_max_stealable_items(current_time, sys_from) < 1)
         {
@@ -2154,6 +2160,7 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
         from_user.overwrite_user_in_db(mongo_context);
         to_user.overwrite_user_in_db(mongo_context);
     }
+    #endif // SECLEVEL_FUNCTIONS
 
     item placeholder;
 
@@ -2736,7 +2743,6 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!found.has_value())
         return push_error(ctx, "Error or no such user");
 
-
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 
     if(!low_level_structure_manage.in_same_system(get_caller(ctx), from))
@@ -2744,6 +2750,7 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     //#define STEALDEBUG
     #ifdef STEALDEBUG
+    ///for some reason even though the limit is 3, we could only steal 2
     low_level_structure& sys_1 = *low_level_structure_manage.get_system_of(from).value();
 
     std::cout << sys_1.get_ratelimit_max_item_steal() << std::endl;
@@ -2756,6 +2763,20 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(!((hostile & user_node_info::XFER_ITEM_FROM) > 0))
         return push_error(ctx, "System Breach Node Secured");
+
+    size_t current_time = get_wall_time();
+
+    auto sys_from_opt = low_level_structure_manage.get_system_of(from);
+
+    if(!sys_from_opt.has_value())
+        return push_error(ctx, "Catastrophic error, lost in item.steal");
+
+    low_level_structure& sys_from = *low_level_structure_manage.get_system_of(from).value();
+
+    if(from_user.get_max_stealable_items(current_time, sys_from) < indices.size())
+    {
+        return push_error(ctx, "User has had too many items stolen from them recently. Please wait");
+    }
 
     //std::string item_id = found_user.index_to_item(item_idx);
     int cost = 0;

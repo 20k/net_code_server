@@ -40,6 +40,7 @@
 					<Add option="-O3" />
 					<Add option="-g" />
 					<Add option="-march=nehalem" />
+					<Add option="-pie -fPIE" />
 					<Add option="-DEXTERN_IP" />
 				</Compiler>
 				<ExtraCommands>
@@ -110,7 +111,6 @@
 			<Add option="-fexceptions" />
 			<Add option="-fno-devirtualize" />
 			<Add option="-Wno-narrowing" />
-			<Add option="-pie -fPIE" />
 			<Add option="-fno-strict-aliasing" />
 			<Add option="-DBOOST_STACKTRACE_USE_BACKTRACE" />
 			<Add option="-DSERVER" />
