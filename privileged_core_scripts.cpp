@@ -1750,13 +1750,30 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
 
 void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes& nodes, user& found_user, std::string preamble)
 {
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+    auto sys_opt = low_level_structure_manage.get_system_of(found_user);
+
+    if(!sys_opt.has_value())
+    {
+        return push_error(ctx, "Lost in push items internal");
+    }
+
+    low_level_structure& sys = *sys_opt.value();
+
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
     std::vector<std::string> to_ret = str_to_array(found_user.upgr_idx);
 
+    size_t current_time = get_wall_time();
+
     if(pretty)
     {
-        std::string formatted;
+        std::string formatted = "Currently Stealable: ";
+
+        int currently_stealable = found_user.get_max_stealable_items(current_time, sys);
+
+        formatted += currently_stealable + "\n";
 
         if(full)
            formatted = "[\n";
