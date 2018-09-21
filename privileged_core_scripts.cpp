@@ -1756,7 +1756,8 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
 
     if(!sys_opt.has_value())
     {
-        return push_error(ctx, "Lost in push items internal");
+        push_error(ctx, "Lost in push items internal");
+        return;
     }
 
     low_level_structure& sys = *sys_opt.value();
