@@ -5344,7 +5344,16 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         std::string result = ascii_render_from_accessibility_info(info, buffer, pos, found_scale, flags, target_user.name);
 
-        result = "Current Sys: " + colour_string(*structure.name) + "\n" + result;
+        std::string seclevel_string = "Seclevel: ";
+
+        int seclevel = seclevel_fraction_to_seclevel(structure.calculate_seclevel());
+        std::string sstring = seclevel_to_string(seclevel);
+
+        std::string col = string_to_colour(sstring);
+
+        seclevel_string += "(`" + col + to_string_with_enforced_variable_dp(structure.calculate_seclevel(), 2) + "` - `" + col + sstring + "`)";
+
+        result = "Current Sys: " + colour_string(*structure.name) + "\n" + seclevel_string + "\n" + result;
 
         push_duk_val(ctx, result);
     }
