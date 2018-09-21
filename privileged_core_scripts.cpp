@@ -664,7 +664,7 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
 
                 double fraction_removed = amount / real_cash_limit;
 
-                lim.data = clamp(lim.data - fraction_removed, 0., 1.);
+                lim.data = clamp(lim.calculate_current_data(current_time) - fraction_removed, 0., 1.);
                 lim.time_at = current_time;
 
                 msg += to_string_with_enforced_variable_dp(lim.data*100, 1) + " remaining";
