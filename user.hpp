@@ -120,6 +120,7 @@ struct user
 
     double get_pvp_old_cash_estimate(size_t current_time);
     double get_max_stealable_cash(size_t current_time, low_level_structure& sys);
+    double get_max_sendable_cash(size_t current_time, low_level_structure& sys_1, low_level_structure& sys_2);
 
     timestamp_move_queue get_timestamp_queue();
     space_pos_t get_local_pos() const;
