@@ -837,7 +837,7 @@ double user::get_max_sendable_cash(size_t current_time, low_level_structure& sys
 
 double user::get_max_stealable_items(size_t current_time, low_level_structure& sys)
 {
-    double system_ratelimit_max_item_steal = get_most_secure_seclevel_of(sys_1, sys_2).get_ratelimit_max_item_steal();
+    double system_ratelimit_max_item_steal = sys.get_ratelimit_max_item_steal();
 
     user_limit& lim = user_limits[user_limit::ITEM_STEAL];
 
