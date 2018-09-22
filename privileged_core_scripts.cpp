@@ -1647,7 +1647,7 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
     item next;
 
     {
-        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
+        mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
 
         if(!next.exists(item_ctx, which))
             return "Something weird happened";
@@ -1666,7 +1666,7 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
         usr.unload_item(tul);
 
         {
-            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(thread_id);
+            mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(thread_id);
 
             usr.overwrite_user_in_db(mongo_ctx);
         }
@@ -1682,7 +1682,7 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
             return "Already loaded";
 
         {
-            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
+            mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
 
             item lock;
             lock.load_from_db(item_ctx, to_load);
@@ -1700,7 +1700,7 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
         user_node* node = nodes.type_to_node((user_node_t)node_idx);
 
         {
-            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
+            mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
 
             if(node->can_load_lock(item_ctx, to_load))
             {
@@ -1740,7 +1740,7 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
     //if(which == to_unload && node_idx )
 
     {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(thread_id);
+        mongo_nolock_proxy node_ctx = get_global_mongo_node_properties_context(thread_id);
         nodes.overwrite_in_db(node_ctx);
     }
 

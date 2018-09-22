@@ -468,7 +468,7 @@ void item_types::give_item_to(item& new_item, const std::string& to, int thread_
     }
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(thread_id);
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_items_context(thread_id);
         new_item.overwrite_in_db(mongo_ctx);
     }
 
