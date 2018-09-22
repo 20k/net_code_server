@@ -410,6 +410,7 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
 
     quick_register(ctx, "HASH_D", "");
     quick_register(ctx, "print_str", "");
+    quick_register(ctx, "base_caller", caller.c_str());
     quick_register(ctx, "caller", caller.c_str());
     quick_register_generic(ctx, "caller_stack", caller_stack);
     quick_register(ctx, "script_host", script_host.c_str());
@@ -615,12 +616,16 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
         duk_put_prop_string(new_ctx, id, "caller"); ///[object]
 
         std::string script_host = get_script_host(ctx);
+        std::string base_caller = get_base_caller(ctx);
 
         duk_push_string(new_ctx, script_host.c_str());
         duk_put_prop_string(new_ctx, id, "script_host");
 
         duk_push_string(new_ctx, calling_script.c_str());
         duk_put_prop_string(new_ctx, id, "calling_script");
+
+        duk_push_string(new_ctx, base_caller.c_str());
+        duk_put_prop_string(new_ctx, id, "base_caller");
 
         ///duplicate current object, put it into the global object
         duk_push_global_object(new_ctx);
@@ -1062,10 +1067,36 @@ duk_ret_t jxs_call(duk_context* ctx)
 
     set_global_int(ctx, "last_seclevel", current_seclevel);
 
-    ///its now no longer necessary to reset the functions after a script call
-    ///as the global object can be only modified by us
-    ///in theory
-    //register_funcs(ctx, current_seclevel);
+    return ret;
+}
+
+template<int N>
+duk_ret_t jxos_call(duk_context* ctx)
+{
+    int current_seclevel = get_global_int(ctx, "last_seclevel");
+
+    std::vector<std::string> old_caller_stack = get_caller_stack(ctx);
+    std::string old_caller = get_caller(ctx);
+
+    std::string new_caller = get_script_host(ctx);
+
+    duk_push_heap_stash(ctx);
+
+    quick_register(ctx, "caller", new_caller.c_str());
+    quick_register_generic(ctx, "caller_stack", std::vector<std::string>{new_caller});
+
+    duk_pop(ctx);
+
+    duk_ret_t ret = js_call(ctx, N);
+
+    set_global_int(ctx, "last_seclevel", current_seclevel);
+
+    duk_push_heap_stash(ctx);
+
+    quick_register(ctx, "caller", old_caller.c_str());
+    quick_register_generic(ctx, "caller_stack", old_caller_stack);
+
+    duk_pop(ctx);
 
     return ret;
 }
@@ -1099,6 +1130,29 @@ duk_ret_t sl_call(duk_context* ctx)
     return 1;
 }
 
+template<int N>
+inline
+duk_ret_t os_call(duk_context* ctx)
+{
+    std::string str = duk_require_string(ctx, -2);
+
+    bool async_launch = dukx_is_truthy(ctx, -1);
+
+    ///???
+    duk_push_c_function(ctx, &jxos_call<N>, 1);
+
+    put_duk_keyvalue(ctx, "FUNCTION_NAME", str);
+    put_duk_keyvalue(ctx, "call", err);
+    put_duk_keyvalue(ctx, "is_async", async_launch);
+
+    std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
+    dukx_put_hidden_prop(ctx, -1, "script_host", secret_script_host);
+
+    freeze_duk(ctx);
+
+    return 1;
+}
+
 void register_funcs(duk_context* ctx, int seclevel, const std::string& script_host)
 {
     remove_func(ctx, "fs_call");
@@ -1106,14 +1160,25 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     remove_func(ctx, "ms_call");
     remove_func(ctx, "ls_call");
     remove_func(ctx, "ns_call");
+    remove_func(ctx, "os_call");
 
     /*remove_func(ctx, "db_insert");
     remove_func(ctx, "db_find");
     remove_func(ctx, "db_remove");
     remove_func(ctx, "db_update");*/
 
+    inject_c_function(ctx, os_call<0>, "os_call", 2, "script_host", script_host);
+
+    inject_c_function(ctx, os_call<4>, "ofs_call", 2, "script_host", script_host);
+    inject_c_function(ctx, os_call<3>, "ohs_call", 2, "script_host", script_host);
+    inject_c_function(ctx, os_call<2>, "oms_call", 2, "script_host", script_host);
+    inject_c_function(ctx, os_call<1>, "ols_call", 2, "script_host", script_host);
+    inject_c_function(ctx, os_call<0>, "ons_call", 2, "script_host", script_host);
+
     if(seclevel <= 4)
+    {
         inject_c_function(ctx, sl_call<4>, "fs_call", 2, "script_host", script_host);
+    }
 
     if(seclevel <= 3)
         inject_c_function(ctx, sl_call<3>, "hs_call", 2, "script_host", script_host);

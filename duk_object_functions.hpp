@@ -399,6 +399,12 @@ std::string get_script_ending(duk_context* ctx)
     return get_global_string(ctx, "script_ending");
 }
 
+inline
+std::string get_base_caller(duk_context* ctx)
+{
+    return get_global_string(ctx, "base_caller");
+}
+
 template<typename T>
 inline
 void dukx_put_pointer(duk_context* ctx, T* ptr, const std::string& key)
