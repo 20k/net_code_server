@@ -338,7 +338,7 @@ int main()
                  });*/
 
     npc_manager& npc_manage = get_global_npc_manager();
-    //npc_manage.create_npcs_up_to(MAX_NPC_COUNT);
+
 
     /*{
         mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
@@ -350,6 +350,26 @@ int main()
     low_level_structure_manager& manage = get_global_low_level_structure_manager();
     //manage.erase_intersystem_specials();
     //manage.for_each(low_level_structure::cleanup_invalid_users);
+
+
+    #ifdef DELETE_DISCONNECTED_USERS
+    for_each_npc([&](npc_user& usr)
+                 {
+                        auto sys_opt = manage.get_system_of(usr.name);
+
+                        if(!sys_opt.has_value())
+                        {
+                            command_handler_state state;
+
+                            std::cout << "deleting " << usr.name << std::endl;
+
+                            delete_user(state, usr.name, true);
+                        }
+                 });
+
+
+    npc_manage.create_npcs_up_to(MAX_NPC_COUNT);
+    #endif // DELETE_DISCONNECTED_USERS
 
     //manage.erase_all();
     //manage.generate_up_to(150);
