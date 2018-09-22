@@ -26,6 +26,7 @@ struct arg_metadata
         NODE_IDX = 8192,
         NODE_STRING = 16384,
         OPT = 32768,
+        OBJECT = 65536,
     };
 
     static inline std::map<arg_type, std::string> enum_examples
@@ -47,6 +48,7 @@ struct arg_metadata
         {NODE_IDX, "-1"},
         {NODE_STRING, "\"F\""},
         {OPT, "<optional>"},
+        {OBJECT, "{}"},
     };
 
     std::string key_name;

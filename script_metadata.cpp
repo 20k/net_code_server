@@ -91,6 +91,8 @@ std::string arg_metadata::get_example()
         return enum_examples[STRING];
     if((type & BOOLEAN) > 0)
         return enum_examples[BOOLEAN];
+    if((type & OBJECT) > 0)
+        return enum_examples[OBJECT];
 
     return enum_examples[UNKNOWN];
 }

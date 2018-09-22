@@ -153,8 +153,8 @@ std::map<std::string, script_metadata> construct_core_metadata()
     ret["cash.balance"].return_data = make_met("", "Cash Balance", arg_metadata::CASH | arg_metadata::NUMERIC);
 
     ret["cash.expose"].description = "Displays a hostile targets cash balance";
-    ret["cash.expose"].return_data = make_met("", "Cash Balance", arg_metadata::CASH | arg_metadata::NUMERIC, ok_arg);
-    ret["cash.expose"].param_data = make_met("user", "User to Expose", arg_metadata::USER);
+    ret["cash.expose"].return_data = make_met("available", "Cash Balance that can be stolen currently", arg_metadata::CASH | arg_metadata::NUMERIC, "exposed", "Total Cash Balance", arg_metadata::CASH | arg_metadata::NUMERIC, ok_arg);
+    ret["cash.expose"].param_data = make_met("user", "User to Expose", arg_metadata::USER, array_arg);
     ret["cash.expose"].requires_breach = true;
 
     ret["cash.xfer_to"].description = "Sends cash to someone else";
@@ -216,7 +216,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
     ret["item.steal"].requires_breach = true;
 
     ret["item.expose"].description = "Shows a list of items on a user";
-    ret["item.expose"].return_data = make_met("", "Stringified items", arg_metadata::STRING, "", "Array of Items", arg_metadata::ARRAY, ok_arg);
+    ret["item.expose"].return_data = make_met("", "Stringified items", arg_metadata::STRING, "available", "How many items can be stolen currently", arg_metadata::INTEGER, "exposed", "Array of Items", arg_metadata::ARRAY, ok_arg);
     ret["item.expose"].param_data = make_met("user", "User to Expose Items on", arg_metadata::USER, "full", "Should expose item properties", arg_metadata::BOOLEAN | arg_metadata::OPT, array_arg);
     ret["item.expose"].requires_breach = true;
 
