@@ -5838,6 +5838,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool in_same_system = target_sys_opt.value() == my_sys_opt.value();
 
     low_level_structure& current_sys = *my_sys_opt.value();
+    low_level_structure& target_sys = *target_sys_opt.value();
 
     bool is_warpy = false;
 
@@ -6180,10 +6181,11 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             std::string str_remove = "Pass " + make_key_val("remove", "\"\"") + " to remove a user";
             std::string str_view = "Pass " + make_key_val("view", "true") + " to view allowed user list";
 
+            double base_npc_purchase_cost = target_sys.get_npc_purchase_cost();
 
-            int add_price = 800;
-            int remove_price = 200;
-            int view_price = 20;
+            int add_price = base_npc_purchase_cost;
+            int remove_price = base_npc_purchase_cost / 4;
+            int view_price = base_npc_purchase_cost / 40;
 
             if(target.is_allowed_user(get_caller(ctx)))
             {
