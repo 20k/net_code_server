@@ -374,6 +374,7 @@ std::vector<std::string> hidden_functions
     {"item.manage"},
     {"ada.access"},
     {"able.help"},
+    {"cash.xfer_to_caller"}, ///deprecated because we now have #os.
 };
 
 std::map<std::string, std::vector<script_arg>> construct_core_args();
