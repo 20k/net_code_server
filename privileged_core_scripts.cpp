@@ -6321,6 +6321,115 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string sys_name = duk_safe_get_prop_string(ctx, -1, "sys");
+    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
+    std::string user_name = duk_safe_get_prop_string(ctx, -1, "user");
+
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+    std::optional<low_level_structure*> sys_opt;
+    std::optional<low_level_structure*> sys_current_opt;
+
+    sys_current_opt = low_level_structure_manage.get_system_of(get_caller(ctx));
+
+    if(sys_name != "")
+        sys_opt = low_level_structure_manage.get_system_from_name(sys_name);
+    else if(user_name != "")
+        sys_opt = low_level_structure_manage.get_system_of(user_name);
+    else
+        sys_opt = sys_current_opt;
+
+    if(!sys_opt.has_value())
+        return push_error(ctx, "No such system");
+
+    auto user_opt = get_user(get_caller(ctx), get_thread_id(ctx));
+
+    if(!user_opt.has_value())
+        return push_error(ctx, "Error no such user");
+
+    user& usr = user_opt.value();
+
+    size_t current_time = get_wall_time();
+
+    low_level_structure& sys = *sys_opt.value();
+    low_level_structure& sys_base = *sys_current_opt.value();
+
+    double cash_send = sys.get_ratelimit_max_cash_send();
+    double cash_steal_percent = sys.get_ratelimit_max_cash_percentage_steal();
+    double item_send = sys.get_ratelimit_max_item_send();
+    double item_steal = sys.get_ratelimit_max_item_steal();
+
+    double current_cash_send = usr.get_max_sendable_cash(current_time, sys, sys_base);
+    double current_item_send = usr.get_max_sendable_items(current_time, sys, sys_base);
+
+    double seclevel_1 = sys.calculate_seclevel();
+    double seclevel_2 = sys_base.calculate_seclevel();
+
+    double current_cash_stealable = usr.get_max_stealable_cash(current_time, sys);
+    double current_items_stealable = usr.get_max_stealable_items(current_time, sys);
+
+    std::cout << cash_steal_percent * usr.get_pvp_old_cash_estimate(current_time) << std::endl;
+
+    ///show how much cash can be stolen from me as well
+
+    ///needs to have +inf for within system xfers?
+    ///might be exploitable
+
+    if(!is_arr)
+    {
+        std::string rstr;
+
+        rstr += "Limits due to Security Levels:\n";
+        rstr += "System: " + colour_string(*sys_base.name) + " (`" + seclevel_fraction_to_colour(seclevel_2) + to_string_with_enforced_variable_dp(seclevel_2, 2) + "`)\n";
+
+        if(user_name != "")
+        {
+            rstr += "Target: " + colour_string(user_name) + "\n";
+        }
+        else if(sys_opt.has_value() && sys_name != "")
+        {
+            rstr += "Target: " + colour_string(*sys.name) + " (`" + seclevel_fraction_to_colour(seclevel_1) + to_string_with_enforced_variable_dp(seclevel_1, 2) + "`)\n";
+        }
+
+        /*rstr += "Sendable Cash (passive): " + to_string_with_enforced_variable_dp(cash_send, 2) + "\n";
+        rstr += "Sendable Items (passive): " + std::to_string((int)item_send) + "\n";
+
+        rstr += "Stealable Cash % (passive): " + to_string_with_enforced_variable_dp(cash_steal_percent * 100., 2) + "\n";
+        rstr += "Stealable Items (passive): " + std::to_string((int)item_steal) + "\n";
+
+        rstr += "Current Cash Sendable: " + to_string_with_enforced_variable_dp(current_cash_send, 2) + "\n";
+        rstr += "Current Items Sendable: " + std::to_string((int)current_item_send) + "\n";
+
+        rstr += "Current Cash Stealable from you: " + to_string_with_enforced_variable_dp(current_cash_stealable, 2) + "\n";
+        rstr += "Current Items Stealable from you: " + std::to_string((int)current_items_stealable);*/
+
+        rstr += make_cash_col("Cash") + ":\n";
+        rstr += "    " + make_success_col("Sendable") + ":\n";
+        rstr += "        max:" + to_string_with_enforced_variable_dp(cash_send, 2) + "\n";
+        rstr += "        cur:" + to_string_with_enforced_variable_dp(current_cash_send, 2) + "\n";
+        rstr += "    " + make_error_col("Stealable") + ": (from " + colour_string(get_caller(ctx)) + ")\n";
+        rstr += "        max:" + to_string_with_enforced_variable_dp(cash_steal_percent*100, 2) + "%" + "\n";
+        rstr += "        cur:" + to_string_with_enforced_variable_dp(current_cash_stealable, 2) + "\n";
+
+        rstr += make_item_col("Item") + ":\n";
+        rstr += "    " + make_success_col("Sendable") + ":\n";
+        rstr += "        max:" + std::to_string((int)item_send) + "\n";
+        rstr += "        cur:" + std::to_string((int)current_item_send) + "\n";
+        rstr += "    " + make_error_col("Stealable") + ": (from " + colour_string(get_caller(ctx)) + ")\n";
+        rstr += "        max:" + std::to_string((int)item_steal) + "\n";
+        rstr += "        cur:" + std::to_string((int)current_items_stealable);
+
+        push_duk_val(ctx, rstr);
+    }
+
+
+    return 1;
+}
+
 duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
