@@ -6409,19 +6409,19 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         rstr += make_cash_col("Cash") + ":\n";
         rstr += "    " + make_success_col("Sendable") + ":\n";
-        rstr += "        max:" + to_string_with_enforced_variable_dp(cash_send, 2) + "\n";
-        rstr += "        cur:" + to_string_with_enforced_variable_dp(current_cash_send, 2) + "\n";
+        rstr += "        Max:" + to_string_with_enforced_variable_dp(cash_send, 2) + "\n";
+        rstr += "        Cur:" + to_string_with_enforced_variable_dp(current_cash_send, 2) + "\n";
         rstr += "    " + make_error_col("Stealable") + ": (from " + colour_string(get_caller(ctx)) + ")\n";
-        rstr += "        max:" + to_string_with_enforced_variable_dp(cash_steal_percent*100, 2) + "%" + "\n";
-        rstr += "        cur:" + to_string_with_enforced_variable_dp(current_cash_stealable, 2) + "\n";
+        rstr += "        Max:" + to_string_with_enforced_variable_dp(cash_steal_percent*100, 2) + "%" + "\n";
+        rstr += "        Cur:" + to_string_with_enforced_variable_dp(current_cash_stealable, 2) + "\n";
 
         rstr += make_item_col("Item") + ":\n";
         rstr += "    " + make_success_col("Sendable") + ":\n";
-        rstr += "        max:" + std::to_string((int)item_send) + "\n";
-        rstr += "        cur:" + std::to_string((int)current_item_send) + "\n";
+        rstr += "        Max:" + std::to_string((int)item_send) + "\n";
+        rstr += "        Cur:" + std::to_string((int)current_item_send) + "\n";
         rstr += "    " + make_error_col("Stealable") + ": (from " + colour_string(get_caller(ctx)) + ")\n";
-        rstr += "        max:" + std::to_string((int)item_steal) + "\n";
-        rstr += "        cur:" + std::to_string((int)current_items_stealable);
+        rstr += "        Max:" + std::to_string((int)item_steal) + "\n";
+        rstr += "        Cur:" + std::to_string((int)current_items_stealable);
 
         push_duk_val(ctx, rstr);
     }
