@@ -34,9 +34,6 @@ void from_json(const nlohmann::json& j, user_limit& limit)
 ///could probably use this to implement the hour long window eh
 double user_limit::calculate_current_data(size_t time_ms)
 {
-    double hours_to_refill = 2;
-    double ms_to_refill = hours_to_refill * 60 * 60 * 1000;
-
     if(time_ms < time_at)
     {
         printf("Warning, time error in calculate current data\n");
@@ -46,7 +43,7 @@ double user_limit::calculate_current_data(size_t time_ms)
 
     size_t diff_ms = time_ms - time_at;
 
-    double fraction = diff_ms / ms_to_refill;
+    double fraction = diff_ms / recharge_time_ms;
 
     //fraction = 1;
 

@@ -26,6 +26,8 @@ struct user_limit
     size_t time_at = 0;
 
     double calculate_current_data(size_t time_ms);
+
+    static inline double recharge_time_ms = 2 * 60 * 60 * 1000;
 };
 
 ///ok. Need to fetch users out of the db

@@ -6372,6 +6372,9 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
     double current_cash_stealable = usr.get_max_stealable_cash(current_time, sys);
     double current_items_stealable = usr.get_max_stealable_items(current_time, sys);
 
+    double charge_time_ms = user_limit::recharge_time_ms;
+    double charge_time_h = charge_time_ms / 1000. / 60. / 60.;
+
     //std::cout << cash_steal_percent * usr.get_pvp_old_cash_estimate(current_time) << std::endl;
 
     ///show how much cash can be stolen from me as well
@@ -6421,11 +6424,44 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
         rstr += "        Cur:" + std::to_string((int)current_item_send) + "\n";
         rstr += "    " + make_error_col("Stealable") + ": (from " + colour_string(get_caller(ctx)) + ")\n";
         rstr += "        Max:" + std::to_string((int)item_steal) + "\n";
-        rstr += "        Cur:" + std::to_string((int)current_items_stealable);
+        rstr += "        Cur:" + std::to_string((int)current_items_stealable) + "\n";
+
+        rstr += "\nLimits take " + std::to_string((int)charge_time_h) + "h to refill fully";
 
         push_duk_val(ctx, rstr);
     }
+    else
+    {
+        nlohmann::json ret;
+        ret["current_system"] = *sys_base.name;
+        ret["current_seclevel"] = seclevel_2;
 
+        if(user_name != "")
+        {
+            ret["target_user"] = user_name;
+        }
+        else if(sys_opt.has_value() && sys_name != "")
+        {
+            ret["target_system"] = sys_name;
+            ret["target_seclevel"] = seclevel_1;
+        }
+
+        ret["max_cash_send"] = cash_send;
+        ret["current_cash_send"] = current_cash_send;
+
+        ret["max_cash_steal_fraction"] = cash_steal_percent;
+        ret["current_cash_steal"] = current_cash_stealable;
+
+        ret["max_item_send"] = item_send;
+        ret["current_item_send"] = current_item_send;
+
+        ret["max_item_steal"] = item_steal;
+        ret["current_item_steal"] = current_items_stealable;
+
+        ret["refill_time_ms"] = charge_time_ms;
+
+        push_duk_val(ctx, ret);
+    }
 
     return 1;
 }
