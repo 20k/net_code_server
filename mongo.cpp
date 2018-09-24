@@ -1,5 +1,6 @@
 #include "mongo.hpp"
 #include <json/json.hpp>
+#include <mongoc/mongoc.h>
 
 #include <chrono>
 #include <set>
@@ -16,6 +17,40 @@
 
 thread_local int mongo_lock_proxy::thread_id_storage_hack = -2;
 thread_local int mongo_lock_proxy::print_performance_diagnostics = 0;
+
+std::string bson_iter_binary_std_string(bson_iter_t* iter)
+{
+    uint32_t len = 0;
+    const uint8_t* binary = nullptr;
+    bson_subtype_t subtype = BSON_SUBTYPE_BINARY;
+
+    bson_iter_binary(iter, &subtype, &len, &binary);
+
+    if(binary == nullptr)
+    {
+        printf("warning invalid bson_iter_binary_std_string\n");
+        return std::string();
+    }
+
+    std::string value((const char*)binary, len);
+
+    return value;
+}
+
+std::string bson_iter_utf8_easy(bson_iter_t* iter)
+{
+    uint32_t len = bson_iter_utf8_len_unsafe(iter);
+    const char* k = bson_iter_utf8(iter, &len);
+
+    if(k == nullptr)
+    {
+        printf("warning invalid bson_iter_utf8_easy\n");
+
+        return std::string();
+    }
+
+    return std::string(k, len);
+}
 
 void lock_internal::lock(const std::string& debug_info, size_t who, mongoc_client_t* emergency)
 {
@@ -1397,4 +1432,42 @@ void mongo_requester::remove_all_from_db(mongo_lock_proxy& ctx)
     ctx->remove_bson(ctx->last_collection, to_remove);
 
     bson_destroy(to_remove);
+}
+
+std::array<mongo_context*, (int)mongo_database_type::MONGO_COUNT> mongo_databases;
+
+void initialse_mongo_all()
+{
+    mongoc_init();
+
+    for(int i=0; i < (int)mongo_database_type::MONGO_COUNT; i++)
+        mongo_databases[i] = new mongo_context((mongo_database_type)i);
+
+    atexit(cleanup_mongo_all);
+}
+
+void cleanup_mongo_all()
+{
+    ///first argument is irrelevant
+    get_global_mongo_context(mongo_database_type::USER_ACCESSIBLE, true);
+
+    mongoc_cleanup();
+}
+
+bson_t* make_bson_default()
+{
+    bson_t* bs = new bson_t;
+    bson_init(bs);
+
+    return bs;
+}
+
+void destroy_bson_default(bson_t* t)
+{
+    if(t == nullptr)
+        return;
+
+    bson_destroy(t);
+
+    delete t;
 }

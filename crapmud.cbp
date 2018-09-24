@@ -191,6 +191,7 @@
 		<Unit filename="mongo.cpp" />
 		<Unit filename="mongo.hpp" />
 		<Unit filename="mongo_cleanup.hpp" />
+		<Unit filename="mongoc_fwd.hpp" />
 		<Unit filename="non_user_task_thread.cpp" />
 		<Unit filename="non_user_task_thread.hpp" />
 		<Unit filename="perfmon.cpp" />

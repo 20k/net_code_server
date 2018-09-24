@@ -1034,11 +1034,15 @@ void delete_notifs_for(const std::string& name)
         mongo_lock_proxy notifs_db = get_global_mongo_pending_notifs_context(-2);
         notifs_db.change_collection(name);
 
-        bson_t bson;
+        /*bson_t bson;
         bson_init(&bson);
 
         notifs_db->remove_bson(name, &bson);
-        bson_destroy(&bson);
+        bson_destroy(&bson);*/
+
+        bson_t* bs = make_bson_default();
+        notifs_db->remove_bson(name, bs);
+        destroy_bson_default(bs);
     }
 }
 
@@ -1049,10 +1053,14 @@ void delete_user_db_for(const std::string& name)
         mongo_lock_proxy user_db = get_global_mongo_user_accessible_context(-2);
         user_db.change_collection(name);
 
-        bson_t bson;
+        /*bson_t bson;
         bson_init(&bson);
         user_db->remove_bson(name, &bson);
-        bson_destroy(&bson);
+        bson_destroy(&bson);*/
+
+        bson_t* bs = make_bson_default();
+        user_db->remove_bson(name, bs);
+        destroy_bson_default(bs);
     }
 }
 

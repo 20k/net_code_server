@@ -35,6 +35,7 @@
 #include <libncclient/nc_util.hpp>
 #include <secret/secret.hpp>
 #include <secret/low_level_structure.hpp>
+#include <windows.h>
 
 #if 0
 void user_tests()

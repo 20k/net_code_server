@@ -1,7 +1,6 @@
 #ifndef MONGO_HPP_INCLUDED
 #define MONGO_HPP_INCLUDED
 
-#include <mongoc/mongoc.h>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -10,6 +9,7 @@
 #include <atomic>
 #include <thread>
 #include "perfmon.hpp"
+#include "mongoc_fwd.hpp"
 
 #include <json/json.hpp>
 
@@ -209,8 +209,6 @@ struct mongo_nolock_proxy : mongo_lock_proxy
     mongo_nolock_proxy(const mongo_shim& shim);
 };
 
-#include "mongo_cleanup.hpp"
-
 //https://stackoverflow.com/questions/30166706/c-convert-simple-values-to-string
 template<typename T>
 inline
@@ -224,42 +222,6 @@ inline
 typename std::enable_if<!std::is_fundamental<T>::value, std::string>::type  stringify_hack(const T& t)
 {
     return std::string(t);
-}
-
-inline
-std::string bson_iter_binary_std_string(bson_iter_t* iter)
-{
-    uint32_t len = 0;
-    const uint8_t* binary = nullptr;
-    bson_subtype_t subtype = BSON_SUBTYPE_BINARY;
-
-    bson_iter_binary(iter, &subtype, &len, &binary);
-
-    if(binary == nullptr)
-    {
-        printf("warning invalid bson_iter_binary_std_string\n");
-        return std::string();
-    }
-
-    std::string value((const char*)binary, len);
-
-    return value;
-}
-
-inline
-std::string bson_iter_utf8_easy(bson_iter_t* iter)
-{
-    uint32_t len = bson_iter_utf8_len_unsafe(iter);
-    const char* k = bson_iter_utf8(iter, &len);
-
-    if(k == nullptr)
-    {
-        printf("warning invalid bson_iter_utf8_easy\n");
-
-        return std::string();
-    }
-
-    return std::string(k, len);
 }
 
 ///ok, support for arrays is now non negotiable
@@ -499,6 +461,113 @@ void mongo_tests(const std::string& coll)
 
     ctx.insert_json_1(coll, "{\"name\": {\"first\":\"bum\", \"last\":\"test\"}}");
     #endif // 0
+}
+
+extern std::array<mongo_context*, (int)mongo_database_type::MONGO_COUNT> mongo_databases;
+
+///if a script were terminated while fetching the global mongo context, everything would break
+///ALARM: ALARM:
+inline
+mongo_shim get_global_mongo_context(mongo_database_type type, int lock_id, bool destroy = false)
+{
+    if(destroy)
+    {
+        for(auto& i : mongo_databases)
+        {
+            delete i;
+            i = nullptr;
+        }
+
+        return mongo_shim(nullptr, lock_id);
+    }
+
+    return mongo_shim(mongo_databases[(int)type], lock_id);
+}
+
+void initialse_mongo_all();
+void cleanup_mongo_all();
+
+bson_t* make_bson_default();
+void destroy_bson_default(bson_t* t);
+
+inline
+mongo_shim get_global_mongo_user_accessible_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::USER_ACCESSIBLE, lock_id);
+}
+
+inline
+mongo_shim get_global_mongo_user_info_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::USER_PROPERTIES, lock_id);
+}
+
+inline
+mongo_shim get_global_mongo_user_items_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::USER_ITEMS, lock_id);
+}
+
+inline
+mongo_shim get_global_mongo_global_properties_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::GLOBAL_PROPERTIES, lock_id);
+}
+
+/*inline
+mongo_lock_proxy get_global_mongo_chat_channels_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::CHAT_CHANNELS, lock_id);
+}*/
+
+inline
+mongo_shim get_global_mongo_pending_notifs_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::PENDING_NOTIFS, lock_id);
+}
+
+inline
+mongo_shim get_global_mongo_chat_channel_propeties_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::CHAT_CHANNEL_PROPERTIES, lock_id);
+}
+
+inline
+mongo_shim get_global_mongo_node_properties_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::NODE_PROPERTIES, lock_id);
+}
+
+inline
+mongo_shim get_global_mongo_npc_properties_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::NPC_PROPERTIES, lock_id);
+}
+
+inline
+mongo_shim get_global_mongo_network_properties_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::NETWORK_PROPERTIES, lock_id);
+}
+
+inline
+mongo_shim get_global_mongo_scheduled_task_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::SCHEDULED_TASK, lock_id);
+}
+
+using mongo_lock_low_level = mongo_lock_proxy;
+
+inline
+mongo_shim get_global_mongo_low_level_structure_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::LOW_LEVEL_STRUCTURE, lock_id);
+}
+
+inline
+mongo_shim get_global_mongo_quest_manager_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::QUEST_MANAGER, lock_id);
 }
 
 #endif // MONGO_HPP_INCLUDED
