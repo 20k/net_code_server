@@ -6372,7 +6372,7 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
     double current_cash_stealable = usr.get_max_stealable_cash(current_time, sys);
     double current_items_stealable = usr.get_max_stealable_items(current_time, sys);
 
-    std::cout << cash_steal_percent * usr.get_pvp_old_cash_estimate(current_time) << std::endl;
+    //std::cout << cash_steal_percent * usr.get_pvp_old_cash_estimate(current_time) << std::endl;
 
     ///show how much cash can be stolen from me as well
 
