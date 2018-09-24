@@ -93,50 +93,6 @@ struct mongo_context
 
     void unlock_if(size_t who);
 
-    #if 0
-    void ping()
-    {
-        bson_t* command = BCON_NEW ("ping", BCON_INT32 (1));
-
-        bson_t reply;
-
-        bson_error_t error;
-
-        bool retval = mongoc_client_command_simple (
-                          client, "admin", command, NULL, &reply, &error);
-
-        if (!retval)
-        {
-            fprintf (stderr, "%s\n", error.message);
-
-            return;
-        }
-
-        char* str = bson_as_json (&reply, NULL);
-        printf ("%s\n", str);
-
-        bson_destroy (&reply);
-        bson_destroy (command);
-        bson_free (str);
-    }
-    #endif // 0
-
-    #if 0
-    void insert_test_data() const
-    {
-        bson_error_t error;
-
-        bson_t* insert = BCON_NEW ("hello", BCON_UTF8 ("world"));
-
-        if (!mongoc_collection_insert_one (collection, insert, NULL, NULL, &error))
-        {
-            fprintf (stderr, "%s\n", error.message);
-        }
-
-        bson_destroy (insert);
-    }
-    #endif
-
     mongoc_client_t* request_client();
 
     void return_client(mongoc_client_t* pclient);
@@ -200,11 +156,6 @@ struct mongo_interface
 
     std::string update_bson_one(bson_t* selector, bson_t* update) const;
     std::string update_json_one(const std::string& selector, const std::string& update) const;
-
-    /*bool has_collection(const std::string& coll)
-    {
-        return !mongoc_database_has_collection()
-    }*/
 
     std::vector<std::string> find_bson(const std::string& script_host, bson_t* bs, bson_t* ps);
     std::vector<std::string> find_json(const std::string& script_host, const std::string& json, const std::string& proj);
