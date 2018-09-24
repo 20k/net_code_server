@@ -129,6 +129,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["sys.map"] = make_cary("n", "-1", "centre", "false");
     ret["sys.move"] = make_cary("to", "\"\"", "queue", "false");
     ret["sys.access"] = make_cary("user", "\"\"");
+    ret["sys.limits"] = make_cary();
     ret["ada.access"] = make_cary();
     ret["able.help"] = make_cary();
 
@@ -285,6 +286,12 @@ std::map<std::string, script_metadata> construct_core_metadata()
                                                 "user", "User to access", arg_metadata::USER
                                            );
     ret["sys.access"].requires_breach = true;
+
+    ret["sys.limits"].description = "Shows a list of limits due to seclevels";
+    ret["sys.limits"].return_data = make_met("", "Description of seclevel limits", arg_metadata::STRING, "", "Object containing seclevel limits", arg_metadata::ARRAY);
+    ret["sys.limits"].param_data = make_met("sys", "Target System", arg_metadata::STRING | arg_metadata::OPT,
+                                            "user", "Target User", arg_metadata::USER | arg_metadata::OPT,
+                                            array_arg);
 
     return ret;
 }
@@ -6382,11 +6389,14 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///needs to have +inf for within system xfers?
     ///might be exploitable
 
+    std::string extra_args = "Pass " + make_key_val("sys", "\"example\"") + " to view a specific system's limits\n";
+    extra_args += "Pass " + make_key_val("user", "\"username\"") + " to see limits to a specific user\n";
+
     if(!is_arr)
     {
-        std::string rstr;
+        std::string rstr = extra_args;
 
-        rstr += "Limits due to Security Levels:\n";
+        //rstr += "Limits due to Security Levels:\n";
         rstr += "System: " + colour_string(*sys_base.name) + " (`" + seclevel_fraction_to_colour(seclevel_2) + to_string_with_enforced_variable_dp(seclevel_2, 2) + "`)\n";
 
         if(user_name != "")
