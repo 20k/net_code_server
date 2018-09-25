@@ -105,7 +105,7 @@ struct db_val : db_common
 
             try
             {
-                val = j[key].get<U>();
+                val = j[key].template get<U>();
             }
             catch(...)
             {
@@ -187,13 +187,17 @@ void stringify_params(std::string& in, U first, T... name)
 
 struct mongo_lock_proxy;
 
+namespace caches
+{
+    template<typename concrete>
+    static global_generic_cache<concrete> this_cache;
+};
+
 template<typename concrete, bool cacheable, char... name>
 struct db_interfaceable
 {
     std::string key_name;
     json data;
-
-    static inline global_generic_cache<concrete> this_cache;
 
     db_interfaceable()
     {
@@ -208,7 +212,7 @@ struct db_interfaceable
     {
         try
         {
-            auto found = data[key].get<T>();
+            auto found = data[key].template get<T>();
 
             data[key] = cv(found);
 
@@ -228,7 +232,7 @@ struct db_interfaceable
     template<typename T>
     T get_as(const std::string& key)
     {
-        return data[key].get<T>();
+        return data[key].template get<T>();
     }
 
     template<typename T>
@@ -263,7 +267,7 @@ struct db_interfaceable
 
     std::string get_key_data()
     {
-        return data[key_name].get<std::string>();
+        return data[key_name].template get<std::string>();
     }
 
     virtual bool handle_serialise(json& j, bool ser) {return false;}
@@ -315,7 +319,7 @@ struct db_interfaceable
 
         ctx->remove_json(ctx->last_collection, to_find.dump());
 
-        this_cache.clear();
+        caches::this_cache<concrete>.clear();
     }
 
     ///need a fetch all from db
@@ -327,13 +331,13 @@ struct db_interfaceable
         if(!exists(ctx, id))
             return false;
 
-        if(cacheable && this_cache.exists_in_cache(id))
+        if(cacheable && caches::this_cache<concrete>.exists_in_cache(id))
         {
-            *this = this_cache.load_from_cache(id);
+            *this = caches::this_cache<concrete>.load_from_cache(id);
 
             if(cacheable)
             {
-                this_cache.overwrite_in_cache(id, *(concrete*)this);
+                caches::this_cache<concrete>.overwrite_in_cache(id, *(concrete*)this);
             }
 
             if(handle_serialise(data, false))
@@ -360,7 +364,7 @@ struct db_interfaceable
 
             if(cacheable)
             {
-                this_cache.overwrite_in_cache(id, *(concrete*)this);
+                caches::this_cache<concrete>.overwrite_in_cache(id, *(concrete*)this);
             }
 
             if(handle_serialise(data, false))
@@ -382,11 +386,11 @@ struct db_interfaceable
     {
         handle_serialise(data, true);
 
-        if(!exists(ctx, data[key_name].get<std::string>()))
+        if(!exists(ctx, data[key_name].template get<std::string>()))
         {
             if(cacheable)
             {
-                this_cache.overwrite_in_cache(data[key_name].get<std::string>(), *(concrete*)this);
+                caches::this_cache<concrete>.overwrite_in_cache(data[key_name].template get<std::string>(), *(concrete*)this);
             }
 
             ///insert
@@ -396,7 +400,7 @@ struct db_interfaceable
         {
             if(cacheable)
             {
-                this_cache.overwrite_in_cache(data[key_name].get<std::string>(), *(concrete*)this);
+                caches::this_cache<concrete>.overwrite_in_cache(data[key_name].template get<std::string>(), *(concrete*)this);
             }
 
             ///overwrite
@@ -423,13 +427,13 @@ struct db_interfaceable
 
         if(cacheable)
         {
-            this_cache.delete_from_cache(data[key_name].get<std::string>());
+            caches::this_cache<concrete>.delete_from_cache(data[key_name].template get<std::string>());
         }
     }
 
     bool exists(mongo_lock_proxy& ctx, const std::string& id)
     {
-        if(cacheable && this_cache.exists_in_cache(id))
+        if(cacheable && caches::this_cache<concrete>.exists_in_cache(id))
             return true;
 
         json to_find;

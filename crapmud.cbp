@@ -118,6 +118,19 @@
 					<Add option="-DTESTING" />
 				</Compiler>
 			</Target>
+			<Target title="RDClang">
+				<Option output="bin/ReleaseTestDebugClang/crapmud" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/ReleaseTestDebugClang/" />
+				<Option type="1" />
+				<Option compiler="clang" />
+				<Compiler>
+					<Add option="-O3" />
+					<Add option="-g" />
+					<Add option="-march=nehalem" />
+					<Add option="-DLOCAL_IP" />
+					<Add option="-DTESTING" />
+				</Compiler>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wnon-virtual-dtor" />
