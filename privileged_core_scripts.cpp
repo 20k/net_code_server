@@ -5019,6 +5019,8 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     bool by_seclevel = dukx_is_prop_truthy(ctx, -1, "seclevels") || dukx_is_prop_truthy(ctx, -1, "seclevel") || dukx_is_prop_truthy(ctx, -1, "s");
 
+    std::string extra_args = "Pass " + make_key_val("seclevel", "true") + " to display seclevels\n";
+
     found_w = clamp(found_w, 5, 300);
     found_h = clamp(found_h, 5, 200);
 
@@ -5128,7 +5130,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         result = "Current Sys: " + colour_string(*structure.name) + "\n" + result;
 
-        push_duk_val(ctx, result);
+        push_duk_val(ctx, extra_args + result);
     }
     else
     {
