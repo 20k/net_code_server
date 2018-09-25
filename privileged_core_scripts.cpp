@@ -5060,11 +5060,11 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         {
             low_level_structure* next = to_test[current_ring].front();
 
-            explored[next->name] = true;
+            explored[*next->name] = true;
 
-            info.rings[next->name] = current_ring;
-            info.global_pos[next->name] = next->get_pos();
-            info.ring_ordered_names.push_back(next->name);
+            info.rings[*next->name] = current_ring;
+            info.global_pos[*next->name] = next->get_pos();
+            info.ring_ordered_names.push_back(*next->name);
 
             to_test[current_ring].pop_front();
 
@@ -5153,8 +5153,8 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             if(low_level_opt.has_value())
             {
-                info.ring_ordered_names.push_back(low_level_opt.value()->name);
-                info.global_pos[low_level_opt.value()->name] = low_level_opt.value()->get_pos();
+                info.ring_ordered_names.push_back(*low_level_opt.value()->name);
+                info.global_pos[*low_level_opt.value()->name] = low_level_opt.value()->get_pos();
             }
         }
 

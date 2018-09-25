@@ -8,14 +8,17 @@ std::string random_binary_string(int len)
     if(len <= 0)
         return std::string();
 
-    unsigned char random_bytes[len] = {0};
+    //unsigned char random_bytes[len] = {0};
+
+    std::vector<unsigned char> random_bytes;
+    random_bytes.resize(len);
 
     HCRYPTPROV provider = 0;
 
     if(!CryptAcquireContext(&provider, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
         return "";
 
-    if(!CryptGenRandom(provider, len, random_bytes))
+    if(!CryptGenRandom(provider, len, &random_bytes[0]))
         return "";
 
     CryptReleaseContext(provider, 0);

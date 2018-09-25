@@ -84,9 +84,10 @@ std::string random_select_of_det(int len, const std::string& of, T& t)
     return ret;
 }
 
-template<typename T, template<typename, typename> typename U>
+//template<typename T, template<typename, typename> typename U>
+template<typename T, typename U>
 inline
-T random_select_of_rarity(U<T, float>& rarities, float rarity)
+T random_select_of_rarity(U& rarities, float rarity)
 {
     float max_rare = 0;
 
