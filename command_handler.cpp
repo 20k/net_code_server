@@ -53,6 +53,8 @@ void managed_duktape_thread(unsafe_info* info)
     ///convert from int to size_t
     *tls_get_thread_id_storage_hack() = (size_t)id;
 
+    //std::cout << *tls_get_thread_id_storage_hack() << std::endl;
+
     if(duk_safe_call(info->ctx, unsafe_wrapper, (void*)info, 0, 1) != 0)
     {
         duk_dup(info->ctx, -1);
