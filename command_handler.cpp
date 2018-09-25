@@ -51,7 +51,7 @@ void managed_duktape_thread(unsafe_info* info)
 
     ///set thread storage hack
     ///convert from int to size_t
-    mongo_lock_proxy::thread_id_storage_hack = (size_t)id;
+    *tls_get_thread_id_storage_hack() = (size_t)id;
 
     if(duk_safe_call(info->ctx, unsafe_wrapper, (void*)info, 0, 1) != 0)
     {

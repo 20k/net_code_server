@@ -176,11 +176,20 @@ struct mongo_shim
     mongo_shim(mongo_context* fctx, int lock_id);
 };
 
+///thread local support on clang seems poor
+/*namespace tl
+{
+    thread_local int thread_id_storage_hack;
+    thread_local int print_performance_diagnostics;
+}*/
+
+void startup_tls_state();
+
+int* tls_get_thread_id_storage_hack();
+int* tls_get_print_performance_diagnostics();
+
 struct mongo_lock_proxy
 {
-    static thread_local int thread_id_storage_hack;
-    static thread_local int print_performance_diagnostics;
-
     mongo_interface ctx;
 
     size_t ilock_id = 0;

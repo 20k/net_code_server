@@ -273,6 +273,8 @@ void tickle_cache()
 ///making sure this ends up in the right repo
 int main()
 {
+    startup_tls_state();
+
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 
     std::cout << std::hash<std::string>{}("aaaaaaaa") << std::endl;

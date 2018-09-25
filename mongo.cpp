@@ -16,8 +16,8 @@
 #include "safe_thread.hpp"
 #include <libncclient/nc_util.hpp>
 
-thread_local int mongo_lock_proxy::thread_id_storage_hack = -2;
-thread_local int mongo_lock_proxy::print_performance_diagnostics = 0;
+//thread_local int mongo_lock_proxy::thread_id_storage_hack = -2;
+//thread_local int mongo_lock_proxy::print_performance_diagnostics = 0;
 
 std::string bson_iter_binary_std_string(bson_iter_t* iter)
 {
@@ -1010,6 +1010,47 @@ mongo_shim::mongo_shim(mongo_context* fctx, int plock_id)
     lock_id = plock_id;
 }
 
+pthread_key_t thread_id_storage_key;
+pthread_key_t print_performance_diagnostics_key;
+
+void tls_freer(void* in)
+{
+    if(in == nullptr)
+        return;
+
+    delete (int*)in;
+}
+
+void startup_tls_state()
+{
+    assert(pthread_key_create(&thread_id_storage_key, tls_freer));
+    assert(pthread_key_create(&print_performance_diagnostics_key, tls_freer));
+}
+
+template<typename T>
+T* tls_fetch(pthread_key_t key)
+{
+    T* ptr = nullptr;
+
+    if((ptr = (T*)pthread_getspecific(key)) == NULL)
+    {
+        ptr = new T;
+        pthread_setspecific(key, ptr);
+    }
+
+    return ptr;
+}
+
+int* tls_get_thread_id_storage_hack()
+{
+    return tls_fetch<int>(thread_id_storage_key);
+}
+
+int* tls_get_print_performance_diagnostics()
+{
+    return tls_fetch<int>(print_performance_diagnostics_key);
+}
+
 mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim, bool lock) : ctx(shim.ctx)
 {
     should_lock = lock;
@@ -1029,9 +1070,9 @@ mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim, bool lock) : ctx(shim
     ///except in the command handler we set this to be higher
     ///the *only* reason these ids exist is for external unlocking of locked resources in the context of
     ///uncooperative thread termination
-    size_t my_id = thread_id_storage_hack;
+    size_t my_id = *tls_get_thread_id_storage_hack();
 
-    perf.enabled = print_performance_diagnostics > 0;
+    perf.enabled = (*tls_get_print_performance_diagnostics()) > 0;
 
     if(shim.ctx == nullptr)
         return;

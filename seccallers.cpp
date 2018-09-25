@@ -543,7 +543,7 @@ duk_ret_t deliberate_hang(duk_context* ctx)
 {
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
-    std::cout << "my id " << mongo_lock_proxy::thread_id_storage_hack << std::endl;
+    std::cout << "my id " << *tls_get_thread_id_storage_hack() << std::endl;
 
     while(1)
     {

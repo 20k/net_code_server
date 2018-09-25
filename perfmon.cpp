@@ -3,10 +3,14 @@
 
 mongo_diagnostics::mongo_diagnostics()
 {
-    mongo_lock_proxy::print_performance_diagnostics++;
+    int* ptr = tls_get_print_performance_diagnostics();
+
+    (*ptr)++;
 }
 
 mongo_diagnostics::~mongo_diagnostics()
 {
-    mongo_lock_proxy::print_performance_diagnostics--;
+    int* ptr = tls_get_print_performance_diagnostics();
+
+    (*ptr)--;
 }
