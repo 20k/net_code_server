@@ -597,8 +597,6 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
         return 1;
     }
 
-    std::string msg;
-
     #ifdef XFER_PATHS
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
@@ -660,7 +658,7 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
                 //std::cout << "real cash limit " << real_cash_limit << std::endl;
 
                 if(real_cash_limit < amount)
-                    return push_error(ctx, "Cannot send " + to_string_with_enforced_variable_dp(amount, 2) + " cash between these systems (limited due to your or their system's security level). Max currently sendable is " + to_string_with_enforced_variable_dp(real_cash_limit, 2) + " cash");
+                    return push_error(ctx, "Cannot send due to seclevel limits, check #sys.limits({user:\"" + to + "\"})");
 
                 //if(fabs(real_cash_limit) < 0.0001)
                 //    return push_error(ctx, "Some sort of calculation error (cash xfer seclevel rlimit)");
@@ -672,8 +670,6 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
 
                 lim.data = clamp(lim.calculate_current_data(current_time) - fraction_removed, 0., 1.);
                 lim.time_at = current_time;
-
-                msg += to_string_with_enforced_variable_dp(lim.data*100, 1) + " remaining";
             }
 
             ///work out old cash
@@ -705,7 +701,7 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
             double old_cash = from_user.get_pvp_old_cash_estimate(current_time);
 
             if(max_stealable < amount)
-                return push_error(ctx, "Cannot steal this much cash currently due to seclevel restrictions. Max currently sendable is " + to_string_with_enforced_variable_dp(max_stealable, 2));
+                return push_error(ctx, "Cannot steal due to seclevel limits, check #cash.expose({user:\"" + from + "\"})");
 
             if(old_cash > 0.1)
             {
@@ -714,8 +710,6 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
                 lim.data = clamp(lim.calculate_current_data(current_time) - fraction_removed, 0., 1.);
                 lim.time_at = current_time;
             }
-
-            msg += to_string_with_enforced_variable_dp(max_stealable - amount, 2) + " cash remaining";
         }
         #endif // SECLEVEL_FUNCTIONS
 
@@ -751,10 +745,7 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
 
     create_xfer_notif(ctx, from, to, amount);
 
-    if(msg == "")
-        push_success(ctx);
-    else
-        push_success(ctx, msg);
+    push_success(ctx);
 
     return 1;
 }
@@ -2167,7 +2158,7 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
 
         if(from_user.get_max_stealable_items(current_time, sys_from) < 1)
         {
-            return push_error(ctx, "User has had too many items stolen from them recently and can lose no more currently. Please wait");
+            return push_error(ctx, "Cannot steal item currently due to seclevel limits. Please wait");
         }
         else
         {
@@ -2178,7 +2169,7 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
     {
         if(from_user.get_max_sendable_items(current_time, sys_from, sys_to) < 1)
         {
-            return push_error(ctx, "User has transferred too many items and transfer no more at the moment. Please wait");
+            return push_error(ctx, "Cannot send item currently due to seclevel limits. Please wait");
         }
         else
         {
@@ -2840,7 +2831,7 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(max_stealable < (int)indices.size())
     {
-        return push_error(ctx, "You may only steal at most " + std::to_string(max_stealable) + " items");
+        return push_error(ctx, "Cannot steal due to seclevel limits, check #item.expose({user:\"" + from + "\"})");
     }
 
     #endif // SECLEVEL_FUNCTIONS
