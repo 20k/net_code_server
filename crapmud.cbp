@@ -120,9 +120,6 @@
 			<Add option="-lmingw32" />
 			<Add option="-lsfml-system" />
 			<Add option="-lfreetype" />
-			<Add option="-lmongoc-static-1.0" />
-			<Add option="-lbson-static-1.0" />
-			<Add option="-lDnsapi" />
 			<Add option="-lws2_32" />
 			<Add option="-lboost_system-mt" />
 			<Add option="-lmswsock" />
@@ -133,12 +130,8 @@
 			<Add option="-lcrypto" />
 			<Add option="-lssl" />
 			<Add option="-lbacktrace" />
-			<Add option="-licuuc" />
-			<Add option="-licuio" />
-			<Add option="-lBcrypt" />
-			<Add option="-lSecur32" />
-			<Add option="-lCrypt32" />
-			<Add option="-lz" />
+			<Add option="-lmongoc-1.0.dll" />
+			<Add option="-lbson-1.0.dll" />
 		</Linker>
 		<Unit filename="ascii_helpers.cpp" />
 		<Unit filename="ascii_helpers.hpp" />

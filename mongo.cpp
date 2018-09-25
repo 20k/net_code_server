@@ -14,6 +14,7 @@
 #include <thread>
 #include "stacktrace.hpp"
 #include "safe_thread.hpp"
+#include <libncclient/nc_util.hpp>
 
 thread_local int mongo_lock_proxy::thread_id_storage_hack = -2;
 thread_local int mongo_lock_proxy::print_performance_diagnostics = 0;
