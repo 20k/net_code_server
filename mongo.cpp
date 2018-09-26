@@ -968,6 +968,7 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
                 auto parsed = nlohmann::json::parse(results[i]);
 
                 remove_mongo_id(parsed);
+                remove_mongo_id(validated[i]);
 
                 if(validated[i] != parsed)
                 {
