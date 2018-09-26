@@ -2,7 +2,9 @@
 #include "mongo.hpp"
 #include <libncclient/nc_util.hpp>
 
-void auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth)
+///perform conversion of all auth tokens to base 64 so we can ditch mongos binary format
+
+bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth)
 {
     mongo_requester request;
     request.set_prop_bin("account_token", auth);
@@ -11,9 +13,9 @@ void auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth)
 
     if(found.size() != 1)
     {
-        printf("Invalid user auth token\n");
+        //printf("Invalid user auth token\n");
 
-        return;
+        return false;
     }
 
     for(mongo_requester& i : found)
@@ -31,7 +33,14 @@ void auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth)
             ///yeah kinda dumb
             users = no_ss_split(user_string, " ");
         }
+
+        if(i.has_prop("is_hex_encoding"))
+        {
+            is_hex_encoding = i.get_prop_as_integer("is_hex_encoding");
+        }
     }
+
+    return valid;
 }
 
 void auth::overwrite_in_db(mongo_lock_proxy& ctx)
@@ -57,6 +66,7 @@ void auth::overwrite_in_db(mongo_lock_proxy& ctx)
 
     mongo_requester to_set;
     to_set.set_prop("users", accum);
+    to_set.set_prop("is_hex_encoding", is_hex_encoding);
 
     request.update_in_db_if_exact(ctx, to_set);
 }
@@ -70,4 +80,12 @@ void auth::insert_user_exclusive(const std::string& username)
     }
 
     users.push_back(username);
+}
+
+void auth::hacky_binary_conversion_check()
+{
+    for_each_auth([](mongo_requester& req)
+                  {
+
+                  });
 }
