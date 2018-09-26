@@ -188,10 +188,7 @@ void for_each_item(T t)
     {
         mongo_lock_proxy ctx = get_global_mongo_user_items_context(-2);
 
-        mongo_requester req;
-        req.exists_check["item_id"] = 1;
-
-        auto all = req.fetch_from_db(ctx);
+        auto all = item::fetch_all_from_db(ctx);
 
         for(auto& i : all)
         {

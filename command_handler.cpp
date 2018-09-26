@@ -1776,13 +1776,9 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
             if(!script_inf.exists_in_db(mongo_ctx))
                 return make_error_col("Script not found");
 
-            mongo_requester request;
-            request.set_prop("item_id", script_inf.name);
+            script_inf.in_public = in_public_state;
 
-            mongo_requester to_set;
-            to_set.set_prop("in_public", in_public_state);
-
-            request.update_in_db_if_exact(mongo_ctx, to_set);
+            script_inf.overwrite_in_db(mongo_ctx);
         }
 
         return make_success_col("Success");
