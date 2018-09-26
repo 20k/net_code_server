@@ -341,6 +341,8 @@ void init_db_storage_backend()
     }
 
     std::cout << "imported from mongo\n";
+
+    db_storage_backend::run_tests();
 }
 
 void db_storage_backend::run_tests()

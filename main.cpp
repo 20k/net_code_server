@@ -261,8 +261,6 @@ int main()
     init_db_storage_backend();
     #endif // TESTING
 
-    db_storage_backend::run_tests();
-
     //test_json();
 
     //#define SERVER_FIRST_TIME_EVER_RELEASE
