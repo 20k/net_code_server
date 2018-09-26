@@ -49,6 +49,32 @@ bool matches(const nlohmann::json& data, const nlohmann::json& match)
     return true;
 }
 
+void updater(nlohmann::json& data, const nlohmann::json& update)
+{
+    if(update.count("$set") == 0)
+    {
+        printf("no $set in update\n");
+
+        return;
+
+        //throw std::runtime_error("You probably want a $set in your update query");
+    }
+
+    const nlohmann::json& to_set = update.at("$set");
+
+    if(!to_set.is_object())
+    {
+        printf("$set is not an object\n");
+
+        return;
+    }
+
+    for(auto& individual_data : to_set.get<nlohmann::json::object_t>())
+    {
+        data[individual_data.first] = individual_data.second;
+    }
+}
+
 struct db_storage
 {
     std::map<std::string, std::map<std::string, std::vector<nlohmann::json>>> all_data;
@@ -75,7 +101,15 @@ struct db_storage
 
         std::vector<nlohmann::json>& collection = all_data[db][coll];
 
+        for(nlohmann::json& js : collection)
+        {
+            if(matches(js, selector))
+            {
+                updater(js, update);
 
+                return;
+            }
+        }
     }
 };
 
@@ -209,6 +243,16 @@ void db_storage_backend::run_tests()
         select["random_key"] = exist;
 
         assert(matches(data, select));
+    }
+
+    {
+        nlohmann::json exist;
+        exist["$exists"] = "ruh roh";
+
+        nlohmann::json select;
+        select["cat"] = exist;
+
+        assert(!matches(data, select));
     }
 }
 
