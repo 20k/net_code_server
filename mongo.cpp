@@ -745,7 +745,7 @@ bson_t* mongo_interface::make_bson_from_json_err(const std::string& json, std::s
     return bson;
 }
 
-#define ONLY_VALIDATION
+//#define ONLY_VALIDATION
 
 void mongo_interface::insert_bson_1(const std::string& script_host, bson_t* bs)
 {
@@ -960,9 +960,9 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
                 continue;
             }
 
-            #ifdef ONLY_VALIDATION
+            //#ifdef ONLY_VALIDATION
             results.push_back(str);
-            #endif // ONLY_VALIDATION
+            //#endif // ONLY_VALIDATION
 
             bson_free(str);
         }
