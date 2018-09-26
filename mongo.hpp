@@ -251,11 +251,11 @@ struct mongo_requester
     std::map<std::string, int> sort_on;
 
     std::map<std::string, int> exists_check;
-    std::map<std::string, std::string> gt_than;
-    std::map<std::string, std::string> lt_than;
+    //std::map<std::string, std::string> gt_than;
+    //std::map<std::string, std::string> lt_than;
 
-    std::map<std::string, int32_t> gt_than_i;
-    std::map<std::string, int32_t> lt_than_i;
+    //std::map<std::string, int32_t> gt_than_i;
+    //std::map<std::string, int32_t> lt_than_i;
 
     int64_t limit = -1;
 

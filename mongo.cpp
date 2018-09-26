@@ -1286,6 +1286,7 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
     }
 
     //if(lt_than.size() != 0 && gt_than.size() != 0)
+    #if 0
     {
         bson_t child;
 
@@ -1332,6 +1333,7 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
             bson_append_document_end(to_find, &child);
         }
     }
+    #endif // 0
 
 
     bson_t* to_opt = nullptr;
