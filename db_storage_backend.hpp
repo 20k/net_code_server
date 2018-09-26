@@ -9,9 +9,13 @@ struct mongo_context;
 
 using database_type = std::string;
 
+void init_db_storage_backend();
+
 struct db_storage_backend
 {
     static void run_tests();
+
+    mongo_context* ctx = nullptr;
 
     database_type database;
     std::string collection;
@@ -37,7 +41,6 @@ struct db_storage_backend
     void remove_json(const std::string& script_host, const std::string& json);
 
     db_storage_backend(mongo_context* fctx);
-    ~db_storage_backend();
 };
 
 #endif // DB_STORAGE_BACKEND_HPP_INCLUDED
