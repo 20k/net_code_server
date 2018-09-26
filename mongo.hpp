@@ -155,24 +155,21 @@ struct mongo_interface
     bson_t* make_bson_from_json(const std::string& json) const;
     bson_t* make_bson_from_json_err(const std::string& json, std::string& err) const;
 
-    void insert_bson_1(const std::string& script_host, bson_t* bs);
     void insert_json_1(const std::string& script_host, const std::string& json);
-
-    std::string update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update);
     std::string update_json_many(const std::string& script_host, const std::string& selector, const std::string& update);
-
-    std::string update_bson_one(bson_t* selector, bson_t* update);
     std::string update_json_one(const std::string& selector, const std::string& update);
-
-    std::vector<std::string> find_bson(const std::string& script_host, bson_t* bs, bson_t* ps);
     std::vector<std::string> find_json(const std::string& script_host, const std::string& json, const std::string& proj);
-
-    void remove_bson(const std::string& script_host, bson_t* bs);
     void remove_json(const std::string& script_host, const std::string& json);
 
     //mongo_interface(mongo_interface&&);
     mongo_interface(mongo_context* fctx);
     ~mongo_interface();
+
+    void insert_bson_1(const std::string& script_host, bson_t* bs);
+    std::string update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update);
+    std::string update_bson_one(bson_t* selector, bson_t* update);
+    std::vector<std::string> find_bson(const std::string& script_host, bson_t* bs, bson_t* ps);
+    void remove_bson(const std::string& script_host, bson_t* bs);
 };
 
 struct mongo_shim
