@@ -167,92 +167,116 @@ void db_storage_backend::run_tests()
     data["cat"] = "dog";
     data["potato"] = "ketchup";
 
+    ///MATCHES TESTS
     {
-        nlohmann::json select;
-        select["cat"] = "dog";
+        {
+            nlohmann::json select;
+            select["cat"] = "dog";
 
-        assert(matches(data, select));
+            assert(matches(data, select));
+        }
+
+        {
+            nlohmann::json select;
+            select["potato"] = "ketchup1";
+
+            assert(!matches(data, select));
+        }
+
+        {
+            nlohmann::json select;
+            select["potato"] = "ketchu";
+
+            assert(!matches(data, select));
+        }
+
+        {
+            nlohmann::json select;
+            select["potato"] = "ketchup";
+
+            assert(matches(data, select));
+        }
+
+        {
+            nlohmann::json exist;
+            exist["$exists"] = true;
+
+            nlohmann::json select;
+            select["cat"] = exist;
+
+            assert(matches(data, select));
+        }
+
+        {
+            nlohmann::json exist;
+            exist["$exists"] = false;
+
+            nlohmann::json select;
+            select["cat"] = exist;
+
+            assert(!matches(data, select));
+        }
+
+        {
+            nlohmann::json exist;
+            exist["$exists"] = true;
+
+            nlohmann::json select;
+            select["random_key"] = exist;
+
+            assert(!matches(data, select));
+        }
+
+        {
+            nlohmann::json exist;
+            exist["$exists"] = 1;
+
+            nlohmann::json select;
+            select["cat"] = exist;
+
+            assert(matches(data, select));
+        }
+
+        {
+            nlohmann::json exist;
+            exist["$exists"] = 0;
+
+            nlohmann::json select;
+            select["random_key"] = exist;
+
+            assert(matches(data, select));
+        }
+
+        {
+            nlohmann::json exist;
+            exist["$exists"] = "ruh roh";
+
+            nlohmann::json select;
+            select["cat"] = exist;
+
+            assert(!matches(data, select));
+        }
     }
 
+    ///UPDATER TESTS
     {
-        nlohmann::json select;
-        select["potato"] = "ketchup1";
+        {
+            nlohmann::json data;
+            data["cat"] = "spooky";
+            data["poop"] = 12;
 
-        assert(!matches(data, select));
-    }
+            nlohmann::json to_update;
+            to_update["weee"] = 54;
+            to_update["cat"] = "boop";
 
-    {
-        nlohmann::json select;
-        select["potato"] = "ketchu";
+            nlohmann::json setter;
+            setter["$set"] = to_update;
 
-        assert(!matches(data, select));
-    }
+            updater(data, setter);
 
-    {
-        nlohmann::json select;
-        select["potato"] = "ketchup";
-
-        assert(matches(data, select));
-    }
-
-    {
-        nlohmann::json exist;
-        exist["$exists"] = true;
-
-        nlohmann::json select;
-        select["cat"] = exist;
-
-        assert(matches(data, select));
-    }
-
-    {
-        nlohmann::json exist;
-        exist["$exists"] = false;
-
-        nlohmann::json select;
-        select["cat"] = exist;
-
-        assert(!matches(data, select));
-    }
-
-    {
-        nlohmann::json exist;
-        exist["$exists"] = true;
-
-        nlohmann::json select;
-        select["random_key"] = exist;
-
-        assert(!matches(data, select));
-    }
-
-    {
-        nlohmann::json exist;
-        exist["$exists"] = 1;
-
-        nlohmann::json select;
-        select["cat"] = exist;
-
-        assert(matches(data, select));
-    }
-
-    {
-        nlohmann::json exist;
-        exist["$exists"] = 0;
-
-        nlohmann::json select;
-        select["random_key"] = exist;
-
-        assert(matches(data, select));
-    }
-
-    {
-        nlohmann::json exist;
-        exist["$exists"] = "ruh roh";
-
-        nlohmann::json select;
-        select["cat"] = exist;
-
-        assert(!matches(data, select));
+            assert(data["cat"] == "boop");
+            assert(data["weee"] == 54);
+        }
     }
 }
 
