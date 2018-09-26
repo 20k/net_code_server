@@ -1385,7 +1385,7 @@ duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(get_thread_id(ctx));
 
-    std::string auth_token = current_user.auth;
+    std::string auth_token = current_user.get_auth_token_binary();
 
     auth user_auth;
     user_auth.load_from_db(mongo_ctx, auth_token);

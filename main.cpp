@@ -37,6 +37,7 @@
 #include <secret/low_level_structure.hpp>
 #include <windows.h>
 #include "db_storage_backend.hpp"
+#include "auth.hpp"
 
 void debug_terminal()
 {
@@ -252,6 +253,9 @@ int main()
 
     test_hexbin();
     initialse_mongo_all();
+
+    auth::hacky_binary_conversion_check();
+    user::fix_auth_problem();
 
     #ifdef TESTING
     init_db_storage_backend();
@@ -766,7 +770,7 @@ int main()
 
         std::cout << "found" << std::endl;
 
-        std::string key = usr.auth;
+        std::string key = usr.get_auth_token_binary();
 
         write_all_bin(command + ".key", key);
 

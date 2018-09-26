@@ -35,6 +35,7 @@ struct command_handler_state
 
     std::map<int, bool> should_terminate_realtime;
 
+    std::string get_auth_hex();
     std::string get_auth();
     void set_auth(const std::string& str);
 

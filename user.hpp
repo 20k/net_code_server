@@ -37,7 +37,9 @@ struct user
 
     std::string name;
     double cash = 0;
-    std::string auth;
+    //std::string auth;
+    std::string old_binary_auth;
+    std::string auth_hex;
     std::string upgr_idx;
     std::string loaded_upgr_idx;
     #ifdef USE_LOCS
@@ -71,6 +73,9 @@ struct user
     bool exists(mongo_lock_proxy& ctx, const std::string& name_);
     bool load_from_db(mongo_lock_proxy& ctx, const std::string& name_);
     bool construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, const std::string& auth);
+
+    std::string get_auth_token_hex();
+    std::string get_auth_token_binary();
 
     static void delete_from_cache(const std::string& name_);
 
@@ -144,6 +149,8 @@ struct user
     virtual ~user(){}
 
     static void launch_pump_events_thread();
+
+    static void fix_auth_problem();
 
 protected:
     //space_pos_t local_pos;

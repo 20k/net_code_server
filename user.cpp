@@ -7,6 +7,7 @@
 #include "privileged_core_scripts.hpp"
 #include <secret/low_level_structure.hpp>
 #include "logging.hpp"
+#include "command_handler.hpp"
 
 using global_user_cache = global_generic_cache<user>;
 
@@ -77,6 +78,7 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     to_set.set_prop_array("owner_list", owner_list);
     to_set.set_prop_array("call_stack", call_stack);
     to_set.set_prop_array("users_i_have_access_to", users_i_have_access_to);
+    to_set.set_prop("auth_hex", auth_hex);
 
     for(int i=0; i < decltype(pos)::DIM; i++)
         to_set.set_prop("vector_pos" + std::to_string(i), pos.v[i]);
@@ -140,7 +142,9 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
         if(req.has_prop("cash"))
             cash = req.get_prop_as_double("cash");
         if(req.has_prop("auth"))
-            auth = req.get_prop("auth");
+            old_binary_auth = req.get_prop("auth");
+        if(req.has_prop("auth_hex"))
+            auth_hex = req.get_prop("auth_hex");
         if(req.has_prop("upgr_idx"))
             upgr_idx = req.get_prop("upgr_idx");
         if(req.has_prop("loaded_upgr_idx"))
@@ -260,6 +264,7 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
     mongo_requester request;
     request.set_prop("name", name);
     request.set_prop_bin("auth", auth);
+    request.set_prop("auth_hex", binary_to_hex(auth));
     request.set_prop("upgr_idx", "");
     request.set_prop("loaded_upgr_idx", "");
     #ifdef USE_LOCS
@@ -285,6 +290,16 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
     //cache.overwrite_in_cache(name, *this);
 
     return true;
+}
+
+std::string user::get_auth_token_hex()
+{
+    return auth_hex;
+}
+
+std::string user::get_auth_token_binary()
+{
+    return hex_to_binary(auth_hex);
 }
 
 void user::delete_from_cache(const std::string& name_)
@@ -785,7 +800,7 @@ int user::get_default_network_links(int thread_id)
 
 bool user::is_npc() const
 {
-    return auth == "";
+    return auth_hex == "";
 }
 
 std::string user::fetch_sector()
@@ -1149,6 +1164,18 @@ void event_pumper()
 void user::launch_pump_events_thread()
 {
     std::thread(event_pumper).detach();
+}
+
+void user::fix_auth_problem()
+{
+    for_each_user([](user& usr)
+                  {
+                        usr.auth_hex = binary_to_hex(usr.old_binary_auth);
+
+                        mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+                        usr.overwrite_user_in_db(ctx);
+                  });
 }
 
 std::vector<user> load_users(const std::vector<std::string>& names, int lock_id)

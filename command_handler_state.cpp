@@ -1,4 +1,12 @@
 #include "command_handler_state.hpp"
+#include "command_handler.hpp"
+
+std::string command_handler_state::get_auth_hex()
+{
+    safe_lock_guard guard(command_lock);
+
+    return binary_to_hex(auth);
+}
 
 std::string command_handler_state::get_auth()
 {

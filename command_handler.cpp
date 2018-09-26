@@ -73,10 +73,10 @@ struct cleanup_auth_at_exit
 {
     std::mutex& to_lock;
     std::map<std::string, int>& to_cleanup;
-    std::string& auth;
+    std::string auth;
     bool blocked = true;
 
-    cleanup_auth_at_exit(std::mutex& lk, std::map<std::string, int>& cleanup, std::string& ath) : to_lock(lk), to_cleanup(cleanup), auth(ath) {}
+    cleanup_auth_at_exit(std::mutex& lk, std::map<std::string, int>& cleanup, const std::string& ath) : to_lock(lk), to_cleanup(cleanup), auth(ath) {}
 
     void unblock()
     {
@@ -426,14 +426,14 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
             if(!force_exec)
             {
-                if(auth_guard[usr.auth] == 1)
+                if(auth_guard[usr.get_auth_token_hex()] == 1)
                     return make_error_col("Cannot run two scripts at once in different contexts!");
 
-                auth_guard[usr.auth] = 1;
+                auth_guard[usr.get_auth_token_hex()] = 1;
             }
         }
 
-        cleanup_auth_at_exit cleanup(id_mut, auth_guard, usr.auth);
+        cleanup_auth_at_exit cleanup(id_mut, auth_guard, usr.get_auth_token_hex());
 
         if(force_exec)
         {
@@ -1333,7 +1333,7 @@ std::string delete_user(command_handler_state& state, const std::string& str, bo
             user to_delete;
             to_delete.load_from_db(ctx, name);
 
-            if(to_delete.auth != auth_token)
+            if(to_delete.auth_hex != auth_token)
                 return "Invalid Auth";
 
             if(SHOULD_RATELIMIT(auth_token, DELETE_USER))
@@ -1481,7 +1481,7 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
             if(should_set)
             {
-                if(fnd.auth != all_shared->state.get_auth())
+                if(fnd.get_auth_token_hex() != all_shared->state.get_auth_hex())
                 {
                     return make_error_col("Incorrect Auth, someone else has registered this account or you are using a different pc and key.key file");
                 }
@@ -1784,6 +1784,7 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
         mongo_requester request;
         request.set_prop_bin("account_token", to_ret);
+        request.set_prop("account_token_hex", binary_to_hex(to_ret));
 
         all_shared->state.set_auth(to_ret);
 
@@ -2305,7 +2306,7 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
             return "command Invalid User";
         }
 
-        if(found.auth != current_auth)
+        if(found.get_auth_token_binary() != current_auth)
         {
             all_shared->state.set_user_name("");
 
