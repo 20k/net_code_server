@@ -681,6 +681,9 @@ bool mongo_interface::contains_banned_query(bson_t* bs) const
 
 void mongo_interface::change_collection_unsafe(const std::string& coll, bool force_change)
 {
+    if(enable_testing_backend)
+        testing_backend.change_collection_unsafe(coll, force_change);
+
     if(ctx->is_fixed && !force_change)
     {
         std::cout << "warning, collection should not be changed" << std::endl;
@@ -748,7 +751,8 @@ void mongo_interface::insert_bson_1(const std::string& script_host, bson_t* bs)
         return;
     }
 
-    testing_backend.insert_one(bson_to_json(bs));
+    if(enable_testing_backend)
+        testing_backend.insert_one(bson_to_json(bs));
 
     bson_error_t error;
 
@@ -785,7 +789,8 @@ std::string mongo_interface::update_bson_many(const std::string& script_host, bs
         return "Contains banned query";
     }
 
-    testing_backend.update_many(bson_to_json(selector), bson_to_json(update));
+    if(enable_testing_backend)
+        testing_backend.update_many(bson_to_json(selector), bson_to_json(update));
 
     bson_error_t error;
 
@@ -838,7 +843,8 @@ std::string mongo_interface::update_bson_one(bson_t* selector, bson_t* update)
         return "Contains banned query";
     }
 
-    testing_backend.update_one(bson_to_json(selector), bson_to_json(update));
+    if(enable_testing_backend)
+        testing_backend.update_one(bson_to_json(selector), bson_to_json(update));
 
     bson_error_t error;
 
@@ -939,19 +945,25 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
     }
 
     #ifdef TESTING
-    std::vector<nlohmann::json> validated = testing_backend.find_many(bson_to_json(bs), bson_to_json(ps));
+    if(enable_testing_backend)
+    {
+        std::vector<nlohmann::json> validated = testing_backend.find_many(bson_to_json(bs), bson_to_json(ps));
 
-    if(validated.size() != results.size())
-    {
-        std::cout << "invalid validated size\n";
-    }
-    else
-    {
-        for(int i=0; i < (int)validated.size(); i++)
+        if(validated.size() != results.size())
         {
-            if(validated[i] != nlohmann::json::parse(results[i]))
+            //std::cout << "back " << get_stacktrace() << std::endl;
+
+            std::cout << "invalid validated size " << validated.size() << " " << results.size() << std::endl;
+            std::cout << "bs " << bson_to_json(bs).dump() + " ps " + bson_to_json(ps).dump() << std::endl;
+        }
+        else
+        {
+            for(int i=0; i < (int)validated.size(); i++)
             {
-                std::cout << "bad find, json " << validated[i] << " real db " << results[i] << std::endl;
+                if(validated[i] != nlohmann::json::parse(results[i]))
+                {
+                    std::cout << "bad find, json " << validated[i] << " real db " << results[i] << std::endl;
+                }
             }
         }
     }
@@ -1010,7 +1022,8 @@ void mongo_interface::remove_bson(const std::string& script_host, bson_t* bs)
     if(bs == nullptr)
         return;
 
-    testing_backend.remove_many(bson_to_json(bs));
+    if(enable_testing_backend)
+        testing_backend.remove_many(bson_to_json(bs));
 
     mongoc_collection_delete_many(collection, bs, nullptr, nullptr, nullptr);
 }

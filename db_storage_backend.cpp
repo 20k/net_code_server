@@ -241,6 +241,7 @@ void init_db_storage_backend()
         mongo_context* ctx = mongo_databases[i];
 
         mongo_nolock_proxy mongo_ctx = get_global_mongo_context((mongo_database_type)i, -2);
+        mongo_ctx.ctx.enable_testing_backend = false;
 
         for(const std::string& collection : ctx->all_collections)
         {
