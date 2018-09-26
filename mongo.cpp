@@ -392,7 +392,7 @@ mongo_context::mongo_context(mongo_database_type type)
 
     last_db = db;
 
-    //database = mongoc_client_get_database(client, db.c_str());
+    database = mongoc_client_get_database(client, db.c_str());
 
     /*if(type == mongo_database_type::USER_PROPERTIES)
     {
@@ -446,6 +446,26 @@ mongo_context::mongo_context(mongo_database_type type)
         default_collection = "all_networks";
         is_fixed = true;
     }
+
+    char** strv;
+
+    if((strv = mongoc_database_get_collection_names_with_opts(database, nullptr, nullptr)))
+    {
+        for(int i = 0; strv[i]; i++)
+        {
+            std::string str(strv[i]);
+
+            all_collections.push_back(str);
+        }
+
+        bson_strfreev (strv);
+    }
+    else
+    {
+        assert(false);
+    }
+
+    mongoc_database_destroy(database);
 }
 
 void mongo_context::map_lock_for()

@@ -12,6 +12,7 @@
 #include "mongoc_fwd.hpp"
 
 #include <json/json.hpp>
+#include "db_storage_backend.hpp"
 
 //#define DEADLOCK_DETECTION
 
@@ -66,6 +67,8 @@ struct mongo_context
     std::string last_db = "";
 
     std::string default_collection = "";
+
+    std::vector<std::string> all_collections;
 
     ///thread safety of below map
     ///make timed
