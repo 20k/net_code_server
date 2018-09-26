@@ -995,7 +995,7 @@ void mongo_interface::remove_json(const std::string& script_host, const std::str
     bson_destroy(bs);
 }
 
-mongo_interface::mongo_interface(mongo_context* fctx)
+mongo_interface::mongo_interface(mongo_context* fctx) : testing_backend(fctx)
 {
     ctx = fctx;
     client = fctx->request_client();

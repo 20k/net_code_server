@@ -21,7 +21,7 @@ struct db_storage_backend
     std::string collection;
 
     static
-    bool contains_banned_query(nlohmann::json& js);
+    bool contains_banned_query(const nlohmann::json& js);
 
     void change_collection_unsafe(const std::string& coll, bool force_change = false);
 

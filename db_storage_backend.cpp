@@ -188,16 +188,16 @@ struct db_storage
     std::vector<nlohmann::json> find_many(const std::string& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& projector)
     {
         if(db_storage_backend::contains_banned_query(selector))
-            return;
+            return std::vector<nlohmann::json>();
 
         if(db_storage_backend::contains_banned_query(projector))
-            return;
+            return std::vector<nlohmann::json>();
 
         std::lock_guard guard(db_lock);
 
         std::vector<nlohmann::json> ret;
 
-        std::vector<nlohmann::json>& collection = all_data[db][coll];
+        const std::vector<nlohmann::json>& collection = all_data[db][coll];
 
         for(const nlohmann::json& js : collection)
         {
@@ -458,7 +458,7 @@ void db_storage_backend::run_tests()
     }
 }
 
-bool db_storage_backend::contains_banned_query(nlohmann::json& js)
+bool db_storage_backend::contains_banned_query(const nlohmann::json& js)
 {
     std::vector<std::string> banned
     {
