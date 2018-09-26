@@ -466,6 +466,7 @@ mongo_context::mongo_context(mongo_database_type type)
     }
 
     mongoc_database_destroy(database);
+    database = nullptr;
 }
 
 void mongo_context::map_lock_for()
