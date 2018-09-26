@@ -1173,6 +1173,7 @@ void user::fix_auth_problem()
                         usr.auth_hex = binary_to_hex(usr.old_binary_auth);
 
                         mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
+                        ctx.ctx.enable_testing_backend = false;
 
                         usr.overwrite_user_in_db(ctx);
                   });
