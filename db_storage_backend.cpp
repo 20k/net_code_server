@@ -147,7 +147,9 @@ struct db_storage
 
     //std::mutex db_lock;
 
-    std::map<database_type, database> all_data;
+    //std::map<database_type, database> all_data;
+
+    std::array<database, (int)mongo_database_type::MONGO_COUNT> all_data;
 
     /*std::vector<nlohmann::json>& get_collection(const std::string& db, const std::string& coll)
     {
