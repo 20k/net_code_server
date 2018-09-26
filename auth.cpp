@@ -1,6 +1,7 @@
 #include "auth.hpp"
 #include "mongo.hpp"
 #include <libncclient/nc_util.hpp>
+#include "command_handler.hpp"
 
 ///perform conversion of all auth tokens to base 64 so we can ditch mongos binary format
 
@@ -86,6 +87,16 @@ void auth::hacky_binary_conversion_check()
 {
     for_each_auth([](mongo_requester& req)
                   {
+                        std::string binary_token = req.get_prop("account_token");
 
+                        std::string hex_token = binary_to_hex(binary_token);
+
+                        auto cp = req;
+
+                        cp.set_prop("account_token_hex", hex_token);
+
+                        mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
+
+                        req.update_in_db_if_exact(ctx, cp);
                   });
 }
