@@ -431,6 +431,24 @@ struct db_interfaceable
         }
     }
 
+    static
+    void remove_from_db(mongo_lock_proxy& ctx, const std::string& id)
+    {
+        std::string static_string;
+
+        stringify_params(static_string, name...);
+
+        json j;
+        j[static_string] = id;
+
+        ctx->remove_json(ctx->last_collection, j.dump());
+
+        if(cacheable)
+        {
+            caches::this_cache<concrete>.delete_from_cache(id);
+        }
+    }
+
     bool exists(mongo_lock_proxy& ctx, const std::string& id)
     {
         if(cacheable && caches::this_cache<concrete>.exists_in_cache(id))

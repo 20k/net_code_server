@@ -1739,10 +1739,7 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
             if(!script_inf.exists_in_db(mongo_ctx))
                 return make_error_col("Script not found");
 
-            mongo_requester request;
-            request.set_prop("item_id", script_inf.name);
-
-            request.remove_all_from_db(mongo_ctx);
+            item::remove_from_db(mongo_ctx, script_inf.name);
         }
 
         return make_success_col("Script removed from server");
