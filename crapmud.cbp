@@ -40,7 +40,6 @@
 					<Add option="-O3" />
 					<Add option="-g" />
 					<Add option="-march=nehalem" />
-					<Add option="-pie -fPIE" />
 					<Add option="-DEXTERN_IP" />
 				</Compiler>
 				<ExtraCommands>
@@ -177,6 +176,8 @@
 		<Unit filename="command_handler_state.hpp" />
 		<Unit filename="db_interfaceable.cpp" />
 		<Unit filename="db_interfaceable.hpp" />
+		<Unit filename="db_storage_backend.cpp" />
+		<Unit filename="db_storage_backend.hpp" />
 		<Unit filename="deps/json/json.hpp">
 			<Option compile="1" />
 		</Unit>
