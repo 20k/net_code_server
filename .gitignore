@@ -1,2 +1,4 @@
 /Deployed_Infrastructure/*.dll
 *.o
+*.exe
+/Deployed_Infrastructure_old
