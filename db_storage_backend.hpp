@@ -11,9 +11,12 @@ using database_type = std::string;
 
 struct db_storage_backend
 {
+    static void run_tests();
+
     database_type database;
     std::string collection;
 
+    static
     bool contains_banned_query(nlohmann::json& js);
 
     void change_collection_unsafe(const std::string& coll, bool force_change = false);

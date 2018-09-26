@@ -36,6 +36,7 @@
 #include <secret/secret.hpp>
 #include <secret/low_level_structure.hpp>
 #include <windows.h>
+#include "db_storage_backend.hpp"
 
 void debug_terminal()
 {
@@ -251,6 +252,9 @@ int main()
 
     test_hexbin();
     initialse_mongo_all();
+
+    db_storage_backend::run_tests();
+
     //test_json();
 
     //#define SERVER_FIRST_TIME_EVER_RELEASE
