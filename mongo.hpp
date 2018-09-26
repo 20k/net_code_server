@@ -142,6 +142,8 @@ struct mongo_interface
     mongoc_database_t* database = nullptr;
     mongoc_collection_t* collection = nullptr;
 
+    db_storage_backend testing_backend;
+
     std::string last_collection;
 
     bool contains_banned_query(bson_t* bs) const;

@@ -133,6 +133,9 @@ struct db_storage
 
     void insert_1(const std::string& db, const std::string& coll, const nlohmann::json& js)
     {
+        if(db_storage_backend::contains_banned_query(js))
+            return;
+
         std::lock_guard guard(db_lock);
 
         all_data[db][coll].push_back(js);
@@ -140,6 +143,12 @@ struct db_storage
 
     void update_one(const std::string& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
     {
+        if(db_storage_backend::contains_banned_query(selector))
+            return;
+
+        if(db_storage_backend::contains_banned_query(update))
+            return;
+
         std::lock_guard guard(db_lock);
 
         std::vector<nlohmann::json>& collection = all_data[db][coll];
@@ -157,6 +166,12 @@ struct db_storage
 
     void update_many(const std::string& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
     {
+        if(db_storage_backend::contains_banned_query(selector))
+            return;
+
+        if(db_storage_backend::contains_banned_query(update))
+            return;
+
         std::lock_guard guard(db_lock);
 
         std::vector<nlohmann::json>& collection = all_data[db][coll];
@@ -172,6 +187,12 @@ struct db_storage
 
     std::vector<nlohmann::json> find_many(const std::string& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& projector)
     {
+        if(db_storage_backend::contains_banned_query(selector))
+            return;
+
+        if(db_storage_backend::contains_banned_query(projector))
+            return;
+
         std::lock_guard guard(db_lock);
 
         std::vector<nlohmann::json> ret;
@@ -193,6 +214,9 @@ struct db_storage
 
     void remove_many(const std::string& db, const std::string& coll, const nlohmann::json& selector)
     {
+        if(db_storage_backend::contains_banned_query(selector))
+            return;
+
         std::lock_guard guard(db_lock);
 
         std::vector<nlohmann::json>& collection = all_data[db][coll];
