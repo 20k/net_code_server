@@ -1007,8 +1007,6 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
         #endif // ONLY_VALIDATION
     }
 
-    //
-
     return results;
 }
 

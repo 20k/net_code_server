@@ -236,10 +236,10 @@ void init_db_storage_backend()
 {
     ///importa data from mongo
 
-    /*for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
+    for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
     {
         get_db_storage().all_data[mongo_databases[idx]->last_db];
-    }*/
+    }
 
     for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
     {
