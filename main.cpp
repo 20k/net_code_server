@@ -258,7 +258,7 @@ int main()
     user::fix_auth_problem();
 
     #ifdef TESTING
-    init_db_storage_backend();
+    //init_db_storage_backend();
     #endif // TESTING
 
     //test_json();
