@@ -965,7 +965,11 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
         {
             for(int i=0; i < (int)validated.size(); i++)
             {
-                if(validated[i] != nlohmann::json::parse(results[i]))
+                auto parsed = nlohmann::json::parse(results[i]);
+
+                remove_mongo_id(parsed);
+
+                if(validated[i] != parsed)
                 {
                     std::cout << "bad find, json " << validated[i] << " real db " << results[i] << std::endl;
                 }
