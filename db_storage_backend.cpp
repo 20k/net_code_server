@@ -190,6 +190,15 @@ struct db_storage
 
         return ret;
     }
+
+    void remove_many(const std::string& db, const std::string& coll, const nlohmann::json& selector)
+    {
+        std::lock_guard guard(db_lock);
+
+        std::vector<nlohmann::json>& collection = all_data[db][coll];
+
+        collection.erase( std::remove_if(collection.begin(), collection.end(), [&](const nlohmann::json& js){return matches(js, selector);}), collection.end() );
+    }
 };
 
 db_storage& get_db_storage()
