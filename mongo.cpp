@@ -21,6 +21,11 @@
 
 nlohmann::json bson_to_json(bson_t* bs)
 {
+    if(bs == nullptr)
+    {
+        return nlohmann::json();
+    }
+
     size_t len = 0;
     char* str = bson_as_canonical_extended_json(bs, &len);
 
