@@ -10,6 +10,9 @@
 #include "command_handler.hpp"
 #include <secret/npc_manager.hpp>
 
+
+///THESE ARE NOW INCORRECT DUE TO BAD AUTH USAGE
+
 //#define ONE_TIME_MANHANDLE
 #ifdef ONE_TIME_MANHANDLE
 void manhandle_away_critical_users()

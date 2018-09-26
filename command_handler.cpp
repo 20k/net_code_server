@@ -1827,15 +1827,6 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
         {
             mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
 
-            /*mongo_requester request;
-            request.set_prop_bin("account_token", auth_token);
-
-            std::cout << "auth len " << auth_token.size() << std::endl;
-
-            if(request.fetch_from_db(ctx).size() == 0)
-                return make_error_col("Auth Failed, have you run \"register client\" at least once?");*/
-
-
             auth user_auth;
 
             if(!user_auth.load_from_db(ctx, auth_token))
