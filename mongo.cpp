@@ -19,6 +19,16 @@
 //thread_local int mongo_lock_proxy::thread_id_storage_hack = -2;
 //thread_local int mongo_lock_proxy::print_performance_diagnostics = 0;
 
+nlohmann::json bson_to_json(bson_t* bs)
+{
+    size_t len = 0;
+    char* str = bson_as_canonical_extended_json(bs, &len);
+
+    std::string ret(str, len);
+
+    return nlohmann::json::parse(ret);
+}
+
 std::string bson_iter_binary_std_string(bson_iter_t* iter)
 {
     uint32_t len = 0;
@@ -727,7 +737,7 @@ bson_t* mongo_interface::make_bson_from_json_err(const std::string& json, std::s
     return bson;
 }
 
-void mongo_interface::insert_bson_1(const std::string& script_host, bson_t* bs) const
+void mongo_interface::insert_bson_1(const std::string& script_host, bson_t* bs)
 {
     if(script_host != last_collection)
         return;
@@ -738,7 +748,7 @@ void mongo_interface::insert_bson_1(const std::string& script_host, bson_t* bs) 
         return;
     }
 
-
+    testing_backend.insert_one(bson_to_json(bs));
 
     bson_error_t error;
 
@@ -749,7 +759,7 @@ void mongo_interface::insert_bson_1(const std::string& script_host, bson_t* bs) 
     }
 }
 
-void mongo_interface::insert_json_1(const std::string& script_host, const std::string& json) const
+void mongo_interface::insert_json_1(const std::string& script_host, const std::string& json)
 {
     if(script_host != last_collection)
         return;
@@ -764,7 +774,7 @@ void mongo_interface::insert_json_1(const std::string& script_host, const std::s
     bson_destroy(bs);
 }
 
-std::string mongo_interface::update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update) const
+std::string mongo_interface::update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update)
 {
     if(selector == nullptr || update == nullptr)
         return "Null pointer";
@@ -774,6 +784,8 @@ std::string mongo_interface::update_bson_many(const std::string& script_host, bs
         //printf("banned\n");
         return "Contains banned query";
     }
+
+    testing_backend.update_many(bson_to_json(selector), bson_to_json(update));
 
     bson_error_t error;
 
@@ -787,7 +799,7 @@ std::string mongo_interface::update_bson_many(const std::string& script_host, bs
     return "";
 }
 
-std::string mongo_interface::update_json_many(const std::string& script_host, const std::string& selector, const std::string& update) const
+std::string mongo_interface::update_json_many(const std::string& script_host, const std::string& selector, const std::string& update)
 {
     if(script_host != last_collection)
         return "Wrong collection, this is an internal error";
@@ -815,7 +827,7 @@ std::string mongo_interface::update_json_many(const std::string& script_host, co
     return update_err;
 }
 
-std::string mongo_interface::update_bson_one(bson_t* selector, bson_t* update) const
+std::string mongo_interface::update_bson_one(bson_t* selector, bson_t* update)
 {
     if(selector == nullptr || update == nullptr)
         return "Null pointer";
@@ -825,6 +837,8 @@ std::string mongo_interface::update_bson_one(bson_t* selector, bson_t* update) c
         //printf("banned\n");
         return "Contains banned query";
     }
+
+    testing_backend.update_one(bson_to_json(selector), bson_to_json(update));
 
     bson_error_t error;
 
@@ -839,7 +853,7 @@ std::string mongo_interface::update_bson_one(bson_t* selector, bson_t* update) c
 }
 
 
-std::string mongo_interface::update_json_one(const std::string& selector, const std::string& update) const
+std::string mongo_interface::update_json_one(const std::string& selector, const std::string& update)
 {
     std::string err;
 
@@ -924,6 +938,26 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
         bson_free(str);
     }
 
+    #ifdef TESTING
+    std::vector<nlohmann::json> validated = testing_backend.find_many(bson_to_json(bs), bson_to_json(ps));
+
+    if(validated.size() != results.size())
+    {
+        std::cout << "invalid validated size\n";
+    }
+    else
+    {
+        for(int i=0; i < (int)validated.size(); i++)
+        {
+            if(validated[i] != nlohmann::json::parse(results[i]))
+            {
+                std::cout << "bad find, json " << validated[i] << " real db " << results[i] << std::endl;
+            }
+        }
+    }
+
+    #endif // TESTING
+
     //if(skipped != 0)
     //    std::cout << "skipped " << skipped << std::endl;
 
@@ -975,6 +1009,8 @@ void mongo_interface::remove_bson(const std::string& script_host, bson_t* bs)
 
     if(bs == nullptr)
         return;
+
+    testing_backend.remove_many(bson_to_json(bs));
 
     mongoc_collection_delete_many(collection, bs, nullptr, nullptr, nullptr);
 }
