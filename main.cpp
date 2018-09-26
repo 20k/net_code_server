@@ -252,7 +252,10 @@ int main()
 
     test_hexbin();
     initialse_mongo_all();
+
+    #ifdef TESTING
     init_db_storage_backend();
+    #endif // TESTING
 
     db_storage_backend::run_tests();
 

@@ -210,7 +210,38 @@ db_storage& get_db_storage()
 
 void init_db_storage_backend()
 {
+    ///importa data from mongo
 
+    for(int i=0; i < (int)mongo_database_type::MONGO_COUNT; i++)
+    {
+        mongo_context* ctx = mongo_databases[i];
+
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_context((mongo_database_type)i, -2);
+
+        for(const std::string& collection : ctx->all_collections)
+        {
+            mongo_ctx.change_collection(collection, true);
+
+            std::vector<std::string> all = mongo_ctx->find_json(mongo_ctx->last_collection, "{}", "{}");
+
+            std::vector<nlohmann::json> js;
+
+            for(auto& i : all)
+            {
+                nlohmann::json found = nlohmann::json::parse(i);
+
+                js.push_back(found);
+            }
+
+            db_storage& store = get_db_storage();
+
+            std::lock_guard guard(store.db_lock);
+
+            store.all_data[ctx->last_db][collection] = js;
+        }
+    }
+
+    std::cout << "imported from mongo\n";
 }
 
 void db_storage_backend::run_tests()
