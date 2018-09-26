@@ -128,6 +128,88 @@ void db_storage_backend::run_tests()
         assert(backend.collection == "i20k");
         assert(backend.database == "user_properties");
     }
+
+    nlohmann::json data;
+    data["cat"] = "dog";
+    data["potato"] = "ketchup";
+
+    {
+        nlohmann::json select;
+        select["cat"] = "dog";
+
+        assert(matches(data, select));
+    }
+
+    {
+        nlohmann::json select;
+        select["potato"] = "ketchup1";
+
+        assert(!matches(data, select));
+    }
+
+    {
+        nlohmann::json select;
+        select["potato"] = "ketchu";
+
+        assert(!matches(data, select));
+    }
+
+    {
+        nlohmann::json select;
+        select["potato"] = "ketchup";
+
+        assert(matches(data, select));
+    }
+
+    {
+        nlohmann::json exist;
+        exist["$exists"] = true;
+
+        nlohmann::json select;
+        select["cat"] = exist;
+
+        assert(matches(data, select));
+    }
+
+    {
+        nlohmann::json exist;
+        exist["$exists"] = false;
+
+        nlohmann::json select;
+        select["cat"] = exist;
+
+        assert(!matches(data, select));
+    }
+
+    {
+        nlohmann::json exist;
+        exist["$exists"] = true;
+
+        nlohmann::json select;
+        select["random_key"] = exist;
+
+        assert(!matches(data, select));
+    }
+
+    {
+        nlohmann::json exist;
+        exist["$exists"] = 1;
+
+        nlohmann::json select;
+        select["cat"] = exist;
+
+        assert(matches(data, select));
+    }
+
+    {
+        nlohmann::json exist;
+        exist["$exists"] = 0;
+
+        nlohmann::json select;
+        select["random_key"] = exist;
+
+        assert(matches(data, select));
+    }
 }
 
 /*void mongo_interface::change_collection_unsafe(const std::string& coll, bool force_change)
