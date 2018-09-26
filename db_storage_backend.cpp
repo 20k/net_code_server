@@ -75,6 +75,49 @@ void updater(nlohmann::json& data, const nlohmann::json& update)
     }
 }
 
+nlohmann::json project(const nlohmann::json& data, const nlohmann::json& proj)
+{
+    if(!proj.is_object())
+        return data;
+
+    int num = 0;
+
+    for(auto& i __attribute__((unused)) : proj.get<nlohmann::json::object_t>())
+    {
+        num++;
+    }
+
+    if(num == 0)
+        return data;
+
+    nlohmann::json ret;
+
+    for(auto& individual_data : proj.get<nlohmann::json::object_t>())
+    {
+        bool truthy = false;
+
+        if(individual_data.second.is_boolean())
+        {
+            truthy = (bool)individual_data.second;
+        }
+
+        if(individual_data.second.is_number())
+        {
+            truthy = (int)individual_data.second;
+        }
+
+        if(data.count(individual_data.first) == 0)
+            continue;
+
+        if(truthy)
+        {
+            ret[individual_data.first] = data.at(individual_data.first);
+        }
+    }
+
+    return ret;
+}
+
 struct db_storage
 {
     std::map<std::string, std::map<std::string, std::vector<nlohmann::json>>> all_data;
@@ -110,6 +153,42 @@ struct db_storage
                 return;
             }
         }
+    }
+
+    void update_many(const std::string& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
+    {
+        std::lock_guard guard(db_lock);
+
+        std::vector<nlohmann::json>& collection = all_data[db][coll];
+
+        for(nlohmann::json& js : collection)
+        {
+            if(matches(js, selector))
+            {
+                updater(js, update);
+            }
+        }
+    }
+
+    std::vector<nlohmann::json> find_many(const std::string& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& projector)
+    {
+        std::lock_guard guard(db_lock);
+
+        std::vector<nlohmann::json> ret;
+
+        std::vector<nlohmann::json>& collection = all_data[db][coll];
+
+        for(const nlohmann::json& js : collection)
+        {
+            if(matches(js, selector))
+            {
+                auto res = project(js, projector);
+
+                ret.push_back(res);
+            }
+        }
+
+        return ret;
     }
 };
 
@@ -276,6 +355,41 @@ void db_storage_backend::run_tests()
 
             assert(data["cat"] == "boop");
             assert(data["weee"] == 54);
+            assert(data["poop"] == 12);
+        }
+    }
+
+    ///PROJECTION TESTS
+    {
+        {
+            nlohmann::json data;
+            data["arg_1"] = 12;
+            data["arg_2"] = "hello there";
+            data["arg_3"] = "asdfsdfxvbxcvlbkj";
+
+            nlohmann::json proj;
+            proj["arg_1"] = 1;
+            proj["arg_2"] = 0;
+
+            auto found = project(data, proj);
+
+            assert(found.count("arg_1") == 1);
+            assert(found["arg_1"] == 12);
+            assert(found.count("arg_2") == 0);
+            assert(found.count("arg_3") == 0);
+        }
+
+        {
+            nlohmann::json data;
+            data["arg_1"] = 12;
+            data["arg_2"] = "hello there";
+            data["arg_3"] = "asdfsdfxvbxcvlbkj";
+
+            nlohmann::json proj = "{}";
+
+            auto post_proj = project(data, proj);
+
+            assert(post_proj == data);
         }
     }
 }
