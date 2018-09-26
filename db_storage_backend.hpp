@@ -25,7 +25,7 @@ struct db_storage_backend
 
     void change_collection_unsafe(const std::string& coll, bool force_change = false);
 
-    void insert_bson_1(const std::string& script_host, bson_t* bs) const;
+    /*void insert_bson_1(const std::string& script_host, bson_t* bs) const;
     void insert_json_1(const std::string& script_host, const std::string& json) const;
 
     std::string update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update) const;
@@ -38,7 +38,13 @@ struct db_storage_backend
     std::vector<std::string> find_json(const std::string& script_host, const std::string& json, const std::string& proj);
 
     void remove_bson(const std::string& script_host, bson_t* bs);
-    void remove_json(const std::string& script_host, const std::string& json);
+    void remove_json(const std::string& script_host, const std::string& json);*/
+
+    void insert_one(const nlohmann::json& json);
+    void update_one(const nlohmann::json& selector, const nlohmann::json& update);
+    void update_many(const nlohmann::json& selector, const nlohmann::json& update);
+    std::vector<nlohmann::json> find_many(const nlohmann::json& selector, const nlohmann::json& projector);
+    void remove_many(const nlohmann::json& selector);
 
     db_storage_backend(mongo_context* fctx);
 };

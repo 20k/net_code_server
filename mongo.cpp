@@ -738,6 +738,8 @@ void mongo_interface::insert_bson_1(const std::string& script_host, bson_t* bs) 
         return;
     }
 
+
+
     bson_error_t error;
 
     if(!mongoc_collection_insert_one(collection, bs, NULL, NULL, &error))

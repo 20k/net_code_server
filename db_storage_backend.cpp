@@ -131,7 +131,7 @@ struct db_storage
         return all_data[db][coll];
     }
 
-    void insert_1(const std::string& db, const std::string& coll, const nlohmann::json& js)
+    void insert_one(const std::string& db, const std::string& coll, const nlohmann::json& js)
     {
         if(db_storage_backend::contains_banned_query(js))
             return;
@@ -511,3 +511,29 @@ db_storage_backend::db_storage_backend(mongo_context* fctx)
     ctx = fctx;
     database = fctx->last_db;
 }
+
+void db_storage_backend::insert_one(const nlohmann::json& json)
+{
+    get_db_storage().insert_one(database, collection, json);
+}
+
+void db_storage_backend::update_one(const nlohmann::json& selector, const nlohmann::json& update)
+{
+    get_db_storage().update_one(database, collection, selector, update);
+}
+
+void db_storage_backend::update_many(const nlohmann::json& selector, const nlohmann::json& update)
+{
+    get_db_storage().update_many(database, collection, selector, update);
+}
+
+std::vector<nlohmann::json> db_storage_backend::find_many(const nlohmann::json& selector, const nlohmann::json& projector)
+{
+    return get_db_storage().find_many(database, collection, selector, projector);
+}
+
+void db_storage_backend::remove_many(const nlohmann::json& selector)
+{
+    get_db_storage().remove_many(database, collection, selector);
+}
+
