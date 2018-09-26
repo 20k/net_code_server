@@ -118,17 +118,47 @@ nlohmann::json project(const nlohmann::json& data, const nlohmann::json& proj)
     return ret;
 }
 
+struct database
+{
+    std::map<std::string, std::vector<nlohmann::json>> all_data;
+
+    std::mutex all_coll_guard;
+
+    std::map<std::string, std::mutex> per_collection_lock;
+
+    std::vector<nlohmann::json>& get_collection(const std::string& coll)
+    {
+        std::lock_guard guard(all_coll_guard);
+
+        return all_data[coll];
+    }
+
+    std::mutex& get_lock(const std::string& coll)
+    {
+        std::lock_guard guard(all_coll_guard);
+
+        return per_collection_lock[coll];
+    }
+};
+
 struct db_storage
 {
-    std::map<std::string, std::map<std::string, std::vector<nlohmann::json>>> all_data;
+    //std::map<std::string, std::map<std::string, std::vector<nlohmann::json>>> all_data;
 
-    std::mutex db_lock;
+    //std::mutex db_lock;
 
-    std::vector<nlohmann::json>& get_collection(const std::string& db, const std::string& coll)
+    std::map<std::string, database> all_data;
+
+    /*std::vector<nlohmann::json>& get_collection(const std::string& db, const std::string& coll)
     {
         std::lock_guard guard(db_lock);
 
         return all_data[db][coll];
+    }*/
+
+    database& get_db(const std::string& db)
+    {
+        return all_data[db];
     }
 
     void insert_one(const std::string& db, const std::string& coll, const nlohmann::json& js)
@@ -136,9 +166,17 @@ struct db_storage
         if(db_storage_backend::contains_banned_query(js))
             return;
 
-        std::lock_guard guard(db_lock);
+        //std::lock_guard guard(db_lock);
 
-        all_data[db][coll].push_back(js);
+        database& cdb = get_db(db);
+
+        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+
+        std::lock_guard guard(cdb.get_lock(coll));
+
+        collection.push_back(js);
+
+        //all_data[db][coll].push_back(js);
     }
 
     void update_one(const std::string& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
@@ -149,9 +187,15 @@ struct db_storage
         if(db_storage_backend::contains_banned_query(update))
             return;
 
-        std::lock_guard guard(db_lock);
+        //std::lock_guard guard(db_lock);
 
-        std::vector<nlohmann::json>& collection = all_data[db][coll];
+        //std::vector<nlohmann::json>& collection = all_data[db][coll];
+
+        database& cdb = get_db(db);
+
+        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+
+        std::lock_guard guard(cdb.get_lock(coll));
 
         for(nlohmann::json& js : collection)
         {
@@ -172,9 +216,15 @@ struct db_storage
         if(db_storage_backend::contains_banned_query(update))
             return;
 
-        std::lock_guard guard(db_lock);
+        //std::lock_guard guard(db_lock);
 
-        std::vector<nlohmann::json>& collection = all_data[db][coll];
+        //std::vector<nlohmann::json>& collection = all_data[db][coll];
+
+        database& cdb = get_db(db);
+
+        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+
+        std::lock_guard guard(cdb.get_lock(coll));
 
         for(nlohmann::json& js : collection)
         {
@@ -193,11 +243,17 @@ struct db_storage
         if(db_storage_backend::contains_banned_query(projector))
             return std::vector<nlohmann::json>();
 
-        std::lock_guard guard(db_lock);
+        //std::lock_guard guard(db_lock);
 
         std::vector<nlohmann::json> ret;
 
-        const std::vector<nlohmann::json>& collection = all_data[db][coll];
+        //const std::vector<nlohmann::json>& collection = all_data[db][coll];
+
+        database& cdb = get_db(db);
+
+        const std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+
+        std::lock_guard guard(cdb.get_lock(coll));
 
         for(const nlohmann::json& js : collection)
         {
@@ -217,9 +273,15 @@ struct db_storage
         if(db_storage_backend::contains_banned_query(selector))
             return;
 
-        std::lock_guard guard(db_lock);
+        //std::lock_guard guard(db_lock);
 
-        std::vector<nlohmann::json>& collection = all_data[db][coll];
+        //std::vector<nlohmann::json>& collection = all_data[db][coll];
+
+        database& cdb = get_db(db);
+
+        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+
+        std::lock_guard guard(cdb.get_lock(coll));
 
         collection.erase( std::remove_if(collection.begin(), collection.end(), [&](const nlohmann::json& js){return matches(js, selector);}), collection.end() );
     }
@@ -270,9 +332,9 @@ void init_db_storage_backend()
 
             db_storage& store = get_db_storage();
 
-            std::lock_guard guard(store.db_lock);
+            //std::lock_guard guard(store.db_lock);
 
-            store.all_data[ctx->last_db][collection] = js;
+            store.all_data[ctx->last_db].all_data[collection] = js;
         }
     }
 
