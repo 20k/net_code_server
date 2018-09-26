@@ -4,10 +4,10 @@
 
 ///perform conversion of all auth tokens to base 64 so we can ditch mongos binary format
 
-bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth)
+bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary_in)
 {
     mongo_requester request;
-    request.set_prop_bin("account_token", auth);
+    request.set_prop_bin("account_token", auth_binary_in);
 
     std::vector<mongo_requester> found = request.fetch_from_db(ctx);
 
@@ -22,7 +22,7 @@ bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth)
     {
         if(i.has_prop("account_token"))
         {
-            auth_token = i.get_prop("account_token");
+            auth_token_binary = i.get_prop("account_token");
             valid = true;
         }
 
@@ -49,7 +49,7 @@ void auth::overwrite_in_db(mongo_lock_proxy& ctx)
         return;
 
     mongo_requester request;
-    request.set_prop_bin("account_token", auth_token);
+    request.set_prop_bin("account_token", auth_token_binary);
 
     std::string accum;
 

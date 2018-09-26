@@ -12,7 +12,8 @@ struct auth
 {
     bool valid = false;
 
-    std::string auth_token;
+    std::string auth_token_binary;
+    std::string auth_token_hex;
     std::vector<std::string> users;
     bool is_hex_encoding = false;
 
