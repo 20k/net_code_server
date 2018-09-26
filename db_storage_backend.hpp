@@ -43,7 +43,7 @@ struct db_storage_backend
     void insert_one(const nlohmann::json& json);
     void update_one(const nlohmann::json& selector, const nlohmann::json& update);
     void update_many(const nlohmann::json& selector, const nlohmann::json& update);
-    std::vector<nlohmann::json> find_many(const nlohmann::json& selector, const nlohmann::json& projector);
+    std::vector<nlohmann::json> find_many(const nlohmann::json& selector, const nlohmann::json& options);
     void remove_many(const nlohmann::json& selector);
 
     db_storage_backend(mongo_context* fctx);

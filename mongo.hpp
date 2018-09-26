@@ -257,7 +257,7 @@ struct mongo_requester
     //std::map<std::string, int32_t> gt_than_i;
     //std::map<std::string, int32_t> lt_than_i;
 
-    int64_t limit = -1;
+    //int64_t limit = -1;
 
     bool has_prop(const std::string& str) const
     {
@@ -362,10 +362,10 @@ struct mongo_requester
         is_arr[key] = 1;
     }
 
-    void set_limit(int64_t limit_)
+    /*void set_limit(int64_t limit_)
     {
         limit = limit_;
-    }
+    }*/
 
     std::vector<mongo_requester> fetch_from_db(mongo_lock_proxy& ctx);
 

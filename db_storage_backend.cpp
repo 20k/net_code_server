@@ -237,12 +237,12 @@ struct db_storage
         }
     }
 
-    std::vector<nlohmann::json> find_many(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& projector)
+    std::vector<nlohmann::json> find_many(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& options)
     {
         if(db_storage_backend::contains_banned_query(selector))
             return std::vector<nlohmann::json>();
 
-        if(db_storage_backend::contains_banned_query(projector))
+        if(db_storage_backend::contains_banned_query(options))
             return std::vector<nlohmann::json>();
 
         //std::lock_guard guard(db_lock);
@@ -261,9 +261,12 @@ struct db_storage
         {
             if(matches(js, selector))
             {
-                auto res = project(js, projector);
+                //auto res = project(js, projector);
 
-                ret.push_back(res);
+                ///ok this is incorrect
+                ///the way mongoc does it is that this is an options structure
+
+                ret.push_back(js);
             }
         }
 
@@ -605,9 +608,9 @@ void db_storage_backend::update_many(const nlohmann::json& selector, const nlohm
     get_db_storage().update_many(database, collection, selector, update);
 }
 
-std::vector<nlohmann::json> db_storage_backend::find_many(const nlohmann::json& selector, const nlohmann::json& projector)
+std::vector<nlohmann::json> db_storage_backend::find_many(const nlohmann::json& selector, const nlohmann::json& options)
 {
-    return get_db_storage().find_many(database, collection, selector, projector);
+    return get_db_storage().find_many(database, collection, selector, options);
 }
 
 void db_storage_backend::remove_many(const nlohmann::json& selector)

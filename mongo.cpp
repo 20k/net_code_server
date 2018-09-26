@@ -1000,6 +1000,7 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
                 if(validated[i] != parsed)
                 {
                     std::cout << "bad find, json " << validated[i] << " real db " << results[i] << std::endl;
+                    std::cout << "request bs " << bson_to_json(bs).dump() + " ps " + bson_to_json(ps).dump() << std::endl;
                 }
             }
         }
@@ -1338,13 +1339,13 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
 
     bson_t* to_opt = nullptr;
 
-    if(limit >= 0)
+    /*if(limit >= 0)
     {
         if(to_opt == nullptr)
             to_opt = bson_new();
 
         BSON_APPEND_INT64(to_opt, "limit", limit);
-    }
+    }*/
 
     if(sort_on.size() != 0)
     {
