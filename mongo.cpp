@@ -27,7 +27,7 @@ nlohmann::json bson_to_json(bson_t* bs)
     }
 
     size_t len = 0;
-    char* str = bson_as_canonical_extended_json(bs, &len);
+    char* str = bson_as_relaxed_extended_json(bs, &len);
 
     std::string ret(str, len);
 
