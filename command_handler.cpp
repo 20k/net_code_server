@@ -1288,7 +1288,7 @@ std::string rename_user_force(const std::string& from_name, const std::string& t
 ///should really queue this or something
 std::string delete_user(command_handler_state& state, const std::string& str, bool cli_force)
 {
-    std::string auth;
+    std::string auth_token;
 
     std::string name;
 
@@ -1296,10 +1296,10 @@ std::string delete_user(command_handler_state& state, const std::string& str, bo
     {
 
         {
-            auth = state.get_auth();
+            auth_token = state.get_auth();
         }
 
-        if(auth == "")
+        if(auth_token == "")
             return "No auth";
 
         std::string command_str = "#delete_user ";
@@ -1333,10 +1333,10 @@ std::string delete_user(command_handler_state& state, const std::string& str, bo
             user to_delete;
             to_delete.load_from_db(ctx, name);
 
-            if(to_delete.auth != auth)
+            if(to_delete.auth != auth_token)
                 return "Invalid Auth";
 
-            if(SHOULD_RATELIMIT(auth, DELETE_USER))
+            if(SHOULD_RATELIMIT(auth_token, DELETE_USER))
                 return "You may only delete 1 user per hour";
         }
     }
@@ -1359,35 +1359,28 @@ std::string delete_user(command_handler_state& state, const std::string& str, bo
     {
         mongo_lock_proxy auth_db = get_global_mongo_global_properties_context(-2);
 
-        mongo_requester req;
-        req.set_prop_bin("account_token", auth);
+        auth found_auth;
 
-        auto found = req.fetch_from_db(auth_db);
-
-        if(found.size() == 1)
+        if(found_auth.load_from_db(auth_db, auth_token))
         {
-            auto found_req = found[0];
-
-            auto arr = str_to_array(found_req.get_prop("users"));
-
-            for(int i=0; i < (int)arr.size(); i++)
+            for(int i=0; i < (int)found_auth.users.size(); i++)
             {
-                if(arr[i] == name)
+                if(found_auth.users[i] == name)
                 {
-                    arr.erase(arr.begin() + i);
+                    found_auth.users.erase(found_auth.users.begin() + i);
                     i--;
                     continue;
                 }
             }
 
-            found_req.set_prop("users", array_to_str(arr));
-
-            req.update_in_db_if_exact(auth_db, found_req);
+            found_auth.overwrite_in_db(auth_db);
         }
         else
         {
             if(!cli_force)
+            {
                 return "Auth Error: Purple Catepillar";
+            }
         }
     }
 
