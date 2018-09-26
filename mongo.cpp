@@ -745,6 +745,8 @@ bson_t* mongo_interface::make_bson_from_json_err(const std::string& json, std::s
     return bson;
 }
 
+#define ONLY_VALIDATION
+
 void mongo_interface::insert_bson_1(const std::string& script_host, bson_t* bs)
 {
     if(script_host != last_collection)
@@ -758,13 +760,17 @@ void mongo_interface::insert_bson_1(const std::string& script_host, bson_t* bs)
 
     if(enable_testing_backend)
         testing_backend.insert_one(bson_to_json(bs));
-
-    bson_error_t error;
-
-    if(!mongoc_collection_insert_one(collection, bs, NULL, NULL, &error))
+    #ifndef ONLY_VALIDATION
+    else
+    #endif // ONLY_VALIDATION
     {
-        printf("Error: %s\n", error.message);
-        //fprintf (stderr, "err: %s\n", error.message);
+        bson_error_t error;
+
+        if(!mongoc_collection_insert_one(collection, bs, NULL, NULL, &error))
+        {
+            printf("Error: %s\n", error.message);
+            //fprintf (stderr, "err: %s\n", error.message);
+        }
     }
 }
 
@@ -797,14 +803,21 @@ std::string mongo_interface::update_bson_many(const std::string& script_host, bs
     if(enable_testing_backend)
         testing_backend.update_many(bson_to_json(selector), bson_to_json(update));
 
-    bson_error_t error;
-
-    if(!mongoc_collection_update_many(collection, selector, update, nullptr, nullptr, &error))
+    #ifndef ONLY_VALIDATION
+    else
     {
-        fprintf (stderr, "err: %s\n", error.message);
+    #endif // ONLY_VALIDATION
+        bson_error_t error;
 
-        return error.message;
+        if(!mongoc_collection_update_many(collection, selector, update, nullptr, nullptr, &error))
+        {
+            fprintf (stderr, "err: %s\n", error.message);
+
+            return error.message;
+        }
+    #ifndef ONLY_VALIDATION
     }
+    #endif // ONLY_VALIDATION
 
     return "";
 }
@@ -851,14 +864,21 @@ std::string mongo_interface::update_bson_one(bson_t* selector, bson_t* update)
     if(enable_testing_backend)
         testing_backend.update_one(bson_to_json(selector), bson_to_json(update));
 
-    bson_error_t error;
-
-    if(!mongoc_collection_update_one(collection, selector, update, nullptr, nullptr, &error))
+    #ifndef ONLY_VALIDATION
+    else
     {
-        fprintf (stderr, "err: %s\n", error.message);
+    #endif // ONLY_VALIDATION
+        bson_error_t error;
 
-        return error.message;
+        if(!mongoc_collection_update_one(collection, selector, update, nullptr, nullptr, &error))
+        {
+            fprintf (stderr, "err: %s\n", error.message);
+
+            return error.message;
+        }
+    #ifndef ONLY_VALIDATION
     }
+    #endif // ONLY_VALIDATION
 
     return "";
 }
@@ -917,43 +937,45 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
         return std::vector<std::string>();
     }
 
-    /*if(last_collection == "all_npcs")
+    #ifndef ONLY_VALIDATION
+    if(!enable_testing_backend)
     {
-        std::cout << "last db " << ctx->last_db << std::endl;
+    #endif // ONLY_VALIDATION
+        const bson_t *doc;
 
-        mongoc_collection_destroy(collection);
-        collection = mongoc_client_get_collection(client, ctx->last_db.c_str(), last_collection.c_str());
-    }*/
+        ///hmm. for .first() we should limit to one doc
+        ///for .count we need to run a completely separate query
+        ///for array, we need to do everythang
+        mongoc_cursor_t* cursor = mongoc_collection_find_with_opts(collection, bs, ps, nullptr);
 
-    const bson_t *doc;
+        int skipped = 0;
 
-    ///hmm. for .first() we should limit to one doc
-    ///for .count we need to run a completely separate query
-    ///for array, we need to do everythang
-    mongoc_cursor_t* cursor = mongoc_collection_find_with_opts(collection, bs, ps, nullptr);
-
-    int skipped = 0;
-
-    while(mongoc_cursor_next (cursor, &doc))
-    {
-        char* str = bson_as_json(doc, NULL);
-
-        if(str == nullptr)
+        while(mongoc_cursor_next (cursor, &doc))
         {
-            skipped++;
-            continue;
+            char* str = bson_as_relaxed_extended_json(doc, NULL);
+
+            if(str == nullptr)
+            {
+                skipped++;
+                continue;
+            }
+
+            #ifdef ONLY_VALIDATION
+            results.push_back(str);
+            #endif // ONLY_VALIDATION
+
+            bson_free(str);
         }
 
-        results.push_back(str);
+        mongoc_cursor_destroy(cursor);
+    #ifndef ONLY_VALIDATION
+    } else
+    #endif // ONLY_VALIDATION
 
-        bson_free(str);
-    }
-
-    #ifdef TESTING
-    if(enable_testing_backend)
     {
         std::vector<nlohmann::json> validated = testing_backend.find_many(bson_to_json(bs), bson_to_json(ps));
 
+        #ifdef ONLY_VALIDATION
         if(validated.size() != results.size())
         {
             //std::cout << "back " << get_stacktrace() << std::endl;
@@ -976,14 +998,15 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
                 }
             }
         }
+        #else
+        for(auto& i : validated)
+        {
+            results.push_back(i.dump());
+        }
+        #endif // ONLY_VALIDATION
     }
 
-    #endif // TESTING
-
-    //if(skipped != 0)
-    //    std::cout << "skipped " << skipped << std::endl;
-
-    mongoc_cursor_destroy(cursor);
+    //
 
     return results;
 }
@@ -1034,8 +1057,10 @@ void mongo_interface::remove_bson(const std::string& script_host, bson_t* bs)
 
     if(enable_testing_backend)
         testing_backend.remove_many(bson_to_json(bs));
-
-    mongoc_collection_delete_many(collection, bs, nullptr, nullptr, nullptr);
+    #ifndef ONLY_VALIDATION
+    else
+    #endif // ONLY_VALIDATION
+        mongoc_collection_delete_many(collection, bs, nullptr, nullptr, nullptr);
 }
 
 void mongo_interface::remove_json(const std::string& script_host, const std::string& json)

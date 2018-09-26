@@ -236,11 +236,16 @@ void init_db_storage_backend()
 {
     ///importa data from mongo
 
-    for(int i=0; i < (int)mongo_database_type::MONGO_COUNT; i++)
+    for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
     {
-        mongo_context* ctx = mongo_databases[i];
+        get_db_storage().all_data[mongo_databases[idx]->last_db];
+    }
 
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_context((mongo_database_type)i, -2);
+    for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
+    {
+        mongo_context* ctx = mongo_databases[idx];
+
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_context((mongo_database_type)idx, -2);
         mongo_ctx.ctx.enable_testing_backend = false;
 
         for(const std::string& collection : ctx->all_collections)
@@ -256,6 +261,11 @@ void init_db_storage_backend()
                 nlohmann::json found = nlohmann::json::parse(i);
 
                 js.push_back(found);
+
+                /*if(idx == (int)mongo_database_type::GLOBAL_PROPERTIES)
+                {
+                    std::cout << "fi " << i << std::endl;
+                }*/
             }
 
             db_storage& store = get_db_storage();
