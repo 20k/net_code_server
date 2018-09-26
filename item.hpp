@@ -188,15 +188,7 @@ void for_each_item(T t)
     {
         mongo_lock_proxy ctx = get_global_mongo_user_items_context(-2);
 
-        auto all = item::fetch_all_from_db(ctx);
-
-        for(auto& i : all)
-        {
-            item n;
-            n.load_from_db(ctx, i.get_prop("item_id"));
-
-            id.push_back(n);
-        }
+        id = item::fetch_all_from_db(ctx);
     }
 
     for(auto& i : id)

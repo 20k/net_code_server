@@ -37,59 +37,6 @@
 #include <secret/low_level_structure.hpp>
 #include <windows.h>
 
-#if 0
-void user_tests()
-{
-    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
-
-    user test_user;
-    test_user.construct_new_user(mongo_user_info, "test_user");
-
-    //test_user.load_from_db("test_user");
-
-    user t2_user;
-    t2_user.load_from_db(mongo_user_info, "test_user");
-
-    for(int i=0; i < 10; i++)
-    {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
-
-        item test_item;
-
-        std::cout << test_item.get_new_id(mongo_ctx) << std::endl;
-    }
-
-    /*item insert_item;
-    insert_item.generate_set_id();
-
-    insert_item.set_prop("Test Key", 23);
-
-    insert_item.create_in_db("what");*/
-
-    mongo_lock_proxy mongo_user_items = get_global_mongo_user_items_context(-2);
-
-    item update_item;
-    update_item.set_prop("item_id", 32);
-    update_item.set_prop("Potato", "ostrich");
-
-    update_item.update_in_db(mongo_user_items);
-
-    item test_load;
-    test_load.set_prop("item_id", 32);
-    test_load.load_from_db(mongo_user_items);
-
-    std::cout << test_load.get_prop("Potato") << std::endl;
-
-    //std::cout << "found user " << t2_user.name << " cash " << t2_user.cash << std::endl;
-
-    //test_user.cash = 1;
-
-    //test_user.overwrite_user_in_db();
-
-    //std::cout << test_user.exists("test_user2");
-}
-#endif // 0
-
 void debug_terminal()
 {
     user current_user;
