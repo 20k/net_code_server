@@ -7,7 +7,7 @@
 
 struct mongo_context;
 
-using database_type = std::string;
+using database_type = int32_t;
 
 void init_db_storage_backend();
 

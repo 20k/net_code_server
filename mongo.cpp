@@ -198,6 +198,8 @@ mongo_context::mongo_context(mongo_database_type type)
     std::string uri_str = "Err";
     std::string db = "Err";
 
+    last_db_type = type;
+
     if(type == mongo_database_type::USER_ACCESSIBLE)
     {
         uri_str = "mongodb://user_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";;

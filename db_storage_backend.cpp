@@ -147,7 +147,7 @@ struct db_storage
 
     //std::mutex db_lock;
 
-    std::map<std::string, database> all_data;
+    std::map<database_type, database> all_data;
 
     /*std::vector<nlohmann::json>& get_collection(const std::string& db, const std::string& coll)
     {
@@ -156,12 +156,12 @@ struct db_storage
         return all_data[db][coll];
     }*/
 
-    database& get_db(const std::string& db)
+    database& get_db(const database_type& db)
     {
         return all_data[db];
     }
 
-    void insert_one(const std::string& db, const std::string& coll, const nlohmann::json& js)
+    void insert_one(const database_type& db, const std::string& coll, const nlohmann::json& js)
     {
         if(db_storage_backend::contains_banned_query(js))
             return;
@@ -179,7 +179,7 @@ struct db_storage
         //all_data[db][coll].push_back(js);
     }
 
-    void update_one(const std::string& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
+    void update_one(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
     {
         if(db_storage_backend::contains_banned_query(selector))
             return;
@@ -208,7 +208,7 @@ struct db_storage
         }
     }
 
-    void update_many(const std::string& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
+    void update_many(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
     {
         if(db_storage_backend::contains_banned_query(selector))
             return;
@@ -235,7 +235,7 @@ struct db_storage
         }
     }
 
-    std::vector<nlohmann::json> find_many(const std::string& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& projector)
+    std::vector<nlohmann::json> find_many(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& projector)
     {
         if(db_storage_backend::contains_banned_query(selector))
             return std::vector<nlohmann::json>();
@@ -268,7 +268,7 @@ struct db_storage
         return ret;
     }
 
-    void remove_many(const std::string& db, const std::string& coll, const nlohmann::json& selector)
+    void remove_many(const database_type& db, const std::string& coll, const nlohmann::json& selector)
     {
         if(db_storage_backend::contains_banned_query(selector))
             return;
@@ -300,7 +300,7 @@ void init_db_storage_backend()
 
     for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
     {
-        get_db_storage().all_data[mongo_databases[idx]->last_db];
+        get_db_storage().all_data[(int)mongo_databases[idx]->last_db_type];
     }
 
     for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
@@ -334,7 +334,7 @@ void init_db_storage_backend()
 
             //std::lock_guard guard(store.db_lock);
 
-            store.all_data[ctx->last_db].all_data[collection] = js;
+            store.all_data[(int)ctx->last_db_type].all_data[collection] = js;
         }
     }
 
@@ -376,7 +376,8 @@ void db_storage_backend::run_tests()
         backend.change_collection_unsafe("i20k");
 
         assert(backend.collection == "i20k");
-        assert(backend.database == "user_properties");
+        assert(backend.database == (int)mongo_database_type::USER_PROPERTIES);
+        //assert(backend.database == "user_properties");
     }
 
     nlohmann::json data;
@@ -582,7 +583,7 @@ void db_storage_backend::change_collection_unsafe(const std::string& coll, bool 
 db_storage_backend::db_storage_backend(mongo_context* fctx)
 {
     ctx = fctx;
-    database = fctx->last_db;
+    database = (int)fctx->last_db_type;
 }
 
 void db_storage_backend::insert_one(const nlohmann::json& json)

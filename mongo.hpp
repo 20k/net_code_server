@@ -65,6 +65,7 @@ struct mongo_context
     mongoc_database_t* database = nullptr;
 
     std::string last_db = "";
+    mongo_database_type last_db_type = mongo_database_type::MONGO_COUNT;
 
     std::string default_collection = "";
 
