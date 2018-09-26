@@ -970,8 +970,9 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
         mongoc_cursor_destroy(cursor);
     #ifndef ONLY_VALIDATION
     } else
-    #endif // ONLY_VALIDATION
-
+    #else
+    if(enable_testing_backend)
+    #endif
     {
         std::vector<nlohmann::json> validated = testing_backend.find_many(bson_to_json(bs), bson_to_json(ps));
 
