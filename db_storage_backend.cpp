@@ -403,28 +403,6 @@ void db_storage_backend::run_tests()
     }
 }
 
-/*void mongo_interface::change_collection_unsafe(const std::string& coll, bool force_change)
-{
-    if(ctx->is_fixed && !force_change)
-    {
-        std::cout << "warning, collection should not be changed" << std::endl;
-        return;
-    }
-
-    if(coll == last_collection && !force_change)
-        return;
-
-    last_collection = coll;
-
-    if(collection)
-    {
-        mongoc_collection_destroy(collection);
-        collection = nullptr;
-    }
-
-    collection = mongoc_client_get_collection(client, ctx->last_db.c_str(), coll.c_str());
-}*/
-
 bool db_storage_backend::contains_banned_query(nlohmann::json& js)
 {
     std::vector<std::string> banned
