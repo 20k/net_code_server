@@ -255,7 +255,7 @@ int main()
     initialse_mongo_all();
 
     auth::hacky_binary_conversion_check();
-    user::fix_auth_problem();
+    //user::fix_auth_problem();
 
     #ifdef TESTING
     init_db_storage_backend();

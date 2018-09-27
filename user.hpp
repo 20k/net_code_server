@@ -38,7 +38,7 @@ struct user
     std::string name;
     double cash = 0;
     //std::string auth;
-    std::string old_binary_auth;
+    //std::string old_binary_auth;
     std::string auth_hex;
     std::string upgr_idx;
     std::string loaded_upgr_idx;

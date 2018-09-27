@@ -141,8 +141,8 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
             name = req.get_prop("name");
         if(req.has_prop("cash"))
             cash = req.get_prop_as_double("cash");
-        if(req.has_prop("auth"))
-            old_binary_auth = req.get_prop("auth");
+        //if(req.has_prop("auth"))
+        //    old_binary_auth = req.get_prop("auth");
         if(req.has_prop("auth_hex"))
             auth_hex = req.get_prop("auth_hex");
         if(req.has_prop("upgr_idx"))
@@ -263,7 +263,7 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
 
     mongo_requester request;
     request.set_prop("name", name);
-    request.set_prop_bin("auth", auth);
+    //request.set_prop_bin("auth", auth);
     request.set_prop("auth_hex", binary_to_hex(auth));
     request.set_prop("upgr_idx", "");
     request.set_prop("loaded_upgr_idx", "");

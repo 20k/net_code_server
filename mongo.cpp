@@ -1387,7 +1387,7 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
 
             if(BSON_ITER_HOLDS_BINARY(&iter))
             {
-                found.set_prop_bin(key, bson_iter_binary_std_string(&iter));
+                //found.set_prop_bin(key, bson_iter_binary_std_string(&iter));
                 continue;
             }
 
