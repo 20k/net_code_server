@@ -162,6 +162,7 @@ struct mongo_interface
     void remove_json(const std::string& script_host, const std::string& json);
 
     std::vector<nlohmann::json> find_json_new(const nlohmann::json& json, const nlohmann::json& opts);
+    void remove_json_many_new(const nlohmann::json& json);
 
     //mongo_interface(mongo_interface&&);
     mongo_interface(mongo_context* fctx);

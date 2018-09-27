@@ -1115,6 +1115,33 @@ void mongo_interface::remove_json(const std::string& script_host, const std::str
     bson_destroy(bs);
 }
 
+void mongo_interface::remove_json_many_new(const nlohmann::json& json)
+{
+    #ifndef ONLY_VALIDATION
+    if(!enable_testing_backend)
+    #endif // ONLY_VALIDATION
+    {
+        if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
+            return;
+
+        bson_t* bs = make_bson_from_json(json);
+
+        if(bs == nullptr)
+            return;
+
+        remove_bson(last_collection, bs);
+
+        bson_destroy(bs);
+    }
+    #ifndef ONLY_VALIDATION
+    else
+    #endif // ONLY_VALIDATION
+    if(enable_testing_backend)
+    {
+        testing_backend.remove_many(json);
+    }
+}
+
 mongo_interface::mongo_interface(mongo_context* fctx) : testing_backend(fctx)
 {
     ctx = fctx;
@@ -1760,13 +1787,17 @@ void mongo_requester::update_one_in_db_if_exact(mongo_lock_proxy& ctx, mongo_req
 
 void mongo_requester::remove_all_from_db(mongo_lock_proxy& ctx)
 {
-    bson_t* to_remove = bson_new();
+    /*bson_t* to_remove = bson_new();
 
     append_properties_all_to(to_remove);
 
     ctx->remove_bson(ctx->last_collection, to_remove);
 
-    bson_destroy(to_remove);
+    bson_destroy(to_remove);*/
+
+    nlohmann::json props = get_all_properties_json();
+
+    ctx->remove_json_many_new(props);
 }
 
 std::array<mongo_context*, (int)mongo_database_type::MONGO_COUNT> mongo_databases;
