@@ -1508,9 +1508,7 @@ void mongo_requester::append_property_json(nlohmann::json& js, const std::string
     else if(is_double[key])
         js[key] = get_prop_as_double(key);
     else if(is_arr[key])
-    {
         js[key] = arr_props[key];
-    }
     else
         js[key] = properties[key];
 }
@@ -1519,7 +1517,17 @@ nlohmann::json mongo_requester::get_all_properties_json()
 {
     nlohmann::json js;
 
+    for(auto& i : properties)
+    {
+        append_property_json(js, i.first);
+    }
 
+    for(auto& i : arr_props)
+    {
+        append_property_json(js, i.first);
+    }
+
+    return js;
 }
 
 /*void update_in_db_if_exists(mongo_lock_proxy& ctx, mongo_requester& set_to)
