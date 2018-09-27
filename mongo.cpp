@@ -1548,7 +1548,7 @@ void mongo_requester::update_in_db_if_exact(mongo_lock_proxy& ctx, mongo_request
     nlohmann::json setter;
     setter["$set"] = all_props_new;
 
-    ctx->update_json_many_new(all_props, setter)
+    ctx->update_json_many_new(all_props, setter);
 }
 
 void mongo_requester::update_one_in_db_if_exact(mongo_lock_proxy& ctx, mongo_requester& set_to)
@@ -1578,7 +1578,7 @@ void mongo_requester::update_one_in_db_if_exact(mongo_lock_proxy& ctx, mongo_req
     nlohmann::json setter;
     setter["$set"] = all_props_new;
 
-    ctx->update_json_one_new(all_props, setter)
+    ctx->update_json_one_new(all_props, setter);
 }
 
 void mongo_requester::remove_all_from_db(mongo_lock_proxy& ctx)
