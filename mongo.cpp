@@ -1478,7 +1478,11 @@ void mongo_requester::append_property_to(bson_t* bson, const std::string& key)
             bson_append_utf8(&child, arr_key.c_str(), arr_key.size(), arr_props[key][i].c_str(), arr_props[key][i].size());
         }
 
+        //std::cout << bson_to_json(&child) << std::endl;
+
         bson_append_array_end(bson, &child);
+
+        //std::cout << bson_to_json(bson) << std::endl;
     }
     else
         bson_append_utf8(bson, key.c_str(), key.size(), val.c_str(), val.size());
@@ -1495,6 +1499,20 @@ void mongo_requester::append_properties_all_to(bson_t* bson)
     {
         append_property_to(bson, i.first);
     }
+}
+
+void mongo_requester::append_property_json(nlohmann::json& js, const std::string& key)
+{
+    if(is_integer[key])
+        js[key] = get_prop_as_integer(key);
+    else if(is_double[key])
+        js[key] = get_prop_as_double(key);
+    else if(is_arr[key])
+    {
+        js[key] = arr_props[key];
+    }
+    else
+        js[key] = properties[key];
 }
 
 nlohmann::json mongo_requester::get_all_properties_json()
