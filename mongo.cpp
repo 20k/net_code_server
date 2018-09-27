@@ -987,6 +987,11 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
 
             std::cout << "invalid validated size " << validated.size() << " " << results.size() << std::endl;
             std::cout << "bs " << bson_to_json(bs).dump() + " ps " + bson_to_json(ps).dump() << std::endl;
+
+            if(results.size() > 0)
+            {
+                std::cout << results[0] << std::endl;
+            }
         }
         else
         {
@@ -1046,6 +1051,31 @@ std::vector<std::string> mongo_interface::find_json(const std::string& script_ho
     //std::cout << "f2\n";
 
     return results;
+}
+
+std::vector<nlohmann::json> mongo_interface::find_json_new(const nlohmann::json& json, const nlohmann::json& opts)
+{
+    #ifndef ONLY_VALIDATION
+    if(!enable_testing_backend)
+    #endif // ONLY_VALIDATION
+    {
+        std::vector<std::string> found = find_json(last_collection, json.dump(), opts.dump());
+
+        std::vector<nlohmann::json> ret;
+
+        for(auto& i : found)
+        {
+            ret.push_back(nlohmann::json::parse(i));
+        }
+
+        return ret;
+    }
+    #ifndef ONLY_VALIDATION
+    else
+    #endif // ONLY_VALIDATION
+    {
+        return testing_backend.find_many(json, opts);
+    }
 }
 
 void mongo_interface::remove_bson(const std::string& script_host, bson_t* bs)
@@ -1286,6 +1316,19 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
         bson_append_document_end(to_find, &child);
     }
 
+    nlohmann::json json_properties = get_all_properties_json();
+
+    for(auto& i : exists_check)
+    {
+        if(!i.second)
+            continue;
+
+        nlohmann::json exist;
+        exist["$exists"] = 1;
+
+        json_properties[i.first] = exist;
+    }
+
     //if(lt_than.size() != 0 && gt_than.size() != 0)
     #if 0
     {
@@ -1347,6 +1390,8 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
         BSON_APPEND_INT64(to_opt, "limit", limit);
     }*/
 
+    nlohmann::json json_opt;
+
     if(sort_on.size() != 0)
     {
         if(to_opt == nullptr)
@@ -1362,9 +1407,30 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
         }
 
         bson_append_document_end(to_opt, &child);
+
+        json_opt["sort"] = sort_on;
     }
 
     std::vector<std::string> json_found = ctx->find_bson(ctx->last_collection, to_find, to_opt);
+
+    std::vector<nlohmann::json> json_found_from_json = ctx->find_json_new(json_properties, json_opt);
+
+    if(json_found.size() != json_found_from_json.size())
+    {
+        std::cout << "invalid ererdfsdf s1 " << json_found.size() << " s2 " << json_found_from_json.size() << std::endl;
+        std::cout << "was looking for " << bson_to_json(to_find) << " r2 " << bson_to_json(to_opt) << std::endl;
+        std::cout << "json approx " << json_properties.dump() << " a2 " << json_opt.dump() << std::endl;
+    }
+    else
+    {
+        for(int i=0; i < (int)json_found.size(); i++)
+        {
+            if(nlohmann::json::parse(json_found[i]) != json_found_from_json[i])
+            {
+                std::cout << "baddybad\n";
+            }
+        }
+    }
 
     for(auto& i : json_found)
     {
