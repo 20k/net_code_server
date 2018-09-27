@@ -284,7 +284,7 @@ struct db_interfaceable
         json to_find;
         to_find[static_key] = exist;
 
-        auto found = ctx->find_json(ctx->last_collection, to_find.dump(), "{}");
+        auto found = ctx->find_json_new(to_find, nlohmann::json());
 
         std::vector<concrete> ret;
 
@@ -293,7 +293,7 @@ struct db_interfaceable
             try
             {
                 concrete val;
-                val.data = json::parse(js);
+                val.data = js;
 
                 val.handle_serialise(val.data, false);
 
@@ -317,7 +317,7 @@ struct db_interfaceable
         json to_find;
         to_find[static_key] = exist;
 
-        ctx->remove_json(ctx->last_collection, to_find.dump());
+        ctx->remove_json_many_new(to_find);
 
         caches::this_cache<concrete>.clear();
     }
@@ -353,14 +353,15 @@ struct db_interfaceable
 
         try
         {
-            auto found = ctx->find_json(ctx->last_collection, to_find.dump(), "{}");
+            auto found = ctx->find_json_new(to_find, nlohmann::json());
 
             if(found.size() != 1)
                 return false;
 
-            std::string js = found[0];
+            //std::string js = found[0];
+            //data = json::parse(js);
 
-            data = json::parse(js);
+            data = found[0];
 
             if(cacheable)
             {
@@ -394,7 +395,7 @@ struct db_interfaceable
             }
 
             ///insert
-            ctx->insert_json_1(ctx->last_collection, data.dump());
+            ctx->insert_json_one_new(data);
         }
         else
         {
@@ -412,7 +413,7 @@ struct db_interfaceable
             json to_set;
             to_set["$set"] = data;
 
-            ctx->update_json_one(selector.dump(), to_set.dump());
+            ctx->update_json_one_new(selector, to_set);
         }
     }
 
@@ -423,7 +424,7 @@ struct db_interfaceable
         json j;
         j[key_name] = data[key_name];
 
-        ctx->remove_json(ctx->last_collection, j.dump());
+        ctx->remove_json_many_new(j);
 
         if(cacheable)
         {
@@ -441,7 +442,7 @@ struct db_interfaceable
         json j;
         j[static_string] = id;
 
-        ctx->remove_json(ctx->last_collection, j.dump());
+        ctx->remove_json_many_new(j);
 
         if(cacheable)
         {
@@ -461,7 +462,7 @@ struct db_interfaceable
         else
             to_find["_id"] = data["_id"];
 
-        auto found = ctx->find_json(ctx->last_collection, to_find.dump(), "{}");
+        auto found = ctx->find_json_new(to_find, nlohmann::json());
 
         return found.size() >= 1;
     }
