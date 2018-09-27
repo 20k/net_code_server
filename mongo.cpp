@@ -770,7 +770,7 @@ std::string mongo_interface::update_json_many_new(const nlohmann::json& selector
 
     if(enable_testing_backend)
     {
-        testing_backend.update_json_many(selector, update);
+        testing_backend.update_many(selector, update);
     }
     #ifndef ONLY_VALIDATION
     else
@@ -788,13 +788,13 @@ std::string mongo_interface::update_json_one_new(const nlohmann::json& selector,
 
     if(enable_testing_backend)
     {
-        testing_backend.update_json_one(selector, update);
+        testing_backend.update_one(selector, update);
     }
     #ifndef ONLY_VALIDATION
     else
     #endif // ONLY_VALIDATION
     {
-        res = update_json_one(last_collection, selector.dump(), update.dump());
+        res = update_json_one(selector.dump(), update.dump());
     }
 
     return res;
@@ -1519,9 +1519,11 @@ nlohmann::json mongo_requester::get_all_properties_json()
     bson_destroy(to_select);
 }*/
 
+///replace these with new version
+///creates {"$set" : {obj:1, obj2:1}} etc i think
 void mongo_requester::update_in_db_if_exact(mongo_lock_proxy& ctx, mongo_requester& set_to)
 {
-    bson_t* to_select = bson_new();
+    /*bson_t* to_select = bson_new();
 
     append_properties_all_to(to_select);
 
@@ -1538,12 +1540,20 @@ void mongo_requester::update_in_db_if_exact(mongo_lock_proxy& ctx, mongo_request
     ctx->update_bson_many(ctx->last_collection, to_select, to_update);
 
     bson_destroy(to_update);
-    bson_destroy(to_select);
+    bson_destroy(to_select);*/
+
+    nlohmann::json all_props = get_all_properties_json();
+    nlohmann::json all_props_new = set_to.get_all_properties_json();
+
+    nlohmann::json setter;
+    setter["$set"] = all_props_new;
+
+    ctx->update_json_many_new(all_props, setter)
 }
 
 void mongo_requester::update_one_in_db_if_exact(mongo_lock_proxy& ctx, mongo_requester& set_to)
 {
-    bson_t* to_select = bson_new();
+    /*bson_t* to_select = bson_new();
 
     append_properties_all_to(to_select);
 
@@ -1560,7 +1570,15 @@ void mongo_requester::update_one_in_db_if_exact(mongo_lock_proxy& ctx, mongo_req
     ctx->update_bson_one(to_select, to_update);
 
     bson_destroy(to_update);
-    bson_destroy(to_select);
+    bson_destroy(to_select);*/
+
+    nlohmann::json all_props = get_all_properties_json();
+    nlohmann::json all_props_new = set_to.get_all_properties_json();
+
+    nlohmann::json setter;
+    setter["$set"] = all_props_new;
+
+    ctx->update_json_one_new(all_props, setter)
 }
 
 void mongo_requester::remove_all_from_db(mongo_lock_proxy& ctx)
