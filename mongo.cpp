@@ -1296,6 +1296,7 @@ mongo_interface* mongo_lock_low_level::operator->()
 
 std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ctx)
 {
+    #if 0
     std::vector<mongo_requester> ret;
 
     bson_t* to_find = bson_new();
@@ -1315,6 +1316,7 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
 
         bson_append_document_end(to_find, &child);
     }
+    #endif // 0
 
     nlohmann::json json_properties = get_all_properties_json();
 
@@ -1380,7 +1382,9 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
     #endif // 0
 
 
+    #if 0
     bson_t* to_opt = nullptr;
+    #endif // 0
 
     /*if(limit >= 0)
     {
@@ -1394,6 +1398,7 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
 
     if(sort_on.size() != 0)
     {
+        #if 0
         if(to_opt == nullptr)
             to_opt = bson_new();
 
@@ -1407,14 +1412,18 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
         }
 
         bson_append_document_end(to_opt, &child);
+        #endif // 0
 
         json_opt["sort"] = sort_on;
     }
 
+    #if 0
     std::vector<std::string> json_found = ctx->find_bson(ctx->last_collection, to_find, to_opt);
+    #endif // 0
 
     std::vector<nlohmann::json> json_found_from_json = ctx->find_json_new(json_properties, json_opt);
 
+    #if 0
     if(json_found.size() != json_found_from_json.size())
     {
         std::cout << "invalid ererdfsdf s1 " << json_found.size() << " s2 " << json_found_from_json.size() << std::endl;
@@ -1432,6 +1441,7 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
         }
     }
 
+    ///todo: delete the bson backend
     for(auto& i : json_found)
     {
         mongo_requester found;
@@ -1502,6 +1512,7 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
 
         ret.push_back(found);
     }
+    #endif // 0
 
     std::vector<mongo_requester> alt_method;
 
@@ -1553,6 +1564,7 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
     }
 
 
+    #if 0
     if(alt_method.size() != ret.size())
     {
         std::cout << "alt != size " << std::endl;
@@ -1572,8 +1584,9 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
         bson_destroy(to_opt);
 
     bson_destroy(to_find);
+    #endif // 0
 
-    return ret;
+    return alt_method;
 }
 
 void mongo_requester::insert_in_db(mongo_lock_proxy& ctx)
