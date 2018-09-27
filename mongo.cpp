@@ -1503,6 +1503,71 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
         ret.push_back(found);
     }
 
+    std::vector<mongo_requester> alt_method;
+
+    for(const nlohmann::json& obj : json_found_from_json)
+    {
+        mongo_requester found;
+
+        for(auto& pairs : obj.get<nlohmann::json::object_t>())
+        {
+            const std::string& key = pairs.first;
+            const nlohmann::json& val = pairs.second;
+
+            /*if(val.is_integer())
+            {
+                found.set_prop_int(key, (int)val);
+                continue;
+            }*/
+
+            if(val.is_number())
+            {
+                found.set_prop_double(key, (double)val);
+                continue;
+            }
+
+            if(val.is_array())
+            {
+                std::vector<std::string> data;
+
+                for(auto& arr_mem : val)
+                {
+                    if(!arr_mem.is_string())
+                        continue;
+
+                    data.push_back(arr_mem);
+                }
+
+                found.set_prop_array(key, data);
+                continue;
+            }
+
+            if(val.is_string())
+            {
+                found.set_prop(key, val.get<std::string>());
+                continue;
+            }
+        }
+
+        alt_method.push_back(found);
+    }
+
+
+    if(alt_method.size() != ret.size())
+    {
+        std::cout << "alt != size " << std::endl;
+    }
+    else
+    {
+        for(int i=0; i < (int)alt_method.size(); i++)
+        {
+            if(alt_method[i].get_all_properties_json() != ret[i].get_all_properties_json())
+            {
+                std::cout << "not eq in double test\n";
+            }
+        }
+    }
+
     if(to_opt != nullptr)
         bson_destroy(to_opt);
 
