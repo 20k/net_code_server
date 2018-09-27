@@ -764,6 +764,42 @@ void mongo_interface::insert_json_one_new(const nlohmann::json& json)
     }
 }
 
+std::string mongo_interface::update_json_many_new(const nlohmann::json& selector, const nlohmann::json& update)
+{
+    std::string res;
+
+    if(enable_testing_backend)
+    {
+        testing_backend.update_json_many(selector, update);
+    }
+    #ifndef ONLY_VALIDATION
+    else
+    #endif // ONLY_VALIDATION
+    {
+        res = update_json_many(last_collection, selector.dump(), update.dump());
+    }
+
+    return res;
+}
+
+std::string mongo_interface::update_json_one_new(const nlohmann::json& selector, const nlohmann::json& update)
+{
+    std::string res;
+
+    if(enable_testing_backend)
+    {
+        testing_backend.update_json_one(selector, update);
+    }
+    #ifndef ONLY_VALIDATION
+    else
+    #endif // ONLY_VALIDATION
+    {
+        res = update_json_one(last_collection, selector.dump(), update.dump());
+    }
+
+    return res;
+}
+
 std::string mongo_interface::update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update)
 {
     if(selector == nullptr || update == nullptr)
