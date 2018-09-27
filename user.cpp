@@ -1168,7 +1168,7 @@ void user::launch_pump_events_thread()
 
 void user::fix_auth_problem()
 {
-    for_each_user([](user& usr)
+    /*for_each_user([](user& usr)
                   {
                         usr.auth_hex = binary_to_hex(usr.old_binary_auth);
 
@@ -1176,7 +1176,7 @@ void user::fix_auth_problem()
                         ctx.ctx.enable_testing_backend = false;
 
                         usr.overwrite_user_in_db(ctx);
-                  });
+                  });*/
 }
 
 std::vector<user> load_users(const std::vector<std::string>& names, int lock_id)
