@@ -168,7 +168,7 @@ void for_each_user(const T& t)
 
         mongo_requester request;
 
-        request.exists_check["account_token"] = 1;
+        request.exists_check["account_token_hex"] = 1;
 
         all = request.fetch_from_db(all_auth);
     }

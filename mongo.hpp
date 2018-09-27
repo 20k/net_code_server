@@ -241,7 +241,7 @@ typename std::enable_if<!std::is_fundamental<T>::value, std::string>::type  stri
 struct mongo_requester
 {
     std::map<std::string, std::string> properties;
-    std::map<std::string, int> is_binary;
+    //std::map<std::string, int> is_binary;
     std::map<std::string, int> is_integer;
     std::map<std::string, int> is_double;
     std::map<std::string, int> is_arr;
@@ -316,12 +316,12 @@ struct mongo_requester
         properties[key] = stringify_hack(value);
     }
 
-    template<typename T>
+    /*template<typename T>
     void set_prop_bin(const std::string& key, const T& value)
     {
         properties[key] = stringify_hack(value);
         is_binary[key] = 1;
-    }
+    }*/
 
     template<typename T>
     void set_prop_int(const std::string& key, const T& value)
@@ -374,6 +374,8 @@ struct mongo_requester
     void append_property_to(bson_t* bson, const std::string& key);
 
     void append_properties_all_to(bson_t* bson);
+
+    nlohmann::json get_all_properties_json();
 
     /*void update_in_db_if_exists(mongo_lock_proxy& ctx, mongo_requester& set_to)
     {

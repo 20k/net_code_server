@@ -8,7 +8,7 @@
 bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary_in)
 {
     mongo_requester request;
-    request.set_prop_bin("account_token", auth_binary_in);
+    request.set_prop("account_token_hex", binary_to_hex(auth_binary_in));
 
     std::vector<mongo_requester> found = request.fetch_from_db(ctx);
 
@@ -21,9 +21,17 @@ bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary_in
 
     for(mongo_requester& i : found)
     {
-        if(i.has_prop("account_token"))
+        /*if(i.has_prop("account_token"))
         {
             auth_token_binary = i.get_prop("account_token");
+            valid = true;
+        }*/
+
+        if(i.has_prop("account_token_hex"))
+        {
+            auth_token_hex = i.get_prop("account_token_hex");
+            auth_token_binary = hex_to_binary(auth_token_hex);
+
             valid = true;
         }
 
@@ -50,7 +58,7 @@ void auth::overwrite_in_db(mongo_lock_proxy& ctx)
         return;
 
     mongo_requester request;
-    request.set_prop_bin("account_token", auth_token_binary);
+    request.set_prop("account_token_hex", auth_token_hex);
 
     std::string accum;
 
@@ -87,11 +95,10 @@ void auth::hacky_binary_conversion_check()
 {
     for_each_auth([](mongo_requester& req)
                   {
-                        std::string binary_token = req.get_prop("account_token");
-
                         if(req.has_prop("account_token_hex"))
                             return;
 
+                        std::string binary_token = req.get_prop("account_token");
                         std::cout << "Converting auth token\n";
 
                         std::string hex_token = binary_to_hex(binary_token);

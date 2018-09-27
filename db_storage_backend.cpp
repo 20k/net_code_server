@@ -270,6 +270,20 @@ struct db_storage
             }
         }
 
+        if(options.is_object())
+        {
+            if(options.count("sort") > 0)
+            {
+                for(auto& pairs : options.get<nlohmann::json::object_t>())
+                {
+                    /*std::sort(ret.begin(), ret.end(), [&](const nlohmann::json& n_1, nlohmann::json& n_2)
+                              {
+
+                              });*/
+                }
+            }
+        }
+
         return ret;
     }
 

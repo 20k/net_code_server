@@ -1460,9 +1460,9 @@ void mongo_requester::append_property_to(bson_t* bson, const std::string& key)
 {
     std::string val = properties[key];
 
-    if(is_binary[key])
-        bson_append_binary(bson, key.c_str(), key.size(), BSON_SUBTYPE_BINARY, (const uint8_t*)val.c_str(), val.size());
-    else if(is_integer[key])
+    //if(is_binary[key])
+    //    bson_append_binary(bson, key.c_str(), key.size(), BSON_SUBTYPE_BINARY, (const uint8_t*)val.c_str(), val.size());
+    if(is_integer[key])
         BSON_APPEND_INT32(bson, key.c_str(), get_prop_as_integer(key));
     else if(is_double[key])
         BSON_APPEND_DOUBLE(bson, key.c_str(), get_prop_as_double(key));
@@ -1495,6 +1495,13 @@ void mongo_requester::append_properties_all_to(bson_t* bson)
     {
         append_property_to(bson, i.first);
     }
+}
+
+nlohmann::json mongo_requester::get_all_properties_json()
+{
+    nlohmann::json js;
+
+
 }
 
 /*void update_in_db_if_exists(mongo_lock_proxy& ctx, mongo_requester& set_to)
