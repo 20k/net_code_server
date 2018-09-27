@@ -347,6 +347,8 @@ void init_db_storage_backend()
 {
     ///importa data from mongo
 
+    db_storage_backend::run_tests();
+
     for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
     {
         get_db_storage().all_data[(int)mongo_databases[idx]->last_db_type];
@@ -388,8 +390,6 @@ void init_db_storage_backend()
     }
 
     std::cout << "imported from mongo\n";
-
-    db_storage_backend::run_tests();
 }
 
 void db_storage_backend::run_tests()
@@ -580,6 +580,31 @@ void db_storage_backend::run_tests()
 
             assert(post_proj == data);
         }
+    }
+
+    ///compatability tests
+    {
+        mongo_requester req1;
+        req1.set_prop_int("prop", 1);
+
+        mongo_requester req2;
+        req2.set_prop_double("prop", 1);
+
+        //uint64_t val = ((uint64_t)1 << 63) - 1;
+
+        //mongo_requester req3;
+        //req3.set_prop_int("prop", val);
+
+        //mongo_requester req4;
+        //req4.set_prop("prop", val);
+
+        //std::cout << req1.get_all_properties_json() << std::endl;
+        //std::cout << req2.get_all_properties_json() << std::endl;
+
+        //std::cout << req3.get_all_properties_json() << std::endl;
+        //std::cout << req4.get_all_properties_json() << std::endl;
+
+        assert(req1.get_all_properties_json() == req2.get_all_properties_json());
     }
 }
 
