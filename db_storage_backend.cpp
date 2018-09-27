@@ -141,6 +141,24 @@ struct database
     }
 };
 
+bool json_prop_true(const nlohmann::json& js, const std::string& key)
+{
+    if(js.count(key) == 0)
+        return false;
+
+    if(js.at(key).is_boolean())
+    {
+        return js.at(key) == true;
+    }
+
+    if(js.at(key).is_number())
+    {
+        return js.at(key) == 1;
+    }
+
+    return false;
+}
+
 struct db_storage
 {
     //std::map<std::string, std::map<std::string, std::vector<nlohmann::json>>> all_data;
@@ -274,12 +292,16 @@ struct db_storage
         {
             if(options.count("sort") > 0)
             {
-                for(auto& pairs : options.get<nlohmann::json::object_t>())
+                for(auto& pairs : options.at("sort").get<nlohmann::json::object_t>())
                 {
-                    /*std::sort(ret.begin(), ret.end(), [&](const nlohmann::json& n_1, nlohmann::json& n_2)
-                              {
+                    std::string sort_on = pairs.first;
 
-                              });*/
+                    std::sort(ret.begin(), ret.end(), [&](const nlohmann::json& n_1, nlohmann::json& n_2)
+                              {
+                                return n_1.at(sort_on) < n_2.at(sort_on);
+                              });
+
+                    break;
                 }
             }
         }
