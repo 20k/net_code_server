@@ -1523,25 +1523,6 @@ nlohmann::json mongo_requester::get_all_properties_json()
 ///creates {"$set" : {obj:1, obj2:1}} etc i think
 void mongo_requester::update_in_db_if_exact(mongo_lock_proxy& ctx, mongo_requester& set_to)
 {
-    /*bson_t* to_select = bson_new();
-
-    append_properties_all_to(to_select);
-
-    bson_t* to_update = bson_new();
-
-    bson_t child;
-
-    BSON_APPEND_DOCUMENT_BEGIN(to_update, "$set", &child);
-
-    set_to.append_properties_all_to(&child);
-
-    bson_append_document_end(to_update, &child);
-
-    ctx->update_bson_many(ctx->last_collection, to_select, to_update);
-
-    bson_destroy(to_update);
-    bson_destroy(to_select);*/
-
     nlohmann::json all_props = get_all_properties_json();
     nlohmann::json all_props_new = set_to.get_all_properties_json();
 
@@ -1553,25 +1534,6 @@ void mongo_requester::update_in_db_if_exact(mongo_lock_proxy& ctx, mongo_request
 
 void mongo_requester::update_one_in_db_if_exact(mongo_lock_proxy& ctx, mongo_requester& set_to)
 {
-    /*bson_t* to_select = bson_new();
-
-    append_properties_all_to(to_select);
-
-    bson_t* to_update = bson_new();
-
-    bson_t child;
-
-    BSON_APPEND_DOCUMENT_BEGIN(to_update, "$set", &child);
-
-    set_to.append_properties_all_to(&child);
-
-    bson_append_document_end(to_update, &child);
-
-    ctx->update_bson_one(to_select, to_update);
-
-    bson_destroy(to_update);
-    bson_destroy(to_select);*/
-
     nlohmann::json all_props = get_all_properties_json();
     nlohmann::json all_props_new = set_to.get_all_properties_json();
 
@@ -1583,14 +1545,6 @@ void mongo_requester::update_one_in_db_if_exact(mongo_lock_proxy& ctx, mongo_req
 
 void mongo_requester::remove_all_from_db(mongo_lock_proxy& ctx)
 {
-    /*bson_t* to_remove = bson_new();
-
-    append_properties_all_to(to_remove);
-
-    ctx->remove_bson(ctx->last_collection, to_remove);
-
-    bson_destroy(to_remove);*/
-
     nlohmann::json props = get_all_properties_json();
 
     ctx->remove_json_many_new(props);
