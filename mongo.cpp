@@ -16,7 +16,7 @@
 #include "safe_thread.hpp"
 #include <libncclient/nc_util.hpp>
 
-#define ONLY_VALIDATION
+//#define ONLY_VALIDATION
 
 //thread_local int mongo_lock_proxy::thread_id_storage_hack = -2;
 //thread_local int mongo_lock_proxy::print_performance_diagnostics = 0;
@@ -589,50 +589,6 @@ void mongo_context::unlock_if(size_t who)
         map_lock.unlock();
     }
 }
-
-#if 0
-void ping()
-{
-    bson_t* command = BCON_NEW ("ping", BCON_INT32 (1));
-
-    bson_t reply;
-
-    bson_error_t error;
-
-    bool retval = mongoc_client_command_simple (
-                      client, "admin", command, NULL, &reply, &error);
-
-    if (!retval)
-    {
-        fprintf (stderr, "%s\n", error.message);
-
-        return;
-    }
-
-    char* str = bson_as_json (&reply, NULL);
-    printf ("%s\n", str);
-
-    bson_destroy (&reply);
-    bson_destroy (command);
-    bson_free (str);
-}
-#endif // 0
-
-#if 0
-void insert_test_data() const
-{
-    bson_error_t error;
-
-    bson_t* insert = BCON_NEW ("hello", BCON_UTF8 ("world"));
-
-    if (!mongoc_collection_insert_one (collection, insert, NULL, NULL, &error))
-    {
-        fprintf (stderr, "%s\n", error.message);
-    }
-
-    bson_destroy (insert);
-}
-#endif
 
 mongoc_client_t* mongo_context::request_client()
 {
@@ -1323,28 +1279,6 @@ mongo_interface* mongo_lock_low_level::operator->()
 
 std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ctx)
 {
-    #if 0
-    std::vector<mongo_requester> ret;
-
-    bson_t* to_find = bson_new();
-
-    append_properties_all_to(to_find);
-
-    for(auto& i : exists_check)
-    {
-        if(!i.second)
-            continue;
-
-        bson_t child;
-
-        bson_append_document_begin(to_find, i.first.c_str(), strlen(i.first.c_str()), &child);
-
-        BSON_APPEND_INT32(&child, "$exists", 1);
-
-        bson_append_document_end(to_find, &child);
-    }
-    #endif // 0
-
     nlohmann::json json_properties = get_all_properties_json();
 
     for(auto& i : exists_check)
@@ -1358,188 +1292,14 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
         json_properties[i.first] = exist;
     }
 
-    //if(lt_than.size() != 0 && gt_than.size() != 0)
-    #if 0
-    {
-        bson_t child;
-
-        std::set<std::string> keys_check;
-
-        for(auto& i : lt_than)
-            keys_check.insert(i.first);
-
-        for(auto& i : gt_than)
-            keys_check.insert(i.first);
-
-        for(auto& i : lt_than_i)
-            keys_check.insert(i.first);
-
-        for(auto& i : gt_than_i)
-            keys_check.insert(i.first);
-
-        for(auto& i : keys_check)
-        {
-            std::string key = i;
-
-            bool has_lt_than = lt_than.find(key) != lt_than.end();
-            bool has_gt_than = gt_than.find(key) != gt_than.end();
-
-            std::string lt_val = has_lt_than ? lt_than[key] : "";
-            std::string gt_val = has_gt_than ? gt_than[key] : "";
-
-            bson_append_document_begin(to_find, key.c_str(), key.size(), &child);
-
-            if(gt_val != "")
-                BSON_APPEND_UTF8(&child, "$gt", gt_val.c_str());
-
-            if(lt_val != "")
-                BSON_APPEND_UTF8(&child, "$lt", lt_val.c_str());
-
-            if(lt_than_i.find(key) != lt_than_i.end())
-                BSON_APPEND_INT32(&child, "$lt", lt_than_i[key]);
-
-            if(gt_than_i.find(key) != gt_than_i.end())
-                BSON_APPEND_INT32(&child, "$gt", gt_than_i[key]);
-
-            //std::cout << "$gt " << gt_val << " $lt " << lt_val << std::endl;
-
-            bson_append_document_end(to_find, &child);
-        }
-    }
-    #endif // 0
-
-
-    #if 0
-    bson_t* to_opt = nullptr;
-    #endif // 0
-
-    /*if(limit >= 0)
-    {
-        if(to_opt == nullptr)
-            to_opt = bson_new();
-
-        BSON_APPEND_INT64(to_opt, "limit", limit);
-    }*/
-
     nlohmann::json json_opt;
 
     if(sort_on.size() != 0)
     {
-        #if 0
-        if(to_opt == nullptr)
-            to_opt = bson_new();
-
-        bson_t child;
-
-        bson_append_document_begin(to_opt, "sort", 4, &child);
-
-        for(auto& i : sort_on)
-        {
-            BSON_APPEND_INT64(&child, i.first.c_str(), i.second);
-        }
-
-        bson_append_document_end(to_opt, &child);
-        #endif // 0
-
         json_opt["sort"] = sort_on;
     }
 
-    #if 0
-    std::vector<std::string> json_found = ctx->find_bson(ctx->last_collection, to_find, to_opt);
-    #endif // 0
-
     std::vector<nlohmann::json> json_found_from_json = ctx->find_json_new(json_properties, json_opt);
-
-    #if 0
-    if(json_found.size() != json_found_from_json.size())
-    {
-        std::cout << "invalid ererdfsdf s1 " << json_found.size() << " s2 " << json_found_from_json.size() << std::endl;
-        std::cout << "was looking for " << bson_to_json(to_find) << " r2 " << bson_to_json(to_opt) << std::endl;
-        std::cout << "json approx " << json_properties.dump() << " a2 " << json_opt.dump() << std::endl;
-    }
-    else
-    {
-        for(int i=0; i < (int)json_found.size(); i++)
-        {
-            if(nlohmann::json::parse(json_found[i]) != json_found_from_json[i])
-            {
-                std::cout << "baddybad\n";
-            }
-        }
-    }
-
-    ///todo: delete the bson backend
-    for(auto& i : json_found)
-    {
-        mongo_requester found;
-
-        bson_t* next = bson_new_from_json((const uint8_t*)i.c_str(), i.size(), nullptr);
-
-        if(next == nullptr)
-        {
-            printf("invalid json in find\n");
-            continue;
-        }
-
-        bson_iter_t iter;
-        bson_iter_init(&iter, next);
-
-        while (bson_iter_next (&iter))
-        {
-            std::string key = bson_iter_key(&iter);
-
-            if(BSON_ITER_HOLDS_BINARY(&iter))
-            {
-                //found.set_prop_bin(key, bson_iter_binary_std_string(&iter));
-                continue;
-            }
-
-            if(BSON_ITER_HOLDS_UTF8(&iter))
-            {
-                found.set_prop(key, bson_iter_utf8_easy(&iter));
-                continue;
-            }
-
-            if(BSON_ITER_HOLDS_INT32(&iter))
-            {
-                found.set_prop_int(key, bson_iter_int32(&iter));
-                continue;
-            }
-
-            if(BSON_ITER_HOLDS_DOUBLE(&iter))
-            {
-                found.set_prop_double(key, bson_iter_double(&iter));
-                continue;
-            }
-
-            ///if we'd done this right, this would compose
-            ///sadly it is not done right
-            if(BSON_ITER_HOLDS_ARRAY(&iter))
-            {
-                std::vector<std::string> arr;
-
-                bson_iter_t child;
-
-                bson_iter_recurse(&iter, &child);
-
-                while(bson_iter_next(&child))
-                {
-                    if(BSON_ITER_HOLDS_UTF8(&child))
-                    {
-                        arr.push_back(bson_iter_utf8_easy(&child));
-                    }
-                }
-
-                found.set_prop_array(key, arr);
-                continue;
-            }
-        }
-
-        bson_destroy(next);
-
-        ret.push_back(found);
-    }
-    #endif // 0
 
     std::vector<mongo_requester> alt_method;
 
@@ -1551,12 +1311,6 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
         {
             const std::string& key = pairs.first;
             const nlohmann::json& val = pairs.second;
-
-            /*if(val.is_integer())
-            {
-                found.set_prop_int(key, (int)val);
-                continue;
-            }*/
 
             if(val.is_number())
             {
@@ -1589,29 +1343,6 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
 
         alt_method.push_back(found);
     }
-
-
-    #if 0
-    if(alt_method.size() != ret.size())
-    {
-        std::cout << "alt != size " << std::endl;
-    }
-    else
-    {
-        for(int i=0; i < (int)alt_method.size(); i++)
-        {
-            if(alt_method[i].get_all_properties_json() != ret[i].get_all_properties_json())
-            {
-                std::cout << "not eq in double test\n";
-            }
-        }
-    }
-
-    if(to_opt != nullptr)
-        bson_destroy(to_opt);
-
-    bson_destroy(to_find);
-    #endif // 0
 
     return alt_method;
 }
