@@ -749,6 +749,21 @@ void mongo_interface::insert_json_1(const std::string& script_host, const std::s
     bson_destroy(bs);
 }
 
+
+void mongo_interface::insert_json_one_new(const nlohmann::json& json)
+{
+    if(enable_testing_backend)
+    {
+        testing_backend.insert_one(json);
+    }
+    #ifndef ONLY_VALIDATION
+    else
+    #endif // ONLY_VALIDATION
+    {
+        insert_json_1(last_collection, json.dump());
+    }
+}
+
 std::string mongo_interface::update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update)
 {
     if(selector == nullptr || update == nullptr)
@@ -1349,13 +1364,9 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
 
 void mongo_requester::insert_in_db(mongo_lock_proxy& ctx)
 {
-    bson_t* to_insert = bson_new();
+    auto all_props = get_all_properties_json();
 
-    append_properties_all_to(to_insert);
-
-    ctx->insert_bson_1(ctx->last_collection, to_insert);
-
-    bson_destroy(to_insert);
+    ctx->insert_json_one_new(all_props);
 }
 
 void mongo_requester::append_property_to(bson_t* bson, const std::string& key)
