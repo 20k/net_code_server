@@ -304,6 +304,14 @@ struct db_storage
                     break;
                 }
             }
+
+            if(options.count("projection") > 0)
+            {
+                for(auto& i : ret)
+                {
+                    i = project(i, options.at("projection"));
+                }
+            }
         }
 
         return ret;
