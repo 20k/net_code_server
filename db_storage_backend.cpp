@@ -374,11 +374,6 @@ struct db_storage
             {
                 if(matches(js, selector))
                 {
-                    //auto res = project(js, projector);
-
-                    ///ok this is incorrect
-                    ///the way mongoc does it is that this is an options structure
-
                     ret.push_back(js);
                 }
             }
