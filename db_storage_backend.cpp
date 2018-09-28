@@ -58,7 +58,15 @@ bool is_exists(const nlohmann::json& data, const std::string& key)
 
     if(val.count("$exists") > 0)
     {
-        return val.at("$exists");
+        nlohmann::json js = val.at("$exists");
+
+        if(js.is_number())
+            return js == 1;
+
+        if(js.is_boolean())
+            return js == true;
+
+        return false;
     }
 
     return false;
