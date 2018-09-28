@@ -494,6 +494,13 @@ void init_db_storage_backend()
             {
                 std::string index = store.get_index((int)ctx->last_db_type);
 
+                /*if(js.size() > 1)
+                {
+                    std::cout << "js size " << js.size() << std::endl;
+
+                    std::cout << "collection " << collection << std::endl;
+                }
+
                 assert(js.size() == 0 || js.size() == 1);
 
                 if(js.size() == 1)
@@ -503,6 +510,13 @@ void init_db_storage_backend()
                     assert(data.count(index) > 0);
 
                     store.all_data[(int)ctx->last_db_type].index_map[collection][data.at(index)] = data;
+                }*/
+
+                for(auto& i : js)
+                {
+                    assert(i.count(index) > 0);
+
+                    store.all_data[(int)ctx->last_db_type].index_map[collection][i.at(index)] = i;
                 }
             }
         }
