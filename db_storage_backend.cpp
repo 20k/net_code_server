@@ -49,6 +49,21 @@ bool matches(const nlohmann::json& data, const nlohmann::json& match)
     return true;
 }
 
+bool is_exists(const nlohmann::json& data, const std::string& key)
+{
+    if(data.count(key) == 0)
+        return false;
+
+    nlohmann::json val = data.at(key);
+
+    if(val.count("$exists") > 0)
+    {
+        return val.at("$exists");
+    }
+
+    return false;
+}
+
 void updater(nlohmann::json& data, const nlohmann::json& update)
 {
     if(update.count("$set") == 0)
@@ -265,6 +280,8 @@ struct db_storage
 
             assert(selector.count(index) > 0);
 
+            assert(!is_exists(selector, index));
+
             auto found = indices.find(selector.at(index));
 
             if(found == indices.end())
@@ -308,6 +325,8 @@ struct db_storage
             std::string index = get_index(db);
 
             assert(selector.count(index) > 0);
+
+            assert(!is_exists(selector, index));
 
             auto found = indices.find(selector.at(index));
 
@@ -360,12 +379,23 @@ struct db_storage
 
             assert(selector.count(index) > 0);
 
-            auto found = indices.find(selector.at(index));
+            if(is_exists(selector, index))
+            {
+                for(auto& i : indices)
+                {
+                    ret.push_back(i);
+                }
+            }
+            else
+            {
+                ///throwing
+                auto found = indices.find(selector.at(index));
 
-            if(found == indices.end())
-                return {};
+                if(found == indices.end())
+                    return {};
 
-            ret.push_back(found->second);
+                ret.push_back(found->second);
+            }
         }
 
         if(options.is_object())
@@ -423,12 +453,19 @@ struct db_storage
 
             assert(selector.count(index) > 0);
 
-            auto found = indices.find(selector.at(index));
+            if(is_exists(selector, index))
+            {
+                indices.clear();
+            }
+            else
+            {
+                auto found = indices.find(selector.at(index));
 
-            if(found == indices.end())
-                return;
+                if(found == indices.end())
+                    return;
 
-            indices.erase(found);
+                indices.erase(found);
+            }
         }
     }
 };
