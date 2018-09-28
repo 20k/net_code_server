@@ -380,26 +380,52 @@ struct db_storage
         }
         else
         {
+            ///ok this is all wrong
+            ///we're assuming that incoming requests for searches are like
+            ///hey just fetch this one item
+            ///wheras they might be a query for other properties
+            ///starting to think this map or vector design may be wrong
             std::string index = get_index(db);
 
-            assert(selector.count(index) > 0);
+            //assert(selector.count(index) > 0);
 
-            if(is_exists(selector, index))
+            bool has_index_key = selector.count(index) > 0;
+
+            if(has_index_key)
             {
-                for(auto& i : indices)
+                if(is_exists(selector, index))
                 {
-                    ret.push_back(i.second);
+                    for(auto& i : indices)
+                    {
+                        if(matches(i.second, selector))
+                        {
+                            ret.push_back(i.second);
+                        }
+                    }
+                }
+                else
+                {
+                    ///throwing
+                    auto found = indices.find(selector.at(index));
+
+                    if(found == indices.end())
+                        return {};
+
+                    if(matches(found->second, selector))
+                    {
+                        ret.push_back(found->second);
+                    }
                 }
             }
             else
             {
-                ///throwing
-                auto found = indices.find(selector.at(index));
-
-                if(found == indices.end())
-                    return {};
-
-                ret.push_back(found->second);
+                for(auto& i : indices)
+                {
+                    if(matches(i.second, selector))
+                    {
+                        ret.push_back(i.second);
+                    }
+                }
             }
         }
 
