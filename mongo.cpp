@@ -995,6 +995,8 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
             std::cout << "invalid validated size " << validated.size() << " " << results.size() << std::endl;
             std::cout << "bs " << bson_to_json(bs).dump() + " ps " + bson_to_json(ps).dump() << std::endl;
 
+            std::cout << "failed validation from ctx " << ctx->last_db << std::endl;
+
             if(results.size() > 0)
             {
                 std::cout << results[0] << std::endl;
@@ -1002,17 +1004,29 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
         }
         else
         {
+            std::vector<nlohmann::json> res_copy;
+
             for(int i=0; i < (int)validated.size(); i++)
             {
                 auto parsed = nlohmann::json::parse(results[i]);
 
-                remove_mongo_id(parsed);
+                res_copy.push_back(parsed);
+            }
+
+            std::sort(validated.begin(), validated.end());
+            std::sort(res_copy.begin(), res_copy.end());
+
+            for(int i=0; i < (int)validated.size(); i++)
+            {
+                remove_mongo_id(res_copy[i]);
                 remove_mongo_id(validated[i]);
 
-                if(validated[i] != parsed)
+                if(validated[i] != res_copy[i])
                 {
-                    std::cout << "bad find, json " << validated[i] << " real db " << results[i] << std::endl;
+                    std::cout << "bad find, json " << validated[i] << " real db " << res_copy[i] << std::endl;
                     std::cout << "request bs " << bson_to_json(bs).dump() + " ps " + bson_to_json(ps).dump() << std::endl;
+
+                    std::cout << "failed validation from ctx " << ctx->last_db << std::endl;
                 }
             }
         }

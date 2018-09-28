@@ -1,5 +1,7 @@
 #include "db_storage_backend.hpp"
 #include "mongo.hpp"
+#include "user.hpp"
+#include <secret/npc_manager.hpp>
 
 bool matches(const nlohmann::json& data, const nlohmann::json& match)
 {
@@ -404,6 +406,11 @@ struct db_storage
 
                 ret.push_back(found->second);
             }
+
+            /*for(auto& i : ret)
+            {
+                std::cout << "hello " << i << std::endl;
+            }*/
         }
 
         if(options.is_object())
@@ -549,7 +556,30 @@ void init_db_storage_backend()
         }
     }
 
+    {
+        for_each_user([](user& usr)
+                      {
+
+                      });
+
+        for_each_npc([](npc_user& usr)
+                     {
+                        mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
+
+                        npc_prop_list props;
+
+                        props.load_from_db(ctx, usr.name);
+                     });
+
+        //mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+
+        //user usr;
+        //usr.load_from_db(ctx, "i20k");
+    }
+
     std::cout << "imported from mongo\n";
+
+    exit(0);
 }
 
 void db_storage_backend::run_tests()
