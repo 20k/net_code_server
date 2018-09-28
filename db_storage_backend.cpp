@@ -293,12 +293,28 @@ struct db_storage
 
         std::lock_guard guard(cdb.get_lock(coll));
 
-        for(nlohmann::json& js : collection)
+        if(!has_index(db))
         {
-            if(matches(js, selector))
+            for(nlohmann::json& js : collection)
             {
-                updater(js, update);
+                if(matches(js, selector))
+                {
+                    updater(js, update);
+                }
             }
+        }
+        else
+        {
+            std::string index = get_index(db);
+
+            assert(selector.count(index) > 0);
+
+            auto found = indices.find(selector.at(index));
+
+            if(found == indices.end())
+                return;
+
+            updater(found->second, update);
         }
     }
 
@@ -323,17 +339,33 @@ struct db_storage
 
         std::lock_guard guard(cdb.get_lock(coll));
 
-        for(const nlohmann::json& js : collection)
+        if(!has_index(db))
         {
-            if(matches(js, selector))
+            for(const nlohmann::json& js : collection)
             {
-                //auto res = project(js, projector);
+                if(matches(js, selector))
+                {
+                    //auto res = project(js, projector);
 
-                ///ok this is incorrect
-                ///the way mongoc does it is that this is an options structure
+                    ///ok this is incorrect
+                    ///the way mongoc does it is that this is an options structure
 
-                ret.push_back(js);
+                    ret.push_back(js);
+                }
             }
+        }
+        else
+        {
+            std::string index = get_index(db);
+
+            assert(selector.count(index) > 0);
+
+            auto found = indices.find(selector.at(index));
+
+            if(found == indices.end())
+                return {};
+
+            ret.push_back(found->second);
         }
 
         if(options.is_object())
@@ -381,7 +413,23 @@ struct db_storage
 
         std::lock_guard guard(cdb.get_lock(coll));
 
-        collection.erase( std::remove_if(collection.begin(), collection.end(), [&](const nlohmann::json& js){return matches(js, selector);}), collection.end() );
+        if(!has_index(db))
+        {
+            collection.erase( std::remove_if(collection.begin(), collection.end(), [&](const nlohmann::json& js){return matches(js, selector);}), collection.end() );
+        }
+        else
+        {
+            std::string index = get_index(db);
+
+            assert(selector.count(index) > 0);
+
+            auto found = indices.find(selector.at(index));
+
+            if(found == indices.end())
+                return;
+
+            indices.erase(found);
+        }
     }
 };
 
@@ -438,7 +486,25 @@ void init_db_storage_backend()
 
             //std::lock_guard guard(store.db_lock);
 
-            store.all_data[(int)ctx->last_db_type].all_data[collection] = js;
+            if(!store.has_index((int)ctx->last_db_type))
+            {
+                store.all_data[(int)ctx->last_db_type].all_data[collection] = js;
+            }
+            else
+            {
+                std::string index = store.get_index((int)ctx->last_db_type);
+
+                assert(js.size() == 0 || js.size() == 1);
+
+                if(js.size() == 1)
+                {
+                    nlohmann::json data = js[0];
+
+                    assert(data.count(index) > 0);
+
+                    store.all_data[(int)ctx->last_db_type].index_map[collection][data.at(index)] = data;
+                }
+            }
         }
     }
 
