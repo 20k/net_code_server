@@ -398,12 +398,6 @@ struct db_storage
             }
             else
             {
-                /*if(db == (int)mongo_database_type::NPC_PROPERTIES)
-                for(auto& i : indices)
-                {
-                    std::cout << "in " << i << std::endl;
-                }*/
-
                 ///throwing
                 auto found = indices.find(selector.at(index));
 
@@ -412,14 +406,6 @@ struct db_storage
 
                 ret.push_back(found->second);
             }
-
-            /*if(db == (int)mongo_database_type::NPC_PROPERTIES)
-            {
-                for(auto& i : ret)
-                {
-                    std::cout << "hello " << i << std::endl;
-                }
-            }*/
         }
 
         if(options.is_object())
@@ -564,26 +550,10 @@ void init_db_storage_backend()
                     std::map<std::string, nlohmann::json>& indices = store.all_data[(int)ctx->last_db_type].index_map[collection];
 
                     indices[current_idx] = k;
-
-                    /*if(idx == (int)mongo_database_type::NPC_PROPERTIES)
-                    {
-                        std::cout << k << std::endl;
-
-                        std::cout << "index " << indices[current_idx] << std::endl;
-                    }*/
                 }
-
-                /*if(idx == (int)mongo_database_type::NPC_PROPERTIES)
-                {
-                    for(auto& k : store.all_data[(int)ctx->last_db_type].index_map[collection])
-                    {
-                        std::cout << "k " << k.second << std::endl;
-                    }
-                }*/
             }
         }
     }
-
 
 
     /*{
