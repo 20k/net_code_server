@@ -168,6 +168,7 @@ struct db_storage
     //std::map<database_type, database> all_data;
 
     std::array<database, (int)mongo_database_type::MONGO_COUNT> all_data;
+    std::array<std::string, (int)mongo_database_type::MONGO_COUNT> indices;
 
     /*std::vector<nlohmann::json>& get_collection(const std::string& db, const std::string& coll)
     {
@@ -353,6 +354,10 @@ void init_db_storage_backend()
     {
         get_db_storage().all_data[(int)mongo_databases[idx]->last_db_type];
     }
+
+    get_db_storage().indices[(int)mongo_database_type::USER_PROPERTIES] = "name";
+    get_db_storage().indices[(int)mongo_database_type::USER_ITEMS] = "item_id";
+    get_db_storage().indices[(int)mongo_database_type::NPC_PROPERTIES] = "name";
 
     for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
     {
