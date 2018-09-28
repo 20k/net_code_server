@@ -457,10 +457,7 @@ struct db_interfaceable
 
         json to_find;
 
-        if(!has("_id"))
-            to_find[key_name] = id;
-        else
-            to_find["_id"] = data["_id"];
+        to_find[key_name] = id;
 
         auto found = ctx->find_json_new(to_find, nlohmann::json());
 
