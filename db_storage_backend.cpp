@@ -393,11 +393,17 @@ struct db_storage
             {
                 for(auto& i : indices)
                 {
-                    ret.push_back(i);
+                    ret.push_back(i.second);
                 }
             }
             else
             {
+                /*if(db == (int)mongo_database_type::NPC_PROPERTIES)
+                for(auto& i : indices)
+                {
+                    std::cout << "in " << i << std::endl;
+                }*/
+
                 ///throwing
                 auto found = indices.find(selector.at(index));
 
@@ -407,9 +413,12 @@ struct db_storage
                 ret.push_back(found->second);
             }
 
-            /*for(auto& i : ret)
+            /*if(db == (int)mongo_database_type::NPC_PROPERTIES)
             {
-                std::cout << "hello " << i << std::endl;
+                for(auto& i : ret)
+                {
+                    std::cout << "hello " << i << std::endl;
+                }
             }*/
         }
 
@@ -546,17 +555,38 @@ void init_db_storage_backend()
             {
                 std::string index = store.get_index((int)ctx->last_db_type);
 
-                for(auto& i : js)
+                for(auto& k : js)
                 {
-                    assert(i.count(index) > 0);
+                    assert(k.count(index) > 0);
 
-                    store.all_data[(int)ctx->last_db_type].index_map[collection][i.at(index)] = i;
+                    std::string current_idx = k.at(index);
+
+                    std::map<std::string, nlohmann::json>& indices = store.all_data[(int)ctx->last_db_type].index_map[collection];
+
+                    indices[current_idx] = k;
+
+                    /*if(idx == (int)mongo_database_type::NPC_PROPERTIES)
+                    {
+                        std::cout << k << std::endl;
+
+                        std::cout << "index " << indices[current_idx] << std::endl;
+                    }*/
                 }
+
+                /*if(idx == (int)mongo_database_type::NPC_PROPERTIES)
+                {
+                    for(auto& k : store.all_data[(int)ctx->last_db_type].index_map[collection])
+                    {
+                        std::cout << "k " << k.second << std::endl;
+                    }
+                }*/
             }
         }
     }
 
-    {
+
+
+    /*{
         for_each_user([](user& usr)
                       {
 
@@ -575,11 +605,11 @@ void init_db_storage_backend()
 
         //user usr;
         //usr.load_from_db(ctx, "i20k");
-    }
+    }*/
 
     std::cout << "imported from mongo\n";
 
-    exit(0);
+    //exit(0);
 }
 
 void db_storage_backend::run_tests()
