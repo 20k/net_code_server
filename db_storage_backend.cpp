@@ -210,19 +210,22 @@ struct db_storage
         database& cdb = get_db(db);
 
         std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
 
         std::lock_guard guard(cdb.get_lock(coll));
 
-        collection.push_back(js);
-
-        /*if(has_index(db))
+        if(!has_index(db))
         {
-            std::string idx = get_index(db);
+            collection.push_back(js);
+        }
+        else
+        {
+            std::string index = get_index(db);
 
-            assert(js.count(idx) > 0);
+            assert(js.count(index) > 0);
 
-            cdb.index_map[js.at(idx)] = js;
-        }*/
+            indices[js.at(index)] = js;
+        }
     }
 
     void update_one(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
@@ -240,17 +243,34 @@ struct db_storage
         database& cdb = get_db(db);
 
         std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
 
         std::lock_guard guard(cdb.get_lock(coll));
 
-        for(nlohmann::json& js : collection)
+        if(!has_index(db))
         {
-            if(matches(js, selector))
+            for(nlohmann::json& js : collection)
             {
-                updater(js, update);
+                if(matches(js, selector))
+                {
+                    updater(js, update);
 
-                return;
+                    return;
+                }
             }
+        }
+        else
+        {
+            std::string index = get_index(db);
+
+            assert(selector.count(index) > 0);
+
+            auto found = indices.find(selector.at(index));
+
+            if(found == indices.end())
+                return;
+
+            updater(found->second, update);
         }
     }
 
@@ -269,6 +289,7 @@ struct db_storage
         database& cdb = get_db(db);
 
         std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
 
         std::lock_guard guard(cdb.get_lock(coll));
 
@@ -298,6 +319,7 @@ struct db_storage
         database& cdb = get_db(db);
 
         const std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+        const std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
 
         std::lock_guard guard(cdb.get_lock(coll));
 
@@ -355,6 +377,7 @@ struct db_storage
         database& cdb = get_db(db);
 
         std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
 
         std::lock_guard guard(cdb.get_lock(coll));
 
