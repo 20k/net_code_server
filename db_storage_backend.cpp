@@ -6,9 +6,11 @@
 #include <tinydir/tinydir.h>
 #include <direct.h>
 #include <fstream>
+#include <libncclient/nc_util.hpp>
 
 #define CID_STRING "_cid"
 #define ROOT_STORE "C:/net_code_storage"
+#define ROOT_FILE "C:/net_code_storage/gid"
 
 bool matches(const nlohmann::json& data, const nlohmann::json& match)
 {
@@ -230,6 +232,8 @@ struct db_storage
     size_t get_next_id()
     {
         size_t val = global_id++;
+
+        write_all(ROOT_FILE, std::to_string(global_id));
 
         ///do disk stuff etc
 
@@ -604,6 +608,21 @@ void init_db_storage_backend()
 
     mkdir(ROOT_STORE);
 
+    std::string root_file = ROOT_FILE;
+
+    std::string resulting_data = read_file(root_file);
+
+    std::cout << "RDATA " << resulting_data << std::endl;
+
+    if(resulting_data.size() == 0)
+    {
+        write_all(root_file, std::to_string(0));
+    }
+    else
+    {
+        store.global_id = atoll(resulting_data.c_str());
+    }
+
     ///READ ID STORAGE FROM DISK
     ///obviously unimplemented now
 
@@ -671,7 +690,6 @@ void init_db_storage_backend()
             }
         }
     }
-
 
     /*{
         for_each_user([](user& usr)
