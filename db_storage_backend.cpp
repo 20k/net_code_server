@@ -121,6 +121,7 @@ nlohmann::json project(const nlohmann::json& data, const nlohmann::json& proj)
 struct database
 {
     std::map<std::string, std::vector<nlohmann::json>> all_data;
+    std::map<std::string, std::map<std::string, nlohmann::json>> index_map;
 
     std::mutex all_coll_guard;
 
@@ -131,6 +132,13 @@ struct database
         std::lock_guard guard(all_coll_guard);
 
         return all_data[coll];
+    }
+
+    std::map<std::string, nlohmann::json>& get_indexed(const std::string& coll)
+    {
+        std::lock_guard guard(all_coll_guard);
+
+        return index_map[coll];
     }
 
     std::mutex& get_lock(const std::string& coll)
@@ -182,6 +190,16 @@ struct db_storage
         return all_data[db];
     }
 
+    bool has_index(const database_type& db)
+    {
+        return indices[db].size() > 0;
+    }
+
+    std::string get_index(const database_type& db)
+    {
+        return indices[db];
+    }
+
     void insert_one(const database_type& db, const std::string& coll, const nlohmann::json& js)
     {
         if(db_storage_backend::contains_banned_query(js))
@@ -197,7 +215,14 @@ struct db_storage
 
         collection.push_back(js);
 
-        //all_data[db][coll].push_back(js);
+        /*if(has_index(db))
+        {
+            std::string idx = get_index(db);
+
+            assert(js.count(idx) > 0);
+
+            cdb.index_map[js.at(idx)] = js;
+        }*/
     }
 
     void update_one(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
