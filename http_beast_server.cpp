@@ -78,7 +78,7 @@ std::vector<std::string> sanitise_input_vec(std::vector<std::string> vec)
     return vec;
 }
 
-bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handler_state>& all_shared, const std::string& str)
+bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handler_state>& all_shared, const std::string& str, sf::Clock& terminate_timer)
 {
     std::string tstr = "client_terminate_scripts ";
 
@@ -97,6 +97,8 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
             if(id <= -1)
             {
                 all_shared->state.should_terminate_any_realtime = true;
+
+                terminate_timer.restart();
             }
             else
             {
@@ -293,7 +295,7 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
     return false;
 }
 
-bool handle_read(const std::shared_ptr<shared_command_handler_state>& all_shared, std::deque<std::string>& shared_queue)
+bool handle_read(const std::shared_ptr<shared_command_handler_state>& all_shared, std::deque<std::string>& shared_queue, sf::Clock& terminate_timer)
 {
     boost::system::error_code ec;
 
@@ -307,7 +309,7 @@ bool handle_read(const std::shared_ptr<shared_command_handler_state>& all_shared
 
     lg::log(next_command);
 
-    if(handle_termination_shortcircuit(all_shared, next_command))
+    if(handle_termination_shortcircuit(all_shared, next_command, terminate_timer))
         return false;
 
     int len;
@@ -368,6 +370,8 @@ void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
 
     lg::log("read_write_async_queue\n");
 
+    sf::Clock terminate_timer;
+
     try
     {
         while(1)
@@ -384,8 +388,13 @@ void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
             {
                 found_any = true;
 
-                if(handle_read(all_shared, shared_queue))
+                if(handle_read(all_shared, shared_queue, terminate_timer))
                     break;
+            }
+
+            if(terminate_timer.getElapsedTime().asMilliseconds() > 100)
+            {
+                all_shared->state.should_terminate_any_realtime = false;
             }
 
             while(all_shared->shared.has_front_write())
