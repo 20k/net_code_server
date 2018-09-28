@@ -3,6 +3,8 @@
 #include "user.hpp"
 #include <secret/npc_manager.hpp>
 
+#define CID_STRING "_cid"
+
 bool matches(const nlohmann::json& data, const nlohmann::json& match)
 {
     if(!match.is_object())
@@ -203,12 +205,7 @@ struct db_storage
     std::array<database, (int)mongo_database_type::MONGO_COUNT> all_data;
     std::array<std::string, (int)mongo_database_type::MONGO_COUNT> indices;
 
-    /*std::vector<nlohmann::json>& get_collection(const std::string& db, const std::string& coll)
-    {
-        std::lock_guard guard(db_lock);
-
-        return all_data[db][coll];
-    }*/
+    size_t global_id = 0;
 
     database& get_db(const database_type& db)
     {
@@ -223,6 +220,15 @@ struct db_storage
     std::string get_index(const database_type& db)
     {
         return indices[db];
+    }
+
+    size_t get_next_id()
+    {
+        size_t val = global_id++;
+
+        ///do disk stuff etc
+
+        return val;
     }
 
     void flush(const database_type& db, const std::string& coll, const nlohmann::json& data)
@@ -556,14 +562,19 @@ void init_db_storage_backend()
 
     db_storage_backend::run_tests();
 
+    db_storage& store = get_db_storage();
+
+    ///READ ID STORAGE FROM DISK
+    ///obviously unimplemented now
+
     for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
     {
-        get_db_storage().all_data[(int)mongo_databases[idx]->last_db_type];
+        store.all_data[(int)mongo_databases[idx]->last_db_type];
     }
 
-    get_db_storage().indices[(int)mongo_database_type::USER_PROPERTIES] = "name";
-    get_db_storage().indices[(int)mongo_database_type::USER_ITEMS] = "item_id";
-    get_db_storage().indices[(int)mongo_database_type::NPC_PROPERTIES] = "name";
+    store.indices[(int)mongo_database_type::USER_PROPERTIES] = "name";
+    store.indices[(int)mongo_database_type::USER_ITEMS] = "item_id";
+    store.indices[(int)mongo_database_type::NPC_PROPERTIES] = "name";
 
     for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
     {
@@ -584,17 +595,13 @@ void init_db_storage_backend()
             {
                 nlohmann::json found = nlohmann::json::parse(i);
 
-                js.push_back(found);
-
-                /*if(idx == (int)mongo_database_type::GLOBAL_PROPERTIES)
+                if(found.count(CID_STRING) == 0)
                 {
-                    std::cout << "fi " << i << std::endl;
-                }*/
+                    found[CID_STRING] = store.get_next_id();
+                }
+
+                js.push_back(found);
             }
-
-            db_storage& store = get_db_storage();
-
-            //std::lock_guard guard(store.db_lock);
 
             if(!store.has_index((int)ctx->last_db_type))
             {
