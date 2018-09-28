@@ -255,24 +255,28 @@ struct db_storage
 
         std::lock_guard guard(cdb.get_lock(coll));
 
+        auto fdata = js;
+        fdata[CID_STRING] = get_next_id();
+
         if(!has_index(db))
         {
-            collection.push_back(js);
+            collection.push_back(fdata);
 
-            flush(db, coll, js);
+            flush(db, coll, fdata);
         }
         else
         {
             std::string index = get_index(db);
 
-            assert(js.count(index) > 0);
+            assert(fdata.count(index) > 0);
 
-            indices[js.at(index)] = js;
+            indices[fdata.at(index)] = fdata;
 
-            flush(db, coll, js);
+            flush(db, coll, fdata);
         }
     }
 
+    ///ensure that update can never contain CID_STRING
     void update_one(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
     {
         if(db_storage_backend::contains_banned_query(selector))
