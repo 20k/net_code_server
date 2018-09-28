@@ -3,7 +3,12 @@
 #include "user.hpp"
 #include <secret/npc_manager.hpp>
 
+#include <tinydir/tinydir.h>
+#include <direct.h>
+#include <fstream>
+
 #define CID_STRING "_cid"
+#define ROOT_STORE "C:/net_code_storage"
 
 bool matches(const nlohmann::json& data, const nlohmann::json& match)
 {
@@ -231,9 +236,38 @@ struct db_storage
         return val;
     }
 
+    ///todo: make atomic
     void flush(const database_type& db, const std::string& coll, const nlohmann::json& data)
     {
+        assert(data.count(CID_STRING) == 1);
 
+        assert(coll.find('/') == std::string::npos);
+
+        std::string root = ROOT_STORE;
+
+        std::string db_dir = root + "/" + std::to_string((int)db);
+
+        mkdir(db_dir.c_str());
+
+        std::string collection_dir = db_dir + "/" + coll;
+
+        mkdir(collection_dir.c_str());
+
+        std::string final_dir = collection_dir + "/" + std::to_string((size_t)data.at(CID_STRING));
+
+        //std::string dumped = data.dump();
+
+        std::vector<uint8_t> dumped = nlohmann::json::to_cbor(data);
+
+        if(dumped.size() == 0)
+            return;
+
+        ///so
+        ///we need some way to recover db, collection and data on reload
+        auto my_file = std::fstream(final_dir, std::ios::out | std::ios::binary);
+
+        my_file.write((char*)&dumped[0], dumped.size());
+        my_file.close();
     }
 
     void disk_erase(const database_type& db, const std::string& coll, const nlohmann::json& data)
@@ -568,6 +602,8 @@ void init_db_storage_backend()
 
     db_storage& store = get_db_storage();
 
+    mkdir(ROOT_STORE);
+
     ///READ ID STORAGE FROM DISK
     ///obviously unimplemented now
 
@@ -610,6 +646,11 @@ void init_db_storage_backend()
             if(!store.has_index((int)ctx->last_db_type))
             {
                 store.all_data[(int)ctx->last_db_type].all_data[collection] = js;
+
+                for(auto& k : js)
+                {
+                    store.flush((int)ctx->last_db_type, collection, k);
+                }
             }
             else
             {
@@ -624,6 +665,8 @@ void init_db_storage_backend()
                     std::map<std::string, nlohmann::json>& indices = store.all_data[(int)ctx->last_db_type].index_map[collection];
 
                     indices[current_idx] = k;
+
+                    store.flush((int)ctx->last_db_type, collection, k);
                 }
             }
         }
@@ -956,5 +999,10 @@ void remove_mongo_id(nlohmann::json& in)
     if(in.count("_id") > 0)
     {
         in.erase(in.find("_id"));
+    }
+
+    if(in.count(CID_STRING))
+    {
+        in.erase(in.find(CID_STRING));
     }
 }
