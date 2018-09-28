@@ -225,6 +225,16 @@ struct db_storage
         return indices[db];
     }
 
+    void flush(const database_type& db, const std::string& coll, const nlohmann::json& data)
+    {
+
+    }
+
+    void disk_erase(const database_type& db, const std::string& coll, const nlohmann::json& data)
+    {
+
+    }
+
     void insert_one(const database_type& db, const std::string& coll, const nlohmann::json& js)
     {
         if(db_storage_backend::contains_banned_query(js))
@@ -242,6 +252,8 @@ struct db_storage
         if(!has_index(db))
         {
             collection.push_back(js);
+
+            flush(db, coll, js);
         }
         else
         {
@@ -250,6 +262,8 @@ struct db_storage
             assert(js.count(index) > 0);
 
             indices[js.at(index)] = js;
+
+            flush(db, coll, js);
         }
     }
 
@@ -280,6 +294,8 @@ struct db_storage
                 {
                     updater(js, update);
 
+                    flush(db, coll, js);
+
                     return;
                 }
             }
@@ -298,6 +314,8 @@ struct db_storage
                 return;
 
             updater(found->second, update);
+
+            flush(db, coll, found->second);
         }
     }
 
@@ -327,6 +345,8 @@ struct db_storage
                 if(matches(js, selector))
                 {
                     updater(js, update);
+
+                    flush(db, coll, js);
                 }
             }
         }
@@ -344,6 +364,8 @@ struct db_storage
                 return;
 
             updater(found->second, update);
+
+            flush(db, coll, found->second);
         }
     }
 
@@ -476,6 +498,16 @@ struct db_storage
 
         if(!has_index(db))
         {
+            //collection.erase( std::remove_if(collection.begin(), collection.end(), [&](const nlohmann::json& js){return matches(js, selector);}), collection.end() );
+
+            for(auto& js : collection)
+            {
+                if(matches(js, selector))
+                {
+                    disk_erase(db, coll, js);
+                }
+            }
+
             collection.erase( std::remove_if(collection.begin(), collection.end(), [&](const nlohmann::json& js){return matches(js, selector);}), collection.end() );
         }
         else
@@ -486,6 +518,14 @@ struct db_storage
 
             if(is_exists(selector, index))
             {
+                for(auto& i : indices)
+                {
+                    if(matches(i.second, selector))
+                    {
+                        disk_erase(db, coll, i.second);
+                    }
+                }
+
                 indices.clear();
             }
             else
@@ -494,6 +534,8 @@ struct db_storage
 
                 if(found == indices.end())
                     return;
+
+                disk_erase(db, coll, found->second);
 
                 indices.erase(found);
             }
