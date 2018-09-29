@@ -728,32 +728,6 @@ void import_from_mongo()
 
 void import_from_disk()
 {
-    /*std::string root = ROOT_STORE;
-
-    std::string db_dir = root + "/" + std::to_string((int)db);
-
-    mkdir(db_dir.c_str());
-
-    std::string collection_dir = db_dir + "/" + coll;
-
-    mkdir(collection_dir.c_str());
-
-    std::string final_dir = collection_dir + "/" + std::to_string((size_t)data.at(CID_STRING));
-
-    //std::string dumped = data.dump();
-
-    std::vector<uint8_t> dumped = nlohmann::json::to_cbor(data);
-
-    if(dumped.size() == 0)
-        return;
-
-    ///so
-    ///we need some way to recover db, collection and data on reload
-    auto my_file = std::fstream(final_dir, std::ios::out | std::ios::binary);
-
-    my_file.write((char*)&dumped[0], dumped.size());
-    my_file.close();*/
-
     db_storage& store = get_db_storage();
 
     std::string root = ROOT_STORE;
@@ -768,11 +742,7 @@ void import_from_disk()
             {
                 std::string path = db_dir + "/" + coll + "/" + file_name;
 
-                //std::cout << "file path " <<  path << std::endl;
-
                 std::string data = read_file_bin(path);
-
-                //std::cout << "cbor data " << data << std::endl;
 
                 nlohmann::json fdata = nlohmann::json::from_cbor(data);
 
