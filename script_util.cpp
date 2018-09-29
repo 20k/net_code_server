@@ -518,6 +518,8 @@ bool script_info::load_from_db(mongo_lock_proxy& ctx)
     seclevel = my_script.get_prop_as_integer("seclevel");
     valid = my_script.get_prop_as_integer("valid");
 
+    //std::cout << "valid? " << valid << std::endl;
+
     metadata.load_from_string(my_script.get_prop("metadata"));
 
     if(!valid || parsed_source.size() == 0)
