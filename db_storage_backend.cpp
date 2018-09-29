@@ -220,6 +220,7 @@ struct database
 {
     std::map<std::string, std::vector<nlohmann::json>> all_data;
     std::map<std::string, std::map<std::string, nlohmann::json>> index_map;
+    std::map<std::string, bool> collection_imported;
 
     std::mutex all_coll_guard;
 
@@ -380,10 +381,62 @@ struct db_storage
         remove(get_filename(db, coll, data).c_str());
     }
 
+    void import_collection(const database_type& db_idx, const std::string& coll)
+    {
+        database& cdb = get_db(db_idx);
+
+        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
+
+        std::lock_guard guard(cdb.get_lock(coll));
+
+        if(cdb.collection_imported[coll])
+            return;
+
+        std::string coll_path = std::string(ROOT_STORE) + "/" + std::to_string((int)db_idx) + "/" + coll;
+
+        tinydir_dir dir;
+
+        if(tinydir_open(&dir, coll_path.c_str()) == -1)
+            return;
+
+        tinydir_close(&dir);
+
+        for_each_file(coll_path, [&](const std::string& file_name)
+        {
+            std::string path = coll_path + "/" + file_name;
+
+            std::string data = read_file_bin(path);
+
+            nlohmann::json fdata = nlohmann::json::from_cbor(data);
+
+            if(!has_index(db_idx))
+            {
+                collection.push_back(fdata);
+            }
+            else
+            {
+                std::string index = get_index(db_idx);
+
+                assert(fdata.count(index) > 0);
+
+                std::string current_idx = fdata.at(index);
+
+                //std::map<std::string, nlohmann::json>& indices = all_data[db_idx].index_map[coll];
+
+                indices[current_idx] = fdata;
+            }
+        });
+
+        cdb.collection_imported[coll] = true;
+    }
+
     void insert_one(const database_type& db, const std::string& coll, const nlohmann::json& js)
     {
         if(db_storage_backend::contains_banned_query(js))
             return;
+
+        import_collection(db, coll);
 
         //std::lock_guard guard(db_lock);
 
@@ -493,6 +546,8 @@ struct db_storage
         if(db_storage_backend::contains_banned_query(update))
             return;
 
+        import_collection(db, coll);
+
         for_each_match(db, coll, selector, [&](nlohmann::json& js)
         {
             updater(js, update);
@@ -511,6 +566,8 @@ struct db_storage
         if(db_storage_backend::contains_banned_query(update))
             return;
 
+        import_collection(db, coll);
+
         for_each_match(db, coll, selector, [&](nlohmann::json& js)
         {
             updater(js, update);
@@ -528,6 +585,8 @@ struct db_storage
 
         if(db_storage_backend::contains_banned_query(options))
             return std::vector<nlohmann::json>();
+
+        import_collection(db, coll);
 
         std::vector<nlohmann::json> ret;
 
@@ -591,6 +650,8 @@ struct db_storage
     {
         if(db_storage_backend::contains_banned_query(selector))
             return;
+
+        import_collection(db, coll);
 
         //std::lock_guard guard(db_lock);
 
@@ -736,7 +797,7 @@ void import_from_disk()
     {
         std::string db_dir = root + "/" + std::to_string((int)db_idx);
 
-        for_each_dir(db_dir, [&](const std::string& coll)
+        /*for_each_dir(db_dir, [&](const std::string& coll)
         {
             for_each_file(db_dir + "/" + coll, [&](const std::string& file_name)
             {
@@ -762,8 +823,10 @@ void import_from_disk()
 
                     indices[current_idx] = fdata;
                 }
+
+                store.all_data[db_idx].collection_imported[coll] = true;
             });
-        });
+        });*/
     }
 
     std::cout << "imported from disk" << std::endl;
