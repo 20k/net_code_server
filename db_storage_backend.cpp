@@ -269,45 +269,6 @@ bool json_prop_true(const nlohmann::json& js, const std::string& key)
     return false;
 }
 
-template<typename T>
-void atomic_write(const std::string& file, const T& data)
-{
-    int length = data.size();
-
-    if(length == 0)
-        return;
-
-    ///hmm
-    ///<filesystem> defines some interesting semantics
-    std::string atomic_extension = ".atom";
-    std::string atomic_file = file + atomic_extension;
-
-    auto my_file = std::fstream(atomic_file, std::ios::out | std::ios::binary);
-
-    my_file.write((const char*)&data[0], data.size());
-    my_file.close();
-
-    if(!file_exists(file))
-    {
-        rename(atomic_file.c_str(), file.c_str());
-        return;
-    }
-
-    ///hooray! guarantees atomicity (?)
-    //std::filesystem::rename(atomic_file, file);
-
-    bool err = ReplaceFileA(file.c_str(), atomic_file.c_str(), nullptr, REPLACEFILE_IGNORE_MERGE_ERRORS, nullptr, nullptr) == 0;
-
-    if(err)
-    {
-        std::cout << "atomic write error " << GetLastError() << std::endl;
-
-        throw std::runtime_error("Explod in atomic write");
-    }
-
-    ///boo! doesn't actually work!
-}
-
 struct db_storage
 {
     //std::map<std::string, std::map<std::string, std::vector<nlohmann::json>>> all_data;
@@ -321,6 +282,56 @@ struct db_storage
 
     size_t global_id = 0;
     std::mutex id_guard;
+
+    bool atomic_enabled = true;
+
+    template<typename T>
+    void atomic_write(const std::string& file, const T& data)
+    {
+        int length = data.size();
+
+        if(length == 0)
+            return;
+
+        ///hmm
+        ///<filesystem> defines some interesting semantics
+        ///boo! doesn't actually work!
+        if(atomic_enabled)
+        {
+            std::string atomic_extension = ".atom";
+            std::string atomic_file = file + atomic_extension;
+
+            auto my_file = std::fstream(atomic_file, std::ios::out | std::ios::binary);
+
+            my_file.write((const char*)&data[0], data.size());
+            my_file.close();
+
+            if(!file_exists(file))
+            {
+                rename(atomic_file.c_str(), file.c_str());
+                return;
+            }
+
+            ///hooray! guarantees atomicity (?)
+            //std::filesystem::rename(atomic_file, file);
+
+            bool err = ReplaceFileA(file.c_str(), atomic_file.c_str(), nullptr, REPLACEFILE_IGNORE_MERGE_ERRORS, nullptr, nullptr) == 0;
+
+            if(err)
+            {
+                std::cout << "atomic write error " << GetLastError() << std::endl;
+
+                throw std::runtime_error("Explod in atomic write");
+            }
+        }
+        else
+        {
+            auto my_file = std::fstream(file, std::ios::out | std::ios::binary);
+
+            my_file.write((const char*)&data[0], data.size());
+            my_file.close();
+        }
+    }
 
     database& get_db(const database_type& db)
     {
@@ -732,6 +743,8 @@ void import_from_mongo()
 
     store.global_id = 0;
 
+    store.atomic_enabled = false;
+
     for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
     {
         mongo_context* ctx = mongo_databases[idx];
@@ -787,6 +800,8 @@ void import_from_mongo()
             }
         }
     }
+
+    store.atomic_enabled = true;
 
     std::cout << "imported from mongo\n";
 
@@ -858,7 +873,7 @@ void init_db_storage_backend()
 
     if(resulting_data.size() == 0)
     {
-        atomic_write(root_file, std::to_string(0));
+        store.atomic_write(root_file, std::to_string(0));
         //write_all(root_file, std::to_string(0));
     }
     else
