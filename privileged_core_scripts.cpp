@@ -414,7 +414,7 @@ duk_ret_t scripts__get_level(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 
 
-std::string format_pretty_names(const std::vector<std::string>& names, bool colour)
+std::string format_pretty_names(const std::vector<std::string>& names, bool colour, bool all_characters = false)
 {
     std::string ret;
 
@@ -434,7 +434,10 @@ std::string format_pretty_names(const std::vector<std::string>& names, bool colo
                 {
                     if(i == 0)
                     {
-                        name += colour_string_only_alnum(post_split[i]);
+                        if(!all_characters)
+                            name += colour_string_only_alnum(post_split[i]);
+                        else
+                            name += colour_string(post_split[i]);
                     }
                     else
                     {
@@ -1397,7 +1400,7 @@ duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///so have to revisit updating auth
     if(pretty)
     {
-        std::string str = format_pretty_names(names, true);
+        std::string str = format_pretty_names(names, true, true);
 
         push_duk_val(ctx, str);
     }
