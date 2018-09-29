@@ -12,6 +12,55 @@
 #define ROOT_STORE "C:/net_code_storage"
 #define ROOT_FILE "C:/net_code_storage/gid"
 
+template<typename T>
+void for_each_dir(const std::string& directory, const T& t)
+{
+    tinydir_dir dir;
+    tinydir_open(&dir, directory.c_str());
+
+    while(dir.has_next)
+    {
+        tinydir_file file;
+        tinydir_readfile(&dir, &file);
+
+        if(file.is_dir)
+        {
+            std::string dir_name(file.name);
+
+            t(dir_name);
+        }
+
+        tinydir_next(&dir);
+    }
+
+    tinydir_close(&dir);
+}
+
+template<typename T>
+void for_each_file(const std::string& directory, const T& t)
+{
+    tinydir_dir dir;
+    tinydir_open(&dir, directory.c_str());
+
+    while(dir.has_next)
+    {
+        tinydir_file file;
+        tinydir_readfile(&dir, &file);
+
+        if(!file.is_dir)
+        {
+            std::string file_name(file.name);
+
+            t(file_name);
+        }
+
+        tinydir_next(&dir);
+    }
+
+    tinydir_close(&dir);
+}
+
+
 bool matches(const nlohmann::json& data, const nlohmann::json& match)
 {
     if(!match.is_object())
@@ -598,42 +647,9 @@ db_storage& get_db_storage()
     return store;
 }
 
-void init_db_storage_backend()
+void import_from_mongo()
 {
-    ///importa data from mongo
-
-    db_storage_backend::run_tests();
-
     db_storage& store = get_db_storage();
-
-    mkdir(ROOT_STORE);
-
-    std::string root_file = ROOT_FILE;
-
-    std::string resulting_data = read_file(root_file);
-
-    std::cout << "RDATA " << resulting_data << std::endl;
-
-    if(resulting_data.size() == 0)
-    {
-        write_all(root_file, std::to_string(0));
-    }
-    else
-    {
-        store.global_id = atoll(resulting_data.c_str());
-    }
-
-    ///READ ID STORAGE FROM DISK
-    ///obviously unimplemented now
-
-    for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
-    {
-        store.all_data[(int)mongo_databases[idx]->last_db_type];
-    }
-
-    store.indices[(int)mongo_database_type::USER_PROPERTIES] = "name";
-    store.indices[(int)mongo_database_type::USER_ITEMS] = "item_id";
-    store.indices[(int)mongo_database_type::NPC_PROPERTIES] = "name";
 
     for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
     {
@@ -689,6 +705,126 @@ void init_db_storage_backend()
                 }
             }
         }
+    }
+}
+
+void import_from_disk()
+{
+    /*std::string root = ROOT_STORE;
+
+    std::string db_dir = root + "/" + std::to_string((int)db);
+
+    mkdir(db_dir.c_str());
+
+    std::string collection_dir = db_dir + "/" + coll;
+
+    mkdir(collection_dir.c_str());
+
+    std::string final_dir = collection_dir + "/" + std::to_string((size_t)data.at(CID_STRING));
+
+    //std::string dumped = data.dump();
+
+    std::vector<uint8_t> dumped = nlohmann::json::to_cbor(data);
+
+    if(dumped.size() == 0)
+        return;
+
+    ///so
+    ///we need some way to recover db, collection and data on reload
+    auto my_file = std::fstream(final_dir, std::ios::out | std::ios::binary);
+
+    my_file.write((char*)&dumped[0], dumped.size());
+    my_file.close();*/
+
+    db_storage& store = get_db_storage();
+
+    std::string root = ROOT_STORE;
+
+    for(int db_idx=0; db_idx < (int)mongo_database_type::MONGO_COUNT; db_idx++)
+    {
+        std::string db_dir = root + "/" + std::to_string((int)db_idx);
+
+        for_each_dir(db_dir, [&](const std::string& coll)
+        {
+            for_each_file(db_dir + "/" + coll, [&](const std::string& file_name)
+            {
+                std::string path = db_dir + "/" + coll + "/" + file_name;
+
+                std::string data = read_file_bin(path);
+
+                nlohmann::json fdata = nlohmann::json::from_cbor(data);
+
+                if(!store.has_index(db_idx))
+                {
+                    store.all_data[db_idx].all_data[coll].push_back(fdata);
+                }
+                else
+                {
+                    std::string index = store.get_index(db_idx);
+
+                    assert(fdata.count(index) > 0);
+
+                    std::string current_idx = fdata.at(index);
+
+                    std::map<std::string, nlohmann::json>& indices = store.all_data[db_idx].index_map[coll];
+
+                    indices[current_idx] = fdata;
+
+                    //store.flush(idx, coll, k);
+                }
+            });
+        });
+    }
+}
+
+void init_db_storage_backend()
+{
+    ///importa data from mongo
+
+    db_storage_backend::run_tests();
+
+    db_storage& store = get_db_storage();
+
+    mkdir(ROOT_STORE);
+
+    std::string root_file = ROOT_FILE;
+
+    std::string resulting_data = read_file(root_file);
+
+    std::cout << "RDATA " << resulting_data << std::endl;
+
+    bool new_data = false;
+
+    if(resulting_data.size() == 0)
+    {
+        write_all(root_file, std::to_string(0));
+    }
+    else
+    {
+        store.global_id = atoll(resulting_data.c_str());
+
+        new_data = true;
+    }
+
+    ///READ ID STORAGE FROM DISK
+    ///obviously unimplemented now
+
+    for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
+    {
+        store.all_data[(int)mongo_databases[idx]->last_db_type];
+    }
+
+    store.indices[(int)mongo_database_type::USER_PROPERTIES] = "name";
+    store.indices[(int)mongo_database_type::USER_ITEMS] = "item_id";
+    store.indices[(int)mongo_database_type::NPC_PROPERTIES] = "name";
+
+    if(!new_data)
+    {
+        import_from_mongo();
+    }
+    else
+    {
+        import_from_disk();
     }
 
     /*{
