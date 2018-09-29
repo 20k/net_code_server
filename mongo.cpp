@@ -1145,7 +1145,7 @@ void mongo_interface::remove_json_many_new(const nlohmann::json& json)
         if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
             return;
 
-        bson_t* bs = make_bson_from_json(json);
+        bson_t* bs = make_bson_from_json(json.dump());
 
         if(bs == nullptr)
             return;
