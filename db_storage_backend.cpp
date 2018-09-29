@@ -275,6 +275,7 @@ struct db_storage
     std::array<std::string, (int)mongo_database_type::MONGO_COUNT> indices;
 
     size_t global_id = 0;
+    std::mutex id_guard;
 
     database& get_db(const database_type& db)
     {
@@ -293,6 +294,8 @@ struct db_storage
 
     size_t get_next_id()
     {
+        std::lock_guard guard(id_guard);
+
         size_t val = global_id++;
 
         write_all(ROOT_FILE, std::to_string(global_id));
@@ -666,6 +669,8 @@ void import_from_mongo()
 {
     db_storage& store = get_db_storage();
 
+    store.global_id = 0;
+
     for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
     {
         mongo_context* ctx = mongo_databases[idx];
@@ -695,8 +700,20 @@ void import_from_mongo()
                     if(found.at("unique_id") == "fragme_vgdajw_6153")
                     {
                         std::cout << "hi\n";
+                        std::cout << "all size " << all.size() << std::endl;
+                        std::cout << "collection name " << collection << std::endl;
+
+                        for(auto& kk : all)
+                        {
+                            std::cout << kk << std::endl;
+                        }
                     }
                 }
+
+                /*validated {"_cid":152955,"attached_locks":"","connected_to":"frag_ssnufc_ld_1230 ","is_node":"1","logs":[],"max_locks":"2","node
+                _state":"0","node_type":"2","owned_by":"frag_ssnufc_ld","time_last_breached_at_s":0.0,"unique_id":"frag_ssnufc_ld_2032"}
+                validated {"_cid":152956,"attached_locks":"","connected_to":"frag_ssnufc_ld_1230 ","is_node":"1","logs":[],"max_locks":"2","node
+                _state":"0","node_type":"2","owned_by":"frag_ssnufc_ld","time_last_breached_at_s":0.0,"unique_id":"frag_ssnufc_ld_2032"}*/
 
                 js.push_back(found);
             }
@@ -732,7 +749,7 @@ void import_from_mongo()
 
     std::cout << "imported from mongo\n";
 
-    exit(0);
+    //exit(0);
 }
 
 void import_from_disk()
