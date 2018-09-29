@@ -7,7 +7,6 @@
 #include <direct.h>
 #include <fstream>
 #include <libncclient/nc_util.hpp>
-#include <filesystem>
 
 #define CID_STRING "_cid"
 #define ROOT_STORE "C:/net_code_storage"
@@ -284,8 +283,25 @@ void atomic_write(const std::string& file, const T& data)
     my_file.write((const char*)&data[0], data.size());
     my_file.close();
 
+    if(!file_exists(file))
+    {
+        rename(atomic_file.c_str(), file.c_str());
+        return;
+    }
+
     ///hooray! guarantees atomicity (?)
-    std::filesystem::rename(atomic_file, file);
+    //std::filesystem::rename(atomic_file, file);
+
+    bool err = ReplaceFileA(file.c_str(), atomic_file.c_str(), nullptr, REPLACEFILE_IGNORE_MERGE_ERRORS, nullptr, nullptr) == 0;
+
+    if(err)
+    {
+        std::cout << "atomic write error " << GetLastError() << std::endl;
+
+        throw std::runtime_error("Explod in atomic write");
+    }
+
+    ///boo! doesn't actually work!
 }
 
 struct db_storage
