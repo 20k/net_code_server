@@ -7,6 +7,7 @@
 #include <direct.h>
 #include <fstream>
 #include <libncclient/nc_util.hpp>
+#include <filesystem>
 
 #define CID_STRING "_cid"
 #define ROOT_STORE "C:/net_code_storage"
@@ -263,6 +264,25 @@ bool json_prop_true(const nlohmann::json& js, const std::string& key)
     }
 
     return false;
+}
+
+template<typename T>
+void atomic_write(const std::string& file, const T& data)
+{
+    int length = data.size();
+
+    if(length == 0)
+        return;
+
+    ///hmm
+    ///<filesystem> defines some interesting semantics
+    std::string atomic_extension = ".atom";
+    std::string atomic_file = file + atomic_extension;
+
+    write_all(atomic_file, data);
+
+    ///hooray! guarantees atomicity (?)
+    std::filesystem::rename(atomic_file, file);
 }
 
 struct db_storage
