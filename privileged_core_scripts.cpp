@@ -1546,6 +1546,9 @@ std::string format_item(item& i, bool is_short, user& usr, user_nodes& nodes)
         if(it.key() == "_id")
             continue;
 
+        if(it.key() == "_cid")
+            continue;
+
         if(!is_open_source && it.key() == "unparsed_source")
             continue;
 
