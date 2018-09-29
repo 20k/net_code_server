@@ -798,6 +798,8 @@ void import_from_mongo()
                     store.flush((int)ctx->last_db_type, collection, k);
                 }
             }
+
+            store.all_data[(int)ctx->last_db_type].collection_imported[collection] = true;
         }
     }
 
