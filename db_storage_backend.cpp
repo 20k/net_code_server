@@ -1161,7 +1161,7 @@ void remove_mongo_id(nlohmann::json& in)
         in.erase(in.find("_id"));
     }
 
-    if(in.count(CID_STRING))
+    if(in.count(CID_STRING) > 0)
     {
         in.erase(in.find(CID_STRING));
     }

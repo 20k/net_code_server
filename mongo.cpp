@@ -1013,6 +1013,12 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
                 res_copy.push_back(parsed);
             }
 
+            for(int i=0; i < (int)validated.size(); i++)
+            {
+                remove_mongo_id(res_copy[i]);
+                remove_mongo_id(validated[i]);
+            }
+
             std::sort(validated.begin(), validated.end());
             std::sort(res_copy.begin(), res_copy.end());
 
