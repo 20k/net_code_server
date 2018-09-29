@@ -254,7 +254,7 @@ int main()
     test_hexbin();
     initialse_mongo_all();
 
-    auth::hacky_binary_conversion_check();
+    //auth::hacky_binary_conversion_check();
     //user::fix_auth_problem();
 
     #ifdef TESTING
