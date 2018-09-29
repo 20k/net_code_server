@@ -697,21 +697,6 @@ void import_from_mongo()
                     found[CID_STRING] = store.get_next_id();
                 }
 
-                if(found.count("unique_id") > 0)
-                {
-                    if(found.at("unique_id") == "fragme_vgdajw_6153")
-                    {
-                        std::cout << "hi\n";
-                        std::cout << "all size " << all.size() << std::endl;
-                        std::cout << "collection name " << collection << std::endl;
-
-                        for(auto& kk : all)
-                        {
-                            std::cout << kk << std::endl;
-                        }
-                    }
-                }
-
                 js.push_back(found);
             }
 
