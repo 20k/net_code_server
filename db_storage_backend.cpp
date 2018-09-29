@@ -398,7 +398,10 @@ struct db_storage
         tinydir_dir dir;
 
         if(tinydir_open(&dir, coll_path.c_str()) == -1)
+        {
+            cdb.collection_imported[coll] = true;
             return;
+        }
 
         tinydir_close(&dir);
 
