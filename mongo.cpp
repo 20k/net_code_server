@@ -1001,6 +1001,13 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
             {
                 std::cout << results[0] << std::endl;
             }
+
+            for(auto& i : validated)
+            {
+                std::cout << "validated " << i << std::endl;
+            }
+
+            std::cout << "has skipped " << skipped << std::endl;
         }
         else
         {
