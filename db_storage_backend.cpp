@@ -61,6 +61,18 @@ void for_each_file(const std::string& directory, const T& t)
     tinydir_close(&dir);
 }
 
+std::string get_filename(const database_type& db, const std::string& coll, const nlohmann::json& data)
+{
+    std::string root = ROOT_STORE;
+
+    std::string db_dir = root + "/" + std::to_string((int)db);
+
+    std::string collection_dir = db_dir + "/" + coll;
+
+    std::string final_dir = collection_dir + "/" + std::to_string((size_t)data.at(CID_STRING));
+
+    return final_dir;
+}
 
 bool matches(const nlohmann::json& data, const nlohmann::json& match)
 {
@@ -326,7 +338,9 @@ struct db_storage
 
     void disk_erase(const database_type& db, const std::string& coll, const nlohmann::json& data)
     {
+        assert(data.count(CID_STRING) > 0);
 
+        remove(get_filename(db, coll, data).c_str());
     }
 
     void insert_one(const database_type& db, const std::string& coll, const nlohmann::json& js)
@@ -671,9 +685,17 @@ void import_from_mongo()
             {
                 nlohmann::json found = nlohmann::json::parse(i);
 
-                if(found.count(CID_STRING) == 0)
+                //if(found.count(CID_STRING) == 0)
                 {
                     found[CID_STRING] = store.get_next_id();
+                }
+
+                if(found.count("unique_id") > 0)
+                {
+                    if(found.at("unique_id") == "fragme_vgdajw_6153")
+                    {
+                        std::cout << "hi\n";
+                    }
                 }
 
                 js.push_back(found);
@@ -709,6 +731,8 @@ void import_from_mongo()
     }
 
     std::cout << "imported from mongo\n";
+
+    exit(0);
 }
 
 void import_from_disk()
@@ -825,14 +849,16 @@ void init_db_storage_backend()
     store.indices[(int)mongo_database_type::USER_ITEMS] = "item_id";
     store.indices[(int)mongo_database_type::NPC_PROPERTIES] = "name";
 
-    if(!new_data)
+    //if(!new_data)
     {
         import_from_mongo();
     }
-    else
+    /*else
     {
         import_from_disk();
-    }
+    }*/
+
+    ///error with "unique_id" : "fragme_vgdajw_6153"
 
     /*{
         for_each_user([](user& usr)
