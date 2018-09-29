@@ -407,6 +407,9 @@ struct db_storage
         if(cdb.collection_imported[coll])
             return;
 
+        collection.clear();
+        indices.clear();
+
         std::string coll_path = std::string(ROOT_STORE) + "/" + std::to_string((int)db_idx) + "/" + coll;
 
         tinydir_dir dir;
