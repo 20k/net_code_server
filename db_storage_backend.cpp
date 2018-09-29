@@ -712,11 +712,6 @@ void import_from_mongo()
                     }
                 }
 
-                /*validated {"_cid":152955,"attached_locks":"","connected_to":"frag_ssnufc_ld_1230 ","is_node":"1","logs":[],"max_locks":"2","node
-                _state":"0","node_type":"2","owned_by":"frag_ssnufc_ld","time_last_breached_at_s":0.0,"unique_id":"frag_ssnufc_ld_2032"}
-                validated {"_cid":152956,"attached_locks":"","connected_to":"frag_ssnufc_ld_1230 ","is_node":"1","logs":[],"max_locks":"2","node
-                _state":"0","node_type":"2","owned_by":"frag_ssnufc_ld","time_last_breached_at_s":0.0,"unique_id":"frag_ssnufc_ld_2032"}*/
-
                 js.push_back(found);
             }
 
