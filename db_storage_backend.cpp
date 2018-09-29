@@ -279,7 +279,10 @@ void atomic_write(const std::string& file, const T& data)
     std::string atomic_extension = ".atom";
     std::string atomic_file = file + atomic_extension;
 
-    write_all(atomic_file, data);
+    auto my_file = std::fstream(atomic_file, std::ios::out | std::ios::binary);
+
+    my_file.write((const char*)&data[0], data.size());
+    my_file.close();
 
     ///hooray! guarantees atomicity (?)
     std::filesystem::rename(atomic_file, file);
@@ -320,9 +323,7 @@ struct db_storage
 
         size_t val = global_id++;
 
-        write_all(ROOT_FILE, std::to_string(global_id));
-
-        ///do disk stuff etc
+        atomic_write(ROOT_FILE, std::to_string(global_id));
 
         return val;
     }
@@ -353,12 +354,7 @@ struct db_storage
         if(dumped.size() == 0)
             return;
 
-        ///so
-        ///we need some way to recover db, collection and data on reload
-        auto my_file = std::fstream(final_dir, std::ios::out | std::ios::binary);
-
-        my_file.write((char*)&dumped[0], dumped.size());
-        my_file.close();
+        atomic_write(final_dir, dumped);
     }
 
     void disk_erase(const database_type& db, const std::string& coll, const nlohmann::json& data)
@@ -807,7 +803,8 @@ void init_db_storage_backend()
 
     if(resulting_data.size() == 0)
     {
-        write_all(root_file, std::to_string(0));
+        atomic_write(root_file, std::to_string(0));
+        //write_all(root_file, std::to_string(0));
     }
     else
     {
