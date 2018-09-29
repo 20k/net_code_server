@@ -514,9 +514,14 @@ struct db_storage
                 {
                     std::string sort_on = pairs.first;
 
-                    std::sort(ret.begin(), ret.end(), [&](const nlohmann::json& n_1, nlohmann::json& n_2)
+                    int direction = pairs.second;
+
+                    std::sort(ret.begin(), ret.end(), [&](const nlohmann::json& n_1, const nlohmann::json& n_2)
                               {
-                                return n_1.at(sort_on) < n_2.at(sort_on);
+                                  if(direction == 1)
+                                    return n_1.at(sort_on) < n_2.at(sort_on);
+                                  else
+                                    return n_1.at(sort_on) > n_2.at(sort_on);
                               });
 
                     break;
@@ -528,6 +533,21 @@ struct db_storage
                 for(auto& i : ret)
                 {
                     i = project(i, options.at("projection"));
+                }
+            }
+
+            if(options.count("limit") > 0)
+            {
+                nlohmann::json lim = options.at("limit");
+
+                if(lim.is_number())
+                {
+                    int val = (int)lim;
+
+                    if(val >= 0 && (int)ret.size() > val)
+                    {
+                        ret.resize(val);
+                    }
                 }
             }
         }
@@ -788,14 +808,14 @@ void init_db_storage_backend()
     store.indices[(int)mongo_database_type::USER_ITEMS] = "item_id";
     store.indices[(int)mongo_database_type::NPC_PROPERTIES] = "name";
 
-    //if(!new_data)
+    if(!new_data)
     {
         import_from_mongo();
     }
-    /*else
+    else
     {
         import_from_disk();
-    }*/
+    }
 
     ///error with "unique_id" : "fragme_vgdajw_6153"
 
