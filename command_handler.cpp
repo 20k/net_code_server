@@ -1757,6 +1757,8 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
             script_inf.in_public = in_public_state;
 
             script_inf.overwrite_in_db(mongo_ctx);
+
+            std::cout << "overwriting public " << script_inf.name << " public? " << script_inf.in_public << std::endl;
         }
 
         return make_success_col("Success");

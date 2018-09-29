@@ -431,6 +431,13 @@ struct mongo_requester
     void remove_all_from_db(mongo_lock_proxy& ctx);
 };
 
+template<>
+inline
+void mongo_requester::set_prop(const std::string& key, const bool& value)
+{
+    properties[key] = stringify_hack((int)value);
+}
+
 inline
 std::vector<nlohmann::json> fetch_from_db(mongo_lock_proxy& ctx, nlohmann::json fnd, nlohmann::json proj = {})
 {

@@ -547,7 +547,7 @@ duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(seclevel >= 0 && seclevel <= 4)
         request.set_prop("seclevel", seclevel);
 
-    request.set_prop_sort_on("item_id", 1);
+    //request.set_prop_sort_on("item_id", 1);
 
     ///seclevel
     //request.set_prop("seclevel", num);
@@ -1746,7 +1746,7 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
 }
 
 
-void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes& nodes, user& found_user, std::string preamble)
+void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes& nodes, user& found_user, std::string preamble, bool pvp)
 {
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 
@@ -1768,11 +1768,16 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
 
     if(pretty)
     {
-        std::string formatted = "available: ";
+        std::string formatted;
 
-        int currently_stealable = found_user.get_max_stealable_items(current_time, sys);
+        if(pvp)
+        {
+            formatted = "available: ";
 
-        formatted += std::to_string(currently_stealable) + "\n";
+            int currently_stealable = found_user.get_max_stealable_items(current_time, sys);
+
+            formatted += std::to_string(currently_stealable) + "\n";
+        }
 
         if(full)
            formatted = "[\n";
@@ -1833,10 +1838,17 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
             objs.push_back(get_item_raw(next, !full, found_user, nodes));
         }
 
-        ret["available"] = currently_stealable;
-        ret["exposed"] = objs;
+        if(pvp)
+        {
+            ret["available"] = currently_stealable;
+            ret["exposed"] = objs;
 
-        push_duk_val(ctx, ret);
+            push_duk_val(ctx, ret);
+        }
+        else
+        {
+            push_duk_val(ctx, objs);
+        }
     }
 }
 
@@ -1954,7 +1966,7 @@ duk_ret_t item__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
     }
 
-    push_internal_items_view(ctx, pretty, full, nodes, found_user, usage + "\n");
+    push_internal_items_view(ctx, pretty, full, nodes, found_user, usage + "\n", false);
 
     return 1;
 }
@@ -1974,7 +1986,7 @@ duk_ret_t item__list(priv_context& priv_ctx, duk_context* ctx, int sl)
         return push_error(ctx, "User does not exist");
     }
 
-    push_internal_items_view(ctx, !is_arr, full, user_and_node_opt->second, user_and_node_opt->first, "");
+    push_internal_items_view(ctx, !is_arr, full, user_and_node_opt->second, user_and_node_opt->first, "", false);
 
     return 1;
 }
@@ -2677,7 +2689,7 @@ duk_ret_t item__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if((hostile & user_node_info::XFER_ITEM_FROM) > 0)
     {
-        push_internal_items_view(ctx, pretty, full, opt_user_and_nodes->second, opt_user_and_nodes->first);
+        push_internal_items_view(ctx, pretty, full, opt_user_and_nodes->second, opt_user_and_nodes->first, "", true);
 
         return 1;
     }

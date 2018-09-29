@@ -868,14 +868,14 @@ void init_db_storage_backend()
     store.indices[(int)mongo_database_type::USER_ITEMS] = "item_id";
     store.indices[(int)mongo_database_type::NPC_PROPERTIES] = "name";
 
-    if(!new_data)
+    //if(!new_data)
     {
         import_from_mongo();
     }
-    else
+    /*else
     {
         import_from_disk();
-    }
+    }*/
 
     ///error with "unique_id" : "fragme_vgdajw_6153"
 

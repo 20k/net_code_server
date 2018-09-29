@@ -177,6 +177,13 @@ struct item : db_interfaceable<item, true, MACRO_GET_STR("item_id")>
     bool is_breached();
 };
 
+template<>
+inline
+void item::set_prop(const std::string& str, const bool& b)
+{
+    set_stringify_as(str, (int)b);
+}
+
 extern
 double get_wall_time_s();
 

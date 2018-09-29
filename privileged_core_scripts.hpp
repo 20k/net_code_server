@@ -123,7 +123,7 @@ void change_item_raw(mongo_lock_proxy& mongo_ctx, int load_idx, int unload_idx, 
 
 std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr, user_nodes& nodes, std::string& accum, int thread_id);
 
-void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes& nodes, user& found_user, std::string preamble = "");
+void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes& nodes, user& found_user, std::string preamble, bool pvp);
 
 duk_ret_t item__cull(priv_context& priv_ctx, duk_context* ctx, int sl);
 
