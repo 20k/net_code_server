@@ -169,6 +169,9 @@ void updater(nlohmann::json& data, const nlohmann::json& update)
 
     for(auto& individual_data : to_set.get<nlohmann::json::object_t>())
     {
+        if(individual_data.first == CID_STRING)
+            continue;
+
         data[individual_data.first] = individual_data.second;
     }
 }
