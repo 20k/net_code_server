@@ -885,11 +885,17 @@ void init_db_storage_backend()
 
         for_each_npc([](npc_user& usr)
                      {
-                        mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
+                         {
+                            mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
 
-                        npc_prop_list props;
+                            npc_prop_list props;
 
-                        props.load_from_db(ctx, usr.name);
+                            props.load_from_db(ctx, usr.name);
+                         }
+
+                         {
+                            get_nodes(usr.name, -2);
+                         }
                      });
 
         //mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
