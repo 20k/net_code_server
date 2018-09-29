@@ -547,7 +547,7 @@ duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(seclevel >= 0 && seclevel <= 4)
         request.set_prop("seclevel", seclevel);
 
-    //request.set_prop_sort_on("item_id", 1);
+    request.set_prop_sort_on("item_id", 1);
 
     ///seclevel
     //request.set_prop("seclevel", num);
