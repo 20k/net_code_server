@@ -768,7 +768,7 @@ void import_from_disk()
 
                     std::map<std::string, nlohmann::json>& indices = store.all_data[db_idx].index_map[coll];
 
-                    indices[current_idx].push_back(fdata);
+                    indices[current_idx] = fdata;
                 }
             });
         });
