@@ -383,19 +383,9 @@ struct db_storage
         }
     }
 
-    ///ensure that update can never contain CID_STRING
-    void update_one(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
+    template<typename T>
+    void for_each_match(const database_type& db, const std::string& coll, const nlohmann::json& selector, const T& t)
     {
-        if(db_storage_backend::contains_banned_query(selector))
-            return;
-
-        if(db_storage_backend::contains_banned_query(update))
-            return;
-
-        //std::lock_guard guard(db_lock);
-
-        //std::vector<nlohmann::json>& collection = all_data[db][coll];
-
         database& cdb = get_db(db);
 
         std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
@@ -409,124 +399,14 @@ struct db_storage
             {
                 if(matches(js, selector))
                 {
-                    updater(js, update);
-
-                    flush(db, coll, js);
-
-                    return;
+                    if(t(js))
+                        return;
                 }
             }
         }
         else
         {
             std::string index = get_index(db);
-
-            assert(selector.count(index) > 0);
-
-            assert(!is_exists(selector, index));
-
-            auto found = indices.find(selector.at(index));
-
-            if(found == indices.end())
-                return;
-
-            updater(found->second, update);
-
-            flush(db, coll, found->second);
-        }
-    }
-
-    void update_many(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
-    {
-        if(db_storage_backend::contains_banned_query(selector))
-            return;
-
-        if(db_storage_backend::contains_banned_query(update))
-            return;
-
-        //std::lock_guard guard(db_lock);
-
-        //std::vector<nlohmann::json>& collection = all_data[db][coll];
-
-        database& cdb = get_db(db);
-
-        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
-        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
-
-        std::lock_guard guard(cdb.get_lock(coll));
-
-        if(!has_index(db))
-        {
-            for(nlohmann::json& js : collection)
-            {
-                if(matches(js, selector))
-                {
-                    updater(js, update);
-
-                    flush(db, coll, js);
-                }
-            }
-        }
-        else
-        {
-            std::string index = get_index(db);
-
-            assert(selector.count(index) > 0);
-
-            assert(!is_exists(selector, index));
-
-            auto found = indices.find(selector.at(index));
-
-            if(found == indices.end())
-                return;
-
-            updater(found->second, update);
-
-            flush(db, coll, found->second);
-        }
-    }
-
-    std::vector<nlohmann::json> find_many(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& options)
-    {
-        if(db_storage_backend::contains_banned_query(selector))
-            return std::vector<nlohmann::json>();
-
-        if(db_storage_backend::contains_banned_query(options))
-            return std::vector<nlohmann::json>();
-
-        //std::lock_guard guard(db_lock);
-
-        std::vector<nlohmann::json> ret;
-
-        //const std::vector<nlohmann::json>& collection = all_data[db][coll];
-
-        database& cdb = get_db(db);
-
-        const std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
-        const std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
-
-        std::lock_guard guard(cdb.get_lock(coll));
-
-        if(!has_index(db))
-        {
-            for(const nlohmann::json& js : collection)
-            {
-                if(matches(js, selector))
-                {
-                    ret.push_back(js);
-                }
-            }
-        }
-        else
-        {
-            ///ok this is all wrong
-            ///we're assuming that incoming requests for searches are like
-            ///hey just fetch this one item
-            ///wheras they might be a query for other properties
-            ///starting to think this map or vector design may be wrong
-            std::string index = get_index(db);
-
-            //assert(selector.count(index) > 0);
 
             bool has_index_key = selector.count(index) > 0;
 
@@ -538,7 +418,8 @@ struct db_storage
                     {
                         if(matches(i.second, selector))
                         {
-                            ret.push_back(i.second);
+                            if(t(i.second))
+                                return;
                         }
                     }
                 }
@@ -548,11 +429,12 @@ struct db_storage
                     auto found = indices.find(selector.at(index));
 
                     if(found == indices.end())
-                        return {};
+                        return;
 
                     if(matches(found->second, selector))
                     {
-                        ret.push_back(found->second);
+                        if(t(found->second))
+                            return;
                     }
                 }
             }
@@ -562,11 +444,67 @@ struct db_storage
                 {
                     if(matches(i.second, selector))
                     {
-                        ret.push_back(i.second);
+                        if(t(i.second))
+                            return;
                     }
                 }
             }
         }
+    }
+
+    ///ensure that update can never contain CID_STRING
+    void update_one(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
+    {
+        if(db_storage_backend::contains_banned_query(selector))
+            return;
+
+        if(db_storage_backend::contains_banned_query(update))
+            return;
+
+        for_each_match(db, coll, selector, [&](nlohmann::json& js)
+        {
+            updater(js, update);
+
+            flush(db, coll, js);
+
+            return true;
+        });
+    }
+
+    void update_many(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
+    {
+        if(db_storage_backend::contains_banned_query(selector))
+            return;
+
+        if(db_storage_backend::contains_banned_query(update))
+            return;
+
+        for_each_match(db, coll, selector, [&](nlohmann::json& js)
+        {
+            updater(js, update);
+
+            flush(db, coll, js);
+
+            return false;
+        });
+    }
+
+    std::vector<nlohmann::json> find_many(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& options)
+    {
+        if(db_storage_backend::contains_banned_query(selector))
+            return std::vector<nlohmann::json>();
+
+        if(db_storage_backend::contains_banned_query(options))
+            return std::vector<nlohmann::json>();
+
+        std::vector<nlohmann::json> ret;
+
+        for_each_match(db, coll, selector, [&](nlohmann::json& js)
+        {
+            ret.push_back(js);
+
+            return false;
+        });
 
         if(options.is_object())
         {
@@ -631,19 +569,21 @@ struct db_storage
         {
             std::string index = get_index(db);
 
-            assert(selector.count(index) > 0);
-
-            if(is_exists(selector, index))
+            if(is_exists(selector, index) || selector.count(index) == 0)
             {
-                for(auto& i : indices)
+                for(auto it = indices.begin(); it != indices.end(); )
                 {
-                    if(matches(i.second, selector))
+                    if(matches(it->second, selector))
                     {
-                        disk_erase(db, coll, i.second);
+                        disk_erase(db, coll, it->second);
+
+                        it = indices.erase(it);
+                    }
+                    else
+                    {
+                        it++;
                     }
                 }
-
-                indices.clear();
             }
             else
             {
