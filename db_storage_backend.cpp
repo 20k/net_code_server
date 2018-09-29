@@ -27,7 +27,8 @@ void for_each_dir(const std::string& directory, const T& t)
         {
             std::string dir_name(file.name);
 
-            t(dir_name);
+            if(dir_name != "." && dir_name != "..")
+                t(dir_name);
         }
 
         tinydir_next(&dir);
@@ -706,6 +707,8 @@ void import_from_mongo()
             }
         }
     }
+
+    std::cout << "imported from mongo\n";
 }
 
 void import_from_disk()
@@ -750,7 +753,11 @@ void import_from_disk()
             {
                 std::string path = db_dir + "/" + coll + "/" + file_name;
 
+                //std::cout << "file path " <<  path << std::endl;
+
                 std::string data = read_file_bin(path);
+
+                //std::cout << "cbor data " << data << std::endl;
 
                 nlohmann::json fdata = nlohmann::json::from_cbor(data);
 
@@ -773,6 +780,8 @@ void import_from_disk()
             });
         });
     }
+
+    std::cout << "imported from disk" << std::endl;
 }
 
 void init_db_storage_backend()
@@ -846,7 +855,6 @@ void init_db_storage_backend()
         //usr.load_from_db(ctx, "i20k");
     }*/
 
-    std::cout << "imported from mongo\n";
 
     //exit(0);
 }
