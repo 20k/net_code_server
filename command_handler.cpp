@@ -580,10 +580,14 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                 break;
             }
 
+            if(elapsed >= max_time_ms + db_grace_time_ms/2)
+            {
+                *tls_get_should_throw() = 1;
+            }
+
             if(elapsed >= max_time_ms)
             {
                 sand_data->terminate_semi_gracefully = true;
-                *tls_get_should_throw() = 1;
             }
 
             Sleep(1);
