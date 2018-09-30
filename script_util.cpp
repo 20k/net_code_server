@@ -268,11 +268,13 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
                                    "#4s.", "#3s.", "#2s.", "#1s.", "#0s.",
                                    "#os.",
                                    "#ofs.", "#ohs.", "#oms.", "#ols.", "#ons.",
+                                   "#o4s.", "#o3s.", "#o2s.", "#o1s.", "#o0s.",
                                    "#s.", "#"};
 
     std::vector<std::string> tos  {"fs_call", "hs_call", "ms_call", "ls_call", "ns_call",
                                    "fs_call", "hs_call", "ms_call", "ls_call", "ns_call",
                                    "os_call",
+                                   "ofs_call", "ohs_call", "oms_call", "ols_call", "ons_call",
                                    "ofs_call", "ohs_call", "oms_call", "ols_call", "ons_call",
                                    "ns_call", "ns_call"};
 
@@ -280,7 +282,11 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
                                    4, 3, 2, 1, 0,
                                    4,
                                    4, 4, 4, 4, 4,
+                                   4, 4, 4, 4, 4,
                                    0, 0};
+
+    assert(froms.size() == tos.size());
+    assert(froms.size() == sec_levels.size());
 
     ///won't find D, but seems prudent to exclude it anyway
     std::vector<std::string> parse_exclusion{"D",
