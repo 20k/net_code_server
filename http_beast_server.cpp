@@ -307,10 +307,10 @@ bool handle_read(const std::shared_ptr<shared_command_handler_state>& all_shared
     if(next_command.size() > 400000)
         return false;
 
-    lg::log(next_command);
-
     if(handle_termination_shortcircuit(all_shared, next_command, terminate_timer))
         return false;
+
+    lg::log(next_command);
 
     int len;
 
@@ -612,7 +612,7 @@ void websocket_ssl_test_server(int in_port)
         std::string const doc_root = "./doc_root";
 
         // The io_context is required for all I/O
-        boost::asio::io_context ioc{1};
+        boost::asio::io_context ioc{2};
 
         // The acceptor receives incoming connections
         tcp::acceptor acceptor{ioc, {address, port}};
@@ -620,11 +620,15 @@ void websocket_ssl_test_server(int in_port)
         {
             lg::log("presock");
 
+            std::cout << "presock\n";
+
             // This will receive the new connection
             tcp::socket socket{ioc};
 
             // Block until we get a connection
             acceptor.accept(socket);
+
+            std::cout << "accepted\n";
 
             lg::log("postaccept\n");
 
@@ -658,6 +662,10 @@ void boot_connection_handlers()
     std::thread(websocket_test_server).detach();
     std::thread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT).detach();
     std::thread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT_2).detach();
+
+    #ifdef TESTING
+    std::thread(websocket_ssl_test_server, 30000).detach();
+    #endif // TESTING
 
     //http_test_server();
 }
