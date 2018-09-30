@@ -243,6 +243,16 @@ struct database
         return index_map[coll];
     }
 
+    std::vector<nlohmann::json>& get_collection_nolock(const std::string& coll)
+    {
+        return all_data[coll];
+    }
+
+    std::map<std::string, nlohmann::json>& get_indexed_nolock(const std::string& coll)
+    {
+        return index_map[coll];
+    }
+
     std::mutex& get_lock(const std::string& coll)
     {
         std::lock_guard guard(all_coll_guard);
@@ -395,20 +405,14 @@ struct db_storage
         remove(get_filename(db, coll, data).c_str());
     }
 
-    void import_collection(const database_type& db_idx, const std::string& coll)
+    void import_collection_nolock(const database_type& db_idx, const std::string& coll)
     {
+        //std::lock_guard guard(cdb.get_lock(coll));
+
         database& cdb = get_db(db_idx);
 
-        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
-        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
-
-        std::lock_guard guard(cdb.get_lock(coll));
-
-        /*if(db_idx == (int)mongo_database_type::PENDING_NOTIFS)
-        {
-            std::cout << "imported? " << cdb.collection_imported[coll] << std::endl;
-            std::cout << "coll " << coll << std::endl;
-        }*/
+        std::vector<nlohmann::json>& collection = cdb.get_collection_nolock(coll);
+        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed_nolock(coll);
 
         if(cdb.collection_imported[coll])
             return;
@@ -462,16 +466,14 @@ struct db_storage
         if(db_storage_backend::contains_banned_query(js))
             return;
 
-        import_collection(db, coll);
-
-        //std::lock_guard guard(db_lock);
-
         database& cdb = get_db(db);
 
-        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
-        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
-
         std::lock_guard guard(cdb.get_lock(coll));
+
+        import_collection_nolock(db, coll);
+
+        std::vector<nlohmann::json>& collection = cdb.get_collection_nolock(coll);
+        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed_nolock(coll);
 
         auto fdata = js;
         fdata[CID_STRING] = get_next_id();
@@ -495,14 +497,14 @@ struct db_storage
     }
 
     template<typename T>
-    void for_each_match(const database_type& db, const std::string& coll, const nlohmann::json& selector, const T& t)
+    void for_each_match_nolock(const database_type& db, const std::string& coll, const nlohmann::json& selector, const T& t)
     {
         database& cdb = get_db(db);
 
-        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
-        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
+        //std::lock_guard guard(cdb.get_lock(coll));
 
-        std::lock_guard guard(cdb.get_lock(coll));
+        std::vector<nlohmann::json>& collection = cdb.get_collection_nolock(coll);
+        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed_nolock(coll);
 
         if(!has_index(db))
         {
@@ -572,9 +574,13 @@ struct db_storage
         if(db_storage_backend::contains_banned_query(update))
             return;
 
-        import_collection(db, coll);
+        database& cdb = get_db(db);
 
-        for_each_match(db, coll, selector, [&](nlohmann::json& js)
+        std::lock_guard guard(cdb.get_lock(coll));
+
+        import_collection_nolock(db, coll);
+
+        for_each_match_nolock(db, coll, selector, [&](nlohmann::json& js)
         {
             updater(js, update);
 
@@ -592,9 +598,13 @@ struct db_storage
         if(db_storage_backend::contains_banned_query(update))
             return;
 
-        import_collection(db, coll);
+        database& cdb = get_db(db);
 
-        for_each_match(db, coll, selector, [&](nlohmann::json& js)
+        std::lock_guard guard(cdb.get_lock(coll));
+
+        import_collection_nolock(db, coll);
+
+        for_each_match_nolock(db, coll, selector, [&](nlohmann::json& js)
         {
             updater(js, update);
 
@@ -612,16 +622,22 @@ struct db_storage
         if(db_storage_backend::contains_banned_query(options))
             return std::vector<nlohmann::json>();
 
-        import_collection(db, coll);
-
         std::vector<nlohmann::json> ret;
 
-        for_each_match(db, coll, selector, [&](nlohmann::json& js)
         {
-            ret.push_back(js);
+            database& cdb = get_db(db);
 
-            return false;
-        });
+            std::lock_guard guard(cdb.get_lock(coll));
+
+            import_collection_nolock(db, coll);
+
+            for_each_match_nolock(db, coll, selector, [&](nlohmann::json& js)
+            {
+                ret.push_back(js);
+
+                return false;
+            });
+        }
 
         if(options.is_object())
         {
@@ -677,23 +693,17 @@ struct db_storage
         if(db_storage_backend::contains_banned_query(selector))
             return;
 
-        import_collection(db, coll);
-
-        //std::lock_guard guard(db_lock);
-
-        //std::vector<nlohmann::json>& collection = all_data[db][coll];
-
         database& cdb = get_db(db);
-
-        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
-        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
 
         std::lock_guard guard(cdb.get_lock(coll));
 
+        import_collection_nolock(db, coll);
+
+        std::vector<nlohmann::json>& collection = cdb.get_collection_nolock(coll);
+        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed_nolock(coll);
+
         if(!has_index(db))
         {
-            //collection.erase( std::remove_if(collection.begin(), collection.end(), [&](const nlohmann::json& js){return matches(js, selector);}), collection.end() );
-
             for(auto& js : collection)
             {
                 if(matches(js, selector))
