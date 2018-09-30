@@ -579,6 +579,23 @@ struct db_storage
         if(db_storage_backend::contains_banned_query(update))
             return;
 
+        /*if(update.count("parsed_source") > 0)
+        {
+            std::cout << "update " << update.at("parsed_source") << std::endl;
+        }*/
+
+        /*bool checky = false;
+
+        if(update.count("$set") > 0)
+        {
+            if(update.at("$set").count("parsed_source") > 0)
+            {
+                std::cout << update.at("$set").at("parsed_source") << std::endl;
+
+                checky = true;
+            }
+        }*/
+
         database& cdb = get_db(db);
 
         std::lock_guard guard(cdb.get_lock(coll));
@@ -587,10 +604,21 @@ struct db_storage
 
         for_each_match_nolock(db, coll, selector, [&](nlohmann::json& js)
         {
+            /*if(checky)
+            {
+                std::cout << "Checkers!\n";
+
+                std::cout << "old parsed" << js.at("parsed_source") << std::endl;
+            }*/
+
             updater(js, update);
 
-            flush(db, coll, js);
+            /*if(checky)
+            {
+                std::cout << "new parsed " << js << std::endl;
+            }*/
 
+            flush(db, coll, js);
             return true;
         });
     }

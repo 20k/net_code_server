@@ -33,7 +33,7 @@ namespace task_type
 }
 
 
-struct task_data_db : db_interfaceable<task_data_db, true, MACRO_GET_STR("id")>
+struct task_data_db : db_interfaceable<task_data_db, MACRO_GET_STR("id")>
 {
     DB_VAL(double, start_time_s);
     DB_VAL(double, end_time_s);

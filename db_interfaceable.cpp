@@ -25,7 +25,7 @@ bool db_interfaceable<name>::load_from_db(mongo_lock_proxy& ctx, const std::stri
 #include "scheduled_tasks.hpp"
 #include "item.hpp"
 
-template global_generic_cache<low_level_structure> caches::this_cache<low_level_structure>;
+/*template global_generic_cache<low_level_structure> caches::this_cache<low_level_structure>;
 template global_generic_cache<npc_prop_list> caches::this_cache<npc_prop_list>;
 template global_generic_cache<task_data_db> caches::this_cache<task_data_db>;
-template global_generic_cache<item> caches::this_cache<item>;
+template global_generic_cache<item> caches::this_cache<item>;*/

@@ -846,6 +846,8 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     unified_script_info script = unified_script_loading(get_thread_id(ctx), to_call_fullname, script_err, *get_shim_pointer<shim_map_t>(ctx));
 
+    //std::cout << "script source findy " << script.parsed_source << " name " << script.name << std::endl;
+
     if(!script.valid)
     {
         std::string err = script_err == "" ? "Tried to run a non existent or invalid script" : script_err;

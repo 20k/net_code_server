@@ -187,13 +187,13 @@ void stringify_params(std::string& in, U first, T... name)
 
 struct mongo_lock_proxy;
 
-namespace caches
+/*namespace caches
 {
     template<typename concrete>
     static global_generic_cache<concrete> this_cache;
-};
+};*/
 
-template<typename concrete, bool cacheable, char... name>
+template<typename concrete, char... name>
 struct db_interfaceable
 {
     std::string key_name;
@@ -318,8 +318,6 @@ struct db_interfaceable
         to_find[static_key] = exist;
 
         ctx->remove_json_many_new(to_find);
-
-        caches::this_cache<concrete>.clear();
     }
 
     ///need a fetch all from db
@@ -331,23 +329,6 @@ struct db_interfaceable
         if(!exists(ctx, id))
             return false;
 
-        if(cacheable && caches::this_cache<concrete>.exists_in_cache(id))
-        {
-            *this = caches::this_cache<concrete>.load_from_cache(id);
-
-            if(cacheable)
-            {
-                caches::this_cache<concrete>.overwrite_in_cache(id, *(concrete*)this);
-            }
-
-            if(handle_serialise(data, false))
-            {
-                overwrite_in_db(ctx);
-            }
-
-            return true;
-        }
-
         json to_find;
         to_find[key_name] = id;
 
@@ -358,15 +339,7 @@ struct db_interfaceable
             if(found.size() != 1)
                 return false;
 
-            //std::string js = found[0];
-            //data = json::parse(js);
-
             data = found[0];
-
-            if(cacheable)
-            {
-                caches::this_cache<concrete>.overwrite_in_cache(id, *(concrete*)this);
-            }
 
             if(handle_serialise(data, false))
             {
@@ -389,21 +362,11 @@ struct db_interfaceable
 
         if(!exists(ctx, data[key_name].template get<std::string>()))
         {
-            if(cacheable)
-            {
-                caches::this_cache<concrete>.overwrite_in_cache(data[key_name].template get<std::string>(), *(concrete*)this);
-            }
-
             ///insert
             ctx->insert_json_one_new(data);
         }
         else
         {
-            if(cacheable)
-            {
-                caches::this_cache<concrete>.overwrite_in_cache(data[key_name].template get<std::string>(), *(concrete*)this);
-            }
-
             ///overwrite
             json selector;
             selector[key_name] = data[key_name];
@@ -425,11 +388,6 @@ struct db_interfaceable
         j[key_name] = data[key_name];
 
         ctx->remove_json_many_new(j);
-
-        if(cacheable)
-        {
-            caches::this_cache<concrete>.delete_from_cache(data[key_name].template get<std::string>());
-        }
     }
 
     static
@@ -443,18 +401,10 @@ struct db_interfaceable
         j[static_string] = id;
 
         ctx->remove_json_many_new(j);
-
-        if(cacheable)
-        {
-            caches::this_cache<concrete>.delete_from_cache(id);
-        }
     }
 
     bool exists(mongo_lock_proxy& ctx, const std::string& id)
     {
-        if(cacheable && caches::this_cache<concrete>.exists_in_cache(id))
-            return true;
-
         json to_find;
 
         to_find[key_name] = id;
@@ -482,7 +432,7 @@ std::vector<T> from_string(const std::vector<std::string>& in)
     return ret;
 }
 
-struct test_dbable : db_interfaceable<test_dbable, false, MACRO_GET_STR("test_key")>
+struct test_dbable : db_interfaceable<test_dbable, MACRO_GET_STR("test_key")>
 {
 
 };

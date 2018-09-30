@@ -49,7 +49,7 @@ std::string array_to_str(const std::vector<std::string>& arr);
 
 #define MAX_ITEMS 48
 
-struct item : db_interfaceable<item, true, MACRO_GET_STR("item_id")>
+struct item : db_interfaceable<item, MACRO_GET_STR("item_id")>
 {
     template<typename T>
     void set_prop(const std::string& str, const T& t)

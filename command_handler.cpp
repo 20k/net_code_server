@@ -1658,7 +1658,8 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
                 mongo_lock_proxy user_locks = get_global_mongo_user_info_context(-2);
 
-                cur.load_from_db(user_locks, uname);
+                if(!cur.load_from_db(user_locks, uname))
+                    return make_error_col("Bad User");
             }
 
             std::map<std::string, double> user_details;
@@ -1675,6 +1676,8 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
                 script_inf.in_public = was_public;
 
                 mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
+
+                std::cout << "overwriting\n";
 
                 script_inf.overwrite_in_db(mongo_ctx);
             }

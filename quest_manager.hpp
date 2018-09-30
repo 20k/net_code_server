@@ -3,7 +3,7 @@
 
 #include "db_interfaceable.hpp"
 
-struct quest_manager : db_interfaceable<quest_manager, true, MACRO_GET_STR("id")>
+struct quest_manager : db_interfaceable<quest_manager, MACRO_GET_STR("id")>
 {
     enum class type
     {
