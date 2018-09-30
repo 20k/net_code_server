@@ -1685,7 +1685,7 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
                 mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
-                std::cout << "overwriting\n";
+                //std::cout << "overwriting\n";
 
                 script_inf.overwrite_in_db(mongo_ctx);
             }
