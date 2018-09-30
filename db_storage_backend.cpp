@@ -470,7 +470,10 @@ struct db_storage
 
         std::lock_guard guard(cdb.get_lock(coll));
 
-        import_collection_nolock(db, coll);
+        bool is_imported = cdb.collection_imported[coll];
+
+        if(is_imported)
+            import_collection_nolock(db, coll);
 
         std::vector<nlohmann::json>& collection = cdb.get_collection_nolock(coll);
         std::map<std::string, nlohmann::json>& indices = cdb.get_indexed_nolock(coll);
@@ -480,7 +483,8 @@ struct db_storage
 
         if(!has_index(db))
         {
-            collection.push_back(fdata);
+            if(is_imported)
+                collection.push_back(fdata);
 
             flush(db, coll, fdata);
         }
@@ -490,7 +494,8 @@ struct db_storage
 
             assert(fdata.count(index) > 0);
 
-            indices[fdata.at(index)] = fdata;
+            if(is_imported)
+                indices[fdata.at(index)] = fdata;
 
             flush(db, coll, fdata);
         }
