@@ -384,12 +384,16 @@ void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
 
             bool found_any = false;
 
-            while(all_shared->msock->available() > 0)
+            int read_count = 0;
+
+            while(all_shared->msock->available() > 0 && read_count < 100)
             {
                 found_any = true;
 
                 if(handle_read(all_shared, shared_queue, terminate_timer))
                     break;
+
+                read_count++;
             }
 
             if(terminate_timer.getElapsedTime().asMilliseconds() > 100)
@@ -397,7 +401,9 @@ void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
                 all_shared->state.should_terminate_any_realtime = false;
             }
 
-            while(all_shared->shared.has_front_write())
+            int write_count = 0;
+
+            while(all_shared->shared.has_front_write() && write_count < 100)
             {
                 found_any = true;
 
@@ -405,6 +411,8 @@ void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
 
                 if(handle_write(all_shared))
                     break;
+
+                write_count++;
             }
 
             if(shared_queue.size() > 0)
