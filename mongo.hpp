@@ -198,6 +198,7 @@ void startup_tls_state();
 
 int* tls_get_thread_id_storage_hack();
 int* tls_get_print_performance_diagnostics();
+int* tls_get_should_throw();
 
 struct mongo_lock_proxy
 {

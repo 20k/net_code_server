@@ -22,6 +22,7 @@
 #include "duk_object_functions.hpp"
 #include <secret/low_level_structure.hpp>
 #include "safe_thread.hpp"
+#include "mongo.hpp"
 
 struct unsafe_info
 {
@@ -526,7 +527,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
                 if(all_shared.value()->live_work_units() > 10)
                 {
-                    max_time_ms = 0.f;
+                    sand_data->terminate_semi_gracefully = true;
                 }
             }
 
@@ -582,10 +583,13 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             if(elapsed >= max_time_ms)
             {
                 sand_data->terminate_semi_gracefully = true;
+                *tls_get_should_throw() = 1;
             }
 
             Sleep(1);
         }
+
+        *tls_get_should_throw() = 0;
 
         if(all_shared.has_value())
         {

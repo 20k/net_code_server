@@ -12,6 +12,8 @@
 #define ROOT_STORE "C:/net_code_storage"
 #define ROOT_FILE "C:/net_code_storage/gid"
 
+#include "rate_limiting.hpp"
+
 template<typename T>
 void for_each_dir(const std::string& directory, const T& t)
 {
@@ -37,16 +39,30 @@ void for_each_dir(const std::string& directory, const T& t)
     tinydir_close(&dir);
 }
 
+struct tinydir_autoclose
+{
+    tinydir_dir dir;
+
+    tinydir_autoclose(const std::string& directory)
+    {
+        tinydir_open(&dir, directory.c_str());
+    }
+
+    ~tinydir_autoclose()
+    {
+        tinydir_close(&dir);
+    }
+};
+
 template<typename T>
 void for_each_file(const std::string& directory, const T& t)
 {
-    tinydir_dir dir;
-    tinydir_open(&dir, directory.c_str());
+    tinydir_autoclose close(directory);
 
-    while(dir.has_next)
+    while(close.dir.has_next)
     {
         tinydir_file file;
-        tinydir_readfile(&dir, &file);
+        tinydir_readfile(&close.dir, &file);
 
         if(!file.is_dir)
         {
@@ -55,10 +71,8 @@ void for_each_file(const std::string& directory, const T& t)
             t(file_name);
         }
 
-        tinydir_next(&dir);
+        tinydir_next(&close.dir);
     }
-
-    tinydir_close(&dir);
 }
 
 std::string get_filename(const database_type& db, const std::string& coll, const nlohmann::json& data)
@@ -435,6 +449,8 @@ struct db_storage
 
         for_each_file(coll_path, [&](const std::string& file_name)
         {
+            COOPERATE_KILL_THREAD_LOCAL();
+
             std::string path = coll_path + "/" + file_name;
 
             std::string data = read_file_bin(path);

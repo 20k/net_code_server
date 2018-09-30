@@ -141,6 +141,8 @@ struct rate_limit
                             throw std::runtime_error("Terminated realtime script"); \
                          }
 
+#define COOPERATE_KILL_THREAD_LOCAL() if(*tls_get_should_throw()) { throw std::runtime_error("Script ran for more than 5000ms and was cooperatively terminated"); }
+
 typedef struct duk_hthread duk_context;
 
 bool is_script_timeout(duk_context* ctx);

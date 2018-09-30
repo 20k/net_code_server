@@ -1214,6 +1214,7 @@ mongo_shim::mongo_shim(mongo_context* fctx, int plock_id)
 
 pthread_key_t thread_id_storage_key;
 pthread_key_t print_performance_diagnostics_key;
+pthread_key_t should_throw;
 
 void tls_freer(void* in)
 {
@@ -1227,6 +1228,7 @@ void startup_tls_state()
 {
     assert(pthread_key_create(&thread_id_storage_key, tls_freer) == 0);
     assert(pthread_key_create(&print_performance_diagnostics_key, tls_freer) == 0);
+    assert(pthread_key_create(&should_throw, tls_freer) == 0);
 }
 
 template<typename T, typename U>
@@ -1254,6 +1256,11 @@ int* tls_get_thread_id_storage_hack()
 int* tls_get_print_performance_diagnostics()
 {
     return tls_fetch<int>(print_performance_diagnostics_key, [](int& i){i = 0;});
+}
+
+int* tls_get_should_throw()
+{
+    return tls_fetch<int>(should_throw, [](int& i){i = 0;});
 }
 
 mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim, bool lock) : ctx(shim.ctx)
