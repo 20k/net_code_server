@@ -14,6 +14,14 @@
 #include <json/json.hpp>
 #include "db_storage_backend.hpp"
 
+#define NO_MONGO
+
+#ifndef NO_MONGO
+#undef USE_MONGO
+#endif // NO_MONGO
+
+//#define USE_MONGO
+
 //#define DEADLOCK_DETECTION
 
 enum class mongo_database_type
@@ -47,9 +55,15 @@ struct lock_internal
     std::string locked_by_debug;
     #endif // DEADLOCK_DETECTION
     std::atomic_flag locked = ATOMIC_FLAG_INIT;
+
+    #ifdef USE_MONGO
     mongoc_client_t* in_case_of_emergency = nullptr;
 
     void lock(const std::string& debug_info, size_t who, mongoc_client_t* emergency);
+    #else
+    void lock(const std::string& debug_info, size_t who);
+    #endif // USE_MONGO
+
     void unlock();
 };
 
@@ -58,11 +72,13 @@ struct lock_internal
 ///and get the client in a thread safe way
 struct mongo_context
 {
+    #ifdef USE_MONGO
     mongoc_uri_t* uri = nullptr;
     mongoc_client_pool_t* pool = nullptr;
 
     mongoc_client_t* client = nullptr;
     mongoc_database_t* database = nullptr;
+    #endif // NO_MONGO
 
     std::string last_db = "";
     mongo_database_type last_db_type = mongo_database_type::MONGO_COUNT;
@@ -91,15 +107,20 @@ struct mongo_context
 
     void map_lock_for();
 
+    #ifdef USE_MONGO
     void make_lock(const std::string& debug_info, const std::string& collection, size_t who, mongoc_client_t* in_case_of_emergency);
+    #else
+    void make_lock(const std::string& debug_info, const std::string& collection, size_t who);
+    #endif // USE_MONGO
 
     void make_unlock(const std::string& collection);
 
     void unlock_if(size_t who);
 
+    #ifdef USE_MONGO
     mongoc_client_t* request_client();
-
     void return_client(mongoc_client_t* pclient);
+    #endif // USE_MONGO
 
     ~mongo_context();
 };
@@ -137,11 +158,13 @@ struct safe_lock_guard
 
 struct mongo_interface
 {
-    mongoc_client_t* client = nullptr;
     mongo_context* ctx = nullptr;
 
+    #ifdef USE_MONGO
+    mongoc_client_t* client = nullptr;
     mongoc_database_t* database = nullptr;
     mongoc_collection_t* collection = nullptr;
+    #endif // USE_MONGO
 
     db_storage_backend testing_backend;
     bool enable_testing_backend = true;

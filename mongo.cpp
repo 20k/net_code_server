@@ -18,6 +18,10 @@
 
 //#define ONLY_VALIDATION
 
+#ifndef USE_MONGO
+#undef ONLY_VALIDATION
+#endif // USE_MONGO
+
 //thread_local int mongo_lock_proxy::thread_id_storage_hack = -2;
 //thread_local int mongo_lock_proxy::print_performance_diagnostics = 0;
 
@@ -70,6 +74,7 @@ std::string bson_iter_utf8_easy(bson_iter_t* iter)
     return std::string(k, len);
 }
 
+#ifdef USE_MONGO
 void lock_internal::lock(const std::string& debug_info, size_t who, mongoc_client_t* emergency)
 {
     #ifdef DEADLOCK_DETECTION
@@ -184,6 +189,33 @@ void lock_internal::lock(const std::string& debug_info, size_t who, mongoc_clien
     #endif // DEADLOCK_DETECTION
     in_case_of_emergency = emergency;
 }
+#else
+void lock_internal::lock(const std::string& debug_info, size_t who)
+{
+    sthread::this_yield();
+
+    ///200 ms
+    constexpr size_t max_microseconds_elapsed = 1000 * 20;
+    bool sleeptime = false;
+
+    sf::Clock clk;
+
+    while(locked.test_and_set(std::memory_order_acquire))
+    {
+        if(sleeptime || clk.getElapsedTime().asMicroseconds() >= max_microseconds_elapsed)
+        {
+            sleeptime = true;
+            Sleep(1);
+        }
+        else
+        {
+            sthread::this_yield();
+        }
+    }
+
+    locked_by = who;
+}
+#endif
 
 void lock_internal::unlock()
 {
@@ -197,7 +229,7 @@ void lock_internal::unlock()
 
 mongo_context::mongo_context(mongo_database_type type)
 {
-    std::string uri_str = "Err";
+    std::string uri_str = "";
     std::string db = "Err";
 
     last_db_type = type;
@@ -206,32 +238,24 @@ mongo_context::mongo_context(mongo_database_type type)
     {
         uri_str = "mongodb://user_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";;
         db = "user_dbs";
-
-        client = mongoc_client_new(uri_str.c_str());
     }
 
     if(type == mongo_database_type::USER_PROPERTIES)
     {
         uri_str = "mongodb://user_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
         db = "user_properties";
-
-        client = mongoc_client_new(uri_str.c_str());
     }
 
     if(type == mongo_database_type::USER_ITEMS)
     {
         uri_str = "mongodb://user_items_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
         db = "user_items";
-
-        client = mongoc_client_new(uri_str.c_str());
     }
 
     if(type == mongo_database_type::GLOBAL_PROPERTIES)
     {
         uri_str = "mongodb://global_properties_database:james20kuserhandlermongofundiff@localhost:27017/?authSource=users";
         db = "global_properties";
-
-        client = mongoc_client_new(uri_str.c_str());
     }
 
     /*if(type == mongo_database_type::CHAT_CHANNELS)
@@ -244,32 +268,24 @@ mongo_context::mongo_context(mongo_database_type type)
     {
         uri_str = "mongodb://pending_notifs_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
         db = "pending_notifs";
-
-        client = mongoc_client_new(uri_str.c_str());
     }
 
     if(type == mongo_database_type::CHAT_CHANNEL_PROPERTIES)
     {
         uri_str = "mongodb://chat_channel_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
         db = "chat_channel_properties";
-
-        client = mongoc_client_new(uri_str.c_str());
     }
 
     if(type == mongo_database_type::NODE_PROPERTIES)
     {
         uri_str = "mongodb://node_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
         db = "node_properties";
-
-        client = mongoc_client_new(uri_str.c_str());
     }
 
     if(type == mongo_database_type::NPC_PROPERTIES)
     {
         uri_str = "mongodb://npc_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
         db = "npc_properties";
-
-        client = mongoc_client_new(uri_str.c_str());
     }
 
     ///hmm.. somewhat of a naming fuckup here
@@ -279,8 +295,13 @@ mongo_context::mongo_context(mongo_database_type type)
     {
         uri_str = "mongodb://network_properties_database:james20kuserhandlermongofun@localhost:27017/?authSource=users";
         db = "all_networks";
+    }
 
+    if(uri_str != "")
+    {
+        #ifdef USE_MONGO
         client = mongoc_client_new(uri_str.c_str());
+        #endif // USE_MONGO
     }
 
     std::map<mongo_database_type, std::string> procedural_dbs
@@ -304,6 +325,7 @@ mongo_context::mongo_context(mongo_database_type type)
 
             std::cout << "curi " << uri_str << std::endl;
 
+            #ifdef USE_MONGO
             #ifndef TESTING
             mongoc_client_t* tclient = mongoc_client_new(turi.c_str());
 
@@ -392,14 +414,17 @@ mongo_context::mongo_context(mongo_database_type type)
             #endif // TESTING
 
             client = mongoc_client_new(uri_str.c_str());
+            #endif // USE_MONGO
         }
     }
 
+    #ifdef USE_MONGO
     mongoc_client_set_appname(client, "crapmud");
 
     uri = mongoc_uri_new(uri_str.c_str());
     pool = mongoc_client_pool_new(uri);
     mongoc_client_pool_set_error_api(pool, 2);
+    #endif // USE_MONGO
 
     #if 0
     if(type == mongo_database_type::USER_AUTH)
@@ -411,7 +436,9 @@ mongo_context::mongo_context(mongo_database_type type)
 
     last_db = db;
 
+    #ifdef USE_MONGO
     database = mongoc_client_get_database(client, db.c_str());
+    #endif // USE_MONGO
 
     /*if(type == mongo_database_type::USER_PROPERTIES)
     {
@@ -466,6 +493,7 @@ mongo_context::mongo_context(mongo_database_type type)
         is_fixed = true;
     }
 
+    #ifdef USE_MONGO
     char** strv;
 
     if((strv = mongoc_database_get_collection_names_with_opts(database, nullptr, nullptr)))
@@ -486,6 +514,7 @@ mongo_context::mongo_context(mongo_database_type type)
 
     mongoc_database_destroy(database);
     database = nullptr;
+    #endif // USE_MONGO
 }
 
 void mongo_context::map_lock_for()
@@ -496,6 +525,7 @@ void mongo_context::map_lock_for()
     while(!map_lock.try_lock_for(std::chrono::milliseconds(time_ms))){}
 }
 
+#ifdef USE_MONGO
 void mongo_context::make_lock(const std::string& debug_info, const std::string& collection, size_t who, mongoc_client_t* in_case_of_emergency)
 {
     map_lock_for();
@@ -531,6 +561,18 @@ void mongo_context::make_lock(const std::string& debug_info, const std::string& 
 
     locked_by = who;*/
 }
+#else
+void mongo_context::make_lock(const std::string& debug_info, const std::string& collection, size_t who)
+{
+    map_lock_for();
+
+    auto& found = per_collection_lock[collection];
+
+    map_lock.unlock();
+
+    found.lock(debug_info, who);
+}
+#endif
 
 void mongo_context::make_unlock(const std::string& collection)
 {
@@ -580,7 +622,9 @@ void mongo_context::unlock_if(size_t who)
         {
             if(i.second.locked_by == who)
             {
+                #ifdef USE_MONGO
                 return_client(i.second.in_case_of_emergency);
+                #endif // USE_MONGO
                 i.second.unlock();
                 printf("salvaged db\n");
             }
@@ -590,6 +634,7 @@ void mongo_context::unlock_if(size_t who)
     }
 }
 
+#ifdef USE_MONGO
 mongoc_client_t* mongo_context::request_client()
 {
     return mongoc_client_pool_pop(pool);
@@ -599,15 +644,18 @@ void mongo_context::return_client(mongoc_client_t* pclient)
 {
     return mongoc_client_pool_push(pool, pclient);
 }
+#endif // USE_MONGO
 
 mongo_context::~mongo_context()
 {
+    #ifdef USE_MONGO
     //if(collection)
     //    mongoc_collection_destroy (collection);
 
     //mongoc_database_destroy (database);
     mongoc_client_destroy (client);
     mongoc_uri_destroy (uri);
+    #endif // USE_MONGO
 }
 
 
@@ -660,6 +708,7 @@ void mongo_interface::change_collection_unsafe(const std::string& coll, bool for
 
     last_collection = coll;
 
+    #ifdef USE_MONGO
     if(collection)
     {
         mongoc_collection_destroy(collection);
@@ -667,6 +716,7 @@ void mongo_interface::change_collection_unsafe(const std::string& coll, bool for
     }
 
     collection = mongoc_client_get_collection(client, ctx->last_db.c_str(), coll.c_str());
+    #endif // USE_MONGO
 }
 
 bson_t* mongo_interface::make_bson_from_json(const std::string& json) const
@@ -724,6 +774,7 @@ void mongo_interface::insert_bson_1(const std::string& script_host, bson_t* bs)
     else
     #endif // ONLY_VALIDATION
     {
+        #ifdef USE_MONGO
         bson_error_t error;
 
         if(!mongoc_collection_insert_one(collection, bs, NULL, NULL, &error))
@@ -731,6 +782,7 @@ void mongo_interface::insert_bson_1(const std::string& script_host, bson_t* bs)
             printf("Error: %s\n", error.message);
             //fprintf (stderr, "err: %s\n", error.message);
         }
+        #endif // USE_MONGO
     }
 }
 
@@ -818,6 +870,7 @@ std::string mongo_interface::update_bson_many(const std::string& script_host, bs
     else
     {
     #endif // ONLY_VALIDATION
+        #ifdef USE_MONGO
         bson_error_t error;
 
         if(!mongoc_collection_update_many(collection, selector, update, nullptr, nullptr, &error))
@@ -826,6 +879,7 @@ std::string mongo_interface::update_bson_many(const std::string& script_host, bs
 
             return error.message;
         }
+        #endif // USE_MONGO
     #ifndef ONLY_VALIDATION
     }
     #endif // ONLY_VALIDATION
@@ -879,6 +933,7 @@ std::string mongo_interface::update_bson_one(bson_t* selector, bson_t* update)
     else
     {
     #endif // ONLY_VALIDATION
+    #ifdef USE_MONGO
         bson_error_t error;
 
         if(!mongoc_collection_update_one(collection, selector, update, nullptr, nullptr, &error))
@@ -887,6 +942,7 @@ std::string mongo_interface::update_bson_one(bson_t* selector, bson_t* update)
 
             return error.message;
         }
+    #endif // USE_MONGO
     #ifndef ONLY_VALIDATION
     }
     #endif // ONLY_VALIDATION
@@ -943,15 +999,18 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
     if(script_host != last_collection)
         return results;
 
+    #ifdef USE_MONGO
     if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
     {
         return std::vector<std::string>();
     }
+    #endif // USE_MONGO
 
     #ifndef ONLY_VALIDATION
     if(!enable_testing_backend)
     {
     #endif // ONLY_VALIDATION
+    #ifdef USE_MONGO
         const bson_t *doc;
 
         ///hmm. for .first() we should limit to one doc
@@ -979,6 +1038,7 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
         }
 
         mongoc_cursor_destroy(cursor);
+    #endif // USE_MONGO
     #ifndef ONLY_VALIDATION
     } else
     #else
@@ -1117,18 +1177,23 @@ void mongo_interface::remove_bson(const std::string& script_host, bson_t* bs)
     if(script_host != last_collection)
         return;
 
+    #ifdef USE_MONGO
     if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
         return;
+    #endif // USE_MONGO
 
     if(bs == nullptr)
         return;
 
     if(enable_testing_backend)
         testing_backend.remove_many(bson_to_json(bs));
+
+    #ifdef USE_MONGO
     #ifndef ONLY_VALIDATION
     else
     #endif // ONLY_VALIDATION
         mongoc_collection_delete_many(collection, bs, nullptr, nullptr, nullptr);
+    #endif // USE_MONGO
 }
 
 void mongo_interface::remove_json(const std::string& script_host, const std::string& json)
@@ -1136,8 +1201,10 @@ void mongo_interface::remove_json(const std::string& script_host, const std::str
     if(script_host != last_collection)
         return;
 
+    #ifdef USE_MONGO
     if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
         return;
+    #endif // USE_MONGO
 
     bson_t* bs = make_bson_from_json(json);
 
@@ -1155,6 +1222,7 @@ void mongo_interface::remove_json_many_new(const nlohmann::json& json)
     if(!enable_testing_backend)
     #endif // ONLY_VALIDATION
     {
+        #ifdef USE_MONGO
         if(!mongoc_database_has_collection(database, last_collection.c_str(), nullptr))
             return;
 
@@ -1166,6 +1234,7 @@ void mongo_interface::remove_json_many_new(const nlohmann::json& json)
         remove_bson(last_collection, bs);
 
         bson_destroy(bs);
+        #endif // USE_MONGO
     }
     #ifndef ONLY_VALIDATION
     else
@@ -1179,9 +1248,12 @@ void mongo_interface::remove_json_many_new(const nlohmann::json& json)
 mongo_interface::mongo_interface(mongo_context* fctx) : testing_backend(fctx)
 {
     ctx = fctx;
+
+    #ifdef USE_MONGO
     client = fctx->request_client();
 
     database = mongoc_client_get_database(client, ctx->last_db.c_str());
+    #endif // USE_MONGO
 }
 
 /*mongo_interface::mongo_interface(mongo_interface&& other)
@@ -1198,12 +1270,14 @@ mongo_interface::mongo_interface(mongo_context* fctx) : testing_backend(fctx)
 
 mongo_interface::~mongo_interface()
 {
+    #ifdef USE_MONGO
     ctx->return_client(client);
 
     if(collection)
         mongoc_collection_destroy (collection);
 
     mongoc_database_destroy (database);
+    #endif // USE_MONGO
 }
 
 mongo_shim::mongo_shim(mongo_context* fctx, int plock_id)
@@ -1322,7 +1396,11 @@ void mongo_lock_proxy::lock()
 
     if(!has_lock)
     {
+        #ifdef USE_MONGO
         ctx.ctx->make_lock(ctx.ctx->last_db, ctx.last_collection, ilock_id, ctx.client);
+        #else
+        ctx.ctx->make_lock(ctx.ctx->last_db, ctx.last_collection, ilock_id);
+        #endif
 
         perf.locks++;
 

@@ -808,6 +808,7 @@ db_storage& get_db_storage()
 
 void import_from_mongo()
 {
+    #ifdef USE_MONGO
     db_storage& store = get_db_storage();
 
     store.global_id = 0;
@@ -875,6 +876,9 @@ void import_from_mongo()
     store.atomic_enabled = true;
 
     std::cout << "imported from mongo\n";
+    #else
+    throw std::runtime_error("Should not be possible (use mongo import from mongo)");
+    #endif
 
     //exit(0);
 }
