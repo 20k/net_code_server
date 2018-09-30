@@ -329,7 +329,27 @@ int main()
 
 
     npc_manage.create_npcs_up_to(MAX_NPC_COUNT);
-    #endif // DELETE_DISCONNECTED_USERS
+    #endif // DELETE_DISCONNECTED_USERS]
+
+    int num_broken = 0;
+
+    for_each_npc([&](npc_user& usr)
+    {
+        auto sys_opt = manage.get_system_of(usr.name);
+
+        if(!sys_opt.has_value())
+        {
+            /*command_handler_state state;
+
+            std::cout << "deleting " << usr.name << std::endl;
+
+            delete_user(state, usr.name, true);*/
+
+            num_broken++;
+        }
+    });
+
+    std::cout << "num broken " << num_broken << std::endl;
 
     //manage.erase_all();
     //manage.generate_up_to(150);
