@@ -156,7 +156,8 @@ void updater(nlohmann::json& data, const nlohmann::json& update)
         //throw std::runtime_error("You probably want a $set in your update query");
     }
 
-    assert(update.count(CID_STRING) == 0);
+    ///this doesn't make sense, the danger is if they want to $set cid_string
+    //assert(update.count(CID_STRING) == 0);
 
     const nlohmann::json& to_set = update.at("$set");
 
