@@ -1108,8 +1108,6 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
-    std::cout << "hi hello there\n";
-
     bool found = false;
 
     for(auto& i : users)
@@ -1121,8 +1119,6 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
-    std::cout << "at part two\n";
-
     if(!found)
         return push_error(ctx, "Not in channel");
 
@@ -1130,12 +1126,8 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         ///TODO: LIMIT
         for(auto& current_user : users)
         {
-            std::cout << "pre lock\n";
-
             mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
             mongo_ctx.change_collection(current_user);
-
-            std::cout << "post lock\n";
 
             size_t real_time = get_wall_time();
 
@@ -1147,26 +1139,14 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
             to_insert["time_ms"] = real_time;
             to_insert["processed"] = 0;
 
-            std::cout << "construct\n";
-
             insert_in_db(mongo_ctx, to_insert);
-
-            std::cout << "insert\n";
         }
     }
-
-    std::cout << "hi hello 3\n";
-
-    printf("here1\n");
 
     command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(ctx, "command_handler_state_pointer");
 
     if(found_ptr && get_caller_stack(ctx).size() > 0 && get_caller_stack(ctx)[0] == found_ptr->get_user_name())
         send_async_message(ctx, handle_client_poll_json(my_user));
-
-    printf("here2\n");
-
-    std::cout << "hi hello 4\n";
 
     return push_success(ctx);
 }

@@ -404,6 +404,12 @@ struct db_storage
 
         std::lock_guard guard(cdb.get_lock(coll));
 
+        /*if(db_idx == (int)mongo_database_type::PENDING_NOTIFS)
+        {
+            std::cout << "imported? " << cdb.collection_imported[coll] << std::endl;
+            std::cout << "coll " << coll << std::endl;
+        }*/
+
         if(cdb.collection_imported[coll])
             return;
 
