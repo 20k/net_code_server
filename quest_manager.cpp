@@ -1,6 +1,6 @@
 #include "quest_manager.hpp"
 
-nlohmann::json quest_manager::get_quest_data(quest_manager::type t, const std::string& username)
+nlohmann::json quest::get_quest_part_data(quest::type t)
 {
     for(auto& i : *quest_data)
     {
@@ -11,7 +11,7 @@ nlohmann::json quest_manager::get_quest_data(quest_manager::type t, const std::s
     return nlohmann::json();
 }
 
-void quest_manager::set_quest_data(type t, const std::string& username, const nlohmann::json& j)
+void quest::set_quest_part_data(type t, const nlohmann::json& j)
 {
     for(auto& i : *quest_data)
     {
@@ -23,4 +23,16 @@ void quest_manager::set_quest_data(type t, const std::string& username, const nl
     }
 
     quest_data->push_back({t, j});
+}
+
+std::vector<quest> quest_manager::fetch_quests_of(mongo_lock_proxy& ctx, const std::string& user)
+{
+    nlohmann::json req;
+    req["user_for"] = user;
+
+    auto found = ctx->find_json_new(req, nlohmann::json());
+
+    auto quests = quest::convert_all_from(found);
+
+    return quests;
 }

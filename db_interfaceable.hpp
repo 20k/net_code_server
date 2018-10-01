@@ -306,6 +306,28 @@ struct db_interfaceable
     }
 
     static
+    std::vector<concrete> convert_all_from(const std::vector<nlohmann::json>& found)
+    {
+        std::vector<concrete> ret;
+
+        for(auto& js : found)
+        {
+            try
+            {
+                concrete val;
+                val.data = js;
+
+                val.handle_serialise(val.data, false);
+
+                ret.push_back(val);
+            }
+            catch(...){}
+        }
+
+        return ret;
+    }
+
+    static
     void remove_all_from_db(mongo_lock_proxy& ctx)
     {
         std::string static_key;
