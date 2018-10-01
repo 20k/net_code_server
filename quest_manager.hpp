@@ -31,7 +31,8 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
     ///who's this quest being done for?
     DB_VAL(std::string, user_for);
 
-    using map_type = std::vector<std::pair<type, nlohmann::json>>;
+    using data_type = std::pair<type, nlohmann::json>;
+    using map_type = std::vector<data_type>;
 
     ///maps quest type to a user to arbitrary json
     ///so the way this is expected to operate is that we run a script, and that script keeps track of what we're doing
@@ -48,11 +49,29 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
 
     nlohmann::json get_quest_part_data(type t);
     void set_quest_part_data(type t, const nlohmann::json& j);
+
+    void add_send_cash(const std::string& to, double amount);
+    void add_steal_cash(const std::string& from, double amount);
+
+    /*
+    ///steal item type?
+    void add_send_item(const std::string& to, double amount);
+    void add_steal_item(const std::string& from, double amount);*/
+
+    void add_hack_user(const std::string& target);
+    void add_breach_user(const std::string& target);
+
+    void add_move_system(const std::string& sys);
+
+    void add_claim_user_for(const std::string& claim_user, const std::string& claim_for);
+    void add_revoke_user_from(const std::string& revoke_user, const std::string& revoke_from);
 };
 
 struct quest_manager
 {
     std::vector<quest> fetch_quests_of(mongo_lock_proxy& ctx, const std::string& user);
+
+    quest get_new_quest_for(const std::string& username);
 };
 
 #endif // QUEST_MANAGER_HPP_INCLUDED

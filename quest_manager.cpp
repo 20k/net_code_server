@@ -25,6 +25,24 @@ void quest::set_quest_part_data(type t, const nlohmann::json& j)
     quest_data->push_back({t, j});
 }
 
+void quest::add_hack_user(const std::string& target)
+{
+    data_type dat;
+    dat.first = type::HACK_USER;
+    dat.second["user"] = target;
+
+    quest_data->push_back(dat);
+}
+
+void quest::add_breach_user(const std::string& target)
+{
+    data_type dat;
+    dat.first = type::BREACH_USER;
+    dat.second["user"] = target;
+
+    quest_data->push_back(dat);
+}
+
 std::vector<quest> quest_manager::fetch_quests_of(mongo_lock_proxy& ctx, const std::string& user)
 {
     nlohmann::json req;
@@ -35,4 +53,12 @@ std::vector<quest> quest_manager::fetch_quests_of(mongo_lock_proxy& ctx, const s
     auto quests = quest::convert_all_from(found);
 
     return quests;
+}
+
+quest quest_manager::get_new_quest_for(const std::string& username)
+{
+    quest nquest;
+    *nquest.user_for = username;
+
+    return nquest;
 }
