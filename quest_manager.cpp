@@ -57,7 +57,16 @@ std::string quest::get_as_string()
 
         if(type.first == quest::type::HACK_USER)
         {
-            ret += title + "\n";
+            std::string usr = type.second["user"];
+
+            ret += title + usr + "\n";
+        }
+
+        if(type.first == quest::type::BREACH_USER)
+        {
+            std::string usr = type.second["user"];
+
+            ret += title + usr + "\n";
         }
     }
 
