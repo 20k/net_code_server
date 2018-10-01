@@ -43,6 +43,46 @@ void quest::add_breach_user(const std::string& target)
     quest_data->push_back(dat);
 }
 
+std::string quest::get_as_string()
+{
+    std::string ret;
+
+    int dim = quest_data->size();
+
+    for(int i=0; i < dim; i++)
+    {
+        std::string title = quest::type_strings[i] + ": ";
+
+        data_type& type = (*quest_data)[i];
+
+        if(type.first == quest::type::HACK_USER)
+        {
+            ret += title + "\n";
+        }
+    }
+
+    if(dim > 0)
+        ret.pop_back();
+
+    return ret;
+}
+
+nlohmann::json quest::get_as_data()
+{
+    std::vector<nlohmann::json> js;
+
+    for(int i=0; i < (int)quest_data->size(); i++)
+    {
+        js.push_back((*quest_data)[i]);
+    }
+
+    nlohmann::json ret;
+    ret["user"] = *user_for;
+    ret["quests"] = js;
+
+    return ret;
+}
+
 std::vector<quest> quest_manager::fetch_quests_of(mongo_lock_proxy& ctx, const std::string& user)
 {
     nlohmann::json req;

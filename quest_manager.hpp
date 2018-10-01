@@ -28,6 +28,22 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
         ///create a script that does something?
     };
 
+    static inline std::vector<std::string> type_strings
+    {
+        "Deposit Cash",
+        "Steal Cash",
+        "Send Item",
+        "Steal Item",
+
+        "Poke User",
+        "Breach User",
+
+        "Move to System",
+
+        "Claim User For",
+        "Revoke User From",
+    };
+
     ///who's this quest being done for?
     DB_VAL(std::string, user_for);
 
@@ -65,6 +81,9 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
 
     void add_claim_user_for(const std::string& claim_user, const std::string& claim_for);
     void add_revoke_user_from(const std::string& revoke_user, const std::string& revoke_from);
+
+    std::string get_as_string();
+    nlohmann::json get_as_data();
 };
 
 struct quest_manager
