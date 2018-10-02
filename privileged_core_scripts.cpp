@@ -15,6 +15,7 @@
 #include <secret/secret.hpp>
 #include "perfmon.hpp"
 #include "time.hpp"
+#include "quest_manager.hpp"
 
 #define SECLEVEL_FUNCTIONS
 
@@ -6555,6 +6556,115 @@ duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+duk_ret_t mission__list(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string caller = get_caller(ctx);
+
+    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
+
+    quest_manager& quest_manage = get_global_quest_manager();
+
+    std::vector<quest> all_quests;
+
+    {
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_quest_manager_context(get_thread_id(ctx));
+        all_quests = quest_manage.fetch_quests_of(mongo_ctx, caller);
+    }
+
+
+    if(is_arr)
+    {
+        nlohmann::json ret;
+
+        std::vector<nlohmann::json> jsonified;
+
+        for(quest& q : all_quests)
+        {
+            jsonified.push_back(q.get_as_data());
+        }
+
+        ret["quests"] = jsonified;
+
+        push_duk_val(ctx, ret);
+        return 1;
+    }
+    else
+    {
+        std::string str;
+
+        for(quest& q : all_quests)
+        {
+            str += q.get_as_string() + "\n";
+        }
+
+        str = strip_trailing_newlines(str);
+
+        if(all_quests.size() == 0)
+        {
+            str = "No Quests";
+        }
+
+        push_duk_val(ctx, str);
+        return 1;
+    }
+}
+
+duk_ret_t mission__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string caller = get_caller(ctx);
+
+    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
+
+    quest_manager& quest_manage = get_global_quest_manager();
+
+    std::vector<quest> all_quests;
+
+    {
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_quest_manager_context(get_thread_id(ctx));
+        all_quests = quest_manage.fetch_quests_of(mongo_ctx, caller);
+    }
+
+
+    if(is_arr)
+    {
+        nlohmann::json ret;
+
+        std::vector<nlohmann::json> jsonified;
+
+        for(quest& q : all_quests)
+        {
+            jsonified.push_back(q.get_as_data());
+        }
+
+        ret["quests"] = jsonified;
+
+        push_duk_val(ctx, ret);
+        return 1;
+    }
+    else
+    {
+        std::string str;
+
+        for(quest& q : all_quests)
+        {
+            str += q.get_as_string() + "\n";
+        }
+
+        str = strip_trailing_newlines(str);
+
+        if(all_quests.size() == 0)
+        {
+            str = "No Quests";
+        }
+
+        push_duk_val(ctx, str);
+        return 1;
+    }
+}
 
 #ifdef TESTING
 

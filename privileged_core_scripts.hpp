@@ -234,6 +234,8 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 #ifdef TESTING
 duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl);
+duk_ret_t mission__list(priv_context& priv_ctx, duk_context* ctx, int sl);
+duk_ret_t mission__debug(priv_context& priv_ctx, duk_context* ctx, int sl);
 #endif // TESTING
 
 #ifdef TESTING
@@ -362,6 +364,8 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(ada__access, 4),
     REGISTER_FUNCTION_PRIV(able__help, 4),
     REGISTER_FUNCTION_PRIV(sys__debug, 1),
+    REGISTER_FUNCTION_PRIV(mission__list, 1),
+    REGISTER_FUNCTION_PRIV(mission__debug, 1),
     #endif // TESTING
     #ifdef LIVE_DEBUGGING
     REGISTER_FUNCTION_PRIV(cheats__debug, 4),

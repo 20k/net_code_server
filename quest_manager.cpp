@@ -1,4 +1,5 @@
 #include "quest_manager.hpp"
+#include <libncclient/nc_util.hpp>
 
 nlohmann::json quest::get_quest_part_data(quest::type t)
 {
@@ -58,18 +59,20 @@ std::string quest::get_as_string()
 
         data_type& type = (*quest_data)[i];
 
+        bool complete = type.second["complete"];
+
         if(type.first == quest::type::HACK_USER)
         {
             std::string usr = type.second["user"];
 
-            ret += title + usr + "\n";
+            ret += colour_string_if(title, complete) + usr + "\n";
         }
 
         if(type.first == quest::type::BREACH_USER)
         {
             std::string usr = type.second["user"];
 
-            ret += title + usr + "\n";
+            ret += colour_string_if(title, complete) + usr + "\n";
         }
     }
 

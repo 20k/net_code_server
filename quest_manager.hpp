@@ -99,4 +99,12 @@ struct quest_manager
     quest get_new_quest_for(const std::string& username, const std::string& name, const std::string& description);
 };
 
+inline
+quest_manager& get_global_quest_manager()
+{
+    static quest_manager quest_manage;
+
+    return quest_manage;
+}
+
 #endif // QUEST_MANAGER_HPP_INCLUDED
