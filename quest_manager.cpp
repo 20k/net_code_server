@@ -104,10 +104,12 @@ std::vector<quest> quest_manager::fetch_quests_of(mongo_lock_proxy& ctx, const s
     return quests;
 }
 
-quest quest_manager::get_new_quest_for(const std::string& username)
+quest quest_manager::get_new_quest_for(const std::string& username, const std::string& name, const std::string& description)
 {
     quest nquest;
     *nquest.user_for = username;
+    *nquest.name = name;
+    *nquest.description = description;
 
     return nquest;
 }

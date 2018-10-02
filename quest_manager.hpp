@@ -47,6 +47,9 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
     ///who's this quest being done for?
     DB_VAL(std::string, user_for);
 
+    DB_VAL(std::string, name);
+    DB_VAL(std::string, description);
+
     using data_type = std::pair<type, nlohmann::json>;
     using map_type = std::vector<data_type>;
 
@@ -59,6 +62,9 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
     {
         quest_data.serialise(j, ser);
         user_for.serialise(j, ser);
+
+        name.serialise(j, ser);
+        description.serialise(j, ser);
 
         return false;
     }
@@ -90,7 +96,7 @@ struct quest_manager
 {
     std::vector<quest> fetch_quests_of(mongo_lock_proxy& ctx, const std::string& user);
 
-    quest get_new_quest_for(const std::string& username);
+    quest get_new_quest_for(const std::string& username, const std::string& name, const std::string& description);
 };
 
 #endif // QUEST_MANAGER_HPP_INCLUDED
