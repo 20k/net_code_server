@@ -49,6 +49,9 @@ std::string quest::get_as_string()
 
     int dim = quest_data->size();
 
+    ret = *name + ":\n";
+    ret += *description + "\n";
+
     for(int i=0; i < dim; i++)
     {
         std::string title = quest::type_strings[i] + ": ";
@@ -88,6 +91,8 @@ nlohmann::json quest::get_as_data()
     nlohmann::json ret;
     ret["user"] = *user_for;
     ret["quests"] = js;
+    ret["name"] = *name;
+    ret["description"] = *description;
 
     return ret;
 }
