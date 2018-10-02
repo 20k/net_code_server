@@ -6621,7 +6621,9 @@ duk_ret_t mission__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     quest_manager& quest_manage = get_global_quest_manager();
 
-    std::vector<quest> all_quests;
+    quest test = quest_manage.get_new_quest_for(get_caller(ctx), "Trouble in Paradise?", "This is an example quest\nGo blow up some folks or sommit");
+
+    /*std::vector<quest> all_quests;
 
     {
         mongo_nolock_proxy mongo_ctx = get_global_mongo_quest_manager_context(get_thread_id(ctx));
@@ -6663,7 +6665,7 @@ duk_ret_t mission__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         push_duk_val(ctx, str);
         return 1;
-    }
+    }*/
 }
 
 #ifdef TESTING

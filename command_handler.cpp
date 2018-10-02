@@ -23,6 +23,7 @@
 #include <secret/low_level_structure.hpp>
 #include "safe_thread.hpp"
 #include "mongo.hpp"
+#include "quest_manager.hpp"
 
 struct unsafe_info
 {
@@ -1136,6 +1137,20 @@ void delete_structure_for(const std::string& name)
     }
 }
 
+void delete_quests_for(const std::string& name)
+{
+    quest_manager& quest_manage = get_global_quest_manager();
+
+    mongo_lock_proxy ctx = get_global_mongo_quest_manager_context(-2);
+
+    auto all = quest_manage.fetch_quests_of(ctx, name);
+
+    for(auto& i : all)
+    {
+        i.remove_from_db(ctx);
+    }
+}
+
 ///ok
 ///things this function needs to do
 ///preserve items
@@ -1147,6 +1162,8 @@ void delete_structure_for(const std::string& name)
 ///fixup auth
 
 ///NOT UPDATED FOR SYSTEM STUFF
+
+///not updated for quest stuff
 std::string rename_user_force(const std::string& from_name, const std::string& to_name)
 {
     user usr;
@@ -1273,7 +1290,6 @@ std::string rename_user_force(const std::string& from_name, const std::string& t
     delete_user_db_for(from_name);
     delete_user_for(from_name);
     delete_notifs_for(from_name);
-
 
     return "Renamed " + from_name + " " + to_name;
 }
@@ -1403,6 +1419,8 @@ std::string delete_user(command_handler_state& state, const std::string& str, bo
     delete_links_for(name);
 
     delete_structure_for(name);
+
+    delete_quests_for(name);
 
     return "Deleted";
 }
