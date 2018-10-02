@@ -1,6 +1,19 @@
 #include "quest_manager.hpp"
 #include <libncclient/nc_util.hpp>
 
+bool quest::is_index_completed(int idx)
+{
+    if(idx < 0 || idx >= (int)quest_data->size())
+        return true;
+
+    nlohmann::json data = (*quest_data)[idx].second["completed"];
+
+    if(!data.is_boolean())
+        return true;
+
+    return (bool)data;
+}
+
 nlohmann::json quest::get_quest_part_data(quest::type t)
 {
     for(auto& i : *quest_data)
@@ -50,8 +63,8 @@ std::string quest::get_as_string()
 
     int dim = quest_data->size();
 
-    ret = *name + ":\n";
-    ret += *description + "\n";
+    ret = "Name:\n" + *name + "\n";
+    ret += "Description:\n" + *description + "\n";
 
     for(int i=0; i < dim; i++)
     {

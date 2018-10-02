@@ -3,7 +3,7 @@
 
 #include "db_interfaceable.hpp"
 
-struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
+struct quest : db_interfaceable<quest, MACRO_GET_STR("user_for")>
 {
     /*enum class type
     {
@@ -68,6 +68,8 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
 
         return false;
     }
+
+    bool is_index_completed(int idx);
 
     nlohmann::json get_quest_part_data(type t);
     void set_quest_part_data(type t, const nlohmann::json& j);

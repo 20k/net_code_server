@@ -6617,11 +6617,19 @@ duk_ret_t mission__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string caller = get_caller(ctx);
 
-    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
+    //bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
 
     quest_manager& quest_manage = get_global_quest_manager();
 
     quest test = quest_manage.get_new_quest_for(get_caller(ctx), "Trouble in Paradise?", "This is an example quest\nGo blow up some folks or sommit");
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_quest_manager_context(get_thread_id(ctx));
+
+        test.overwrite_in_db(mongo_ctx);
+    }
+
+    return 1;
 
     /*std::vector<quest> all_quests;
 
