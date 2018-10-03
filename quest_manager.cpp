@@ -14,6 +14,17 @@ bool quest::is_index_completed(int idx)
     return (bool)data;
 }
 
+bool quest::complete()
+{
+    for(int i=0; i < (int)quest_data->size(); i++)
+    {
+        if(!is_index_completed(i))
+            return false;
+    }
+
+    return true;
+}
+
 nlohmann::json quest::get_quest_part_data(quest::type t)
 {
     for(auto& i : *quest_data)
@@ -63,7 +74,21 @@ std::string quest::get_as_string()
 
     int dim = quest_data->size();
 
-    ret = "Name:\n" + *name + "\n";
+    bool is_complete = complete();
+
+    std::string name_col = *name;
+
+    if(is_complete)
+    {
+        name_col = make_success_col(name_col) + " (finished)";
+    }
+    else
+    {
+        name_col = make_error_col(name_col) + " (incomplete)";
+    }
+
+    ret = name_col + "\n";
+
     ret += "Description:\n" + *description + "\n";
 
     for(int i=0; i < dim; i++)

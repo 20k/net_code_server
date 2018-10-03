@@ -71,6 +71,8 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("user_for")>
 
     bool is_index_completed(int idx);
 
+    bool complete();
+
     nlohmann::json get_quest_part_data(type t);
     void set_quest_part_data(type t, const nlohmann::json& j);
 
