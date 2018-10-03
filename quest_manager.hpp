@@ -3,6 +3,23 @@
 
 #include "db_interfaceable.hpp"
 
+struct quest_type_base
+{
+    bool is_eq(const nlohmann::json& json);
+};
+
+struct quest_targeted_user : quest_type_base
+{
+    std::string target;
+
+    bool is_eq(const nlohmann::json& json);
+};
+
+struct quest_breach_data : quest_targeted_user
+{
+
+};
+
 struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
 {
     /*enum class type
@@ -95,7 +112,7 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
     std::string get_as_string();
     nlohmann::json get_as_data();
 
-    bool process_breach_user(const std::string& target);
+    bool process(quest_breach_data& breach);
 };
 
 struct quest_manager
@@ -104,7 +121,7 @@ struct quest_manager
 
     quest get_new_quest_for(const std::string& username, const std::string& name, const std::string& description);
 
-    void process_breach_user(int lock_id, const std::string& caller, const std::string& target);
+    void process(int lock_id, const std::string& caller, quest_breach_data& t);
 };
 
 inline

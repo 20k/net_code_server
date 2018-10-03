@@ -2,6 +2,14 @@
 #include <libncclient/nc_util.hpp>
 #include "privileged_core_scripts.hpp"
 
+bool quest_targeted_user::is_eq(const nlohmann::json& json)
+{
+    if(json.count("user") == 0)
+        return false;
+
+    return json.at("user") == target;
+}
+
 bool quest::is_index_completed(int idx)
 {
     if(idx < 0 || idx >= (int)quest_data->size())
@@ -184,21 +192,28 @@ quest quest_manager::get_new_quest_for(const std::string& username, const std::s
     return nquest;
 }
 
-bool quest::process_breach_user(const std::string& target)
+template<typename T>
+bool process_general(quest& q, T& t, quest::type of_type)
 {
     bool any = false;
 
-    for(int i=0; i < (int)quest_data->size(); i++)
+    for(int i=0; i < (int)q.quest_data->size(); i++)
     {
-        data_type& type = (*quest_data)[i];
+        quest::data_type& type = (*q.quest_data)[i];
 
-        if(is_index_completed(i))
+        if(q.is_index_completed(i))
             continue;
 
-        if(type.first != quest::type::BREACH_USER)
+        if(type.first != of_type)
             continue;
 
-        if(type.second["user"] == target)
+        /*if(type.second["user"] == target)
+        {
+            type.second["completed"] = true;
+            any = true;
+        }*/
+
+        if(t.is_eq(type.second))
         {
             type.second["completed"] = true;
             any = true;
@@ -208,18 +223,24 @@ bool quest::process_breach_user(const std::string& target)
     return any;
 }
 
-void quest_manager::process_breach_user(int lock_id, const std::string& caller, const std::string& target)
+bool quest::process(quest_breach_data& breach)
+{
+    return process_general(*this, breach, quest::type::BREACH_USER);
+}
+
+template<typename T>
+void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t)
 {
     std::string str;
 
     {
         mongo_lock_proxy ctx = get_global_mongo_quest_manager_context(lock_id);
 
-        auto quests_for = fetch_quests_of(ctx, caller);
+        auto quests_for = qm.fetch_quests_of(ctx, caller);
 
         for(auto& i : quests_for)
         {
-            if(i.process_breach_user(target))
+            if(i.process(t))
             {
                 i.overwrite_in_db(ctx);
 
@@ -234,4 +255,18 @@ void quest_manager::process_breach_user(int lock_id, const std::string& caller, 
     {
         create_notification(lock_id, caller, "Completed:\n" + str + "\n");
     }
+}
+
+void quest_manager::process(int lock_id, const std::string& caller, quest_breach_data& t)
+{
+    return process_qm(*this, lock_id, caller, t);
+}
+
+void suppress()
+{
+    quest_breach_data dat;
+
+    quest_manager qm;
+
+    qm.process(-2, "", dat);
 }

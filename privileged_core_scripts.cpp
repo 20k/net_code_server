@@ -3328,7 +3328,10 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
     {
         quest_manager& qm = get_global_quest_manager();
 
-        qm.process_breach_user(get_thread_id(ctx), get_caller(ctx), name_of_person_being_attacked);
+        quest_breach_data br;
+        br.target = name_of_person_being_attacked;
+
+        qm.process(get_thread_id(ctx), get_caller(ctx), br);
     }
 
     if(breach_node->is_breached() && !breach_is_breached)
