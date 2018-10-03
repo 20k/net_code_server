@@ -16,6 +16,7 @@
 #include "perfmon.hpp"
 #include "time.hpp"
 #include "quest_manager.hpp"
+#include "rng.hpp"
 
 #define SECLEVEL_FUNCTIONS
 
@@ -6621,7 +6622,33 @@ duk_ret_t mission__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     quest_manager& quest_manage = get_global_quest_manager();
 
-    quest test = quest_manage.get_new_quest_for(get_caller(ctx), "Trouble in Paradise?", "This is an example quest\nGo blow up some folks or sommit");
+    quest test = quest_manage.get_new_quest_for(get_caller(ctx), "Trouble in Paradise? Pt 2.", "This is an example quest\nGo blow up some folks or sommit");
+
+    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+    auto sys_opt = low_level_structure_manage.get_system_of(caller);
+
+    if(!sys_opt.has_value())
+        return push_error(ctx, "No sys");
+
+    low_level_structure& sys = *sys_opt.value();
+
+    auto all_user_names = sys.get_all_users();
+
+    shuffle_csprng_seed<std::minstd_rand>(all_user_names);
+
+    auto all_users = load_users(all_user_names, get_thread_id(ctx));
+
+    for(user& usr : all_users)
+    {
+        if(!usr.is_npc())
+            continue;
+
+        test.add_breach_user(usr.name);
+
+        break;
+    }
+
 
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_quest_manager_context(get_thread_id(ctx));

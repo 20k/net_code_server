@@ -97,7 +97,7 @@ std::string quest::get_as_string()
 
         data_type& type = (*quest_data)[i];
 
-        bool complete = type.second["complete"];
+        bool complete = is_index_completed(i);
 
         if(type.first == quest::type::HACK_USER)
         {
