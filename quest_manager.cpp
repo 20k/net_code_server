@@ -228,6 +228,11 @@ bool quest::process(quest_breach_data& breach)
     return process_general(*this, breach, quest::type::BREACH_USER);
 }
 
+bool quest::process(quest_hack_data& breach)
+{
+    return process_general(*this, breach, quest::type::HACK_USER);
+}
+
 template<typename T>
 void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t)
 {
@@ -258,6 +263,11 @@ void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t)
 }
 
 void quest_manager::process(int lock_id, const std::string& caller, quest_breach_data& t)
+{
+    return process_qm(*this, lock_id, caller, t);
+}
+
+void quest_manager::process(int lock_id, const std::string& caller, quest_hack_data& t)
 {
     return process_qm(*this, lock_id, caller, t);
 }

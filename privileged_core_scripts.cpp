@@ -3294,6 +3294,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
     }
 
     user_node* breach_node = nodes.type_to_node(user_node_info::BREACH);
+    user_node* front_node = nodes.type_to_node(user_node_info::FRONT);
 
     if(breach_node == nullptr)
         push_error(ctx, "Error Code: Yellow Panther in hack_internal (net.hack?)");
@@ -3322,6 +3323,16 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
         mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
 
         nodes.overwrite_in_db(node_ctx);
+    }
+
+    if(front_node && front_node->is_breached())
+    {
+        quest_manager& qm = get_global_quest_manager();
+
+        quest_hack_data br;
+        br.target = name_of_person_being_attacked;
+
+        qm.process(get_thread_id(ctx), get_caller(ctx), br);
     }
 
     if(breach_node->is_breached())

@@ -20,6 +20,11 @@ struct quest_breach_data : quest_targeted_user
 
 };
 
+struct quest_hack_data : quest_targeted_user
+{
+
+};
+
 struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
 {
     /*enum class type
@@ -113,6 +118,7 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
     nlohmann::json get_as_data();
 
     bool process(quest_breach_data& breach);
+    bool process(quest_hack_data& breach);
 };
 
 struct quest_manager
@@ -122,6 +128,7 @@ struct quest_manager
     quest get_new_quest_for(const std::string& username, const std::string& name, const std::string& description);
 
     void process(int lock_id, const std::string& caller, quest_breach_data& t);
+    void process(int lock_id, const std::string& caller, quest_hack_data& t);
 };
 
 inline
