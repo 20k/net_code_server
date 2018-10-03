@@ -94,6 +94,8 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
 
     std::string get_as_string();
     nlohmann::json get_as_data();
+
+    bool process_breach_user(const std::string& target);
 };
 
 struct quest_manager
@@ -101,6 +103,8 @@ struct quest_manager
     std::vector<quest> fetch_quests_of(mongo_lock_proxy& ctx, const std::string& user);
 
     quest get_new_quest_for(const std::string& username, const std::string& name, const std::string& description);
+
+    void process_breach_user(int lock_id, const std::string& caller, const std::string& target);
 };
 
 inline

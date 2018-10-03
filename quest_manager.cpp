@@ -1,5 +1,6 @@
 #include "quest_manager.hpp"
 #include <libncclient/nc_util.hpp>
+#include "privileged_core_scripts.hpp"
 
 bool quest::is_index_completed(int idx)
 {
@@ -181,4 +182,56 @@ quest quest_manager::get_new_quest_for(const std::string& username, const std::s
     nquest.data["id"] = std::to_string(db_storage_backend::get_unique_id());
 
     return nquest;
+}
+
+bool quest::process_breach_user(const std::string& target)
+{
+    bool any = false;
+
+    for(int i=0; i < (int)quest_data->size(); i++)
+    {
+        data_type& type = (*quest_data)[i];
+
+        if(is_index_completed(i))
+            continue;
+
+        if(type.first != quest::type::BREACH_USER)
+            continue;
+
+        if(type.second["user"] == target)
+        {
+            type.second["completed"] = true;
+            any = true;
+        }
+    }
+
+    return any;
+}
+
+void quest_manager::process_breach_user(int lock_id, const std::string& caller, const std::string& target)
+{
+    std::string str;
+
+    {
+        mongo_lock_proxy ctx = get_global_mongo_quest_manager_context(lock_id);
+
+        auto quests_for = fetch_quests_of(ctx, caller);
+
+        for(auto& i : quests_for)
+        {
+            if(i.process_breach_user(target))
+            {
+                i.overwrite_in_db(ctx);
+
+                str += i.get_as_string() + "\n\n";
+            }
+        }
+    }
+
+    str = strip_trailing_newlines(str);
+
+    if(str != "")
+    {
+        create_notification(lock_id, caller, "Completed:\n" + str + "\n");
+    }
 }

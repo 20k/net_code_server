@@ -3324,6 +3324,13 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
         nodes.overwrite_in_db(node_ctx);
     }
 
+    if(breach_node->is_breached())
+    {
+        quest_manager& qm = get_global_quest_manager();
+
+        qm.process_breach_user(get_thread_id(ctx), get_caller(ctx), name_of_person_being_attacked);
+    }
+
     if(breach_node->is_breached() && !breach_is_breached)
     {
         std::vector<item> all_items;
