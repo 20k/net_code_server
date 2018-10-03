@@ -6,6 +6,11 @@ bool quest::is_index_completed(int idx)
     if(idx < 0 || idx >= (int)quest_data->size())
         return true;
 
+    nlohmann::json overall_data = (*quest_data)[idx].second;
+
+    if(overall_data.count("completed") == 0)
+        return false;
+
     nlohmann::json data = (*quest_data)[idx].second["completed"];
 
     if(!data.is_boolean())
@@ -91,11 +96,13 @@ std::string quest::get_as_string()
 
     ret += "Description:\n" + *description + "\n";
 
+    ret += "Tasks:\n";
+
     for(int i=0; i < dim; i++)
     {
-        std::string title = quest::type_strings[i] + ": ";
-
         data_type& type = (*quest_data)[i];
+
+        std::string title = quest::type_strings[(int)type.first];
 
         bool complete = is_index_completed(i);
 
@@ -103,15 +110,26 @@ std::string quest::get_as_string()
         {
             std::string usr = type.second["user"];
 
-            ret += colour_string_if(title, complete) + usr + "\n";
+            ret += colour_string(title) + ": " + usr;
         }
 
         if(type.first == quest::type::BREACH_USER)
         {
             std::string usr = type.second["user"];
 
-            ret += colour_string_if(title, complete) + usr + "\n";
+            ret += colour_string(title) + ": " + usr;
         }
+
+        if(complete)
+        {
+            ret += " (complete)";
+        }
+        else
+        {
+            ret += " (incomplete)";
+        }
+
+        ret += "\n";
     }
 
     if(dim > 0)
