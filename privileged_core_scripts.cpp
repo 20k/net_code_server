@@ -6597,7 +6597,7 @@ duk_ret_t mission__list(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         for(quest& q : all_quests)
         {
-            str += q.get_as_string() + "\n";
+            str += q.get_as_string() + "\n\n";
         }
 
         str = strip_trailing_newlines(str);
@@ -6622,7 +6622,7 @@ duk_ret_t mission__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     quest_manager& quest_manage = get_global_quest_manager();
 
-    quest test = quest_manage.get_new_quest_for(get_caller(ctx), "Trouble in Paradise? Pt 2.", "This is an example quest\nGo blow up some folks or sommit");
+    quest test = quest_manage.get_new_quest_for(get_caller(ctx), "Trouble in Paradise? Pt 4.", "This is an example quest\nGo blow up some folks or sommit");
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 

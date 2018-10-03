@@ -81,15 +81,19 @@ std::string quest::get_as_string()
 
     bool is_complete = complete();
 
-    std::string name_col = *name;
+    std::string name_col = colour_string(*name);
 
     if(is_complete)
     {
-        name_col = make_success_col(name_col) + " (finished)";
+        name_col += make_success_col(" (finished)");
+
+        //name_col = make_success_col(name_col) + " (finished)";
     }
     else
     {
-        name_col = make_error_col(name_col) + " (incomplete)";
+        name_col += make_error_col(" (incomplete)");
+
+        //name_col = make_error_col(name_col) + " (incomplete)";
     }
 
     ret = name_col + "\n";
@@ -122,11 +126,11 @@ std::string quest::get_as_string()
 
         if(complete)
         {
-            ret += " (complete)";
+            ret += make_success_col(" (complete)");
         }
         else
         {
-            ret += " (incomplete)";
+            ret += make_error_col(" (incomplete)");
         }
 
         ret += "\n";
@@ -174,6 +178,7 @@ quest quest_manager::get_new_quest_for(const std::string& username, const std::s
     *nquest.user_for = username;
     *nquest.name = name;
     *nquest.description = description;
+    nquest.data["id"] = std::to_string(db_storage_backend::get_unique_id());
 
     return nquest;
 }

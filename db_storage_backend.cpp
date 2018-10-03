@@ -1307,6 +1307,11 @@ void db_storage_backend::remove_many(const nlohmann::json& selector)
     get_db_storage().remove_many(database, collection, selector);
 }
 
+size_t db_storage_backend::get_unique_id()
+{
+    return get_db_storage().get_next_id();
+}
+
 void remove_mongo_id(nlohmann::json& in)
 {
     if(in.count("_id") > 0)

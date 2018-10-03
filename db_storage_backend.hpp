@@ -46,6 +46,9 @@ struct db_storage_backend
     std::vector<nlohmann::json> find_many(const nlohmann::json& selector, const nlohmann::json& options);
     void remove_many(const nlohmann::json& selector);
 
+    static
+    size_t get_unique_id();
+
     db_storage_backend(mongo_context* fctx);
 };
 
