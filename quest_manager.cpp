@@ -306,12 +306,3 @@ void quest_manager::process(int lock_id, const std::string& caller, quest_script
 {
     return process_qm(*this, lock_id, caller, t);
 }
-
-void suppress()
-{
-    quest_breach_data dat;
-
-    quest_manager qm;
-
-    qm.process(-2, "", dat);
-}
