@@ -663,9 +663,9 @@ void boot_connection_handlers()
     std::thread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT).detach();
     std::thread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT_2).detach();
 
-    #ifdef TESTING
+    /*#ifdef TESTING
     std::thread(websocket_ssl_test_server, 30000).detach();
-    #endif // TESTING
+    #endif // TESTING*/
 
     //http_test_server();
 }
