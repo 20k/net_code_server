@@ -68,6 +68,9 @@ void for_each_file(const std::string& directory, const T& t)
         {
             std::string file_name(file.name);
 
+            if(file_name.find('.') != std::string::npos)
+                continue;
+
             t(file_name);
         }
 
@@ -455,7 +458,18 @@ struct db_storage
 
             std::string data = read_file_bin(path);
 
-            nlohmann::json fdata = nlohmann::json::from_cbor(data);
+            nlohmann::json fdata;
+
+            try
+            {
+                fdata = nlohmann::json::from_cbor(data);
+            }
+            catch(...)
+            {
+                std::cout << "bad coll " << coll_path << " file name " << file_name << std::endl;
+                std::cout << "raw dlen " << data.size() << std::endl;
+                throw std::runtime_error("Hello!");
+            }
 
             if(!has_index(db_idx))
             {

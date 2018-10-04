@@ -2,7 +2,7 @@
 #include <libncclient/nc_util.hpp>
 #include "privileged_core_scripts.hpp"
 
-bool quest_targeted_user::is_eq(const nlohmann::json& json)
+/*bool quest_targeted_user::is_eq(const nlohmann::json& json)
 {
     if(json.count("user") == 0)
         return false;
@@ -17,6 +17,49 @@ bool quest_script_data::is_eq(const nlohmann::json& json)
 
     return json.at("script") == target;
 }
+
+bool quest_cash_send_data::is_eq(const nlohmann::json& json)
+{
+    if(json.count("user") == 0)
+        return false;
+
+    if(json.count("amount") == 0)
+        return false;
+
+    std::string dest = json.at("target");
+    double amount = json.at("sent");
+
+    return dest == target;
+
+    //return json.at("script") == target;
+}*/
+
+void quest_targeted_user::update_json(nlohmann::json& json)
+{
+    if(json.count("user") == 0)
+        return;
+
+    if(json.at("user") == target)
+    {
+        json["completed"] = true;
+    }
+}
+
+void quest_script_data::update_json(nlohmann::json& json)
+{
+    if(json.count("script") == 0)
+        return;
+
+    if(json.at("script") == target)
+    {
+        json["completed"] = true;
+    }
+}
+
+/*void quest_cash_send_data::update_json(nlohmann::json& json)
+{
+
+}*/
 
 bool quest::is_index_completed(int idx)
 {
@@ -237,11 +280,16 @@ bool process_general(quest& q, T& t, quest::type of_type)
             any = true;
         }*/
 
-        if(t.is_eq(type.second))
+        /*if(t.is_eq(type.second))
         {
             type.second["completed"] = true;
             any = true;
-        }
+        }*/
+
+        t.update_json(type.second);
+
+        if(q.is_index_completed(i))
+            any = true;
     }
 
     return any;

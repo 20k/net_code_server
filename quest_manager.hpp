@@ -5,14 +5,18 @@
 
 struct quest_type_base
 {
-    bool is_eq(const nlohmann::json& json);
+    //void process(nlohmann::json& json);
+
+    //bool is_eq(nlohmann::json& json);
 };
 
 struct quest_targeted_user : quest_type_base
 {
     std::string target;
 
-    bool is_eq(const nlohmann::json& json);
+    void update_json(nlohmann::json& json);
+
+    //bool is_eq(nlohmann::json& json);
 };
 
 struct quest_breach_data : quest_targeted_user
@@ -29,7 +33,19 @@ struct quest_script_data
 {
     std::string target;
 
-    bool is_eq(const nlohmann::json& json);
+    void update_json(nlohmann::json& json);
+
+    //bool is_eq(const nlohmann::json& json);
+};
+
+struct quest_cash_send_data
+{
+    std::string target;
+    double at_least = 0;
+
+    void update_json(nlohmann::json& json);
+
+    //bool is_eq(const nlohmann::json& json);
 };
 
 struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
