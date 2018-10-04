@@ -68,10 +68,8 @@ void for_each_file(const std::string& directory, const T& t)
         {
             std::string file_name(file.name);
 
-            if(file_name.find('.') != std::string::npos)
-                continue;
-
-            t(file_name);
+            if(file_name.find('.') == std::string::npos)
+                t(file_name);
         }
 
         tinydir_next(&close.dir);
