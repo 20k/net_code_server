@@ -212,8 +212,7 @@ std::string quest::get_as_string()
         ret += "\n";
     }
 
-    if(dim > 0)
-        ret.pop_back();
+    ret = strip_trailing_newlines(ret);
 
     return ret;
 }
@@ -312,7 +311,7 @@ bool quest::process(quest_script_data& data)
 
 void quest::send_new_quest_alert_to(int lock_id, const std::string& to)
 {
-    std::string notif = "New Mission Received:\n" + get_as_string() + "\n\n";
+    std::string notif = "New Mission Received:\n" + get_as_string() + "\n";
 
     create_notification(lock_id, to, notif);
 }
