@@ -111,7 +111,7 @@ std::string quest::get_as_string()
 
     if(is_complete)
     {
-        name_col += make_success_col(" (ready to hand in)");
+        name_col += make_success_col(" (complete)");
 
         //name_col = make_success_col(name_col) + " (finished)";
     }
@@ -262,6 +262,13 @@ bool quest::process(quest_script_data& data)
     return process_general(*this, data, quest::type::RUN_SCRIPT);
 }
 
+void quest::send_new_quest_alert_to(int lock_id, const std::string& to)
+{
+    std::string notif = "New Mission Received:\n" + get_as_string() + "\n\n";
+
+    create_notification(lock_id, to, notif);
+}
+
 template<typename T>
 void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t)
 {
@@ -281,6 +288,14 @@ void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t)
 
                 str += std::to_string(idx) + ". " + quests_for[idx].get_as_string() + "\n\n";
             }
+        }
+
+        for(auto& i : quests_for)
+        {
+            if(!i.complete())
+                continue;
+
+            i.remove_from_db(ctx);
         }
     }
 

@@ -136,6 +136,8 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
     bool process(quest_breach_data& breach);
     bool process(quest_hack_data& breach);
     bool process(quest_script_data& breach);
+
+    void send_new_quest_alert_to(int lock_id, const std::string& to);
 };
 
 struct quest_manager
