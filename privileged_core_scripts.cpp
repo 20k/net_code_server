@@ -6616,9 +6616,10 @@ duk_ret_t mission__list(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         std::string str;
 
-        for(quest& q : all_quests)
+        //for(quest& q : all_quests)
+        for(int idx = 0; idx < (int)all_quests.size(); idx++)
         {
-            str += q.get_as_string() + "\n\n";
+            str += std::to_string(idx) + ". " + all_quests[idx].get_as_string() + "\n\n";
         }
 
         str = strip_trailing_newlines(str);

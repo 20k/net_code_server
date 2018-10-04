@@ -154,7 +154,7 @@ std::string quest::get_as_string()
         {
             std::string script = type.second["script"];
 
-            ret += colour_string(title) + ": " + script;
+            ret += colour_string(title) + ": #" + script + "()";
         }
 
         if(complete)
@@ -272,13 +272,14 @@ void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t)
 
         auto quests_for = qm.fetch_quests_of(ctx, caller);
 
-        for(auto& i : quests_for)
+        //for(auto& i : quests_for)
+        for(int idx = 0; idx < (int)quests_for.size(); idx++)
         {
-            if(i.process(t))
+            if(quests_for[idx].process(t))
             {
-                i.overwrite_in_db(ctx);
+                quests_for[idx].overwrite_in_db(ctx);
 
-                str += i.get_as_string() + "\n\n";
+                str += std::to_string(idx) + ". " + quests_for[idx].get_as_string() + "\n\n";
             }
         }
     }
