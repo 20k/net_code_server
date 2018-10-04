@@ -10,6 +10,14 @@ bool quest_targeted_user::is_eq(const nlohmann::json& json)
     return json.at("user") == target;
 }
 
+bool quest_script_data::is_eq(const nlohmann::json& json)
+{
+    if(json.count("script") == 0)
+        return false;
+
+    return json.at("script") == target;
+}
+
 bool quest::is_index_completed(int idx)
 {
     if(idx < 0 || idx >= (int)quest_data->size())
@@ -82,6 +90,15 @@ void quest::add_breach_user(const std::string& target)
     quest_data->push_back(dat);
 }
 
+void quest::add_run_script(const std::string& script_name)
+{
+    data_type dat;
+    dat.first = type::RUN_SCRIPT;
+    dat.second["script"] = script_name;
+
+    quest_data->push_back(dat);
+}
+
 std::string quest::get_as_string()
 {
     std::string ret;
@@ -94,7 +111,7 @@ std::string quest::get_as_string()
 
     if(is_complete)
     {
-        name_col += make_success_col(" (finished)");
+        name_col += make_success_col(" (ready to hand in)");
 
         //name_col = make_success_col(name_col) + " (finished)";
     }
@@ -131,6 +148,13 @@ std::string quest::get_as_string()
             std::string usr = type.second["user"];
 
             ret += colour_string(title) + ": " + usr;
+        }
+
+        if(type.first == quest::type::RUN_SCRIPT)
+        {
+            std::string script = type.second["script"];
+
+            ret += colour_string(title) + ": " + script;
         }
 
         if(complete)
@@ -233,6 +257,11 @@ bool quest::process(quest_hack_data& breach)
     return process_general(*this, breach, quest::type::HACK_USER);
 }
 
+bool quest::process(quest_script_data& data)
+{
+    return process_general(*this, data, quest::type::RUN_SCRIPT);
+}
+
 template<typename T>
 void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t)
 {
@@ -268,6 +297,11 @@ void quest_manager::process(int lock_id, const std::string& caller, quest_breach
 }
 
 void quest_manager::process(int lock_id, const std::string& caller, quest_hack_data& t)
+{
+    return process_qm(*this, lock_id, caller, t);
+}
+
+void quest_manager::process(int lock_id, const std::string& caller, quest_script_data& t)
 {
     return process_qm(*this, lock_id, caller, t);
 }

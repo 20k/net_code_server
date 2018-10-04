@@ -25,6 +25,13 @@ struct quest_hack_data : quest_targeted_user
 
 };
 
+struct quest_script_data
+{
+    std::string target;
+
+    bool is_eq(const nlohmann::json& json);
+};
+
 struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
 {
     /*enum class type
@@ -41,11 +48,16 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
 
         HACK_USER, ///front
         BREACH_USER, ///breach node
+        ///hack item and gc logs?
+
+        ///then expose breach, item and gc as quest options
 
         MOVE_TO_SYSTEM,
 
         CLAIM_USER_FOR, ///claim a user for someone
         REVOKE_USER_FROM, ///revoke a users access from another user
+
+        RUN_SCRIPT,
 
         ///create a script that does something?
     };
@@ -64,6 +76,8 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
 
         "Claim User For",
         "Revoke User From",
+
+        "Run Script",
     };
 
     ///who's this quest being done for?
@@ -114,11 +128,14 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
     void add_claim_user_for(const std::string& claim_user, const std::string& claim_for);
     void add_revoke_user_from(const std::string& revoke_user, const std::string& revoke_from);
 
+    void add_run_script(const std::string& script_name);
+
     std::string get_as_string();
     nlohmann::json get_as_data();
 
     bool process(quest_breach_data& breach);
     bool process(quest_hack_data& breach);
+    bool process(quest_script_data& breach);
 };
 
 struct quest_manager
@@ -129,6 +146,7 @@ struct quest_manager
 
     void process(int lock_id, const std::string& caller, quest_breach_data& t);
     void process(int lock_id, const std::string& caller, quest_hack_data& t);
+    void process(int lock_id, const std::string& caller, quest_script_data& t);
 };
 
 inline

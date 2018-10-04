@@ -6643,9 +6643,9 @@ duk_ret_t mission__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     quest_manager& quest_manage = get_global_quest_manager();
 
-    quest test = quest_manage.get_new_quest_for(get_caller(ctx), "Trouble in Paradise? Pt 4.", "This is an example quest\nGo blow up some folks or sommit");
+    quest test = quest_manage.get_new_quest_for(get_caller(ctx), "Trouble in Paradise? Pt 5.", "Run #scripts.core() ayy");
 
-    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+    /*low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 
     auto sys_opt = low_level_structure_manage.get_system_of(caller);
 
@@ -6668,7 +6668,9 @@ duk_ret_t mission__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
         test.add_breach_user(usr.name);
 
         break;
-    }
+    }*/
+
+    test.add_run_script("scripts.core");
 
 
     {

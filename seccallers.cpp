@@ -10,6 +10,7 @@
 #include "shared_data.hpp"
 #include "shared_command_handler_state.hpp"
 #include "safe_thread.hpp"
+#include "quest_manager.hpp"
 
 int my_timeout_check(void* udata)
 {
@@ -822,6 +823,11 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     }
     #endif // USE_LOCS
 
+    quest_script_data qdata;
+    qdata.target = to_call_fullname;
+
+    quest_manager& qm = get_global_quest_manager();
+
     ///IF IS PRIVILEGED SCRIPT, RETURN THAT CFUNC
     if(privileged_functions.find(to_call_fullname) != privileged_functions.end())
     {
@@ -833,6 +839,8 @@ duk_ret_t js_call(duk_context* ctx, int sl)
         //set_script_info(ctx, to_call_fullname);
 
         duk_ret_t result = privileged_functions[to_call_fullname].func(priv_ctx, ctx, sl);
+
+        qm.process(get_thread_id(ctx), get_caller(ctx), qdata);
 
         //set_script_info(ctx, full_script);
 
@@ -913,6 +921,8 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
         //result = (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name](sd.ctx, sl);
     }
+
+    qm.process(get_thread_id(ctx), get_caller(ctx), qdata);
 
     return result;
 }
