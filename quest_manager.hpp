@@ -63,16 +63,18 @@ struct quest_targeted_user : quest_type_base
 
 struct quest_breach_data : quest_targeted_user
 {
-
+    static inline quest_type::type class_type = quest_type::type::BREACH_USER;
 };
 
 struct quest_hack_data : quest_targeted_user
 {
-
+    static inline quest_type::type class_type = quest_type::type::HACK_USER;
 };
 
 struct quest_script_data : quest_type_base
 {
+    static inline quest_type::type class_type = quest_type::type::RUN_SCRIPT;
+
     std::string target;
 
     void update_json(nlohmann::json& json);
@@ -80,6 +82,8 @@ struct quest_script_data : quest_type_base
 
 struct quest_cash_send_data
 {
+    static inline quest_type::type class_type = quest_type::type::SEND_CASH_TO;
+
     std::string target;
     double at_least = 0;
 

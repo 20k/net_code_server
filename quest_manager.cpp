@@ -273,7 +273,7 @@ void quest::send_new_quest_alert_to(int lock_id, const std::string& to)
 }
 
 template<typename T>
-bool quest_process(quest& q, T& t, quest_type::type of_type)
+bool quest_process(quest& q, T& t)
 {
     bool any = false;
 
@@ -284,7 +284,7 @@ bool quest_process(quest& q, T& t, quest_type::type of_type)
         if(q.is_index_completed(i))
             continue;
 
-        if(type.first != of_type)
+        if(type.first != T::class_type)
             continue;
 
         t.update_json(type.second);
@@ -297,7 +297,7 @@ bool quest_process(quest& q, T& t, quest_type::type of_type)
 }
 
 template<typename T>
-void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t, quest_type::type type)
+void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t)
 {
     std::string str;
 
@@ -309,7 +309,7 @@ void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t,
         //for(auto& i : quests_for)
         for(int idx = 0; idx < (int)quests_for.size(); idx++)
         {
-            if(quest_process(quests_for[idx], t, type))
+            if(quest_process(quests_for[idx], t))
             {
                 quests_for[idx].overwrite_in_db(ctx);
 
@@ -336,20 +336,20 @@ void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t,
 
 void quest_manager::process(int lock_id, const std::string& caller, quest_cash_send_data& t)
 {
-    return process_qm(*this, lock_id, caller, t, quest_type::type::SEND_CASH_TO);
+    return process_qm(*this, lock_id, caller, t);
 }
 
 void quest_manager::process(int lock_id, const std::string& caller, quest_breach_data& t)
 {
-    return process_qm(*this, lock_id, caller, t, quest_type::type::BREACH_USER);
+    return process_qm(*this, lock_id, caller, t);
 }
 
 void quest_manager::process(int lock_id, const std::string& caller, quest_hack_data& t)
 {
-    return process_qm(*this, lock_id, caller, t, quest_type::type::HACK_USER);
+    return process_qm(*this, lock_id, caller, t);
 }
 
 void quest_manager::process(int lock_id, const std::string& caller, quest_script_data& t)
 {
-    return process_qm(*this, lock_id, caller, t, quest_type::type::RUN_SCRIPT);
+    return process_qm(*this, lock_id, caller, t);
 }
