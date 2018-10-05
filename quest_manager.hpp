@@ -151,11 +151,6 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
     std::string get_as_string();
     nlohmann::json get_as_data();
 
-    /*bool process(quest_cash_send_data& breach);
-    bool process(quest_breach_data& breach);
-    bool process(quest_hack_data& breach);
-    bool process(quest_script_data& breach);*/
-
     template<typename T>
     bool process(T& t, quest::type of_type)
     {
