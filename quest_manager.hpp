@@ -151,30 +151,6 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
     std::string get_as_string();
     nlohmann::json get_as_data();
 
-    template<typename T>
-    bool process(T& t, quest::type of_type)
-    {
-        bool any = false;
-
-        for(int i=0; i < (int)quest_data->size(); i++)
-        {
-            quest::data_type& type = (*quest_data)[i];
-
-            if(is_index_completed(i))
-                continue;
-
-            if(type.first != of_type)
-                continue;
-
-            t.update_json(type.second);
-
-            if(is_index_completed(i))
-                any = true;
-        }
-
-        return any;
-    }
-
     void send_new_quest_alert_to(int lock_id, const std::string& to);
 };
 

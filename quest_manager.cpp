@@ -273,6 +273,30 @@ void quest::send_new_quest_alert_to(int lock_id, const std::string& to)
 }
 
 template<typename T>
+bool quest_process(quest& q, T& t, quest::type of_type)
+{
+    bool any = false;
+
+    for(int i=0; i < (int)q.quest_data->size(); i++)
+    {
+        quest::data_type& type = (*q.quest_data)[i];
+
+        if(q.is_index_completed(i))
+            continue;
+
+        if(type.first != of_type)
+            continue;
+
+        t.update_json(type.second);
+
+        if(q.is_index_completed(i))
+            any = true;
+    }
+
+    return any;
+}
+
+template<typename T>
 void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t, quest::type type)
 {
     std::string str;
@@ -285,7 +309,7 @@ void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t,
         //for(auto& i : quests_for)
         for(int idx = 0; idx < (int)quests_for.size(); idx++)
         {
-            if(quests_for[idx].process(t, type))
+            if(quest_process(quests_for[idx], t, type))
             {
                 quests_for[idx].overwrite_in_db(ctx);
 
