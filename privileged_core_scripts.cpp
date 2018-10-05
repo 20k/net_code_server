@@ -20,7 +20,7 @@
 
 #define SECLEVEL_FUNCTIONS
 
-#define XFER_PATHS
+//#define XFER_PATHS
 
 std::map<std::string, std::vector<script_arg>> privileged_args = construct_core_args();
 std::map<std::string, script_metadata> privileged_metadata = construct_core_metadata();
@@ -746,6 +746,17 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
 
         if(err)
             return err;
+    }
+
+    if(!pvp_action)
+    {
+        quest_manager& qm = get_global_quest_manager();
+
+        quest_cash_send_data dat;
+        dat.target = to;
+        dat.at_least = amount;
+
+        qm.process(get_thread_id(ctx), from, dat);
     }
 
     create_xfer_notif(ctx, from, to, amount);
