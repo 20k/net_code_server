@@ -35,13 +35,15 @@ void quest_cash_send_data::update_json(nlohmann::json& json)
     if(json.count("current_amount") == 0 || json.count("target_amount") == 0)
         return;
 
-    double cur = json.at("current_amount");
+    double cur = (double)json.at("current_amount") + at_least;
     double max = json.at("target_amount");
 
     if(cur >= max)
     {
         json["completed"] = true;
     }
+
+    json["current_amount"] = cur;
 }
 
 bool quest::is_index_completed(int idx)
@@ -272,10 +274,17 @@ void quest::send_new_quest_alert_to(int lock_id, const std::string& to)
     create_notification(lock_id, to, notif);
 }
 
-template<typename T>
-bool quest_process(quest& q, T& t)
+enum class quest_state
 {
-    bool any = false;
+    NONE,
+    PARTIAL,
+    COMPLETE
+};
+
+template<typename T>
+quest_state quest_process(quest& q, T& t)
+{
+    quest_state ret = quest_state::NONE;
 
     for(int i=0; i < (int)q.quest_data->size(); i++)
     {
@@ -290,10 +299,16 @@ bool quest_process(quest& q, T& t)
         t.update_json(type.second);
 
         if(q.is_index_completed(i))
-            any = true;
+        {
+            ret = quest_state::COMPLETE;
+        }
+        else
+        {
+            ret = quest_state::PARTIAL;
+        }
     }
 
-    return any;
+    return ret;
 }
 
 template<typename T>
@@ -309,11 +324,14 @@ void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t)
         //for(auto& i : quests_for)
         for(int idx = 0; idx < (int)quests_for.size(); idx++)
         {
-            if(quest_process(quests_for[idx], t))
+            auto result = quest_process(quests_for[idx], t);
+
+            if(result == quest_state::PARTIAL || result == quest_state::COMPLETE)
             {
                 quests_for[idx].overwrite_in_db(ctx);
 
-                str += std::to_string(idx) + ". " + quests_for[idx].get_as_string() + "\n\n";
+                if(result == quest_state::COMPLETE)
+                    str += std::to_string(idx) + ". " + quests_for[idx].get_as_string() + "\n\n";
             }
         }
 
