@@ -2,38 +2,6 @@
 #include <libncclient/nc_util.hpp>
 #include "privileged_core_scripts.hpp"
 
-/*bool quest_targeted_user::is_eq(const nlohmann::json& json)
-{
-    if(json.count("user") == 0)
-        return false;
-
-    return json.at("user") == target;
-}
-
-bool quest_script_data::is_eq(const nlohmann::json& json)
-{
-    if(json.count("script") == 0)
-        return false;
-
-    return json.at("script") == target;
-}
-
-bool quest_cash_send_data::is_eq(const nlohmann::json& json)
-{
-    if(json.count("user") == 0)
-        return false;
-
-    if(json.count("amount") == 0)
-        return false;
-
-    std::string dest = json.at("target");
-    double amount = json.at("sent");
-
-    return dest == target;
-
-    //return json.at("script") == target;
-}*/
-
 void quest_targeted_user::update_json(nlohmann::json& json)
 {
     if(json.count("user") == 0)
@@ -56,10 +24,25 @@ void quest_script_data::update_json(nlohmann::json& json)
     }
 }
 
-/*void quest_cash_send_data::update_json(nlohmann::json& json)
+void quest_cash_send_data::update_json(nlohmann::json& json)
 {
+    if(json.count("user") == 0)
+        return;
 
-}*/
+    if(json.at("user") != target)
+        return;
+
+    if(json.count("current_amount") == 0 || json.count("target_amount") == 0)
+        return;
+
+    double cur = json.at("current_amount");
+    double max = json.at("target_amount");
+
+    if(cur >= max)
+    {
+        json["completed"] = true;
+    }
+}
 
 bool quest::is_index_completed(int idx)
 {
@@ -113,6 +96,17 @@ void quest::set_quest_part_data(type t, const nlohmann::json& j)
     }
 
     quest_data->push_back({t, j});
+}
+
+void quest::add_send_cash(const std::string& target, double amount)
+{
+    data_type dat;
+    dat.first = type::SEND_CASH_TO;
+    dat.second["user"] = target;
+    dat.second["target_amount"] = amount;
+    dat.second["current_amount"] = 0.;
+
+    quest_data->push_back(dat);
 }
 
 void quest::add_hack_user(const std::string& target)
@@ -178,6 +172,18 @@ std::string quest::get_as_string()
         std::string title = quest::type_strings[(int)type.first];
 
         bool complete = is_index_completed(i);
+
+        if(type.first == quest::type::SEND_CASH_TO)
+        {
+            std::string usr = type.second["user"];
+
+            double current_amount = type.second["current_amount"];
+            double max_amount = type.second["target_amount"];
+
+            ret += colour_string(title) + ": " +
+            to_string_with_enforced_variable_dp(current_amount, 2) + "/" +
+            to_string_with_enforced_variable_dp(max_amount, 2) + " to " + usr;
+        }
 
         if(type.first == quest::type::HACK_USER)
         {
@@ -258,56 +264,6 @@ quest quest_manager::get_new_quest_for(const std::string& username, const std::s
     return nquest;
 }
 
-template<typename T>
-bool process_general(quest& q, T& t, quest::type of_type)
-{
-    bool any = false;
-
-    for(int i=0; i < (int)q.quest_data->size(); i++)
-    {
-        quest::data_type& type = (*q.quest_data)[i];
-
-        if(q.is_index_completed(i))
-            continue;
-
-        if(type.first != of_type)
-            continue;
-
-        /*if(type.second["user"] == target)
-        {
-            type.second["completed"] = true;
-            any = true;
-        }*/
-
-        /*if(t.is_eq(type.second))
-        {
-            type.second["completed"] = true;
-            any = true;
-        }*/
-
-        t.update_json(type.second);
-
-        if(q.is_index_completed(i))
-            any = true;
-    }
-
-    return any;
-}
-
-bool quest::process(quest_breach_data& breach)
-{
-    return process_general(*this, breach, quest::type::BREACH_USER);
-}
-
-bool quest::process(quest_hack_data& breach)
-{
-    return process_general(*this, breach, quest::type::HACK_USER);
-}
-
-bool quest::process(quest_script_data& data)
-{
-    return process_general(*this, data, quest::type::RUN_SCRIPT);
-}
 
 void quest::send_new_quest_alert_to(int lock_id, const std::string& to)
 {
@@ -317,7 +273,7 @@ void quest::send_new_quest_alert_to(int lock_id, const std::string& to)
 }
 
 template<typename T>
-void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t)
+void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t, quest::type type)
 {
     std::string str;
 
@@ -329,7 +285,7 @@ void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t)
         //for(auto& i : quests_for)
         for(int idx = 0; idx < (int)quests_for.size(); idx++)
         {
-            if(quests_for[idx].process(t))
+            if(quests_for[idx].process(t, type))
             {
                 quests_for[idx].overwrite_in_db(ctx);
 
@@ -354,17 +310,22 @@ void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t)
     }
 }
 
+void quest_manager::process(int lock_id, const std::string& caller, quest_cash_send_data& t)
+{
+    return process_qm(*this, lock_id, caller, t, quest::type::SEND_CASH_TO);
+}
+
 void quest_manager::process(int lock_id, const std::string& caller, quest_breach_data& t)
 {
-    return process_qm(*this, lock_id, caller, t);
+    return process_qm(*this, lock_id, caller, t, quest::type::BREACH_USER);
 }
 
 void quest_manager::process(int lock_id, const std::string& caller, quest_hack_data& t)
 {
-    return process_qm(*this, lock_id, caller, t);
+    return process_qm(*this, lock_id, caller, t, quest::type::HACK_USER);
 }
 
 void quest_manager::process(int lock_id, const std::string& caller, quest_script_data& t)
 {
-    return process_qm(*this, lock_id, caller, t);
+    return process_qm(*this, lock_id, caller, t, quest::type::RUN_SCRIPT);
 }

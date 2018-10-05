@@ -8,6 +8,8 @@ struct quest_type_base
     //void process(nlohmann::json& json);
 
     //bool is_eq(nlohmann::json& json);
+
+    //void update_json(nlohmann::json& json) = 0;
 };
 
 struct quest_targeted_user : quest_type_base
@@ -29,7 +31,7 @@ struct quest_hack_data : quest_targeted_user
 
 };
 
-struct quest_script_data
+struct quest_script_data : quest_type_base
 {
     std::string target;
 
@@ -149,9 +151,34 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
     std::string get_as_string();
     nlohmann::json get_as_data();
 
+    /*bool process(quest_cash_send_data& breach);
     bool process(quest_breach_data& breach);
     bool process(quest_hack_data& breach);
-    bool process(quest_script_data& breach);
+    bool process(quest_script_data& breach);*/
+
+    template<typename T>
+    bool process(T& t, quest::type of_type)
+    {
+        bool any = false;
+
+        for(int i=0; i < (int)quest_data->size(); i++)
+        {
+            quest::data_type& type = (*quest_data)[i];
+
+            if(is_index_completed(i))
+                continue;
+
+            if(type.first != of_type)
+                continue;
+
+            t.update_json(type.second);
+
+            if(is_index_completed(i))
+                any = true;
+        }
+
+        return any;
+    }
 
     void send_new_quest_alert_to(int lock_id, const std::string& to);
 };
@@ -162,6 +189,7 @@ struct quest_manager
 
     quest get_new_quest_for(const std::string& username, const std::string& name, const std::string& description);
 
+    void process(int lock_id, const std::string& caller, quest_cash_send_data& t);
     void process(int lock_id, const std::string& caller, quest_breach_data& t);
     void process(int lock_id, const std::string& caller, quest_hack_data& t);
     void process(int lock_id, const std::string& caller, quest_script_data& t);
