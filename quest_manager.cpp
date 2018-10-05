@@ -73,7 +73,7 @@ bool quest::complete()
     return true;
 }
 
-nlohmann::json quest::get_quest_part_data(quest::type t)
+nlohmann::json quest::get_quest_part_data(quest_type::type t)
 {
     for(auto& i : *quest_data)
     {
@@ -84,7 +84,7 @@ nlohmann::json quest::get_quest_part_data(quest::type t)
     return nlohmann::json();
 }
 
-void quest::set_quest_part_data(type t, const nlohmann::json& j)
+void quest::set_quest_part_data(quest_type::type t, const nlohmann::json& j)
 {
     for(auto& i : *quest_data)
     {
@@ -101,7 +101,7 @@ void quest::set_quest_part_data(type t, const nlohmann::json& j)
 void quest::add_send_cash(const std::string& target, double amount)
 {
     data_type dat;
-    dat.first = type::SEND_CASH_TO;
+    dat.first = quest_type::type::SEND_CASH_TO;
     dat.second["user"] = target;
     dat.second["target_amount"] = amount;
     dat.second["current_amount"] = 0.;
@@ -112,7 +112,7 @@ void quest::add_send_cash(const std::string& target, double amount)
 void quest::add_hack_user(const std::string& target)
 {
     data_type dat;
-    dat.first = type::HACK_USER;
+    dat.first = quest_type::type::HACK_USER;
     dat.second["user"] = target;
 
     quest_data->push_back(dat);
@@ -121,7 +121,7 @@ void quest::add_hack_user(const std::string& target)
 void quest::add_breach_user(const std::string& target)
 {
     data_type dat;
-    dat.first = type::BREACH_USER;
+    dat.first = quest_type::type::BREACH_USER;
     dat.second["user"] = target;
 
     quest_data->push_back(dat);
@@ -130,7 +130,7 @@ void quest::add_breach_user(const std::string& target)
 void quest::add_run_script(const std::string& script_name)
 {
     data_type dat;
-    dat.first = type::RUN_SCRIPT;
+    dat.first = quest_type::type::RUN_SCRIPT;
     dat.second["script"] = script_name;
 
     quest_data->push_back(dat);
@@ -169,11 +169,11 @@ std::string quest::get_as_string()
     {
         data_type& type = (*quest_data)[i];
 
-        std::string title = quest::type_strings[(int)type.first];
+        std::string title = quest_type::type_strings[(int)type.first];
 
         bool complete = is_index_completed(i);
 
-        if(type.first == quest::type::SEND_CASH_TO)
+        if(type.first == quest_type::type::SEND_CASH_TO)
         {
             std::string usr = type.second["user"];
 
@@ -185,21 +185,21 @@ std::string quest::get_as_string()
             to_string_with_enforced_variable_dp(max_amount, 2) + " to " + usr;
         }
 
-        if(type.first == quest::type::HACK_USER)
+        if(type.first == quest_type::type::HACK_USER)
         {
             std::string usr = type.second["user"];
 
             ret += colour_string(title) + ": " + usr;
         }
 
-        if(type.first == quest::type::BREACH_USER)
+        if(type.first == quest_type::type::BREACH_USER)
         {
             std::string usr = type.second["user"];
 
             ret += colour_string(title) + ": " + usr;
         }
 
-        if(type.first == quest::type::RUN_SCRIPT)
+        if(type.first == quest_type::type::RUN_SCRIPT)
         {
             std::string script = type.second["script"];
 
@@ -273,7 +273,7 @@ void quest::send_new_quest_alert_to(int lock_id, const std::string& to)
 }
 
 template<typename T>
-bool quest_process(quest& q, T& t, quest::type of_type)
+bool quest_process(quest& q, T& t, quest_type::type of_type)
 {
     bool any = false;
 
@@ -297,7 +297,7 @@ bool quest_process(quest& q, T& t, quest::type of_type)
 }
 
 template<typename T>
-void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t, quest::type type)
+void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t, quest_type::type type)
 {
     std::string str;
 
@@ -336,20 +336,20 @@ void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t,
 
 void quest_manager::process(int lock_id, const std::string& caller, quest_cash_send_data& t)
 {
-    return process_qm(*this, lock_id, caller, t, quest::type::SEND_CASH_TO);
+    return process_qm(*this, lock_id, caller, t, quest_type::type::SEND_CASH_TO);
 }
 
 void quest_manager::process(int lock_id, const std::string& caller, quest_breach_data& t)
 {
-    return process_qm(*this, lock_id, caller, t, quest::type::BREACH_USER);
+    return process_qm(*this, lock_id, caller, t, quest_type::type::BREACH_USER);
 }
 
 void quest_manager::process(int lock_id, const std::string& caller, quest_hack_data& t)
 {
-    return process_qm(*this, lock_id, caller, t, quest::type::HACK_USER);
+    return process_qm(*this, lock_id, caller, t, quest_type::type::HACK_USER);
 }
 
 void quest_manager::process(int lock_id, const std::string& caller, quest_script_data& t)
 {
-    return process_qm(*this, lock_id, caller, t, quest::type::RUN_SCRIPT);
+    return process_qm(*this, lock_id, caller, t, quest_type::type::RUN_SCRIPT);
 }

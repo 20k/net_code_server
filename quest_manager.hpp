@@ -3,46 +3,7 @@
 
 #include "db_interfaceable.hpp"
 
-struct quest_type_base
-{
-    //void process(nlohmann::json& json);
-
-    //void update_json(nlohmann::json& json) = 0;
-};
-
-struct quest_targeted_user : quest_type_base
-{
-    std::string target;
-
-    void update_json(nlohmann::json& json);
-};
-
-struct quest_breach_data : quest_targeted_user
-{
-
-};
-
-struct quest_hack_data : quest_targeted_user
-{
-
-};
-
-struct quest_script_data : quest_type_base
-{
-    std::string target;
-
-    void update_json(nlohmann::json& json);
-};
-
-struct quest_cash_send_data
-{
-    std::string target;
-    double at_least = 0;
-
-    void update_json(nlohmann::json& json);
-};
-
-struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
+namespace quest_type
 {
     enum class type : int32_t
     {
@@ -84,14 +45,56 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
 
         "Run Script",
     };
+}
 
+struct quest_type_base
+{
+    //void process(nlohmann::json& json);
+
+    //void update_json(nlohmann::json& json) = 0;
+};
+
+struct quest_targeted_user : quest_type_base
+{
+    std::string target;
+
+    void update_json(nlohmann::json& json);
+};
+
+struct quest_breach_data : quest_targeted_user
+{
+
+};
+
+struct quest_hack_data : quest_targeted_user
+{
+
+};
+
+struct quest_script_data : quest_type_base
+{
+    std::string target;
+
+    void update_json(nlohmann::json& json);
+};
+
+struct quest_cash_send_data
+{
+    std::string target;
+    double at_least = 0;
+
+    void update_json(nlohmann::json& json);
+};
+
+struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
+{
     ///who's this quest being done for?
     DB_VAL(std::string, user_for);
 
     DB_VAL(std::string, name);
     DB_VAL(std::string, description);
 
-    using data_type = std::pair<type, nlohmann::json>;
+    using data_type = std::pair<quest_type::type, nlohmann::json>;
     using map_type = std::vector<data_type>;
 
     ///maps quest type to a user to arbitrary json
@@ -99,7 +102,7 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
     ///also note to self: generally try to cut down on the number of threads in the application
     DB_VAL(map_type, quest_data);
 
-    bool handle_serialise(json& j, bool ser)
+    bool handle_serialise(json& j, bool ser) override
     {
         quest_data.serialise(j, ser);
         user_for.serialise(j, ser);
@@ -114,8 +117,8 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
 
     bool complete();
 
-    nlohmann::json get_quest_part_data(type t);
-    void set_quest_part_data(type t, const nlohmann::json& j);
+    nlohmann::json get_quest_part_data(quest_type::type t);
+    void set_quest_part_data(quest_type::type t, const nlohmann::json& j);
 
     void add_send_cash(const std::string& to, double amount);
     void add_steal_cash(const std::string& from, double amount);

@@ -20,7 +20,7 @@
 
 #define SECLEVEL_FUNCTIONS
 
-//#define XFER_PATHS
+#define XFER_PATHS
 
 std::map<std::string, std::vector<script_arg>> privileged_args = construct_core_args();
 std::map<std::string, script_metadata> privileged_metadata = construct_core_metadata();
