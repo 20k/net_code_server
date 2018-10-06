@@ -78,7 +78,7 @@ struct cleanup_auth_at_exit
     std::string auth;
     bool blocked = true;
 
-    cleanup_auth_at_exit(std::mutex& lk, std::map<std::string, int>& cleanup, const std::string& ath) : to_lock(lk), to_cleanup(cleanup), auth(ath) {}
+    cleanup_auth_at_exit(std::mutex& lk, std::map<std::string, int>& cleanup, std::string ath) : to_lock(lk), to_cleanup(cleanup), auth(ath) {}
 
     void unblock()
     {
@@ -399,7 +399,7 @@ struct execution_blocker_guard
     }
 };
 
-std::string run_in_user_context(const std::string& username, const std::string& command, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared, std::optional<float> custom_exec_time_s, bool force_exec)
+std::string run_in_user_context(std::string username, std::string command, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared, std::optional<float> custom_exec_time_s, bool force_exec)
 {
     try
     {
