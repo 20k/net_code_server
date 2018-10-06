@@ -9,10 +9,10 @@ struct sthread
     std::thread thrd;
 
     template<typename T, typename... U>
-    sthread(T&& t, U&&... u) : thrd([=]()
+    sthread(T&& t, U&&... u) : thrd([&]()
                                     {
                                         try{
-                                            t(u...);
+                                            t(std::forward<U>(u)...);
                                         }
                                         catch(...)
                                         {

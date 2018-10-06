@@ -1,6 +1,7 @@
 #include "quest_manager.hpp"
 #include <libncclient/nc_util.hpp>
 #include "privileged_core_scripts.hpp"
+#include "command_handler.hpp"
 
 void quest_targeted_user::update_json(nlohmann::json& json)
 {
@@ -243,6 +244,11 @@ nlohmann::json quest::get_as_data()
     return ret;
 }
 
+void quest::set_on_finish(const std::string& on_finish)
+{
+    *run_on_complete = on_finish;
+}
+
 std::vector<quest> quest_manager::fetch_quests_of(mongo_lock_proxy& ctx, const std::string& user)
 {
     nlohmann::json req;
@@ -339,6 +345,13 @@ void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t)
         {
             if(!i.complete())
                 continue;
+
+            std::string run = *i.run_on_complete;
+
+            if(run != "")
+            {
+                throwaway_user_thread(caller, run, std::nullopt, true);
+            }
 
             i.remove_from_db(ctx);
         }

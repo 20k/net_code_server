@@ -481,12 +481,12 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             dukx_put_pointer(ctx, nullptr, "all_shared_data");
         }
 
-        unsafe_info inf;
-        inf.usr = &usr;
-        inf.command = command;
-        inf.ctx = ctx;
+        unsafe_info* inf = new unsafe_info;
+        inf->usr = &usr;
+        inf->command = command;
+        inf->ctx = ctx;
 
-        sthread* launch = new sthread(managed_duktape_thread, &inf);
+        sthread* launch = new sthread(managed_duktape_thread, inf);
 
         if(all_shared.has_value())
         {
@@ -518,7 +518,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
 
         script_management_mode::mode current_mode = script_management_mode::DEFAULT;
 
-        while(!inf.finished)
+        while(!inf->finished)
         {
             int sleep_mult = 1;
 
@@ -574,7 +574,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                 TerminateThread(native_handle, 1);
                 CloseHandle(native_handle);
 
-                inf.ret = "Ran for longer than " + std::to_string((int)max_time_ms) + "ms and was uncooperatively terminated";
+                inf->ret = "Ran for longer than " + std::to_string((int)max_time_ms) + "ms and was uncooperatively terminated";
 
                 terminated = true;
 
@@ -611,7 +611,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
         bool launched_realtime = false;
         int launched_realtime_id = 0;
 
-        if(inf.finished && !terminated)
+        if(inf->finished && !terminated)
         {
             launch->join();
             delete launch;
@@ -720,7 +720,7 @@ std::string run_in_user_context(const std::string& username, const std::string& 
                         catch(...){}
                     }
 
-                    std::thread thrd = std::thread(async_realtime_script_handler, ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf.ret),
+                    std::thread thrd = std::thread(async_realtime_script_handler, ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf->ret),
                                                    std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate),
                                                    std::ref(avg_exec_time));
 
@@ -911,7 +911,13 @@ std::string run_in_user_context(const std::string& username, const std::string& 
             //all_shared.value()->state.number_of_realtime_scripts_terminated++;
         }
 
-        std::string ret = inf.ret;
+        std::string ret = inf->ret;
+
+        if(!terminated)
+        {
+            delete inf;
+            inf = nullptr;
+        }
 
         return ret;
     }

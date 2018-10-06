@@ -105,6 +105,7 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
     ///so the way this is expected to operate is that we run a script, and that script keeps track of what we're doing
     ///also note to self: generally try to cut down on the number of threads in the application
     DB_VAL(map_type, quest_data);
+    DB_VAL(std::string, run_on_complete);
 
     bool handle_serialise(json& j, bool ser) override
     {
@@ -113,6 +114,8 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
 
         name.serialise(j, ser);
         description.serialise(j, ser);
+
+        run_on_complete.serialise(j, ser);
 
         return false;
     }
@@ -144,6 +147,8 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
 
     std::string get_as_string();
     nlohmann::json get_as_data();
+
+    void set_on_finish(const std::string& on_finish);
 
     void send_new_quest_alert_to(int lock_id, const std::string& to);
 };
