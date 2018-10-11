@@ -154,7 +154,9 @@ void sleep_thread_for(std::thread& t, int sleep_ms)
     //sthread::increase_priority();
     SuspendThread(native_handle);
 
-    Sleep(sleep_ms);
+    //Sleep(sleep_ms);
+
+    sf::sleep(sf::milliseconds(sleep_ms));
 
     ResumeThread(native_handle);
     //sthread::normal_priority();
@@ -534,12 +536,12 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
             #ifdef ACTIVE_TIME_MANAGEMENT
             {
-                Sleep(active_time_slice_ms);
+                sf::sleep(sf::milliseconds(active_time_slice_ms));
 
                 pthread_t thread = launch->native_handle();
                 void* native_handle = pthread_gethandle(thread);
                 SuspendThread(native_handle);
-                Sleep(sleeping_time_slice_ms * sleep_mult);
+                sf::sleep(sf::milliseconds(sleeping_time_slice_ms * sleep_mult));
                 ResumeThread(native_handle);
             }
             #endif // ACTIVE_TIME_MANAGEMENT
@@ -591,7 +593,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 sand_data->terminate_semi_gracefully = true;
             }
 
-            Sleep(1);
+            sf::sleep(sf::milliseconds(1));
         }
 
         *tls_get_should_throw() = 0;
@@ -831,7 +833,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                         //sthread::increase_priority();
 
                         if(estimated_time_remaining >= 1.5f)
-                            Sleep(1);
+                            sf::sleep(sf::milliseconds(1));
                         else
                             sthread::low_yield();
 
