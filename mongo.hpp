@@ -45,8 +45,6 @@ enum class mongo_database_type
     MONGO_COUNT
 };
 
-std::string strip_whitespace(std::string);
-
 struct lock_internal
 {
     size_t locked_by = -1;
