@@ -48,6 +48,7 @@ namespace event
             evt.user_name = user_name;
             evt.unique_event_tag = unique_event_tag;
             evt.complete = true;
+            evt.set_key_data(std::to_string(db_storage_backend::get_unique_id()));
 
             evt.overwrite_in_db(ctx);
         }
