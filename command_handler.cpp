@@ -518,6 +518,8 @@ std::string run_in_user_context(std::string username, std::string command, std::
         int sleeping_time_slice_ms = 1;
         #endif // ACTIVE_TIME_MANAGEMENT
 
+        bool displayed_warning = false;
+
         script_management_mode::mode current_mode = script_management_mode::DEFAULT;
 
         while(!inf->finished)
@@ -575,6 +577,12 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                 break;
             }*/
+
+            if(elapsed >= max_time_ms + db_grace_time_ms * 10 && !displayed_warning)
+            {
+                printf("Warning, long running thread\n");
+                displayed_warning = true;
+            }
 
             if(elapsed >= max_time_ms + db_grace_time_ms)
             {
