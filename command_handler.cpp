@@ -554,14 +554,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
             double elapsed = dur.count();
 
-            ///you know
-            ///if we change db stuff to happen on a separate thread and spinlock
-            ///the worker trying to retrieve data
-            ///so that it can throw on a long calling db op
-            ///we could remove forceful thread termination and dear god my life
-            ///would become so much easier
-            ///maybe a structure with a thread pool to manage incoming db requests and
-            ///service them, which returns an event thing to wait on
+            ///forceful termination, very unsafe
             /*if(elapsed >= max_time_ms + db_grace_time_ms)
             {
                 /pthread_t thread = launch->native_handle();
