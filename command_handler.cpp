@@ -562,9 +562,9 @@ std::string run_in_user_context(std::string username, std::string command, std::
             ///would become so much easier
             ///maybe a structure with a thread pool to manage incoming db requests and
             ///service them, which returns an event thing to wait on
-            if(elapsed >= max_time_ms + db_grace_time_ms)
+            /*if(elapsed >= max_time_ms + db_grace_time_ms)
             {
-                pthread_t thread = launch->native_handle();
+                /pthread_t thread = launch->native_handle();
 
                 void* native_handle = pthread_gethandle(thread);
 
@@ -581,6 +581,11 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 terminated = true;
 
                 break;
+            }*/
+
+            if(elapsed >= max_time_ms + db_grace_time_ms)
+            {
+                *tls_get_should_throw() = 2;
             }
 
             if(elapsed >= max_time_ms + db_grace_time_ms/2)

@@ -695,6 +695,9 @@ struct db_storage
 
             for_each_match_nolock(db, coll, selector, [&](nlohmann::json& js)
             {
+                ///abort if runtime runs significantly over
+                COOPERATE_KILL_THREAD_LOCAL_URGENT();
+
                 ret.push_back(js);
 
                 return false;

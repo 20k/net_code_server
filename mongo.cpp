@@ -16,6 +16,8 @@
 #include "safe_thread.hpp"
 #include <libncclient/nc_util.hpp>
 
+#include "rate_limiting.hpp"
+
 //#define ONLY_VALIDATION
 
 #ifndef USE_MONGO
@@ -204,6 +206,8 @@ void lock_internal::lock(const std::string& debug_info, size_t who)
     {
         if(sleeptime || clk.getElapsedTime().asMicroseconds() >= max_microseconds_elapsed)
         {
+            COOPERATE_KILL_THREAD_LOCAL_URGENT();
+
             sleeptime = true;
             Sleep(1);
         }
