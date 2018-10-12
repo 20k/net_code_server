@@ -22,11 +22,14 @@ namespace event
         }
     };
 
+    static inline std::mutex in_memory_lock;
+    static inline std::map<std::string, std::map<std::string, bool>> in_memory_map;
+
     template<typename T>
     void exec_once_ever(const std::string& user_name, const std::string& unique_event_tag, const T& func)
     {
         {
-            mongo_lock_proxy ctx = get_global_mongo_event_manager_context(-2);
+            mongo_nolock_proxy ctx = get_global_mongo_event_manager_context(-2);
 
             nlohmann::json req;
             req["user_name"] = user_name;
@@ -39,10 +42,22 @@ namespace event
                 return;
         }
 
+        ///the reason why this is here is so that we check whether or not the function has executed
+        ///any times before. But the persisting of this information to disk is only done *after* func is executed
+        ///so that if the server crashes during the execution of func, the player isn't unfairly penalised or misses information
+        {
+            std::lock_guard guard(in_memory_lock);
+
+            if(in_memory_map[user_name][unique_event_tag])
+                return;
+
+            in_memory_map[user_name][unique_event_tag] = true;
+        }
+
         func();
 
         {
-            mongo_lock_proxy ctx = get_global_mongo_event_manager_context(-2);
+            mongo_nolock_proxy ctx = get_global_mongo_event_manager_context(-2);
 
             event_impl evt;
             evt.user_name = user_name;
