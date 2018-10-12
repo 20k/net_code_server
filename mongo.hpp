@@ -42,6 +42,7 @@ enum class mongo_database_type
     SCHEDULED_TASK,
     LOW_LEVEL_STRUCTURE,
     QUEST_MANAGER,
+    EVENT_MANAGER,
     MONGO_COUNT
 };
 
@@ -611,6 +612,11 @@ inline
 mongo_shim get_global_mongo_quest_manager_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::QUEST_MANAGER, lock_id);
+}
+inline
+mongo_shim get_global_mongo_event_manager_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::EVENT_MANAGER, lock_id);
 }
 
 #endif // MONGO_HPP_INCLUDED

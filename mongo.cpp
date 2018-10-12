@@ -313,6 +313,7 @@ mongo_context::mongo_context(mongo_database_type type)
         {mongo_database_type::SCHEDULED_TASK, "SCHEDULED_TASK"},
         {mongo_database_type::LOW_LEVEL_STRUCTURE, "LOW_LEVEL_STRUCTURE"},
         {mongo_database_type::QUEST_MANAGER, "QUEST_MANAGER"},
+        {mongo_database_type::EVENT_MANAGER, "EVENT_MANAGER"},
     };
 
     for(auto& i : procedural_dbs)

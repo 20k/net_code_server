@@ -225,6 +225,8 @@
 		<Unit filename="duk_object_functions.cpp" />
 		<Unit filename="duk_object_functions.hpp" />
 		<Unit filename="duktape.cpp" />
+		<Unit filename="event_manager.cpp" />
+		<Unit filename="event_manager.hpp" />
 		<Unit filename="global_caching.hpp" />
 		<Unit filename="http_beast_server.cpp" />
 		<Unit filename="http_beast_server.hpp" />
