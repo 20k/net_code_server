@@ -1095,11 +1095,10 @@ duk_ret_t dukx_wrap_ctx(duk_context* ctx)
     return 1;
 }
 
-#define DUKX_HIDE() duk_dup(dst_ctx, -3 + idx);\
-                    duk_put_prop_string(dst_ctx, -1 + idx, DUKX_HIDDEN_SYMBOL("WRAPPED").c_str());
-
 void dukx_sanitise_in_place(duk_context* dst_ctx, duk_idx_t idx);
 
 void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t idx);
+
+void dukx_push_db_proxy(duk_context* ctx);
 
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED

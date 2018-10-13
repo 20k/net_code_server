@@ -34,86 +34,68 @@ duk_ret_t dukx_proxy_apply(duk_context* ctx)
     return 1;
 }
 
+#define DUKX_HIDE() duk_dup(dst_ctx, -3 + idx);\
+                    duk_put_prop_string(dst_ctx, -1 + idx, DUKX_HIDDEN_SYMBOL("WRAPPED").c_str());
+
+#define DUKX_HIDE_CTX(ctx) duk_dup(ctx, -3 + idx);\
+                           duk_put_prop_string(ctx, -1 + idx, DUKX_HIDDEN_SYMBOL("WRAPPED").c_str());
+
+void dukx_make_proxy_base_from(duk_context* ctx, duk_idx_t idx)
+{
+    std::vector<std::string> rkeys = dukx_get_keys(ctx);
+
+    if(duk_is_function(ctx, idx))
+        duk_push_c_function(ctx, dukx_dummy, 0);
+    else if(duk_is_object(ctx, idx))
+        duk_push_object(ctx);
+    else
+        assert(false);
+
+    dukx_hack_in_keys(ctx, -1, rkeys);
+
+    duk_push_object(ctx);  /* handler */
+}
+
+void dukx_push_proxy_functions(duk_context* ctx, duk_idx_t idx)
+{
+
+}
+
+template<typename... X>
+void dukx_push_proxy_functions(duk_context* ctx, duk_idx_t idx, const duk_c_function& func, int nargs, const std::string& trap, X... x)
+{
+    duk_push_c_function(ctx, func, nargs);
+    DUKX_HIDE_CTX(ctx);
+    duk_put_prop_string(ctx, -1 + idx, trap.c_str());
+
+    dukx_push_proxy_functions(ctx, idx, x...);
+}
+
 void dukx_sanitise_in_place(duk_context* dst_ctx, duk_idx_t idx)
 {
     if(duk_is_primitive(dst_ctx, idx))
         return;
 
-    std::vector<std::string> rkeys = dukx_get_keys(dst_ctx);
-
-    if(duk_is_function(dst_ctx, idx))
-        duk_push_c_function(dst_ctx, dukx_dummy, 0);
-    else if(duk_is_object(dst_ctx, idx))
-        duk_push_object(dst_ctx);
-    else
-        assert(false);
-
-    dukx_hack_in_keys(dst_ctx, -1, rkeys);
-
-    duk_push_object(dst_ctx);  /* handler */
+    dukx_make_proxy_base_from(dst_ctx, idx);
 
     ///https://github.com/svaarala/duktape-wiki/blob/master/PostEs5Features.md#proxy-handlers-traps
 
     duk_require_stack(dst_ctx, 16);
 
-
-    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_get_prototype_of>, 1);
-    DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -1 + idx, "getPrototypeOf");
-
-    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_set_prototype_of>, 2);
-    DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -1 + idx, "setPrototypeOf");
-
-    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_is_extensible>, 1);
-    DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -1 + idx, "isExtensible");
-
-    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_prevent_extension>, 1);
-    DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -1 + idx, "preventExtension");
-
-    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_get_own_property>, 2);
-    DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -1 + idx, "getOwnPropertyDescriptor");
-
-    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_define_property>, 3);
-    DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -1 + idx, "defineProperty");
-
-    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_has>, 2);
-    DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -1 + idx, "has");
-
-    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_get>, 3);  /* 'get' trap */
-    DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -1 + idx, "get");
-
-    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_set>, 4);  /* 'set' trap */
-    DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -1 + idx, "set");
-
-    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_delete_property>, 2);
-    DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -1 + idx, "deleteProperty");
-
-    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_own_keys>, 1);
-    DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -1 + idx, "ownKeys");
-
-    ///crashing
-    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_apply>, 3);
-    DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -1 + idx, "apply");
-
-    duk_push_c_function(dst_ctx, dukx_wrap_ctx<dukx_proxy_construct>, 2);
-    DUKX_HIDE();
-    duk_put_prop_string(dst_ctx, -1 + idx, "construct");
-
-    /*///[to_wrap, proxy_dummy, handler]
-    duk_dup(ctx, -3);
-
-    duk_put_prop_string(dst_ctx, -2, DUKX_HIDDEN_SYMBOL("WRAPPED_OBJECT").c_str());*/
+    dukx_push_proxy_functions(dst_ctx, idx,
+                                        dukx_wrap_ctx<dukx_proxy_get_prototype_of>, 1, "getPrototypeOf",
+                                        dukx_wrap_ctx<dukx_proxy_set_prototype_of>, 2, "setPrototypeOf",
+                                        dukx_wrap_ctx<dukx_proxy_is_extensible>, 1, "isExtensible",
+                                        dukx_wrap_ctx<dukx_proxy_prevent_extension>, 1, "preventExtension",
+                                        dukx_wrap_ctx<dukx_proxy_get_own_property>, 2, "getOwnPropertyDescriptor",
+                                        dukx_wrap_ctx<dukx_proxy_define_property>, 3, "defineProperty",
+                                        dukx_wrap_ctx<dukx_proxy_has>, 2, "has",
+                                        dukx_wrap_ctx<dukx_proxy_get>, 3, "get",
+                                        dukx_wrap_ctx<dukx_proxy_set>, 4, "set",
+                                        dukx_wrap_ctx<dukx_proxy_delete_property>, 2, "deleteProperty",
+                                        dukx_wrap_ctx<dukx_proxy_own_keys>, 1, "ownKeys",
+                                        dukx_wrap_ctx<dukx_proxy_apply>, 3, "apply",
+                                        dukx_wrap_ctx<dukx_proxy_construct>, 2, "construct");
 
     duk_push_proxy(dst_ctx, 0);
 
@@ -134,3 +116,7 @@ void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t 
     dukx_sanitise_in_place(dst_ctx, -1);
 }
 
+void dukx_push_db_proxy(duk_context* ctx)
+{
+
+}
