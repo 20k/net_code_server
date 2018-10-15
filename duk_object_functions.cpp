@@ -234,6 +234,44 @@ nlohmann::json chain_to_request(const std::string& chain)
     return js;
 }
 
+nlohmann::json get_from_request(nlohmann::json in, const std::string& chain)
+{
+    std::string proxy_chain = chain;
+
+    while(proxy_chain.size() > 0 && proxy_chain.front() == '.')
+    {
+        proxy_chain.erase(proxy_chain.begin());
+    }
+
+    std::vector<std::string> object_stack = no_ss_split(proxy_chain, ".");
+
+    std::reference_wrapper<nlohmann::json> last_js = in;
+
+    for(int i=0; i < (int)object_stack.size(); i++)
+    {
+        std::string key = object_stack[i];
+
+        if(last_js.get().is_array())
+        {
+            int val = std::stoi(key);
+
+            last_js = last_js.get()[val];
+        }
+        else
+        {
+            last_js.get()[key];
+
+            last_js = last_js.get()[key];
+        }
+    }
+
+    return last_js.get();
+}
+
+///this is all wrong but on the plus side itll work just fine with the planned implementation everything is resolved
+///db.hi is doing hi:{$exists : true}, but its finding objects which contain a key hi
+///instead, db.hi should find everything in the db, and then get the key hi, which in the case of an array of objects would give error
+///correctly, it'd be db[0].hi
 duk_int_t db_fetch(duk_context* ctx)
 {
     duk_push_current_function(ctx);
@@ -265,34 +303,21 @@ duk_int_t db_fetch(duk_context* ctx)
         mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
         mongo_ctx.change_collection(host);
 
-        found = mongo_ctx->find_json_new(request, nlohmann::json());
+        found = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
     }
 
-    std::vector<nlohmann::json> data;
-
-    if(last_key != "")
-    {
-        for(auto& i : found)
-        {
-            data.push_back(i[last_key]);
-        }
-    }
-    else
-    {
-        data = found;
-    }
-
-    if(data.size() == 1)
-    {
-        push_duk_val(ctx, data[0]);
-    }
-    else if(data.size() == 0)
+    if(found.size() == 0)
     {
         duk_push_undefined(ctx);
     }
+
+    else if(found.size() == 1)
+    {
+        push_duk_val(ctx, get_from_request(found[0], proxy_chain));
+    }
     else
     {
-        push_duk_val(ctx, data);
+        push_duk_val(ctx, get_from_request(found, proxy_chain));
     }
 
     return 1;
