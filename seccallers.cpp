@@ -1229,6 +1229,13 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     inject_c_function(ctx, deliberate_hang, "deliberate_hang", 0);
     #endif // TESTING
 
+    #ifdef TESTING
+    duk_push_global_object(ctx);
+    dukx_push_db_proxy(ctx);
+
+    duk_put_prop_string(ctx, -2, "db");
+    #endif // TESTING
+
     inject_hacky_Symbol(ctx);
 
     //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");

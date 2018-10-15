@@ -39187,10 +39187,10 @@ DUK_INTERNAL void duk_proxy_ownkeys_postprocess(duk_hthread *thr, duk_hobject *h
 					DUK_DDD(DUK_DDDPRINT("ignore non-enumerable property: %!T", duk_get_tval(thr, -1)));
 					goto skip_key;
 				}
-			} else {
+			} /*else {
 				DUK_DDD(DUK_DDDPRINT("ignore non-existent property: %!T", duk_get_tval(thr, -1)));
 				goto skip_key;
-			}
+			}*/
 		}
 		if (DUK_UNLIKELY(DUK_HSTRING_HAS_SYMBOL(h))) {
 			if (!(flags & DUK_ENUM_INCLUDE_SYMBOLS)) {
