@@ -326,6 +326,7 @@ struct db_storage
         {
             std::string atomic_extension = ".atom";
             std::string atomic_file = file + atomic_extension;
+            std::string backup_file = file + ".back";
 
             auto my_file = std::fstream(atomic_file, std::ios::out | std::ios::binary);
 
@@ -341,7 +342,7 @@ struct db_storage
             ///hooray! guarantees atomicity (?)
             //std::filesystem::rename(atomic_file, file);
 
-            bool err = ReplaceFileA(file.c_str(), atomic_file.c_str(), nullptr, REPLACEFILE_IGNORE_MERGE_ERRORS, nullptr, nullptr) == 0;
+            bool err = ReplaceFileA(file.c_str(), atomic_file.c_str(), backup_file.c_str(), REPLACEFILE_IGNORE_MERGE_ERRORS, nullptr, nullptr) == 0;
 
             if(err)
             {
