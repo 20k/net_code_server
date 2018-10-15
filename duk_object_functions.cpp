@@ -253,7 +253,16 @@ nlohmann::json get_from_request(nlohmann::json in, const std::string& chain)
 
         if(last_js.get().is_array())
         {
-            int val = std::stoi(key);
+            int val = 0;
+
+            try
+            {
+                val = std::stoi(key);
+            }
+            catch(...)
+            {
+                throw std::runtime_error("Error converting key \"" + key + "\" to integer for array lookup");
+            }
 
             last_js = last_js.get()[val];
         }
