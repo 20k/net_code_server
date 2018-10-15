@@ -700,7 +700,7 @@ bool mongo_interface::contains_banned_query(bson_t* bs) const
 void mongo_interface::change_collection_unsafe(const std::string& coll, bool force_change)
 {
     if(enable_testing_backend)
-        testing_backend.change_collection_unsafe(coll, force_change);
+        backend.change_collection_unsafe(coll, force_change);
 
     if(ctx->is_fixed && !force_change)
     {
@@ -774,7 +774,7 @@ void mongo_interface::insert_bson_1(const std::string& script_host, bson_t* bs)
     }
 
     if(enable_testing_backend)
-        testing_backend.insert_one(bson_to_json(bs));
+        backend.insert_one(bson_to_json(bs));
     #ifndef ONLY_VALIDATION
     else
     #endif // ONLY_VALIDATION
@@ -811,7 +811,7 @@ void mongo_interface::insert_json_one_new(const nlohmann::json& json)
 {
     if(enable_testing_backend)
     {
-        testing_backend.insert_one(json);
+        backend.insert_one(json);
     }
     #ifndef ONLY_VALIDATION
     else
@@ -827,7 +827,7 @@ std::string mongo_interface::update_json_many_new(const nlohmann::json& selector
 
     if(enable_testing_backend)
     {
-        testing_backend.update_many(selector, update);
+        backend.update_many(selector, update);
     }
     #ifndef ONLY_VALIDATION
     else
@@ -845,7 +845,7 @@ std::string mongo_interface::update_json_one_new(const nlohmann::json& selector,
 
     if(enable_testing_backend)
     {
-        testing_backend.update_one(selector, update);
+        backend.update_one(selector, update);
     }
     #ifndef ONLY_VALIDATION
     else
@@ -869,7 +869,7 @@ std::string mongo_interface::update_bson_many(const std::string& script_host, bs
     }
 
     if(enable_testing_backend)
-        testing_backend.update_many(bson_to_json(selector), bson_to_json(update));
+        backend.update_many(bson_to_json(selector), bson_to_json(update));
 
     #ifndef ONLY_VALIDATION
     else
@@ -932,7 +932,7 @@ std::string mongo_interface::update_bson_one(bson_t* selector, bson_t* update)
     }
 
     if(enable_testing_backend)
-        testing_backend.update_one(bson_to_json(selector), bson_to_json(update));
+        backend.update_one(bson_to_json(selector), bson_to_json(update));
 
     #ifndef ONLY_VALIDATION
     else
@@ -1050,7 +1050,7 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
     if(enable_testing_backend)
     #endif
     {
-        std::vector<nlohmann::json> validated = testing_backend.find_many(bson_to_json(bs), bson_to_json(ps));
+        std::vector<nlohmann::json> validated = backend.find_many(bson_to_json(bs), bson_to_json(ps));
 
         #ifdef ONLY_VALIDATION
         if(validated.size() != results.size())
@@ -1173,7 +1173,7 @@ std::vector<nlohmann::json> mongo_interface::find_json_new(const nlohmann::json&
     else
     #endif // ONLY_VALIDATION
     {
-        return testing_backend.find_many(json, opts);
+        return backend.find_many(json, opts);
     }
 }
 
@@ -1191,7 +1191,7 @@ void mongo_interface::remove_bson(const std::string& script_host, bson_t* bs)
         return;
 
     if(enable_testing_backend)
-        testing_backend.remove_many(bson_to_json(bs));
+        backend.remove_many(bson_to_json(bs));
 
     #ifdef USE_MONGO
     #ifndef ONLY_VALIDATION
@@ -1246,11 +1246,11 @@ void mongo_interface::remove_json_many_new(const nlohmann::json& json)
     #endif // ONLY_VALIDATION
     if(enable_testing_backend)
     {
-        testing_backend.remove_many(json);
+        backend.remove_many(json);
     }
 }
 
-mongo_interface::mongo_interface(mongo_context* fctx) : testing_backend(fctx)
+mongo_interface::mongo_interface(mongo_context* fctx) : backend(fctx)
 {
     ctx = fctx;
 

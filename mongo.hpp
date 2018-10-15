@@ -165,7 +165,7 @@ struct mongo_interface
     mongoc_collection_t* collection = nullptr;
     #endif // USE_MONGO
 
-    db_storage_backend testing_backend;
+    db_storage_backend backend;
     bool enable_testing_backend = true;
 
     std::string last_collection;
