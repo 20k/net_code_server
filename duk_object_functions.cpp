@@ -286,17 +286,7 @@ duk_int_t db_fetch(duk_context* ctx)
     duk_push_current_function(ctx);
 
     std::string proxy_chain = get_chain_of(ctx, -1);
-
     nlohmann::json request = chain_to_request(proxy_chain);
-
-    std::string last_key;
-
-    std::vector<std::string> split_keys = no_ss_split(proxy_chain, ".");
-
-    if(split_keys.size() > 0)
-    {
-        last_key = split_keys.back();
-    }
 
     std::vector<nlohmann::json> found;
 
@@ -319,11 +309,10 @@ duk_int_t db_fetch(duk_context* ctx)
     {
         duk_push_undefined(ctx);
     }
-
-    else if(found.size() == 1)
+    /*else if(found.size() == 1)
     {
         push_duk_val(ctx, get_from_request(found[0], proxy_chain));
-    }
+    }*/
     else
     {
         push_duk_val(ctx, get_from_request(found, proxy_chain));
