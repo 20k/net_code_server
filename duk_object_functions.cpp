@@ -419,7 +419,7 @@ void set_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& js, 
 
         last_js.get() = new_dat;
 
-        ctx.flush(new_dat);
+        ctx.flush(js[collection_root]);
     }
 }
 
@@ -505,7 +505,7 @@ duk_int_t db_set(duk_context* ctx)
         {
             std::lock_guard guard(mongo_ctx->backend.get_lock_for());
 
-            std::vector<nlohmann::json>& direct_data = mongo_ctx->backend.get_db_data_nolock();
+            std::vector<nlohmann::json>& direct_data = mongo_ctx->backend.get_db_data_nolock_import();
 
             ///need to flush db
             set_from_request(mongo_ctx->backend, direct_data, proxy_chain, to_set_value);

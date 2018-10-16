@@ -1327,8 +1327,10 @@ std::mutex& db_storage_backend::get_lock_for()
     return get_db_storage().get_db(database).get_lock(collection);
 }
 
-std::vector<nlohmann::json>& db_storage_backend::get_db_data_nolock()
+std::vector<nlohmann::json>& db_storage_backend::get_db_data_nolock_import()
 {
+    get_db_storage().import_collection_nolock(database, collection);
+
     return get_db_storage().get_db(database).get_collection_nolock(collection);
 }
 

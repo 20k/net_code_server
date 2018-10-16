@@ -50,7 +50,7 @@ struct db_storage_backend
     void remove_many(const nlohmann::json& selector);
 
     std::mutex& get_lock_for();
-    std::vector<nlohmann::json>& get_db_data_nolock();
+    std::vector<nlohmann::json>& get_db_data_nolock_import();
     void flush(const nlohmann::json& data);
     void disk_erase(const nlohmann::json& data);
 
