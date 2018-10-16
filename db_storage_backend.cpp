@@ -466,7 +466,22 @@ struct db_storage
             {
                 std::cout << "bad coll " << coll_path << " file name " << file_name << std::endl;
                 std::cout << "raw dlen " << data.size() << std::endl;
-                throw std::runtime_error("Hello!");
+
+                if(file_exists(path + ".back"))
+                {
+                    try
+                    {
+                        fdata = nlohmann::json::from_cbor(read_file_bin(path + ".back"));
+
+                        std::cout << "successfully recovered data from backup" << std::endl;
+                    }
+                    catch(...)
+                    {
+                        throw std::runtime_error("Bad collection and no backup");
+                    }
+                }
+
+                //throw std::runtime_error("Db corruption oops!");
             }
 
             if(!has_index(db_idx))
