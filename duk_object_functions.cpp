@@ -278,7 +278,7 @@ nlohmann::json get_from_request(nlohmann::json in, const std::string& chain)
 }
 
 ///the reason why this is a vector is implementation details unfortunately
-void set_from_request(std::vector<nlohmann::json>& js, const std::string& chain, nlohmann::json to_set)
+void set_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& js, const std::string& chain, nlohmann::json to_set)
 {
     std::string proxy_chain = chain;
 
@@ -383,9 +383,22 @@ void set_from_request(std::vector<nlohmann::json>& js, const std::string& chain,
 
         js.push_back(new_dat);
         ///need to flush collection to disk and delete old db info in that order
+
+        for(auto& i : old_cids)
+        {
+            nlohmann::json to_erase;
+            to_erase[CID_STRING] = i;
+
+            ctx.disk_erase(to_erase);
+        }
+
+        ctx.flush(new_dat);
     }
     else
     {
+        if(collection_root < 0 || collection_root >= (int)js.size())
+            throw std::runtime_error("Bad collection root? " + std::to_string(collection_root));
+
         ///collection root is the one we need to flush to disk
         nlohmann::json new_dat;
 
@@ -405,6 +418,8 @@ void set_from_request(std::vector<nlohmann::json>& js, const std::string& chain,
         }
 
         last_js.get() = new_dat;
+
+        ctx.flush(new_dat);
     }
 }
 
@@ -493,7 +508,7 @@ duk_int_t db_set(duk_context* ctx)
             std::vector<nlohmann::json>& direct_data = mongo_ctx->backend.get_db_data_nolock();
 
             ///need to flush db
-            set_from_request(direct_data, proxy_chain, to_set_value);
+            set_from_request(mongo_ctx->backend, direct_data, proxy_chain, to_set_value);
         }
 
         //found = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());

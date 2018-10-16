@@ -1332,6 +1332,16 @@ std::vector<nlohmann::json>& db_storage_backend::get_db_data_nolock()
     return get_db_storage().get_db(database).get_collection_nolock(collection);
 }
 
+void db_storage_backend::flush(const nlohmann::json& data)
+{
+    return get_db_storage().flush(database, collection, data);
+}
+
+void db_storage_backend::disk_erase(const nlohmann::json& data)
+{
+    return get_db_storage().disk_erase(database, collection, data);
+}
+
 size_t db_storage_backend::get_unique_id()
 {
     return get_db_storage().get_next_id();

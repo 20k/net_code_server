@@ -51,6 +51,8 @@ struct db_storage_backend
 
     std::mutex& get_lock_for();
     std::vector<nlohmann::json>& get_db_data_nolock();
+    void flush(const nlohmann::json& data);
+    void disk_erase(const nlohmann::json& data);
 
     static
     size_t get_unique_id();
