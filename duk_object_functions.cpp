@@ -332,7 +332,10 @@ void set_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& js, 
 
             if(val == (int)js.size())
             {
-                js.push_back(nlohmann::json({}));
+                nlohmann::json new_coll;
+                new_coll[CID_STRING] = db_storage_backend::get_unique_id();
+
+                js.push_back(new_coll);
 
                 last_js = js.back();
             }
@@ -368,6 +371,10 @@ void set_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& js, 
     if(object_stack.size() == 0)
     {
         ///harvest old CIDs so we can delete them from the disk
+        if(!to_set.is_object())
+        {
+            throw std::runtime_error("value assigned to db or db[index] must be object");
+        }
 
         std::vector<size_t> old_cids;
 
@@ -399,25 +406,32 @@ void set_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& js, 
         if(collection_root < 0 || collection_root >= (int)js.size())
             throw std::runtime_error("Bad collection root? " + std::to_string(collection_root));
 
-        ///collection root is the one we need to flush to disk
-        nlohmann::json new_dat;
+        std::cout << "HERE HI HAR " << std::endl;
 
-        if(to_set.is_object())
+        size_t old_cid = -1;
+        bool has_cid = false;
+
+        //if(last_js.get().count(CID_STRING) > 0)
+        if(js[collection_root].count(CID_STRING) > 0)
         {
-            for(auto& individual_data : to_set.get<nlohmann::json::object_t>())
-            {
-                if(individual_data.first == CID_STRING)
-                    continue;
+            old_cid = js[collection_root].at(CID_STRING);
+            has_cid = true;
+        }
 
-                new_dat[individual_data.first] = individual_data.second;
+        if(&last_js.get() == &js[collection_root])
+        {
+            if(!to_set.is_object())
+            {
+                throw std::runtime_error("value assigned to db or db[index] must be object");
             }
         }
-        else
-        {
-            new_dat = to_set;
-        }
 
-        last_js.get() = new_dat;
+        last_js.get() = to_set;
+
+        if(has_cid)
+        {
+            js[collection_root][CID_STRING] = old_cid;
+        }
 
         ctx.flush(js[collection_root]);
     }
