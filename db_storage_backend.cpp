@@ -467,7 +467,7 @@ struct db_storage
                 std::cout << "bad coll " << coll_path << " file name " << file_name << std::endl;
                 std::cout << "raw dlen " << data.size() << std::endl;
 
-                if(file_exists(path + ".back"))
+                /*if(file_exists(path + ".back"))
                 {
                     try
                     {
@@ -479,9 +479,9 @@ struct db_storage
                     {
                         throw std::runtime_error("Bad collection and no backup");
                     }
-                }
+                }*/
 
-                //throw std::runtime_error("Db corruption oops!");
+                throw std::runtime_error("Db corruption oops!");
             }
 
             if(!has_index(db_idx))
