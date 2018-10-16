@@ -487,7 +487,7 @@ duk_int_t db_fetch(duk_context* ctx)
 
 ///expose direct db access
 ///expose locks as well
-duk_int_t db_set(duk_context* ctx)
+/*duk_int_t db_proxy_set(duk_context* ctx)
 {
     std::string proxy_chain = get_chain_of(ctx, 3);
     std::string secret_host = get_original_host(ctx, 3);
@@ -499,6 +499,56 @@ duk_int_t db_set(duk_context* ctx)
     std::string property_to_set = duk_safe_to_std_string(ctx, 1);
 
     proxy_chain += "." + property_to_set;
+
+    //nlohmann::json request = chain_to_request(proxy_chain);
+
+    //std::cout << "SET HIE" << std::endl;
+
+    //std::cout << "to set " << to_set_value.dump() << std::endl;
+
+    if(secret_host != get_script_host(ctx))
+    {
+        push_error(ctx, "This almost certainly isn't what you want to happen");
+        return 1;
+    }
+
+    {
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+        mongo_ctx.change_collection(secret_host);
+
+        {
+            std::lock_guard guard(mongo_ctx->backend.get_lock_for());
+
+            std::vector<nlohmann::json>& direct_data = mongo_ctx->backend.get_db_data_nolock_import();
+
+            ///need to flush db
+            set_from_request(mongo_ctx->backend, direct_data, proxy_chain, to_set_value);
+        }
+
+        //found = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
+    }
+
+    return 0;
+}*/
+
+duk_int_t db_set(duk_context* ctx)
+{
+    duk_push_current_function(ctx);
+
+    std::vector<nlohmann::json> found;
+
+    std::string proxy_chain = get_chain_of(ctx, -1);
+    std::string secret_host = get_original_host(ctx, -1);
+
+    duk_pop(ctx);
+
+    //std::cout << " in setter " << proxy_chain << std::endl;
+
+    nlohmann::json to_set_value = dukx_get_as_json(ctx, -1);
+
+    //std::string property_to_set = duk_safe_to_std_string(ctx, 1);
+
+    //proxy_chain += "." + property_to_set;
 
     //nlohmann::json request = chain_to_request(proxy_chain);
 
@@ -545,9 +595,13 @@ duk_int_t db_get(duk_context* ctx)
     std::string secret_host = get_original_host(ctx, 2);
 
     ///make it so that fetch also returns the proxy, but if we call that result itll do the fetch function?
-    if(key == "fetch")
+    if(key == "$fetch" || key == "$set")
     {
-        duk_push_c_function(ctx, db_fetch, 0);
+        if(key == "$fetch")
+            duk_push_c_function(ctx, db_fetch, 0);
+
+        if(key == "$set")
+            duk_push_c_function(ctx, db_set, 1);
 
         duk_push_string(ctx, proxy_chain.c_str());
         duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
@@ -586,19 +640,20 @@ void dukx_push_db_proxy(duk_context* ctx)
     duk_require_stack(ctx, 16);
 
     dukx_push_proxy_functions(ctx, -1,
-                                        dukx_proxy_get_prototype_of, 1, "getPrototypeOf",
-                                        dukx_proxy_set_prototype_of, 2, "setPrototypeOf",
-                                        dukx_proxy_is_extensible, 1, "isExtensible",
-                                        dukx_proxy_prevent_extension, 1, "preventExtension",
-                                        dukx_proxy_get_own_property, 2, "getOwnPropertyDescriptor",
-                                        dukx_proxy_define_property, 3, "defineProperty",
-                                        dukx_proxy_has, 2, "has",
-                                        db_get, 3, "get",
-                                        db_set, 4, "set",
-                                        dukx_proxy_delete_property, 2, "deleteProperty",
-                                        dukx_proxy_own_keys, 1, "ownKeys",
-                                        dukx_proxy_apply, 3, "apply",
-                                        dukx_proxy_construct, 2, "construct");
+                                        //dukx_proxy_get_prototype_of, 1, "getPrototypeOf",
+                                        //dukx_proxy_set_prototype_of, 2, "setPrototypeOf",
+                                        //dukx_proxy_is_extensible, 1, "isExtensible",
+                                        //dukx_proxy_prevent_extension, 1, "preventExtension",
+                                        //dukx_proxy_get_own_property, 2, "getOwnPropertyDescriptor",
+                                        //dukx_proxy_define_property, 3, "defineProperty",
+                                        //dukx_proxy_has, 2, "has",
+                                        db_get, 3, "get"
+                                        //db_set, 4, "set",
+                                        //dukx_proxy_delete_property, 2, "deleteProperty",
+                                        //dukx_proxy_own_keys, 1, "ownKeys",
+                                        //dukx_proxy_apply, 3, "apply",
+                                        //dukx_proxy_construct, 2, "construct");
+                                        );
 
     duk_push_proxy(ctx, 0);
 
