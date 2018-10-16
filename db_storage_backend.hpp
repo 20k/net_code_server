@@ -4,6 +4,9 @@
 #include <string>
 #include <json/json.hpp>
 #include "mongoc_fwd.hpp"
+#include <mutex>
+
+#define CID_STRING "_cid"
 
 struct mongo_context;
 
@@ -45,6 +48,9 @@ struct db_storage_backend
     void update_many(const nlohmann::json& selector, const nlohmann::json& update);
     std::vector<nlohmann::json> find_many(const nlohmann::json& selector, const nlohmann::json& options);
     void remove_many(const nlohmann::json& selector);
+
+    std::mutex& get_lock_for();
+    std::vector<nlohmann::json>& get_db_data_nolock();
 
     static
     size_t get_unique_id();

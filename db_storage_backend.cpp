@@ -8,7 +8,6 @@
 #include <fstream>
 #include <libncclient/nc_util.hpp>
 
-#define CID_STRING "_cid"
 #define ROOT_STORE "C:/net_code_storage"
 #define ROOT_FILE "C:/net_code_storage/gid"
 
@@ -1321,6 +1320,16 @@ std::vector<nlohmann::json> db_storage_backend::find_many(const nlohmann::json& 
 void db_storage_backend::remove_many(const nlohmann::json& selector)
 {
     get_db_storage().remove_many(database, collection, selector);
+}
+
+std::mutex& db_storage_backend::get_lock_for()
+{
+    return get_db_storage().get_db(database).get_lock(collection);
+}
+
+std::vector<nlohmann::json>& db_storage_backend::get_db_data_nolock()
+{
+    return get_db_storage().get_db(database).get_collection_nolock(collection);
 }
 
 size_t db_storage_backend::get_unique_id()

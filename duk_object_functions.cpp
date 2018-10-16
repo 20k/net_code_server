@@ -277,6 +277,137 @@ nlohmann::json get_from_request(nlohmann::json in, const std::string& chain)
     return last_js.get();
 }
 
+///the reason why this is a vector is implementation details unfortunately
+void set_from_request(std::vector<nlohmann::json>& js, const std::string& chain, nlohmann::json to_set)
+{
+    std::string proxy_chain = chain;
+
+    while(proxy_chain.size() > 0 && proxy_chain.front() == '.')
+    {
+        proxy_chain.erase(proxy_chain.begin());
+    }
+
+    std::cout << "chain "<< proxy_chain << std::endl;
+
+    std::vector<std::string> object_stack = no_ss_split(proxy_chain, ".");
+
+    nlohmann::json dummy;
+    std::reference_wrapper<nlohmann::json> last_js = dummy;
+
+    int collection_root = -1;
+
+    for(int i=0; i < (int)object_stack.size(); i++)
+    {
+        std::string key = object_stack[i];
+
+        if(key == "_cid")
+        {
+            throw std::runtime_error("No setting _cid");
+        }
+
+        ///i == 0 is dealing with the implementation detail that the root isn't an object
+        ///can't convert because its a direct reference
+        if(i == 0)
+        {
+            int val = 0;
+
+            try
+            {
+                val = std::stoi(key);
+            }
+            catch(...)
+            {
+                throw std::runtime_error("Error converting key \"" + key + "\" to integer for array lookup");
+            }
+
+            if(val < 0 || val > (int)js.size())
+            {
+                throw std::runtime_error("Bad key for root db object access \"" + key + "\", either < 0 or > db.fetch().length (sparse arrays are not supported on the root object!)");
+            }
+
+            if(val >= 0 && val < (int)js.size())
+            {
+                last_js = js[val];
+            }
+
+            if(val == (int)js.size())
+            {
+                js.push_back(nlohmann::json({}));
+
+                last_js = js.back();
+            }
+
+            collection_root = val;
+        }
+        else
+        {
+            if(last_js.get().is_array())
+            {
+                int val = 0;
+
+                try
+                {
+                    val = std::stoi(key);
+                }
+                catch(...)
+                {
+                    throw std::runtime_error("Error converting key \"" + key + "\" to integer for array lookup");
+                }
+
+                last_js = last_js.get()[val];
+            }
+            else
+            {
+                last_js.get()[key];
+
+                last_js = last_js.get()[key];
+            }
+        }
+    }
+
+    if(object_stack.size() == 0)
+    {
+        ///harvest old CIDs so we can delete them from the disk
+
+        std::vector<size_t> old_cids;
+
+        for(auto& i : js)
+        {
+            old_cids.push_back(i.at(CID_STRING).get<size_t>());
+        }
+
+        js.clear();
+
+        nlohmann::json new_dat = to_set;
+        new_dat[CID_STRING] = db_storage_backend::get_unique_id();
+
+        js.push_back(new_dat);
+        ///need to flush collection to disk and delete old db info in that order
+    }
+    else
+    {
+        ///collection root is the one we need to flush to disk
+        nlohmann::json new_dat;
+
+        if(to_set.is_object())
+        {
+            for(auto& individual_data : to_set.get<nlohmann::json::object_t>())
+            {
+                if(individual_data.first == CID_STRING)
+                    continue;
+
+                new_dat[individual_data.first] = individual_data.second;
+            }
+        }
+        else
+        {
+            new_dat = to_set;
+        }
+
+        last_js.get() = new_dat;
+    }
+}
+
 ///this is all wrong but on the plus side itll work just fine with the planned implementation everything is resolved
 ///db.hi is doing hi:{$exists : true}, but its finding objects which contain a key hi
 ///instead, db.hi should find everything in the db, and then get the key hi, which in the case of an array of objects would give error
@@ -286,23 +417,26 @@ duk_int_t db_fetch(duk_context* ctx)
     duk_push_current_function(ctx);
 
     std::string proxy_chain = get_chain_of(ctx, -1);
-    nlohmann::json request = chain_to_request(proxy_chain);
+    //nlohmann::json request = chain_to_request(proxy_chain);
 
     std::vector<nlohmann::json> found;
 
+    std::string secret_host = get_original_host(ctx, -1);
+
+    if(secret_host != get_script_host(ctx))
     {
-        std::string host = get_original_host(ctx, -1);
+        push_error(ctx, "This almost certainly isn't what you want to happen");
+        return 1;
+    }
 
-        if(host != get_script_host(ctx))
-        {
-            push_error(ctx, "This almost certainly isn't what you want to happen");
-            return 1;
-        }
-
+    {
         mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
-        mongo_ctx.change_collection(host);
+        mongo_ctx.change_collection(secret_host);
+
+        //std::cout << "req " << request.dump() << std::endl;
 
         found = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
+        //found = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
     }
 
     if(found.size() == 0)
@@ -315,10 +449,57 @@ duk_int_t db_fetch(duk_context* ctx)
     }*/
     else
     {
+        //push_duk_val(ctx, found);
         push_duk_val(ctx, get_from_request(found, proxy_chain));
     }
 
     return 1;
+}
+
+///expose direct db access
+///expose locks as well
+duk_int_t db_set(duk_context* ctx)
+{
+    std::string proxy_chain = get_chain_of(ctx, 3);
+    std::string secret_host = get_original_host(ctx, 3);
+
+    //std::cout << " in setter " << proxy_chain << std::endl;
+
+    nlohmann::json to_set_value = dukx_get_as_json(ctx, 2);
+
+    std::string property_to_set = duk_safe_to_std_string(ctx, 1);
+
+    proxy_chain += "." + property_to_set;
+
+    //nlohmann::json request = chain_to_request(proxy_chain);
+
+    //std::cout << "SET HIE" << std::endl;
+
+    //std::cout << "to set " << to_set_value.dump() << std::endl;
+
+    if(secret_host != get_script_host(ctx))
+    {
+        push_error(ctx, "This almost certainly isn't what you want to happen");
+        return 1;
+    }
+
+    {
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+        mongo_ctx.change_collection(secret_host);
+
+        {
+            std::lock_guard guard(mongo_ctx->backend.get_lock_for());
+
+            std::vector<nlohmann::json>& direct_data = mongo_ctx->backend.get_db_data_nolock();
+
+            ///need to flush db
+            set_from_request(direct_data, proxy_chain, to_set_value);
+        }
+
+        //found = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
+    }
+
+    return 0;
 }
 
 duk_int_t db_get(duk_context* ctx)
@@ -332,7 +513,6 @@ duk_int_t db_get(duk_context* ctx)
     duk_pop(ctx);
 
     std::string proxy_chain = get_chain_of(ctx, 2);
-
     std::string secret_host = get_original_host(ctx, 2);
 
     ///make it so that fetch also returns the proxy, but if we call that result itll do the fetch function?
@@ -385,7 +565,7 @@ void dukx_push_db_proxy(duk_context* ctx)
                                         dukx_proxy_define_property, 3, "defineProperty",
                                         dukx_proxy_has, 2, "has",
                                         db_get, 3, "get",
-                                        dukx_proxy_set, 4, "set",
+                                        db_set, 4, "set",
                                         dukx_proxy_delete_property, 2, "deleteProperty",
                                         dukx_proxy_own_keys, 1, "ownKeys",
                                         dukx_proxy_apply, 3, "apply",
