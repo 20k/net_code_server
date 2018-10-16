@@ -419,6 +419,7 @@ struct db_storage
         assert(data.count(CID_STRING) > 0);
 
         remove(get_filename(db, coll, data).c_str());
+        //remove((get_filename(db, coll, data) + ".back").c_str());
     }
 
     void import_collection_nolock(const database_type& db_idx, const std::string& coll)
