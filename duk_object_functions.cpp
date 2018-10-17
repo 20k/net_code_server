@@ -67,6 +67,11 @@ void dukx_push_proxy_functions(duk_context* ctx, duk_idx_t idx)
 
 }
 
+void dukx_push_proxy_functions_nhide(duk_context* ctx, duk_idx_t idx)
+{
+
+}
+
 ///this function is incorrect with its handling of idx, with respect to duk_put_prop_string
 template<typename... X>
 void dukx_push_proxy_functions(duk_context* ctx, duk_idx_t idx, const duk_c_function& func, int nargs, const std::string& trap, X... x)
@@ -86,7 +91,7 @@ void dukx_push_proxy_functions_nhide(duk_context* ctx, duk_idx_t idx, const duk_
     duk_push_c_function(ctx, func, nargs);
     duk_put_prop_string(ctx, -1 + idx, trap.c_str());
 
-    dukx_push_proxy_functions(ctx, idx, x...);
+    dukx_push_proxy_functions_nhide(ctx, idx, x...);
 }
 
 void dukx_sanitise_in_place(duk_context* dst_ctx, duk_idx_t idx)
