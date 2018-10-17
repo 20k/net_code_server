@@ -67,12 +67,23 @@ void dukx_push_proxy_functions(duk_context* ctx, duk_idx_t idx)
 
 }
 
+///this function is incorrect with its handling of idx, with respect to duk_put_prop_string
 template<typename... X>
 void dukx_push_proxy_functions(duk_context* ctx, duk_idx_t idx, const duk_c_function& func, int nargs, const std::string& trap, X... x)
 {
     duk_push_c_function(ctx, func, nargs);
     DUKX_HIDE_CTX(ctx);
     //DUKX_HIDE_HOST(ctx);
+    duk_put_prop_string(ctx, -1 + idx, trap.c_str());
+
+    dukx_push_proxy_functions(ctx, idx, x...);
+}
+
+///this function handles idx correctly but does not hide things
+template<typename... X>
+void dukx_push_proxy_functions_nhide(duk_context* ctx, duk_idx_t idx, const duk_c_function& func, int nargs, const std::string& trap, X... x)
+{
+    duk_push_c_function(ctx, func, nargs);
     duk_put_prop_string(ctx, -1 + idx, trap.c_str());
 
     dukx_push_proxy_functions(ctx, idx, x...);
@@ -547,6 +558,9 @@ duk_int_t db_get(duk_context* ctx)
 
     std::string key = duk_safe_to_std_string(ctx, -1);
 
+
+    //std::cout << "key! " << std::endl;
+
     ///pass chain into dukx_push_db
 
     duk_pop(ctx);
@@ -569,8 +583,8 @@ duk_int_t db_get(duk_context* ctx)
         duk_push_string(ctx, secret_host.c_str());
         duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
 
-        duk_push_string(ctx, key.c_str());
-        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("LKEY").c_str());
+        //duk_push_string(ctx, key.c_str());
+        //duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("LKEY").c_str());
     }
     else
     {
@@ -580,6 +594,77 @@ duk_int_t db_get(duk_context* ctx)
     }
 
     return 1;
+}
+
+duk_int_t db_getter_get(duk_context* ctx)
+{
+    /*duk_dup(ctx, 1);
+
+    std::string key = duk_safe_to_std_string(ctx, -1);
+
+    ///pass chain into dukx_push_db
+
+    duk_pop(ctx);*/
+
+    //std::string proxy_chain = get_chain_of(ctx, 2);
+
+
+    //std::string secret_host = get_original_host(ctx, 2);
+
+    ///make it so that fetch also returns the proxy, but if we call that result itll do the fetch function?
+    /*if(key == "$fetch" || key == "$set")
+    {
+        if(key == "$fetch")
+            duk_push_c_function(ctx, db_fetch, 0);
+
+        if(key == "$set")
+            duk_push_c_function(ctx, db_set, 1);
+
+        duk_push_string(ctx, proxy_chain.c_str());
+        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
+
+        duk_push_string(ctx, secret_host.c_str());
+        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
+
+        duk_push_string(ctx, key.c_str());
+        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("LKEY").c_str());
+    }
+    else*/
+    {
+        dukx_push_db_proxy(ctx);
+        set_chain(ctx, "", -1);
+    }
+
+    return 1;
+}
+
+void dukx_setup_db_proxy(duk_context* ctx)
+{
+    std::string host = get_script_host(ctx);
+
+    duk_push_global_object(ctx);
+    //duk_push_object(ctx);
+
+
+    /*dukx_push_db_proxy(ctx);
+    duk_put_prop_string(ctx, -2, "$db");*/
+
+    //dukx_set_getter_setter(ctx, -1, "$db", db_getter_get, db_set);
+
+
+    duk_push_string(ctx, "$db");
+
+    duk_push_c_function(ctx, db_getter_get, 0);
+
+    duk_push_c_function(ctx, db_set, 1);
+    duk_push_string(ctx, host.c_str());
+    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
+
+    duk_def_prop(ctx,
+                 -1 - 3,
+                 DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_HAVE_SETTER | DUK_DEFPROP_FORCE);
+
+    duk_pop(ctx);
 }
 
 void dukx_push_db_proxy(duk_context* ctx)
@@ -599,7 +684,7 @@ void dukx_push_db_proxy(duk_context* ctx)
 
     duk_require_stack(ctx, 16);
 
-    dukx_push_proxy_functions(ctx, -1,
+    dukx_push_proxy_functions_nhide(ctx, -1,
                                         //dukx_proxy_get_prototype_of, 1, "getPrototypeOf",
                                         //dukx_proxy_set_prototype_of, 2, "setPrototypeOf",
                                         //dukx_proxy_is_extensible, 1, "isExtensible",
@@ -625,4 +710,32 @@ void dukx_push_db_proxy(duk_context* ctx)
 
     ///[to_wrap, proxy]
     //duk_remove(ctx, -1 + -1);
+}
+
+void dukx_set_setter(duk_context* ctx, duk_idx_t idx, const std::string& prop, duk_c_function func)
+{
+    duk_push_string(ctx, prop.c_str());
+    duk_push_c_function(ctx, func, 1 /*nargs*/);
+    duk_def_prop(ctx,
+                 idx - 2,
+                 DUK_DEFPROP_HAVE_SETTER);
+}
+
+void dukx_set_getter(duk_context* ctx, duk_idx_t idx, const std::string& prop, duk_c_function func)
+{
+    duk_push_string(ctx, prop.c_str());
+    duk_push_c_function(ctx, func, 0 /*nargs*/);
+    duk_def_prop(ctx,
+                 idx - 2,
+                 DUK_DEFPROP_HAVE_GETTER);
+}
+
+void dukx_set_getter_setter(duk_context* ctx, duk_idx_t idx, const std::string& prop, duk_c_function getter, duk_c_function setter)
+{
+    duk_push_string(ctx, prop.c_str());
+    duk_push_c_function(ctx, getter, 0 /*nargs*/);
+    duk_push_c_function(ctx, setter, 1 /*nargs*/);
+    duk_def_prop(ctx,
+                 idx - 3,
+                 DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_HAVE_SETTER);
 }
