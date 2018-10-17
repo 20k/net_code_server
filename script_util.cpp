@@ -321,16 +321,20 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
 
     std::vector<std::string> froms_unchecked{"#D",
                                              "#db.i", "#db.r", "#db.f", "#db.u", "#db.u1", "#db.us",
+                                             "$db",
                                              };
 
     std::vector<std::string> tos_unchecked  {"hash_d",
                                              "db_insert", "db_remove", "db_find", "db_update", "db_update1", "db_upsert",
+                                             "$db",
                                              };
 
     std::vector<int> sec_levels_unchecked   {4,
-                                             3, 3, 3, 3, 3, 3};
+                                             3, 3, 3, 3, 3, 3,
+                                             3};
 
     assert(sec_levels_unchecked.size() == tos_unchecked.size());
+    assert(froms_unchecked.size() == tos_unchecked.size());
 
     for(int i=0; i < (int)tos_unchecked.size(); i++)
     {
