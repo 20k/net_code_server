@@ -1230,10 +1230,14 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     #endif // TESTING
 
     #ifdef TESTING
-    duk_push_global_object(ctx);
-    dukx_push_db_proxy(ctx);
+    if(seclevel <= 3)
+    {
+        duk_push_global_object(ctx);
+        dukx_push_db_proxy(ctx);
 
-    duk_put_prop_string(ctx, -2, "db");
+        duk_put_prop_string(ctx, -2, "db");
+        duk_pop(ctx);
+    }
     #endif // TESTING
 
     inject_hacky_Symbol(ctx);
