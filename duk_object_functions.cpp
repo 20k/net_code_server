@@ -516,18 +516,31 @@ duk_int_t db_fetch(duk_context* ctx)
     return 1;
 }
 
+template<bool is_proxy>
 duk_int_t db_set(duk_context* ctx)
 {
-    duk_push_current_function(ctx);
+    if(!is_proxy)
+        duk_push_current_function(ctx);
 
     std::vector<nlohmann::json> found;
 
-    std::string proxy_chain = get_chain_of(ctx, -1);
-    std::string secret_host = get_original_host(ctx, -1);
+    std::string proxy_chain = get_chain_of(ctx, is_proxy ? 3 : -1);
+    std::string secret_host = get_original_host(ctx, is_proxy ? 3 : -1);
 
     duk_pop(ctx);
 
-    nlohmann::json to_set_value = dukx_get_as_json(ctx, -1);
+    nlohmann::json to_set_value = dukx_get_as_json(ctx, is_proxy ? 2 : -1);
+
+    if(is_proxy)
+    {
+        duk_dup(ctx, 1);
+
+        std::string key = duk_safe_to_std_string(ctx, -1);
+
+        duk_pop(ctx);
+
+        proxy_chain += "." + key;
+    }
 
     if(secret_host != get_script_host(ctx))
     {
@@ -572,7 +585,7 @@ duk_int_t db_get(duk_context* ctx)
             duk_push_c_function(ctx, db_fetch, 0);
 
         if(key == "$set")
-            duk_push_c_function(ctx, db_set, 1);
+            duk_push_c_function(ctx, db_set<false>, 1);
 
         duk_push_string(ctx, proxy_chain.c_str());
         duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
@@ -619,7 +632,7 @@ void dukx_setup_db_proxy(duk_context* ctx)
 
     duk_push_c_function(ctx, db_getter_get, 0);
 
-    duk_push_c_function(ctx, db_set, 1);
+    duk_push_c_function(ctx, db_set<false>, 1);
     duk_push_string(ctx, host.c_str());
     duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
 
@@ -655,8 +668,8 @@ void dukx_push_db_proxy(duk_context* ctx)
                                         //dukx_proxy_get_own_property, 2, "getOwnPropertyDescriptor",
                                         //dukx_proxy_define_property, 3, "defineProperty",
                                         //dukx_proxy_has, 2, "has",
-                                        db_get, 3, "get"
-                                        //db_set, 4, "set",
+                                        db_get, 3, "get",
+                                        db_set<true>, 4, "set"
                                         //dukx_proxy_delete_property, 2, "deleteProperty",
                                         //dukx_proxy_own_keys, 1, "ownKeys",
                                         //dukx_proxy_apply, 3, "apply",
