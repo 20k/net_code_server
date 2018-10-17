@@ -216,9 +216,16 @@ bool is_number(const std::string& s)
     return !s.empty() && std::all_of(s.begin(), s.end(), isdigit);
 }
 
-std::vector<std::string> normalise_object_stack(const std::vector<std::string>& obj)
+std::vector<std::string> normalise_object_stack(const std::string& chain)
 {
-    std::vector<std::string> in = obj;
+    std::string proxy_chain = chain;
+
+    while(proxy_chain.size() > 0 && proxy_chain.front() == '.')
+    {
+        proxy_chain.erase(proxy_chain.begin());
+    }
+
+    std::vector<std::string> in = no_ss_split(proxy_chain, ".");
 
     if(in.size() == 0)
         return in;
@@ -235,16 +242,7 @@ std::vector<std::string> normalise_object_stack(const std::vector<std::string>& 
 
 nlohmann::json chain_to_request(const std::string& chain)
 {
-    std::string proxy_chain = chain;
-
-    while(proxy_chain.size() > 0 && proxy_chain.front() == '.')
-    {
-        proxy_chain.erase(proxy_chain.begin());
-    }
-
-    std::vector<std::string> object_stack = no_ss_split(proxy_chain, ".");
-
-    object_stack = normalise_object_stack(object_stack);
+    std::vector<std::string> object_stack = normalise_object_stack(chain);
 
     nlohmann::json js;
 
@@ -276,16 +274,7 @@ nlohmann::json chain_to_request(const std::string& chain)
 
 nlohmann::json get_from_request(nlohmann::json in, const std::string& chain)
 {
-    std::string proxy_chain = chain;
-
-    while(proxy_chain.size() > 0 && proxy_chain.front() == '.')
-    {
-        proxy_chain.erase(proxy_chain.begin());
-    }
-
-    std::vector<std::string> object_stack = no_ss_split(proxy_chain, ".");
-
-    object_stack = normalise_object_stack(object_stack);
+    std::vector<std::string> object_stack = normalise_object_stack(chain);
 
     std::reference_wrapper<nlohmann::json> last_js = in;
 
@@ -319,24 +308,12 @@ nlohmann::json get_from_request(nlohmann::json in, const std::string& chain)
     return last_js.get();
 }
 
-///the reason why this is a vector is implementation details unfortunately
-void set_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& js, const std::string& chain, nlohmann::json to_set)
+std::pair<std::reference_wrapper<nlohmann::json>, int> get_last_js(std::vector<nlohmann::json>& js, const std::string& chain, nlohmann::json& dummy)
 {
-    std::string proxy_chain = chain;
-
-    while(proxy_chain.size() > 0 && proxy_chain.front() == '.')
-    {
-        proxy_chain.erase(proxy_chain.begin());
-    }
-
-    std::vector<std::string> object_stack = no_ss_split(proxy_chain, ".");
-
-    object_stack = normalise_object_stack(object_stack);
-
-    nlohmann::json dummy;
     std::reference_wrapper<nlohmann::json> last_js = dummy;
-
     int collection_root = -1;
+
+    std::vector<std::string> object_stack = normalise_object_stack(chain);
 
     for(int i=0; i < (int)object_stack.size(); i++)
     {
@@ -409,6 +386,18 @@ void set_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& js, 
             }
         }
     }
+
+    return {last_js, collection_root};
+}
+
+///the reason why this is a vector is implementation details unfortunately
+void set_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& js, const std::string& chain, nlohmann::json to_set)
+{
+    std::vector<std::string> object_stack = normalise_object_stack(chain);
+
+    nlohmann::json dummy;
+
+    auto [last_js, collection_root] = get_last_js(js, chain, dummy);
 
     if(object_stack.size() == 0)
     {
@@ -570,6 +559,13 @@ duk_int_t db_set(duk_context* ctx)
     return 0;
 }
 
+duk_int_t db_delete(duk_context* ctx)
+{
+
+
+    return 0;
+}
+
 duk_int_t db_get(duk_context* ctx)
 {
     duk_dup(ctx, 1);
@@ -584,13 +580,17 @@ duk_int_t db_get(duk_context* ctx)
     std::string secret_host = get_original_host(ctx, 2);
 
     ///make it so that fetch also returns the proxy, but if we call that result itll do the fetch function?
-    if(key == "$fetch" || key == "$set")
+    ///need to implement $delete
+    if(key == "$fetch" || key == "$set" || key == "$delete")
     {
         if(key == "$fetch")
             duk_push_c_function(ctx, db_fetch, 0);
 
         if(key == "$set")
             duk_push_c_function(ctx, db_set<false>, 1);
+
+        if(key == "$delete")
+            duk_push_c_function(ctx, db_delete, 0);
 
         duk_push_string(ctx, proxy_chain.c_str());
         duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());

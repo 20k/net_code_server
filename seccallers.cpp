@@ -1229,7 +1229,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     inject_c_function(ctx, deliberate_hang, "deliberate_hang", 0);
     #endif // TESTING
 
-    #ifdef TESTING
+    //#ifdef TESTING
     if(seclevel <= 3)
     {
         /*duk_push_global_object(ctx);
@@ -1240,7 +1240,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
 
         dukx_setup_db_proxy(ctx);
     }
-    #endif // TESTING
+    //#endif // TESTING
 
     inject_hacky_Symbol(ctx);
 
