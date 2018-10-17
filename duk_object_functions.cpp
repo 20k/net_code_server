@@ -313,8 +313,6 @@ void set_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& js, 
         proxy_chain.erase(proxy_chain.begin());
     }
 
-    //std::cout << "chain "<< proxy_chain << std::endl;
-
     std::vector<std::string> object_stack = no_ss_split(proxy_chain, ".");
 
     object_stack = normalise_object_stack(object_stack);
@@ -434,8 +432,6 @@ void set_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& js, 
         if(collection_root < 0 || collection_root >= (int)js.size())
             throw std::runtime_error("Bad collection root? " + std::to_string(collection_root));
 
-        std::cout << "HERE HI HAR " << std::endl;
-
         size_t old_cid = -1;
         bool has_cid = false;
 
@@ -474,7 +470,6 @@ duk_int_t db_fetch(duk_context* ctx)
     duk_push_current_function(ctx);
 
     std::string proxy_chain = get_chain_of(ctx, -1);
-    //nlohmann::json request = chain_to_request(proxy_chain);
 
     std::vector<nlohmann::json> found;
 
@@ -490,10 +485,7 @@ duk_int_t db_fetch(duk_context* ctx)
         mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
         mongo_ctx.change_collection(secret_host);
 
-        //std::cout << "req " << request.dump() << std::endl;
-
         found = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
-        //found = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
     }
 
     if(found.size() == 0)
@@ -513,52 +505,6 @@ duk_int_t db_fetch(duk_context* ctx)
     return 1;
 }
 
-///expose direct db access
-///expose locks as well
-/*duk_int_t db_proxy_set(duk_context* ctx)
-{
-    std::string proxy_chain = get_chain_of(ctx, 3);
-    std::string secret_host = get_original_host(ctx, 3);
-
-    //std::cout << " in setter " << proxy_chain << std::endl;
-
-    nlohmann::json to_set_value = dukx_get_as_json(ctx, 2);
-
-    std::string property_to_set = duk_safe_to_std_string(ctx, 1);
-
-    proxy_chain += "." + property_to_set;
-
-    //nlohmann::json request = chain_to_request(proxy_chain);
-
-    //std::cout << "SET HIE" << std::endl;
-
-    //std::cout << "to set " << to_set_value.dump() << std::endl;
-
-    if(secret_host != get_script_host(ctx))
-    {
-        push_error(ctx, "This almost certainly isn't what you want to happen");
-        return 1;
-    }
-
-    {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
-        mongo_ctx.change_collection(secret_host);
-
-        {
-            std::lock_guard guard(mongo_ctx->backend.get_lock_for());
-
-            std::vector<nlohmann::json>& direct_data = mongo_ctx->backend.get_db_data_nolock_import();
-
-            ///need to flush db
-            set_from_request(mongo_ctx->backend, direct_data, proxy_chain, to_set_value);
-        }
-
-        //found = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
-    }
-
-    return 0;
-}*/
-
 duk_int_t db_set(duk_context* ctx)
 {
     duk_push_current_function(ctx);
@@ -570,19 +516,7 @@ duk_int_t db_set(duk_context* ctx)
 
     duk_pop(ctx);
 
-    //std::cout << " in setter " << proxy_chain << std::endl;
-
     nlohmann::json to_set_value = dukx_get_as_json(ctx, -1);
-
-    //std::string property_to_set = duk_safe_to_std_string(ctx, 1);
-
-    //proxy_chain += "." + property_to_set;
-
-    //nlohmann::json request = chain_to_request(proxy_chain);
-
-    //std::cout << "SET HIE" << std::endl;
-
-    //std::cout << "to set " << to_set_value.dump() << std::endl;
 
     if(secret_host != get_script_host(ctx))
     {
@@ -602,8 +536,6 @@ duk_int_t db_set(duk_context* ctx)
             ///need to flush db
             set_from_request(mongo_ctx->backend, direct_data, proxy_chain, to_set_value);
         }
-
-        //found = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
     }
 
     return 0;
