@@ -624,14 +624,6 @@ void dukx_setup_db_proxy(duk_context* ctx)
     std::string host = get_script_host(ctx);
 
     duk_push_global_object(ctx);
-    //duk_push_object(ctx);
-
-
-    /*dukx_push_db_proxy(ctx);
-    duk_put_prop_string(ctx, -2, "$db");*/
-
-    //dukx_set_getter_setter(ctx, -1, "$db", db_getter_get, db_set);
-
 
     duk_push_string(ctx, "$db");
 
@@ -650,14 +642,6 @@ void dukx_setup_db_proxy(duk_context* ctx)
 
 void dukx_push_db_proxy(duk_context* ctx)
 {
-    ///ok key hacking is fixed
-    ///so we need basically, get, set, has, and ownKeys or something
-    ///get should do db lookup and return a proxy or the val
-    ///set should pass through to db
-    ///has should check if the key exists?
-    ///hmm... fetching everything in the entire db is free...
-    ///
-
     duk_push_object(ctx);
     duk_push_object(ctx);
 
@@ -685,12 +669,6 @@ void dukx_push_db_proxy(duk_context* ctx)
 
     duk_push_string(ctx, get_script_host(ctx).c_str());
     duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
-
-    //duk_push_c_function(ctx, db_fetch, 0);
-    //duk_put_prop_string(ctx, -2, "fetch");
-
-    ///[to_wrap, proxy]
-    //duk_remove(ctx, -1 + -1);
 }
 
 void dukx_set_setter(duk_context* ctx, duk_idx_t idx, const std::string& prop, duk_c_function func)
