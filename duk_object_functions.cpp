@@ -195,6 +195,28 @@ void dukx_push_db_proxy(duk_context* ctx);
 ///proxy get only stores the string to be looked up from the db
 ///then when .fetch() is called, we actually perform the lookup
 
+bool is_number(const std::string& s)
+{
+    return !s.empty() && std::all_of(s.begin(), s.end(), isdigit);
+}
+
+std::vector<std::string> normalise_object_stack(const std::vector<std::string>& obj)
+{
+    std::vector<std::string> in = obj;
+
+    if(in.size() == 0)
+        return in;
+
+    std::string first = in.front();
+
+    if(!is_number(first))
+    {
+        in.insert(in.begin(), "0");
+    }
+
+    return in;
+}
+
 nlohmann::json chain_to_request(const std::string& chain)
 {
     std::string proxy_chain = chain;
@@ -205,6 +227,8 @@ nlohmann::json chain_to_request(const std::string& chain)
     }
 
     std::vector<std::string> object_stack = no_ss_split(proxy_chain, ".");
+
+    object_stack = normalise_object_stack(object_stack);
 
     nlohmann::json js;
 
@@ -220,7 +244,7 @@ nlohmann::json chain_to_request(const std::string& chain)
         last_js = last_js.get()[object_stack[i]];
     }
 
-    std::cout << "ostack stize " << object_stack.size() << std::endl;
+    //std::cout << "ostack stize " << object_stack.size() << std::endl;
 
     if(object_stack.size() == 0)
     {
@@ -244,6 +268,8 @@ nlohmann::json get_from_request(nlohmann::json in, const std::string& chain)
     }
 
     std::vector<std::string> object_stack = no_ss_split(proxy_chain, ".");
+
+    object_stack = normalise_object_stack(object_stack);
 
     std::reference_wrapper<nlohmann::json> last_js = in;
 
@@ -287,9 +313,11 @@ void set_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& js, 
         proxy_chain.erase(proxy_chain.begin());
     }
 
-    std::cout << "chain "<< proxy_chain << std::endl;
+    //std::cout << "chain "<< proxy_chain << std::endl;
 
     std::vector<std::string> object_stack = no_ss_split(proxy_chain, ".");
+
+    object_stack = normalise_object_stack(object_stack);
 
     nlohmann::json dummy;
     std::reference_wrapper<nlohmann::json> last_js = dummy;
