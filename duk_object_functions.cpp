@@ -558,9 +558,6 @@ duk_int_t db_get(duk_context* ctx)
 
     std::string key = duk_safe_to_std_string(ctx, -1);
 
-
-    //std::cout << "key! " << std::endl;
-
     ///pass chain into dukx_push_db
 
     duk_pop(ctx);
@@ -598,42 +595,8 @@ duk_int_t db_get(duk_context* ctx)
 
 duk_int_t db_getter_get(duk_context* ctx)
 {
-    /*duk_dup(ctx, 1);
-
-    std::string key = duk_safe_to_std_string(ctx, -1);
-
-    ///pass chain into dukx_push_db
-
-    duk_pop(ctx);*/
-
-    //std::string proxy_chain = get_chain_of(ctx, 2);
-
-
-    //std::string secret_host = get_original_host(ctx, 2);
-
-    ///make it so that fetch also returns the proxy, but if we call that result itll do the fetch function?
-    /*if(key == "$fetch" || key == "$set")
-    {
-        if(key == "$fetch")
-            duk_push_c_function(ctx, db_fetch, 0);
-
-        if(key == "$set")
-            duk_push_c_function(ctx, db_set, 1);
-
-        duk_push_string(ctx, proxy_chain.c_str());
-        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
-
-        duk_push_string(ctx, secret_host.c_str());
-        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
-
-        duk_push_string(ctx, key.c_str());
-        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("LKEY").c_str());
-    }
-    else*/
-    {
-        dukx_push_db_proxy(ctx);
-        set_chain(ctx, "", -1);
-    }
+    dukx_push_db_proxy(ctx);
+    set_chain(ctx, "", -1);
 
     return 1;
 }
