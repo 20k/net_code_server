@@ -506,13 +506,23 @@ void delete_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& j
         ///parent is null
         if(&last_js.get() == &js[collection_root])
         {
-            ctx.disk_erase(js[collection_root]);
-            js[collection_root].clear();
+            /*size_t cid = js[collection_root].at(CID_STRING);
+
+            js[collection_root][CID_STRING] = cid;
 
             if(collection_root == (int)js.size() - 1)
             {
                 js.pop_back();
+                ctx.disk_erase(js[collection_root]);
             }
+            else
+            {
+                ctx.flush(js[collection_root]);
+            }*/
+
+            ctx.disk_erase(js[collection_root]);
+
+            js.erase(js.begin() + collection_root);
 
             return;
         }
@@ -520,8 +530,14 @@ void delete_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& j
         if(&parent.get() == &dummy)
             throw std::runtime_error("Parent is dummy, should never happen");
 
+        nlohmann::json& parent_js = parent.get();
+
+        std::string last_key = object_stack.back();
+
+        parent_js.erase(last_key);
+
         ///$db[index].hello.$delete();
-        parent.get().erase(parent.get().find(last_js.get()));
+        //parent.get().erase(parent.get().find(last_js.get()));
 
         if(has_cid)
         {
@@ -587,7 +603,8 @@ duk_int_t db_set(duk_context* ctx)
     std::string proxy_chain = get_chain_of(ctx, is_proxy ? 3 : -1);
     std::string secret_host = get_original_host(ctx, is_proxy ? 3 : -1);
 
-    duk_pop(ctx);
+    if(!is_proxy)
+        duk_pop(ctx);
 
     nlohmann::json to_set_value = dukx_get_as_json(ctx, is_proxy ? 2 : -1);
 
@@ -625,9 +642,49 @@ duk_int_t db_set(duk_context* ctx)
     return 0;
 }
 
+template<bool is_proxy>
 duk_int_t db_delete(duk_context* ctx)
 {
+    if(!is_proxy)
+        duk_push_current_function(ctx);
 
+    std::vector<nlohmann::json> found;
+
+    std::string proxy_chain = get_chain_of(ctx, is_proxy ? 3 : -1);
+    std::string secret_host = get_original_host(ctx, is_proxy ? 3 : -1);
+
+    if(!is_proxy)
+        duk_pop(ctx);
+
+    if(is_proxy)
+    {
+        duk_dup(ctx, 1);
+
+        std::string key = duk_safe_to_std_string(ctx, -1);
+
+        duk_pop(ctx);
+
+        proxy_chain += "." + key;
+    }
+
+    if(secret_host != get_script_host(ctx))
+    {
+        push_error(ctx, "This almost certainly isn't what you want to happen");
+        return 1;
+    }
+
+    {
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+        mongo_ctx.change_collection(secret_host);
+
+        {
+            std::lock_guard guard(mongo_ctx->backend.get_lock_for());
+
+            std::vector<nlohmann::json>& direct_data = mongo_ctx->backend.get_db_data_nolock_import();
+
+            delete_from_request(mongo_ctx->backend, direct_data, proxy_chain);
+        }
+    }
 
     return 0;
 }
@@ -656,7 +713,7 @@ duk_int_t db_get(duk_context* ctx)
             duk_push_c_function(ctx, db_set<false>, 1);
 
         if(key == "$delete")
-            duk_push_c_function(ctx, db_delete, 0);
+            duk_push_c_function(ctx, db_delete<false>, 0);
 
         duk_push_string(ctx, proxy_chain.c_str());
         duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
