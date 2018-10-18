@@ -520,10 +520,8 @@ void delete_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& j
 
         std::string last_key = object_stack.back();
 
-        parent_js.erase(last_key);
-
         ///$db[index].hello.$delete();
-        //parent.get().erase(parent.get().find(last_js.get()));
+        parent_js.erase(last_key);
 
         if(has_cid)
         {
