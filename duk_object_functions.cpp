@@ -521,7 +521,20 @@ void delete_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& j
         std::string last_key = object_stack.back();
 
         ///$db[index].hello.$delete();
-        parent_js.erase(last_key);
+
+        if(!parent_js.is_array())
+        {
+            parent_js.erase(last_key);
+        }
+        else
+        {
+            if(!is_number(last_key))
+                throw std::runtime_error("Attempted to index array with string");
+
+            int idx = std::stoi(last_key);
+
+            parent_js.erase(idx);
+        }
 
         if(has_cid)
         {
