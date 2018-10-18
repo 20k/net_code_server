@@ -506,20 +506,6 @@ void delete_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& j
         ///parent is null
         if(&last_js.get() == &js[collection_root])
         {
-            /*size_t cid = js[collection_root].at(CID_STRING);
-
-            js[collection_root][CID_STRING] = cid;
-
-            if(collection_root == (int)js.size() - 1)
-            {
-                js.pop_back();
-                ctx.disk_erase(js[collection_root]);
-            }
-            else
-            {
-                ctx.flush(js[collection_root]);
-            }*/
-
             ctx.disk_erase(js[collection_root]);
 
             js.erase(js.begin() + collection_root);
