@@ -308,9 +308,10 @@ nlohmann::json get_from_request(nlohmann::json in, const std::string& chain)
     return last_js.get();
 }
 
-std::pair<std::reference_wrapper<nlohmann::json>, int> get_last_js(std::vector<nlohmann::json>& js, const std::string& chain, nlohmann::json& dummy)
+std::tuple<std::reference_wrapper<nlohmann::json>, std::reference_wrapper<nlohmann::json>, int> get_last_js(std::vector<nlohmann::json>& js, const std::string& chain, nlohmann::json& dummy)
 {
     std::reference_wrapper<nlohmann::json> last_js = dummy;
+    std::reference_wrapper<nlohmann::json> parent = dummy;
     int collection_root = -1;
 
     std::vector<std::string> object_stack = normalise_object_stack(chain);
@@ -376,18 +377,20 @@ std::pair<std::reference_wrapper<nlohmann::json>, int> get_last_js(std::vector<n
                     throw std::runtime_error("Error converting key \"" + key + "\" to integer for array lookup");
                 }
 
+                parent = last_js.get();
                 last_js = last_js.get()[val];
             }
             else
             {
                 last_js.get()[key];
 
+                parent = last_js.get();
                 last_js = last_js.get()[key];
             }
         }
     }
 
-    return {last_js, collection_root};
+    return {last_js, parent, collection_root};
 }
 
 ///the reason why this is a vector is implementation details unfortunately
@@ -397,7 +400,7 @@ void set_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& js, 
 
     nlohmann::json dummy;
 
-    auto [last_js, collection_root] = get_last_js(js, chain, dummy);
+    auto [last_js, parent, collection_root] = get_last_js(js, chain, dummy);
 
     if(object_stack.size() == 0)
     {
@@ -456,6 +459,69 @@ void set_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& js, 
         }
 
         last_js.get() = to_set;
+
+        if(has_cid)
+        {
+            js[collection_root][CID_STRING] = old_cid;
+        }
+
+        ctx.flush(js[collection_root]);
+    }
+}
+
+///the reason why this is a vector is implementation details unfortunately
+void delete_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& js, const std::string& chain)
+{
+    std::vector<std::string> object_stack = normalise_object_stack(chain);
+
+    nlohmann::json dummy;
+
+    auto [last_js, parent, collection_root] = get_last_js(js, chain, dummy);
+
+    ///$db.$delete();
+    if(object_stack.size() == 0)
+    {
+        for(auto& i : js)
+        {
+            ctx.disk_erase(i);
+        }
+
+        js.clear();
+    }
+    else
+    {
+        if(collection_root < 0 || collection_root >= (int)js.size())
+            throw std::runtime_error("Bad collection index " + std::to_string(collection_root));
+
+        size_t old_cid = -1;
+        bool has_cid = false;
+
+        if(js[collection_root].count(CID_STRING) > 0)
+        {
+            old_cid = js[collection_root].at(CID_STRING);
+            has_cid = true;
+        }
+
+        ///$db[1].$delete()
+        ///parent is null
+        if(&last_js.get() == &js[collection_root])
+        {
+            ctx.disk_erase(js[collection_root]);
+            js[collection_root].clear();
+
+            if(collection_root == (int)js.size() - 1)
+            {
+                js.pop_back();
+            }
+
+            return;
+        }
+
+        if(&parent.get() == &dummy)
+            throw std::runtime_error("Parent is dummy, should never happen");
+
+        ///$db[index].hello.$delete();
+        parent.get().erase(parent.get().find(last_js.get()));
 
         if(has_cid)
         {
