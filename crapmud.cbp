@@ -123,11 +123,17 @@
 				<Option type="1" />
 				<Option compiler="clang" />
 				<Compiler>
-					<Add option="-O3" />
-					<Add option="-march=nehalem" />
+					<Add option="-ftrapv" />
+					<Add option="-fsanitize=undefined-trap -fsanitize-undefined-trap-on-error" />
+					<Add option="-m64" />
+					<Add option="-g" />
+					<Add option="-std=c++17" />
 					<Add option="-DLOCAL_IP" />
 					<Add option="-DTESTING" />
 				</Compiler>
+				<Linker>
+					<Add option="-m64" />
+				</Linker>
 			</Target>
 			<Target title="RT_prof">
 				<Option output="bin/ReleaseTestProfile/crapmud" prefix_auto="1" extension_auto="1" />
