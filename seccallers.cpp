@@ -1232,12 +1232,6 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     //#ifdef TESTING
     if(seclevel <= 3)
     {
-        /*duk_push_global_object(ctx);
-        dukx_push_db_proxy(ctx);
-
-        duk_put_prop_string(ctx, -2, "$db");
-        duk_pop(ctx);*/
-
         dukx_setup_db_proxy(ctx);
     }
     //#endif // TESTING

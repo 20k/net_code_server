@@ -201,7 +201,10 @@ void set_chain(duk_context* ctx, const std::string& full, duk_idx_t idx)
     duk_put_prop_string(ctx, idx - 1, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
 }
 
-void dukx_push_db_proxy(duk_context* ctx);
+//void dukx_push_db_proxy(duk_context* ctx);
+
+void dukx_db_push_proxy_handlers(duk_context* ctx);
+void dukx_db_finish_proxy(duk_context* ctx);
 
 ///todo: multilevel, store current lookup chain as a hidden property
 ///ok. so db_get basically checks if the result is a primitive
@@ -545,18 +548,11 @@ void delete_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& j
     }
 }
 
-///this is all wrong but on the plus side itll work just fine with the planned implementation everything is resolved
-///db.hi is doing hi:{$exists : true}, but its finding objects which contain a key hi
-///instead, db.hi should find everything in the db, and then get the key hi, which in the case of an array of objects would give error
-///correctly, it'd be db[0].hi
 duk_int_t db_fetch(duk_context* ctx)
 {
     duk_push_current_function(ctx);
 
     std::string proxy_chain = get_chain_of(ctx, -1);
-
-    std::vector<nlohmann::json> found;
-
     std::string secret_host = get_original_host(ctx, -1);
 
     if(secret_host != get_script_host(ctx))
@@ -564,6 +560,8 @@ duk_int_t db_fetch(duk_context* ctx)
         push_error(ctx, "This almost certainly isn't what you want to happen");
         return 1;
     }
+
+    std::vector<nlohmann::json> found;
 
     {
         mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
@@ -594,14 +592,15 @@ duk_int_t db_set(duk_context* ctx)
 {
     if(!is_proxy)
         duk_push_current_function(ctx);
+    else
+        duk_push_this(ctx);
 
     std::vector<nlohmann::json> found;
 
-    std::string proxy_chain = get_chain_of(ctx, is_proxy ? 3 : -1);
-    std::string secret_host = get_original_host(ctx, is_proxy ? 3 : -1);
+    std::string proxy_chain = get_chain_of(ctx, -1);
+    std::string secret_host = get_original_host(ctx, -1);
 
-    if(!is_proxy)
-        duk_pop(ctx);
+    duk_pop(ctx);
 
     nlohmann::json to_set_value = dukx_get_as_json(ctx, is_proxy ? 2 : -1);
 
@@ -644,14 +643,15 @@ duk_int_t db_delete(duk_context* ctx)
 {
     if(!is_proxy)
         duk_push_current_function(ctx);
+    else
+        duk_push_this(ctx);
 
     std::vector<nlohmann::json> found;
 
-    std::string proxy_chain = get_chain_of(ctx, is_proxy ? 3 : -1);
-    std::string secret_host = get_original_host(ctx, is_proxy ? 3 : -1);
+    std::string proxy_chain = get_chain_of(ctx, -1);
+    std::string secret_host = get_original_host(ctx, -1);
 
-    if(!is_proxy)
-        duk_pop(ctx);
+    duk_pop(ctx);
 
     if(is_proxy)
     {
@@ -696,8 +696,12 @@ duk_int_t db_get(duk_context* ctx)
 
     duk_pop(ctx);
 
-    std::string proxy_chain = get_chain_of(ctx, 2);
-    std::string secret_host = get_original_host(ctx, 2);
+    duk_push_this(ctx);
+
+    std::string proxy_chain = get_chain_of(ctx, -1);
+    std::string secret_host = get_original_host(ctx, -1);
+
+    duk_pop(ctx);
 
     ///make it so that fetch also returns the proxy, but if we call that result itll do the fetch function?
     ///need to implement $delete
@@ -723,9 +727,16 @@ duk_int_t db_get(duk_context* ctx)
     }
     else
     {
-        dukx_push_db_proxy(ctx);
+        //dukx_push_db_proxy(ctx);
+
+        dukx_db_push_proxy_handlers(ctx);
 
         set_chain(ctx, proxy_chain + "." + key, -1);
+
+        duk_push_string(ctx, secret_host.c_str());
+        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
+
+        dukx_db_finish_proxy(ctx);
     }
 
     return 1;
@@ -733,8 +744,21 @@ duk_int_t db_get(duk_context* ctx)
 
 duk_int_t db_getter_get(duk_context* ctx)
 {
-    dukx_push_db_proxy(ctx);
+    duk_push_current_function(ctx);
+
+    std::string secret_host = get_original_host(ctx, -1);
+
+    duk_pop(ctx);
+
+    //dukx_push_db_proxy(ctx);
+    dukx_db_push_proxy_handlers(ctx);
+
     set_chain(ctx, "", -1);
+
+    duk_push_string(ctx, secret_host.c_str());
+    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
+
+    dukx_db_finish_proxy(ctx);
 
     return 1;
 }
@@ -748,6 +772,8 @@ void dukx_setup_db_proxy(duk_context* ctx)
     duk_push_string(ctx, "$db");
 
     duk_push_c_function(ctx, db_getter_get, 0);
+    duk_push_string(ctx, host.c_str());
+    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
 
     duk_push_c_function(ctx, db_set<false>, 1);
     duk_push_string(ctx, host.c_str());
@@ -760,9 +786,11 @@ void dukx_setup_db_proxy(duk_context* ctx)
     duk_pop(ctx);
 }
 
+#if 0
 void dukx_push_db_proxy(duk_context* ctx)
 {
-    duk_push_object(ctx);
+    //duk_push_object(ctx);
+    duk_push_c_function(ctx, dukx_dummy, 0);
     duk_push_object(ctx);
 
     ///https://github.com/svaarala/duktape-wiki/blob/master/PostEs5Features.md#proxy-handlers-traps
@@ -778,10 +806,10 @@ void dukx_push_db_proxy(duk_context* ctx)
                                         //dukx_proxy_define_property, 3, "defineProperty",
                                         //dukx_proxy_has, 2, "has",
                                         db_get, 3, "get",
-                                        db_set<true>, 4, "set"
+                                        db_set<true>, 4, "set",
                                         //dukx_proxy_delete_property, 2, "deleteProperty",
                                         //dukx_proxy_own_keys, 1, "ownKeys",
-                                        //dukx_proxy_apply, 3, "apply",
+                                        db_apply, 3, "apply"
                                         //dukx_proxy_construct, 2, "construct");
                                         );
 
@@ -789,6 +817,39 @@ void dukx_push_db_proxy(duk_context* ctx)
 
     duk_push_string(ctx, get_script_host(ctx).c_str());
     duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
+}
+#endif // 0
+
+void dukx_db_push_proxy_handlers(duk_context* ctx)
+{
+    duk_push_c_function(ctx, dukx_dummy, 0);
+    duk_push_object(ctx);
+}
+
+void dukx_db_finish_proxy(duk_context* ctx)
+{
+    duk_require_stack(ctx, 16);
+
+    dukx_push_proxy_functions_nhide(ctx, -1,
+                                        //dukx_proxy_get_prototype_of, 1, "getPrototypeOf",
+                                        //dukx_proxy_set_prototype_of, 2, "setPrototypeOf",
+                                        //dukx_proxy_is_extensible, 1, "isExtensible",
+                                        //dukx_proxy_prevent_extension, 1, "preventExtension",
+                                        //dukx_proxy_get_own_property, 2, "getOwnPropertyDescriptor",
+                                        //dukx_proxy_define_property, 3, "defineProperty",
+                                        //dukx_proxy_has, 2, "has",
+                                        db_get, 3, "get",
+                                        db_set<true>, 4, "set",
+                                        //dukx_proxy_delete_property, 2, "deleteProperty",
+                                        //dukx_proxy_own_keys, 1, "ownKeys",
+                                        db_get, 3, "apply"
+                                        //dukx_proxy_construct, 2, "construct");
+                                        );
+
+    duk_push_proxy(ctx, 0);
+
+    //duk_push_string(ctx, get_script_host(ctx).c_str());
+    //duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
 }
 
 void dukx_set_setter(duk_context* ctx, duk_idx_t idx, const std::string& prop, duk_c_function func)
