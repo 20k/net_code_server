@@ -570,6 +570,11 @@ duk_int_t db_fetch(duk_context* ctx)
         found = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
     }
 
+    /*for(auto& i : found)
+    {
+        std::cout << i << std::endl;
+    }*/
+
     if(found.size() == 0)
     {
         duk_push_undefined(ctx);
@@ -705,9 +710,9 @@ duk_int_t db_get(duk_context* ctx)
 
     ///make it so that fetch also returns the proxy, but if we call that result itll do the fetch function?
     ///need to implement $delete
-    if(key == "$fetch" || key == "$set" || key == "$delete")
+    if(key == "$fetch" || key == "$" || key == "$set" || key == "$delete")
     {
-        if(key == "$fetch")
+        if(key == "$fetch" || key == "$")
             duk_push_c_function(ctx, db_fetch, 0);
 
         if(key == "$set")
@@ -739,6 +744,29 @@ duk_int_t db_get(duk_context* ctx)
         dukx_db_finish_proxy(ctx);
     }
 
+    return 1;
+}
+
+duk_int_t db_apply(duk_context* ctx)
+{
+    duk_push_this(ctx);
+
+    std::string proxy_chain = get_chain_of(ctx, -1);
+    std::string secret_host = get_original_host(ctx, -1);
+
+    duk_pop(ctx);
+
+    duk_push_c_function(ctx, db_fetch, 0);
+
+    duk_push_string(ctx, proxy_chain.c_str());
+    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
+
+    duk_push_string(ctx, secret_host.c_str());
+    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
+
+    std::cout << "doing fetch on chain " << proxy_chain << std::endl;
+
+    duk_pcall(ctx, 0);
     return 1;
 }
 
@@ -842,7 +870,7 @@ void dukx_db_finish_proxy(duk_context* ctx)
                                         db_set<true>, 4, "set",
                                         //dukx_proxy_delete_property, 2, "deleteProperty",
                                         //dukx_proxy_own_keys, 1, "ownKeys",
-                                        db_get, 3, "apply"
+                                        db_apply, 3, "apply"
                                         //dukx_proxy_construct, 2, "construct");
                                         );
 
