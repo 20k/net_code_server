@@ -584,7 +584,7 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
     duk_push_string(new_ctx, wrapper.c_str());
     duk_push_string(new_ctx, "test-name");
 
-    duk_int_t mode = DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT;
+    duk_int_t mode = DUK_COMPILE_FUNCTION;
 
     if(is_top_level)
         mode = DUK_COMPILE_EVAL;

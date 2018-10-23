@@ -29,7 +29,7 @@ std::string attach_unparsed_wrapper(std::string str)
 
 bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out)
 {
-    std::string prologue = "function INTERNAL_TEST(context, args)\n{'use strict'\nvar IVAR = ";
+    std::string prologue = "function INTERNAL_TEST(context, args)\n{\nvar IVAR = ";
     std::string endlogue = "\n\nreturn IVAR(context, args);\n\n}\n";
 
     std::string wrapper = prologue + function_wrap(script.parsed_source) + endlogue;
@@ -70,7 +70,7 @@ bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out
 
 std::string attach_wrapper(const std::string& data_in, bool stringify, bool direct)
 {
-    std::string prologue = "function INTERNAL_TEST(context, args)\n{'use strict'\nvar IVAR = ";
+    std::string prologue = "function INTERNAL_TEST(context, args)\n{\nvar IVAR = ";
     std::string endlogue = "\n\nreturn IVAR(context, args);\n\n}\n";
 
     if(stringify)
