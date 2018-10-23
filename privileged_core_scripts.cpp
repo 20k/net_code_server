@@ -6637,7 +6637,7 @@ duk_ret_t mission__list(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         if(all_quests.size() == 0)
         {
-            str = "No Quests";
+            str = "No Missions";
         }
 
         push_duk_val(ctx, str);
