@@ -316,6 +316,14 @@ mongo_context::mongo_context(mongo_database_type type)
         {mongo_database_type::EVENT_MANAGER, "EVENT_MANAGER"},
     };
 
+    std::map<mongo_database_type, bool> is_fixed_map
+    {
+        {mongo_database_type::SCHEDULED_TASK, true},
+        {mongo_database_type::LOW_LEVEL_STRUCTURE, true},
+        {mongo_database_type::QUEST_MANAGER, true},
+        {mongo_database_type::EVENT_MANAGER, false},
+    };
+
     for(auto& i : procedural_dbs)
     {
         if(i.first == type)
@@ -325,10 +333,22 @@ mongo_context::mongo_context(mongo_database_type type)
             std::string turi = "mongodb://20k_admin:james20kcaterpillarmongofun@localhost:27017/?authSource=admin";
 
             db = i.second;
-            default_collection = "all_" + i.second;
-            is_fixed = true;
 
-            std::cout << "curi " << uri_str << std::endl;
+            if(is_fixed_map[i.first])
+            {
+                default_collection = "all_" + i.second;
+                is_fixed = true;
+
+                std::cout << "curi " << uri_str << std::endl;
+            }
+            else
+            {
+                #ifdef USE_MONGO
+                static_assert(false, "Not implemented in mongodb");
+                #endif // USE_MONGO
+
+                continue;
+            }
 
             #ifdef USE_MONGO
             #ifndef TESTING

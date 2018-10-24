@@ -25,11 +25,12 @@ namespace event
     static inline std::mutex in_memory_lock;
     static inline std::map<std::string, std::map<std::string, bool>> in_memory_map;
 
-    template<typename T>
-    void exec_once_ever(const std::string& user_name, const std::string& unique_event_tag, const T& func)
+    inline
+    bool was_executed(const std::string& user_name, const std::string& unique_event_tag)
     {
         {
             mongo_nolock_proxy ctx = get_global_mongo_event_manager_context(-2);
+            ctx.change_collection(user_name);
 
             nlohmann::json req;
             req["user_name"] = user_name;
@@ -39,17 +40,31 @@ namespace event
             auto found = ctx->find_json_new(req, nlohmann::json());
 
             if(found.size() > 0)
-                return;
+                return true;
         }
+
+        {
+            std::lock_guard guard(in_memory_lock);
+
+            if(in_memory_map[user_name][unique_event_tag])
+                return true;
+        }
+
+        return false;
+    }
+
+    template<typename T>
+    inline
+    bool exec_once_ever(const std::string& user_name, const std::string& unique_event_tag, const T& func)
+    {
+        if(was_executed(user_name, unique_event_tag))
+            return false;
 
         ///the reason why this is here is so that we check whether or not the function has executed
         ///any times before. But the persisting of this information to disk is only done *after* func is executed
         ///so that if the server crashes during the execution of func, the player isn't unfairly penalised or misses information
         {
             std::lock_guard guard(in_memory_lock);
-
-            if(in_memory_map[user_name][unique_event_tag])
-                return;
 
             in_memory_map[user_name][unique_event_tag] = true;
         }
@@ -58,6 +73,7 @@ namespace event
 
         {
             mongo_nolock_proxy ctx = get_global_mongo_event_manager_context(-2);
+            ctx.change_collection(user_name);
 
             event_impl evt;
             evt.user_name = user_name;
@@ -67,6 +83,8 @@ namespace event
 
             evt.overwrite_in_db(ctx);
         }
+
+        return true;
     }
 }
 
