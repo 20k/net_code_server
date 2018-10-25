@@ -233,9 +233,10 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl);
 
+duk_ret_t mission__list(priv_context& priv_ctx, duk_context* ctx, int sl);
+
 #ifdef TESTING
 duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t mission__list(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t mission__debug(priv_context& priv_ctx, duk_context* ctx, int sl);
 #endif // TESTING
 
