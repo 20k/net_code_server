@@ -185,21 +185,21 @@ std::string quest::get_as_string()
 
             ret += colour_string(title) + ": " +
             to_string_with_enforced_variable_dp(current_amount, 2) + "/" +
-            to_string_with_enforced_variable_dp(max_amount, 2) + " to " + usr;
+            to_string_with_enforced_variable_dp(max_amount, 2) + " to " + colour_string(usr);
         }
 
         if(type.first == quest_type::type::HACK_USER)
         {
             std::string usr = type.second["user"];
 
-            ret += colour_string(title) + ": " + usr;
+            ret += colour_string(title) + ": " + colour_string(usr);
         }
 
         if(type.first == quest_type::type::BREACH_USER)
         {
             std::string usr = type.second["user"];
 
-            ret += colour_string(title) + ": " + usr;
+            ret += colour_string(title) + ": " + colour_string(usr);
         }
 
         if(type.first == quest_type::type::RUN_SCRIPT)
