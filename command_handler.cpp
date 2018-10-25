@@ -24,6 +24,7 @@
 #include "safe_thread.hpp"
 #include "mongo.hpp"
 #include "quest_manager.hpp"
+#include <secret/tutorial.hpp>
 
 struct unsafe_info
 {
@@ -1040,6 +1041,8 @@ void on_create_user(const std::string& usr)
     }*/
 
     user_first_time_network_setup(get_global_playspace_network_manager(), usr);
+
+    tutorial_first_time_dialogue(usr);
 
     /*{
         mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);

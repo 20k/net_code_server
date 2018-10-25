@@ -1093,7 +1093,7 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         if(channel != "local")
         {
-            mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+            mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
             users = get_users_in_channel(mongo_ctx, channel);
         }
         else
@@ -1139,7 +1139,7 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         ///TODO: LIMIT
         for(auto& current_user : users)
         {
-            mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
+            mongo_nolock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
             mongo_ctx.change_collection(current_user);
 
             size_t real_time = get_wall_time();

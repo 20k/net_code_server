@@ -81,6 +81,7 @@ size_t get_wall_time();
 double get_wall_time_s();
 
 bool user_in_channel(mongo_lock_proxy& mongo_ctx, const std::string& username, const std::string& channel);
+std::vector<std::string> get_users_in_channel(mongo_lock_proxy& mongo_ctx, const std::string& channel);
 
 bool is_valid_channel_name(const std::string& in);
 
