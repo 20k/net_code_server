@@ -361,11 +361,11 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(sys__move, 0),
     REGISTER_FUNCTION_PRIV(sys__access, 0),
     REGISTER_FUNCTION_PRIV(sys__limits, 2),
-    #ifdef TESTING
     REGISTER_FUNCTION_PRIV(ada__access, 4),
     REGISTER_FUNCTION_PRIV(able__help, 4),
-    REGISTER_FUNCTION_PRIV(sys__debug, 1),
     REGISTER_FUNCTION_PRIV(mission__list, 1),
+    #ifdef TESTING
+    REGISTER_FUNCTION_PRIV(sys__debug, 1),
     REGISTER_FUNCTION_PRIV(mission__debug, 1),
     #endif // TESTING
     #ifdef LIVE_DEBUGGING
