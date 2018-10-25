@@ -1479,7 +1479,7 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
     lg::log(str);
 
-    if(strip_whitespace(str) == "help" || strip_whitespace(str) == "#help")
+    if(strip_whitespace(tolower_str(str)) == "help" || strip_whitespace(tolower_str(str)) == "#help")
     {
         return "Lost? Run #ada.access() to get started";
     }
