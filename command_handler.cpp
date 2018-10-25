@@ -1479,7 +1479,11 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
     lg::log(str);
 
-    if(starts_with(str, "user "))
+    if(strip_whitespace(str) == "help" || strip_whitespace(str) == "#help")
+    {
+        return "Lost? Run #ada.access() to get started";
+    }
+    else if(starts_with(str, "user "))
     {
         if(all_shared->state.get_auth() == "")
             return make_error_col("Please create account with \"register client\"");
