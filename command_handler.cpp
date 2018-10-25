@@ -1165,6 +1165,14 @@ void delete_quests_for(const std::string& name)
     }
 }
 
+void delete_events_for(const std::string& name)
+{
+    mongo_lock_proxy ctx = get_global_mongo_event_manager_context(-2);
+    ctx.change_collection(name);
+
+    ctx->remove_json_many_new(nlohmann::json({}));
+}
+
 ///ok
 ///things this function needs to do
 ///preserve items
@@ -1178,6 +1186,7 @@ void delete_quests_for(const std::string& name)
 ///NOT UPDATED FOR SYSTEM STUFF
 
 ///not updated for quest stuff
+///not updated for event stuff
 std::string rename_user_force(const std::string& from_name, const std::string& to_name)
 {
     user usr;
@@ -1435,6 +1444,8 @@ std::string delete_user(command_handler_state& state, const std::string& str, bo
     delete_structure_for(name);
 
     delete_quests_for(name);
+
+    delete_events_for(name);
 
     return "Deleted";
 }
