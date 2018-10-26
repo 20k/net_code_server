@@ -124,6 +124,32 @@ bool matches(const nlohmann::json& data, const nlohmann::json& match)
 
                 continue;
             }
+
+            if(val.count("$lt") > 0)
+            {
+                const nlohmann::json& lt_val = val.at("$lt");
+
+                if(data.count(key) == 0)
+                    return false;
+
+                if(data.at(key) >= lt_val)
+                    return false;
+
+                continue;
+            }
+
+            if(val.count("$gt") > 0)
+            {
+                const nlohmann::json& gt_val = val.at("$gt");
+
+                if(data.count(key) == 0)
+                    return false;
+
+                if(data.at(key) <= gt_val)
+                    return false;
+
+                continue;
+            }
         }
 
         if(data.count(key) == 0)

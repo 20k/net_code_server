@@ -714,13 +714,13 @@ int main()
                         }
                      });*/
 
-    /*for_each_user([](user& u1)
+    for_each_user([](user& u1)
                   {
                         mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
                         ctx.change_collection(u1.get_call_stack().back());
 
                         strip_old_msg_or_notif(ctx);
-                  });*/
+                  });
     #endif // TESTING
 
     //#ifndef TESTING

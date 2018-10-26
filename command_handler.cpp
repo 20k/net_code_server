@@ -1925,8 +1925,12 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
 
 void strip_old_msg_or_notif(mongo_lock_proxy& ctx)
 {
+    #if 0
+    nlohmann::json exists;
+    exists["$exists"] = true;
+
     nlohmann::json to_fetch;
-    to_fetch["processed"] = 1;
+    to_fetch["processed"] = exists;
 
     auto all = fetch_from_db(ctx, to_fetch);
 
@@ -1949,10 +1953,25 @@ void strip_old_msg_or_notif(mongo_lock_proxy& ctx)
 
         if(get_wall_time() >= found_time + thirty_days)
         {
+            //printf("removing from db\n");
+
             req["processed"] = 1;
             remove_all_from_db(ctx, req);
         }
     }
+    #endif // 0
+
+    size_t thirty_days = 1000ull * 60ull * 60ull * 24ull * 30ull;
+
+    size_t delete_older_than = get_wall_time() - thirty_days;
+
+    nlohmann::json lt_than;
+    lt_than["$lt"] = delete_older_than;
+
+    nlohmann::json to_delete;
+    to_delete["time_ms"] = lt_than;
+
+    remove_all_from_db(ctx, to_delete);
 }
 
 std::vector<nlohmann::json> get_and_update_chat_msgs_for_user(user& usr)
