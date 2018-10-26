@@ -764,7 +764,7 @@ duk_int_t db_apply(duk_context* ctx)
     duk_push_string(ctx, secret_host.c_str());
     duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
 
-    std::cout << "doing fetch on chain " << proxy_chain << std::endl;
+    //std::cout << "doing fetch on chain " << proxy_chain << std::endl;
 
     duk_pcall(ctx, 0);
     return 1;

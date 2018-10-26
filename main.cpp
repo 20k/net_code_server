@@ -622,7 +622,7 @@ int main()
 
     ///fix db screwup
     #ifndef TESTING
-    for_each_npc([](npc_user& npc)
+    /*for_each_npc([](npc_user& npc)
                      {
                         npc_prop_list props;
 
@@ -662,7 +662,7 @@ int main()
 
                             props.overwrite_in_db(ctx);
                         }
-                     });
+                     });*/
 
     for_each_user([](user& u1)
                   {
