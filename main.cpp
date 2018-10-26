@@ -219,9 +219,43 @@ void tickle_cache()
     });
 }
 
+void termination_func()
+{
+    //if(std::uncaught_exceptions() > 0)
+
+    if(std::current_exception())
+    {
+        try
+        {
+            if(std::current_exception())
+            {
+                std::rethrow_exception(std::current_exception());
+            }
+        }
+        catch(const std::exception& e)
+        {
+            std::cout << "Caught exception \"" << e.what() << "\"\n";
+        }
+    }
+    else
+        std::cout << "unexpected terminate\n";
+
+    std::cout << get_stacktrace() << std::endl;
+
+    while(1){}
+}
+
+void handle_terminate()
+{
+    std::set_terminate(termination_func);
+    std::set_unexpected(termination_func);
+}
+
 ///making sure this ends up in the right repo
 int main()
 {
+    handle_terminate();
+
     startup_tls_state();
 
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
@@ -664,13 +698,13 @@ int main()
                         }
                      });*/
 
-    for_each_user([](user& u1)
+    /*for_each_user([](user& u1)
                   {
                         mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
                         ctx.change_collection(u1.get_call_stack().back());
 
                         strip_old_msg_or_notif(ctx);
-                  });
+                  });*/
     #endif // TESTING
 
     //#ifndef TESTING
