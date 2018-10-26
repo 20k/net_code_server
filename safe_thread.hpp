@@ -11,7 +11,7 @@ struct sthread
     std::thread thrd;
 
     template<typename T, typename... U>
-    sthread(T&& t, U&&... u) : thrd([&]()
+    sthread(T&& t, U&&... u) : thrd([](auto t, auto... u)
                                     {
                                         stack_on_start();
 
@@ -22,7 +22,7 @@ struct sthread
                                         {
                                             std::cout << "caught termination exception from thread" << std::endl;
                                         }
-                                    })
+                                    }, std::forward<T>(t), std::forward<U>(u)...)
     {
 
     }
