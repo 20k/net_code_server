@@ -42,7 +42,7 @@ bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out
     std::cout << wrapper << std::endl;
     #endif // DEBUG_REAL
 
-    if(duk_pcompile(ctx, DUK_COMPILE_FUNCTION | DUK_COMPILE_STRICT) != 0)
+    if(duk_pcompile(ctx, DUK_COMPILE_FUNCTION) != 0)
     {
         std::string ret = duk_safe_to_string(ctx, -1);
 
