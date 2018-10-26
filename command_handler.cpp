@@ -109,7 +109,7 @@ namespace script_management_mode
     };
 }
 
-void sleep_thread_for(std::thread& t, int sleep_ms)
+void sleep_thread_for(sthread& t, int sleep_ms)
 {
     pthread_t thread = t.native_handle();
     void* native_handle = pthread_gethandle(thread);
@@ -729,7 +729,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                         catch(...){}
                     }
 
-                    std::thread thrd = std::thread(async_realtime_script_handler, ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf->ret),
+                    sthread thrd = sthread(async_realtime_script_handler, ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf->ret),
                                                    std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate),
                                                    std::ref(avg_exec_time));
 
@@ -938,7 +938,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
 void throwaway_user_thread(const std::string& username, const std::string& command, std::optional<float> custom_exec_time_s, bool force_exec)
 {
-    std::thread(run_in_user_context, username, command, std::nullopt, custom_exec_time_s, force_exec).detach();
+    sthread(run_in_user_context, username, command, std::nullopt, custom_exec_time_s, force_exec).detach();
 }
 
 std::string binary_to_hex(const std::string& in, bool swap_endianness)
@@ -2522,7 +2522,7 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
 
 void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str)
 {
-    std::thread([=]()
+    sthread([=]()
                 {
                     std::string result = handle_command(all_shared, str);
 

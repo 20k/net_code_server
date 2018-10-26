@@ -7,6 +7,7 @@
 #include <libncclient/nc_util.hpp>
 #include <json/json.hpp>
 #include "shared_command_handler_state.hpp"
+#include "safe_thread.hpp"
 
 //
 // Copyright (c) 2016-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
@@ -547,7 +548,7 @@ void session_wrapper(tcp::socket&& socket,
             int id = glob.global_id++;
 
             // Launch the session, transferring ownership of the socket
-            std::thread(
+            sthread(
                 session_wrapper,
                 std::move(socket),
                 doc_root,
@@ -588,7 +589,7 @@ void websocket_test_server()
             int id = glob.global_id++;
 
             // Launch the session, transferring ownership of the socket
-            std::thread(
+            sthread(
                 session_wrapper,
                 std::move(socket),
                 doc_root,
@@ -635,7 +636,7 @@ void websocket_ssl_test_server(int in_port)
             int id = glob.global_id++;
 
             // Launch the session, transferring ownership of the socket
-            std::thread(
+            sthread(
                 session_wrapper,
                 std::move(socket),
                 doc_root,
@@ -652,19 +653,19 @@ void websocket_ssl_test_server(int in_port)
 
 void boot_connection_handlers()
 {
-    //std::thread{std::bind(&http_test_server, &req)}.detach();
+    //sthread{std::bind(&http_test_server, &req)}.detach();
 
     start_non_user_task_thread();
 
-    //std::thread(http_test_server).detach();
-    //std::thread(websocket_test_server).detach();
+    //sthread(http_test_server).detach();
+    //sthread(websocket_test_server).detach();
 
-    std::thread(websocket_test_server).detach();
-    std::thread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT).detach();
-    std::thread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT_2).detach();
+    sthread(websocket_test_server).detach();
+    sthread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT).detach();
+    sthread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT_2).detach();
 
     /*#ifdef TESTING
-    std::thread(websocket_ssl_test_server, 30000).detach();
+    sthread(websocket_ssl_test_server, 30000).detach();
     #endif // TESTING*/
 
     //http_test_server();

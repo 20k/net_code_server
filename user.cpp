@@ -8,6 +8,7 @@
 #include <secret/low_level_structure.hpp>
 #include "logging.hpp"
 #include "command_handler.hpp"
+#include "safe_thread.hpp"
 
 using global_user_cache = global_generic_cache<user>;
 
@@ -1163,7 +1164,7 @@ void event_pumper()
 
 void user::launch_pump_events_thread()
 {
-    std::thread(event_pumper).detach();
+    sthread(event_pumper).detach();
 }
 
 void user::fix_auth_problem()

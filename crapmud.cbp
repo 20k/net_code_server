@@ -178,7 +178,6 @@
 			<Add option="-lole32" />
 			<Add option="-lboost_filesystem-mt" />
 			<Add option="-ldbgeng" />
-			<Add option="-lboost_stacktrace_windbg-mt" />
 			<Add option="-lcrypto" />
 			<Add option="-lssl" />
 			<Add option="-lbacktrace" />

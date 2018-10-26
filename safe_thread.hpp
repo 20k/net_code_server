@@ -3,6 +3,8 @@
 
 #include <thread>
 #include <type_traits>
+#include "stacktrace.hpp"
+#include <thread>
 
 struct sthread
 {
@@ -11,12 +13,14 @@ struct sthread
     template<typename T, typename... U>
     sthread(T&& t, U&&... u) : thrd([&]()
                                     {
+                                        stack_on_start();
+
                                         try{
                                             t(std::forward<U>(u)...);
                                         }
                                         catch(...)
                                         {
-
+                                            std::cout << "caught termination exception from thread" << std::endl;
                                         }
                                     })
     {
@@ -40,7 +44,9 @@ struct sthread
 
     static void this_yield()
     {
-        Sleep(0);
+        //Sleep(0);
+
+        sf::sleep(sf::milliseconds(0));
 
         #ifndef __WIN32__
         #error("doesn't work on linux");
@@ -52,7 +58,7 @@ struct sthread
         std::this_thread::yield();
     }
 
-    static void increase_priority()
+    /*static void increase_priority()
     {
         SetThreadPriority(pthread_gethandle(pthread_self()), THREAD_PRIORITY_HIGHEST);
     }
@@ -76,7 +82,7 @@ struct sthread
         void* native_handle = pthread_gethandle(thread);
 
         SetThreadPriority(native_handle, THREAD_PRIORITY_NORMAL);
-    }
+    }*/
 };
 
 

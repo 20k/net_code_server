@@ -5,12 +5,34 @@
 #include <boost/filesystem.hpp>
 #include <iostream>
 #include <sstream>
+#include <windows.h>
+
+void signal_handler(int signum)
+{
+    ::signal(signum, SIG_DFL);
+    //boost::stacktrace::safe_dump_to("./backtrace.dump");
+
+    std::string stacktrace = get_stacktrace();
+
+    printf("stacktrace %s\n", stacktrace.c_str());
+
+    FILE* pFile = fopen("crash.txt", "w");
+
+    fwrite(stacktrace.c_str(), 1, stacktrace.size(), pFile);
+
+    fclose(pFile);
+
+    system("pause");
+
+    ::raise(SIGABRT);
+}
 
 void stack_on_start()
 {
+    //CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+
     ::signal(SIGSEGV, &signal_handler);
     ::signal(SIGABRT, &signal_handler);
-
 
     if (boost::filesystem::exists("./backtrace.dump"))
     {
@@ -27,13 +49,6 @@ void stack_on_start()
 
         rename("./backtrace.dump", "./backtrace_1.dump");
     }
-}
-
-void signal_handler(int signum)
-{
-    ::signal(signum, SIG_DFL);
-    boost::stacktrace::safe_dump_to("./backtrace.dump");
-    ::raise(SIGABRT);
 }
 
 std::string get_stacktrace()

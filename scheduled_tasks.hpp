@@ -9,6 +9,7 @@
 #include <thread>
 #include <json/json.hpp>
 #include "db_interfaceable.hpp"
+#include "safe_thread.hpp"
 
 struct scheduled_tasks;
 
@@ -90,29 +91,29 @@ struct scheduled_tasks
             counter++;
         }
 
-        std::thread(task_thread, std::ref(*this)).detach();
+        sthread(task_thread, std::ref(*this)).detach();
     }
 
     void handle_callback(task_data_db& d)
     {
         if(d.type == task_type::ON_RELINK)
         {
-             std::thread(on_finish_relink, d.count_offset, (std::vector<std::string>)d.udata).detach();
+             sthread(on_finish_relink, d.count_offset, (std::vector<std::string>)d.udata).detach();
         }
 
         if(d.type == task_type::ON_DISCONNECT)
         {
-             std::thread(on_disconnect_link, d.count_offset, (std::vector<std::string>)d.udata).detach();
+             sthread(on_disconnect_link, d.count_offset, (std::vector<std::string>)d.udata).detach();
         }
 
         if(d.type == task_type::ON_HEAL_NETWORK)
         {
-             std::thread(on_heal_network_link, d.count_offset, (std::vector<std::string>)d.udata).detach();
+             sthread(on_heal_network_link, d.count_offset, (std::vector<std::string>)d.udata).detach();
         }
 
         if(d.type == task_type::ON_FORCE_DISCONNECT)
         {
-             std::thread(on_force_disconnect_link, d.count_offset, (std::vector<std::string>)d.udata).detach();
+             sthread(on_force_disconnect_link, d.count_offset, (std::vector<std::string>)d.udata).detach();
         }
 
         {

@@ -38,6 +38,7 @@
 #include <windows.h>
 #include "db_storage_backend.hpp"
 #include "auth.hpp"
+#include "safe_thread.hpp"
 
 void debug_terminal()
 {
@@ -223,6 +224,10 @@ void termination_func()
 {
     //if(std::uncaught_exceptions() > 0)
 
+    FILE* pFile = fopen("crash.txt", "w");
+
+    fclose(pFile);
+
     if(std::current_exception())
     {
         try
@@ -240,7 +245,10 @@ void termination_func()
     else
         std::cout << "unexpected terminate\n";
 
+    std::cout << "stacktracing\n";
+
     std::cout << get_stacktrace() << std::endl;
+    system("pause");
 
     while(1){}
 }
@@ -258,11 +266,19 @@ int main()
 
     startup_tls_state();
 
-    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-
     std::cout << std::hash<std::string>{}("aaaaaaaa") << std::endl;
 
     stack_on_start();
+
+    /*sthread([]()
+                {
+                    //Sleep(5000);
+                    raise(SIGSEGV);
+                }).detach();*/
+
+    //std::cout << "STACKTRACE " << get_stacktrace() << std::endl;
+
+    //raise(SIGSEGV);
 
     lg::set_logfile("./log.txt");
 

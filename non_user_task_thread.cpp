@@ -9,6 +9,7 @@
 #include "rate_limiting.hpp"
 #include "command_handler.hpp"
 #include <secret/npc_manager.hpp>
+#include "safe_thread.hpp"
 
 
 ///THESE ARE NOW INCORRECT DUE TO BAD AUTH USAGE
@@ -300,10 +301,10 @@ void run_non_user_tasks()
 
 void start_non_user_task_thread()
 {
-    std::thread(run_non_user_tasks).detach();
-    std::thread(bot_thread).detach();
+    sthread(run_non_user_tasks).detach();
+    sthread(bot_thread).detach();
     #ifdef ONE_TIME_MANHANDLE
-    std::thread(manhandle_away_critical_users).detach();
+    sthread(manhandle_away_critical_users).detach();
     #endif // ONE_TIME_MANHANDLE
 
     //fix_auth_errors();
