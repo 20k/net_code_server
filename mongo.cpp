@@ -194,6 +194,7 @@ void lock_internal::lock(const std::string& debug_info, size_t who, mongoc_clien
 #else
 void lock_internal::lock(const std::string& debug_info, size_t who)
 {
+    #ifndef USE_STD_MUTEX
     sthread::this_yield();
 
     ///200 ms
@@ -216,6 +217,9 @@ void lock_internal::lock(const std::string& debug_info, size_t who)
             sthread::this_yield();
         }
     }
+    #else
+    mut_lock.lock();
+    #endif // USE_STD_MUTEX
 
     locked_by = who;
 }
@@ -227,7 +231,12 @@ void lock_internal::unlock()
     locked_by_debug = "";
     #endif // DEADLOCK_DETECTION
     locked_by = 0;
+
+    #ifndef USE_STD_MUTEX
     locked.clear(std::memory_order_release);
+    #else
+    mut_lock.unlock();
+    #endif
 }
 
 
