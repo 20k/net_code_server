@@ -17,6 +17,8 @@ void time_structure::from_time_ms(size_t time_code_ms)
     minutes = utc_tm.tm_min;
     seconds = utc_tm.tm_sec;
     days = utc_tm.tm_mday;
+    months = utc_tm.tm_mon;
+    years = utc_tm.tm_year;
 }
 
 std::string time_structure::format(int unit)

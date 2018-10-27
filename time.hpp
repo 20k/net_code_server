@@ -6,6 +6,8 @@
 
 struct time_structure
 {
+    int years = 0;
+    int months = 0;
     int days = 0;
     int hours = 0;
     int minutes = 0;
