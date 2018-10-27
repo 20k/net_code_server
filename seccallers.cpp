@@ -47,7 +47,21 @@ duk_ret_t async_print(duk_context* ctx)
     COOPERATE_KILL();
     RATELIMIT_DUK(ASYNC_PRINT);
 
-    std::string str = duk_safe_to_std_string(ctx, -1);
+    std::string str;
+
+    int nargs = duk_get_top(ctx);
+
+    for(int i=0; i < nargs; i++)
+    {
+        if(i != nargs-1)
+        {
+            str += duk_safe_to_std_string(ctx, i) + " ";
+        }
+        else
+        {
+            str += duk_safe_to_std_string(ctx, i);
+        }
+    }
 
     command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(ctx, "command_handler_state_pointer");
 
@@ -1157,6 +1171,18 @@ duk_ret_t os_call(duk_context* ctx)
     return 1;
 }
 
+void inject_console_log(duk_context* ctx)
+{
+    duk_push_global_object(ctx);
+
+    duk_push_object(ctx);
+    duk_push_c_function(ctx, async_print, DUK_VARARGS);
+    duk_put_prop_string(ctx, -2, "log");
+    duk_put_prop_string(ctx, -2, "console");
+
+    duk_pop(ctx);
+}
+
 void register_funcs(duk_context* ctx, int seclevel, const std::string& script_host)
 {
     remove_func(ctx, "fs_call");
@@ -1228,6 +1254,8 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     #ifdef TESTING
     inject_c_function(ctx, deliberate_hang, "deliberate_hang", 0);
     #endif // TESTING
+
+    inject_console_log(ctx);
 
     //#ifdef TESTING
     if(seclevel <= 3)
