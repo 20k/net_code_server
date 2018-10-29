@@ -6,12 +6,13 @@
 inline
 duk_ret_t dukx_proxy_own_keys(duk_context* ctx)
 {
-    //auto keys = dukx_get_keys(ctx);
-    //push_duk_val(ctx, keys);
+    auto keys = dukx_get_keys(ctx);
+    push_duk_val(ctx, keys);
+    return 1;
 
-    duk_push_array(ctx);
+    /*duk_push_array(ctx);
 
-    duk_enum(ctx, -1, 0);
+    duk_enum(ctx, -2, DUK_ENUM_NO_PROXY_BEHAVIOR);
 
     int idx = 0;
 
@@ -23,7 +24,7 @@ duk_ret_t dukx_proxy_own_keys(duk_context* ctx)
 
     duk_pop(ctx);
 
-    return 1;
+    return 1;*/
 }
 
 template<duk_c_function t>
@@ -244,6 +245,9 @@ void dukx_sanitise_in_place(duk_context* dst_ctx, duk_idx_t idx)
     if(duk_is_primitive(dst_ctx, idx))
         return;
 
+    if(duk_has_prop_string(dst_ctx, idx, DUKX_HIDDEN_SYMBOL("PROX").c_str()))
+        return;
+
     dukx_make_proxy_base_from(dst_ctx, idx);
 
     ///https://github.com/svaarala/duktape-wiki/blob/master/PostEs5Features.md#proxy-handlers-traps
@@ -266,6 +270,9 @@ void dukx_sanitise_in_place(duk_context* dst_ctx, duk_idx_t idx)
                                         dukx_wrap_ctx<dukx_proxy_construct>, 2, "construct");
 
     duk_push_proxy(dst_ctx, 0);
+
+    duk_push_true(dst_ctx);
+    duk_put_prop_string(dst_ctx, -2, DUKX_HIDDEN_SYMBOL("PROX").c_str());
 
     ///[to_wrap, proxy]
     duk_remove(dst_ctx, -1 + idx);
