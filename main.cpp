@@ -733,7 +733,6 @@ int main()
 
                         strip_old_msg_or_notif(ctx);
                   });*/
-    #endif // TESTING
 
     sthread([]()
     {
@@ -757,6 +756,8 @@ int main()
 
         printf("Finished all strip\n");
     }).detach();
+
+    #endif // TESTING
 
     //#ifndef TESTING
     start_npc_thread();

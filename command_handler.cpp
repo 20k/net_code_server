@@ -2000,7 +2000,7 @@ void strip_old_msg_or_notif(mongo_lock_proxy& ctx)
 
     std::vector<nlohmann::json> most_recent = ctx->find_json_new(nlohmann::json({}), )*/
 
-    #define FULL_REBUILD
+    //#define FULL_REBUILD
     #ifdef FULL_REBUILD
     int save_num = 2000;
 
