@@ -945,17 +945,40 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
 {
     set_script_info(ctx, host + ".invoke");
 
-    script_info dummy;
-    dummy.load_from_unparsed_source(ctx, data, host + ".invoke", false, true);
+    std::string unified_invoke_err;
 
-    if(!dummy.valid)
+    unified_script_info unified_invoke = unified_script_loading(get_thread_id(ctx), host + ".invoke", unified_invoke_err);
+
+    bool first_invoke_valid = unified_invoke.valid;
+
+    if(!unified_invoke.valid)
+    {
+        script_info dummy;
+        dummy.load_from_unparsed_source(ctx, data, host + ".invoke", false, true);
+
+        unified_invoke.make_from(dummy);
+    }
+
+    if(!unified_invoke.valid && !first_invoke_valid)
+        return unified_invoke_err;
+
+    if(!unified_invoke.valid)
         return "Invalid Command Line Syntax";
 
-    set_global_int(ctx, "last_seclevel", dummy.seclevel);
+    set_global_int(ctx, "last_seclevel", unified_invoke.seclevel);
 
-    duk_push_undefined(ctx);
+    if(!first_invoke_valid)
+    {
+        duk_push_undefined(ctx);
+    }
+    else
+    {
+        duk_push_object(ctx);
+        push_duk_val(ctx, data);
+        duk_put_prop_string(ctx, -1, "command");
+    }
 
-    std::string extra = compile_and_call(ctx, dummy.parsed_source, get_caller(ctx), false, dummy.seclevel, true, "core.invoke");
+    std::string extra = compile_and_call(ctx, unified_invoke.parsed_source, get_caller(ctx), false, unified_invoke.seclevel, true, "core.invoke");
 
     if(!duk_is_object_coercible(ctx, -1))
     {
