@@ -1745,6 +1745,11 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
             if(starts_with(str, "#dry "))
                 rstr = "Dry Upload Successful ";
 
+            if(scriptname == "invoke")
+            {
+                rstr += "[Set as command line wrapper] ";
+            }
+
             return make_success_col(rstr + std::to_string(num_chars) + "/" + std::to_string(max_chars));
         }
     }
@@ -1781,7 +1786,14 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
             item::remove_from_db(mongo_ctx, script_inf.name);
         }
 
-        return make_success_col("Script removed from server");
+        std::string str = "Script removed from server";
+
+        if(scriptname == "invoke")
+        {
+            str += " [Removed as command line wrapper]";
+        }
+
+        return make_success_col(str);
     }
     else if(starts_with(str, "#public ") || starts_with(str, "#private "))
     {
