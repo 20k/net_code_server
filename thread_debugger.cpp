@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <assert.h>
+#include "stacktrace.hpp"
 
 #if 0
 //  Forward declarations:
@@ -285,30 +286,17 @@ int GetCallingFunctionName(HANDLE hThread, std::string &callingFunctionName)
     frm->AddrFrame.Offset = ctx.Rbp;
     frm->AddrPC.Offset = ctx.Rip;
 
-    /*pSC = SymCleanup;
-    pSFTA = SymFunctionTableAccess;
-    pSGMB =   SymGetModuleBase;
-    pSGMI =    SymGetModuleInfo;
-    pSGO =    SymGetOptions;
-    pSGSFA =    SymGetSymFromAddr;
-    pSI =    SymInitialize;
-    pSSO =    SymSetOptions;
-    pSW =    StackWalk64;
-    pUDSN =    UnDecorateSymbolName;*/
-
     std::cout << "fram " << frm->AddrFrame.Offset << std::endl;
-
 
 
 
     for (i=0; i<3; i++)
     {
-
-// Call the routine to trace to the next frame
-
         stat = StackWalk64( machType, hProc, hThread, frm, &ctx, NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL );
 
         std::cout << "frame? " << frm->AddrFrame.Offset << std::endl;
+
+        std::cout << "decoded? " << name_from_ptr((void*)frm->AddrFrame.Offset) << std::endl;
 
         if ( !stat )
         {
@@ -322,10 +310,14 @@ int GetCallingFunctionName(HANDLE hThread, std::string &callingFunctionName)
         }
     }
 
-// Decode the closest routine symbol name
+    PSYMBOL_INFO inf = (PSYMBOL_INFO)malloc(sizeof(SYMBOL_INFO) + 1000);
 
-    if ( SymGetSymFromAddr( hProc, frm->AddrPC.Offset, &displacement, sym ) )
-        callingFunctionName = sym->Name;
+    inf->MaxNameLen = 100;
+
+    // Decode the closest routine symbol name
+
+    if ( SymFromAddr ( hProc, frm->AddrPC.Offset, &displacement, inf ) )
+        callingFunctionName = inf->Name;
     else
     {
         lastErr = GetLastError ();
@@ -363,6 +355,8 @@ int GetCallingFunctionName(HANDLE hThread, std::string &callingFunctionName)
 std::string get_all_thread_stacktraces()
 {
     //std::vector<int> thread_ids = ListProcessThreads(GetCurrentProcessId() );
+
+    //SymInitialize(GetCurrentProcess(), "./", false);
 
     std::vector<HANDLE> thread_ids = get_thread_registration().fetch();
 

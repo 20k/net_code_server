@@ -46,7 +46,7 @@ enum class mongo_database_type
     MONGO_COUNT
 };
 
-#define USE_STD_MUTEX
+//#define USE_STD_MUTEX
 
 struct lock_internal
 {

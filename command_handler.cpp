@@ -155,9 +155,10 @@ void sleep_thread_for(sthread& t, int sleep_ms)
     //sthread::increase_priority();
     SuspendThread(native_handle);
 
-    //Sleep(sleep_ms);
+    ///for some reason this is dangerous
+    Sleep(sleep_ms);
 
-    sf::sleep(sf::milliseconds(sleep_ms));
+    //sf::sleep(sf::milliseconds(sleep_ms));
 
     ResumeThread(native_handle);
     //sthread::normal_priority();
@@ -541,12 +542,20 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
             #ifdef ACTIVE_TIME_MANAGEMENT
             {
-                sf::sleep(sf::milliseconds(active_time_slice_ms));
+                //sf::sleep(sf::milliseconds(active_time_slice_ms));
 
+                Sleep(active_time_slice_ms);
+
+                ///Ok so
+                ///this is the problem
+                ///basically sfml uses timebeginperiod
+                ///which uses windows critical sections
+                ///sleeping during them is causing issues
                 pthread_t thread = launch->native_handle();
                 void* native_handle = pthread_gethandle(thread);
                 SuspendThread(native_handle);
-                sf::sleep(sf::milliseconds(sleeping_time_slice_ms * sleep_mult));
+                //sf::sleep(sf::milliseconds(sleeping_time_slice_ms * sleep_mult));
+                Sleep(sleeping_time_slice_ms * sleep_mult);
                 ResumeThread(native_handle);
             }
             #endif // ACTIVE_TIME_MANAGEMENT
@@ -602,7 +611,8 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 sand_data->terminate_semi_gracefully = true;
             }
 
-            sf::sleep(sf::milliseconds(1));
+            Sleep(1);
+            //sf::sleep(sf::milliseconds(1));
         }
 
         *tls_get_should_throw() = 0;
@@ -842,7 +852,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                         //sthread::increase_priority();
 
                         if(estimated_time_remaining >= 1.5f)
-                            sf::sleep(sf::milliseconds(1));
+                            Sleep(1);
                         else
                             sthread::low_yield();
 

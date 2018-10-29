@@ -59,3 +59,8 @@ std::string get_stacktrace()
 
     return stream.str();
 }
+
+std::string name_from_ptr(void* ptr)
+{
+    return boost::stacktrace::frame((boost::stacktrace::detail::native_frame_ptr_t)ptr).name();
+}
