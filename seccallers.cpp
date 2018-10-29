@@ -642,6 +642,8 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
         int nargs = 2;
 
+        #define USE_PROXY
+
         ///[object] is on the stack, aka context
         if(!duk_is_object(ctx, -2))
             duk_push_undefined(new_ctx);
@@ -649,8 +651,12 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
         {
             duk_dup(ctx, -2);
             ///push args
-            //duk_xmove_top(new_ctx, sd.ctx, 1);
+
+            #ifndef USE_PROXY
+            duk_xmove_top(new_ctx, ctx, 1);
+            #else
             dukx_sanitise_move_value(ctx, new_ctx, -1);
+            #endif // USE_PROXY
         }
 
         ///now we have [object, args] on the stack 2
@@ -664,8 +670,11 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
             {
                 try
                 {
+                    #ifndef USE_PROXY
+                    duk_xmove_top(ctx, new_ctx, 1);
+                    #else
                     dukx_sanitise_move_value(new_ctx, ctx, -1);
-                    //duk_xmove_top(sd.ctx, new_ctx, 1);
+                    #endif // USE_PROXY
                 }
                 catch(...)
                 {

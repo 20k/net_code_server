@@ -805,6 +805,30 @@ int main()
             continue;
         }
 
+        if(starts_with(command, "#pdown"))
+        {
+            std::string item_id;
+
+            std::cout << "enter full item id, eg phobetor.hack\n";
+
+            std::getline(std::cin, item_id);
+
+            item id;
+
+            {
+                mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
+
+                if(!id.load_from_db(mongo_ctx, item_id))
+                {
+                    std::cout << "no such item with id " << item_id << std::endl;
+                    continue;
+                }
+            }
+
+            write_all_bin(item_id, id.get_prop("parsed_source"));
+            continue;
+        }
+
         if(starts_with(command, "#exfil"))
         {
             std::string exp = run_in_user_context("i20k", "#i20k.ast_debug({suffix:\"s\"})", std::nullopt);
