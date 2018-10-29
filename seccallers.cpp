@@ -568,6 +568,20 @@ duk_ret_t deliberate_hang(duk_context* ctx)
     return 0;
 }
 
+duk_ret_t global_test(duk_context* ctx)
+{
+    duk_push_global_object(ctx);
+    duk_push_string(ctx, "TEST STRING");
+    duk_put_prop_string(ctx, -2, "key");
+
+    duk_push_object(ctx);
+    duk_set_global_object(ctx);
+
+    duk_get_prop_string(ctx, -1, "key");
+    std::cout << duk_safe_to_std_string(ctx, -1) << std::endl;
+    return 1;
+}
+
 std::string compile_and_call(duk_context* ctx, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script)
 {
     if(data.size() == 0)
@@ -1285,6 +1299,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
 
     #ifdef TESTING
     inject_c_function(ctx, deliberate_hang, "deliberate_hang", 0);
+    inject_c_function(ctx, global_test, "global_test", 0);
     #endif // TESTING
 
     inject_console_log(ctx);

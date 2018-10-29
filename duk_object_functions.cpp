@@ -3,6 +3,128 @@
 #include "mongo.hpp"
 #include <libncclient/nc_util.hpp>
 
+
+template<duk_c_function t>
+inline
+duk_ret_t dukx_wrap_ctx(duk_context* ctx)
+{
+    #ifdef OLD_GLOBAL_SWAP
+    ///[arg1, arg2... argtop]
+    int top = duk_get_top(ctx);
+
+    ///[argstop, thread]
+    duk_push_thread(ctx);
+    //duk_push_thread_new_globalenv(ctx);
+
+    duk_context* new_ctx = duk_get_context(ctx, -1);
+
+    duk_push_object(new_ctx);
+    duk_set_global_object(new_ctx);
+
+    ///[thread, argstop]
+    duk_insert(ctx, 0);
+
+    duk_require_stack(new_ctx, top+1);
+
+    duk_push_current_function(ctx);
+    duk_xmove_top(new_ctx, ctx, 1);
+    duk_get_prop_string(new_ctx, -1, DUKX_HIDDEN_SYMBOL("WRAPPED").c_str());
+    duk_remove(new_ctx, -2);
+
+    duk_xmove_top(ctx, new_ctx, 1);
+
+    ///[thread, argstop, new_arg]
+
+    ///replaces this to [thread, new_arg, argstopexcept0]
+    duk_replace(ctx, -1 - top);
+
+    ///ok so we have [thread, argstop]
+    ///we want to replace the first arg with the hidden body
+    ///[new -> cfunc]
+    duk_push_c_function(new_ctx, t, top);
+    ///[old -> thread]
+    ///[new -> cfunc, argstop]
+    duk_xmove_top(new_ctx, ctx, top);
+
+    ///[new -> return]
+    duk_int_t rc = duk_pcall(new_ctx, top);
+
+    ///[new -> empty]
+    ///[old -> thread, return]
+    //duk_xmove_top(ctx, new_ctx, 1);
+
+    ///get is special cased because
+    ///it can let unsanitised values out
+    if(t != dukx_proxy_get && t != dukx_proxy_own_keys)
+        dukx_sanitise_move_value(new_ctx, ctx, -1);
+    else
+        duk_xmove_top(ctx, new_ctx, 1);
+
+    ///remove thread
+    ///[old -> return]
+    duk_remove(ctx, 0);
+
+    if(rc != DUK_EXEC_SUCCESS)
+    {
+        return duk_throw(ctx);
+    }
+
+    return 1;
+    #else
+    ///[arg1, arg2... argtop]
+    int top = duk_get_top(ctx);
+
+    ///save global object
+    duk_push_global_object(ctx);
+    duk_insert(ctx, -1 - top);
+
+    ///[global, arg1, arg2... argtop]
+    duk_push_object(ctx);
+    ///[global, arg1, arg2... argtop, new_global] -> [global, arg1, arg2... argtop]
+    duk_set_global_object(ctx);
+
+    duk_push_current_function(ctx);
+    duk_get_prop_string(ctx, -1, DUKX_HIDDEN_SYMBOL("WRAPPED").c_str());
+    duk_remove(ctx, -2);
+
+    ///we have [old_global, args, new_arg]
+
+    ///replaces this to [old_global, new_arg, argstopexcept0]
+    duk_replace(ctx, -1 - top);
+
+    ///takes us to [old_global, new_arg, argstopexcept0, function]
+    duk_push_c_function(ctx, t, top);
+
+    ///takes us to [old_global, function, new_arg, argstopexcept0]
+    duk_insert(ctx, -1 - top);
+
+    ///[old_global, return]
+    duk_int_t rc = duk_pcall(ctx, top);
+
+    ///get is special cased because
+    ///it can let unsanitised values out
+    if(t != dukx_proxy_get && t != dukx_proxy_own_keys)
+        dukx_sanitise_in_place(ctx, -1);
+    else
+    {
+        ///do nothing, unsanitised value is already on stack
+    }
+
+    ///duk stack is now [old_global, value]
+    duk_dup(ctx, 0);
+    duk_set_global_object(ctx);
+    duk_remove(ctx, 0);
+
+    if(rc != DUK_EXEC_SUCCESS)
+    {
+        return duk_throw(ctx);
+    }
+
+    return 1;
+
+    #endif // OLD_GLOBAL_SWAP
+}
+
 duk_ret_t dukx_proxy_apply(duk_context* ctx)
 {
     //printf("apply\n");
