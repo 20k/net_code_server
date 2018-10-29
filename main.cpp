@@ -319,6 +319,11 @@ int main()
     init_db_storage_backend();
     //#endif // TESTING
 
+    sthread([]()
+           {
+            tickle_item_cache();
+           }).detach();
+
     //test_json();
 
     //#define SERVER_FIRST_TIME_EVER_RELEASE
@@ -659,7 +664,6 @@ int main()
     //test_locking();
 
     boot_connection_handlers();
-    tickle_item_cache();
 
     #ifdef TESTING
     system("start test_launch.bat");
