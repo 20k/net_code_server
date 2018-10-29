@@ -347,6 +347,8 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
             double exec_time = elapsed.getElapsedTime().asMicroseconds() / 1000.;
             avg_exec_time = (avg_exec_time + exec_time)/2.;
 
+            duk_gc(ctx, 0);
+
             while(!fedback)
             {
                 sthread::low_yield();

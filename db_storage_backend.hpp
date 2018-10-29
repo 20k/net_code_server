@@ -5,6 +5,9 @@
 #include <json/json.hpp>
 #include "mongoc_fwd.hpp"
 #include <mutex>
+#include "stacktrace.hpp"
+#include <iostream>
+#include <SFML/System/Clock.hpp>
 
 #define CID_STRING "_cid"
 
@@ -13,6 +16,29 @@ struct mongo_context;
 using database_type = int32_t;
 
 void init_db_storage_backend();
+
+struct safe_mutex
+{
+    std::mutex mutex;
+
+    void lock()
+    {
+        sf::Clock clk;
+
+        while(!mutex.try_lock())
+        {
+            if(clk.getElapsedTime().asMilliseconds() > 5000)
+            {
+                std::cout << get_stacktrace() << std::endl;
+            }
+        }
+    }
+
+    void unlock()
+    {
+        mutex.unlock();
+    }
+};
 
 struct db_storage_backend
 {

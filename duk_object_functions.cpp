@@ -31,6 +31,7 @@ template<duk_c_function t>
 inline
 duk_ret_t dukx_wrap_ctx(duk_context* ctx)
 {
+    #define OLD_GLOBAL_SWAP
     #ifdef OLD_GLOBAL_SWAP
     ///[arg1, arg2... argtop]
     int top = duk_get_top(ctx);

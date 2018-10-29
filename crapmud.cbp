@@ -97,7 +97,8 @@
 					<Add option="-O3" />
 					<Add option="-g" />
 					<Add option="-march=nehalem" />
-					<Add option="-DEXTERN_IP" />
+					<Add option="-DLOCAL_IP" />
+					<Add option="-DTESTING" />
 				</Compiler>
 				<ExtraCommands>
 					<Add after="deploy.bat" />
@@ -187,6 +188,7 @@
 			<Add option="-lSecur32" />
 			<Add option="-lCrypt32" />
 			<Add option="-lz" />
+			<Add option="-ldbghelp" />
 		</Linker>
 		<Unit filename="ascii_helpers.cpp" />
 		<Unit filename="ascii_helpers.hpp" />
@@ -272,6 +274,8 @@
 		<Unit filename="shared_duk_worker_state.hpp" />
 		<Unit filename="stacktrace.cpp" />
 		<Unit filename="stacktrace.hpp" />
+		<Unit filename="thread_debugger.cpp" />
+		<Unit filename="thread_debugger.hpp" />
 		<Unit filename="time.cpp" />
 		<Unit filename="time.hpp" />
 		<Unit filename="timestamped_position.hpp" />

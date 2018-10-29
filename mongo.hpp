@@ -46,7 +46,7 @@ enum class mongo_database_type
     MONGO_COUNT
 };
 
-//#define USE_STD_MUTEX
+#define USE_STD_MUTEX
 
 struct lock_internal
 {
@@ -59,7 +59,7 @@ struct lock_internal
     #ifndef USE_STD_MUTEX
     std::atomic_flag locked = ATOMIC_FLAG_INIT;
     #else
-    std::mutex mut_lock;
+    safe_mutex mut_lock;
     #endif // USE_STD_MUTEX
 
     #ifdef USE_MONGO

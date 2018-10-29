@@ -12,6 +12,7 @@
 #define ROOT_FILE "C:/net_code_storage/gid"
 
 #include "rate_limiting.hpp"
+#include "stacktrace.hpp"
 
 template<typename T>
 void for_each_dir(const std::string& directory, const T& t)
@@ -260,15 +261,17 @@ nlohmann::json project(const nlohmann::json& data, const nlohmann::json& proj)
     return ret;
 }
 
+using mutex_t = safe_mutex;
+
 struct database
 {
     std::map<std::string, std::vector<nlohmann::json>> all_data;
     std::map<std::string, std::map<std::string, nlohmann::json>> index_map;
     std::map<std::string, bool> collection_imported;
 
-    std::mutex all_coll_guard;
+    mutex_t all_coll_guard;
 
-    std::map<std::string, std::mutex> per_collection_lock;
+    std::map<std::string, mutex_t> per_collection_lock;
 
     std::vector<nlohmann::json>& get_collection(const std::string& coll)
     {
@@ -294,14 +297,14 @@ struct database
         return index_map[coll];
     }
 
-    std::mutex& get_lock(const std::string& coll)
+    mutex_t& get_lock(const std::string& coll)
     {
         std::lock_guard guard(all_coll_guard);
 
         return per_collection_lock[coll];
     }
 
-    std::mutex& get_db_lock()
+    mutex_t& get_db_lock()
     {
         return all_coll_guard;
     }
@@ -344,7 +347,7 @@ struct db_storage
     std::array<std::string, (int)mongo_database_type::MONGO_COUNT> indices;
 
     size_t global_id = 0;
-    std::mutex id_guard;
+    mutex_t id_guard;
 
     bool atomic_enabled = true;
 
@@ -433,19 +436,23 @@ struct db_storage
             remove((get_filename(db, coll, data) + ".back").c_str());
     }
 
+    ///must have collection locked to work
+    ///internally locks whole db
     void import_collection_nolock(const database_type& db_idx, const std::string& coll)
     {
         //std::lock_guard guard(cdb.get_lock(coll));
 
         database& cdb = get_db(db_idx);
 
-        std::lock_guard guard(cdb.get_db_lock());
+        {
+            std::lock_guard guard(cdb.get_db_lock());
 
-        if(cdb.collection_imported[coll])
-            return;
+            if(cdb.collection_imported[coll])
+                return;
+        }
 
-        std::vector<nlohmann::json>& collection = cdb.get_collection_nolock(coll);
-        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed_nolock(coll);
+        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
 
         collection.clear();
         indices.clear();
@@ -456,7 +463,12 @@ struct db_storage
 
         if(tinydir_open(&dir, coll_path.c_str()) == -1)
         {
-            cdb.collection_imported[coll] = true;
+            {
+                std::lock_guard guard(cdb.get_db_lock());
+
+                cdb.collection_imported[coll] = true;
+            }
+
             return;
         }
 
@@ -516,7 +528,11 @@ struct db_storage
             }
         });
 
-        cdb.collection_imported[coll] = true;
+        {
+            std::lock_guard guard(cdb.get_db_lock());
+
+            cdb.collection_imported[coll] = true;
+        }
     }
 
     void insert_one(const database_type& db, const std::string& coll, const nlohmann::json& js)
@@ -526,16 +542,13 @@ struct db_storage
 
         database& cdb = get_db(db);
 
+        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
+
         std::lock_guard guard(cdb.get_lock(coll));
 
         ///nothing can touch the collection while we do this so its fine
         bool is_imported = cdb.is_imported(coll);
-
-        /*if(is_imported)
-            import_collection_nolock(db, coll);*/
-
-        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
-        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
 
         auto fdata = js;
         fdata[CID_STRING] = get_next_id();
@@ -1354,7 +1367,7 @@ void db_storage_backend::remove_many(const nlohmann::json& selector)
 
 std::mutex& db_storage_backend::get_lock_for()
 {
-    return get_db_storage().get_db(database).get_lock(collection);
+    return get_db_storage().get_db(database).get_lock(collection).mutex;
 }
 
 std::vector<nlohmann::json>& db_storage_backend::get_db_data_nolock_import()
