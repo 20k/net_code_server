@@ -23,7 +23,7 @@ struct safe_mutex
 
     void lock()
     {
-        sf::Clock clk;
+        /*sf::Clock clk;
 
         while(!mutex.try_lock())
         {
@@ -31,7 +31,9 @@ struct safe_mutex
             {
                 std::cout << get_stacktrace() << std::endl;
             }
-        }
+        }*/
+
+        mutex.lock();
     }
 
     void unlock()

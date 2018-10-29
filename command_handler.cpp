@@ -1991,6 +1991,35 @@ void strip_old_msg_or_notif(mongo_lock_proxy& ctx)
     to_delete["time_ms"] = lt_than;
 
     remove_all_from_db(ctx, to_delete);
+
+    /*nlohmann::json to_sort;
+    to_sort["sort"] = 1;
+
+    nlohmann::json prop_opts;
+    prop_opts["time_ms"] = to_sort;
+
+    std::vector<nlohmann::json> most_recent = ctx->find_json_new(nlohmann::json({}), )*/
+
+    #define FULL_REBUILD
+    #ifdef FULL_REBUILD
+    int save_num = 2000;
+
+    nlohmann::json time_opt;
+    time_opt["time_ms"] = -1;
+
+    nlohmann::json opt;
+    opt["sort"] = time_opt;
+    opt["limit"] = save_num;
+
+    std::vector<nlohmann::json> to_save = ctx->find_json_new(nlohmann::json({}), opt);
+
+    ctx->remove_json_many_new(nlohmann::json({}));
+
+    for(auto& i : to_save)
+    {
+        ctx->insert_json_one_new(i);
+    }
+    #endif // FULL_REBUILD
 }
 
 std::vector<nlohmann::json> get_and_update_chat_msgs_for_user(user& usr)
