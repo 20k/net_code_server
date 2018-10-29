@@ -157,6 +157,8 @@ void bot_thread()
 
         auto check_autorun = [&](user& found_user)
         {
+            Sleep(1);
+
             std::vector<std::string> loaded = found_user.all_loaded_items();
 
             for(std::string& item_id : loaded)
@@ -164,7 +166,7 @@ void bot_thread()
                 item next_item;
 
                 {
-                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
+                    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
                     next_item.load_from_db(mongo_ctx, item_id);
                 }
