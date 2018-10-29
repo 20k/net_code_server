@@ -975,10 +975,10 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
     {
         duk_push_object(ctx);
         push_duk_val(ctx, data);
-        duk_put_prop_string(ctx, -1, "command");
+        duk_put_prop_string(ctx, -2, "command");
     }
 
-    std::string extra = compile_and_call(ctx, unified_invoke.parsed_source, get_caller(ctx), false, unified_invoke.seclevel, true, "core.invoke");
+    std::string extra = compile_and_call(ctx, unified_invoke.parsed_source, get_caller(ctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke");
 
     if(!duk_is_object_coercible(ctx, -1))
     {
