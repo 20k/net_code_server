@@ -2,6 +2,7 @@
 #define MEMORY_SANDBOX_HPP_INCLUDED
 
 #include "scripting_api.hpp"
+#include "safe_thread.hpp"
 
 //#include <windows.h>
 
@@ -172,7 +173,7 @@ static void sandbox_fatal(void *udata, const char *msg)
     ///yeah um. So sleep in a spinlock until we get terminated by the watchdog
     ///great idea james
     ///this seems the best thing i can think to do as this function cannot return
-    while(1){sf::sleep(sf::milliseconds(10));}
+    while(1){sthread::this_sleep(10);}
 
     //exit(1);  /* must not return */
 }

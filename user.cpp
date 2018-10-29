@@ -1149,16 +1149,16 @@ void event_pumper()
         for_each_user([](user& usr)
                       {
                         usr.pump_notifications(-2);
-                        sf::sleep(sf::milliseconds(1));
+                        sthread::this_sleep(1);
                       });
 
         for_each_npc([](user& usr)
                      {
                         usr.pump_notifications(-2);
-                        sf::sleep(sf::milliseconds(1));
+                        sthread::this_sleep(1);
                      });
 
-        sf::sleep(sf::milliseconds(1));
+        sthread::this_sleep(1);
     }
 }
 

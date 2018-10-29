@@ -842,11 +842,11 @@ int main()
             break;
         }
 
-        if(starts_with(command, "#dbg"))
+        /*if(starts_with(command, "#dbg"))
         {
             std::cout << get_all_thread_stacktraces() << std::endl;
             continue;
-        }
+        }*/
 
         std::cout << "Are you sure? y/n" << std::endl;
 

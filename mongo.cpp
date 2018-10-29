@@ -203,9 +203,11 @@ void lock_internal::lock(const std::string& debug_info, size_t who)
 
     sf::Clock clk;
 
+    size_t cycles = 1;
+
     while(locked.test_and_set(std::memory_order_acquire))
     {
-        if(sleeptime || clk.getElapsedTime().asMicroseconds() >= max_microseconds_elapsed)
+        /*if(sleeptime || cycles > 1000)
         {
             COOPERATE_KILL_THREAD_LOCAL_URGENT();
 
@@ -215,7 +217,19 @@ void lock_internal::lock(const std::string& debug_info, size_t who)
         else
         {
             sthread::this_yield();
+            cycles++;
+        }*/
+
+        if((cycles & (128 - 1)) == 0)
+            sthread::this_yield();
+
+        if((cycles & (1024 - 1)) == 0)
+        {
+            sthread::this_sleep(1);
+            COOPERATE_KILL_THREAD_LOCAL_URGENT();
         }
+
+        cycles++;
     }
     #else
     mut_lock.lock();

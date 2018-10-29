@@ -156,9 +156,8 @@ void sleep_thread_for(sthread& t, int sleep_ms)
     SuspendThread(native_handle);
 
     ///for some reason this is dangerous
-    Sleep(sleep_ms);
-
-    //sf::sleep(sf::milliseconds(sleep_ms));
+    ///critical sections
+    sthread::this_sleep(sleep_ms);
 
     ResumeThread(native_handle);
     //sthread::normal_priority();
@@ -542,8 +541,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
             #ifdef ACTIVE_TIME_MANAGEMENT
             {
-                //sf::sleep(sf::milliseconds(active_time_slice_ms));
-
                 Sleep(active_time_slice_ms);
 
                 ///Ok so
@@ -554,8 +551,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 pthread_t thread = launch->native_handle();
                 void* native_handle = pthread_gethandle(thread);
                 SuspendThread(native_handle);
-                //sf::sleep(sf::milliseconds(sleeping_time_slice_ms * sleep_mult));
-                Sleep(sleeping_time_slice_ms * sleep_mult);
+                sthread::this_sleep(sleeping_time_slice_ms * sleep_mult);
                 ResumeThread(native_handle);
             }
             #endif // ACTIVE_TIME_MANAGEMENT
@@ -611,8 +607,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 sand_data->terminate_semi_gracefully = true;
             }
 
-            Sleep(1);
-            //sf::sleep(sf::milliseconds(1));
+            sthread::this_sleep(1);
         }
 
         *tls_get_should_throw() = 0;
@@ -852,7 +847,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                         //sthread::increase_priority();
 
                         if(estimated_time_remaining >= 1.5f)
-                            Sleep(1);
+                            sthread::this_sleep(1);
                         else
                             sthread::low_yield();
 
@@ -862,7 +857,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                     force_terminate = true;
                     fedback = true;
 
-                    Sleep(50);
+                    sthread::this_sleep(50);
 
                     //sand_data->terminate_semi_gracefully = true;
                     sand_data->terminate_realtime_gracefully = true;

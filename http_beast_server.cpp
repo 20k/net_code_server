@@ -442,7 +442,7 @@ void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
 
             if(!found_any)
             {
-                sf::sleep(sf::milliseconds(2));
+                sthread::this_sleep(2);
             }
         }
     }

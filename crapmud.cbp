@@ -188,7 +188,6 @@
 			<Add option="-lSecur32" />
 			<Add option="-lCrypt32" />
 			<Add option="-lz" />
-			<Add option="-ldbghelp" />
 		</Linker>
 		<Unit filename="ascii_helpers.cpp" />
 		<Unit filename="ascii_helpers.hpp" />
@@ -258,6 +257,7 @@
 		<Unit filename="rate_limiting.hpp" />
 		<Unit filename="rng.cpp" />
 		<Unit filename="rng.hpp" />
+		<Unit filename="safe_thread.cpp" />
 		<Unit filename="safe_thread.hpp" />
 		<Unit filename="scheduled_tasks.cpp" />
 		<Unit filename="scheduled_tasks.hpp" />
@@ -274,8 +274,6 @@
 		<Unit filename="shared_duk_worker_state.hpp" />
 		<Unit filename="stacktrace.cpp" />
 		<Unit filename="stacktrace.hpp" />
-		<Unit filename="thread_debugger.cpp" />
-		<Unit filename="thread_debugger.hpp" />
 		<Unit filename="time.cpp" />
 		<Unit filename="time.hpp" />
 		<Unit filename="timestamped_position.hpp" />

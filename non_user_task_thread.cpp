@@ -10,6 +10,7 @@
 #include "command_handler.hpp"
 #include <secret/npc_manager.hpp>
 #include "safe_thread.hpp"
+#include "unified_scripts.hpp"
 
 
 ///THESE ARE NOW INCORRECT DUE TO BAD AUTH USAGE
@@ -158,6 +159,13 @@ void bot_thread()
         auto check_autorun = [&](user& found_user)
         {
             Sleep(1);
+
+            {
+                std::string err;
+
+                if(!unified_script_loading(-2, found_user.name + ".autorun", err).valid)
+                    return;
+            }
 
             std::vector<std::string> loaded = found_user.all_loaded_items();
 
