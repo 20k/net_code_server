@@ -995,21 +995,6 @@ void dukx_hack_in_keys(duk_context* ctx, duk_idx_t idx, const std::vector<std::s
     }
 }
 
-inline
-duk_ret_t dukx_proxy_own_keys(duk_context* ctx)
-{
-    auto keys = dukx_get_keys(ctx);
-
-    //duk_push_array(ctx);
-
-    ///duk_proxy_ownkeys_postprocess
-    ///seems to filter out keys not in the underlying object
-
-    push_duk_val(ctx, keys);
-
-    return 1;
-}
-
 duk_ret_t dukx_proxy_apply(duk_context* ctx);
 
 inline

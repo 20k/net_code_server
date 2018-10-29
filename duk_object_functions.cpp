@@ -3,6 +3,28 @@
 #include "mongo.hpp"
 #include <libncclient/nc_util.hpp>
 
+inline
+duk_ret_t dukx_proxy_own_keys(duk_context* ctx)
+{
+    //auto keys = dukx_get_keys(ctx);
+    //push_duk_val(ctx, keys);
+
+    duk_push_array(ctx);
+
+    duk_enum(ctx, -1, 0);
+
+    int idx = 0;
+
+    while(duk_next(ctx, -1, 0))
+    {
+        duk_put_prop_index(ctx, -3, idx++);
+        duk_pop(ctx);
+    }
+
+    duk_pop(ctx);
+
+    return 1;
+}
 
 template<duk_c_function t>
 inline
@@ -124,6 +146,7 @@ duk_ret_t dukx_wrap_ctx(duk_context* ctx)
 
     #endif // OLD_GLOBAL_SWAP
 }
+///its sanitise in place thats slow
 
 duk_ret_t dukx_proxy_apply(duk_context* ctx)
 {
@@ -179,7 +202,7 @@ void dukx_make_proxy_base_from(duk_context* ctx, duk_idx_t idx)
         assert(false);
 
     ///duk_proxy_ownkeys_postprocess
-    dukx_hack_in_keys(ctx, -1, rkeys);
+    //dukx_hack_in_keys(ctx, -1, rkeys);
 
     duk_push_object(ctx);  /* handler */
 }
