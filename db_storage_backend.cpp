@@ -300,6 +300,18 @@ struct database
 
         return per_collection_lock[coll];
     }
+
+    std::mutex& get_db_lock()
+    {
+        return all_coll_guard;
+    }
+
+    bool is_imported(const std::string& coll)
+    {
+        std::lock_guard guard(all_coll_guard);
+
+        return collection_imported[coll];
+    }
 };
 
 bool json_prop_true(const nlohmann::json& js, const std::string& key)
@@ -427,11 +439,13 @@ struct db_storage
 
         database& cdb = get_db(db_idx);
 
-        std::vector<nlohmann::json>& collection = cdb.get_collection_nolock(coll);
-        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed_nolock(coll);
+        std::lock_guard guard(cdb.get_db_lock());
 
         if(cdb.collection_imported[coll])
             return;
+
+        std::vector<nlohmann::json>& collection = cdb.get_collection_nolock(coll);
+        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed_nolock(coll);
 
         collection.clear();
         indices.clear();
@@ -514,13 +528,14 @@ struct db_storage
 
         std::lock_guard guard(cdb.get_lock(coll));
 
-        bool is_imported = cdb.collection_imported[coll];
+        ///nothing can touch the collection while we do this so its fine
+        bool is_imported = cdb.is_imported(coll);
 
-        if(is_imported)
-            import_collection_nolock(db, coll);
+        /*if(is_imported)
+            import_collection_nolock(db, coll);*/
 
-        std::vector<nlohmann::json>& collection = cdb.get_collection_nolock(coll);
-        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed_nolock(coll);
+        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
 
         auto fdata = js;
         fdata[CID_STRING] = get_next_id();
@@ -552,8 +567,8 @@ struct db_storage
 
         //std::lock_guard guard(cdb.get_lock(coll));
 
-        std::vector<nlohmann::json>& collection = cdb.get_collection_nolock(coll);
-        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed_nolock(coll);
+        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
 
         if(!has_index(db))
         {
@@ -779,8 +794,8 @@ struct db_storage
 
         import_collection_nolock(db, coll);
 
-        std::vector<nlohmann::json>& collection = cdb.get_collection_nolock(coll);
-        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed_nolock(coll);
+        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
 
         if(!has_index(db))
         {
