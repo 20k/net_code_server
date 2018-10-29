@@ -220,6 +220,14 @@ void tickle_cache()
     });
 }
 
+void tickle_item_cache()
+{
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
+
+    item it;
+    it.load_from_db(mongo_ctx, "0");
+}
+
 void termination_func()
 {
     //if(std::uncaught_exceptions() > 0)
@@ -651,7 +659,7 @@ int main()
     //test_locking();
 
     boot_connection_handlers();
-
+    tickle_item_cache();
 
     #ifdef TESTING
     system("start test_launch.bat");
