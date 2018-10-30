@@ -74,6 +74,38 @@ duk_ret_t async_print(duk_context* ctx)
 	return push_error(ctx, "No pointer or wrong user");
 }
 
+duk_ret_t async_print_raw(duk_context* ctx)
+{
+    COOPERATE_KILL();
+    RATELIMIT_DUK(ASYNC_PRINT);
+
+    std::string str;
+
+    int nargs = duk_get_top(ctx);
+
+    for(int i=0; i < nargs; i++)
+    {
+        if(i != nargs-1)
+        {
+            str += duk_safe_to_std_string(ctx, i) + " ";
+        }
+        else
+        {
+            str += duk_safe_to_std_string(ctx, i);
+        }
+    }
+
+    command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(ctx, "command_handler_state_pointer");
+
+    if(found_ptr && get_caller_stack(ctx).size() > 0 && get_caller_stack(ctx)[0] == found_ptr->get_user_name())
+    {
+        send_async_message(ctx, "command_no_pad " + str);
+        return push_success(ctx);
+    }
+
+	return push_error(ctx, "No pointer or wrong user");
+}
+
 duk_ret_t timeout_yield(duk_context* ctx)
 {
     COOPERATE_KILL();
@@ -1280,6 +1312,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
 
     inject_c_function(ctx, native_print, "print", DUK_VARARGS);
     inject_c_function(ctx, async_print, "async_print", DUK_VARARGS);
+    inject_c_function(ctx, async_print_raw, "async_print_raw", DUK_VARARGS);
 
     inject_c_function(ctx, timeout_yield, "timeout_yield",  0);
     inject_c_function(ctx, async_pipe, "async_pipe",  1);
