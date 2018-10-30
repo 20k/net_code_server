@@ -20,6 +20,8 @@ struct unified_script_info
     {
         SCRIPT,
         BUNDLE,
+        C_SHIM,
+        PRIVILEGED,
         NONE,
     };
 

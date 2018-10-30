@@ -67,6 +67,8 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
             ret.metadata = it2->second;
         }
 
+        ret.type = unified_script_info::script_type::PRIVILEGED;
+
         return ret;
     }
 
@@ -81,7 +83,7 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
         ret.valid = true;
         ret.parsed_source = "function(context, args){\n    return \"This script is a fake shim to c++ and this source is fake, sorry <3\";\n}";
         ret.name = c_shim_name;
-
+        ret.type = unified_script_info::script_type::C_SHIM;
 
         return ret;
     }
