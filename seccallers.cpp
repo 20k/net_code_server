@@ -1006,7 +1006,7 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
 
     bool first_invoke_valid = unified_invoke.valid;
 
-    if(!unified_invoke.valid)
+    if(!unified_invoke.valid || unified_invoke.type == unified_script_info::script_type::BUNDLE)
     {
         script_info dummy;
         dummy.load_from_unparsed_source(ctx, data, host + ".invoke", false, true);
