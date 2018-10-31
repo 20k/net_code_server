@@ -5,6 +5,8 @@
 #include "rng.hpp"
 #include <secret/initial_link_setup.hpp>
 #include <secret/low_level_structure.hpp>
+#include <libncclient/nc_util.hpp>
+#include "privileged_core_scripts.hpp"
 
 void on_heal_network_link(int cnt, std::vector<std::string> data)
 {
@@ -145,6 +147,9 @@ void on_disconnect_link(int cnt, std::vector<std::string> data)
 
     playspace_network_manage.unlink(s1, s2);
 
+    create_notification(-2, s1, make_gray_col("-Link to " + s2 + " Collapsed-"));
+    create_notification(-2, s2, make_gray_col("-Link to " + s1 + " Collapsed-"));
+
     printf("unlink\n");
 }
 
@@ -160,6 +165,9 @@ void on_force_disconnect_link(int cnt, std::vector<std::string> data)
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
     playspace_network_manage.unlink(s1, s2);
+
+    create_notification(-2, s1, make_gray_col("-Link to " + s2 + " Collapsed-"));
+    create_notification(-2, s2, make_gray_col("-Link to " + s1 + " Collapsed-"));
 
     printf("force unlink\n");
 }
