@@ -34,6 +34,9 @@ void on_heal_network_link(int cnt, std::vector<std::string> data)
         playspace_network_manage.set_neighbour_link_strength(data[0], data[1], std::stof(data[2]));
     }
 
+    create_notification(-2, data[0], make_gray_col("-Link to " + data[1] + " Formed-"));
+    create_notification(-2, data[1], make_gray_col("-Link to " + data[0] + " Formed-"));
+
     for(auto& i : data)
     {
         std::cout << i << std::endl;
