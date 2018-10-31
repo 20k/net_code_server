@@ -462,22 +462,10 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
 
     if(data.count("bable_error") > 0)
     {
-        int error_pos = data["bable_error"]["pos"];
+        //int error_pos = data["bable_error"]["pos"];
         int error_line = (int)data["bable_error"]["loc"]["line"] - 1;
         int error_column = (int)data["bable_error"]["loc"]["column"] - 1;
         std::string code = data["code_posttype"]["outputText"];
-
-        std::string highlight_text;
-
-        /*std::cout << "epos " << error_pos << " code " << code << std::endl;
-
-        for(int i=-5 + error_pos; i < 5 + error_pos && i < (int)code.size(); i++)
-        {
-            if(i < 0)
-                continue;
-
-            highlight_text += code[i];
-        }*/
 
         std::vector<std::string> by_line;
 
@@ -502,13 +490,11 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
         std::vector<std::string> pre_contexts;
         std::vector<std::string> post_contexts;
 
-        int context_line = 0;
-
         for(int i=-3; i < 4; i++)
         {
             int idx = i + error_line;
 
-            if(idx < 0 || idx >= by_line.size())
+            if(idx < 0 || idx >= (int)by_line.size())
                 continue;
 
             if(i <= 0)
