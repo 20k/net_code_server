@@ -195,7 +195,7 @@ std::map<std::string, script_metadata> construct_core_metadata()
     ret["scripts.public"].param_data = make_met("seclevel", "Filter By Seclevel", arg_metadata::SECURITY_LEVEL, array_arg);
 
     ret["channel.create"].description = "Create a Channel";
-    ret["channel.create"].return_data = make_met(ok_arg)
+    ret["channel.create"].return_data = make_met(ok_arg);
     ret["channel.create"].param_data = make_met("name", "Channel to Create", arg_metadata::CHANNEL, "password", "Channel Password", arg_metadata::STRING);
 
     ret["channel.join"].description = "Join a Channel";
