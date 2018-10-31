@@ -1700,7 +1700,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             inf.load_from_db(mongo_ctx);
 
             if(!inf.valid)
-                return "Could not find script " + scriptname;
+                return make_error_col("Could not find script " + fullname);
 
             unparsed_source = inf.unparsed_source;
         }
