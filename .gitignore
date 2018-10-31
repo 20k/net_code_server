@@ -2,3 +2,5 @@
 *.o
 *.exe
 /Deployed_Infrastructure_old
+script_compile
+/script_compilation/node_modules/.bin
