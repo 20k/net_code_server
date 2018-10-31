@@ -451,7 +451,7 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
 
     try
     {
-        data = nlohmann::json::parse(read_file_bin(phase_1 + ".ts"));
+        data = nlohmann::json::parse(read_file(phase_1 + ".ts"));
     }
     catch(...)
     {
@@ -461,7 +461,113 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
     //std::cout << "DATA " << data.dump() << std::endl;
 
     if(data.count("bable_error") > 0)
-        return {"", data["bable_error"].dump()};
+    {
+        int error_pos = data["bable_error"]["pos"];
+        int error_line = (int)data["bable_error"]["loc"]["line"] - 1;
+        int error_column = (int)data["bable_error"]["loc"]["column"] - 1;
+        std::string code = data["code_posttype"]["outputText"];
+
+        std::string highlight_text;
+
+        /*std::cout << "epos " << error_pos << " code " << code << std::endl;
+
+        for(int i=-5 + error_pos; i < 5 + error_pos && i < (int)code.size(); i++)
+        {
+            if(i < 0)
+                continue;
+
+            highlight_text += code[i];
+        }*/
+
+        std::vector<std::string> by_line;
+
+        std::string accum;
+
+        for(int i=0; i < (int)code.size(); i++)
+        {
+            if(code[i] == '\n')
+            {
+                by_line.push_back(accum);
+                accum.clear();
+            }
+            else
+            {
+                accum += code[i];
+            }
+        }
+
+        if(accum != "")
+            by_line.push_back(accum);
+
+        std::vector<std::string> pre_contexts;
+        std::vector<std::string> post_contexts;
+
+        int context_line = 0;
+
+        for(int i=-1; i < 2; i++)
+        {
+            int idx = i + error_line;
+
+            if(idx < 0 || idx >= by_line.size())
+                continue;
+
+            /*if(i == 0)
+                context_line = contexts.size();
+
+            contexts.push_back(by_line[idx]);*/
+
+            if(i <= 0)
+                pre_contexts.push_back(by_line[idx]);
+            else
+                post_contexts.push_back(by_line[idx]);
+        }
+
+        /*std::string line = "No context found";
+
+        if(error_line < by_line.size())
+        {
+            line = by_line[error_line];
+        }*/
+
+        std::string line = "";
+
+        for(auto& i : pre_contexts)
+        {
+            line += i + "\n";
+        }
+
+        if(line.size() > 0)
+            line.pop_back();
+
+        std::string post_line;
+
+        for(auto& i : post_contexts)
+        {
+            post_line += i + "\n";
+        }
+
+        //std::string prepad = "Source: ";
+
+        std::string prepad;
+
+        std::string arrow;
+
+        for(int i=0; i < error_column + (int)prepad.size(); i++)
+        {
+            arrow += " ";
+        }
+
+        arrow += "^";
+
+        std::string formatted_error = "Script Upload Error: Line " + std::to_string(error_line + 1) + " column " + std::to_string(error_column + 1) + "\n" +
+                                      "Source:\n" + line + "\n" + arrow + "\n" + post_line;
+
+        //data["bable_error"]["context"] = line;
+
+        return {"", formatted_error};
+
+        //return {"", data["bable_error"].dump()};
+    }
 
     return {data["code_postbabel"]["code"], ""};
 
