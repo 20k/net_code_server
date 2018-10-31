@@ -199,11 +199,11 @@ std::map<std::string, script_metadata> construct_core_metadata()
     ret["channel.create"].param_data = make_met("name", "Channel to Create", arg_metadata::CHANNEL, "password", "Channel Password", arg_metadata::STRING);
 
     ret["channel.join"].description = "Join a Channel";
-    ret["channel.join"].return_data = make_met(ok_arg)
-    ret["channel.join"].param_data = make_met("name", "Channel to Create", arg_metadata::CHANNEL, "password", "Channel Password", arg_metadata::STRING);
+    ret["channel.join"].return_data = make_met(ok_arg);
+    ret["channel.join"].param_data = make_met("name", "Channel to Join", arg_metadata::CHANNEL, "password", "Channel Password", arg_metadata::STRING);
 
     ret["channel.leave"].description = "Leave a Channel";
-    ret["channel.leave"].return_data = make_met(ok_arg)
+    ret["channel.leave"].return_data = make_met(ok_arg);
     ret["channel.leave"].param_data = make_met("name", "Channel to Leave", arg_metadata::CHANNEL);
 
     ret["channel.list"].description = "Get a list of joined Channels";
