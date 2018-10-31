@@ -59,6 +59,8 @@ struct script_data
     std::string parsed_source;
     int seclevel = 0;
     bool valid = false;
+
+    std::string compile_error;
 };
 
 script_data parse_script(const std::string& file_name, std::string in, bool enable_typescript);

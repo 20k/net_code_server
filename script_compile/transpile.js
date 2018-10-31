@@ -60,7 +60,7 @@ try
 }
 catch(err)
 {
-    found = err;
+    found["bable_error"] = err;
 }
 
 fs.writeFileSync(path + ".ts", JSON.stringify(found))

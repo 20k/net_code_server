@@ -33,7 +33,7 @@ std::string attach_unparsed_wrapper(std::string str)
 
     std::string match = "function";
 
-    for(int i=0; i < match.size() && i < str.size(); i++)
+    for(int i=0; i < (int)match.size() && i < (int)str.size(); i++)
     {
         if(match[i] != str[i])
             return str;
@@ -421,7 +421,7 @@ void crappy_exec(const std::string& cmd, const std::string& params)
     //ShellExecute(NULL, "open", cmd.c_str(), params.c_str(), nullptr, SW_SHOWDEFAULT);
 }
 
-std::string make_fill_es6(const std::string& file_name, const std::string& in)
+std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, const std::string& in)
 {
     std::string compiler_dir = "compile/";
 
@@ -446,9 +446,28 @@ std::string make_fill_es6(const std::string& file_name, const std::string& in)
 
     std::string res = capture_exec("node script_compile/transpile.js " + phase_1);
 
+
+    nlohmann::json data;
+
+    try
+    {
+        data = nlohmann::json::parse(read_file_bin(phase_1 + ".ts"));
+    }
+    catch(...)
+    {
+        std::cout << "didn't go well\n";
+    }
+
+    //std::cout << "DATA " << data.dump() << std::endl;
+
+    if(data.count("bable_error") > 0)
+        return {"", data["bable_error"].dump()};
+
+    return {data["code_postbabel"]["code"], ""};
+
     //std::cout << "es6 " << res << std::endl;
 
-    std::string found = read_file(phase_3);
+    //std::string found = read_file(phase_3);
 
     //std::cout << "found " << found << std::endl;
 
@@ -456,7 +475,7 @@ std::string make_fill_es6(const std::string& file_name, const std::string& in)
     //std::remove((phase_2).c_str());
     //std::remove((phase_3).c_str());
 
-    return found;
+    //return found;
 }
 
 script_data parse_script(const std::string& file_name, std::string in, bool enable_typescript)
@@ -475,16 +494,26 @@ script_data parse_script(const std::string& file_name, std::string in, bool enab
         expand(strview, in, i, found_seclevel, autocompletes);
     }
 
+    script_data script;
+
+    script.valid = true;
+
     if(enable_typescript)
     {
-        in = make_fill_es6(file_name, in);
+        std::pair<std::string, std::string> result = make_fill_es6(file_name, in);
+
+        in = result.first;
+
+        if(result.second != "")
+        {
+            script.compile_error = result.second;
+            script.valid = false;
+        }
     }
 
-    script_data script;
     script.autocompletes = autocompletes;
     script.parsed_source = in;
     script.seclevel = found_seclevel;
-    script.valid = true;
 
     return script;
 }
@@ -535,6 +564,9 @@ std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::
     seclevel = sdata.seclevel;
     valid = sdata.valid;
     metadata = decltype(metadata)();
+
+    if(!sdata.valid && sdata.compile_error != "")
+        return sdata.compile_error;
 
     std::string err;
 
