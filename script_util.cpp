@@ -504,30 +504,18 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
 
         int context_line = 0;
 
-        for(int i=-1; i < 2; i++)
+        for(int i=-3; i < 4; i++)
         {
             int idx = i + error_line;
 
             if(idx < 0 || idx >= by_line.size())
                 continue;
 
-            /*if(i == 0)
-                context_line = contexts.size();
-
-            contexts.push_back(by_line[idx]);*/
-
             if(i <= 0)
                 pre_contexts.push_back(by_line[idx]);
             else
                 post_contexts.push_back(by_line[idx]);
         }
-
-        /*std::string line = "No context found";
-
-        if(error_line < by_line.size())
-        {
-            line = by_line[error_line];
-        }*/
 
         std::string line = "";
 
