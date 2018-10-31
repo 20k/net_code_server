@@ -5,6 +5,7 @@
 #include "duk_object_functions.hpp"
 #include <memory>
 #include "logging.hpp"
+#include <shellapi.h>
 
 ///new api
 ///we need a function to upload it to the server
@@ -384,22 +385,43 @@ std::string capture_exec(const std::string& cmd)
     return result;
 }
 
+void crappy_exec(const std::string& cmd, const std::string& params)
+{
+    system((cmd + params).c_str());
+
+    //ShellExecute(NULL, "open", cmd.c_str(), params.c_str(), nullptr, SW_SHOWDEFAULT);
+}
+
 std::string make_fill_es6(const std::string& file_name, const std::string& in)
 {
     std::string compiler_dir = "compile/";
 
-    write_all_bin(compiler_dir + file_name + ".ts", in);
+    //write_all_bin(compiler_dir + file_name + ".ts", in);
 
-    std::string res = capture_exec("C:\\Stuff\\nodejs\\node.exe transpile.js " + compiler_dir + file_name + ".ts");
+    //std::string res = capture_exec("C:\\Stuff\\nodejs\\node.exe transpile.js " + compiler_dir + file_name + ".ts");
+
+    //crappy_exec("mkdir ", compiler_dir);
+
+    mkdir(compiler_dir.c_str());
+
+    std::string phase_1 = compiler_dir + file_name + ".out1.js";
+    std::string phase_2 = compiler_dir + file_name + ".out2.js";
+    std::string phase_3 = compiler_dir + file_name + ".out3.js";
+
+    write_all_bin(phase_1, in);
+
+    crappy_exec("\"script_compile\\node_modules\\.bin\\babel.cmd\" ", phase_1 + " --out-file " + phase_2 + " --presets @babel/preset-typescript");
+    crappy_exec("\"script_compile\\node_modules\\.bin\\babel.cmd\" ", phase_2 + " --out-file " + phase_3 + " --presets @babel/preset-env");
 
     //std::cout << "es6 " << res << std::endl;
 
-    std::string found = read_file(compiler_dir + file_name + ".ts.ts");
+    std::string found = read_file(phase_3);
 
     //std::cout << "found " << found << std::endl;
 
-    std::remove((compiler_dir + file_name + ".ts.ts").c_str());
-    std::remove((compiler_dir + file_name + ".ts").c_str());
+    //std::remove((phase_1).c_str());
+    //std::remove((phase_2).c_str());
+    //std::remove((phase_3).c_str());
 
     return found;
 }
