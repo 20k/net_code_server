@@ -921,9 +921,12 @@ duk_ret_t channel__create(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(request.fetch_from_db(mongo_ctx).size() > 0)
         return push_error(ctx, "Channel already exists");
 
+    std::vector<std::string> user_list{get_caller(ctx)};
+
     mongo_requester to_insert;
     to_insert.set_prop("channel_name", chan);
     to_insert.set_prop("password", password);
+    to_insert.set_prop("user_list", array_to_str(user_list));
 
     to_insert.insert_in_db(mongo_ctx);
 
@@ -978,6 +981,59 @@ duk_ret_t channel__join(priv_context& priv_ctx, duk_context* ctx, int sl)
     to_find.update_in_db_if_exact(mongo_ctx, to_set);
 
     return push_success(ctx);
+}
+
+duk_ret_t channel__list(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
+
+    std::string username = get_caller(ctx);
+
+    std::vector<std::string> ret;
+
+    mongo_requester all;
+    all.exists_check["channel_name"] = 1;
+
+    std::vector<mongo_requester> found;
+
+    {
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
+        found = all.fetch_from_db(mongo_ctx);
+    }
+
+    for(auto& i : found)
+    {
+        std::vector<std::string> users = str_to_array(i.get_prop("user_list"));
+
+        for(auto& k : users)
+        {
+            if(k == username)
+            {
+                ret.push_back(i.get_prop("channel_name"));
+                break;
+            }
+        }
+    }
+
+    if(is_arr)
+    {
+        push_duk_val(ctx, ret);
+        return 1;
+    }
+    else
+    {
+        std::string str;
+
+        for(auto& i : ret)
+        {
+            str += i + "\n";
+        }
+
+        push_duk_val(ctx, strip_trailing_newlines(str));
+        return 1;
+    }
 }
 
 duk_ret_t channel__leave(priv_context& priv_ctx, duk_context* ctx, int sl)

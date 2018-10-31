@@ -88,6 +88,7 @@ bool is_valid_channel_name(const std::string& in);
 duk_ret_t channel__create(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t channel__join(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t channel__leave(priv_context& priv_ctx, duk_context* ctx, int sl);
+duk_ret_t channel__list(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl);
 
@@ -312,7 +313,8 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(scripts__public, 4),
     REGISTER_FUNCTION_PRIV(channel__create, 3),
     REGISTER_FUNCTION_PRIV(channel__join, 3),
-    REGISTER_FUNCTION_PRIV(channel__leave, 3), ///implement channel.list
+    REGISTER_FUNCTION_PRIV(channel__leave, 3),
+    REGISTER_FUNCTION_PRIV(channel__list, 3),
     REGISTER_FUNCTION_PRIV(msg__manage, 3),
     REGISTER_FUNCTION_PRIV(msg__send, 3),
     REGISTER_FUNCTION_PRIV(msg__tell, 3),
@@ -390,6 +392,7 @@ std::vector<std::string> hidden_functions
     {"ada.access"},
     {"able.help"},
     {"cash.xfer_to_caller"}, ///deprecated because we now have #os.
+    {"msg.manage"}, ///deprecated due to channel.* namespace
 };
 
 std::map<std::string, std::vector<script_arg>> construct_core_args();
