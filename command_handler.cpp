@@ -2342,6 +2342,7 @@ std::string handle_client_poll_json(user& usr)
     all["tells"] = tdata;
     all["notifs"] = ndata;
     all["user"] = usr.get_call_stack().back();
+    all["root_user"] = usr.name;
 
     return "chat_api_json " + all.dump();
 }
