@@ -6,6 +6,7 @@
 #include <memory>
 #include "logging.hpp"
 #include <shellapi.h>
+#include <dirent.h>
 
 ///new api
 ///we need a function to upload it to the server
@@ -20,18 +21,46 @@ std::string function_wrap(const std::string& str)
     return "(function(){" + str + "})()";
 }
 
+std::string arg_function_wrap(const std::string& str)
+{
+    return "(function(context, args){" + str + "})(context, args)";
+}
+
 std::string attach_unparsed_wrapper(std::string str)
 {
     while(str.size() > 0 && isspace(str.front()))
         str.erase(str.begin());
 
-    return "return " + str;
+    std::string match = "function";
+
+    for(int i=0; i < match.size() && i < str.size(); i++)
+    {
+        if(match[i] != str[i])
+            return str;
+    }
+
+    std::string fname = " INTERNAL";
+
+    int index = match.size();
+
+    for(int i=(int)fname.size() - 1; i >= 0; i--)
+    {
+        str.insert(str.begin() + index, fname[i]);
+    }
+
+    str += "\nreturn INTERNAL(context, args);";
+
+    return arg_function_wrap(str);
+    //return "return " + str;
 }
 
 bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out)
 {
-    std::string prologue = "function INTERNAL_TEST(context, args)\n{\nvar IVAR = ";
-    std::string endlogue = "\n\nreturn IVAR(context, args);\n\n}\n";
+    //std::string prologue = "function INTERNAL_TEST(context, args)\n{\nvar IVAR = ";
+    //std::string endlogue = "\n\nreturn IVAR(context, args);\n\n}\n";
+
+    std::string prologue = "";
+    std::string endlogue = "";
 
     std::string wrapper = prologue + function_wrap(script.parsed_source) + endlogue;
 
@@ -43,7 +72,7 @@ bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out
     std::cout << wrapper << std::endl;
     #endif // DEBUG_REAL
 
-    if(duk_pcompile(ctx, DUK_COMPILE_FUNCTION) != 0)
+    if(duk_pcompile(ctx, DUK_COMPILE_EVAL) != 0)
     {
         std::string ret = duk_safe_to_string(ctx, -1);
 
@@ -71,7 +100,7 @@ bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out
 
 std::string attach_wrapper(const std::string& data_in, bool stringify, bool direct)
 {
-    std::string prologue = "function INTERNAL_TEST(context, args)\n{\nvar IVAR = ";
+    std::string prologue = "function INTERNAL_TEST()\n{\nvar IVAR = ";
     std::string endlogue = "\n\nreturn IVAR(context, args);\n\n}\n";
 
     if(stringify)
@@ -410,8 +439,12 @@ std::string make_fill_es6(const std::string& file_name, const std::string& in)
 
     write_all_bin(phase_1, in);
 
-    crappy_exec("\"script_compile\\node_modules\\.bin\\babel.cmd\" ", phase_1 + " --out-file " + phase_2 + " --presets @babel/preset-typescript");
-    crappy_exec("\"script_compile\\node_modules\\.bin\\babel.cmd\" ", phase_2 + " --out-file " + phase_3 + " --presets @babel/preset-env");
+    //crappy_exec("\"script_compile\\node_modules\\.bin\\babel.cmd\" ", phase_1 + " --out-file " + phase_2 + " --presets @babel/preset-typescript");
+    //crappy_exec("\"script_compile\\node_modules\\.bin\\babel.cmd\" ", phase_2 + " --out-file " + phase_3 + " --presets @babel/preset-env");
+
+    //crappy_exec("node script_compile/transpile.js ", phase_1);
+
+    std::string res = capture_exec("node script_compile/transpile.js " + phase_1);
 
     //std::cout << "es6 " << res << std::endl;
 

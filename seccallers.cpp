@@ -630,11 +630,12 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
     register_funcs(new_ctx, seclevel, get_script_host(ctx));
 
     std::string wrapper;
+    wrapper = data;
 
-    if(!is_top_level)
+    /*if(!is_top_level)
         wrapper = attach_wrapper(data, stringify, false);
     else ///wrapper already attached
-        wrapper = data;
+        wrapper = data;*/
 
     //std::cout << "wrapper:\n";
     //std::cout << wrapper << std::endl;
@@ -644,10 +645,10 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
     duk_push_string(new_ctx, wrapper.c_str());
     duk_push_string(new_ctx, "test-name");
 
-    duk_int_t mode = DUK_COMPILE_FUNCTION;
+    //duk_int_t mode = DUK_COMPILE_FUNCTION;
 
-    if(is_top_level)
-        mode = DUK_COMPILE_EVAL;
+    //if(is_top_level)
+    duk_int_t mode = DUK_COMPILE_EVAL;
 
     if(duk_pcompile(new_ctx, mode) != 0)
     {
@@ -704,6 +705,11 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
             dukx_sanitise_move_value(ctx, new_ctx, -1);
             #endif // USE_PROXY
         }
+
+        duk_push_global_object(new_ctx);
+        duk_dup(new_ctx, -2);
+        duk_put_prop_string(new_ctx, -2, "args");
+        duk_pop(new_ctx);
 
         ///now we have [object, args] on the stack 2
 
