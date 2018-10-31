@@ -96,6 +96,12 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["cash.xfer_to"] = make_cary("user", "\"\"", "amount", "0");
     ret["cash.xfer_to_caller"] = make_cary();
     ret["scripts.core"] = make_cary();
+
+    ret["channel.create"] = make_cary("name", "\"\"", "password", "\"\"");
+    ret["channel.join"] = make_cary("name", "\"\"");
+    ret["channel.leave"] = make_cary("name", "\"\"");
+    ret["channel.list"] = make_cary();
+
     ret["msg.manage"] = make_cary();
     ret["msg.send"] = make_cary("channel", "\"\"", "msg", "\"\"");
     ret["msg.tell"] = make_cary("user", "\"\"", "msg", "\"\"");
@@ -187,6 +193,22 @@ std::map<std::string, script_metadata> construct_core_metadata()
     ret["scripts.public"].description = "Gets a list of public scripts";
     ret["scripts.public"].return_data = make_met("", "Stringified result", arg_metadata::STRING, "", "Array Result", arg_metadata::ARRAY);
     ret["scripts.public"].param_data = make_met("seclevel", "Filter By Seclevel", arg_metadata::SECURITY_LEVEL, array_arg);
+
+    ret["channel.create"].description = "Create a Channel";
+    ret["channel.create"].return_data = make_met(ok_arg)
+    ret["channel.create"].param_data = make_met("name", "Channel to Create", arg_metadata::CHANNEL, "password", "Channel Password", arg_metadata::STRING);
+
+    ret["channel.join"].description = "Join a Channel";
+    ret["channel.join"].return_data = make_met(ok_arg)
+    ret["channel.join"].param_data = make_met("name", "Channel to Create", arg_metadata::CHANNEL, "password", "Channel Password", arg_metadata::STRING);
+
+    ret["channel.leave"].description = "Leave a Channel";
+    ret["channel.leave"].return_data = make_met(ok_arg)
+    ret["channel.leave"].param_data = make_met("name", "Channel to Leave", arg_metadata::CHANNEL);
+
+    ret["channel.list"].description = "Get a list of joined Channels";
+    ret["channel.list"].return_data = make_met("", "Stringified list of Channels", arg_metadata::STRING, "", "Array of Channels", arg_metadata::CHANNEL | arg_metadata::ARRAY);
+    ret["channel.list"].param_data = make_met();
 
     ret["msg.manage"].description = "Join, Leave, or Create a channel";
     ret["msg.manage"].return_data = make_met(ok_arg);
