@@ -1478,7 +1478,37 @@ bool is_allowed_user(const std::string& user)
     return banned.find(user) == banned.end();
 }
 
-std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str, bool& is_auth)
+struct handle_command_return
+{
+    enum class return_type
+    {
+        DEFAULT,
+        RAW,
+        ERR,
+    };
+
+    return_type type = return_type::ERR;
+    std::string val;
+
+    handle_command_return(const std::string& pval)
+    {
+        type = return_type::DEFAULT;
+        val = pval;
+    }
+
+    handle_command_return(const char* ptr) : handle_command_return(std::string(ptr))
+    {
+
+    }
+
+    handle_command_return(const std::string& pval, const std::string& tag)
+    {
+        type = return_type::RAW;
+        val = tag + " " + pval;
+    }
+};
+
+handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str, bool& is_auth)
 {
     is_auth = false;
 
@@ -1643,6 +1673,24 @@ std::string handle_command_impl(std::shared_ptr<shared_command_handler_state> al
     else if(starts_with(str, "#delete_user "))
     {
         return delete_user(all_shared->state, str);
+    }
+    else if(starts_with(str, "#down"))
+    {
+        if(all_shared->state.get_auth() == "")
+            return make_error_col("No Auth");
+
+        std::vector<std::string> split_string = no_ss_split(str, " ");
+
+        if(split_string.size() != 2)
+        {
+            return "Syntax is #down scriptname";
+        }
+
+        std::string scriptname = strip_whitespace(split_string[1]);
+
+        std::string fullname = all_shared->state.get_user_name() + "." + scriptname;
+
+
     }
     else if(starts_with(str, "#up ") || starts_with(str, "#dry ") || starts_with(str, "#up_es6 "))
     {
@@ -2458,20 +2506,28 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
         {
             bool is_auth = false;
 
-            std::string ret = handle_command_impl(all_shared, to_exec, is_auth);
+            handle_command_return ret = handle_command_impl(all_shared, to_exec, is_auth);
 
-            if(is_auth)
+            if(ret.type == handle_command_return::return_type::DEFAULT)
             {
-                return "command_auth " + ret;
+                if(is_auth)
+                {
+                    return "command_auth " + ret.val;
+                }
+
+                if(tagged)
+                {
+                    return "command_tagged " + tag + " " + ret.val;
+                }
+                else
+                {
+                    return "command " + ret.val;
+                }
             }
 
-            if(tagged)
+            if(ret.type == handle_command_return::return_type::RAW)
             {
-                return "command_tagged " + tag + " " + ret;
-            }
-            else
-            {
-                return "command " + ret;
+                return ret.val;
             }
         };
 
