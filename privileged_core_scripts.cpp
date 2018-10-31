@@ -880,6 +880,12 @@ bool user_in_channel(mongo_lock_proxy& mongo_ctx, const std::string& username, c
 
 bool is_valid_channel_name(const std::string& in)
 {
+    if(in.size() == 0)
+        return false;
+
+    if(in.size() > 16)
+        return false;
+
     for(auto& i : in)
     {
         if(isalnum(i) || i == '_')
@@ -894,6 +900,134 @@ bool is_valid_channel_name(const std::string& in)
     return true;
 }
 
+duk_ret_t channel__create(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string chan = duk_safe_get_prop_string(ctx, -1, "name");
+    std::string password = duk_safe_get_prop_string(ctx, -1, "password");
+
+    if(password.size() > 16)
+        password.resize(16);
+
+    if(!is_valid_channel_name(chan))
+        return push_error(ctx, "Invalid Name");
+
+    mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+
+    mongo_requester request;
+    request.set_prop("channel_name", chan);
+
+    if(request.fetch_from_db(mongo_ctx).size() > 0)
+        return push_error(ctx, "Channel already exists");
+
+    mongo_requester to_insert;
+    to_insert.set_prop("channel_name", chan);
+    to_insert.set_prop("password", password);
+
+    to_insert.insert_in_db(mongo_ctx);
+
+    return push_success(ctx);
+}
+
+duk_ret_t channel__join(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string chan = duk_safe_get_prop_string(ctx, -1, "name");
+    std::string password = duk_safe_get_prop_string(ctx, -1, "password");
+
+    if(password.size() > 16)
+        password.resize(16);
+
+    if(!is_valid_channel_name(chan))
+        return push_error(ctx, "Invalid Name");
+
+    mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+
+    mongo_requester request;
+    request.set_prop("channel_name", chan);
+
+    std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
+
+    if(found.size() == 0)
+        return push_error(ctx, "Channel does not exist");
+
+    if(found.size() > 1)
+        return push_error(ctx, "Some kind of catastrophic error: Yellow Sparrow");
+
+    mongo_requester& found_channel = found[0];
+
+    if(found_channel.has_prop("password") && found_channel.get_prop("password") != password)
+        return push_error(ctx, "Wrong Password");
+
+    std::vector<std::string> users = str_to_array(found_channel.get_prop("user_list"));
+
+    std::string username = get_caller(ctx);
+
+    if(array_contains(users, username))
+        return push_success(ctx, "In channel");
+
+    users.push_back(username);
+
+    mongo_requester to_find = request;
+
+    mongo_requester to_set;
+    to_set.set_prop("user_list", array_to_str(users));
+
+    to_find.update_in_db_if_exact(mongo_ctx, to_set);
+
+    return push_success(ctx);
+}
+
+duk_ret_t channel__leave(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    std::string chan = duk_safe_get_prop_string(ctx, -1, "name");
+
+    if(!is_valid_channel_name(chan))
+        return push_error(ctx, "Invalid Name");
+
+    mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+
+    mongo_requester request;
+    request.set_prop("channel_name", chan);
+
+    std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
+
+    if(found.size() == 0)
+        return push_error(ctx, "Channel does not exist");
+
+    if(found.size() > 1)
+        return push_error(ctx, "Some kind of catastrophic error: Yellow Sparrow");
+
+    mongo_requester& found_channel = found[0];
+
+    std::vector<std::string> users = str_to_array(found_channel.get_prop("user_list"));
+
+    std::string username = get_caller(ctx);
+
+    if(!array_contains(users, username))
+        return push_error(ctx, "Not in Channel");
+
+    auto it = std::find(users.begin(), users.end(), username);
+
+    if(it != users.end())
+        users.erase(it);
+
+    if(array_contains(users, username))
+        return push_success(ctx, "In channel");
+
+    mongo_requester to_find = request;
+
+    mongo_requester to_set;
+    to_set.set_prop("user_list", array_to_str(users));
+
+    to_find.update_in_db_if_exact(mongo_ctx, to_set);
+
+    return push_success(ctx);
+}
 
 duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
@@ -987,7 +1121,8 @@ duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         to_find.update_in_db_if_exact(mongo_ctx, to_set);
     }
 
-    {
+    ///this was disabled an extremely long time ago
+    /*{
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
 
         user found_user;
@@ -1011,7 +1146,7 @@ duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         found_user.joined_channels = array_to_str(chans);
         found_user.overwrite_user_in_db(mongo_ctx);
-    }
+    }*/
 
     if(to_create.size() > 0)
     {

@@ -85,6 +85,10 @@ std::vector<std::string> get_users_in_channel(mongo_lock_proxy& mongo_ctx, const
 
 bool is_valid_channel_name(const std::string& in);
 
+duk_ret_t channel__create(priv_context& priv_ctx, duk_context* ctx, int sl);
+duk_ret_t channel__join(priv_context& priv_ctx, duk_context* ctx, int sl);
+duk_ret_t channel__leave(priv_context& priv_ctx, duk_context* ctx, int sl);
+
 duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl);
@@ -306,6 +310,9 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(scripts__core, 4),
     REGISTER_FUNCTION_PRIV(scripts__me, 2),
     REGISTER_FUNCTION_PRIV(scripts__public, 4),
+    REGISTER_FUNCTION_PRIV(channel__create, 3),
+    REGISTER_FUNCTION_PRIV(channel__join, 3),
+    REGISTER_FUNCTION_PRIV(channel__leave, 3), ///implement channel.list
     REGISTER_FUNCTION_PRIV(msg__manage, 3),
     REGISTER_FUNCTION_PRIV(msg__send, 3),
     REGISTER_FUNCTION_PRIV(msg__tell, 3),
