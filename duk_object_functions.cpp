@@ -388,9 +388,14 @@ std::vector<std::string> normalise_object_stack(const std::string& chain)
 
     std::string first = in.front();
 
-    if(!is_number(first))
+    /*if(!is_number(first))
     {
         in.insert(in.begin(), "0");
+    }*/
+
+    if(!is_number(first))
+    {
+        throw std::runtime_error("Root key must be index, eg $db[0], whereas you passed $db[" + first + "]");
     }
 
     return in;
