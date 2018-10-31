@@ -1690,7 +1690,24 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
         std::string fullname = all_shared->state.get_user_name() + "." + scriptname;
 
+        std::string unparsed_source;
 
+        {
+            mongo_nolock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
+
+            script_info inf;
+            inf.name = fullname;
+            inf.load_from_db(mongo_ctx);
+
+            if(!inf.valid)
+                return "Could not find script " + scriptname;
+
+            unparsed_source = inf.unparsed_source;
+        }
+
+        handle_command_return ret(unparsed_source, "command_down " + fullname);
+
+        return ret;
     }
     else if(starts_with(str, "#up ") || starts_with(str, "#dry ") || starts_with(str, "#up_es6 "))
     {
@@ -2529,6 +2546,8 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
             {
                 return ret.val;
             }
+
+            return std::string("command Error: This is unhandled");
         };
 
         if(conditional_async)
