@@ -9,4 +9,6 @@ struct source_map
     void decode(const std::string& str);
 };
 
+void source_map_tests();
+
 #endif // SOURCE_MAPS_HPP_INCLUDED

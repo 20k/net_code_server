@@ -39,6 +39,7 @@
 #include "db_storage_backend.hpp"
 #include "auth.hpp"
 #include "safe_thread.hpp"
+#include "source_maps.hpp"
 
 void debug_terminal()
 {
@@ -289,6 +290,8 @@ int main()
     //raise(SIGSEGV);
 
     lg::set_logfile("./log.txt");
+
+    source_map_tests();
 
     #ifdef TESTING
     parse_source();
