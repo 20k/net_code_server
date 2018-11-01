@@ -82,6 +82,8 @@ struct source_segment
     std::optional<int> names_index;*/
 
     std::array<std::optional<int>, 5> vals;
+
+    std::string input;;
 };
 
 struct source_line
@@ -137,6 +139,8 @@ struct source_line
                 }
             }
 
+            found.input = seg;
+
             segments.push_back(found);
 
             first = false;
@@ -144,6 +148,61 @@ struct source_line
 
         if(segments.size() > 0)
             last_line = segments.back();
+    }
+
+    std::string dump()
+    {
+        std::string ret = "Num segments " + std::to_string(segments.size()) + "\n";
+
+        for(source_segment& seg : segments)
+        {
+            for(int i=0; i < 5; i++)
+            {
+                if(seg.vals[i].has_value())
+                {
+                    ret += "i: " + std::to_string(i) + " val: " + std::to_string(seg.vals[i].value()) + "\n";
+                }
+                else
+                {
+                    continue;
+                    //ret += "No value here\n";
+                }
+            }
+        }
+
+        return ret;
+    }
+};
+
+struct full_intermediate_map
+{
+    std::vector<source_line> lines;
+
+    void decode_from(const std::string& in)
+    {
+        auto vals = no_ss_split(in, ";");
+
+        source_segment last;
+
+        for(auto& i : vals)
+        {
+            source_line line;
+            line.decode_from_whole_line(last, i);
+
+            lines.push_back(line);
+        }
+    }
+
+    std::string dump()
+    {
+        std::string ret;
+
+        for(auto& i : lines)
+        {
+            ret += i.dump() + "\n";
+        }
+
+        return ret;
     }
 };
 
@@ -169,6 +228,27 @@ void source_map_tests()
     {
         std::cout << "decoded " << i << std::endl;
     }
+
+
+    /*source_line decoded_line;
+    source_segment seg;
+    decoded_line.decode_from_whole_line(seg, "AAgBC,SAAQ,CAAEA");
+
+    std::cout << decoded_line.dump();*/
+
+    /*full_intermediate_map full_map;
+    full_map.decode_from("AAgBC,SAAQ,CAAEA");
+
+    std::cout << full_map.dump() << std::endl;*/
+
+    //"sourceMapText":"{\"version\":3,\"file\":\"module.js\",\"sourceRoot\":\"\",\"sources\":[\"module.ts\"],\"names\":[],\"mappings\":\"AAAA,CAAC,UAAS,OAAO,EAAE,IAAI;IAAE,kBAAkB,OAAO,EAAE,IAAI;QAEpD,YAAY;QACZ,CAAC,EAAE,EAAE,EAAA,KAAK,CAAA,CAAA;QACV,MAAM,CAAC,aAAa,CAAA;IACxB,CAAC;IACD,MAAM,CAAC,QAAQ,CAAC,OAAO,EAAE,IAAI,CAAC,CAAC;AAAA,CAAC,CAAC,CAAC,OAAO,EAAE,IAAI,CAAC,CAAA\"}"
+
+    std::string test_frag = "AAAA,CAAC,UAAS,OAAO,EAAE,IAAI;IAAE,kBAAkB,OAAO,EAAE,IAAI;QAEpD,YAAY;QACZ,CAAC,EAAE,EAAE,EAAA,KAAK,CAAA,CAAA;QACV,MAAM,CAAC,aAAa,CAAA;IACxB,CAAC;IACD,MAAM,CAAC,QAAQ,CAAC,OAAO,EAAE,IAAI,CAAC,CAAC;AAAA,CAAC,CAAC,CAAC,OAAO,EAAE,IAAI,CAAC,CAAA";
+
+    full_intermediate_map full_map;
+    full_map.decode_from(test_frag);
+
+    std::cout << full_map.dump() << std::endl;
 
     exit(0);
 }

@@ -49,7 +49,7 @@ var found = {};
 
 try
 {
-    let after_type = ts.transpileModule(text, { compilerOptions: { module: ts.ModuleKind.CommonJS, noEmitOnError: false, noImplicitAny: false, downlevelIteration:true, target:ts.ScriptTarget.ES5 } });
+    let after_type = ts.transpileModule(text, { compilerOptions: { sourceMap:true, module: ts.ModuleKind.CommonJS, noEmitOnError: false, noImplicitAny: false, downlevelIteration:true, target:ts.ScriptTarget.ES5 } });
 
     found["code_posttype"] = after_type;
     

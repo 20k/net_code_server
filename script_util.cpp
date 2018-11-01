@@ -467,6 +467,9 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
         int error_column = (int)data["bable_error"]["loc"]["column"] - 1;
         std::string code = data["code_posttype"]["outputText"];
 
+        ///js object
+        std::string typescript_sourcemap = data["code_posttype"]["sourceMapText"];
+
         std::vector<std::string> by_line;
 
         std::string accum;
