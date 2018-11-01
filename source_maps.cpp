@@ -4,6 +4,7 @@
 #include <iostream>
 #include <array>
 #include <libncclient/nc_util.hpp>
+#include <json/json.hpp>
 
 #define BITS_PER_VLQ 5
 
@@ -73,7 +74,7 @@ std::vector<int> decode_segment(const std::string& in)
     return ret;
 }
 
-struct source_segment
+struct intermediate_source_segment
 {
     /*std::optional<int> generated_column;
     std::optional<int> source_index;
@@ -83,15 +84,15 @@ struct source_segment
 
     std::array<std::optional<int>, 5> vals;
 
-    std::string input;;
+    std::string input;
 };
 
-struct source_line
+struct intermediate_source_line
 {
-    std::vector<source_segment> segments;
+    std::vector<intermediate_source_segment> segments;
 
     ///pretty easy to get lines, just split by ;
-    void decode_from_whole_line(source_segment& last_line, const std::string& in)
+    void decode_from_whole_line(intermediate_source_segment& last_line, const std::string& in)
     {
         std::vector<std::string> parse_segments = no_ss_split(in, ",");
 
@@ -101,7 +102,7 @@ struct source_line
 
         for(int i=0; i < (int)parse_segments.size(); i++)
         {
-            source_segment last;
+            intermediate_source_segment last;
 
             if(i == 0)
                 last = last_line;
@@ -115,7 +116,7 @@ struct source_line
             if(decoded.size() == 0)
                 continue;
 
-            source_segment found;
+            intermediate_source_segment found;
 
             for(int kk=0; kk < (int)decoded.size(); kk++)
             {
@@ -139,6 +140,11 @@ struct source_line
                 }
             }
 
+            for(int kk=(int)decoded.size(); kk < 5; kk++)
+            {
+                found.vals[kk] = last.vals[kk];
+            }
+
             found.input = seg;
 
             segments.push_back(found);
@@ -154,7 +160,7 @@ struct source_line
     {
         std::string ret = "Num segments " + std::to_string(segments.size()) + "\n";
 
-        for(source_segment& seg : segments)
+        for(intermediate_source_segment& seg : segments)
         {
             for(int i=0; i < 5; i++)
             {
@@ -176,17 +182,17 @@ struct source_line
 
 struct full_intermediate_map
 {
-    std::vector<source_line> lines;
+    std::vector<intermediate_source_line> lines;
 
     void decode_from(const std::string& in)
     {
         auto vals = no_ss_split(in, ";");
 
-        source_segment last;
+        intermediate_source_segment last;
 
         for(auto& i : vals)
         {
-            source_line line;
+            intermediate_source_line line;
             line.decode_from_whole_line(last, i);
 
             lines.push_back(line);
@@ -206,9 +212,48 @@ struct full_intermediate_map
     }
 };
 
-void source_map::decode(const std::string& str)
+void source_map::decode(const std::string& code_in, const std::string& code_out, const std::string& json_obj)
 {
+    original_code = code_in;
+    parsed_code = code_out;
 
+    nlohmann::json obj = nlohmann::json::parse(json_obj);
+
+    std::vector<std::string> names = obj["names"];
+
+    std::string mappings = obj["mappings"];
+
+    full_intermediate_map full_map;
+    full_map.decode_from(mappings);
+
+    intermediate_source_line last;
+
+    for(intermediate_source_line& j : full_map.lines)
+    {
+        source_line line;
+
+        for(intermediate_source_segment& i : j.segments)
+        {
+            source_segment seg;
+
+            for(auto kk = 0; kk < 5; kk++)
+            {
+                if(!i.vals[kk].has_value())
+                {
+                    seg.vals[kk] = 0;
+                }
+                else
+                {
+                    seg.vals[kk] = i.vals[kk].value();
+                }
+            }
+
+            line.segments.push_back(seg);
+        }
+
+
+        lines.push_back(line);
+    }
 }
 
 void source_map_tests()
