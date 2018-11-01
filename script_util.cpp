@@ -7,6 +7,7 @@
 #include "logging.hpp"
 #include <shellapi.h>
 #include <dirent.h>
+#include "source_maps.hpp"
 
 ///new api
 ///we need a function to upload it to the server
@@ -470,6 +471,18 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
         ///js object
         std::string typescript_sourcemap = data["code_posttype"]["sourceMapText"];
 
+        source_map src_map;
+        src_map.decode(in, code, typescript_sourcemap);
+
+        source_position mapped = src_map.map({error_line, error_column});
+
+        std::string formatted_error = src_map.get_caret_text_of(mapped);
+
+        /*error_line = mapped.line;
+        error_column = mapped.column;*/
+
+        #if 0
+
         std::vector<std::string> by_line;
 
         std::string accum;
@@ -538,6 +551,7 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
 
         std::string formatted_error = "Script Upload Error: Line " + std::to_string(error_line + 1) + " column " + std::to_string(error_column + 1) + "\n" +
                                       "Source:\n" + line + "\n" + arrow + "\n" + post_line;
+        #endif // 0
 
         //data["bable_error"]["context"] = line;
 

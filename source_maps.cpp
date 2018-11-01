@@ -278,7 +278,7 @@ source_position source_map::map(const source_position& pos)
         if(pos.column >= generated_column)
         {
             source_position new_pos;
-            new_pos.column = pos.column - generated_column;
+            new_pos.column = (pos.column - generated_column) + original_column;
             new_pos.line = original_line;
 
             return new_pos;
@@ -286,6 +286,80 @@ source_position source_map::map(const source_position& pos)
     }
 
     return source_position();
+}
+
+std::string source_map::get_caret_text_of(const source_position& pos)
+{
+    std::vector<std::string> by_line;
+
+    std::string accum;
+
+    for(int i=0; i < (int)original_code.size(); i++)
+    {
+        if(original_code[i] == '\n')
+        {
+            by_line.push_back(accum);
+            accum.clear();
+        }
+        else
+        {
+            accum += original_code[i];
+        }
+    }
+
+    if(accum != "")
+        by_line.push_back(accum);
+
+    std::vector<std::string> pre_contexts;
+    std::vector<std::string> post_contexts;
+
+    for(int i=-3; i < 4; i++)
+    {
+        int idx = i + pos.line;
+
+        if(idx < 0 || idx >= (int)by_line.size())
+            continue;
+
+        if(i <= 0)
+            pre_contexts.push_back(by_line[idx]);
+        else
+            post_contexts.push_back(by_line[idx]);
+    }
+
+    std::string line = "";
+
+    for(auto& i : pre_contexts)
+    {
+        line += i + "\n";
+    }
+
+    if(line.size() > 0)
+        line.pop_back();
+
+    std::string post_line;
+
+    for(auto& i : post_contexts)
+    {
+        post_line += i + "\n";
+    }
+
+    //std::string prepad = "Source: ";
+
+    std::string prepad;
+
+    std::string arrow;
+
+    for(int i=0; i < pos.column + (int)prepad.size(); i++)
+    {
+        arrow += " ";
+    }
+
+    arrow += "^";
+
+    std::string formatted_error = "Script Upload Error: Line " + std::to_string(pos.line + 1) + " column " + std::to_string(pos.column + 1) + "\n" +
+                                  "Source:\n" + line + "\n" + arrow + "\n" + post_line;
+
+    return formatted_error;
 }
 
 void source_map_tests()
@@ -325,7 +399,7 @@ void source_map_tests()
     full_intermediate_map full_map;
     full_map.decode_from(test_frag);
 
-    std::cout << full_map.dump() << std::endl;
+    //std::cout << full_map.dump() << std::endl;
 
-    exit(0);
+    //exit(0);
 }

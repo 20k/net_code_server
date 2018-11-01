@@ -36,6 +36,9 @@ struct source_map
 
     source_position map(const source_position& pos);
 
+    ///accepts post transform coordinate
+    std::string get_caret_text_of(const source_position& pos);
+
     std::string original_code;
     std::string parsed_code;
 
