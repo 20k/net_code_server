@@ -263,7 +263,7 @@ source_position source_map::map(const source_position& pos)
     if(pos.line < 0)
         return pos;
 
-    if(pos.line >= lines.size())
+    if(pos.line >= (int)lines.size())
         return pos;
 
     source_line& line = lines[pos.line];
