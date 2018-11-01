@@ -256,6 +256,38 @@ void source_map::decode(const std::string& code_in, const std::string& code_out,
     }
 }
 
+source_position source_map::map(const source_position& pos)
+{
+    source_position ret;
+
+    if(pos.line < 0)
+        return pos;
+
+    if(pos.line >= lines.size())
+        return pos;
+
+    source_line& line = lines[pos.line];
+
+    for(source_segment& seg : line.segments)
+    {
+        int generated_column = seg.vals[source_segment::column_gen];
+
+        int original_line = seg.vals[source_segment::line_original];
+        int original_column = seg.vals[source_segment::column_original];
+
+        if(pos.column >= generated_column)
+        {
+            source_position new_pos;
+            new_pos.column = pos.column - generated_column;
+            new_pos.line = original_line;
+
+            return new_pos;
+        }
+    }
+
+    return source_position();
+}
+
 void source_map_tests()
 {
     std::string fragment = "AAgBC";
