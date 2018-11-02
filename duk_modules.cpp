@@ -6,6 +6,7 @@
 #include <libncclient/nc_util.hpp>
 #include "duk_object_functions.hpp"
 #include <iostream>
+#include "memory_sandbox.hpp"
 
 std::map<std::string, std::string>& module_cache()
 {
@@ -19,6 +20,44 @@ std::map<std::string, std::string>& module_cache()
     }
 
     return dat;
+}
+
+std::map<std::string, std::string>& module_binary_cache()
+{
+    static bool init = false;
+    static std::map<std::string, std::string> saved_map;
+
+    if(!init)
+    {
+        auto cache = module_cache();
+
+        duk_context* ctx = create_sandbox_heap();
+
+        for(auto& data : cache)
+        {
+            duk_push_string(ctx, data.second.c_str());
+            duk_push_string(ctx, data.first.c_str());
+
+            duk_pcompile(ctx, DUK_COMPILE_EVAL);
+
+            duk_dump_function(ctx);
+
+            duk_size_t out;
+            char* ptr = (char*)duk_get_buffer(ctx, -1, &out);
+
+            std::string buf(ptr, out);
+
+            saved_map[data.first] = buf;
+
+            duk_pop(ctx);
+        }
+
+        duk_destroy_heap(ctx);
+
+        init = true;
+    }
+
+    return saved_map;
 }
 
 void dukx_push_fixed_buffer(duk_context* ctx, const std::string& buffer)
@@ -37,15 +76,23 @@ duk_int_t duk_get_func(duk_context* ctx)
 
     if(str == "@babel/polyfill")
     {
-        std::string data = module_cache()["@babel/polyfill"];
+        //std::string data = module_cache()["@babel/polyfill"];
 
-        push_duk_val(ctx, data);
+        auto bin = module_binary_cache()["@babel/polyfill"];
 
-        //push_duk_val(ctx, "");
+        dukx_push_fixed_buffer(ctx, bin);
+        duk_load_function(ctx);
+
+        duk_pcall(ctx, 0);
+        duk_pop(ctx);
+
+        //push_duk_val(ctx, data);
+
+        push_duk_val(ctx, "");
         return 1;
     }
 
-    if(str == "hello")
+    /*if(str == "hello")
     {
         duk_push_string(ctx, "var global = new Function('return this')(); global.hello = function () { print(\"Hello world from bar!\"); };");
         duk_push_string(ctx, "test-name");
@@ -74,7 +121,7 @@ duk_int_t duk_get_func(duk_context* ctx)
 
         push_duk_val(ctx, "");
         return 1;
-    }
+    }*/
 
     duk_throw(ctx);
     return 1;
@@ -95,4 +142,5 @@ void dukx_inject_modules(duk_context* ctx)
 void init_module_cache()
 {
     module_cache();
+    module_binary_cache();
 }
