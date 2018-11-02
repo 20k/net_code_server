@@ -7,6 +7,7 @@
 #include "duk_object_functions.hpp"
 #include <iostream>
 #include "memory_sandbox.hpp"
+#include <SFML/Graphics.hpp>
 
 std::map<std::string, std::string>& module_cache()
 {
@@ -80,11 +81,18 @@ duk_int_t duk_get_func(duk_context* ctx)
 
         auto bin = module_binary_cache()["@babel/polyfill"];
 
+        //sf::Clock clk;
+
         dukx_push_fixed_buffer(ctx, bin);
         duk_load_function(ctx);
 
+        //std::cout << "clk time " << clk.restart().asMilliseconds() << std::endl;
+
+        ///pcall is slow
         duk_pcall(ctx, 0);
         duk_pop(ctx);
+
+        //std::cout << "clk time2 " << clk.restart().asMilliseconds() << std::endl;
 
         //push_duk_val(ctx, data);
 
