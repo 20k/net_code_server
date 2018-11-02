@@ -45,6 +45,6 @@ struct source_map
     std::vector<source_line> lines;
 };
 
-void source_map_tests();
+void source_map_init();
 
 #endif // SOURCE_MAPS_HPP_INCLUDED

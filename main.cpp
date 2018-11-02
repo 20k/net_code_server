@@ -291,7 +291,7 @@ int main()
 
     lg::set_logfile("./log.txt");
 
-    source_map_tests();
+    source_map_init();
 
     #ifdef TESTING
     parse_source();

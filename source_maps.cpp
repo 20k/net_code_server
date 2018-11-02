@@ -14,15 +14,21 @@
 
 int32_t get_val_of_base64(char base_64)
 {
-    std::string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    static std::string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    static std::map<char, int> values;
 
-    std::map<char, int> values;
+    static bool init;
 
-    int kidx = 0;
-
-    for(auto& i : characters)
+    if(!init)
     {
-        values[i] = kidx++;
+        int kidx = 0;
+
+        for(auto& i : characters)
+        {
+            values[i] = kidx++;
+        }
+
+        init = true;
     }
 
     return values[base_64];
@@ -362,8 +368,10 @@ std::string source_map::get_caret_text_of(const source_position& pos)
     return formatted_error;
 }
 
-void source_map_tests()
+void source_map_init()
 {
+    get_val_of_base64('A');
+
     std::string fragment = "AAgBC";
 
     /*auto it = fragment.begin();
