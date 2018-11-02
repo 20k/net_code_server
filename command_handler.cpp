@@ -31,44 +31,28 @@ struct unsafe_info
 {
     user* usr;
     std::string command;
-    duk_context* ctx;
     volatile int finished = 0;
+    exec_context* ectx;
 
     std::string ret;
 };
 
-inline
-duk_ret_t unsafe_wrapper(duk_context* ctx, void* udata)
+duk_ret_t unsafe_wrapper(exec_context& ectx, unsafe_info& info)
 {
-    unsafe_info* info = (unsafe_info*)udata;
+    std::string ret = js_unified_force_call_data((duk_context*)info.ectx->get_ctx(), info.command, info.usr->get_call_stack().back());
 
-    std::string ret = js_unified_force_call_data(info->ctx, info->command, info->usr->get_call_stack().back());
-
-    info->ret = ret;
+    info.ret = ret;
 
     return 1;
 }
 
-void managed_duktape_thread(unsafe_info* info)
+void managed_duktape_thread(unsafe_info* info, size_t tid)
 {
-    int id = get_thread_id(info->ctx);
-
     ///set thread storage hack
     ///convert from int to size_t
-    *tls_get_thread_id_storage_hack() = (size_t)id;
+    *tls_get_thread_id_storage_hack() = (size_t)tid;
 
-    //std::cout << *tls_get_thread_id_storage_hack() << std::endl;
-
-    if(duk_safe_call(info->ctx, unsafe_wrapper, (void*)info, 0, 1) != 0)
-    {
-        duk_dup(info->ctx, -1);
-
-        printf("Err in safe wrapper %s\n", duk_safe_to_string(info->ctx, -1));
-
-        duk_pop(info->ctx);
-    }
-
-    //duk_pop(info->ctx);
+    info->ectx->safe_exec(unsafe_wrapper, *info->ectx, *info);
 
     info->finished = 1;
 }
@@ -491,9 +475,9 @@ std::string run_in_user_context(std::string username, std::string command, std::
         unsafe_info* inf = new unsafe_info;
         inf->usr = &usr;
         inf->command = command;
-        inf->ctx = ctx;
+        inf->ectx = &ectx;
 
-        sthread* launch = new sthread(managed_duktape_thread, inf);
+        sthread* launch = new sthread(managed_duktape_thread, inf, local_thread_id);
 
         if(all_shared.has_value())
         {
