@@ -16,3 +16,6 @@
 [submodule "deps/tinydir"]
 	path = deps/tinydir
 	url = https://github.com/cxong/tinydir
+[submodule "deps/duktape"]
+	path = deps/duktape
+	url = https://github.com/svaarala/duktape

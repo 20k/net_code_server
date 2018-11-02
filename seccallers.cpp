@@ -11,6 +11,7 @@
 #include "shared_command_handler_state.hpp"
 #include "safe_thread.hpp"
 #include "quest_manager.hpp"
+#include "duk_modules.hpp"
 
 int my_timeout_check(void* udata)
 {
@@ -1351,6 +1352,8 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     //#endif // TESTING
 
     inject_hacky_Symbol(ctx);
+
+    dukx_inject_modules(ctx);
 
     //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }

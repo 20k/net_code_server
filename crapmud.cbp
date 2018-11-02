@@ -227,6 +227,8 @@
 		<Unit filename="deps/secret/structure.hpp" />
 		<Unit filename="deps/secret/tutorial.cpp" />
 		<Unit filename="deps/secret/tutorial.hpp" />
+		<Unit filename="duk_modules.cpp" />
+		<Unit filename="duk_modules.hpp" />
 		<Unit filename="duk_object_functions.cpp" />
 		<Unit filename="duk_object_functions.hpp" />
 		<Unit filename="duktape.cpp" />
