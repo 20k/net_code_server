@@ -12,6 +12,7 @@
 #include "safe_thread.hpp"
 #include "quest_manager.hpp"
 #include "duk_modules.hpp"
+#include "exec_context.hpp"
 
 int my_timeout_check(void* udata)
 {
@@ -624,8 +625,10 @@ bool compile_and_push(duk_context* ctx, const std::string& data)
     return duk_pcompile(ctx, DUK_COMPILE_EVAL) == 0;
 }
 
-std::string compile_and_call(duk_context* ctx, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script)
+std::string compile_and_call(exec_context& ectx, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script)
 {
+    duk_context* ctx = (duk_context*)ectx.ctx;
+
     if(data.size() == 0)
     {
         duk_push_undefined(ctx);
@@ -974,7 +977,14 @@ duk_ret_t js_call(duk_context* ctx, int sl)
         }
         else
         {
-            compile_and_call(ctx, load, get_caller(ctx), false, script.seclevel, false, full_script);
+            exec_context* ectx = exec_from_ctx(ctx);
+
+            if(ectx == nullptr)
+            {
+                throw std::runtime_error("Ectx is nullptr in js_call");
+            }
+
+            compile_and_call(*ectx, load, get_caller(ctx), false, script.seclevel, false, full_script);
         }
 
         set_script_info(ctx, full_script);
@@ -1004,8 +1014,10 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     return result;
 }
 
-std::string js_unified_force_call_data(duk_context* ctx, const std::string& data, const std::string& host)
+std::string js_unified_force_call_data(exec_context& ectx, const std::string& data, const std::string& host)
 {
+    duk_context* ctx = (duk_context*)ectx.get_ctx();
+
     set_script_info(ctx, host + ".invoke");
 
     std::string unified_invoke_err;
@@ -1041,7 +1053,7 @@ std::string js_unified_force_call_data(duk_context* ctx, const std::string& data
         duk_put_prop_string(ctx, -2, "command");
     }
 
-    std::string extra = compile_and_call(ctx, unified_invoke.parsed_source, get_caller(ctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke");
+    std::string extra = compile_and_call(ectx, unified_invoke.parsed_source, get_caller(ctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke");
 
     if(!duk_is_object_coercible(ctx, -1))
     {

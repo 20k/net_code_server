@@ -39,7 +39,7 @@ struct unsafe_info
 
 duk_ret_t unsafe_wrapper(exec_context& ectx, unsafe_info& info)
 {
-    std::string ret = js_unified_force_call_data((duk_context*)info.ectx->get_ctx(), info.command, info.usr->get_call_stack().back());
+    std::string ret = js_unified_force_call_data(*info.ectx, info.command, info.usr->get_call_stack().back());
 
     info.ret = ret;
 

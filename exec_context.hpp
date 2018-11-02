@@ -50,4 +50,6 @@ struct exec_context
     }
 };
 
+exec_context* exec_from_ctx(duk_context* ctx);
+
 #endif // EXEC_CONTEXT_HPP_INCLUDED

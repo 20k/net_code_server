@@ -8,6 +8,8 @@
 
 struct shared_duk_worker_state;
 
+struct exec_context;
+
 int my_timeout_check(void* udata);
 
 duk_ret_t native_print(duk_context *ctx);
@@ -57,7 +59,7 @@ void send_async_message(duk_context* ctx, const std::string& message);
 
 duk_ret_t js_call(duk_context* ctx, int sl);
 
-std::string js_unified_force_call_data(duk_context* ctx, const std::string& data, const std::string& host);
+std::string js_unified_force_call_data(exec_context& ctx, const std::string& data, const std::string& host);
 
 void register_funcs(duk_context* ctx, int seclevel, const std::string& script_host);
 
