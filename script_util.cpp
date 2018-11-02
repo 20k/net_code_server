@@ -478,87 +478,14 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
 
         std::string formatted_error = src_map.get_caret_text_of(mapped);
 
-        /*error_line = mapped.line;
-        error_column = mapped.column;*/
-
-        #if 0
-
-        std::vector<std::string> by_line;
-
-        std::string accum;
-
-        for(int i=0; i < (int)code.size(); i++)
-        {
-            if(code[i] == '\n')
-            {
-                by_line.push_back(accum);
-                accum.clear();
-            }
-            else
-            {
-                accum += code[i];
-            }
-        }
-
-        if(accum != "")
-            by_line.push_back(accum);
-
-        std::vector<std::string> pre_contexts;
-        std::vector<std::string> post_contexts;
-
-        for(int i=-3; i < 4; i++)
-        {
-            int idx = i + error_line;
-
-            if(idx < 0 || idx >= (int)by_line.size())
-                continue;
-
-            if(i <= 0)
-                pre_contexts.push_back(by_line[idx]);
-            else
-                post_contexts.push_back(by_line[idx]);
-        }
-
-        std::string line = "";
-
-        for(auto& i : pre_contexts)
-        {
-            line += i + "\n";
-        }
-
-        if(line.size() > 0)
-            line.pop_back();
-
-        std::string post_line;
-
-        for(auto& i : post_contexts)
-        {
-            post_line += i + "\n";
-        }
-
-        //std::string prepad = "Source: ";
-
-        std::string prepad;
-
-        std::string arrow;
-
-        for(int i=0; i < error_column + (int)prepad.size(); i++)
-        {
-            arrow += " ";
-        }
-
-        arrow += "^";
-
-        std::string formatted_error = "Script Upload Error: Line " + std::to_string(error_line + 1) + " column " + std::to_string(error_column + 1) + "\n" +
-                                      "Source:\n" + line + "\n" + arrow + "\n" + post_line;
-        #endif // 0
-
         //data["bable_error"]["context"] = line;
 
         return {"", formatted_error};
 
         //return {"", data["bable_error"].dump()};
     }
+
+    ///TODO: std::remove
 
     return {data["code_postbabel"]["code"], ""};
 
