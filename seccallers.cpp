@@ -615,6 +615,15 @@ duk_ret_t global_test(duk_context* ctx)
     return 1;
 }
 
+///returns true on success, false on failure
+bool compile_and_push(duk_context* ctx, const std::string& data)
+{
+    duk_push_string(ctx, data.c_str());
+    duk_push_string(ctx, "test-name");
+
+    return duk_pcompile(ctx, DUK_COMPILE_EVAL) != 0;
+}
+
 std::string compile_and_call(duk_context* ctx, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script)
 {
     if(data.size() == 0)
@@ -643,15 +652,7 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
     std::string ret;
 
-    duk_push_string(new_ctx, wrapper.c_str());
-    duk_push_string(new_ctx, "test-name");
-
-    //duk_int_t mode = DUK_COMPILE_FUNCTION;
-
-    //if(is_top_level)
-    duk_int_t mode = DUK_COMPILE_EVAL;
-
-    if(duk_pcompile(new_ctx, mode) != 0)
+    if(!compile_and_push(ctx, wrapper))
     {
         std::string err = duk_safe_to_string(new_ctx, -1);
 
