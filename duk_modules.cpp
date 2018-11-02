@@ -5,6 +5,7 @@
 #include <string>
 #include <libncclient/nc_util.hpp>
 #include "duk_object_functions.hpp"
+#include <iostream>
 
 std::map<std::string, std::string>& module_cache()
 {
@@ -20,6 +21,16 @@ std::map<std::string, std::string>& module_cache()
     return dat;
 }
 
+void dukx_push_fixed_buffer(duk_context* ctx, const std::string& buffer)
+{
+    char *ptr = (char*)duk_push_fixed_buffer(ctx, buffer.size());
+
+    for(int i=0; i < (int)buffer.size(); i++)
+    {
+        ptr[i] = buffer[i];
+    }
+}
+
 duk_int_t duk_get_func(duk_context* ctx)
 {
     std::string str = duk_safe_to_std_string(ctx, 0);
@@ -29,6 +40,39 @@ duk_int_t duk_get_func(duk_context* ctx)
         std::string data = module_cache()["@babel/polyfill"];
 
         push_duk_val(ctx, data);
+
+        //push_duk_val(ctx, "");
+        return 1;
+    }
+
+    if(str == "hello")
+    {
+        duk_push_string(ctx, "var global = new Function('return this')(); global.hello = function () { print(\"Hello world from bar!\"); };");
+        duk_push_string(ctx, "test-name");
+
+        duk_pcompile(ctx, DUK_COMPILE_EVAL);
+        //duk_pcall(ctx, 0);
+
+        duk_dup(ctx, -1);
+
+        duk_dump_function(ctx);
+
+        duk_size_t out;
+        char* ptr = (char*)duk_get_buffer(ctx, -1, &out);
+
+        std::string buf(ptr, out);
+
+        duk_pop(ctx);
+        duk_pop(ctx);
+
+        dukx_push_fixed_buffer(ctx, buf);
+
+        duk_load_function(ctx);
+
+        duk_pcall(ctx, 0);
+        duk_pop(ctx);
+
+        push_duk_val(ctx, "");
         return 1;
     }
 

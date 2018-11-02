@@ -621,7 +621,7 @@ bool compile_and_push(duk_context* ctx, const std::string& data)
     duk_push_string(ctx, data.c_str());
     duk_push_string(ctx, "test-name");
 
-    return duk_pcompile(ctx, DUK_COMPILE_EVAL) != 0;
+    return duk_pcompile(ctx, DUK_COMPILE_EVAL) == 0;
 }
 
 std::string compile_and_call(duk_context* ctx, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script)
@@ -652,7 +652,7 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
     std::string ret;
 
-    if(!compile_and_push(ctx, wrapper))
+    if(!compile_and_push(new_ctx, wrapper))
     {
         std::string err = duk_safe_to_string(new_ctx, -1);
 
