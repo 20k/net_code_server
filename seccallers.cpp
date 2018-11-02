@@ -664,6 +664,8 @@ std::string compile_and_call(exec_context& ectx, const std::string& data, std::s
         printf("compile failed: %s\n", err.c_str());
 
         duk_push_string(ctx, "Syntax or Compile Error");
+
+        stk.early_out();
     }
     else
     {
