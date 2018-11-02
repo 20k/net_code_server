@@ -41,33 +41,12 @@ void dukx_inject_modules(duk_context* ctx)
 #ifdef TESTING
     duk_module_duktape_init(ctx);
 
-    auto cache = module_cache();
-
-    #if 0
-    duk_eval_string(ctx,
-R"D(
-Duktape.modSearch = function (id, require, exports, module) {
-    if (id === '@babel/polyfill')
-    {
-        console.log("hello");
-        return
-    }
-
-    throw new Error('cannot find module: ' + id);
-}
-  )D");
-
-  /// 'exports.hello = function () { print("Hello world from bar!"); };';
-    #endif // 0
-
     duk_push_global_object(ctx);
     duk_get_prop_string(ctx, -1, "Duktape");
 
     duk_push_c_function(ctx, duk_get_func, 4);
     duk_put_prop_string(ctx, -2, "modSearch");
     duk_pop(ctx);
-
-
 #endif // TESTING
 }
 
