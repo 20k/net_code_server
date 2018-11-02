@@ -25,6 +25,7 @@
 #include "mongo.hpp"
 #include "quest_manager.hpp"
 #include <secret/tutorial.hpp>
+#include "exec_context.hpp"
 
 struct unsafe_info
 {
@@ -448,9 +449,10 @@ std::string run_in_user_context(std::string username, std::string command, std::
             exec_guard.unblock();
         }
 
-        duk_context* ctx;
-        //init_js_interop(sd, std::string());
-        ctx = create_sandbox_heap();
+        exec_context ectx;
+        ectx.create_as_sandbox();
+
+        duk_context* ctx = (duk_context*)ectx.get_ctx();
 
         duk_memory_functions funcs;
         duk_get_memory_functions(ctx, &funcs);
@@ -911,7 +913,8 @@ std::string run_in_user_context(std::string username, std::string command, std::
             dukx_free_in_heap<std::shared_ptr<shared_command_handler_state>>(ctx, "all_shared_data");
             teardown_state(ctx);
 
-            duk_destroy_heap(ctx);
+            //duk_destroy_heap(ctx);
+            ectx.destroy();
         }
         catch(...)
         {
