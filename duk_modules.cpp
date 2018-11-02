@@ -75,7 +75,8 @@ duk_int_t duk_get_func(duk_context* ctx)
 {
     std::string str = duk_safe_to_std_string(ctx, 0);
 
-    if(str == "@babel/polyfill")
+    ///might as well go ham
+    if(str == "@babel/polyfill" || str == "es6" || str == "es6+" || str == "esnext" || str == "p" || str == "poly" || str == "polyfill")
     {
         //std::string data = module_cache()["@babel/polyfill"];
 
