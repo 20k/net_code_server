@@ -925,6 +925,7 @@ bool is_valid_channel_name(const std::string& in)
 duk_ret_t channel__create(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
+    RATELIMIT_DUK(CREATE_CHANNEL);
 
     std::string chan = duk_safe_get_prop_string(ctx, -1, "name");
     std::string password = duk_safe_get_prop_string(ctx, -1, "password");
@@ -1137,6 +1138,8 @@ duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         if(!is_valid_channel_name(to_create))
             return push_error(ctx, "Invalid Name");
+
+        RATELIMIT_DUK(CREATE_CHANNEL);
 
         num_set++;
     }
