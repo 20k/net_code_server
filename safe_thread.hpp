@@ -26,6 +26,11 @@ struct sthread
                                         try{
                                             t(std::forward<U>(u)...);
                                         }
+                                        catch(const std::exception& ex)
+                                        {
+                                            std::cout << "caught termination exception from thread " << ex.what() << std::endl;
+                                            std::cout << "stack " << get_stacktrace() << std::endl;
+                                        }
                                         catch(...)
                                         {
                                             std::cout << "caught termination exception from thread" << std::endl;

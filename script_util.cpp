@@ -461,28 +461,35 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
 
     //std::cout << "DATA " << data.dump() << std::endl;
 
-    if(data.count("bable_error") > 0)
+    try
     {
-        //int error_pos = data["bable_error"]["pos"];
-        int error_line = (int)data["bable_error"]["loc"]["line"] - 1;
-        int error_column = (int)data["bable_error"]["loc"]["column"] - 1;
-        std::string code = data["code_posttype"]["outputText"];
+        if(data.count("bable_error") > 0)
+        {
+            //int error_pos = data["bable_error"]["pos"];
+            int error_line = (int)data["bable_error"]["loc"]["line"] - 1;
+            int error_column = (int)data["bable_error"]["loc"]["column"] - 1;
+            std::string code = data["code_posttype"]["outputText"];
 
-        ///js object
-        std::string typescript_sourcemap = data["code_posttype"]["sourceMapText"];
+            ///js object
+            std::string typescript_sourcemap = data["code_posttype"]["sourceMapText"];
 
-        source_map src_map;
-        src_map.decode(in, code, typescript_sourcemap);
+            source_map src_map;
+            src_map.decode(in, code, typescript_sourcemap);
 
-        source_position mapped = src_map.map({error_line, error_column});
+            source_position mapped = src_map.map({error_line, error_column});
 
-        std::string formatted_error = src_map.get_caret_text_of(mapped);
+            std::string formatted_error = src_map.get_caret_text_of(mapped);
 
-        //data["bable_error"]["context"] = line;
+            //data["bable_error"]["context"] = line;
 
-        return {"", formatted_error};
+            return {"", formatted_error};
 
-        //return {"", data["bable_error"].dump()};
+            //return {"", data["bable_error"].dump()};
+        }
+    }
+    catch(...)
+    {
+        std::cout << "Error trying to get bable_error\n";
     }
 
     ///TODO: std::remove

@@ -38,7 +38,6 @@ duk_int_t duk_get_func(duk_context* ctx)
 
 void dukx_inject_modules(duk_context* ctx)
 {
-#ifdef TESTING
     duk_module_duktape_init(ctx);
 
     duk_push_global_object(ctx);
@@ -47,7 +46,6 @@ void dukx_inject_modules(duk_context* ctx)
     duk_push_c_function(ctx, duk_get_func, 4);
     duk_put_prop_string(ctx, -2, "modSearch");
     duk_pop(ctx);
-#endif // TESTING
 }
 
 void init_module_cache()

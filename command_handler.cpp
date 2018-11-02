@@ -1769,8 +1769,8 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             }
 
             duk_context* ctx;
-            ctx = duk_create_heap_default();
-            register_funcs(ctx, 0, "core");
+            ctx = create_sandbox_heap();
+            //register_funcs(ctx, 0, "core");
 
 
             script_info script_inf;
