@@ -285,6 +285,17 @@ void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t 
 {
     //printf("top 1 %i top 2 %i\n", duk_get_top(ctx), duk_get_top(dst_ctx));
 
+    if(ctx == dst_ctx)
+    {
+        ///??????
+        ///could disable this for a perf boost
+        ///but changes semantics depending on whether or not the global is reused or not
+        ///which is... yeah
+        ///that said, if the proxy can exactly replicate not the proxy, that may be fine
+        dukx_sanitise_in_place(dst_ctx, idx);
+        return;
+    }
+
     duk_dup(ctx, idx);
     duk_xmove_top(dst_ctx, ctx, 1);
     duk_remove(ctx, idx);

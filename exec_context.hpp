@@ -3,6 +3,7 @@
 
 #include <tuple>
 #include "scripting_api.hpp"
+#include <map>
 
 template<typename F, typename... T>
 inline
@@ -30,6 +31,8 @@ struct exec_context
 
     void* get_ctx();
 
+    std::map<std::string, std::map<int, void*>> stashed_contexts;
+
     template<typename... T>
     int safe_exec(T&&... t)
     {
@@ -48,6 +51,9 @@ struct exec_context
 
         return rval;
     }
+
+    void stash_context(const std::string& host, int seclevel, int stack_offset, void* ptr);
+    void* get_new_context_for(const std::string& host, int seclevel);
 };
 
 struct exec_stack
