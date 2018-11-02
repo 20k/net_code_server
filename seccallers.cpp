@@ -653,6 +653,8 @@ std::string compile_and_call(exec_context& ectx, const std::string& data, std::s
     //std::cout << "wrapper:\n";
     //std::cout << wrapper << std::endl;
 
+    exec_stack stk(ectx, new_ctx);
+
     std::string ret;
 
     if(!compile_and_push(new_ctx, wrapper))
@@ -742,6 +744,9 @@ std::string compile_and_call(exec_context& ectx, const std::string& data, std::s
             {
                 duk_xmove_top(sd.ctx, new_ctx, 1);
             }*/
+
+
+            stk.early_out();
 
             ///stack 2 is now empty, and stack 1 now has [thread, val]
             //duk_xmove_top(sd.ctx, new_ctx, 1);

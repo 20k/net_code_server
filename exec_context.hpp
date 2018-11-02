@@ -50,6 +50,18 @@ struct exec_context
     }
 };
 
+struct exec_stack
+{
+    void* backup;
+    exec_context& ctx;
+    bool escaped = false;
+
+    exec_stack(exec_context& ctx, void* fresh);
+    ~exec_stack();
+
+    void early_out();
+};
+
 exec_context* exec_from_ctx(duk_context* ctx);
 
 #endif // EXEC_CONTEXT_HPP_INCLUDED
