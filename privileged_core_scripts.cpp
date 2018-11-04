@@ -627,8 +627,6 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
     #ifdef XFER_PATHS
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    sf::Clock clk;
-
     std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, to, from, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, amount / cash_to_destroy_link);
 
     if(path.size() == 0)
@@ -637,8 +635,6 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
     std::string leak_msg = "Xfer'd " + std::to_string(amount);
 
     playspace_network_manage.modify_path_per_link_strength_with_logs(path, -amount / cash_to_destroy_link, {leak_msg}, get_thread_id(ctx));
-
-    std::cout << "elapsed " << clk.getElapsedTime().asMilliseconds() << std::endl;
     #endif // 0
 
     size_t current_time = get_wall_time();

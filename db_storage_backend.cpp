@@ -1006,6 +1006,8 @@ void init_db_storage_backend()
 
     if(resulting_data.size() == 0)
     {
+        throw std::runtime_error("Yeah we're past this point! file explosion");
+
         store.atomic_write(root_file, std::to_string(0));
         //write_all(root_file, std::to_string(0));
     }
@@ -1027,6 +1029,7 @@ void init_db_storage_backend()
     store.indices[(int)mongo_database_type::USER_PROPERTIES] = "name";
     store.indices[(int)mongo_database_type::USER_ITEMS] = "item_id";
     store.indices[(int)mongo_database_type::NPC_PROPERTIES] = "name";
+    store.indices[(int)mongo_database_type::NETWORK_PROPERTIES] = "name";
 
     if(!new_data)
     {
