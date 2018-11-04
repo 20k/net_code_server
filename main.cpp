@@ -274,7 +274,7 @@ void pathfind_stresstest()
 
     sf::Clock clk;
 
-    for(int i=0; i < 100; i++)
+    for(int i=0; i < 1000; i++)
     {
         auto plen = playspace_network_manage.get_accessible_path_to("i20k", "core", "i20k", (path_info::path_info)(path_info::ALLOW_WARP_BOUNDARY | path_info::NONE));
 
@@ -345,8 +345,6 @@ int main()
            {
             tickle_item_cache();
            }).detach();
-
-    pathfind_stresstest();
 
     //test_json();
 
@@ -690,6 +688,8 @@ int main()
     //test_locking();
 
     boot_connection_handlers();
+
+    pathfind_stresstest();
 
     #ifdef TESTING
     system("start test_launch.bat");
