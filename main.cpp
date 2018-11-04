@@ -268,6 +268,25 @@ void handle_terminate()
     std::set_unexpected(termination_func);
 }
 
+void pathfind_stresstest()
+{
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    sf::Clock clk;
+
+    for(int i=0; i < 100; i++)
+    {
+        auto plen = playspace_network_manage.get_accessible_path_to("i20k", "core", "i20k", (path_info::path_info)(path_info::ALLOW_WARP_BOUNDARY | path_info::NONE));
+
+        if(i == 0)
+            std::cout << "plsize " << plen.size() << std::endl;
+    }
+
+    std::cout << "elapsed " << clk.getElapsedTime().asMilliseconds() << std::endl;
+
+    exit(0);
+}
+
 ///making sure this ends up in the right repo
 int main()
 {
@@ -326,6 +345,8 @@ int main()
            {
             tickle_item_cache();
            }).detach();
+
+    pathfind_stresstest();
 
     //test_json();
 

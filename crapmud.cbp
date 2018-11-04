@@ -181,11 +181,6 @@
 			<Add option="-lcrypto" />
 			<Add option="-lssl" />
 			<Add option="-lbacktrace" />
-			<Add option="-licuuc" />
-			<Add option="-licuio" />
-			<Add option="-lBcrypt" />
-			<Add option="-lSecur32" />
-			<Add option="-lCrypt32" />
 			<Add option="-lz" />
 		</Linker>
 		<Unit filename="ascii_helpers.cpp" />
