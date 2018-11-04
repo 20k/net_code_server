@@ -1043,7 +1043,7 @@ std::string js_unified_force_call_data(exec_context& ectx, const std::string& da
     if(!unified_invoke.valid || unified_invoke.type == unified_script_info::script_type::BUNDLE)
     {
         script_info dummy;
-        dummy.load_from_unparsed_source(ctx, data, host + ".invoke", false, true);
+        dummy.load_from_unparsed_source(ctx, attach_cli_wrapper(data), host + ".invoke", false, true);
 
         unified_invoke.make_from(dummy);
     }

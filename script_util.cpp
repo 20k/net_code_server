@@ -17,6 +17,11 @@
 
 ///then, when we want to load, we look from the db
 
+std::string attach_cli_wrapper(const std::string& data_in)
+{
+    return "require(\"@babel/polyfill\");\n" + data_in;
+}
+
 std::string function_wrap(const std::string& str)
 {
     return "(function(){" + str + "})()";
@@ -426,27 +431,13 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
 {
     std::string compiler_dir = "compile/";
 
-    //write_all_bin(compiler_dir + file_name + ".ts", in);
-
-    //std::string res = capture_exec("C:\\Stuff\\nodejs\\node.exe transpile.js " + compiler_dir + file_name + ".ts");
-
-    //crappy_exec("mkdir ", compiler_dir);
-
     mkdir(compiler_dir.c_str());
 
     std::string phase_1 = compiler_dir + file_name + ".out1.js";
-    std::string phase_2 = compiler_dir + file_name + ".out2.js";
-    std::string phase_3 = compiler_dir + file_name + ".out3.js";
 
     write_all_bin(phase_1, in);
 
-    //crappy_exec("\"script_compile\\node_modules\\.bin\\babel.cmd\" ", phase_1 + " --out-file " + phase_2 + " --presets @babel/preset-typescript");
-    //crappy_exec("\"script_compile\\node_modules\\.bin\\babel.cmd\" ", phase_2 + " --out-file " + phase_3 + " --presets @babel/preset-env");
-
-    //crappy_exec("node script_compile/transpile.js ", phase_1);
-
     std::string res = capture_exec("node script_compile/transpile.js " + phase_1);
-
 
     nlohmann::json data;
 
@@ -458,6 +449,8 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
     {
         std::cout << "didn't go well\n";
     }
+
+    remove((phase_1 + ".ts").c_str());
 
     //std::cout << "DATA " << data.dump() << std::endl;
 
@@ -483,30 +476,16 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
             //data["bable_error"]["context"] = line;
 
             return {"", formatted_error};
-
-            //return {"", data["bable_error"].dump()};
         }
     }
     catch(...)
     {
         std::cout << "Error trying to get bable_error\n";
+
+        return {"", "Caught exception in checking babel_error: " + data.dump()};
     }
 
-    ///TODO: std::remove
-
     return {data["code_postbabel"]["code"], ""};
-
-    //std::cout << "es6 " << res << std::endl;
-
-    //std::string found = read_file(phase_3);
-
-    //std::cout << "found " << found << std::endl;
-
-    //std::remove((phase_1).c_str());
-    //std::remove((phase_2).c_str());
-    //std::remove((phase_3).c_str());
-
-    //return found;
 }
 
 script_data parse_script(const std::string& file_name, std::string in, bool enable_typescript)
