@@ -630,7 +630,7 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
     std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, to, from, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, amount / cash_to_destroy_link);
 
     if(path.size() == 0)
-        return push_error(ctx, "User does not exist or is disconnected");
+        return push_error(ctx, "No path to user through the network");
 
     std::string leak_msg = "Xfer'd " + std::to_string(amount);
 
@@ -2353,7 +2353,7 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
     std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, to, from, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, 1.f / items_to_destroy_link);
 
     if(path.size() == 0)
-        return push_error(ctx, "User does not exist or is disconnected");
+        return push_error(ctx, "No path to user through the network");
     #endif // XFER_PATHS
 
     std::string found_item_description;
