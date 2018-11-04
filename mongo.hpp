@@ -535,8 +535,8 @@ mongo_shim get_global_mongo_context(mongo_database_type type, int lock_id, bool 
     return mongo_shim(mongo_databases[(int)type], lock_id);
 }
 
-void initialse_mongo_all();
-void cleanup_mongo_all();
+void initialse_db_all();
+void cleanup_db_all();
 
 bson_t* make_bson_default();
 void destroy_bson_default(bson_t* t);

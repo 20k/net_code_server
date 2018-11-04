@@ -1712,22 +1712,18 @@ void mongo_requester::remove_all_from_db(mongo_lock_proxy& ctx)
 
 std::array<mongo_context*, (int)mongo_database_type::MONGO_COUNT> mongo_databases;
 
-void initialse_mongo_all()
+void initialse_db_all()
 {
-    mongoc_init();
-
     for(int i=0; i < (int)mongo_database_type::MONGO_COUNT; i++)
         mongo_databases[i] = new mongo_context((mongo_database_type)i);
 
-    atexit(cleanup_mongo_all);
+    atexit(cleanup_db_all);
 }
 
-void cleanup_mongo_all()
+void cleanup_db_all()
 {
     ///first argument is irrelevant
     get_global_mongo_context(mongo_database_type::USER_ACCESSIBLE, true);
-
-    mongoc_cleanup();
 }
 
 bson_t* make_bson_default()

@@ -313,7 +313,7 @@ int main()
     printf("\n");
 
     test_hexbin();
-    initialse_mongo_all();
+    initialse_db_all();
 
     //auth::hacky_binary_conversion_check();
     //user::fix_auth_problem();
@@ -566,7 +566,7 @@ int main()
 
     #endif // FIX_BAD_ITEMS
 
-    #define REGEN_SCRIPTS
+    //#define REGEN_SCRIPTS
     #ifdef REGEN_SCRIPTS
     int nid = 0;
     for_each_item([&](item& it)
@@ -764,7 +764,7 @@ int main()
 
     #endif // TESTING
 
-    //#ifndef TESTING
+    //#ifndef TES TING
     start_npc_thread();
     init_purple_whale();
     init_blue_mantis();
