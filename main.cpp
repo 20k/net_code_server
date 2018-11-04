@@ -566,7 +566,7 @@ int main()
 
     #endif // FIX_BAD_ITEMS
 
-    //#define REGEN_SCRIPTS
+    #define REGEN_SCRIPTS
     #ifdef REGEN_SCRIPTS
     int nid = 0;
     for_each_item([&](item& it)
@@ -590,6 +590,8 @@ int main()
 
                             it.overwrite_in_db(ctx);
                         }
+
+                        printf("Did %i\n", nid);
                   });
     #endif // REGEN_SCRIPTS
 
