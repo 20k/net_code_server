@@ -10,15 +10,6 @@
 #include "command_handler.hpp"
 #include "safe_thread.hpp"
 
-using global_user_cache = global_generic_cache<user>;
-
-global_user_cache& get_global_user_cache()
-{
-    static global_user_cache cache;
-
-    return cache;
-}
-
 void to_json(nlohmann::json& j, const user_limit& limit)
 {
     j = nlohmann::json{
@@ -94,18 +85,10 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     to_set.set_prop("limits", nlohmann::json(user_limits).dump());
 
     filter.update_one_in_db_if_exact(ctx, to_set);
-
-    global_user_cache& cache = get_global_user_cache();
-    cache.overwrite_in_cache(name, *this);
 }
 
 bool user::exists(mongo_lock_proxy& ctx, const std::string& name_)
 {
-    global_user_cache& cache = get_global_user_cache();
-
-    if(cache.exists_in_cache(name_))
-        return true;
-
     ctx.change_collection(name_);
 
     mongo_requester req;
@@ -116,14 +99,6 @@ bool user::exists(mongo_lock_proxy& ctx, const std::string& name_)
 
 bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
 {
-    global_user_cache& cache = get_global_user_cache();
-
-    if(cache.exists_in_cache(name_))
-    {
-        *this = cache.load_from_cache(name_);
-        return true;
-    }
-
     ctx.change_collection(name_);
 
     if(!exists(ctx, name_))
@@ -245,8 +220,6 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
     }
     #endif // USE_LOCS
 
-    cache.overwrite_in_cache(name_, *this);
-
     return true;
 }
 
@@ -286,10 +259,6 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
 
     request.insert_in_db(ctx);
 
-    ///not valid to cache here
-    //global_user_cache& cache = get_global_user_cache();
-    //cache.overwrite_in_cache(name, *this);
-
     return true;
 }
 
@@ -305,8 +274,7 @@ std::string user::get_auth_token_binary()
 
 void user::delete_from_cache(const std::string& name_)
 {
-    global_user_cache& cache = get_global_user_cache();
-    cache.delete_from_cache(name_);
+
 }
 
 std::map<std::string, double> user::get_properties_from_loaded_items(mongo_lock_proxy& ctx)

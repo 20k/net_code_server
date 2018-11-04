@@ -276,7 +276,7 @@ void pathfind_stresstest()
 
     for(int i=0; i < 1000; i++)
     {
-        auto plen = playspace_network_manage.get_accessible_path_to("i20k", "core", "i20k", (path_info::path_info)(path_info::ALLOW_WARP_BOUNDARY | path_info::NONE));
+        auto plen = playspace_network_manage.get_accessible_path_to("i20k", "ast", "i20k", (path_info::path_info)(path_info::ALLOW_WARP_BOUNDARY | path_info::NONE));
 
         if(i == 0)
             std::cout << "plsize " << plen.size() << std::endl;
@@ -284,7 +284,9 @@ void pathfind_stresstest()
 
     std::cout << "elapsed " << clk.getElapsedTime().asMilliseconds() << std::endl;
 
-    exit(0);
+    while(1){}
+
+    //exit(0);
 }
 
 ///making sure this ends up in the right repo
