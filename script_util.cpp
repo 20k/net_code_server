@@ -451,6 +451,7 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
     }
 
     remove((phase_1 + ".ts").c_str());
+    remove((phase_1).c_str());
 
     //std::cout << "DATA " << data.dump() << std::endl;
 
@@ -458,13 +459,71 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
     {
         if(data.count("bable_error") > 0)
         {
+            int error_line = 0;
+            int error_column = 0;
+            std::string code;
+
+            std::string typescript_sourcemap;
+
             //int error_pos = data["bable_error"]["pos"];
-            int error_line = (int)data["bable_error"]["loc"]["line"] - 1;
+            /*int error_line = (int)data["bable_error"]["loc"]["line"] - 1;
             int error_column = (int)data["bable_error"]["loc"]["column"] - 1;
             std::string code = data["code_posttype"]["outputText"];
 
             ///js object
-            std::string typescript_sourcemap = data["code_posttype"]["sourceMapText"];
+            std::string typescript_sourcemap = data["code_posttype"]["sourceMapText"];*/
+
+            /*try
+            {
+                error_pos = data["babel_error"]["pos"];
+            }
+            catch(...)
+            {
+                std::cout << "bad error pos\n";
+                throw;
+            }*/
+
+            try
+            {
+                error_line = (int)data["bable_error"]["loc"]["line"] - 1;
+            }
+            catch(...)
+            {
+                std::cout << "bad error line\n";
+
+                std::cout << "got res " << res << std::endl;
+
+                throw;
+            }
+            try
+            {
+                error_column = (int)data["bable_error"]["loc"]["column"] - 1;
+            }
+            catch(...)
+            {
+                std::cout << "bad error col\n";
+                throw;
+            }
+
+            try
+            {
+                code = data["code_posttype"]["outputText"];
+            }
+            catch(...)
+            {
+                std::cout << "bad error code\n";
+                throw;
+            }
+
+            try
+            {
+                typescript_sourcemap = data["code_posttype"]["sourceMapText"];
+            }
+            catch(...)
+            {
+                std::cout << "bad error map\n";
+                throw;
+            }
 
             source_map src_map;
             src_map.decode(in, code, typescript_sourcemap);
@@ -478,9 +537,9 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
             return {"", formatted_error};
         }
     }
-    catch(...)
+    catch(const std::exception& e)
     {
-        std::cout << "Error trying to get bable_error\n";
+        std::cout << "Error trying to get bable_error " << e.what() << std::endl;
 
         return {"", "Caught exception in checking babel_error: " + data.dump()};
     }
