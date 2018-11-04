@@ -691,7 +691,9 @@ int main()
 
     boot_connection_handlers();
 
+    #ifdef PATHFIND_STRESS
     pathfind_stresstest();
+    #endif // PATHFIND_STRESS
 
     #ifdef TESTING
     system("start test_launch.bat");
