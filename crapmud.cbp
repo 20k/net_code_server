@@ -171,7 +171,6 @@
 			<Add option="-lsfml-system" />
 			<Add option="-lfreetype" />
 			<Add option="-lbson-static-1.0" />
-			<Add option="-lDnsapi" />
 			<Add option="-lws2_32" />
 			<Add option="-lboost_system-mt" />
 			<Add option="-lmswsock" />
@@ -181,7 +180,6 @@
 			<Add option="-lcrypto" />
 			<Add option="-lssl" />
 			<Add option="-lbacktrace" />
-			<Add option="-lz" />
 		</Linker>
 		<Unit filename="ascii_helpers.cpp" />
 		<Unit filename="ascii_helpers.hpp" />
