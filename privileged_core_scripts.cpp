@@ -620,7 +620,7 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
 
     if(from == to)
     {
-        push_error(ctx, "Money definitely shifted hands");
+        push_success(ctx);
         return 1;
     }
 
