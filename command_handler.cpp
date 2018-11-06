@@ -2452,6 +2452,7 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
     std::string client_command = "client_command ";
     std::string client_command_tagged = "client_command_tagged ";
     std::string client_chat = "client_chat ";
+    std::string client_chat_respond = "client_chat_respond ";
     std::string client_poll = "client_poll";
     std::string client_poll_json = "client_poll_json";
 
@@ -2557,22 +2558,39 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
         }
     }
 
-    if(starts_with(str, client_chat))
+    if(starts_with(str, client_chat) || starts_with(str, client_chat_respond))
     {
-        std::string to_exec(str.begin() + client_chat.size(), str.end());
+        bool respond = starts_with(str, client_chat_respond);
+
+        int len = starts_with(str, client_chat) ? client_chat.size() : client_chat_respond.size();
+
+        std::string to_exec(str.begin() + len, str.end());
 
         if(conditional_async)
         {
             sthread([=]()
             {
                 bool is_auth = false;
-                handle_command_impl(all_shared, to_exec, is_auth);
+                handle_command_return ret = handle_command_impl(all_shared, to_exec, is_auth);
+
+                if(respond)
+                {
+                    return "chat_api_response " + ret.val;
+                }
+
+                return std::string();
+
             }).detach();
         }
         else
         {
             bool is_auth = false;
-            handle_command_impl(all_shared, to_exec, is_auth);
+            handle_command_return ret = handle_command_impl(all_shared, to_exec, is_auth);
+
+            if(respond)
+            {
+                return "chat_api_response " + ret.val;
+            }
         }
 
         return "";
