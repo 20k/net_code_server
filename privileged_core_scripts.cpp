@@ -2303,11 +2303,12 @@ duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
-    std::string usage = "Usage: " + make_key_val("load", "idx") + ", and optionally " + make_key_val("node", "short_name");
+    //std::string usage = "Usage: " + make_key_val("load", "idx") + ", and optionally " + make_key_val("node", "short_name");
 
     int offset = 0;
 
-    duk_push_array(ctx);
+    if(is_arr)
+        duk_push_array(ctx);
 
     for(int& idx : indices)
     {
@@ -2324,8 +2325,9 @@ duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl)
                 accum.pop_back();
 
             push_duk_val(ctx, accum);
-            duk_put_prop_index(ctx, -2, offset);
-            //return 1;
+
+            if(is_arr)
+                duk_put_prop_index(ctx, -2, offset);
         }
         else
         {
@@ -2342,7 +2344,11 @@ duk_ret_t item__unload(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    int unload_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
+    auto [is_arr, indices] = check_get_index_property(ctx);
+
+    if(indices.size() == 0)
+        return push_error(ctx, "Index must be number or array of numbers, eg idx:0 or idx:[1, 2, 3]");
+
     int node_idx = duk_get_prop_string_as_int(ctx, -1, "node", -1);
 
     std::optional<std::pair<user, user_nodes>> user_and_node_opt = get_user_and_nodes(get_caller(ctx), get_thread_id(ctx));
@@ -2353,7 +2359,6 @@ duk_ret_t item__unload(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         return push_error(ctx, "User does not exist");
     }
-
 
     if(node_name != "")
     {
@@ -2367,26 +2372,36 @@ duk_ret_t item__unload(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
-    std::string usage = "Usage: " + make_key_val("load", "idx") + ", and optionally " + make_key_val("node", "short_name");
+    int offset = 0;
 
-    if(unload_idx >= 0)
+    if(is_arr)
+        duk_push_array(ctx);
+
+    for(int& idx : indices)
     {
-        std::string accum;
+        if(idx >= 0)
+        {
+            std::string accum;
 
-        auto ret = load_item_raw(node_idx, -1, unload_idx, user_and_node_opt->first, user_and_node_opt->second, accum, get_thread_id(ctx));
+            auto ret = load_item_raw(node_idx, -1, idx, user_and_node_opt->first, user_and_node_opt->second, accum, get_thread_id(ctx));
 
-        if(ret != "")
-            return push_error(ctx, ret);
+            if(ret != "")
+                return push_error(ctx, ret + " for index " + std::to_string(idx) + ", stopping operation");
 
-        if(accum.size() > 0 && accum.back() == '\n')
-            accum.pop_back();
+            if(accum.size() > 0 && accum.back() == '\n')
+                accum.pop_back();
 
-        push_duk_val(ctx, accum);
-        return 1;
-    }
-    else
-    {
-        return push_error(ctx, "Needs idx >= 0");
+            push_duk_val(ctx, accum);
+
+            if(is_arr)
+                duk_put_prop_index(ctx, -2, offset);
+        }
+        else
+        {
+            return push_error(ctx, "Index " + std::to_string(idx) + " was < 0, stopping operation");
+        }
+
+        offset++;
     }
 
     return 1;
@@ -2573,8 +2588,6 @@ duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return 1;
 }
-
-
 
 duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
