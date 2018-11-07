@@ -2322,7 +2322,7 @@ duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl)
                 accum.pop_back();
 
             if(ret != "")
-                push_error(ctx, ret + " for index " + std::to_string(idx) + ", stopping operation");
+                push_error(ctx, ret + " for index " + std::to_string(idx));
             else
                 push_duk_val(ctx, accum);
 
@@ -2331,7 +2331,7 @@ duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
         else
         {
-            push_error(ctx, "Index " + std::to_string(idx) + " was < 0, stopping operation");
+            push_error(ctx, "Index " + std::to_string(idx) + " was < 0");
 
             if(is_arr)
                 duk_put_prop_index(ctx, -2, offset);
@@ -2392,7 +2392,7 @@ duk_ret_t item__unload(priv_context& priv_ctx, duk_context* ctx, int sl)
                 accum.pop_back();
 
             if(ret != "")
-                push_error(ctx, ret + " for index " + std::to_string(idx) + ", stopping operation");
+                push_error(ctx, ret + " for index " + std::to_string(idx));
             else
                 push_duk_val(ctx, accum);
 
@@ -2401,7 +2401,7 @@ duk_ret_t item__unload(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
         else
         {
-            push_error(ctx, "Index " + std::to_string(idx) + " was < 0, stopping operation");
+            push_error(ctx, "Index " + std::to_string(idx) + " was < 0");
 
             if(is_arr)
                 duk_put_prop_index(ctx, -2, offset);
@@ -2573,7 +2573,7 @@ duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
         auto ret = load_item_raw(-1, -1, item_idx, user_and_nodes->first, user_and_nodes->second, accum, get_thread_id(ctx));
 
         if(ret != "")
-            push_error(ctx, ret + " for index " + std::to_string(item_idx) + ", stopping operation");
+            push_error(ctx, ret + " for index " + std::to_string(item_idx));
         else
             push_xfer_item_with_logs(ctx, item_idx, from, to, false);
 
