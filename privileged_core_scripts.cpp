@@ -2318,20 +2318,23 @@ duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             auto ret = load_item_raw(node_idx, idx, -1, user_and_node_opt->first, user_and_node_opt->second, accum, get_thread_id(ctx));
 
-            if(ret != "")
-                return push_error(ctx, ret + " for index " + std::to_string(idx) + ", stopping operation");
-
             if(accum.size() > 0 && accum.back() == '\n')
                 accum.pop_back();
 
-            push_duk_val(ctx, accum);
+            if(ret != "")
+                push_error(ctx, ret + " for index " + std::to_string(idx) + ", stopping operation");
+            else
+                push_duk_val(ctx, accum);
 
             if(is_arr)
                 duk_put_prop_index(ctx, -2, offset);
         }
         else
         {
-            return push_error(ctx, "Index " + std::to_string(idx) + " was < 0, stopping operation");
+            push_error(ctx, "Index " + std::to_string(idx) + " was < 0, stopping operation");
+
+            if(is_arr)
+                duk_put_prop_index(ctx, -2, offset);
         }
 
         offset++;
@@ -2385,20 +2388,23 @@ duk_ret_t item__unload(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             auto ret = load_item_raw(node_idx, -1, idx, user_and_node_opt->first, user_and_node_opt->second, accum, get_thread_id(ctx));
 
-            if(ret != "")
-                return push_error(ctx, ret + " for index " + std::to_string(idx) + ", stopping operation");
-
             if(accum.size() > 0 && accum.back() == '\n')
                 accum.pop_back();
 
-            push_duk_val(ctx, accum);
+            if(ret != "")
+                push_error(ctx, ret + " for index " + std::to_string(idx) + ", stopping operation");
+            else
+                push_duk_val(ctx, accum);
 
             if(is_arr)
                 duk_put_prop_index(ctx, -2, offset);
         }
         else
         {
-            return push_error(ctx, "Index " + std::to_string(idx) + " was < 0, stopping operation");
+            push_error(ctx, "Index " + std::to_string(idx) + " was < 0, stopping operation");
+
+            if(is_arr)
+                duk_put_prop_index(ctx, -2, offset);
         }
 
         offset++;
@@ -2542,32 +2548,40 @@ duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    int item_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
+    auto [is_arr, indices] = check_get_index_property(ctx);
 
-    if(item_idx < 0)
-    {
-        push_error(ctx, "Invalid index");
-        return 1;
-    }
+    if(indices.size() == 0)
+        return push_error(ctx, "Index must be number or array of numbers, eg idx:0 or idx:[1, 2, 3]");
 
     std::string from = get_caller(ctx);
     std::string to = duk_safe_get_prop_string(ctx, -1, "user");
 
+    std::optional user_and_nodes = get_user_and_nodes(get_caller(ctx), get_thread_id(ctx));
+
+    if(!user_and_nodes.has_value())
+        return push_error(ctx, "No such user/really catastrophic error");
+
+    int offset = 0;
+
+    if(is_arr)
+        duk_push_array(ctx);
+
+    for(auto& item_idx : indices)
     {
-        std::optional user_and_nodes = get_user_and_nodes(get_caller(ctx), get_thread_id(ctx));
-
-        if(!user_and_nodes.has_value())
-            return push_error(ctx, "No such user/really catastrophic error");
-
         std::string accum;
 
         auto ret = load_item_raw(-1, -1, item_idx, user_and_nodes->first, user_and_nodes->second, accum, get_thread_id(ctx));
 
         if(ret != "")
-            return push_error(ctx, ret);
-    }
+            push_error(ctx, ret + " for index " + std::to_string(item_idx) + ", stopping operation");
+        else
+            push_xfer_item_with_logs(ctx, item_idx, from, to, false);
 
-    push_xfer_item_with_logs(ctx, item_idx, from, to, false);
+        if(is_arr)
+            duk_put_prop_index(ctx, -2, offset);
+
+        offset++;
+    }
 
     return 1;
 }
@@ -3166,9 +3180,9 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
         auto ret = load_item_raw(-1, -1, found_user.item_to_index(item_id), found_user, nodes, accum, get_thread_id(ctx));
 
         if(ret != "")
-            return push_error(ctx, ret);
-
-        push_xfer_item_id_with_logs(ctx, item_id, from, get_caller(ctx), true);
+            push_error(ctx, ret);
+        else
+            push_xfer_item_id_with_logs(ctx, item_id, from, get_caller(ctx), true);
 
         if(is_arr)
             duk_put_prop_index(ctx, -2, idx);
