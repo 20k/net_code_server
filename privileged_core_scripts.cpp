@@ -2554,31 +2554,14 @@ duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string to = duk_safe_get_prop_string(ctx, -1, "user");
 
     {
-        user found_user;
+        std::optional user_and_nodes = get_user_and_nodes(get_caller(ctx), get_thread_id(ctx));
 
-        {
-            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-
-            if(!found_user.load_from_db(mongo_ctx, get_caller(ctx)))
-            {
-                push_error(ctx, "No such user/really catastrophic error");
-                return 1;
-            }
-        }
-
-        user_nodes nodes;
-
-        {
-            mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
-
-            nodes.ensure_exists(node_ctx, get_caller(ctx));
-            nodes.load_from_db(node_ctx, get_caller(ctx));
-        }
-
+        if(!user_and_nodes.has_value())
+            return push_error(ctx, "No such user/really catastrophic error");
 
         std::string accum;
 
-        auto ret = load_item_raw(-1, -1, item_idx, found_user, nodes, accum, get_thread_id(ctx));
+        auto ret = load_item_raw(-1, -1, item_idx, user_and_nodes->first, user_and_nodes->second, accum, get_thread_id(ctx));
 
         if(ret != "")
             return push_error(ctx, ret);
