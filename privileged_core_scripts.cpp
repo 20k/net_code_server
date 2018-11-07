@@ -2226,13 +2226,61 @@ duk_ret_t item__list(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+std::pair<bool, std::vector<int>> check_get_index_property(duk_context* ctx)
+{
+    if(!duk_has_prop_string(ctx, -1, "idx") && !dukx_is_prop_truthy(ctx, -1, "idx"))
+        return {false, std::vector<int>()};
+
+    bool is_arr = false;
+
+    std::vector<int> ret;
+
+    duk_get_prop_string(ctx, -1, "idx");
+
+    if(duk_is_number(ctx, -1))
+    {
+        ret.push_back(duk_get_int(ctx, -1));
+
+        is_arr = false;
+    }
+
+    if(duk_is_array(ctx, -1))
+    {
+        duk_size_t n = duk_get_length(ctx, -1);
+
+        for(int i=0; i < (int)n && i < 1000; i++)
+        {
+            duk_get_prop_index(ctx, -1, i);
+
+            if(duk_is_number(ctx, -1))
+            {
+                ret.push_back(duk_get_number(ctx, -1));
+            }
+
+            duk_pop(ctx);
+        }
+
+        is_arr = true;
+    }
+
+    duk_pop(ctx);
+
+    //std::sort(ret.begin(), ret.end());
+
+    return {is_arr, ret};
+}
 
 duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
-    int load_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
+    //int load_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
     int node_idx = duk_get_prop_string_as_int(ctx, -1, "node", -1);
+
+    auto [is_arr, indices] = check_get_index_property(ctx);
+
+    if(indices.size() == 0)
+        return push_error(ctx, "Index must be number or array of numbers, eg idx:0 or idx:[1, 2, 3]");
 
     std::optional<std::pair<user, user_nodes>> user_and_node_opt = get_user_and_nodes(get_caller(ctx), get_thread_id(ctx));
 
@@ -2242,7 +2290,6 @@ duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         return push_error(ctx, "User does not exist");
     }
-
 
     if(node_name != "")
     {
@@ -2258,24 +2305,34 @@ duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::string usage = "Usage: " + make_key_val("load", "idx") + ", and optionally " + make_key_val("node", "short_name");
 
-    if(load_idx >= 0)
+    int offset = 0;
+
+    duk_push_array(ctx);
+
+    for(int& idx : indices)
     {
-        std::string accum;
+        if(idx >= 0)
+        {
+            std::string accum;
 
-        auto ret = load_item_raw(node_idx, load_idx, -1, user_and_node_opt->first, user_and_node_opt->second, accum, get_thread_id(ctx));
+            auto ret = load_item_raw(node_idx, idx, -1, user_and_node_opt->first, user_and_node_opt->second, accum, get_thread_id(ctx));
 
-        if(ret != "")
-            return push_error(ctx, ret);
+            if(ret != "")
+                return push_error(ctx, ret + " for index " + std::to_string(idx) + ", stopping operation");
 
-        if(accum.size() > 0 && accum.back() == '\n')
-            accum.pop_back();
+            if(accum.size() > 0 && accum.back() == '\n')
+                accum.pop_back();
 
-        push_duk_val(ctx, accum);
-        return 1;
-    }
-    else
-    {
-        return push_error(ctx, "Needs idx >= 0");
+            push_duk_val(ctx, accum);
+            duk_put_prop_index(ctx, -2, offset);
+            //return 1;
+        }
+        else
+        {
+            return push_error(ctx, "Index " + std::to_string(idx) + " was < 0, stopping operation");
+        }
+
+        offset++;
     }
 
     return 1;
@@ -2334,11 +2391,6 @@ duk_ret_t item__unload(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return 1;
 }
-
-
-
-
-
 
 duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, const std::string& from, const std::string& to, bool is_pvp)
 {
@@ -2985,51 +3037,13 @@ duk_ret_t take_cash(duk_context* ctx, const std::string& username, double price)
     return 0;
 }
 
-std::vector<int> check_get_index_property(duk_context* ctx)
-{
-    if(!duk_has_prop_string(ctx, -1, "idx") && !dukx_is_prop_truthy(ctx, -1, "idx"))
-        return std::vector<int>();
-
-    std::vector<int> ret;
-
-    duk_get_prop_string(ctx, -1, "idx");
-
-    if(duk_is_number(ctx, -1))
-    {
-        ret.push_back(duk_get_int(ctx, -1));
-    }
-
-    if(duk_is_array(ctx, -1))
-    {
-        duk_size_t n = duk_get_length(ctx, -1);
-
-        for(int i=0; i < (int)n && i < 1000; i++)
-        {
-            duk_get_prop_index(ctx, -1, i);
-
-            if(duk_is_number(ctx, -1))
-            {
-                ret.push_back(duk_get_number(ctx, -1));
-            }
-
-            duk_pop(ctx);
-        }
-    }
-
-    duk_pop(ctx);
-
-    //std::sort(ret.begin(), ret.end());
-
-    return ret;
-}
-
 ///have item__steal reset internal node structure
 
 duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     std::string from = duk_safe_get_prop_string(ctx, -1, "user");
 
-    std::vector<int> indices = check_get_index_property(ctx);
+    auto [is_arr, indices] = check_get_index_property(ctx);
 
     if(indices.size() == 0)
         return push_error(ctx, "Pass idx:item_offset or idx:[offset1, offset2]");
@@ -3145,7 +3159,8 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
-    duk_push_array(ctx);
+    if(is_arr)
+        duk_push_array(ctx);
 
     int idx = 0;
 
@@ -3158,7 +3173,10 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
             return push_error(ctx, ret);
 
         push_xfer_item_id_with_logs(ctx, item_id, from, get_caller(ctx), true);
-        duk_put_prop_index(ctx, -2, idx);
+
+        if(is_arr)
+            duk_put_prop_index(ctx, -2, idx);
+
         idx++;
 
         mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
