@@ -759,12 +759,12 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
     {
         std::string cash_log = "`XCash xfer` | from: " + from  + ", to: " + to + ", amount: " + std::to_string(amount);
 
-        int err = make_logs_on(ctx, from, user_node_info::GC_LOG, {cash_log});
+        int err = make_logs_on(ctx, from, user_node_info::CASH_LOG, {cash_log});
 
         if(err)
             return err;
 
-        err = make_logs_on(ctx, to, user_node_info::GC_LOG, {cash_log});
+        err = make_logs_on(ctx, to, user_node_info::CASH_LOG, {cash_log});
 
         if(err)
             return err;
