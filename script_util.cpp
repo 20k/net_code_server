@@ -34,7 +34,7 @@ std::string arg_function_wrap(const std::string& str)
 
 std::string attach_unparsed_wrapper(std::string str)
 {
-    while(str.size() > 0 && isspace(str.front()))
+    /*while(str.size() > 0 && isspace(str.front()))
         str.erase(str.begin());
 
     std::string match = "function";
@@ -59,7 +59,10 @@ std::string attach_unparsed_wrapper(std::string str)
 
     str += "\nreturn INTERNAL(context, args);";
 
-    return arg_function_wrap(str);
+    return arg_function_wrap(str);*/
+
+    return "(" + str + ")(context, args)";
+
     //return "return " + str;
 }
 
