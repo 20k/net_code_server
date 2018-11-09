@@ -34,36 +34,7 @@ std::string arg_function_wrap(const std::string& str)
 
 std::string attach_unparsed_wrapper(std::string str)
 {
-    /*while(str.size() > 0 && isspace(str.front()))
-        str.erase(str.begin());
-
-    std::string match = "function";
-
-    for(int i=0; i < (int)match.size() && i < (int)str.size(); i++)
-    {
-        if(match[i] != str[i])
-            return str;
-    }
-
-    if(str.size() < match.size())
-        return str;
-
-    std::string fname = " INTERNAL";
-
-    int index = match.size();
-
-    for(int i=(int)fname.size() - 1; i >= 0; i--)
-    {
-        str.insert(str.begin() + index, fname[i]);
-    }
-
-    str += "\nreturn INTERNAL(context, args);";
-
-    return arg_function_wrap(str);*/
-
     return "(" + str + ")(context, args)";
-
-    //return "return " + str;
 }
 
 bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out)
