@@ -43,6 +43,7 @@ enum class mongo_database_type
     LOW_LEVEL_STRUCTURE,
     QUEST_MANAGER,
     EVENT_MANAGER,
+    MEMORY_CORE,
     MONGO_COUNT
 };
 

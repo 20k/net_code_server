@@ -337,6 +337,7 @@ mongo_context::mongo_context(mongo_database_type type)
         {mongo_database_type::LOW_LEVEL_STRUCTURE, "LOW_LEVEL_STRUCTURE"},
         {mongo_database_type::QUEST_MANAGER, "QUEST_MANAGER"},
         {mongo_database_type::EVENT_MANAGER, "EVENT_MANAGER"},
+        {mongo_database_type::MEMORY_CORE, "MEMORY_CORE"},
     };
 
     std::map<mongo_database_type, bool> is_fixed_map
@@ -345,6 +346,7 @@ mongo_context::mongo_context(mongo_database_type type)
         {mongo_database_type::LOW_LEVEL_STRUCTURE, true},
         {mongo_database_type::QUEST_MANAGER, true},
         {mongo_database_type::EVENT_MANAGER, false},
+        {mongo_database_type::MEMORY_CORE, false},
     };
 
     for(auto& i : procedural_dbs)

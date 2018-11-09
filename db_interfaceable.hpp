@@ -27,69 +27,15 @@ struct db_common
 
     db_common(const std::string& _key) : key(_key) {}
 
-    //db_common(const std::string& fkey) : key(fkey){}
-
-    //virtual void extract_from(json& j){}
-
-    //virtual void serialise(json& j, bool ser) {}
-
     virtual ~db_common(){}
 };
-
-/*template<typename T>
-struct db_val : db_common
-{
-    T val;
-
-    template<typename U>
-    bool handle_serialise(json& j, U on_create, bool ser)
-    {
-        ///if this doesnt exist
-        ///return dirty, and do on create
-        ///and then update json
-        if(ser)
-        {
-            j[key] = val;
-        }
-        else
-        {
-            if(j.count(key) == 0)
-            {
-                val = on_create(j);
-                j[key] = val;
-                return true;
-            }
-            ///if it does exist, get it from the key location
-            else
-            {
-                val = j[key].get<T>();
-                return false;
-            }
-        }
-    }
-
-    virtual ~db_val(){}
-};*/
 
 template<typename T>
 struct db_val : db_common
 {
     T val = T();
-    //U* u = nullptr;
 
     db_val(const std::string& _key) : db_common(_key) {}
-
-    //void init_impl_ptr(U* ptr) {u = ptr;}
-
-    /*void operator=(const db_val<T>& other)
-    {
-        if(this == &other)
-            return;
-
-        *this = other;
-
-        //u->template set_as<T>(key, other.u->template get_as<T>(other.key));
-    }*/
 
     template<typename U = T>
     void serialise(json& j, bool ser)
@@ -117,7 +63,6 @@ struct db_val : db_common
     template<typename V>
     db_val<T>& operator=(const V& other)
     {
-        //u->template set_as<T>(key, other);
         val = other;
 
         return *this;
@@ -186,12 +131,6 @@ void stringify_params(std::string& in, U first, T... name)
 }
 
 struct mongo_lock_proxy;
-
-/*namespace caches
-{
-    template<typename concrete>
-    static global_generic_cache<concrete> this_cache;
-};*/
 
 template<typename concrete, char... name>
 struct db_interfaceable
