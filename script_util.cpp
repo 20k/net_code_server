@@ -45,6 +45,9 @@ std::string attach_unparsed_wrapper(std::string str)
             return str;
     }
 
+    if(str.size() < match.size())
+        return str;
+
     std::string fname = " INTERNAL";
 
     int index = match.size();
@@ -610,7 +613,12 @@ std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::
         return "Invalid Name " + name;
     }
 
-    owner = no_ss_split(name, ".")[0];
+    auto post_split = no_ss_split(name, ".");
+
+    if(post_split.size() == 0)
+        return "Invalid Name " + name;
+
+    owner = post_split[0];
     unparsed_source = source;
 
     script_data sdata;

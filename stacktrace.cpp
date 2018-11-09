@@ -16,7 +16,7 @@ void signal_handler(int signum)
 
     printf("stacktrace %s\n", stacktrace.c_str());
 
-    FILE* pFile = fopen("crash.txt", "w");
+    FILE* pFile = fopen("crash.txt", "a+");
 
     fwrite(stacktrace.c_str(), 1, stacktrace.size(), pFile);
 
