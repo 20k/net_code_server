@@ -204,6 +204,8 @@ void for_each_item(T t)
     }
 }
 
+std::vector<item> load_items(mongo_lock_proxy& items_ctx, const std::vector<std::string>& ids);
+
 ///migrate a better version of this into secret
 ///pass in a probability variable
 namespace item_types

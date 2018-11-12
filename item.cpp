@@ -189,6 +189,23 @@ bool item::is_breached()
     return get_prop("lock_is_breached") == "1";
 }
 
+std::vector<item> load_items(mongo_lock_proxy& items_ctx, const std::vector<std::string>& ids)
+{
+    std::vector<item> ret;
+
+    for(auto& i : ids)
+    {
+        item it;
+
+        if(!it.load_from_db(items_ctx, i))
+            continue;
+
+        ret.push_back(it);
+    }
+
+    return ret;
+}
+
 item item_types::get_default_of(item_types::item_type type, const std::string& lock_name)
 {
     using namespace item_types;
