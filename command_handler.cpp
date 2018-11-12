@@ -1075,15 +1075,9 @@ void delete_nodes_for(const std::string& name)
 {
     ///delete nodes
     {
-        mongo_lock_proxy nodes_db = get_global_mongo_node_properties_context(-2);
-        nodes_db.change_collection(name);
+        mongo_lock_proxy mem_db = get_global_mongo_memory_core_context(-2);
 
-        mongo_requester req;
-        req.set_prop("owned_by", name);
-
-        req.remove_all_from_db(nodes_db);
-
-        user_nodes::delete_from_cache(name);
+        user_nodes_shim::remove_from_db(mem_db, name);
     }
 }
 

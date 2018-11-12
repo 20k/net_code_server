@@ -1030,6 +1030,7 @@ void init_db_storage_backend()
     store.indices[(int)mongo_database_type::USER_ITEMS] = "item_id";
     store.indices[(int)mongo_database_type::NPC_PROPERTIES] = "name";
     store.indices[(int)mongo_database_type::NETWORK_PROPERTIES] = "name";
+    store.indices[(int)mongo_database_type::MEMORY_CORE] = "owner";
 
     if(!new_data)
     {

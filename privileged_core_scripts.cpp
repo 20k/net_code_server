@@ -2914,7 +2914,7 @@ duk_ret_t cash__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     size_t current_time = get_wall_time();
 
-    if((hostile & user_node_info::XFER_GC_FROM) > 0)
+    if((hostile & user_node_info::XFER_CASH_FROM) > 0)
     {
         push_duk_val(ctx, opt_user_and_nodes->first.cash);
 
@@ -3236,7 +3236,7 @@ duk_ret_t cash__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     auto hostile = nodes.valid_hostile_actions();
 
-    if((hostile & user_node_info::XFER_GC_FROM) > 0)
+    if((hostile & user_node_info::XFER_CASH_FROM) > 0)
     {
         return cash_internal_xfer(ctx, from, get_caller(ctx), amount, true);
     }

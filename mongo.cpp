@@ -346,7 +346,7 @@ mongo_context::mongo_context(mongo_database_type type)
         {mongo_database_type::LOW_LEVEL_STRUCTURE, true},
         {mongo_database_type::QUEST_MANAGER, true},
         {mongo_database_type::EVENT_MANAGER, false},
-        {mongo_database_type::MEMORY_CORE, false},
+        {mongo_database_type::MEMORY_CORE, true},
     };
 
     for(auto& i : procedural_dbs)

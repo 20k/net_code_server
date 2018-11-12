@@ -621,10 +621,17 @@ mongo_shim get_global_mongo_quest_manager_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::QUEST_MANAGER, lock_id);
 }
+
 inline
 mongo_shim get_global_mongo_event_manager_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::EVENT_MANAGER, lock_id);
+}
+
+inline
+mongo_shim get_global_mongo_memory_core_context(int lock_id)
+{
+    return get_global_mongo_context(mongo_database_type::MEMORY_CORE, lock_id);
 }
 
 #endif // MONGO_HPP_INCLUDED
