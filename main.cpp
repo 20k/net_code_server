@@ -348,6 +348,8 @@ int main()
             tickle_item_cache();
            }).detach();
 
+    convert_all_nodes();
+
     //test_json();
 
     //#define SERVER_FIRST_TIME_EVER_RELEASE
