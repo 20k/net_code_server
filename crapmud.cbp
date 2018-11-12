@@ -205,8 +205,6 @@
 		<Unit filename="deps/secret/loot_gen.hpp" />
 		<Unit filename="deps/secret/low_level_structure.cpp" />
 		<Unit filename="deps/secret/low_level_structure.hpp" />
-		<Unit filename="deps/secret/memory_core.cpp" />
-		<Unit filename="deps/secret/memory_core.hpp" />
 		<Unit filename="deps/secret/node.cpp" />
 		<Unit filename="deps/secret/node.hpp" />
 		<Unit filename="deps/secret/npc_manager.cpp" />
