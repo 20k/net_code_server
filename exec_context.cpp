@@ -44,22 +44,20 @@ void exec_context::stash_context(const std::string& host, int seclevel, int stac
 
 void* exec_context::get_new_context_for(const std::string& host, int seclevel)
 {
-    void* ptr = stashed_contexts[host][seclevel];
+    //void* ptr = stashed_contexts[host][seclevel];
 
-    //ptr = nullptr;
-
-    if(ptr == nullptr)
+    //if(ptr == nullptr)
     {
         duk_context* dctx = (duk_context*)get_ctx();
 
         duk_idx_t thr_idx = duk_push_thread_new_globalenv(dctx);
         duk_context* new_ctx = duk_get_context(dctx, thr_idx);
-        stash_context(host, seclevel, -1, new_ctx);
+        //stash_context(host, seclevel, -1, new_ctx);
 
         register_funcs(new_ctx, seclevel, host, true);
         return (void*)new_ctx;
     }
-    else
+    /*else
     {
         duk_context* dctx = (duk_context*)get_ctx();
 
@@ -73,7 +71,7 @@ void* exec_context::get_new_context_for(const std::string& host, int seclevel)
 
         register_funcs((duk_context*)ptr, seclevel, host, false);
         return ptr;
-    }
+    }*/
 }
 
 exec_context* exec_from_ctx(duk_context* ctx)

@@ -636,12 +636,6 @@ std::string compile_and_call(exec_context& ectx, const std::string& data, std::s
         return "Script not found";
     }
 
-    /*duk_idx_t thr_idx = duk_push_thread_new_globalenv(ctx);
-    duk_context* new_ctx = duk_get_context(ctx, thr_idx);
-    //duk_pop(ctx);
-
-    register_funcs(new_ctx, seclevel, get_script_host(ctx), true);*/
-
     std::string script_host = get_script_host(ctx);
     std::string base_caller = get_base_caller(ctx);
 
@@ -650,20 +644,9 @@ std::string compile_and_call(exec_context& ectx, const std::string& data, std::s
     ///now need to be a bit more careful with object stacks and the like
     duk_context* new_ctx = (duk_context*)ectx.get_new_context_for(get_script_host(ctx), seclevel);
 
-    std::string wrapper;
-    wrapper = data;
-
-    /*if(!is_top_level)
-        wrapper = attach_wrapper(data, stringify, false);
-    else ///wrapper already attached
-        wrapper = data;*/
-
-    //std::cout << "wrapper:\n";
-    //std::cout << wrapper << std::endl;
+    std::string wrapper = data;
 
     exec_stack stk(ectx, new_ctx);
-
-    std::string ret;
 
     if(!compile_and_push(new_ctx, wrapper))
     {
@@ -673,16 +656,16 @@ std::string compile_and_call(exec_context& ectx, const std::string& data, std::s
 
         printf("compile failed: %s\n", err.c_str());
 
-        duk_push_string(ctx, "Syntax or Compile Error");
-
         stk.early_out();
+
+        duk_push_string(ctx, "Syntax or Compile Error");
     }
     else
     {
         duk_push_heap_stash(new_ctx);
         duk_push_int(new_ctx, seclevel);
         duk_put_prop_string(new_ctx, -2, "last_seclevel");
-        duk_pop_n(new_ctx, 1);
+        duk_pop(new_ctx);
 
         duk_idx_t id = duk_push_object(new_ctx); ///[object]
         duk_push_string(new_ctx, caller.c_str()); ///[object -> caller]
@@ -708,6 +691,8 @@ std::string compile_and_call(exec_context& ectx, const std::string& data, std::s
         #define USE_PROXY
 
         ///[object] is on the stack, aka context
+
+        ///this is probably whats breaking the case when ctx == new_ctx
         if(!duk_is_object(ctx, -2))
             duk_push_undefined(new_ctx);
         else
