@@ -759,12 +759,12 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
     {
         std::string cash_log = "`XCash xfer` | from: " + from  + ", to: " + to + ", amount: " + std::to_string(amount);
 
-        int err = make_logs_on(ctx, from, user_node_info::CASH_LOG, {cash_log});
+        int err = make_logs_on(ctx, from, user_node_info::CASH_SEG, {cash_log});
 
         if(err)
             return err;
 
-        err = make_logs_on(ctx, to, user_node_info::CASH_LOG, {cash_log});
+        err = make_logs_on(ctx, to, user_node_info::CASH_SEG, {cash_log});
 
         if(err)
             return err;
@@ -2515,8 +2515,8 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
 
         std::string xfer = "`NItem xfer` | from: " + from  + ", to: " + to + ", name: " + found_item_description;
 
-        make_logs_on(ctx, from, user_node_info::ITEM_LOG, {xfer});
-        make_logs_on(ctx, to, user_node_info::ITEM_LOG, {xfer});
+        make_logs_on(ctx, from, user_node_info::ITEM_SEG, {xfer});
+        make_logs_on(ctx, to, user_node_info::ITEM_SEG, {xfer});
 
         //duk_push_int(ctx, placeholder.get_prop_as_integer("item_id"));
 
