@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "mongo.hpp"
+#include <SFML/System.hpp>
 
 struct mongo_lock_proxy;
 
@@ -25,6 +26,12 @@ struct auth
     static void hacky_binary_conversion_check();
 };
 
+struct enforce_constant_time
+{
+    sf::Clock clk;
+
+    ~enforce_constant_time();
+};
 
 template<typename T>
 inline

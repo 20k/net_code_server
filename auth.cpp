@@ -113,3 +113,8 @@ void auth::hacky_binary_conversion_check()
                         req.update_in_db_if_exact(ctx, cp);
                   });
 }
+
+enforce_constant_time::~enforce_constant_time()
+{
+    while(clk.getElapsedTime().asMicroseconds() < 100 * 1000){}
+}

@@ -1939,6 +1939,8 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
         std::vector<std::string> users;
 
         {
+            enforce_constant_time ect;
+
             mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
 
             auth user_auth;
