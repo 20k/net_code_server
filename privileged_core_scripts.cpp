@@ -2948,7 +2948,7 @@ duk_ret_t cash__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
     else
     {
-        return push_error(ctx, "System Breach Node Secured");
+        return push_error(ctx, "System Cash Node Secured");
     }
 
     return 1;
@@ -2992,7 +2992,7 @@ duk_ret_t item__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
     else
     {
-        return push_error(ctx, "System Breach Node Secured");
+        return push_error(ctx, "System Item Node Secured");
     }
 
     return 1;
@@ -3085,7 +3085,7 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     auto hostile = nodes.valid_hostile_actions();
 
     if(!((hostile & user_node_info::XFER_ITEM_FROM) > 0))
-        return push_error(ctx, "System Breach Node Secured");
+        return push_error(ctx, "System Item Node Secured");
 
     size_t current_time = get_wall_time();
 
@@ -3242,7 +3242,7 @@ duk_ret_t cash__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
     else
     {
-        return push_error(ctx, "System Breach Node Secured");
+        return push_error(ctx, "System Cash Node Secured");
     }
 }
 
