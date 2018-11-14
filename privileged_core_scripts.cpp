@@ -3423,7 +3423,7 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
-duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::string& name_of_person_being_attacked)
+duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::string& name_of_person_being_attacked, bool is_arr)
 {
     //std::cout << "user_name " << name_of_person_being_attacked << std::endl;
 
@@ -3666,6 +3666,7 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
     #endif // TESTING
 
     std::string name_of_person_being_attacked = duk_safe_get_prop_string(ctx, -1, "user");
+    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
 
     if(name_of_person_being_attacked == "")
         return push_error(ctx, "Usage: net.hack({user:<name>})");
@@ -3703,7 +3704,7 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
         playspace_network_manage.modify_path_per_link_strength_with_logs(path, -hack_cost, {"Hostile Path Access"}, get_thread_id(ctx));
     }
 
-    return hack_internal(priv_ctx, ctx, name_of_person_being_attacked);
+    return hack_internal(priv_ctx, ctx, name_of_person_being_attacked, is_arr);
 }
 
 

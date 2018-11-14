@@ -169,7 +169,7 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t cash__steal(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::string& name_of_person_being_attacked);
+duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::string& name_of_person_being_attacked, bool is_arr);
 
 #ifdef USE_LOCS
 duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl);
