@@ -3458,6 +3458,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
     nlohmann::json targeted;
     targeted["NID_string"] = current_node->get_NID();
     targeted["short_name"] = current_node->get_short_name();
+    targeted["name"] = current_node->get_long_name();
 
     nlohmann::json array_data;
 
