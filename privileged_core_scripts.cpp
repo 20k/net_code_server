@@ -3581,7 +3581,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
     if(current_node->is_breached())
     {
-        std::string dat = current_node->get_breach_message(nodes);
+        std::string dat = current_node->get_breach_message(usr, nodes);
 
         msg += dat;
     }
@@ -3591,7 +3591,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
     if(all_success && !current_node->is_breached())
     {
-        std::string dat = current_node->get_breach_message(nodes);
+        std::string dat = current_node->get_breach_message(usr, nodes);
 
         msg += dat;
 
@@ -3609,7 +3609,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
     if(current_node->is_breached())
     {
-        array_data["connected"] = current_node->get_breach_json(nodes);
+        array_data["connected"] = current_node->get_breach_json(usr, nodes);
         array_data["locked"] = false;
     }
     else
