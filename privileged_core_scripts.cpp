@@ -2064,13 +2064,17 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
         nlohmann::json ret;
 
         std::vector<nlohmann::json> objs;
+        int index = 0;
 
         for(std::string& item_id : to_ret)
         {
             item next;
             next.load_from_db(mongo_ctx, item_id);
 
-            objs.push_back(get_item_raw(next, !full, found_user, nodes));
+            auto data = get_item_raw(next, !full, found_user, nodes);
+            data["idx"] = index++;
+
+            objs.push_back(data);
         }
 
         if(pvp)
