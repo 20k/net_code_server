@@ -3425,25 +3425,13 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
 
 duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::string& name_of_person_being_attacked, bool is_arr)
 {
-    //std::cout << "user_name " << name_of_person_being_attacked << std::endl;
+    auto user_and_nodes = get_user_and_nodes(name_of_person_being_attacked, get_thread_id(ctx));
 
-    user usr;
+    if(!user_and_nodes.has_value())
+        return push_error(ctx, "No such user");
 
-    {
-        mongo_nolock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
-
-        if(!usr.load_from_db(user_info, name_of_person_being_attacked))
-            return push_error(ctx, "No such user");
-    }
-
-    user_nodes nodes;
-
-    {
-        mongo_nolock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
-
-        nodes.ensure_exists(node_ctx, name_of_person_being_attacked);
-        nodes.load_from_db(node_ctx, name_of_person_being_attacked);
-    }
+    user& usr = user_and_nodes->first;
+    user_nodes& nodes = user_and_nodes->second;
 
     std::string node_fullname = duk_safe_get_prop_string(ctx, -1, "NID");
 
@@ -3467,12 +3455,35 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
     if(current_node == nullptr)
         return push_error(ctx, "Misc error: Black Tiger");
 
+    nlohmann::json targeted;
+    targeted["NID_string"] = current_node->get_NID();
+    targeted["short_name"] = current_node->get_short_name();
+
+    nlohmann::json array_data;
+
+    array_data["target"] = targeted;
+    array_data["locked"] = false;
+    array_data["accessible"] = true;
+
     if(!nodes.node_accessible(*current_node))
     {
-        duk_push_string(ctx, nodes.get_lockdown_message().c_str());
-        return 1;
+        std::string msg = nodes.get_lockdown_message();
 
-        //return push_error(ctx, nodes.get_lockdown_message());
+        array_data["ok"] = false;
+        array_data["locked"] = true;
+        array_data["msg"] = msg;
+        array_data["accessible"] = false;
+
+        if(!is_arr)
+        {
+            duk_push_string(ctx, msg.c_str());
+        }
+        else
+        {
+            push_duk_val(ctx, array_data);
+        }
+
+        return 1;
     }
 
     ///leave trace in logs
@@ -3502,6 +3513,8 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
     std::string msg;
 
+    array_data["breached"] = current_node->is_breached();
+
     if(!current_node->is_breached())
     {
         for(item& i : attackables)
@@ -3527,9 +3540,13 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
             ///is a lock
             if(it != secret_map.end())
             {
+                array_data["lock_type"] = func;
+
                 if(!it->second.ptr(priv_ctx, ctx, msg, i, name_of_person_being_attacked))
                 {
                     all_success = false;
+
+                    array_data["locked"] = true;
 
                     break;
                 }
@@ -3537,6 +3554,8 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
                 {
                     ///todo: send a chats.tell to victim here
                     i.breach();
+
+                    array_data["lock_breached"] = true;
 
                     create_notification(get_thread_id(ctx), name_of_person_being_attacked, make_notif_col("-" + i.get_prop("short_name") + " breached-"));
 
@@ -3548,17 +3567,22 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
         }
     }
 
+    if(msg.size() > 0)
+        array_data["lock_msg"] = msg;
+
     user_node* breach_node = nodes.type_to_node(user_node_info::BREACH);
     user_node* front_node = nodes.type_to_node(user_node_info::FRONT);
 
     if(breach_node == nullptr)
-        push_error(ctx, "Error Code: Yellow Panther in hack_internal (net.hack?)");
+        return push_error(ctx, "Error Code: Yellow Panther in hack_internal (net.hack?)");
 
     bool breach_is_breached = breach_node->is_breached();
 
     if(current_node->is_breached())
     {
-        msg += current_node->get_breach_message(nodes);
+        std::string dat = current_node->get_breach_message(nodes);
+
+        msg += dat;
     }
 
     ///do info here first, then display the breach message the next time round
@@ -3566,7 +3590,9 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
     if(all_success && !current_node->is_breached())
     {
-        msg += current_node->get_breach_message(nodes);
+        std::string dat = current_node->get_breach_message(nodes);
+
+        msg += dat;
 
         create_notification(get_thread_id(ctx), name_of_person_being_attacked, make_error_col("-" + user_node_info::long_names[current_node->type] + " Node Compromised-"));
     }
@@ -3579,6 +3605,18 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
         nodes.overwrite_in_db(node_ctx);
     }
+
+    if(current_node->is_breached())
+    {
+        array_data["connected"] = current_node->get_breach_json(nodes);
+        array_data["locked"] = false;
+    }
+    else
+    {
+        array_data["locked"] = true;
+    }
+
+    array_data["breached"] = current_node->is_breached();
 
     if(front_node && front_node->is_breached())
     {
@@ -3638,7 +3676,13 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
     while(msg.size() > 0 && msg.back() == '\n')
         msg.pop_back();
 
-    duk_push_string(ctx, msg.c_str());
+    array_data["msg"] = msg;
+    array_data["ok"] = true;
+
+    if(!is_arr)
+        duk_push_string(ctx, msg.c_str());
+    else
+        push_duk_val(ctx, array_data);
 
     return 1;
 }
