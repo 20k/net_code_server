@@ -1356,7 +1356,7 @@ std::string delete_user(command_handler_state& state, const std::string& str, bo
             user to_delete;
             to_delete.load_from_db(ctx, name);
 
-            if(to_delete.auth_hex != auth_token)
+            if(to_delete.get_auth_token_binary() != auth_token)
                 return "Invalid Auth";
 
             if(SHOULD_RATELIMIT(auth_token, DELETE_USER))
