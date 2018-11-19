@@ -124,6 +124,7 @@ std::map<std::string, std::vector<script_arg>> construct_core_args()
     ret["nodes.manage"] = make_cary();
     ret["nodes.port"] = make_cary();
     ret["nodes.view_log"] = make_cary("user", "\"\"", "NID", "-1");
+    ret["log.expose"] = make_cary("user", "\"\"", "NID", "-1");
     ret["net.view"] = make_cary("user", "\"\"", "n", "-1");
     ret["net.map"] = make_cary("user", "\"\"", "n", "6");
     //ret["net.links"] = make_cary("user", "\"\"", "n", "6");
@@ -272,6 +273,10 @@ std::map<std::string, script_metadata> construct_core_metadata()
     ///nodes view log
 
     ///deprecated net view and map
+
+    ret["log.expose"].description = "Exposes the logs on a node";
+    ret["log.expose"].return_data = make_met("", "Node Logs", arg_metadata::STRING, array_arg);
+    ret["log.expose"].param_data = make_met("user", "User to Expose", arg_metadata::USER, "NID", "Node to Expose Logs On", arg_metadata::NODE_IDX);
 
     ret["net.hack"].description = "Hack another user or npc";
     ret["net.hack"].return_data = make_met("", "Hacking Output", arg_metadata::STRING, ok_arg);
@@ -3382,7 +3387,6 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 #endif // 0
 
 
-
 duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -3461,6 +3465,11 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     return 1;
+}
+
+duk_ret_t log__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    return nodes__view_log(priv_ctx, ctx, sl);
 }
 
 duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::string& name_of_person_being_attacked, bool is_arr)

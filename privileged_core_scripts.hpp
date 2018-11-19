@@ -169,6 +169,7 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t cash__steal(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl);
+duk_ret_t log__expose(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::string& name_of_person_being_attacked, bool is_arr);
 
 #ifdef USE_LOCS
@@ -343,6 +344,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(nodes__port, 1),
     #endif // USE_LOCS
     REGISTER_FUNCTION_PRIV(nodes__view_log, 1),
+    REGISTER_FUNCTION_PRIV(log__expose, 1),
     REGISTER_FUNCTION_PRIV(net__view, 1),
     REGISTER_FUNCTION_PRIV(net__map, 1),
     REGISTER_FUNCTION_PRIV(net__hack, 0),
@@ -393,6 +395,7 @@ std::vector<std::string> hidden_functions
     {"able.help"},
     {"cash.xfer_to_caller"}, ///deprecated because we now have #os.
     {"msg.manage"}, ///deprecated due to channel.* namespace
+    {"nodes.view_log"}, ///deprecated due to log.expose
 };
 
 std::map<std::string, std::vector<script_arg>> construct_core_args();
