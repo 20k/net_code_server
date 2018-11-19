@@ -3422,6 +3422,11 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         current_node = nodes.name_to_node(name_of_person_being_attacked + "_" + node_fullname);
 
+        if(current_node == nullptr)
+        {
+            throw std::runtime_error("Node nullptr, impossible " + name_of_person_being_attacked);
+        }
+
         {
             mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 

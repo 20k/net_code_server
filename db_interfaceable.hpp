@@ -53,8 +53,10 @@ struct db_val : db_common
             {
                 val = j[key].template get<U>();
             }
-            catch(...)
+            catch(const std::exception& err)
             {
+                std::cout << "RUH ROH " << err.what() << std::endl;
+
                 j[key] = (U)val;
             }
         }
