@@ -90,7 +90,10 @@ void on_finish_relink(int cnt, std::vector<std::string> data)
 
     float total_path_stability = playspace_network_manage.get_total_path_link_strength(data);
 
-    playspace_network_manage.modify_path_per_link_strength_with_logs(data, -link_stability_cost, {"Relinking"}, -2);
+    user_log next;
+    next.add("type", "relink", "");
+
+    playspace_network_manage.modify_path_per_link_strength_with_logs(data, -link_stability_cost, {next}, -2);
 
     user& start = u1.value();
     user& fin = u2.value();
@@ -115,11 +118,20 @@ void on_finish_relink(int cnt, std::vector<std::string> data)
         start.overwrite_user_in_db(ctx);
     }
 
-    std::string mover_str_start = u1->name + " relinked to " + u2->name;
-    std::string mover_str_dest = u1->name + " was attached";
+    //std::string mover_str_start = u1->name + " relinked to " + u2->name;
+    //std::string mover_str_dest = u1->name + " was attached";
 
-    make_logs_on("extern", start.name, user_node_info::BREACH, {mover_str_start}, -2);
-    make_logs_on("extern", fin.name, user_node_info::BREACH, {mover_str_dest}, -2);
+    user_log first;
+    first.add("type", "relink", "");
+    first.add("from", u1->name, "");
+    first.add("to", u2->name, "");
+
+    user_log last;
+    last.add("type", "attach", "");
+    last.add("to", u1->name, "");
+
+    make_logs_on("extern", start.name, user_node_info::BREACH, {first}, -2);
+    make_logs_on("extern", fin.name, user_node_info::BREACH, {last}, -2);
 
     ///ok
     ///need to rip up data[0]

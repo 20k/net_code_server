@@ -485,6 +485,17 @@ std::string format_pretty_names(const std::vector<std::string>& names, bool colo
     return ret;
 }
 
+std::string format_pretty_names(const std::vector<user_log>& names, bool colour, bool all_characters = false)
+{
+    std::vector<std::string> text;
+
+    for(const user_log& i : names)
+    {
+        text.push_back(i.fetch());
+    }
+
+    return format_pretty_names(text,colour, all_characters);
+}
 
 duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
@@ -632,9 +643,14 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
     if(path.size() == 0)
         return push_error(ctx, "No path to user through the network");
 
-    std::string leak_msg = "Xfer'd " + std::to_string(amount);
+    //std::string leak_msg = "Xfer'd " + std::to_string(amount);
 
-    playspace_network_manage.modify_path_per_link_strength_with_logs(path, -amount / cash_to_destroy_link, {leak_msg}, get_thread_id(ctx));
+    user_log next;
+    //next.add("cash_xfer", std::to_string(amount), "");
+    next.add("type", "cash_xfer", "X");
+    next.add("amount", std::to_string(amount), "");
+
+    playspace_network_manage.modify_path_per_link_strength_with_logs(path, -amount / cash_to_destroy_link, {next}, get_thread_id(ctx));
     #endif // 0
 
     size_t current_time = get_wall_time();
@@ -757,14 +773,20 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
     }
 
     {
-        std::string cash_log = "`XCash xfer` | from: " + from  + ", to: " + to + ", amount: " + std::to_string(amount);
+        //std::string cash_log = "`XCash xfer` | from: " + from  + ", to: " + to + ", amount: " + std::to_string(amount);
 
-        int err = make_logs_on(ctx, from, user_node_info::CASH_SEG, {cash_log});
+        user_log next;
+        next.add("type", "cash_xfer", "X");
+        next.add("from", from, "");
+        next.add("to", to, "");
+        next.add("amount", std::to_string(amount), "");
+
+        int err = make_logs_on(ctx, from, user_node_info::CASH_SEG, {next});
 
         if(err)
             return err;
 
-        err = make_logs_on(ctx, to, user_node_info::CASH_SEG, {cash_log});
+        err = make_logs_on(ctx, to, user_node_info::CASH_SEG, {next});
 
         if(err)
             return err;
@@ -2513,14 +2535,21 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
 
     if(placeholder.transfer_from_to_by_index(from_user.item_to_index(item_id), from, to, get_thread_id(ctx)))
     {
+        user_log next;
+        next.add("type", "item_xfer", "N");
+
         #ifdef XFER_PATHS
-        playspace_network_manage.modify_path_per_link_strength_with_logs(path, -1.f / items_to_destroy_link, {"Xfer'd Item"}, get_thread_id(ctx));
+        playspace_network_manage.modify_path_per_link_strength_with_logs(path, -1.f / items_to_destroy_link, {next}, get_thread_id(ctx));
         #endif // XFER_PATHS
 
-        std::string xfer = "`NItem xfer` | from: " + from  + ", to: " + to + ", name: " + found_item_description;
+        //std::string xfer = "`NItem xfer` | from: " + from  + ", to: " + to + ", name: " + found_item_description;
 
-        make_logs_on(ctx, from, user_node_info::ITEM_SEG, {xfer});
-        make_logs_on(ctx, to, user_node_info::ITEM_SEG, {xfer});
+        next.add("from", from, "");
+        next.add("to", to, "");
+        next.add("name", found_item_description, "");
+
+        make_logs_on(ctx, from, user_node_info::ITEM_SEG, {next});
+        make_logs_on(ctx, to, user_node_info::ITEM_SEG, {next});
 
         //duk_push_int(ctx, placeholder.get_prop_as_integer("item_id"));
 
@@ -3409,11 +3438,18 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
-    std::vector<std::string> logs = current_node->logs;
+    auto logs = current_node->new_logs;
+
+    std::vector<nlohmann::json> all_logs;
+
+    for(user_log& i : logs)
+    {
+        all_logs.push_back(i.script_fetch());
+    }
 
     if(make_array)
     {
-        push_duk_val(ctx, current_node->logs);
+        push_duk_val(ctx, all_logs);
         return 1;
     }
     else
@@ -3750,7 +3786,10 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(path.size() == 0)
             return push_error(ctx, "No Path");
 
-        playspace_network_manage.modify_path_per_link_strength_with_logs(path, -hack_cost, {"Hostile Path Access"}, get_thread_id(ctx));
+        user_log next;
+        next.add("type", "hostile_path_access", "");
+
+        playspace_network_manage.modify_path_per_link_strength_with_logs(path, -hack_cost, {next}, get_thread_id(ctx));
     }
 
     return hack_internal(priv_ctx, ctx, name_of_person_being_attacked, is_arr);
@@ -4890,7 +4929,10 @@ duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, cons
             if(path.size() == 0)
                 return push_error(ctx, "No path");
 
-            playspace_network_manage.modify_path_per_link_strength_with_logs(path, stab / ((float)path.size() - 1.f) , {"Path Fortify"}, get_thread_id(ctx));
+            user_log next;
+            next.add("type", "path_fortify", "");
+
+            playspace_network_manage.modify_path_per_link_strength_with_logs(path, stab / ((float)path.size() - 1.f) , {next}, get_thread_id(ctx));
 
             return push_success(ctx, "Distributed " + std::to_string(stab) + " across " + std::to_string((int)path.size() - 1) + " links");
         }
