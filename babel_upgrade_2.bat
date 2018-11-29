@@ -1,5 +1,7 @@
 npm install --save-dev @babel/core @babel/cli
 
+npm install --save-dev typescript
+
 npx babel-upgrade --write
 npm install --save-dev @babel/preset-typescript
 npm install --save-dev @babel/preset-env
