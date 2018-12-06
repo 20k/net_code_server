@@ -354,11 +354,6 @@ static duk_ret_t duk__require(duk_context *ctx) {
 	dukx_push_fixed_buffer(ctx, binary_cache[name]);
 	duk_load_function(ctx);
 
-	pcall_rc = duk_pcall(ctx, 0);  /* -> eval'd function wrapper (not called yet) */
-	if (pcall_rc != DUK_EXEC_SUCCESS) {
-		goto delete_rethrow;
-	}
-
 	/* Module has now evaluated to a wrapped module function.  Force its
 	 * .name to match module.name (defaults to last component of resolved
 	 * ID) so that it is shown in stack traces too.  Note that we must not

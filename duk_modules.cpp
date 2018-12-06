@@ -102,6 +102,13 @@ std::map<std::string, std::string>& module_binary_cache()
 
             duk_pcompile(ctx, DUK_COMPILE_EVAL);
 
+            duk_int_t ret = duk_pcall(ctx, 0);
+
+            if(ret != DUK_EXEC_SUCCESS)
+            {
+                throw std::runtime_error("Bad module binary cache");
+            }
+
             duk_dump_function(ctx);
 
             duk_size_t out;
