@@ -13,6 +13,7 @@
 
 #include "rate_limiting.hpp"
 #include "stacktrace.hpp"
+#include "directory_helpers.hpp"
 
 template<typename T>
 void for_each_dir(const std::string& directory, const T& t)
@@ -38,21 +39,6 @@ void for_each_dir(const std::string& directory, const T& t)
 
     tinydir_close(&dir);
 }
-
-struct tinydir_autoclose
-{
-    tinydir_dir dir;
-
-    tinydir_autoclose(const std::string& directory)
-    {
-        tinydir_open(&dir, directory.c_str());
-    }
-
-    ~tinydir_autoclose()
-    {
-        tinydir_close(&dir);
-    }
-};
 
 template<typename T>
 void for_each_file(const std::string& directory, const T& t)

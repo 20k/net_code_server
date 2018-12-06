@@ -1013,6 +1013,17 @@ duk_ret_t dukx_dummy(duk_context* ctx)
     return 0;
 }
 
+inline
+void dukx_push_fixed_buffer(duk_context* ctx, const std::string& buffer)
+{
+    char *ptr = (char*)duk_push_fixed_buffer(ctx, buffer.size());
+
+    for(int i=0; i < (int)buffer.size(); i++)
+    {
+        ptr[i] = buffer[i];
+    }
+}
+
 void dukx_sanitise_in_place(duk_context* dst_ctx, duk_idx_t idx);
 
 void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t idx);
