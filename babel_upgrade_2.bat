@@ -8,3 +8,4 @@ npm install --save-dev @babel/preset-env
 npm install --save @babel/polyfill
 
 echo looks like those above need ot be installed globally?
+npm install babel-plugin-transform-remove-strict-mode
