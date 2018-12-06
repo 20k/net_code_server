@@ -344,9 +344,14 @@ static duk_ret_t duk__require(duk_context *ctx) {
 		duk_dup(ctx, DUK__IDX_RESOLVED_ID);
 	}
 
-	auto binary_cache = module_binary_cache()[name];
+	auto& binary_cache = module_binary_cache();
 
-	dukx_push_fixed_buffer(ctx, binary_cache);
+	if(binary_cache.find(name) == binary_cache.end())
+    {
+        throw std::runtime_error("Bad require " + name);
+    }
+
+	dukx_push_fixed_buffer(ctx, binary_cache[name]);
 	duk_load_function(ctx);
 
 	pcall_rc = duk_pcall(ctx, 0);  /* -> eval'd function wrapper (not called yet) */
