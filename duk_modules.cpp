@@ -70,12 +70,8 @@ std::map<std::string, std::string>& module_cache()
 
             data = wrap(data);
 
-            ///(function(require,exports,module){
-
             dat[lookup] = data;
             dat[name] = data;
-
-            //std::cout << "lookup " << lookup << std::endl;
         });
 
         init = true;
@@ -129,127 +125,9 @@ std::map<std::string, std::string>& module_binary_cache()
     return saved_map;
 }
 
-duk_int_t duk_get_func(duk_context* ctx)
-{
-    std::string str = duk_safe_to_std_string(ctx, 0);
-
-    auto cache = module_binary_cache();
-    auto uncached = module_cache();
-
-    ///might as well go ham
-
-    if(str == "@babel/polyfill" || str == "es6" || str == "es6+" || str == "esnext" || str == "p" || str == "poly" || str == "polyfill")
-    {
-        //std::string data = module_cache()["@babel/polyfill"];
-
-        auto bin = cache["@babel/polyfill"];
-
-        //sf::Clock clk;
-
-        dukx_push_fixed_buffer(ctx, bin);
-        duk_load_function(ctx);
-
-        //std::cout << "clk time " << clk.restart().asMilliseconds() << std::endl;
-
-        ///pcall is slow
-        duk_pcall(ctx, 0);
-        duk_pop(ctx);
-
-        //std::cout << "clk time2 " << clk.restart().asMilliseconds() << std::endl;
-
-        //push_duk_val(ctx, data);
-
-
-        push_duk_val(ctx, wrap(""));
-        return 1;
-    }
-    else if(uncached.find(str) != uncached.end())
-    {
-        auto bin = uncached[str];
-
-        //printf("ran %s\n", str.c_str());
-
-        /*auto bin = cache[str];
-
-        //std::cout << "eval " << str << std::endl;
-
-        dukx_push_fixed_buffer(ctx, bin);
-        duk_load_function(ctx);
-
-        duk_dup(ctx, 2);
-        duk_dup(ctx, 1);
-        duk_dup(ctx, 2);
-        duk_dup(ctx, 3);
-
-        //int res = duk_pcall(ctx, 0);
-
-        int res = duk_pcall_method(ctx, 3);
-
-        if(res != DUK_EXEC_SUCCESS)
-        {
-            std::string err = duk_safe_to_std_string(ctx, -1);
-
-            std::cout << "errrr " << err << std::endl;
-        }
-
-        //duk_pop(ctx);
-
-        duk_get_prop_string(ctx, 3, "exports");*/
-
-        push_duk_val(ctx, bin);
-        return 1;
-    }
-    else
-    {
-        std::cout << "did not find " << str << std::endl;
-    }
-
-    /*if(str == "hello")
-    {
-        duk_push_string(ctx, "var global = new Function('return this')(); global.hello = function () { print(\"Hello world from bar!\"); };");
-        duk_push_string(ctx, "test-name");
-
-        duk_pcompile(ctx, DUK_COMPILE_EVAL);
-        //duk_pcall(ctx, 0);
-
-        duk_dup(ctx, -1);
-
-        duk_dump_function(ctx);
-
-        duk_size_t out;
-        char* ptr = (char*)duk_get_buffer(ctx, -1, &out);
-
-        std::string buf(ptr, out);
-
-        duk_pop(ctx);
-        duk_pop(ctx);
-
-        dukx_push_fixed_buffer(ctx, buf);
-
-        duk_load_function(ctx);
-
-        duk_pcall(ctx, 0);
-        duk_pop(ctx);
-
-        push_duk_val(ctx, "");
-        return 1;
-    }*/
-
-    duk_throw(ctx);
-    return 1;
-}
-
 void dukx_inject_modules(duk_context* ctx)
 {
     duk_module_duktape_init(ctx);
-
-    duk_push_global_object(ctx);
-    duk_get_prop_string(ctx, -1, "Duktape");
-
-    duk_push_c_function(ctx, duk_get_func, 4);
-    duk_put_prop_string(ctx, -2, "modSearch");
-    duk_pop(ctx);
-    //duk_pop(ctx);
 }
 
 void init_module_cache()
