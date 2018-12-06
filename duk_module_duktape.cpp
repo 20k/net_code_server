@@ -323,48 +323,11 @@ static duk_ret_t duk__require(duk_context *ctx) {
 	 *  (although expected to be quite rare).
 	 */
 
-	//duk_push_string(ctx, "(function(require,exports,module){");
-
-	/* Duktape.modSearch(resolved_id, fresh_require, exports, module). */
-	#if 0
-	duk_get_prop_string(ctx, DUK__IDX_DUKTAPE, "modSearch");  /* Duktape.modSearch */
-	duk_dup(ctx, DUK__IDX_RESOLVED_ID);
-	duk_dup(ctx, DUK__IDX_FRESH_REQUIRE);
-	duk_dup(ctx, DUK__IDX_EXPORTS);
-	duk_dup(ctx, DUK__IDX_MODULE);  /* [ ... Duktape.modSearch resolved_id last_comp fresh_require exports module ] */
-	pcall_rc = duk_pcall(ctx, 4 /*nargs*/);  /* -> [ ... source ] */
-	DUK__ASSERT_TOP(ctx, DUK__IDX_MODULE + 3);
-	#endif // 0
-
     duk_dup(ctx, DUK__IDX_RESOLVED_ID);
 
 	std::string name = duk_safe_to_std_string(ctx, -1);
 
 	duk_pop(ctx);
-
-    /*auto cache = module_cache()[name];
-
-	duk_push_string(ctx, cache.c_str());*/
-
-	#if 0
-	if (pcall_rc != DUK_EXEC_SUCCESS) {
-		/* Delete entry in Duktape.modLoaded[] and rethrow. */
-		goto delete_rethrow;
-	}
-	#endif // 0
-
-	/* If user callback did not return source code, module loading
-	 * is finished (user callback initialized exports table directly).
-	 */
-	 #if 0
-	if (!duk_is_string(ctx, -1)) {
-		/* User callback did not return source code, so module loading
-		 * is finished: just update modLoaded with final module.exports
-		 * and we're done.
-		 */
-		goto return_exports;
-	}
-	#endif // 0
 
 	/* Finish the wrapped module source.  Force module.filename as the
 	 * function .fileName so it gets set for functions defined within a
@@ -373,8 +336,6 @@ static duk_ret_t duk__require(duk_context *ctx) {
 	 * (Note capitalization: .filename matches Node.js while .fileName is
 	 * used elsewhere in Duktape.)
 	 */
-	//duk_push_string(ctx, "\n})");  /* Newline allows module last line to contain a // comment. */
-	//duk_concat(ctx, 3);
 	if (!duk_get_prop_string(ctx, DUK__IDX_MODULE, "filename")) {
 		/* module.filename for .fileName, default to resolved ID if
 		 * not present.
