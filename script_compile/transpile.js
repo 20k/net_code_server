@@ -53,7 +53,7 @@ try
 
     found["code_posttype"] = after_type;
     
-    let r2 = req.transformSync(after_type.outputText, {sourceMaps:true, presets:[["@babel/preset-env", { "modules": false }]]}, function(err, result) {
+    let r2 = req.transformSync(after_type.outputText, {sourceMaps:true, presets:[["@babel/preset-env", { useBuiltIns:"usage", "modules": "cjs" }]]}, function(err, result) {
     });
     
     found["code_postbabel"] = r2;

@@ -9,3 +9,4 @@ npm install --save @babel/polyfill
 
 echo looks like those above need ot be installed globally?
 npm install babel-plugin-transform-remove-strict-mode
+npm install --save-dev babel-preset-es2015-without-strict

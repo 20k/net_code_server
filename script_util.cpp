@@ -404,6 +404,23 @@ void crappy_exec(const std::string& cmd, const std::string& params)
     //ShellExecute(NULL, "open", cmd.c_str(), params.c_str(), nullptr, SW_SHOWDEFAULT);
 }
 
+std::string process_resulting_code(std::string in)
+{
+    std::string all = "\"use strict\";";
+
+    auto found = in.find(all);
+
+    if(found != std::string::npos)
+    {
+        for(int i=0; i < (int)all.size(); i++, found++)
+        {
+            in[found] = ' ';
+        }
+    }
+
+    return in;
+}
+
 std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, const std::string& in)
 {
     std::string compiler_dir = "compile/";
@@ -427,8 +444,8 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
         std::cout << "didn't go well\n";
     }
 
-    remove((phase_1 + ".ts").c_str());
-    remove((phase_1).c_str());
+    //remove((phase_1 + ".ts").c_str());
+    //remove((phase_1).c_str());
 
     //std::cout << "DATA " << data.dump() << std::endl;
 
@@ -521,7 +538,7 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
         return {"", "Caught exception in checking babel_error: " + data.dump()};
     }
 
-    return {data["code_postbabel"]["code"], ""};
+    return {process_resulting_code(data["code_postbabel"]["code"]), ""};
 }
 
 script_data parse_script(const std::string& file_name, std::string in, bool enable_typescript)
