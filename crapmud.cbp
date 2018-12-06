@@ -219,9 +219,7 @@
 		<Unit filename="deps/secret/structure.hpp" />
 		<Unit filename="deps/secret/tutorial.cpp" />
 		<Unit filename="deps/secret/tutorial.hpp" />
-		<Unit filename="duk_module_duktape.c">
-			<Option compilerVar="CC" />
-		</Unit>
+		<Unit filename="duk_module_duktape.cpp" />
 		<Unit filename="duk_modules.cpp" />
 		<Unit filename="duk_modules.hpp" />
 		<Unit filename="duk_object_functions.cpp" />
