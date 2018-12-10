@@ -1480,28 +1480,28 @@ void create_xfer_notif(duk_context* ctx, const std::string& xfer_from, const std
 {
     COOPERATE_KILL();
 
-    if(xfer_from == "" || xfer_to == "")
-        return;
-
     std::string notif_from = make_notif_col("-Sent " + to_string_with_enforced_variable_dp(amount, 2) + " (xfer)-");
     std::string notif_to = make_notif_col("-Received " + to_string_with_enforced_variable_dp(amount, 2) + " (xfer)-");
 
-    create_notification(get_thread_id(ctx), xfer_from, notif_from);
-    create_notification(get_thread_id(ctx), xfer_to, notif_to);
+    if(xfer_from != "")
+        create_notification(get_thread_id(ctx), xfer_from, notif_from);
+
+    if(xfer_to != "")
+        create_notification(get_thread_id(ctx), xfer_to, notif_to);
 }
 
 void create_xfer_item_notif(duk_context* ctx, const std::string& xfer_from, const std::string& xfer_to, const std::string& item_name)
 {
     COOPERATE_KILL();
 
-    if(xfer_from == "" || xfer_to == "")
-        return;
-
     std::string notif_from = make_notif_col("-Lost " + item_name + " (xfer)-");
     std::string notif_to = make_notif_col("-Received " + item_name + " (xfer)-");
 
-    create_notification(get_thread_id(ctx), xfer_from, notif_from);
-    create_notification(get_thread_id(ctx), xfer_to, notif_to);
+    if(xfer_from != "")
+        create_notification(get_thread_id(ctx), xfer_from, notif_from);
+
+    if(xfer_to != "")
+        create_notification(get_thread_id(ctx), xfer_to, notif_to);
 }
 
 void create_destroy_item_notif(duk_context* ctx, const std::string& to, const std::string& item_name)
@@ -3058,6 +3058,16 @@ duk_ret_t handle_confirmed(duk_context* ctx, bool confirm, const std::string& us
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
         opt_user->cash -= iprice;
+
+        user_log next;
+        next.add("type", "cash_xfer", "X");
+        next.add("from", username, string_to_colour(username));
+        next.add("to", "core", string_to_colour("core"));
+        next.add("amount", std::to_string(price), "");
+
+        make_logs_on(ctx, username, user_node_info::CASH_SEG, {next});
+
+        create_xfer_notif(ctx, username, "", price);
 
         opt_user->overwrite_user_in_db(mongo_ctx);
     }
