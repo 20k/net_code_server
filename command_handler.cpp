@@ -996,7 +996,7 @@ int char_to_val(uint8_t c)
     return 0;
 }
 
-std::string hex_to_binary(const std::string& in)
+std::string hex_to_binary(const std::string& in, bool swap_endianness)
 {
     std::string ret;
 
@@ -1014,6 +1014,11 @@ std::string hex_to_binary(const std::string& in)
 
         char cchar = in[i];
         char nchar = next < len ? in[next] : '0';
+
+        if(swap_endianness)
+        {
+            std::swap(cchar, nchar);
+        }
 
         int lower = char_to_val(cchar) + (char_to_val(nchar) << 4);
 

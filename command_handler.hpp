@@ -27,7 +27,7 @@ void conditional_async_handle_command(std::shared_ptr<shared_command_handler_sta
 std::string handle_autocompletes_json(const std::string& username, const std::string& in);
 
 std::string binary_to_hex(const std::string& in, bool swap_endianness = false);
-std::string hex_to_binary(const std::string& in);
+std::string hex_to_binary(const std::string& in, bool swap_endianness = false);
 std::string delete_user(command_handler_state& state, const std::string& str, bool cli_force = false);
 std::string rename_user_force(const std::string& from_name, const std::string& to_name);
 
