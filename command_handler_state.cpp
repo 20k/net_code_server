@@ -22,6 +22,20 @@ void command_handler_state::set_auth(const std::string& str)
     auth = str;
 }
 
+void command_handler_state::set_steam_id(uint64_t psteam_id)
+{
+    safe_lock_guard guard(command_lock);
+
+    steam_id = psteam_id;
+}
+
+uint64_t command_handler_state::get_steam_id()
+{
+    safe_lock_guard guard(command_lock);
+
+    return steam_id;
+}
+
 void command_handler_state::set_user_name(const std::string& usr)
 {
     safe_lock_guard guard(command_lock);

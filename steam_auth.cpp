@@ -9,7 +9,7 @@
 #include "time.hpp"
 #include <libncclient/nc_util.hpp>
 
-std::optional<uint64_t> get_steam_auth(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& hex_auth_data)
+std::optional<uint64_t> get_steam_auth(const std::string& hex_auth_data)
 {
     std::vector<uint8_t> decrypted;
     decrypted.resize(1024);
