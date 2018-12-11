@@ -26,6 +26,7 @@
 #include "quest_manager.hpp"
 #include <secret/tutorial.hpp>
 #include "exec_context.hpp"
+#include "steam_auth.hpp"
 
 struct unsafe_info
 {
@@ -1968,6 +1969,20 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
         std::cout << auth_string << std::endl;
 
         return make_success_col("Auth Success") + "\n" + full_string + auth_string + "\n" + get_update_message();
+    }
+    else if(starts_with(str, "auth_steam client_hex "))
+    {
+        std::string which_str = "auth_steam client_hex ";
+
+        auto pos = str.begin() + which_str.size();;
+        std::string steam_encrypted_auth_token = std::string(pos, str.end());
+
+        ///don't actually do anything with this yet
+        successful_steam_auth(all_shared, steam_encrypted_auth_token);
+    }
+    else if(starts_with(str, "auth_steam client_hex"))
+    {
+        return "No auth in \"client_command auth_steam client_hex <AUTH>\" format";
     }
     else if(starts_with(str, "auth client") || starts_with(str, "auth client_hex"))
     {

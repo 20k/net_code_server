@@ -180,6 +180,7 @@
 			<Add option="-lcrypto" />
 			<Add option="-lssl" />
 			<Add option="-lbacktrace" />
+			<Add library="deps/steamworks_sdk_142/sdk/public/steam/lib/win64/libsdkencryptedappticket64.a" />
 		</Linker>
 		<Unit filename="ascii_helpers.cpp" />
 		<Unit filename="ascii_helpers.hpp" />
@@ -273,6 +274,8 @@
 		<Unit filename="source_maps.hpp" />
 		<Unit filename="stacktrace.cpp" />
 		<Unit filename="stacktrace.hpp" />
+		<Unit filename="steam_auth.cpp" />
+		<Unit filename="steam_auth.hpp" />
 		<Unit filename="time.cpp" />
 		<Unit filename="time.hpp" />
 		<Unit filename="timestamped_position.hpp" />
