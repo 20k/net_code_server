@@ -56,6 +56,30 @@ bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary_in
     return valid;
 }
 
+bool auth::load_from_db_steamid(mongo_lock_proxy& ctx, uint64_t psteam_id)
+{
+    steam_id = psteam_id;
+
+    mongo_requester request;
+    request.set_prop("steam_id", psteam_id);
+
+    std::vector<mongo_requester> found = request.fetch_from_db(ctx);
+
+    if(found.size() != 1)
+    {
+        //printf("Invalid user auth token\n");
+
+        return false;
+    }
+
+    for(mongo_requester& i : found)
+    {
+        load_from_request(*this, i);
+    }
+
+    return valid;
+}
+
 void auth::overwrite_in_db(mongo_lock_proxy& ctx)
 {
     if(!valid)

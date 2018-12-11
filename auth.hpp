@@ -9,6 +9,9 @@
 
 struct mongo_lock_proxy;
 
+///so the key thing to remember is
+///every user and steam auth has a non steamauth
+///but not every non steam auth will have a steam auth
 struct auth
 {
     bool valid = false;
@@ -20,6 +23,7 @@ struct auth
     bool is_hex_encoding = false;
 
     bool load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary);
+    bool load_from_db_steamid(mongo_lock_proxy& ctx, uint64_t psteam_id);
     void overwrite_in_db(mongo_lock_proxy& ctx);
 
     void insert_user_exclusive(const std::string& username);
