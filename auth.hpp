@@ -15,6 +15,7 @@ struct auth
 
     std::string auth_token_binary;
     std::string auth_token_hex;
+    uint64_t steam_id = 0;
     std::vector<std::string> users;
     bool is_hex_encoding = false;
 

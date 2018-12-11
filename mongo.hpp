@@ -333,6 +333,22 @@ struct mongo_requester
         return val;
     }
 
+    uint64_t get_prop_as_uinteger(const std::string& str) const
+    {
+        if(!has_prop(str))
+            return uint64_t();
+
+        std::string prop = properties.at(str);
+
+        if(prop == "")
+            return 0;
+
+        char* eptr = nullptr;
+        uint64_t val = strtoull(prop.c_str(), &eptr, 10);
+
+        return val;
+    }
+
     double get_prop_as_double(const std::string& str)
     {
         if(!has_prop(str))

@@ -47,6 +47,11 @@ bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary_in
         {
             is_hex_encoding = i.get_prop_as_integer("is_hex_encoding");
         }
+
+        if(i.has_prop("steam_id"))
+        {
+            steam_id = i.get_prop_as_integer("steam_id");
+        }
     }
 
     return valid;
