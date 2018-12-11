@@ -1994,16 +1994,35 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
         auth fauth;
 
+        std::vector<std::string> users;
+
         {
             mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
 
             if(!fauth.load_from_db_steamid(ctx, steam_id))
-            {
                 return "Auth Failed, have you run \"register steam\" at least once?";
-            }
+
+            users = fauth.users;
         }
 
-        return "Unimplemented";
+        all_shared->state.set_auth(fauth.auth_token_binary);
+        all_shared->state.set_steam_id(steam_id);
+
+        std::string auth_string;
+
+        for(auto& i : users)
+        {
+            auth_string += " " + colour_string(i);
+        }
+
+        std::string full_string = "Users Found:";
+
+        if(auth_string == "")
+            full_string = "No Users Found. Type user <username> to register";
+
+        std::cout << auth_string << std::endl;
+
+        return make_success_col("Auth Success") + "\n" + full_string + auth_string + "\n" + get_update_message();
     }
     else if(starts_with(str, "auth_steam client_hex"))
     {
