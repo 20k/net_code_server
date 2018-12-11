@@ -95,8 +95,11 @@ void auth::overwrite_in_db(mongo_lock_proxy& ctx)
         accum += i + " ";
     }
 
-    if(accum.size() == 0)
-        return;
+    ///wtf?
+    ///this won't update auth if you have 0 users
+    ///I have no idea why this is like this but its definitely wrong
+    //if(accum.size() == 0)
+    //    return;
 
     ///its a space
     accum.pop_back();
