@@ -1972,6 +1972,8 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
     }
     else if(starts_with(str, "auth_steam client_hex "))
     {
+        printf("AUTH STEAM\n");
+
         std::string which_str = "auth_steam client_hex ";
 
         auto pos = str.begin() + which_str.size();;
