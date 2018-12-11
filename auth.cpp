@@ -5,6 +5,35 @@
 
 ///perform conversion of all auth tokens to base 64 so we can ditch mongos binary format
 
+void load_from_request(auth& ath, mongo_requester& i)
+{
+    if(i.has_prop("account_token_hex"))
+    {
+        ath.auth_token_hex = i.get_prop("account_token_hex");
+        ath.auth_token_binary = hex_to_binary(ath.auth_token_hex);
+
+        ath.valid = true;
+    }
+
+    if(i.has_prop("users"))
+    {
+        std::string user_string = i.get_prop("users");
+
+        ///yeah kinda dumb
+        ath.users = no_ss_split(user_string, " ");
+    }
+
+    if(i.has_prop("is_hex_encoding"))
+    {
+        ath.is_hex_encoding = i.get_prop_as_integer("is_hex_encoding");
+    }
+
+    if(i.has_prop("steam_id"))
+    {
+        ath.steam_id = i.get_prop_as_uinteger("steam_id");
+    }
+}
+
 bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary_in)
 {
     mongo_requester request;
@@ -21,37 +50,7 @@ bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary_in
 
     for(mongo_requester& i : found)
     {
-        /*if(i.has_prop("account_token"))
-        {
-            auth_token_binary = i.get_prop("account_token");
-            valid = true;
-        }*/
-
-        if(i.has_prop("account_token_hex"))
-        {
-            auth_token_hex = i.get_prop("account_token_hex");
-            auth_token_binary = hex_to_binary(auth_token_hex);
-
-            valid = true;
-        }
-
-        if(i.has_prop("users"))
-        {
-            std::string user_string = i.get_prop("users");
-
-            ///yeah kinda dumb
-            users = no_ss_split(user_string, " ");
-        }
-
-        if(i.has_prop("is_hex_encoding"))
-        {
-            is_hex_encoding = i.get_prop_as_integer("is_hex_encoding");
-        }
-
-        if(i.has_prop("steam_id"))
-        {
-            steam_id = i.get_prop_as_uinteger("steam_id");
-        }
+        load_from_request(*this, i);
     }
 
     return valid;
