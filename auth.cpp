@@ -104,6 +104,7 @@ void auth::overwrite_in_db(mongo_lock_proxy& ctx)
     mongo_requester to_set;
     to_set.set_prop("users", accum);
     to_set.set_prop("is_hex_encoding", is_hex_encoding);
+    to_set.set_prop("steam_id", steam_id);
 
     request.update_in_db_if_exact(ctx, to_set);
 }
