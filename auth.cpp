@@ -102,7 +102,8 @@ void auth::overwrite_in_db(mongo_lock_proxy& ctx)
     //    return;
 
     ///its a space
-    accum.pop_back();
+    if(accum.size() > 0)
+        accum.pop_back();
 
     mongo_requester to_set;
     to_set.set_prop("users", accum);
