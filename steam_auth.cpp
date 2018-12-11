@@ -9,7 +9,7 @@
 #include "time.hpp"
 #include <libncclient/nc_util.hpp>
 
-bool successful_steam_auth(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& hex_auth_data)
+std::optional<uint64_t> get_steam_auth(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& hex_auth_data)
 {
     std::vector<uint8_t> decrypted;
     decrypted.resize(1024);
@@ -45,7 +45,7 @@ bool successful_steam_auth(std::shared_ptr<shared_command_handler_state> all_sha
     if(!SteamEncryptedAppTicket_BDecryptTicket((const uint8*)binary_data.c_str(), binary_data.size(), &decrypted[0], &real_size, (const uint8*)&secret_key[0], secret_key.size()))
     {
         printf("Failed to decrypt ticket\n");
-        return false;
+        return std::nullopt;
     }
 
     decrypted.resize(real_size);
@@ -53,7 +53,7 @@ bool successful_steam_auth(std::shared_ptr<shared_command_handler_state> all_sha
     if(decrypted.size() == 0)
     {
         printf("Decrypted size == 0\n");
-        return false;
+        return std::nullopt;
     }
 
     //AppId_t found_appid = SteamEncryptedAppTicket_GetTicketAppID(&decrypted[0], decrypted.size());
@@ -62,7 +62,7 @@ bool successful_steam_auth(std::shared_ptr<shared_command_handler_state> all_sha
     if(!SteamEncryptedAppTicket_BIsTicketForApp(&decrypted[0], decrypted.size(), 814820))
     {
         printf("Ticket is for wrong appid\n");
-        return false;
+        return std::nullopt;
     }
 
     RTime32 ticket_time = SteamEncryptedAppTicket_GetTicketIssueTime(&decrypted[0], decrypted.size());
@@ -70,7 +70,7 @@ bool successful_steam_auth(std::shared_ptr<shared_command_handler_state> all_sha
     if(ticket_time == 0)
     {
         printf("Bad Ticket Time");
-        return false;
+        return std::nullopt;
     }
 
     ///I have no idea what a good time here is
@@ -80,7 +80,7 @@ bool successful_steam_auth(std::shared_ptr<shared_command_handler_state> all_sha
     if((size_t)ticket_time*1000 + timeout < get_wall_time())
     {
         std::cout << "Ticket is too old " << ticket_time << " wall " << get_wall_time() << std::endl;
-        return false;
+        return std::nullopt;
     }
 
     CSteamID steam_id;
@@ -90,10 +90,10 @@ bool successful_steam_auth(std::shared_ptr<shared_command_handler_state> all_sha
     if(steam_id == k_steamIDNil)
     {
         printf("Invalid ticket (bad steam id)\n");
-        return false;
+        return std::nullopt;
     }
 
     std::cout << "steam id " << steam_id.ConvertToUint64() << std::endl;
 
-    return true;
+    return steam_id.ConvertToUint64();
 }

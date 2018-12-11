@@ -1985,7 +1985,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
         std::string steam_encrypted_auth_token = std::string(pos, str.end());
 
         ///don't actually do anything with this yet
-        successful_steam_auth(all_shared, steam_encrypted_auth_token);
+        get_steam_auth(all_shared, steam_encrypted_auth_token);
     }
     else if(starts_with(str, "auth_steam client_hex"))
     {
