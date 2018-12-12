@@ -1706,7 +1706,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
         std::string auth_hex = std::string(str.begin() + strlen("#tie_to_steam "), str.end());
 
         if(auth_hex.size() != 128*2)
-            return "Auth must be of length 256 in hex";
+            return make_error_col("Auth must be of length 256 in hex");
 
         std::string auth_binary = hex_to_binary(auth_hex);
 
@@ -1726,7 +1726,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             user_auth.overwrite_in_db(ctx);
         }
 
-        return "Success";
+        return make_success_col("Success");
     }
     else if(starts_with(str, "#up ") || starts_with(str, "#dry ") || starts_with(str, "#up_es6 "))
     {
