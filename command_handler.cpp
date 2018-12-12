@@ -2006,7 +2006,6 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
     {
         printf("AUTH STEAM\n");
 
-
         std::string which_str = "auth_steam client_hex ";
 
         auto pos = str.begin() + which_str.size();;
@@ -2019,6 +2018,8 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             return "Error using steam auth, check your client's debug log";
 
         uint64_t steam_id = opt_steam_id.value();
+
+        all_shared->state.set_steam_id(steam_id);
 
         auth fauth;
 
