@@ -1930,7 +1930,6 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
         std::string to_ret = random_binary_string(128);
 
         mongo_requester request;
-        //request.set_prop_bin("account_token", to_ret);
         request.set_prop("account_token_hex", binary_to_hex(to_ret));
         request.set_prop("steam_id", all_shared->state.get_steam_id());
 
