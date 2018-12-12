@@ -1696,6 +1696,38 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
         return ret;
     }
+    else if(starts_with(str, "#tie_to_steam "))
+    {
+        if(all_shared->state.get_auth() == "")
+            return make_error_col("No Auth");
+
+        ///ok so the client sends #tie_to_steam <HEX_AUTH>
+
+        std::string auth_hex = std::string(str.begin() + strlen("#tie_to_steam "), str.end());
+
+        if(auth_hex.size() != 128*2)
+            return "Auth must be of length 256 in hex";
+
+        std::string auth_binary = hex_to_binary(auth_hex);
+
+        uint64_t steam_id = all_shared->state.get_steam_id();
+
+        {
+            mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
+
+            auth user_auth;
+
+            if(!user_auth.load_from_db_steamid(ctx, steam_id))
+                return make_error_col("Auth Failed?");
+
+            user_auth.auth_token_binary = auth_binary;
+            user_auth.auth_token_hex = auth_hex;
+
+            user_auth.overwrite_in_db(ctx);
+        }
+
+        return "Success";
+    }
     else if(starts_with(str, "#up ") || starts_with(str, "#dry ") || starts_with(str, "#up_es6 "))
     {
         if(all_shared->state.get_auth() == "")
