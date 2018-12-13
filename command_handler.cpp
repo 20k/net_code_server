@@ -1696,34 +1696,39 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
         return ret;
     }
-    else if(starts_with(str, "#tie_to_steam "))
+    else if(starts_with(str, "#delete_steam_and_tie_to_auth"))
     {
         if(all_shared->state.get_auth() == "")
             return make_error_col("No Auth");
 
-        ///ok so the client sends #tie_to_steam <HEX_AUTH>
+        std::string auth_binary = all_shared->state.get_auth();
 
-        std::string auth_hex = std::string(str.begin() + strlen("#tie_to_steam "), str.end());
-
-        if(auth_hex.size() != 128*2)
-            return make_error_col("Auth must be of length 256 in hex");
-
-        std::string auth_binary = hex_to_binary(auth_hex);
+        if(auth_binary.size() != 256)
+            return make_error_col("User auth must be of length 256");
 
         uint64_t steam_id = all_shared->state.get_steam_id();
 
         {
             mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
 
-            auth user_auth;
+            auth old_auth;
 
-            if(!user_auth.load_from_db_steamid(ctx, steam_id))
+            if(!old_auth.load_from_db(ctx, auth_binary))
+                return make_error_col("key.key auth is not valid, this should be impossible if you're logged in");
+
+            auth steam_user_auth;
+
+            if(!steam_user_auth.load_from_db_steamid(ctx, steam_id))
                 return make_error_col("Auth Failed?");
 
-            user_auth.auth_token_binary = auth_binary;
-            user_auth.auth_token_hex = auth_hex;
+            mongo_requester request;
+            request.set_prop("steam_id", steam_id);
 
-            user_auth.overwrite_in_db(ctx);
+            request.remove_all_from_db(ctx);
+
+            old_auth.steam_id = steam_id;
+
+            old_auth.overwrite_in_db(ctx);
         }
 
         return make_success_col("Success");
@@ -2064,13 +2069,14 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
             mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
 
-            if(steam_auth.user_data.size() == 256)
+            if(steam_auth.user_data.size() == 128)
             {
                 if(!fauth.load_from_db(ctx, steam_auth.user_data))
                     return "Bad user auth in encrypted token, eg your key.key file is corrupt whilst simultaneously using steam auth";
             }
             else
             {
+                ///should automagically create an account here
                 if(!fauth.load_from_db_steamid(ctx, steam_id))
                     return "Auth Failed, have you run \"register steam\" at least once?";
             }
@@ -2078,6 +2084,8 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             users = fauth.users;
         }
 
+        ///SO IMPORTANT
+        ///THE AUTH TOKEN HERE MAY NOT CORRESPOND TO THE STEAM ACCOUNT *BY DESIGN*
         all_shared->state.set_auth(fauth.auth_token_binary);
         all_shared->state.set_steam_id(steam_id);
 
