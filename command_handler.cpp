@@ -2044,12 +2044,12 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
         std::string steam_encrypted_auth_token = std::string(pos, str.end());
 
         ///don't actually do anything with this yet
-        std::optional<uint64_t> opt_steam_id = get_steam_auth(steam_encrypted_auth_token);
+        std::optional<steam_auth_data> opt_steam_id = get_steam_auth(steam_encrypted_auth_token);
 
         if(!opt_steam_id.has_value())
             return "Error using steam auth, check your client's debug log";
 
-        uint64_t steam_id = opt_steam_id.value();
+        uint64_t steam_id = opt_steam_id.value().steam_id;
 
         all_shared->state.set_steam_id(steam_id);
 

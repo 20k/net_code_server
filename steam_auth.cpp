@@ -9,7 +9,7 @@
 #include "time.hpp"
 #include <libncclient/nc_util.hpp>
 
-std::optional<uint64_t> get_steam_auth(const std::string& hex_auth_data)
+std::optional<steam_auth_data> get_steam_auth(const std::string& hex_auth_data)
 {
     std::vector<uint8_t> decrypted;
     decrypted.resize(1024);
@@ -31,8 +31,8 @@ std::optional<uint64_t> get_steam_auth(const std::string& hex_auth_data)
         loaded = true;
     }
 
-    std::cout << "secret key length " << secret_key.size() << std::endl;
-    std::cout << "expected length " << k_nSteamEncryptedAppTicketSymmetricKeyLen << std::endl;
+    //std::cout << "secret key length " << secret_key.size() << std::endl;
+    //std::cout << "expected length " << k_nSteamEncryptedAppTicketSymmetricKeyLen << std::endl;
 
     //const uint8 spacewar_key[k_nSteamEncryptedAppTicketSymmetricKeyLen] = { 0xed, 0x93, 0x86, 0x07, 0x36, 0x47, 0xce, 0xa5, 0x8b, 0x77, 0x21, 0x49, 0x0d, 0x59, 0xed, 0x44, 0x57, 0x23, 0xf0, 0xf6, 0x6e, 0x74, 0x14, 0xe1, 0x53, 0x3b, 0xa3, 0x3c, 0xd8, 0x03, 0xbd, 0xbd };
 
@@ -93,7 +93,20 @@ std::optional<uint64_t> get_steam_auth(const std::string& hex_auth_data)
         return std::nullopt;
     }
 
+
+    uint32 UserDataLength = 0;
+
+    const uint8* user_data_ptr = SteamEncryptedAppTicket_GetUserVariableData(&decrypted[0], decrypted.size(), &UserDataLength);
+
     std::cout << "steam id " << steam_id.ConvertToUint64() << std::endl;
 
-    return steam_id.ConvertToUint64();
+    steam_auth_data ret;
+    ret.steam_id = steam_id.ConvertToUint64();
+
+    if(user_data_ptr != nullptr)
+        ret.user_data = std::string((const char*)user_data_ptr, (uint32_t)UserDataLength);
+
+    std::cout << "Received user data of length " << UserDataLength << std::endl;
+
+    return ret;
 }
