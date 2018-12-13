@@ -2049,7 +2049,9 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
         if(!opt_steam_id.has_value())
             return "Error using steam auth, check your client's debug log";
 
-        uint64_t steam_id = opt_steam_id.value().steam_id;
+        steam_auth_data steam_auth = opt_steam_id.value();
+
+        uint64_t steam_id = steam_auth.steam_id;
 
         all_shared->state.set_steam_id(steam_id);
 
@@ -2058,10 +2060,20 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
         std::vector<std::string> users;
 
         {
+            enforce_constant_time ect;
+
             mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
 
-            if(!fauth.load_from_db_steamid(ctx, steam_id))
-                return "Auth Failed, have you run \"register steam\" at least once?";
+            if(steam_auth.user_data.size() == 256)
+            {
+                if(!fauth.load_from_db(ctx, steam_auth.user_data))
+                    return "Bad user auth in encrypted token, eg your key.key file is corrupt whilst simultaneously using steam auth";
+            }
+            else
+            {
+                if(!fauth.load_from_db_steamid(ctx, steam_id))
+                    return "Auth Failed, have you run \"register steam\" at least once?";
+            }
 
             users = fauth.users;
         }
