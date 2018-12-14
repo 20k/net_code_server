@@ -2100,7 +2100,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
             if(should_create_account)
             {
-                printf("Made steam account");
+                printf("Created Steam Account\n");
 
                 std::string to_ret = random_binary_string(128);
 
@@ -2110,7 +2110,6 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
                 all_shared->state.set_auth(to_ret);
 
-                mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
                 request.insert_in_db(ctx);
 
                 if(steam_auth.user_data.size() != 128)
@@ -2120,8 +2119,12 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
                 }
             }
 
+            printf("Pre destruct\n");
+
             users = fauth.users;
         }
+
+        printf("Post destruct\n");
 
         ///SO IMPORTANT
         ///THE AUTH TOKEN HERE MAY NOT CORRESPOND TO THE STEAM ACCOUNT *BY DESIGN*
