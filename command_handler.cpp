@@ -1970,33 +1970,6 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
         return "secret " + to_ret;
     }
     #endif // ALLOW_SELF_AUTH
-    /*else if(starts_with(str, "register steam"))
-    {
-        if(all_shared->state.get_steam_id() == 0)
-        {
-            return "No steam auth";
-        }
-
-        std::string to_ret = random_binary_string(128);
-
-        mongo_requester request;
-        request.set_prop("account_token_hex", binary_to_hex(to_ret));
-        request.set_prop("steam_id", all_shared->state.get_steam_id());
-
-        all_shared->state.set_auth(to_ret);
-
-        mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
-        request.insert_in_db(ctx);
-
-        is_auth = true;
-
-        if(starts_with(str, "register client_hex"))
-        {
-            return "secret_hex " + binary_to_hex(to_ret);
-        }
-
-        return "secret " + to_ret;
-    }*/
     else if(starts_with(str, "auth client ") || starts_with(str, "auth client_hex "))
     {
         printf("auth client\n");
