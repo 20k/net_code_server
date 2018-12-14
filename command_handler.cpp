@@ -1703,10 +1703,13 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
         std::string auth_binary = all_shared->state.get_auth();
 
-        if(auth_binary.size() != 256)
-            return make_error_col("User auth must be of length 256");
+        if(auth_binary.size() != 128)
+            return make_error_col("User auth must be of length 256 in hex or 128 in binary");
 
         uint64_t steam_id = all_shared->state.get_steam_id();
+
+        if(steam_id == 0)
+            return make_error_col("No steam auth");
 
         {
             mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
@@ -1719,15 +1722,25 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             auth steam_user_auth;
 
             if(!steam_user_auth.load_from_db_steamid(ctx, steam_id))
-                return make_error_col("Auth Failed?");
+                return make_error_col("Steam Auth Failed?");
 
-            mongo_requester request;
+            if(old_auth.steam_id == steam_id)
+                return "Auth already tied to steam id";
+
+            ///this is just simply too dangerous
+            /*mongo_requester request;
             request.set_prop("steam_id", steam_id);
 
-            request.remove_all_from_db(ctx);
+            request.remove_all_from_db(ctx);*/
 
+            ///this is massively safer
+            ///it will result in orphaned auths but this doesn't matter
+            steam_user_auth.steam_id = 0;
+            steam_user_auth.overwrite_in_db(ctx);
+
+            ///if request being removed from the db deletes old auth that's kind of dangerous
+            ///as auth.overwrite_in_db doesn't have upsert behaviour
             old_auth.steam_id = steam_id;
-
             old_auth.overwrite_in_db(ctx);
         }
 
@@ -2071,11 +2084,15 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
             if(steam_auth.user_data.size() == 128)
             {
+                printf("Steam auth using key token\n");
+
                 if(!fauth.load_from_db(ctx, steam_auth.user_data))
                     return "Bad user auth in encrypted token, eg your key.key file is corrupt whilst simultaneously using steam auth";
             }
             else
             {
+                printf("Steam auth using only steam\n");
+
                 ///should automagically create an account here
                 if(!fauth.load_from_db_steamid(ctx, steam_id))
                     return "Auth Failed, have you run \"register steam\" at least once?";
