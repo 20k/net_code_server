@@ -1970,7 +1970,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
         return "secret " + to_ret;
     }
     #endif // ALLOW_SELF_AUTH
-    else if(starts_with(str, "register steam"))
+    /*else if(starts_with(str, "register steam"))
     {
         if(all_shared->state.get_steam_id() == 0)
         {
@@ -1996,7 +1996,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
         }
 
         return "secret " + to_ret;
-    }
+    }*/
     else if(starts_with(str, "auth client ") || starts_with(str, "auth client_hex "))
     {
         printf("auth client\n");
@@ -2082,6 +2082,8 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
             mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
 
+            bool should_create_account = !auth().load_from_db_steamid(ctx, steam_id);
+
             if(steam_auth.user_data.size() == 128)
             {
                 printf("Steam auth using key token\n");
@@ -2093,9 +2095,29 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             {
                 printf("Steam auth using only steam\n");
 
-                ///should automagically create an account here
-                if(!fauth.load_from_db_steamid(ctx, steam_id))
-                    return "Auth Failed, have you run \"register steam\" at least once?";
+                fauth.load_from_db_steamid(ctx, steam_id);
+            }
+
+            if(should_create_account)
+            {
+                printf("Made steam account");
+
+                std::string to_ret = random_binary_string(128);
+
+                mongo_requester request;
+                request.set_prop("account_token_hex", binary_to_hex(to_ret));
+                request.set_prop("steam_id", all_shared->state.get_steam_id());
+
+                all_shared->state.set_auth(to_ret);
+
+                mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
+                request.insert_in_db(ctx);
+
+                if(steam_auth.user_data.size() != 128)
+                {
+                    if(!fauth.load_from_db_steamid(ctx, steam_id))
+                        throw std::runtime_error("Something catastrophically wrong in the server");
+                }
             }
 
             users = fauth.users;
