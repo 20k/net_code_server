@@ -2077,6 +2077,8 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
         std::vector<std::string> users;
 
+        bool is_steam_auth = false;
+
         {
             enforce_constant_time ect;
 
@@ -2090,12 +2092,16 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
                 if(!fauth.load_from_db(ctx, steam_auth.user_data))
                     return "Bad user auth in encrypted token, eg your key.key file is corrupt whilst simultaneously using steam auth";
+
+                is_steam_auth = false;
             }
             else
             {
                 printf("Steam auth using only steam\n");
 
                 fauth.load_from_db_steamid(ctx, steam_id);
+
+                is_steam_auth = true;
             }
 
             if(should_create_account)
@@ -2119,12 +2125,8 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
                 }
             }
 
-            printf("Pre destruct\n");
-
             users = fauth.users;
         }
-
-        printf("Post destruct\n");
 
         ///SO IMPORTANT
         ///THE AUTH TOKEN HERE MAY NOT CORRESPOND TO THE STEAM ACCOUNT *BY DESIGN*
@@ -2143,9 +2145,20 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
         if(auth_string == "")
             full_string = "No Users Found. Type user <username> to register";
 
+        std::string auth_str = "";
+
+        if(is_steam_auth)
+        {
+            auth_str = "Auth (Steam) Success";
+        }
+        else
+        {
+            auth_str = "Auth (non-Steam) Success";
+        }
+
         std::cout << auth_string << std::endl;
 
-        return make_success_col("Auth Success") + "\n" + full_string + auth_string + "\n" + get_update_message();
+        return make_success_col(auth_str) + "\n" + full_string + auth_string + "\n" + get_update_message();
     }
     else if(starts_with(str, "auth_steam client_hex"))
     {
