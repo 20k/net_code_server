@@ -321,6 +321,8 @@ bool json_prop_true(const nlohmann::json& js, const std::string& key)
     return false;
 }
 
+void import_from_disk(bool force);
+
 struct db_storage
 {
     //std::map<std::string, std::map<std::string, std::vector<nlohmann::json>>> all_data;
@@ -336,6 +338,75 @@ struct db_storage
     mutex_t id_guard;
 
     bool atomic_enabled = true;
+
+    void make_backup(const std::string& to_where)
+    {
+        /*std::lock_guard guard(id_guard);
+
+        std::vector<std::unique_lock<std::mutex>> all_locks;
+
+        for(database& d : all_data)
+        {
+            all_locks.emplace_back(d.all_coll_guard.mutex);
+
+            for(auto& k : d.per_collection_lock)
+            {
+                all_locks.emplace_back(k.second.mutex);
+            }
+        }*/
+
+        import_from_disk(true);
+
+        for(int db_idx = 0; db_idx < (int)mongo_database_type::MONGO_COUNT; db_idx++)
+        {
+            printf("DBIDX %i\n", db_idx);
+
+            if(!has_index(db_idx))
+            {
+                //all_data[db_idx].all_data[coll].push_back(fdata);
+
+                for(const auto& cpair : all_data[db_idx].all_data)
+                {
+                    std::string coll = cpair.first;
+
+                    std::vector<nlohmann::json> fdata = all_data[db_idx].all_data[coll];
+
+                    for(auto& i : fdata)
+                        flush_to(to_where, db_idx, coll, fdata);
+                }
+            }
+            else
+            {
+                for(const auto& cpair : all_data[db_idx].index_map)
+                {
+                    std::string coll = cpair.first;
+
+                    std::string index = get_index(db_idx);
+
+                    //assert(fdata.count(index) > 0);
+
+                    //std::string current_idx = fdata.at(index);
+
+                    std::map<std::string, nlohmann::json>& indices = all_data[db_idx].index_map[coll];
+
+                    //assert(fdata.count(index) == 1);
+
+                    assert(indices.size() == 1);
+
+                    //nlohmann::json fdata = indices[current_idx];
+
+                    for(auto& i : indices)
+                        flush_to(to_where, db_idx, coll, i.second);
+
+                    //std::map<std::string, nlohmann::json>& indices = all_data[db_idx].index_map[coll];
+
+                    //indices[current_idx] = fdata;
+                }
+            }
+        }
+
+        printf("Finished backup\n");
+    }
 
     template<typename T>
     void atomic_write(const std::string& file, const T& data)
@@ -385,11 +456,14 @@ struct db_storage
     ///todo: make atomic
     void flush(const database_type& db, const std::string& coll, const nlohmann::json& data)
     {
+        flush_to(ROOT_STORE, db, coll, data);
+    }
+
+    void flush_to(const std::string& root, const database_type& db, const std::string& coll, const nlohmann::json& data)
+    {
         assert(data.count(CID_STRING) == 1);
 
         assert(coll.find('/') == std::string::npos);
-
-        std::string root = ROOT_STORE;
 
         std::string db_dir = root + "/" + std::to_string((int)db);
 
@@ -933,7 +1007,7 @@ void import_from_mongo()
     //exit(0);
 }
 
-void import_from_disk()
+void import_from_disk(bool force)
 {
     db_storage& store = get_db_storage();
 
@@ -943,36 +1017,42 @@ void import_from_disk()
     {
         std::string db_dir = root + "/" + std::to_string((int)db_idx);
 
-        /*for_each_dir(db_dir, [&](const std::string& coll)
+        if(force)
         {
-            for_each_file(db_dir + "/" + coll, [&](const std::string& file_name)
+            for_each_dir(db_dir, [&](const std::string& coll)
             {
-                std::string path = db_dir + "/" + coll + "/" + file_name;
+                if(store.all_data[db_idx].collection_imported[coll])
+                    return;
 
-                std::string data = read_file_bin(path);
-
-                nlohmann::json fdata = nlohmann::json::from_cbor(data);
-
-                if(!store.has_index(db_idx))
+                for_each_file(db_dir + "/" + coll, [&](const std::string& file_name)
                 {
-                    store.all_data[db_idx].all_data[coll].push_back(fdata);
-                }
-                else
-                {
-                    std::string index = store.get_index(db_idx);
+                    std::string path = db_dir + "/" + coll + "/" + file_name;
 
-                    assert(fdata.count(index) > 0);
+                    std::string data = read_file_bin(path);
 
-                    std::string current_idx = fdata.at(index);
+                    nlohmann::json fdata = nlohmann::json::from_cbor(data);
 
-                    std::map<std::string, nlohmann::json>& indices = store.all_data[db_idx].index_map[coll];
+                    if(!store.has_index(db_idx))
+                    {
+                        store.all_data[db_idx].all_data[coll].push_back(fdata);
+                    }
+                    else
+                    {
+                        std::string index = store.get_index(db_idx);
 
-                    indices[current_idx] = fdata;
-                }
+                        assert(fdata.count(index) > 0);
 
-                store.all_data[db_idx].collection_imported[coll] = true;
+                        std::string current_idx = fdata.at(index);
+
+                        std::map<std::string, nlohmann::json>& indices = store.all_data[db_idx].index_map[coll];
+
+                        indices[current_idx] = fdata;
+                    }
+
+                    store.all_data[db_idx].collection_imported[coll] = true;
+                });
             });
-        });*/
+        }
     }
 
     std::cout << "imported from disk" << std::endl;
@@ -1030,8 +1110,13 @@ void init_db_storage_backend()
     }
     else
     {
-        import_from_disk();
+        import_from_disk(false);
     }
+
+    //#define BACKUP
+    #ifdef BACKUP
+    store.make_backup("C:/net_code_backup_from");
+    #endif // BACKUP
 
     ///error with "unique_id" : "fragme_vgdajw_6153"
 
@@ -1280,6 +1365,11 @@ void db_storage_backend::run_tests()
 
         assert(req1.get_all_properties_json() == req2.get_all_properties_json());
     }
+}
+
+void db_storage_backend::make_backup(const std::string& to_where)
+{
+    get_db_storage().make_backup(to_where);
 }
 
 bool db_storage_backend::contains_banned_query(const nlohmann::json& js)
