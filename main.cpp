@@ -349,7 +349,7 @@ int main()
            }).detach();
 
     #ifndef TESTING
-    convert_all_nodes();
+    //convert_all_nodes();
     #endif // TESTING
 
     //test_json();
