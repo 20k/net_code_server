@@ -1746,6 +1746,12 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
         return make_success_col("Success");
     }
+    else if(starts_with(str, "#dl_auth"))
+    {
+        is_auth = true;
+
+        return "secret " + all_shared->state.get_auth();
+    }
     else if(starts_with(str, "#up ") || starts_with(str, "#dry ") || starts_with(str, "#up_es6 "))
     {
         if(all_shared->state.get_auth() == "")
