@@ -87,6 +87,11 @@ struct db_val : db_common
     {
         return val;
     }
+
+    T& get()
+    {
+        return val;
+    }
 };
 
 #define DB_VAL(type, name) db_val<type> name{#name}

@@ -264,8 +264,6 @@ void source_map::decode(const std::string& code_in, const std::string& code_out,
 
 source_position source_map::map(const source_position& pos)
 {
-    source_position ret;
-
     if(pos.line < 0)
         return pos;
 
