@@ -181,7 +181,7 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
             }
             catch(...)
             {
-                std::cout << "caught error in limits" << std::endl;
+                //std::cout << "caught error in limits" << std::endl;
             }
         }
 
