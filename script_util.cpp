@@ -444,8 +444,8 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
         std::cout << "didn't go well\n";
     }
 
-    //remove((phase_1 + ".ts").c_str());
-    //remove((phase_1).c_str());
+    remove((phase_1 + ".ts").c_str());
+    remove((phase_1).c_str());
 
     //std::cout << "DATA " << data.dump() << std::endl;
 
