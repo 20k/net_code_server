@@ -372,7 +372,7 @@ struct db_storage
                     std::vector<nlohmann::json> fdata = all_data[db_idx].all_data[coll];
 
                     for(auto& i : fdata)
-                        flush_to(to_where, db_idx, coll, fdata);
+                        flush_to(to_where, db_idx, coll, i);
                 }
             }
             else

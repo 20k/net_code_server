@@ -37,6 +37,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-fexpensive-optimizations" />
 					<Add option="-O3" />
 					<Add option="-g" />
 					<Add option="-march=nehalem" />
@@ -53,7 +54,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-O2" />
+					<Add option="-O3" />
 					<Add option="-march=nehalem" />
 					<Add option="-s" />
 					<Add option="-DLOCAL_IP" />
@@ -124,9 +125,9 @@
 				<Option type="1" />
 				<Option compiler="clang" />
 				<Compiler>
-					<Add option="-ftrapv" />
 					<Add option="-fsanitize=undefined-trap -fsanitize-undefined-trap-on-error" />
 					<Add option="-m64" />
+					<Add option="-O1" />
 					<Add option="-g" />
 					<Add option="-std=c++17" />
 					<Add option="-DLOCAL_IP" />
@@ -157,11 +158,15 @@
 		<Compiler>
 			<Add option="-Wnon-virtual-dtor" />
 			<Add option="-Winit-self" />
+			<Add option="-Wunreachable-code" />
+			<Add option="-Wextra" />
 			<Add option="-Wall" />
 			<Add option="-std=c++1z" />
 			<Add option="-fexceptions" />
 			<Add option="-Wno-narrowing" />
 			<Add option="-fno-strict-aliasing" />
+			<Add option="-Wno-unused-parameter" />
+			<Add option="-Wno-unused-label" />
 			<Add option="-DBOOST_STACKTRACE_USE_BACKTRACE" />
 			<Add option="-DSERVER" />
 			<Add directory="deps" />
