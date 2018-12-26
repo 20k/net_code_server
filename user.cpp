@@ -883,7 +883,7 @@ double user::calculate_attack_hack_speedup()
     return 0;
 }
 
-double user::calculate_attack_hack_speedup()
+double user::calculate_hack_progress()
 {
     return hacked_progress;
 }
