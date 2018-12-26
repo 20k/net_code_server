@@ -3879,6 +3879,12 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
     return hack_internal(priv_ctx, ctx, name_of_person_being_attacked, is_arr);
 }
 
+///ok so new hacking
+///takes a certain amount of time
+///therefore we need some sort of longer running process to handle it, akin to realtime scripting
+///but we also want people to be able to run commands during it
+///maybe i can create a server realtime script that executes, would use relatively low cpu,
+///although might require the advanced one thread <-> many thread watcher vs exec model for the server's sanity
 duk_ret_t net__hack_new(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
