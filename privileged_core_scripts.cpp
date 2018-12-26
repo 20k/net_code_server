@@ -3879,6 +3879,59 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
     return hack_internal(priv_ctx, ctx, name_of_person_being_attacked, is_arr);
 }
 
+duk_ret_t net__hack_new(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+    COOPERATE_KILL();
+
+    #ifdef TESTING
+    /*MAKE_PERF_COUNTER();
+    mongo_diagnostics diagnostic_scope;*/
+    #endif // TESTING
+
+    std::string name_of_person_being_attacked = duk_safe_get_prop_string(ctx, -1, "user");
+    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
+
+    if(name_of_person_being_attacked == "")
+        return push_error(ctx, "Usage: net.hack({user:<name>})");
+
+    if(!get_user(name_of_person_being_attacked, get_thread_id(ctx)))
+        return push_error(ctx, "No such user");
+
+    {
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(ctx));
+
+        if(npc_info::has_type(mongo_ctx, npc_info::WARPY, name_of_person_being_attacked))
+        {
+            push_duk_val(ctx, make_error_col("-Access Denied-"));
+            return 1;
+        }
+    }
+
+    bool cheats = false;
+
+    /*#ifdef TESTING
+    cheats = true;
+    #endif // TESTING*/
+
+    if(!cheats)
+    {
+        playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+        float hack_cost = 0.25f;
+
+        auto path = playspace_network_manage.get_accessible_path_to(ctx, name_of_person_being_attacked, get_caller(ctx), (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, hack_cost);
+
+        if(path.size() == 0)
+            return push_error(ctx, "No Path");
+
+        user_log next;
+        next.add("type", "hostile_path_access", "");
+
+        playspace_network_manage.modify_path_per_link_strength_with_logs(path, -hack_cost, {next}, get_thread_id(ctx));
+    }
+
+    return push_error(ctx, "unimplemented");
+}
 
 duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
