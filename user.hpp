@@ -137,6 +137,10 @@ struct user
     void deplete_max_stealable_items(double amount, size_t current_time, low_level_structure& sys);
     void deplete_max_sendable_items(double amount, size_t current_time, low_level_structure& sys_1, low_level_structure& sys_2);
 
+    double calculate_hack_hardness();
+    double calculate_attack_hack_speedup();
+    double calculate_hack_progress();
+
     timestamp_move_queue get_timestamp_queue();
     space_pos_t get_local_pos() const;
     timestamped_position get_final_pos() const;

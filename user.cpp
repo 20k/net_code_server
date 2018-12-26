@@ -871,6 +871,22 @@ void user::deplete_max_sendable_items(double amount, size_t current_time, low_le
     lim.time_at = current_time;
 }
 
+///later loop through items and calculate it depending on defensive upgrades
+///0 -> n
+double user::calculate_hack_hardness()
+{
+    return 0;
+}
+
+double user::calculate_attack_hack_speedup()
+{
+    return 0;
+}
+
+double user::calculate_attack_hack_speedup()
+{
+    return hacked_progress;
+}
 
 extern size_t get_wall_time();
 
