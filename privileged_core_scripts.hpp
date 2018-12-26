@@ -66,6 +66,7 @@ std::string format_pretty_names(const std::vector<std::string>& names);
 
 duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl);
+duk_ret_t scripts__info(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const std::string& to, double amount, bool pvp_action);
 ///TODO: TRANSACTION HISTORY
@@ -312,6 +313,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(scripts__core, 4),
     REGISTER_FUNCTION_PRIV(scripts__me, 2),
     REGISTER_FUNCTION_PRIV(scripts__public, 4),
+    REGISTER_FUNCTION_PRIV(scripts__info, 4),
     REGISTER_FUNCTION_PRIV(channel__create, 3),
     REGISTER_FUNCTION_PRIV(channel__join, 3),
     REGISTER_FUNCTION_PRIV(channel__leave, 3),
