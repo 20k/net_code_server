@@ -67,6 +67,8 @@ struct user
 
     bool has_local_pos = false;
 
+    double hacked_progress = 0;
+
     user();
 
     void overwrite_user_in_db(mongo_lock_proxy& ctx);

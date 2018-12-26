@@ -71,6 +71,7 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     to_set.set_prop_array("call_stack", call_stack);
     to_set.set_prop_array("users_i_have_access_to", users_i_have_access_to);
     to_set.set_prop("auth_hex", auth_hex);
+    to_set.set_prop("hacked_progress", hacked_progress);
 
     for(int i=0; i < decltype(pos)::DIM; i++)
         to_set.set_prop("vector_pos" + std::to_string(i), pos.v[i]);
@@ -121,6 +122,8 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
         //    old_binary_auth = req.get_prop("auth");
         if(req.has_prop("auth_hex"))
             auth_hex = req.get_prop("auth_hex");
+        if(req.has_prop("hacked_progress"))
+            hacked_progress = req.get_prop_as_double("hacked_progress");
         if(req.has_prop("upgr_idx"))
             upgr_idx = req.get_prop("upgr_idx");
         if(req.has_prop("loaded_upgr_idx"))
