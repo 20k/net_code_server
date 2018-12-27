@@ -227,6 +227,7 @@ struct mongo_shim
 int* tls_get_thread_id_storage_hack();
 int* tls_get_print_performance_diagnostics();
 int* tls_get_should_throw();
+int* tls_get_holds_lock();
 
 struct mongo_lock_proxy
 {

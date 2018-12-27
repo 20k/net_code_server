@@ -1340,6 +1340,7 @@ mongo_shim::mongo_shim(mongo_context* fctx, int plock_id)
 tls_variable<int, -2> thread_id_storage_key;
 tls_variable<int, 0> print_performance_diagnostics_key;
 tls_variable<int, 0> should_throw;
+tls_variable<int, 0> holds_lock;
 
 int* tls_get_thread_id_storage_hack()
 {
@@ -1354,6 +1355,11 @@ int* tls_get_print_performance_diagnostics()
 int* tls_get_should_throw()
 {
     return should_throw.get();
+}
+
+int* tls_get_holds_lock()
+{
+    return holds_lock.get();
 }
 
 mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim, bool lock) : ctx(shim.ctx)
@@ -1425,6 +1431,8 @@ void mongo_lock_proxy::lock()
 
         if(perf.enabled)
             perf.lock_stacktraces.push_back(get_stacktrace());
+
+        (*tls_get_holds_lock())++;
     }
 
     has_lock = true;
@@ -1435,6 +1443,8 @@ void mongo_lock_proxy::unlock()
     if(has_lock)
     {
         ctx.ctx->make_unlock(ctx.last_collection);
+
+        (*tls_get_holds_lock())--;
     }
 
     has_lock = false;
