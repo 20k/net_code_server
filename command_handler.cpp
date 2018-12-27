@@ -34,6 +34,7 @@ struct unsafe_info
     std::string command;
     volatile int finished = 0;
     exec_context* ectx;
+    volatile int* holds_lock = nullptr;
 
     std::string ret;
 };
@@ -52,6 +53,8 @@ void managed_duktape_thread(unsafe_info* info, size_t tid)
     ///set thread storage hack
     ///convert from int to size_t
     *tls_get_thread_id_storage_hack() = (size_t)tid;
+
+    info->holds_lock = tls_get_holds_lock();
 
     info->ectx->safe_exec(unsafe_wrapper, *info->ectx, *info);
 
@@ -159,7 +162,7 @@ void sleep_thread_for(sthread& t, int sleep_ms)
 
 void async_realtime_script_handler(duk_context* nctx, shared_data& shared, command_handler_state& state, double& time_of_last_on_update, std::string& ret,
                                    std::atomic_bool& terminated, std::atomic_bool& request_long_sleep, std::atomic_bool& fedback, int current_id,
-                                   std::atomic_bool& force_terminate, std::atomic<double>& avg_exec_time)
+                                   std::atomic_bool& force_terminate, std::atomic<double>& avg_exec_time, volatile int*& holds_lock, std::atomic_bool& safe_to_terminate)
 {
     sf::Clock clk;
 
@@ -172,12 +175,14 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
 
     duk_xmove_top(ctx, nctx, 1);
 
+    holds_lock = tls_get_holds_lock();
+
     //duk_context* ctx = nctx;
 
     /*MAKE_PERF_COUNTER();
     mongo_diagnostics diagnostic_scope;*/
 
-    while(!state.should_terminate_any_realtime && !force_terminate)
+    while(!force_terminate)
     {
         try
         {
@@ -356,6 +361,11 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
     duk_pop(ctx);
 
     terminated = true;
+
+    while(!safe_to_terminate)
+    {
+
+    }
 }
 
 struct execution_blocker_guard
@@ -512,6 +522,8 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         script_management_mode::mode current_mode = script_management_mode::DEFAULT;
 
+        double accumulated_missed_sleep_time = 0;
+
         while(!inf->finished)
         {
             int sleep_mult = 1;
@@ -530,6 +542,8 @@ std::string run_in_user_context(std::string username, std::string command, std::
             {
                 Sleep(active_time_slice_ms);
 
+                accumulated_missed_sleep_time += sleeping_time_slice_ms * sleep_mult;
+
                 ///Ok so
                 ///this is the problem
                 ///basically sfml uses timebeginperiod
@@ -537,9 +551,18 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 ///sleeping during them is causing issues
                 pthread_t thread = launch->native_handle();
                 void* native_handle = pthread_gethandle(thread);
-                SuspendThread(native_handle);
-                sthread::this_sleep(sleeping_time_slice_ms * sleep_mult);
-                ResumeThread(native_handle);
+
+                if(inf->holds_lock && *inf->holds_lock == 0)
+                {
+                    SuspendThread(native_handle);
+
+                    sthread::this_sleep((int)accumulated_missed_sleep_time);
+
+                    accumulated_missed_sleep_time -= (int)accumulated_missed_sleep_time;
+
+                    ResumeThread(native_handle);
+                }
+                ///else continue
             }
             #endif // ACTIVE_TIME_MANAGEMENT
 
@@ -688,10 +711,13 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 double current_goodwill_ms = 0;
                 double max_goodwill_ms = (6./16.) * max_frame_time_ms;
 
+                volatile int* holds_lock = nullptr;
+
                 std::atomic<double> avg_exec_time = 0;
                 double estimated_time_remaining = max_allowed_frame_time_ms;
 
                 double time_of_last_on_update = get_wall_time();
+
 
                 sf::Clock clk;
 
@@ -703,6 +729,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                     std::atomic_bool terminated{false};
                     std::atomic_bool request_long_sleep{false};
                     std::atomic_bool force_terminate{false};
+                    std::atomic_bool safe_to_terminate{false};
 
                     ///pipe window size
                     {
@@ -725,7 +752,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                     sthread thrd = sthread(async_realtime_script_handler, ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf->ret),
                                                    std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate),
-                                                   std::ref(avg_exec_time));
+                                                   std::ref(avg_exec_time), std::ref(holds_lock), std::ref(safe_to_terminate));
 
                     while(!force_terminate)
                     {
@@ -775,7 +802,12 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                         bool long_sleep_requested = request_long_sleep;
 
-                        if(current_frame_time_ms >= max_allowed_frame_time_ms + current_goodwill_ms || long_sleep_requested)
+                        bool avoid_sleeping = false;
+
+                        if(holds_lock)
+                            avoid_sleeping = *holds_lock > 0;
+
+                        if((current_frame_time_ms >= max_allowed_frame_time_ms + current_goodwill_ms || long_sleep_requested) && !avoid_sleeping)
                         {
                             //std::cout << "ftime " << current_frame_time_ms << std::endl;
 
@@ -843,6 +875,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                     force_terminate = true;
                     fedback = true;
+                    safe_to_terminate = true;
 
                     sthread::this_sleep(50);
 
