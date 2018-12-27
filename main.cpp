@@ -294,8 +294,6 @@ int main()
 {
     handle_terminate();
 
-    startup_tls_state();
-
     std::cout << std::hash<std::string>{}("aaaaaaaa") << std::endl;
 
     stack_on_start();
