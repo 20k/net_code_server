@@ -154,6 +154,25 @@
 					<Add option="-pg" />
 				</Linker>
 			</Target>
+			<Target title="ReleaseAndTestLTO">
+				<Option output="bin/ReleaseTestLTO/crapmud" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/ReleaseTestLTO/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-fexpensive-optimizations" />
+					<Add option="-flto" />
+					<Add option="-O3" />
+					<Add option="-march=nehalem" />
+					<Add option="-s" />
+					<Add option="-DLOCAL_IP" />
+					<Add option="-DTESTING" />
+				</Compiler>
+				<Linker>
+					<Add option="-flto" />
+					<Add option="-s" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wnon-virtual-dtor" />
