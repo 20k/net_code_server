@@ -22,6 +22,42 @@ namespace event
         }
     };
 
+    struct db_saver
+    {
+        bool owns = false;
+        event_impl evt;
+
+        db_saver(){}
+
+        db_saver(event_impl& _evt)
+        {
+            evt = _evt;
+            owns = true;
+        }
+
+        db_saver(db_saver&& other)
+        {
+            owns = other.owns;
+            evt = other.evt;
+
+            other.owns = false;
+        }
+
+        db_saver(const db_saver&) = delete;
+        db_saver& operator=(const db_saver&) = delete;
+
+        ~db_saver()
+        {
+            if(!owns)
+                return;
+
+            mongo_nolock_proxy ctx = get_global_mongo_event_manager_context(-2);
+            ctx.change_collection(evt.user_name);
+
+            evt.overwrite_in_db(ctx);
+        }
+    };
+
     static inline std::mutex in_memory_lock;
     static inline std::map<std::string, std::map<std::string, bool>> in_memory_map;
 
@@ -69,9 +105,17 @@ namespace event
             in_memory_map[user_name][unique_event_tag] = true;
         }
 
-        func();
+        event_impl evt;
+        evt.user_name = user_name;
+        evt.unique_event_tag = unique_event_tag;
+        evt.complete = true;
+        evt.set_key_data(std::to_string(db_storage_backend::get_unique_id()));
 
-        {
+        db_saver save(evt);
+
+        func(std::move(save));
+
+        /*{
             mongo_nolock_proxy ctx = get_global_mongo_event_manager_context(-2);
             ctx.change_collection(user_name);
 
@@ -82,7 +126,7 @@ namespace event
             evt.set_key_data(std::to_string(db_storage_backend::get_unique_id()));
 
             evt.overwrite_in_db(ctx);
-        }
+        }*/
 
         return true;
     }
