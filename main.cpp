@@ -40,6 +40,7 @@
 #include "auth.hpp"
 #include "safe_thread.hpp"
 #include "source_maps.hpp"
+#include <secret/special_user_scripts.hpp>
 
 void debug_terminal()
 {
@@ -795,6 +796,7 @@ int main()
     start_npc_thread();
     init_purple_whale();
     init_blue_mantis();
+    init_special_user_scripts();
     user::launch_pump_events_thread();
     //#endif // TESTING
 

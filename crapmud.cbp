@@ -41,6 +41,9 @@
 					<Add option="-O3" />
 					<Add option="-g" />
 					<Add option="-march=nehalem" />
+					<Add option="-Wlogical-op" />
+					<Add option="-Wduplicated-cond" />
+					<Add option="-Wduplicated-branches" />
 					<Add option="-DEXTERN_IP" />
 				</Compiler>
 				<ExtraCommands>
@@ -57,6 +60,9 @@
 					<Add option="-O3" />
 					<Add option="-march=nehalem" />
 					<Add option="-s" />
+					<Add option="-Wlogical-op" />
+					<Add option="-Wduplicated-cond" />
+					<Add option="-Wduplicated-branches" />
 					<Add option="-DLOCAL_IP" />
 					<Add option="-DTESTING" />
 				</Compiler>
@@ -173,6 +179,25 @@
 					<Add option="-s" />
 				</Linker>
 			</Target>
+			<Target title="ReleaseTestLTOClang">
+				<Option output="bin/ReleaseTestLTOClang/crapmud" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/ReleaseTestLTOClang/" />
+				<Option type="1" />
+				<Option compiler="clang" />
+				<Compiler>
+					<Add option="-m64" />
+					<Add option="-O3" />
+					<Add option="-std=c++17" />
+					<Add option="-march=nehalem" />
+					<Add option="-DLOCAL_IP" />
+					<Add option="-DTESTING" />
+				</Compiler>
+				<Linker>
+					<Add option="-m64" />
+					<Add option="-s" />
+					<Add option="-Wl,--strip-all" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wnon-virtual-dtor" />
@@ -186,9 +211,6 @@
 			<Add option="-fno-strict-aliasing" />
 			<Add option="-Wno-unused-parameter" />
 			<Add option="-Wno-unused-label" />
-			<Add option="-Wlogical-op" />
-			<Add option="-Wduplicated-cond" />
-			<Add option="-Wduplicated-branches" />
 			<Add option="-DBOOST_STACKTRACE_USE_BACKTRACE" />
 			<Add option="-DSERVER" />
 			<Add directory="deps" />
@@ -243,6 +265,8 @@
 		<Unit filename="deps/secret/one_shots.hpp" />
 		<Unit filename="deps/secret/secret.cpp" />
 		<Unit filename="deps/secret/secret.hpp" />
+		<Unit filename="deps/secret/special_user_scripts.cpp" />
+		<Unit filename="deps/secret/special_user_scripts.hpp" />
 		<Unit filename="deps/secret/structure.cpp" />
 		<Unit filename="deps/secret/structure.hpp" />
 		<Unit filename="deps/secret/tutorial.cpp" />
