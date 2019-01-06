@@ -132,6 +132,11 @@ struct mongo_context
     ~mongo_context();
 };
 
+int* tls_get_thread_id_storage_hack();
+int* tls_get_print_performance_diagnostics();
+int* tls_get_should_throw();
+int* tls_get_holds_lock();
+
 template<typename T>
 struct safe_lock_guard
 {
@@ -139,6 +144,8 @@ struct safe_lock_guard
 
     safe_lock_guard(T& t) : guard(t)
     {
+        (*tls_get_holds_lock())++;
+
         #ifdef DEADLOCK_DETECTION
         std::lock_guard<std::mutex> g(mongo_context::thread_lock);
 
@@ -155,6 +162,8 @@ struct safe_lock_guard
 
     ~safe_lock_guard()
     {
+        (*tls_get_holds_lock())--;
+
         #ifdef DEADLOCK_DETECTION
         std::lock_guard<std::mutex> g(mongo_context::thread_lock);
 
@@ -223,11 +232,6 @@ struct mongo_shim
     thread_local int thread_id_storage_hack;
     thread_local int print_performance_diagnostics;
 }*/
-
-int* tls_get_thread_id_storage_hack();
-int* tls_get_print_performance_diagnostics();
-int* tls_get_should_throw();
-int* tls_get_holds_lock();
 
 struct mongo_lock_proxy
 {
