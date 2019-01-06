@@ -524,8 +524,11 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         int accumulated_missed_sleep_time = 0;
 
+        #ifdef PERF_DIAGNOSTICS
         int total_suspend_ms = 0;
         sf::Clock runtime;
+        int skip = 0;
+        #endif // PERF_DIAGNOSTICS
 
         while(!inf->finished)
         {
@@ -543,21 +546,17 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
             #ifdef ACTIVE_TIME_MANAGEMENT
             {
-                Sleep(active_time_slice_ms);
+                sthread::this_sleep(active_time_slice_ms);
 
                 accumulated_missed_sleep_time += sleeping_time_slice_ms * sleep_mult;
 
-                ///Ok so
-                ///this is the problem
-                ///basically sfml uses timebeginperiod
-                ///which uses windows critical sections
-                ///sleeping during them is causing issues
-                pthread_t thread = launch->native_handle();
-                void* native_handle = pthread_gethandle(thread);
-
-                //if(inf->holds_lock != nullptr && (*inf->holds_lock) == 0)
+                ///don't use any function which involves ANY lock in this branch
+                ///while the second thread is suspended, otherwise deadlock
+                if(inf->holds_lock != nullptr && (*inf->holds_lock) == 0)
                 {
-                    int csleep = sleeping_time_slice_ms * sleep_mult;
+                    void* native_handle = launch->winapi_handle();
+
+                    int csleep = accumulated_missed_sleep_time;
 
                     SuspendThread(native_handle);
 
@@ -565,25 +564,17 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                     ResumeThread(native_handle);
 
-                    total_suspend_ms += csleep;
+                    //total_suspend_ms += csleep;
                     accumulated_missed_sleep_time -= csleep;
-
-                    /*for(int i=0; i < (int)accumulated_missed_sleep_time; i++)
-                    {
-                        SuspendThread(native_handle);
-
-                        sthread::this_sleep(1);
-
-                        total_suspend_ms += 1;
-
-                        accumulated_missed_sleep_time -= 1;
-                        ResumeThread(native_handle);
-                    }*/
                 }
-                /*else
+                else
                 {
                     sthread::this_sleep((int)(sleeping_time_slice_ms * sleep_mult));
-                }*/
+
+                    #ifdef PERF_DIAGNOSTICS
+                    skip++;
+                    #endif // PERF_DIAGNOSTICS
+                }
                 ///else continue
             }
             #endif // ACTIVE_TIME_MANAGEMENT
@@ -595,28 +586,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
             auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
 
             double elapsed = dur.count();
-
-            ///forceful termination, very unsafe
-            /*if(elapsed >= max_time_ms + db_grace_time_ms)
-            {
-                /pthread_t thread = launch->native_handle();
-
-                void* native_handle = pthread_gethandle(thread);
-
-                printf("UNSAFE THREAD TERMINATION\n");
-
-                ///this is obviously very unsafe, doubly so due to the whole mutex thing, which may leave them locked
-                ///going to need to have an intermittent sync point, where all threads block going in and we free all locks or something
-                SuspendThread(native_handle);
-                TerminateThread(native_handle, 1);
-                CloseHandle(native_handle);
-
-                inf->ret = "Ran for longer than " + std::to_string((int)max_time_ms) + "ms and was uncooperatively terminated";
-
-                terminated = true;
-
-                break;
-            }*/
 
             if(elapsed >= max_time_ms + db_grace_time_ms * 10 && !displayed_warning)
             {
@@ -639,11 +608,14 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 sand_data->terminate_semi_gracefully = true;
             }
 
-            sthread::this_sleep(1);
+            //sthread::this_sleep(1);
         }
 
+        #ifdef PERF_DIAGNOSTICS
         std::cout << "TOTAL SUSPEND " << total_suspend_ms << std::endl;
         std::cout << "TOTAL RUNTIME " << runtime.getElapsedTime().asMilliseconds() << std::endl;
+        std::cout << "TOTAL SKIP " << skip << std::endl;
+        #endif // PERF_DIAGNOSTICS
 
         *tls_get_should_throw() = 0;
 

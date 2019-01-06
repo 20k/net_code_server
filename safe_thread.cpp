@@ -17,8 +17,8 @@ void sthread::low_yield()
 
 void sthread::this_sleep(int milliseconds)
 {
-    /*for(int i=0; i < milliseconds; i++)
-        Sleep(1);*/
+    for(int i=0; i < milliseconds; i++)
+        Sleep(1);
 
-    Sleep(milliseconds);
+    //Sleep(milliseconds);
 }
