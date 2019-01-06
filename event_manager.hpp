@@ -27,12 +27,36 @@ namespace event
         bool owns = false;
         event_impl evt;
 
+        static inline std::mutex transitory_lock;
+        static inline std::map<std::string, std::map<std::string, bool>> transitory_map;
+
+        static bool in_progress(event_impl& _evt)
+        {
+            auto i1 = transitory_map.find(_evt.user_name);
+
+            if(i1 == transitory_map.end())
+                return false;
+
+            auto i2 = i1->second.find(_evt.unique_event_tag);
+
+            if(i2 == i1->second.end())
+                return false;
+
+            return true;
+        }
+
         db_saver(){}
 
         db_saver(event_impl& _evt)
         {
             evt = _evt;
             owns = true;
+
+            {
+                safe_lock_guard slg(transitory_lock);
+
+                transitory_map[evt.user_name][evt.unique_event_tag] = true;
+            }
         }
 
         db_saver(db_saver&& other)
@@ -51,10 +75,24 @@ namespace event
             if(!owns)
                 return;
 
-            mongo_nolock_proxy ctx = get_global_mongo_event_manager_context(-2);
-            ctx.change_collection(evt.user_name);
+            {
+                mongo_nolock_proxy ctx = get_global_mongo_event_manager_context(-2);
+                ctx.change_collection(evt.user_name);
 
-            evt.overwrite_in_db(ctx);
+                evt.overwrite_in_db(ctx);
+            }
+
+            auto i1 = transitory_map.find(evt.user_name);
+
+            if(i1 == transitory_map.end())
+                return;
+
+            auto i2 = i1->second.find(evt.unique_event_tag);
+
+            if(i2 == i1->second.end())
+                return;
+
+            i1->second.erase(i2);
         }
     };
 
@@ -89,6 +127,38 @@ namespace event
         return false;
     }
 
+    inline
+    void reset(const std::string& user_name, const std::string& unique_event_tag)
+    {
+        {
+            mongo_nolock_proxy ctx = get_global_mongo_event_manager_context(-2);
+            ctx.change_collection(user_name);
+
+            nlohmann::json req;
+            req["user_name"] = user_name;
+            req["unique_event_tag"] = unique_event_tag;
+            req["complete"] = true;
+
+            ctx->remove_json_many_new(req);
+        }
+
+        {
+            std::lock_guard guard(in_memory_lock);
+
+            auto i1 = in_memory_map.find(user_name);
+
+            if(i1 == in_memory_map.end())
+                return;
+
+            auto i2 = i1->second.find(unique_event_tag);
+
+            if(i2 == i1->second.end())
+                return;
+
+            i1->second.erase(i2);
+        }
+    }
+
     template<typename T>
     inline
     bool exec_once_ever(const std::string& user_name, const std::string& unique_event_tag, const T& func)
@@ -110,6 +180,9 @@ namespace event
         evt.unique_event_tag = unique_event_tag;
         evt.complete = true;
         evt.set_key_data(std::to_string(db_storage_backend::get_unique_id()));
+
+        if(db_saver::in_progress(evt))
+            return false;
 
         db_saver save(evt);
 
