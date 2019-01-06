@@ -522,7 +522,10 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         script_management_mode::mode current_mode = script_management_mode::DEFAULT;
 
-        double accumulated_missed_sleep_time = 0;
+        int accumulated_missed_sleep_time = 0;
+
+        int total_suspend_ms = 0;
+        sf::Clock runtime;
 
         while(!inf->finished)
         {
@@ -552,16 +555,35 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 pthread_t thread = launch->native_handle();
                 void* native_handle = pthread_gethandle(thread);
 
-                if(inf->holds_lock && *inf->holds_lock == 0)
+                //if(inf->holds_lock != nullptr && (*inf->holds_lock) == 0)
                 {
+                    int csleep = sleeping_time_slice_ms * sleep_mult;
+
                     SuspendThread(native_handle);
 
-                    sthread::this_sleep((int)accumulated_missed_sleep_time);
-
-                    accumulated_missed_sleep_time -= (int)accumulated_missed_sleep_time;
+                    sthread::this_sleep(csleep);
 
                     ResumeThread(native_handle);
+
+                    total_suspend_ms += csleep;
+                    accumulated_missed_sleep_time -= csleep;
+
+                    /*for(int i=0; i < (int)accumulated_missed_sleep_time; i++)
+                    {
+                        SuspendThread(native_handle);
+
+                        sthread::this_sleep(1);
+
+                        total_suspend_ms += 1;
+
+                        accumulated_missed_sleep_time -= 1;
+                        ResumeThread(native_handle);
+                    }*/
                 }
+                /*else
+                {
+                    sthread::this_sleep((int)(sleeping_time_slice_ms * sleep_mult));
+                }*/
                 ///else continue
             }
             #endif // ACTIVE_TIME_MANAGEMENT
@@ -619,6 +641,9 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
             sthread::this_sleep(1);
         }
+
+        std::cout << "TOTAL SUSPEND " << total_suspend_ms << std::endl;
+        std::cout << "TOTAL RUNTIME " << runtime.getElapsedTime().asMilliseconds() << std::endl;
 
         *tls_get_should_throw() = 0;
 
