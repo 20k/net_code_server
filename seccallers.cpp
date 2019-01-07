@@ -126,7 +126,9 @@ duk_ret_t db_insert(duk_context* ctx)
 
     std::string json = duk_json_encode(ctx, -1);
 
-    mongo_ctx->insert_json_1(secret_script_host, json);
+    //mongo_ctx->insert_json_1(secret_script_host, json);
+
+    mongo_ctx->insert_json_one_new(json);
 
     //std::cout << "json " << json << std::endl;
 
@@ -147,7 +149,10 @@ duk_ret_t db_update(duk_context* ctx)
     std::string json_1 = duk_json_encode(ctx, 0);
     std::string json_2 = duk_json_encode(ctx, 1);
 
-    std::string error = mongo_ctx->update_json_many(secret_script_host, json_1, json_2);
+    nlohmann::json j1 = nlohmann::json::parse(json_1);
+    nlohmann::json j2 = nlohmann::json::parse(json_2);
+
+    std::string error = mongo_ctx->update_json_many_new(j1, j2);
 
     //std::cout << "update " << json_1 << " with " << json_2 << std::endl;
 
@@ -200,9 +205,11 @@ duk_ret_t db_find_all(duk_context* ctx)
     if(caller != get_caller(ctx))
         return 0;
 
-    std::vector<std::string> db_data = mongo_ctx->find_json(secret_script_host, json, proj);
+    std::vector<nlohmann::json> db_data = mongo_ctx->find_json_new(nlohmann::json::parse(json), nlohmann::json::parse(proj));
 
-    parse_push_json(ctx, db_data);
+    //parse_push_json(ctx, db_data);
+
+    push_duk_val(ctx, db_data);
 
     return 1;
 }
@@ -238,7 +245,7 @@ duk_ret_t db_find_one(duk_context* ctx)
     if(caller != get_caller(ctx))
         return 0;
 
-    std::vector<std::string> db_data = mongo_ctx->find_json(secret_script_host, json, proj);
+    std::vector<nlohmann::json> db_data = mongo_ctx->find_json_new(nlohmann::json::parse(json), nlohmann::json::parse(proj));
 
     if(db_data.size() == 0)
     {
@@ -246,8 +253,7 @@ duk_ret_t db_find_one(duk_context* ctx)
     }
     else
     {
-        duk_push_string(ctx, db_data[0].c_str());
-        duk_json_decode(ctx, -1);
+        push_duk_val(ctx, db_data[0]);
     }
 
     return 1;
@@ -271,6 +277,7 @@ duk_ret_t db_find(duk_context* ctx)
     if(nargs == 1)
     {
         json = duk_json_encode(ctx, 0);
+        proj = "{}";
     }
 
     if(nargs == 0 || nargs > 2)
@@ -317,7 +324,7 @@ duk_ret_t db_remove(duk_context* ctx)
 
     std::string json = duk_json_encode(ctx, -1);
 
-    mongo_ctx->remove_json(secret_script_host, json);
+    mongo_ctx->remove_json_many_new(nlohmann::json::parse(json));
 
     return 0;
 }

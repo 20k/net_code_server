@@ -28,7 +28,7 @@
 //thread_local int mongo_lock_proxy::thread_id_storage_hack = -2;
 //thread_local int mongo_lock_proxy::print_performance_diagnostics = 0;
 
-nlohmann::json bson_to_json(bson_t* bs)
+/*nlohmann::json bson_to_json(bson_t* bs)
 {
     if(bs == nullptr)
     {
@@ -75,7 +75,7 @@ std::string bson_iter_utf8_easy(bson_iter_t* iter)
     }
 
     return std::string(k, len);
-}
+}*/
 
 #ifdef USE_MONGO
 void lock_internal::lock(const std::string& debug_info, size_t who, mongoc_client_t* emergency)
@@ -710,7 +710,7 @@ mongo_context::~mongo_context()
 }
 
 
-bool mongo_interface::contains_banned_query(bson_t* bs) const
+/*bool mongo_interface::contains_banned_query(bson_t* bs) const
 {
     if(bs == nullptr)
         return false;
@@ -741,7 +741,7 @@ bool mongo_interface::contains_banned_query(bson_t* bs) const
     }
 
     return false;
-}
+}*/
 
 void mongo_interface::change_collection_unsafe(const std::string& coll, bool force_change)
 {
@@ -770,7 +770,7 @@ void mongo_interface::change_collection_unsafe(const std::string& coll, bool for
     #endif // USE_MONGO
 }
 
-bson_t* mongo_interface::make_bson_from_json(const std::string& json) const
+/*bson_t* mongo_interface::make_bson_from_json(const std::string& json) const
 {
     bson_error_t error;
 
@@ -850,7 +850,7 @@ void mongo_interface::insert_json_1(const std::string& script_host, const std::s
     insert_bson_1(script_host, bs);
 
     bson_destroy(bs);
-}
+}*/
 
 
 void mongo_interface::insert_json_one_new(const nlohmann::json& json)
@@ -863,7 +863,8 @@ void mongo_interface::insert_json_one_new(const nlohmann::json& json)
     else
     #endif // ONLY_VALIDATION
     {
-        insert_json_1(last_collection, json.dump());
+        throw std::runtime_error("Unimplemented mongo");
+        //insert_json_1(last_collection, json.dump());
     }
 }
 
@@ -879,7 +880,8 @@ std::string mongo_interface::update_json_many_new(const nlohmann::json& selector
     else
     #endif // ONLY_VALIDATION
     {
-        res = update_json_many(last_collection, selector.dump(), update.dump());
+        throw std::runtime_error("Unimplemented mongo");
+        //res = update_json_many(last_collection, selector.dump(), update.dump());
     }
 
     return res;
@@ -897,13 +899,14 @@ std::string mongo_interface::update_json_one_new(const nlohmann::json& selector,
     else
     #endif // ONLY_VALIDATION
     {
-        res = update_json_one(selector.dump(), update.dump());
+        throw std::runtime_error("Unimplemented mongo");
+        //res = update_json_one(selector.dump(), update.dump());
     }
 
     return res;
 }
 
-std::string mongo_interface::update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update)
+/*std::string mongo_interface::update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update)
 {
     if(selector == nullptr || update == nullptr)
         return "Null pointer";
@@ -936,9 +939,9 @@ std::string mongo_interface::update_bson_many(const std::string& script_host, bs
     #endif // ONLY_VALIDATION
 
     return "";
-}
+}*/
 
-std::string mongo_interface::update_json_many(const std::string& script_host, const std::string& selector, const std::string& update)
+/*std::string mongo_interface::update_json_many(const std::string& script_host, const std::string& selector, const std::string& update)
 {
     if(script_host != last_collection)
         return "Wrong collection, this is an internal error";
@@ -964,9 +967,9 @@ std::string mongo_interface::update_json_many(const std::string& script_host, co
     bson_destroy(us);
 
     return update_err;
-}
+}*/
 
-std::string mongo_interface::update_bson_one(bson_t* selector, bson_t* update)
+/*std::string mongo_interface::update_bson_one(bson_t* selector, bson_t* update)
 {
     if(selector == nullptr || update == nullptr)
         return "Null pointer";
@@ -1025,7 +1028,7 @@ std::string mongo_interface::update_json_one(const std::string& selector, const 
     bson_destroy(us);
 
     return update_err;
-}
+}*/
 
 
 /*bool has_collection(const std::string& coll)
@@ -1033,6 +1036,7 @@ std::string mongo_interface::update_json_one(const std::string& selector, const 
     return !mongoc_database_has_collection()
 }*/
 
+#if 0
 ///https://jira.mongodb.org/browse/SERVER-4462
 std::vector<std::string> mongo_interface::find_bson(const std::string& script_host, bson_t* bs, bson_t* ps)
 {
@@ -1164,7 +1168,9 @@ std::vector<std::string> mongo_interface::find_bson(const std::string& script_ho
 
     return results;
 }
+#endif // 0
 
+#if 0
 std::vector<std::string> mongo_interface::find_json(const std::string& script_host, const std::string& json, const std::string& proj)
 {
     std::vector<std::string> results;
@@ -1197,6 +1203,7 @@ std::vector<std::string> mongo_interface::find_json(const std::string& script_ho
 
     return results;
 }
+#endif // 0
 
 std::vector<nlohmann::json> mongo_interface::find_json_new(const nlohmann::json& json, const nlohmann::json& opts)
 {
@@ -1204,7 +1211,7 @@ std::vector<nlohmann::json> mongo_interface::find_json_new(const nlohmann::json&
     if(!enable_testing_backend)
     #endif // ONLY_VALIDATION
     {
-        std::vector<std::string> found = find_json(last_collection, json.dump(), opts.dump());
+        /*std::vector<std::string> found = find_json(last_collection, json.dump(), opts.dump());
 
         std::vector<nlohmann::json> ret;
 
@@ -1213,7 +1220,9 @@ std::vector<nlohmann::json> mongo_interface::find_json_new(const nlohmann::json&
             ret.push_back(nlohmann::json::parse(i));
         }
 
-        return ret;
+        return ret;*/
+
+        throw std::runtime_error("Unimplemented mongo");
     }
     #ifndef ONLY_VALIDATION
     else
@@ -1223,7 +1232,7 @@ std::vector<nlohmann::json> mongo_interface::find_json_new(const nlohmann::json&
     }
 }
 
-void mongo_interface::remove_bson(const std::string& script_host, bson_t* bs)
+/*void mongo_interface::remove_bson(const std::string& script_host, bson_t* bs)
 {
     if(script_host != last_collection)
         return;
@@ -1265,7 +1274,7 @@ void mongo_interface::remove_json(const std::string& script_host, const std::str
     remove_bson(script_host, bs);
 
     bson_destroy(bs);
-}
+}*/
 
 void mongo_interface::remove_json_many_new(const nlohmann::json& json)
 {
@@ -1546,7 +1555,7 @@ void mongo_requester::insert_in_db(mongo_lock_proxy& ctx)
     ctx->insert_json_one_new(all_props);
 }
 
-void mongo_requester::append_property_to(bson_t* bson, const std::string& key)
+/*void mongo_requester::append_property_to(bson_t* bson, const std::string& key)
 {
     std::string val = properties[key];
 
@@ -1589,7 +1598,7 @@ void mongo_requester::append_properties_all_to(bson_t* bson)
     {
         append_property_to(bson, i.first);
     }
-}
+}*/
 
 void mongo_requester::append_property_json(nlohmann::json& js, const std::string& key)
 {
@@ -1707,7 +1716,7 @@ void cleanup_db_all()
     get_global_mongo_context(mongo_database_type::USER_ACCESSIBLE, true);
 }
 
-bson_t* make_bson_default()
+/*bson_t* make_bson_default()
 {
     bson_t* bs = new bson_t;
     bson_init(bs);
@@ -1723,4 +1732,4 @@ void destroy_bson_default(bson_t* t)
     bson_destroy(t);
 
     delete t;
-}
+}*/

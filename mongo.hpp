@@ -197,18 +197,18 @@ struct mongo_interface
 
     std::string last_collection;
 
-    bool contains_banned_query(bson_t* bs) const;
+    //bool contains_banned_query(bson_t* bs) const;
 
     void change_collection_unsafe(const std::string& coll, bool force_change = false);
 
-    bson_t* make_bson_from_json(const std::string& json) const;
-    bson_t* make_bson_from_json_err(const std::string& json, std::string& err) const;
+    /*bson_t* make_bson_from_json(const std::string& json) const;
+    bson_t* make_bson_from_json_err(const std::string& json, std::string& err) const;*/
 
-    void insert_json_1(const std::string& script_host, const std::string& json);
+    /*void insert_json_1(const std::string& script_host, const std::string& json);
     std::string update_json_many(const std::string& script_host, const std::string& selector, const std::string& update);
     std::string update_json_one(const std::string& selector, const std::string& update);
     std::vector<std::string> find_json(const std::string& script_host, const std::string& json, const std::string& proj);
-    void remove_json(const std::string& script_host, const std::string& json);
+    void remove_json(const std::string& script_host, const std::string& json);*/
 
     void insert_json_one_new(const nlohmann::json& json);
     std::string update_json_many_new(const nlohmann::json& selector, const nlohmann::json& update);
@@ -221,11 +221,11 @@ struct mongo_interface
     mongo_interface(mongo_context* fctx);
     ~mongo_interface();
 
-    void insert_bson_1(const std::string& script_host, bson_t* bs);
+    /*void insert_bson_1(const std::string& script_host, bson_t* bs);
     std::string update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update);
     std::string update_bson_one(bson_t* selector, bson_t* update);
     std::vector<std::string> find_bson(const std::string& script_host, bson_t* bs, bson_t* ps);
-    void remove_bson(const std::string& script_host, bson_t* bs);
+    void remove_bson(const std::string& script_host, bson_t* bs);*/
 };
 
 struct mongo_shim
@@ -438,9 +438,9 @@ struct mongo_requester
 
     void insert_in_db(mongo_lock_proxy& ctx);
 
-    void append_property_to(bson_t* bson, const std::string& key);
+    //void append_property_to(bson_t* bson, const std::string& key);
 
-    void append_properties_all_to(bson_t* bson);
+    //void append_properties_all_to(bson_t* bson);
 
     void append_property_json(nlohmann::json& js, const std::string& key);
     nlohmann::json get_all_properties_json();
@@ -568,8 +568,8 @@ mongo_shim get_global_mongo_context(mongo_database_type type, int lock_id, bool 
 void initialse_db_all();
 void cleanup_db_all();
 
-bson_t* make_bson_default();
-void destroy_bson_default(bson_t* t);
+//bson_t* make_bson_default();
+//void destroy_bson_default(bson_t* t);
 
 inline
 mongo_shim get_global_mongo_user_accessible_context(int lock_id)

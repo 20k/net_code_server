@@ -1092,7 +1092,7 @@ void delete_notifs_for(const std::string& name)
         mongo_lock_proxy notifs_db = get_global_mongo_pending_notifs_context(-2);
         notifs_db.change_collection(name);
 
-        notifs_db->remove_json(name, "{}");
+        notifs_db->remove_json_many_new(nlohmann::json());
     }
 }
 
@@ -1103,7 +1103,7 @@ void delete_user_db_for(const std::string& name)
         mongo_lock_proxy user_db = get_global_mongo_user_accessible_context(-2);
         user_db.change_collection(name);
 
-        user_db->remove_json(name, "{}");
+        user_db->remove_json_many_new(nlohmann::json());
     }
 }
 

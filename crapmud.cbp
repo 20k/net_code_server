@@ -218,8 +218,6 @@
 		<Linker>
 			<Add option="-lmingw32" />
 			<Add option="-lsfml-system" />
-			<Add option="-lfreetype" />
-			<Add option="-lbson-static-1.0" />
 			<Add option="-lws2_32" />
 			<Add option="-lboost_system-mt" />
 			<Add option="-lmswsock" />
