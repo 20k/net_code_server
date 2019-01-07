@@ -6,7 +6,7 @@
 #include <map>
 #include <vector>
 #include <iostream>
-#include "mongo.hpp"
+#include "safe_thread.hpp"
 
 namespace rate
 {

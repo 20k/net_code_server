@@ -7,6 +7,7 @@
 #include <thread>
 //#include "thread_debugger.hpp"
 #include <iostream>
+#include <mutex>
 
 struct sthread
 {
@@ -100,5 +101,42 @@ struct sthread
     }*/
 };
 
+struct lock_counter
+{
+    lock_counter();
+    ~lock_counter();
+};
+
+template<typename T>
+struct safe_lock_guard
+{
+    lock_counter cnt;
+    std::lock_guard<T> guard;
+
+    safe_lock_guard(T& t) : guard(t)
+    {
+        #ifdef DEADLOCK_DETECTION
+        std::lock_guard<std::mutex> g(mongo_context::thread_lock);
+
+        mongo_context::thread_counter[std::this_thread::get_id()]++;
+
+        if(mongo_context::thread_counter[std::this_thread::get_id()] > 1)
+        {
+            printf("bad guard\n");
+
+            std::cout << boost::stacktrace::stacktrace() << std::endl;
+        }
+        #endif // DEADLOCK_DETECTION
+    }
+
+    ~safe_lock_guard()
+    {
+        #ifdef DEADLOCK_DETECTION
+        std::lock_guard<std::mutex> g(mongo_context::thread_lock);
+
+        mongo_context::thread_counter[std::this_thread::get_id()]--;
+        #endif // DEADLOCK_DETECTION
+    }
+};
 
 #endif // SAFE_THREAD_HPP_INCLUDED

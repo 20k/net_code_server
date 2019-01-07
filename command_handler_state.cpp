@@ -1,5 +1,6 @@
 #include "command_handler_state.hpp"
 #include "command_handler.hpp"
+#include "safe_thread.hpp"
 
 std::string command_handler_state::get_auth_hex()
 {

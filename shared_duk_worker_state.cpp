@@ -1,5 +1,5 @@
 #include "shared_duk_worker_state.hpp"
-#include "mongo.hpp"
+#include "safe_thread.hpp"
 
 void shared_duk_worker_state::set_realtime()
 {

@@ -3,6 +3,7 @@
 
 #include "db_interfaceable.hpp"
 #include "mongo.hpp"
+#include "safe_thread.hpp"
 
 namespace event
 {

@@ -1,5 +1,6 @@
 #include "safe_thread.hpp"
 #include <windows.h>
+#include "mongo.hpp"
 
 void sthread::this_yield()
 {
@@ -21,4 +22,14 @@ void sthread::this_sleep(int milliseconds)
         Sleep(1);
 
     //Sleep(milliseconds);
+}
+
+lock_counter::lock_counter()
+{
+    (*tls_get_holds_lock())++;
+}
+
+lock_counter::~lock_counter()
+{
+    (*tls_get_holds_lock())--;
 }
