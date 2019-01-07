@@ -473,12 +473,6 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
     quick_register(ctx, "script_ending", script_ending.c_str());
     set_global_number(ctx, "framerate_limit", 60);
 
-    {
-        safe_lock_guard guard(shim_lock);
-
-        set_copy_allocate_shim_pointer(ctx, c_shim_map);
-    }
-
     duk_push_int(ctx, 0);
     duk_put_prop_string(ctx, -2, "DB_ID");
 
@@ -492,8 +486,6 @@ void teardown_state(duk_context* ctx)
     shared_duk_worker_state* shared_state = dukx_get_pointer<shared_duk_worker_state>(ctx, "shared_caller_state");
 
     delete shared_state;
-
-    free_shim_pointer<shim_map_t>(ctx);
 }
 
 duk_ret_t get_string_col(duk_context* ctx)
@@ -938,7 +930,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     std::string script_err;
 
-    unified_script_info script = unified_script_loading(get_thread_id(ctx), to_call_fullname, script_err, *get_shim_pointer<shim_map_t>(ctx));
+    unified_script_info script = unified_script_loading(get_thread_id(ctx), to_call_fullname, script_err);
 
     //std::cout << "script source findy " << script.parsed_source << " name " << script.name << std::endl;
 
@@ -997,7 +989,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
     }
     else
     {
-        duk_push_c_function(ctx, (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name], 1);
+        duk_push_c_function(ctx, special_scripts::get_special_user_function(script.c_shim_name), 1);
 
         int nargs = 1;
 

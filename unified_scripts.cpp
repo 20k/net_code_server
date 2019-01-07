@@ -1,7 +1,8 @@
 #include "unified_scripts.hpp"
 #include "privileged_core_scripts.hpp"
+#include <secret/special_user_scripts.hpp>
 
-unified_script_info unified_script_loading(int thread_id, const std::string& full_scriptname, std::string& err, shim_map_t shim_map)
+unified_script_info unified_script_loading(int thread_id, const std::string& full_scriptname, std::string& err)
 {
     unified_script_info ret;
 
@@ -74,7 +75,7 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
 
     std::string c_shim_name = full_scriptname;
 
-    if(shim_map.find(c_shim_name) != shim_map.end())
+    if(special_scripts::has_special_user_function(c_shim_name))
     {
         ret.c_shim_name = c_shim_name;
         ret.seclevel = 4;
