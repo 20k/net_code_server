@@ -302,6 +302,8 @@
 		<Unit filename="quest_manager.hpp" />
 		<Unit filename="rate_limiting.cpp" />
 		<Unit filename="rate_limiting.hpp" />
+		<Unit filename="reoccurring_task_handler.cpp" />
+		<Unit filename="reoccurring_task_handler.hpp" />
 		<Unit filename="rng.cpp" />
 		<Unit filename="rng.hpp" />
 		<Unit filename="safe_thread.cpp" />

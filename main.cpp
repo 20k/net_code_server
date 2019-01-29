@@ -41,6 +41,7 @@
 #include "safe_thread.hpp"
 #include "source_maps.hpp"
 #include <secret/special_user_scripts.hpp>
+#include "reoccurring_task_handler.hpp"
 
 void debug_terminal()
 {
@@ -290,6 +291,32 @@ void pathfind_stresstest()
     //exit(0);
 }
 
+void cleanup_notifs()
+{
+    sthread([]()
+    {
+        for_each_user([](user& u1)
+                      {
+                            mongo_nolock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
+                            ctx.change_collection(u1.name);
+
+                            strip_old_msg_or_notif(ctx);
+                      });
+
+        printf("Finished stripping users\n");
+
+        for_each_npc([](npc_user& u1)
+                      {
+                            mongo_nolock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
+                            ctx.change_collection(u1.name);
+
+                            strip_old_msg_or_notif(ctx);
+                      });
+
+        printf("Finished all strip\n");
+    }).detach();
+}
+
 ///making sure this ends up in the right repo
 int main()
 {
@@ -346,6 +373,8 @@ int main()
            {
             tickle_item_cache();
            }).detach();
+
+    get_global_task_handler().register_task(cleanup_notifs, 60*60*24);
 
     #ifndef TESTING
     //convert_all_nodes();
@@ -767,7 +796,7 @@ int main()
                         strip_old_msg_or_notif(ctx);
                   });*/
 
-    sthread([]()
+    /*sthread([]()
     {
         for_each_user([](user& u1)
                       {
@@ -788,7 +817,7 @@ int main()
                       });
 
         printf("Finished all strip\n");
-    }).detach();
+    }).detach();*/
 
     #endif // TESTING
 
