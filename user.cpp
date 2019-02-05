@@ -22,6 +22,11 @@ void from_json(const nlohmann::json& j, user_limit& limit)
 {
     limit.data = j.at("p");
     limit.time_at = j.at("t");
+
+    if(isnan(limit.data) || isinf(limit.data))
+    {
+        limit.data = 1;
+    }
 }
 
 ///could probably use this to implement the hour long window eh
@@ -37,6 +42,11 @@ double user_limit::calculate_current_data(size_t time_ms)
     size_t diff_ms = time_ms - time_at;
 
     double fraction = diff_ms / recharge_time_ms;
+
+    if(isnan(fraction) || isinf(fraction))
+    {
+        fraction = 1;
+    }
 
     //fraction = 1;
 
@@ -789,12 +799,32 @@ double user::get_max_stealable_cash(size_t current_time, low_level_structure& sy
 {
     double old_cash = get_pvp_old_cash_estimate(current_time);
 
+    if(isnan(old_cash))
+    {
+        printf("isnan old cashn");
+    }
+
     double system_ratelimit_max_cash_steal_percentage = sys.get_ratelimit_max_cash_percentage_steal();
     double stealable_cash_constant = old_cash * system_ratelimit_max_cash_steal_percentage;
+
+    if(isnan(system_ratelimit_max_cash_steal_percentage))
+    {
+        printf("isnan system ratelimit cash\n");
+    }
+
+    if(isnan(stealable_cash_constant))
+    {
+        printf("isnan stealable cash constant\n");
+    }
 
     user_limit& lim = user_limits[user_limit::CASH_STEAL];
 
     double real_cash_steal_limit = stealable_cash_constant - (1.f - lim.calculate_current_data(current_time)) * old_cash;
+
+    if(isnan(real_cash_steal_limit))
+    {
+        printf("isnan real cash steal limit\n");
+    }
 
     return real_cash_steal_limit;
 }
