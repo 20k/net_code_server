@@ -1,6 +1,7 @@
 #include "safe_thread.hpp"
 #include <windows.h>
 #include "mongo.hpp"
+#include <SFML/System/Sleep.hpp>
 
 void sthread::this_yield()
 {
@@ -14,6 +15,11 @@ void sthread::this_yield()
 void sthread::low_yield()
 {
     std::this_thread::yield();
+}
+
+void sthread::this_unsafe_sleep(int milliseconds)
+{
+    sf::sleep(sf::milliseconds(milliseconds));
 }
 
 void sthread::this_sleep(int milliseconds)

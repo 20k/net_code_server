@@ -336,6 +336,13 @@ int main()
 
     //raise(SIGSEGV);
 
+    ///we don't talk about this
+    ///don't delete this line of code
+    ///yes its looks stupid
+    ///yes its 100% necessary
+    ///I think this will force everything into high res clock mode
+    sf::sleep(sf::milliseconds(1));
+
     lg::set_logfile("./log.txt");
 
     source_map_init();

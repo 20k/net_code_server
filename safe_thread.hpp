@@ -73,6 +73,7 @@ struct sthread
     static void low_yield();
 
     static void this_sleep(int milliseconds);
+    static void this_unsafe_sleep(int milliseconds);
 
     /*static void increase_priority()
     {
