@@ -624,10 +624,8 @@ bool compile_and_push(duk_context* ctx, const std::string& data)
     return duk_pcompile(ctx, DUK_COMPILE_EVAL) == 0;
 }
 
-std::string compile_and_call(exec_context& ectx, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script)
+std::string compile_and_call(duk_context* ctx, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script)
 {
-    duk_context* ctx = (duk_context*)ectx.ctx;
-
     if(data.size() == 0)
     {
         duk_push_undefined(ctx);
@@ -641,11 +639,15 @@ std::string compile_and_call(exec_context& ectx, const std::string& data, std::s
     ///bear in mind that under this new system
     ///new_ctx being equal to ctx is very likely
     ///now need to be a bit more careful with object stacks and the like
-    duk_context* new_ctx = (duk_context*)ectx.get_new_context_for(get_script_host(ctx), seclevel);
+    //duk_context* new_ctx = (duk_context*)ectx.get_new_context_for(get_script_host(ctx), seclevel);
+
+    duk_idx_t thr_idx = duk_push_thread_new_globalenv(ctx);
+    duk_context* new_ctx = duk_get_context(ctx, thr_idx);
+    register_funcs(new_ctx, seclevel, get_script_host(ctx), true);
 
     std::string wrapper = data;
 
-    exec_stack stk(ectx, new_ctx);
+    //exec_stack stk(ectx, new_ctx);
 
     if(!compile_and_push(new_ctx, wrapper))
     {
@@ -655,7 +657,7 @@ std::string compile_and_call(exec_context& ectx, const std::string& data, std::s
 
         printf("compile failed: %s\n", err.c_str());
 
-        stk.early_out();
+        //stk.early_out();
 
         duk_push_string(ctx, "Syntax or Compile Error");
     }
@@ -739,7 +741,7 @@ std::string compile_and_call(exec_context& ectx, const std::string& data, std::s
             }*/
 
 
-            stk.early_out();
+            //stk.early_out();
 
             ///stack 2 is now empty, and stack 1 now has [thread, val]
             //duk_xmove_top(sd.ctx, new_ctx, 1);
@@ -975,14 +977,14 @@ duk_ret_t js_call(duk_context* ctx, int sl)
         }
         else
         {
-            exec_context* ectx = exec_from_ctx(ctx);
+            /*exec_context* ectx = exec_from_ctx(ctx);
 
             if(ectx == nullptr)
             {
                 throw std::runtime_error("Ectx is nullptr in js_call");
-            }
+            }*/
 
-            compile_and_call(*ectx, load, get_caller(ctx), false, script.seclevel, false, full_script);
+            compile_and_call(ctx, load, get_caller(ctx), false, script.seclevel, false, full_script);
         }
 
         set_script_info(ctx, full_script);
@@ -1051,7 +1053,7 @@ std::string js_unified_force_call_data(exec_context& ectx, const std::string& da
         duk_put_prop_string(ctx, -2, "command");
     }
 
-    std::string extra = compile_and_call(ectx, unified_invoke.parsed_source, get_caller(ctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke");
+    std::string extra = compile_and_call(ctx, unified_invoke.parsed_source, get_caller(ctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke");
 
     if(!duk_is_object_coercible(ctx, -1))
     {
