@@ -98,7 +98,7 @@ namespace script_management_mode
     };
 }
 
-void sleep_thread_for(sthread& t, int sleep_ms)
+void sleep_thread_for(sandbox_data* sand_data, sthread& t, int sleep_ms)
 {
     pthread_t thread = t.native_handle();
     void* native_handle = pthread_gethandle(thread);
@@ -142,13 +142,17 @@ void sleep_thread_for(sthread& t, int sleep_ms)
     #endif // 0
 
     //sthread::increase_priority();
-    SuspendThread(native_handle);
+    /*SuspendThread(native_handle);
 
     ///for some reason this is dangerous
     ///critical sections
     sthread::this_sleep(sleep_ms);
 
-    ResumeThread(native_handle);
+    ResumeThread(native_handle);*/
+
+    sand_data->sleep_for += sleep_ms;
+    sthread::this_sleep(sleep_ms);
+
     //sthread::normal_priority();
 
 
@@ -522,7 +526,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         script_management_mode::mode current_mode = script_management_mode::DEFAULT;
 
-        int accumulated_missed_sleep_time = 0;
+        //int accumulated_missed_sleep_time = 0;
 
         #ifdef PERF_DIAGNOSTICS
         int total_suspend_ms = 0;
@@ -548,12 +552,12 @@ std::string run_in_user_context(std::string username, std::string command, std::
             {
                 sthread::this_sleep(active_time_slice_ms);
 
-                accumulated_missed_sleep_time += sleeping_time_slice_ms * sleep_mult;
+                //accumulated_missed_sleep_time += sleeping_time_slice_ms * sleep_mult;
 
                 ///don't use any function which involves ANY lock in this branch
                 ///while the second thread is suspended, otherwise deadlock
-                if(inf->holds_lock != nullptr && (*inf->holds_lock) == 0)
-                {
+                //if(inf->holds_lock != nullptr && (*inf->holds_lock) == 0)
+                /*{
                     void* native_handle = launch->winapi_handle();
 
                     int csleep = accumulated_missed_sleep_time;
@@ -566,15 +570,19 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                     //total_suspend_ms += csleep;
                     accumulated_missed_sleep_time -= csleep;
-                }
-                else
+                }*/
+                /*else
                 {
                     sthread::this_sleep((int)(sleeping_time_slice_ms * sleep_mult));
 
                     #ifdef PERF_DIAGNOSTICS
                     skip++;
                     #endif // PERF_DIAGNOSTICS
-                }
+                }*/
+
+                sand_data->sleep_for += sleeping_time_slice_ms * sleep_mult;
+
+                sthread::this_sleep(sleeping_time_slice_ms * sleep_mult);
                 ///else continue
             }
             #endif // ACTIVE_TIME_MANAGEMENT
@@ -801,8 +809,8 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                         bool avoid_sleeping = false;
 
-                        if(holds_lock)
-                            avoid_sleeping = *holds_lock > 0;
+                        //if(holds_lock)
+                        //    avoid_sleeping = *holds_lock > 0;
 
                         if((current_frame_time_ms >= max_allowed_frame_time_ms + current_goodwill_ms || long_sleep_requested) && !avoid_sleeping)
                         {
@@ -835,7 +843,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                             //sf::Clock slept_for;
 
-                            sleep_thread_for(thrd, to_sleep);
+                            sleep_thread_for(sand_data, thrd, to_sleep);
 
                             estimated_time_remaining = avg_exec_time;
 

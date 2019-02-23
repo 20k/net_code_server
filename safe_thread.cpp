@@ -24,8 +24,10 @@ void sthread::this_unsafe_sleep(int milliseconds)
 
 void sthread::this_sleep(int milliseconds)
 {
-    for(int i=0; i < milliseconds; i++)
-        Sleep(1);
+    /*for(int i=0; i < milliseconds; i++)
+        Sleep(1);*/
+
+    this_unsafe_sleep(milliseconds);
 
     //Sleep(milliseconds);
 }

@@ -3,6 +3,7 @@
 
 #include "scripting_api.hpp"
 #include "safe_thread.hpp"
+#include <atomic>
 
 //#include <windows.h>
 
@@ -35,6 +36,7 @@ struct sandbox_data
     size_t total_allocated = 0;
     volatile bool terminate_semi_gracefully = false;
     volatile bool terminate_realtime_gracefully = false;
+    std::atomic<int> sleep_for{0};
 };
 
 static void *sandbox_alloc(void *udata, duk_size_t size)

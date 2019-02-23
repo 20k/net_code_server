@@ -151,14 +151,14 @@ void bot_thread()
 {
     while(1)
     {
-        Sleep(1000);
+        sthread::this_sleep(1000);
 
         ///milliseconds
         size_t current_time = get_wall_time();
 
         auto check_autorun = [&](user& found_user)
         {
-            Sleep(1);
+            sthread::this_sleep(1);
 
             {
                 std::string err;
@@ -209,7 +209,7 @@ void bot_thread()
 
                     throwaway_user_thread(found_user.name, "#" + found_user.name + ".autorun()");
 
-                    Sleep(100);
+                    sthread::this_sleep(100);
 
                     break;
                 }
@@ -230,7 +230,7 @@ void run_non_user_tasks()
 
     while(1)
     {
-        Sleep(500);
+        sthread::this_sleep(500);
 
         get_global_rate_limit()->donate_time_budget(0.5f);
 

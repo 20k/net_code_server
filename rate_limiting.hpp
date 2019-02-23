@@ -120,6 +120,10 @@ struct rate_limit
     }*/
 };
 
+struct sandbox_data;
+
+void handle_sleep(sandbox_data* dat);
+
 #define RATELIMIT_DUK(type) if(!get_global_rate_limit()->try_call(get_caller(ctx), rate::type)) {push_error(ctx, "Rate Limit"); return 1;}
 #define SHOULD_RATELIMIT(name, type) !get_global_rate_limit()->try_call(name, rate::type)
 
@@ -129,7 +133,8 @@ struct rate_limit
                                     if(sand_data->terminate_semi_gracefully) \
                                     { printf("Cooperating with kill udata\n");\
                                         throw std::runtime_error("Script ran for more than 5000ms and was cooperatively terminated");\
-                                    }\
+                                    } \
+                                    handle_sleep(sand_data); \
 
 #define COOPERATE_KILL() duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk); \
                          sandbox_data* sand_data = (sandbox_data*)mem_funcs_duk.udata; \
@@ -140,7 +145,8 @@ struct rate_limit
                          if(sand_data->terminate_realtime_gracefully) \
                          { printf("Cooperating with kill realtime\n"); \
                             throw std::runtime_error("Terminated realtime script"); \
-                         }
+                         } \
+                         handle_sleep(sand_data);
 
 #define COOPERATE_KILL_THREAD_LOCAL() if(*tls_get_should_throw() == 1) { throw std::runtime_error("Script ran for more than 5000ms and was cooperatively terminated"); }
 #define COOPERATE_KILL_THREAD_LOCAL_URGENT() if(*tls_get_should_throw() >= 2) { throw std::runtime_error("Script ran for more than 5000ms and was cooperatively terminated (overran significantly)"); }
