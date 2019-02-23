@@ -1,6 +1,7 @@
 #include "rate_limiting.hpp"
 #include "memory_sandbox.hpp"
 #include <SFML/System/Sleep.hpp>
+#include "mongo.hpp"
 
 bool is_script_timeout(duk_context* ctx)
 {
@@ -13,6 +14,12 @@ bool is_script_timeout(duk_context* ctx)
 
 void handle_sleep(sandbox_data* dat)
 {
+    if(tls_get_holds_lock())
+    {
+        if(*tls_get_holds_lock() > 0)
+            return;
+    }
+
     int val = dat->sleep_for;
 
     if(val > 0)
