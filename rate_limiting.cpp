@@ -27,7 +27,7 @@ void handle_sleep(sandbox_data* dat)
         sf::sleep(sf::milliseconds(round(val)));
     }
 
-    dat->sleep_for.fetch_sub(round(val));
+    dat->sleep_for -= round(val);
 }
 
 rate_limit global_rate_limit;

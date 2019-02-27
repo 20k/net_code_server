@@ -333,6 +333,11 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
                 break;
             }
 
+            duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk);
+            sandbox_data* sand_data = (sandbox_data*)mem_funcs_duk.udata;
+
+            handle_sleep(sand_data);
+
             //sthread::increase_priority();
 
             request_long_sleep = true;
