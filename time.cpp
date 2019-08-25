@@ -1,5 +1,6 @@
 #include "time.hpp"
 #include <chrono>
+#include <time.h>
 
 void time_structure::from_time_ms(size_t time_code_ms)
 {
@@ -8,7 +9,7 @@ void time_structure::from_time_ms(size_t time_code_ms)
     time_t tt = std::chrono::system_clock::to_time_t(chron);
 
     tm utc_tm;
-    gmtime_r(&tt, &utc_tm);
+    gmtime_s(&utc_tm, &tt);
 
     /*tm local_tm;
     localtime_r(&tt, &local_tm);*/
