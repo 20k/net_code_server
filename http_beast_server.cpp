@@ -589,9 +589,12 @@ void websocket_ssl_reformed(int in_port)
             {
                 conn.pop_disconnected_client();
 
-                user_states[disconnected_client.value()]->state.should_terminate_any_realtime = true;
+                if(user_states.find(disconnected_client.value()) != user_states.end())
+                {
+                    user_states[disconnected_client.value()]->state.should_terminate_any_realtime = true;
 
-                user_states.erase(disconnected_client.value());
+                    user_states.erase(disconnected_client.value());
+                }
 
                 disconnected_client = conn.has_disconnected_client();
             }
