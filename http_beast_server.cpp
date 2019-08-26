@@ -291,6 +291,7 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
     return false;
 }
 
+#if 0
 bool handle_read(const std::shared_ptr<shared_command_handler_state>& all_shared, std::deque<std::string>& shared_queue, sf::Clock& terminate_timer)
 {
     boost::system::error_code ec;
@@ -552,6 +553,7 @@ void websocket_ssl_test_server(int in_port)
         //return EXIT_FAILURE;
     }
 }
+#endif // 0
 
 void websocket_ssl_reformed(int in_port)
 {
@@ -696,7 +698,7 @@ void websocket_ssl_reformed(int in_port)
 
             for(auto& i : user_states)
             {
-                std::string out = handle_command(shared, "client_poll_json");
+                std::string out = handle_command(i.second, "client_poll_json");
 
                 write_data dat;
                 dat.id = i.first;
@@ -714,6 +716,9 @@ void boot_connection_handlers()
 {
     start_non_user_task_thread();
 
-    sthread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT).detach();
-    sthread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT_2).detach();
+    sthread(websocket_ssl_reformed, HOST_WEBSOCKET_SSL_PORT).detach();
+    sthread(websocket_ssl_reformed, HOST_WEBSOCKET_SSL_PORT_2).detach();
+
+    //sthread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT).detach();
+    //sthread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT_2).detach();
 }

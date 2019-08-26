@@ -1,5 +1,5 @@
 #include "script_metadata.hpp"
-#include <json/json.hpp>
+#include <nlohmann/json.hpp>
 
 void to_json(nlohmann::json& j, const arg_metadata& p)
 {
