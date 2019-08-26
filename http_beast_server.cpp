@@ -50,12 +50,6 @@
 #define HOST_WEBSOCKET_SSL_PORT_2 6781
 #endif // LOCAL_IP
 
-
-//#include <boost/beast/core.hpp>
-//#include <boost/beast/websocket.hpp>
-//#include <boost/beast/http.hpp>
-//#include <boost/beast/version.hpp>
-//#include <boost/asio/ip/tcp.hpp>
 #include <boost/asio.hpp>
 #include <boost/config.hpp>
 #include <cstdlib>
@@ -285,14 +279,14 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
         }
     }
 
-    if(str == "client_poll" || str == "client_poll_json")
+    /*if(str == "client_poll" || str == "client_poll_json")
     {
         std::string out = handle_command(all_shared, str);
 
         all_shared->shared.add_back_write(out);
 
         return true;
-    }
+    }*/
 
     return false;
 }
@@ -342,9 +336,6 @@ bool handle_read(const std::shared_ptr<shared_command_handler_state>& all_shared
 bool handle_write(const std::shared_ptr<shared_command_handler_state>& all_shared)
 {
     std::string next_command = all_shared->shared.get_front_write();
-
-    //if(next_command != "")
-    //    printf("sending test write\n");
 
     if(next_command == "" && all_shared->type != connection_type::HTTP)
         return false;
@@ -504,7 +495,6 @@ void thread_session(
 }
 
 void session_wrapper(tcp::socket&& socket,
-                     std::string const& doc_root,
                      connection_t conn_type)
 {
     try
@@ -527,7 +517,6 @@ void websocket_ssl_test_server(int in_port)
     {
         auto const address = boost::asio::ip::make_address(HOST_IP);
         auto const port = static_cast<unsigned short>(in_port);
-        std::string const doc_root = "./doc_root";
 
         // The io_context is required for all I/O
         boost::asio::io_context ioc{2};
@@ -554,7 +543,6 @@ void websocket_ssl_test_server(int in_port)
             sthread(
                 session_wrapper,
                 std::move(socket),
-                doc_root,
                 connection_type::WEBSOCKET_SSL).detach();
         }
     }
@@ -569,6 +557,157 @@ void websocket_ssl_reformed(int in_port)
 {
     connection conn;
     conn.host("0.0.0.0", in_port);
+
+    std::map<int, std::shared_ptr<shared_command_handler_state>> user_states;
+    std::map<int, std::deque<std::string>> command_queue;
+    std::map<int, sf::Clock> terminate_timers;
+
+    sf::Clock ping_timer;
+    sf::Clock poll_clock; ///!!!
+
+    while(1)
+    {
+        {
+            std::optional<uint64_t> next_client = conn.has_new_client();
+
+            while(next_client.has_value())
+            {
+                user_states[next_client.value()] = std::make_shared<shared_command_handler_state>();
+
+                conn.pop_new_client();
+
+                next_client = conn.has_new_client();
+            }
+        }
+
+        {
+            std::optional<uint64_t> disconnected_client = conn.has_disconnected_client();
+
+            while(disconnected_client.has_value())
+            {
+                conn.pop_disconnected_client();
+
+                user_states[disconnected_client.value()]->state.should_terminate_any_realtime = true;
+
+                user_states.erase(disconnected_client.value());
+
+                disconnected_client = conn.has_disconnected_client();
+            }
+        }
+
+        if(ping_timer.getElapsedTime().asSeconds() > 2)
+        {
+            for(auto& i : user_states)
+            {
+                write_data wdat;
+                wdat.id = i.first;
+                wdat.data = "command_ping";
+
+                conn.write_to(wdat);
+            }
+
+            ping_timer.restart();
+        }
+
+        while(conn.has_read())
+        {
+            write_data dat = conn.read_from();
+
+            conn.pop_read(dat.id);
+
+            if(user_states.find(dat.id) == user_states.end())
+                continue;
+
+            if(dat.data.size() > 400000)
+                continue;
+
+            if(handle_termination_shortcircuit(user_states[dat.id], dat.data, terminate_timers[dat.id]))
+                continue;
+
+            command_queue[dat.id].push_back(dat.data);
+        }
+
+        for(auto& i : user_states)
+        {
+            std::shared_ptr<shared_command_handler_state>& shared_state = i.second;
+
+            int write_count = 0;
+
+            while(shared_state->shared.has_front_write() && write_count < 100)
+            {
+                std::string next_command = i.second->shared.get_front_write();
+
+                if(next_command.size() == 0)
+                    continue;
+
+                if(next_command.size() > MAX_MESSAGE_SIZE)
+                {
+                    next_command.resize(MAX_MESSAGE_SIZE);
+
+                    next_command += " [Truncated, > " + std::to_string(MAX_MESSAGE_SIZE) + "]";
+                }
+
+                write_data to_write;
+                to_write.id = i.first;
+                to_write.data = next_command;
+
+                conn.write_to(to_write);
+
+                write_count++;
+            }
+        }
+
+        for(auto& i : command_queue)
+        {
+            if(user_states.find(i.first) == user_states.end())
+                continue;
+
+            std::shared_ptr<shared_command_handler_state>& shared = user_states[i.first];
+
+            std::deque<std::string>& my_queue = i.second;
+
+            if(my_queue.size() > 0)
+            {
+                if(!shared->execution_is_blocked && !shared->execution_requested)
+                {
+                    shared->execution_requested = true;
+
+                    async_handle_command(shared, my_queue.front());
+
+                    my_queue.pop_front();
+                }
+            }
+        }
+
+        for(auto& i : terminate_timers)
+        {
+            if(user_states.find(i.first) == user_states.end())
+                continue;
+
+            if(i.second.getElapsedTime().asMilliseconds() > 100)
+            {
+                user_states[i.first]->state.should_terminate_any_realtime = false;
+            }
+        }
+
+        if(poll_clock.getElapsedTime().asMicroseconds() / 1000. > 500)
+        {
+            poll_clock.restart();
+
+            for(auto& i : user_states)
+            {
+                std::string out = handle_command(shared, "client_poll_json");
+
+                write_data dat;
+                dat.id = i.first;
+                dat.data = out;
+
+                conn.write_to(dat);
+            }
+        }
+
+        sf::sleep(sf::milliseconds(100));
+    }
 }
 
 void boot_connection_handlers()

@@ -7,32 +7,7 @@
 
 struct shared_command_handler_state
 {
-    connection_t type = connection_type::HTTP;
-
-    shared_command_handler_state(tcp::socket&& socket, connection_type::connection_type type) : type(type)
-    {
-        if(type == connection_type::HTTP)
-        {
-            msock = new http_socket(std::move(socket));
-        }
-        if(type == connection_type::WEBSOCKET)
-        {
-            msock = new websock_socket(std::move(socket));
-        }
-        if(type == connection_type::WEBSOCKET_SSL)
-        {
-            msock = new websock_socket_ssl(std::move(socket));
-        }
-    }
-
-    ~shared_command_handler_state()
-    {
-        if(msock)
-            delete msock;
-    }
-
     command_handler_state state;
-    socket_interface* msock = nullptr;
     int64_t my_id = 0;
 
     shared_data shared;
