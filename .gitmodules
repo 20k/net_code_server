@@ -19,3 +19,9 @@
 [submodule "deps/duktape"]
 	path = deps/duktape
 	url = https://github.com/svaarala/duktape
+[submodule "deps/networking"]
+	path = deps/networking
+	url = https://github.com/20k/clientservernetworking
+[submodule "deps/ndb"]
+	path = deps/ndb
+	url = https://github.com/20k/ndb

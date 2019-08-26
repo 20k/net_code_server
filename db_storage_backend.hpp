@@ -2,7 +2,7 @@
 #define DB_STORAGE_BACKEND_HPP_INCLUDED
 
 #include <string>
-#include <json/json.hpp>
+#include <nlohmann/json.hpp>
 #include "mongoc_fwd.hpp"
 #include <mutex>
 #include "stacktrace.hpp"

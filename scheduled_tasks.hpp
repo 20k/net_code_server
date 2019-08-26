@@ -7,7 +7,7 @@
 #include <vector>
 #include <mutex>
 #include <thread>
-#include <json/json.hpp>
+#include <nlohmann/json.hpp>
 #include "db_interfaceable.hpp"
 #include "safe_thread.hpp"
 

@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "scripting_api.hpp"
-#include <json/json.hpp>
+#include <nlohmann/json.hpp>
 
 using duk_func_t = duk_ret_t (*)(duk_context*);
 //using duk_placeholder_t = void*;

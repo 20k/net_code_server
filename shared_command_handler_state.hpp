@@ -33,7 +33,6 @@ struct shared_command_handler_state
 
     command_handler_state state;
     socket_interface* msock = nullptr;
-    global_state glob;
     int64_t my_id = 0;
 
     shared_data shared;

@@ -5,9 +5,10 @@
 #include "shared_data.hpp"
 #include "logging.hpp"
 #include <libncclient/nc_util.hpp>
-#include <json/json.hpp>
+#include <nlohmann/json.hpp>
 #include "shared_command_handler_state.hpp"
 #include "safe_thread.hpp"
+#include <networking/networking.hpp>
 
 //
 // Copyright (c) 2016-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
@@ -460,7 +461,6 @@ void read_write_queue(std::shared_ptr<shared_command_handler_state> all_shared)
 
 void thread_session(
     tcp::socket&& socket,
-    int64_t my_id,
     connection_t conn_type)
 {
     lg::log("preconstr\n");
@@ -505,12 +505,11 @@ void thread_session(
 
 void session_wrapper(tcp::socket&& socket,
                      std::string const& doc_root,
-                     int64_t my_id,
                      connection_t conn_type)
 {
     try
     {
-        thread_session(std::move(socket), my_id, conn_type);
+        thread_session(std::move(socket), conn_type);
     }
     catch(const std::exception& e)
     {
@@ -519,88 +518,6 @@ void session_wrapper(tcp::socket&& socket,
     catch(...)
     {
         std::cout << "threw error\n";
-    }
-}
-
-/*void http_test_server()
-{
-    try
-    {
-        auto const address = boost::asio::ip::make_address(HOST_IP);
-        auto const port = static_cast<unsigned short>(HOST_PORT);
-        std::string const doc_root = "./doc_root";
-
-        // The io_context is required for all I/O
-        boost::asio::io_context ioc{2};
-
-        global_state glob;
-
-        // The acceptor receives incoming connections
-        tcp::acceptor acceptor{ioc, {address, port}};
-        for(;;)
-        {
-            // This will receive the new connection
-            tcp::socket socket{ioc};
-
-            // Block until we get a connection
-            acceptor.accept(socket);
-
-            int id = glob.global_id++;
-
-            // Launch the session, transferring ownership of the socket
-            sthread(
-                session_wrapper,
-                std::move(socket),
-                doc_root,
-                id,
-                connection_type::HTTP).detach();
-        }
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr << "HTTP Error: " << e.what() << std::endl;
-        //return EXIT_FAILURE;
-    }
-}*/
-
-global_state glob;
-
-void websocket_test_server()
-{
-    try
-    {
-        auto const address = boost::asio::ip::make_address(HOST_IP);
-        auto const port = static_cast<unsigned short>(HOST_WEBSOCKET_PORT);
-        std::string const doc_root = "./doc_root";
-
-        // The io_context is required for all I/O
-        boost::asio::io_context ioc{1};
-
-        // The acceptor receives incoming connections
-        tcp::acceptor acceptor{ioc, {address, port}};
-        for(;;)
-        {
-            // This will receive the new connection
-            tcp::socket socket{ioc};
-
-            // Block until we get a connection
-            acceptor.accept(socket);
-
-            int id = glob.global_id++;
-
-            // Launch the session, transferring ownership of the socket
-            sthread(
-                session_wrapper,
-                std::move(socket),
-                doc_root,
-                id,
-                connection_type::WEBSOCKET).detach();
-        }
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr << "Websocket Error: " << e.what() << std::endl;
-        //return EXIT_FAILURE;
     }
 }
 
@@ -633,14 +550,11 @@ void websocket_ssl_test_server(int in_port)
 
             lg::log("postaccept\n");
 
-            int id = glob.global_id++;
-
             // Launch the session, transferring ownership of the socket
             sthread(
                 session_wrapper,
                 std::move(socket),
                 doc_root,
-                id,
                 connection_type::WEBSOCKET_SSL).detach();
         }
     }
@@ -651,22 +565,16 @@ void websocket_ssl_test_server(int in_port)
     }
 }
 
+void websocket_ssl_reformed(int in_port)
+{
+    connection conn;
+    conn.host("0.0.0.0", in_port);
+}
+
 void boot_connection_handlers()
 {
-    //sthread{std::bind(&http_test_server, &req)}.detach();
-
     start_non_user_task_thread();
 
-    //sthread(http_test_server).detach();
-    //sthread(websocket_test_server).detach();
-
-    sthread(websocket_test_server).detach();
     sthread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT).detach();
     sthread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT_2).detach();
-
-    /*#ifdef TESTING
-    sthread(websocket_ssl_test_server, 30000).detach();
-    #endif // TESTING*/
-
-    //http_test_server();
 }

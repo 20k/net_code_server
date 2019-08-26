@@ -241,9 +241,11 @@
 		<Unit filename="db_interfaceable.hpp" />
 		<Unit filename="db_storage_backend.cpp" />
 		<Unit filename="db_storage_backend.hpp" />
-		<Unit filename="deps/json/json.hpp">
-			<Option compile="1" />
-		</Unit>
+		<Unit filename="deps/networking/networking.cpp" />
+		<Unit filename="deps/networking/networking.hpp" />
+		<Unit filename="deps/networking/serialisable.cpp" />
+		<Unit filename="deps/networking/serialisable.hpp" />
+		<Unit filename="deps/networking/serialisable_fwd.hpp" />
 		<Unit filename="deps/secret/common.cpp" />
 		<Unit filename="deps/secret/common.hpp" />
 		<Unit filename="deps/secret/initial_link_setup.cpp" />

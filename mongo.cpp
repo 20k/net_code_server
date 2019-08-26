@@ -1,6 +1,5 @@
 #include "mongo.hpp"
-#include <json/json.hpp>
-#include <mongoc/mongoc.h>
+#include <nlohmann/json.hpp>
 
 #include <chrono>
 #include <set>
