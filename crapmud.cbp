@@ -241,6 +241,7 @@
 		<Unit filename="db_interfaceable.hpp" />
 		<Unit filename="db_storage_backend.cpp" />
 		<Unit filename="db_storage_backend.hpp" />
+		<Unit filename="deps/networking/beast_compilation_unit.cpp" />
 		<Unit filename="deps/networking/networking.cpp" />
 		<Unit filename="deps/networking/networking.hpp" />
 		<Unit filename="deps/networking/serialisable.cpp" />
