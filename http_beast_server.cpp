@@ -10,21 +10,6 @@
 #include "safe_thread.hpp"
 #include <networking/networking.hpp>
 
-//
-// Copyright (c) 2016-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
-//
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
-// Official repository: https://github.com/boostorg/beast
-//
-
-//------------------------------------------------------------------------------
-//
-// Example: HTTP server, synchronous
-//
-//------------------------------------------------------------------------------
-
 //#define HOST_IP "77.96.132.101"
 //#define HOST_IP "0.0.0.0"
 
@@ -50,8 +35,6 @@
 #define HOST_WEBSOCKET_SSL_PORT_2 6781
 #endif // LOCAL_IP
 
-#include <boost/asio.hpp>
-#include <boost/config.hpp>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
