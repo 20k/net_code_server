@@ -558,7 +558,7 @@ void websocket_ssl_test_server(int in_port)
 void websocket_ssl_reformed(int in_port)
 {
     connection conn;
-    conn.host("0.0.0.0", in_port);
+    conn.host("0.0.0.0", in_port, connection_type::SSL);
 
     std::map<int, std::shared_ptr<shared_command_handler_state>> user_states;
     std::map<int, std::deque<std::string>> command_queue;
