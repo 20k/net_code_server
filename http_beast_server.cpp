@@ -306,6 +306,8 @@ void websocket_ssl_reformed(int in_port)
                 conn.pop_new_client();
 
                 next_client = conn.has_new_client();
+
+                printf("New client\n");
             }
         }
 
@@ -314,6 +316,8 @@ void websocket_ssl_reformed(int in_port)
 
             while(disconnected_client.has_value())
             {
+                printf("Disconnected Client\n");
+
                 conn.pop_disconnected_client();
 
                 if(user_states.find(disconnected_client.value()) != user_states.end())
