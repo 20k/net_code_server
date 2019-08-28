@@ -351,7 +351,7 @@ void websocket_ssl_reformed(int in_port)
 
             for(auto& i : user_states)
             {
-                std::string out = handle_command(i.second, "client_poll_json");
+                std::string out = handle_command(i.second, "client_poll");
 
                 write_data dat;
                 dat.id = i.first;

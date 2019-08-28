@@ -2019,177 +2019,6 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
         return "secret " + to_ret;
     }
     #endif // ALLOW_SELF_AUTH
-    else if(starts_with(str, "auth client ") || starts_with(str, "auth client_hex "))
-    {
-        printf("auth client\n");
-
-        std::string which_str = "auth client ";
-
-        if(starts_with(str, "auth client_hex "))
-            which_str = "auth client_hex ";
-
-        auto pos = str.begin() + which_str.size();;
-        std::string auth_token = std::string(pos, str.end());
-
-        if(starts_with(str, "auth client_hex "))
-        {
-            auth_token = hex_to_binary(auth_token);
-
-            std::cout << "detected hex" << std::endl;
-        }
-
-        if(auth_token.length() > 140)
-            return make_error_col("Auth too long");
-
-        std::vector<std::string> users;
-
-        {
-            enforce_constant_time ect;
-
-            mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
-
-            auth user_auth;
-
-            if(!user_auth.load_from_db(ctx, auth_token))
-                return make_error_col("Auth Failed, have you run \"register client\" at least once?");
-
-            users = user_auth.users;
-        }
-
-        all_shared->state.set_auth(auth_token);
-
-        std::string auth_string;
-
-        for(auto& i : users)
-        {
-            auth_string += " " + colour_string(i);
-        }
-
-        std::string full_string = "Users Found:";
-
-        if(auth_string == "")
-            full_string = "No Users Found. Type user <username> to register";
-
-        std::cout << auth_string << std::endl;
-
-        return make_success_col("Auth Success") + "\n" + full_string + auth_string + "\n" + get_update_message();
-    }
-    else if(starts_with(str, "auth_steam client_hex "))
-    {
-        printf("AUTH STEAM\n");
-
-        std::string which_str = "auth_steam client_hex ";
-
-        auto pos = str.begin() + which_str.size();;
-        std::string steam_encrypted_auth_token = std::string(pos, str.end());
-
-        ///don't actually do anything with this yet
-        std::optional<steam_auth_data> opt_steam_id = get_steam_auth(steam_encrypted_auth_token);
-
-        if(!opt_steam_id.has_value())
-            return "Error using steam auth, check your client's debug log";
-
-        steam_auth_data steam_auth = opt_steam_id.value();
-
-        uint64_t steam_id = steam_auth.steam_id;
-
-        all_shared->state.set_steam_id(steam_id);
-
-        auth fauth;
-
-        std::vector<std::string> users;
-
-        bool is_steam_auth = false;
-
-        {
-            enforce_constant_time ect;
-
-            mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
-
-            bool should_create_account = !auth().load_from_db_steamid(ctx, steam_id);
-
-            if(steam_auth.user_data.size() == 128)
-            {
-                printf("Steam auth using key token\n");
-
-                if(!fauth.load_from_db(ctx, steam_auth.user_data))
-                    return "Bad user auth in encrypted token, eg your key.key file is corrupt whilst simultaneously using steam auth";
-
-                is_steam_auth = false;
-            }
-            else
-            {
-                printf("Steam auth using only steam\n");
-
-                fauth.load_from_db_steamid(ctx, steam_id);
-
-                is_steam_auth = true;
-            }
-
-            if(should_create_account)
-            {
-                printf("Created Steam Account\n");
-
-                std::string to_ret = random_binary_string(128);
-
-                mongo_requester request;
-                request.set_prop("account_token_hex", binary_to_hex(to_ret));
-                request.set_prop("steam_id", all_shared->state.get_steam_id());
-
-                all_shared->state.set_auth(to_ret);
-
-                request.insert_in_db(ctx);
-
-                if(steam_auth.user_data.size() != 128)
-                {
-                    if(!fauth.load_from_db_steamid(ctx, steam_id))
-                        throw std::runtime_error("Something catastrophically wrong in the server");
-                }
-            }
-
-            users = fauth.users;
-        }
-
-        ///SO IMPORTANT
-        ///THE AUTH TOKEN HERE MAY NOT CORRESPOND TO THE STEAM ACCOUNT *BY DESIGN*
-        all_shared->state.set_auth(fauth.auth_token_binary);
-        all_shared->state.set_steam_id(steam_id);
-
-        std::string auth_string;
-
-        for(auto& i : users)
-        {
-            auth_string += " " + colour_string(i);
-        }
-
-        std::string full_string = "Users Found:";
-
-        if(auth_string == "")
-            full_string = "No Users Found. Type user <username> to register";
-
-        std::string auth_str = "";
-
-        if(is_steam_auth)
-        {
-            auth_str = "Auth (Steam) Success";
-        }
-        else
-        {
-            auth_str = "Auth (non-Steam) Success";
-        }
-
-        std::cout << auth_string << std::endl;
-
-        return make_success_col(auth_str) + "\n" + full_string + auth_string + "\n" + get_update_message();
-    }
-    else if(starts_with(str, "auth_steam client_hex"))
-    {
-        return "No auth in \"client_command auth_steam client_hex <AUTH>\" format";
-    }
-    else if(starts_with(str, "auth client") || starts_with(str, "auth client_hex"))
-    {
-        return "No Auth, send \"register client\"";
-    }
     else
     {
         auto name = all_shared->state.get_user_name();
@@ -2438,46 +2267,6 @@ std::vector<std::string> get_channels_for_user(user& usr)
     return ret;
 }
 
-#if 0
-std::string handle_client_poll(user& usr)
-{
-    std::vector<mongo_requester> found = get_and_update_chat_msgs_for_user(usr);
-
-    std::vector<std::string> channels = get_channels_for_user(usr);
-
-    std::string to_send = "";
-
-    std::string prologue_str = std::to_string(channels.size()) + " " + array_to_str(channels);
-
-    while(prologue_str.size() > 0 && prologue_str.back() == ' ')
-        prologue_str.pop_back();
-
-    prologue_str = prologue_str + " ";
-
-    to_send = std::to_string(prologue_str.size()) + " " + prologue_str;
-
-    for(mongo_requester& req : found)
-    {
-        std::string chan = req.get_prop("channel");
-
-        std::vector<mongo_requester> to_col{req};
-
-        std::string full_str = chan + " " + prettify_chat_strings(to_col);
-
-        to_send += std::to_string(full_str.size()) + " " + full_str;
-
-        //to_send += "chat_api " + std::to_string(full_str.size()) + " " + full_str;
-    }
-
-    //std::cout << to_send << std::endl;
-
-    if(to_send == "")
-        return "";
-
-    return "chat_api " + to_send;
-}
-#endif // 0
-
 std::string handle_client_poll_json(user& usr)
 {
     std::vector<nlohmann::json> found = get_and_update_chat_msgs_for_user(usr);
@@ -2576,44 +2365,6 @@ std::optional<std::vector<script_arg>> get_uniform_script_args(const std::string
     return args;
 }
 
-std::string handle_autocompletes(const std::string& username, const std::string& in)
-{
-    std::vector<std::string> dat = no_ss_split(in, " ");
-
-    if(dat.size() < 2)
-        return "server_scriptargs_invalid";
-
-    std::string script = dat[1];
-
-    if(!is_valid_full_name_string(script))
-        return "server_scriptargs_invalid " + script;
-
-    if(SHOULD_RATELIMIT(username, AUTOCOMPLETES))
-        return "server_scriptargs_ratelimit " + script;
-
-    auto opt_arg = get_uniform_script_args(script);
-
-    if(!opt_arg.has_value())
-        return "server_scriptargs_invalid " + script;
-
-    auto args = *opt_arg;
-
-    std::string intro = "server_scriptargs " + std::to_string(script.size()) + " " + script + " ";
-
-    std::string ret;
-
-    for(script_arg& arg : args)
-    {
-        ret += std::to_string(arg.key.size()) + " " + arg.key + " ";
-        ret += std::to_string(arg.val.size()) + " " + arg.val + " ";
-    }
-
-    ///if!public && not owned by me
-    ///return nothing
-
-    return intro + ret;
-}
-
 std::string handle_autocompletes_json(const std::string& username, const std::string& in)
 {
     std::vector<std::string> dat = no_ss_split(in, " ");
@@ -2660,18 +2411,6 @@ std::string handle_autocompletes_json(const std::string& username, const std::st
 
 std::string handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const nlohmann::json& str)
 {
-    //lg::log("Log Command " + str);
-
-    std::string client_command = "client_command ";
-    std::string client_command_tagged = "client_command_tagged ";
-    std::string client_chat = "client_chat ";
-    std::string client_chat_respond = "client_chat_respond ";
-    std::string client_poll = "client_poll";
-    std::string client_poll_json = "client_poll_json";
-
-    std::string client_scriptargs = "client_scriptargs ";
-    std::string client_scriptargs_json = "client_scriptargs_json ";
-
     std::string current_user = all_shared->state.get_user_name();
     std::string current_auth = all_shared->state.get_auth();
 
@@ -2756,10 +2495,10 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
     }
 
     ///matches both client poll and json
-
     ///this path specifically may be called in parallel with the other parts
     ///hence the current user guard
-    if(starts_with(str, client_poll))
+    ///latter check is just for backwards compat
+    if(str["type"] == "client_poll" || str["type"] == "client_poll_json")
     {
         if(current_auth == "" || current_user == "")
             return "";
@@ -2780,48 +2519,180 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
 
         std::string cur_name = all_shared->state.get_user_name();
 
-        if(starts_with(str, client_poll_json))
+        user usr;
+
         {
-            user usr;
+            mongo_nolock_proxy user_info = get_global_mongo_user_info_context(-2);
 
-            {
-                mongo_nolock_proxy user_info = get_global_mongo_user_info_context(-2);
-
-                if(!usr.load_from_db(user_info, cur_name))
-                    return "command error invalid username in client_poll_json";
-            }
-
-            auto ret = handle_client_poll_json(usr);
-
-            return ret;
+            if(!usr.load_from_db(user_info, cur_name))
+                return "command error invalid username in client_poll_json";
         }
 
-        if(starts_with(str, client_poll))
-        {
-            /*auto ret = handle_client_poll(cur);
+        auto ret = handle_client_poll_json(usr);
 
-            all_shared->state.set_user(cur);
-
-            return ret;*/
-
-            return "command client_poll unsupported";
-        }
+        return ret;
     }
 
-    if(starts_with(str, client_scriptargs))
-    {
-        if(current_auth == "" || current_user == "")
-            return "";
-
-        return handle_autocompletes(current_user, str);
-    }
-
-    if(starts_with(str, client_scriptargs_json))
+    if(str["type"] == "autocomplete_request")
     {
         if(current_auth == "" || current_user == "")
             return "";
 
         return handle_autocompletes_json(current_user, str);
+    }
+
+    if(str["type"] == "key_auth")
+    {
+        if(str.count("data") == 0)
+            return "command " + make_error_col("No .data property in json key_auth");
+
+        printf("auth client\n");
+        std::string auth_token = hex_to_binary(str["data"]);
+
+        if(auth_token.length() > 140)
+            return "command " + make_error_col("Auth too long");
+
+        if(auth_token.size() == 0)
+            return "command " + make_error_col("No auth token found");
+
+        std::vector<std::string> users;
+
+        {
+            enforce_constant_time ect;
+
+            mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
+
+            auth user_auth;
+
+            if(!user_auth.load_from_db(ctx, auth_token))
+                return "command " + make_error_col("Auth Failed, have you run \"register client\" at least once?");
+
+            users = user_auth.users;
+        }
+
+        all_shared->state.set_auth(auth_token);
+
+        std::string auth_string;
+
+        for(auto& i : users)
+        {
+            auth_string += " " + colour_string(i);
+        }
+
+        std::string full_string = "Users Found:";
+
+        if(auth_string == "")
+            full_string = "No Users Found. Type user <username> to register";
+
+        std::cout << auth_string << std::endl;
+
+        return "command " + make_success_col("Auth Success") + "\n" + full_string + auth_string + "\n" + get_update_message();
+    }
+
+    if(str["type"] == "steam_auth")
+    {
+        printf("AUTH STEAM\n");
+
+        std::string steam_encrypted_auth_token = str["data"];
+
+        ///don't actually do anything with this yet
+        std::optional<steam_auth_data> opt_steam_id = get_steam_auth(steam_encrypted_auth_token);
+
+        if(!opt_steam_id.has_value())
+            return "command " + make_error_col("Error using steam auth, check your client's debug log");
+
+        steam_auth_data steam_auth = opt_steam_id.value();
+
+        uint64_t steam_id = steam_auth.steam_id;
+
+        all_shared->state.set_steam_id(steam_id);
+
+        auth fauth;
+
+        std::vector<std::string> users;
+
+        bool is_steam_auth = false;
+
+        {
+            enforce_constant_time ect;
+
+            mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
+
+            bool should_create_account = !auth().load_from_db_steamid(ctx, steam_id);
+
+            if(steam_auth.user_data.size() == 128)
+            {
+                printf("Steam auth using key token\n");
+
+                if(!fauth.load_from_db(ctx, steam_auth.user_data))
+                    return "command " + make_error_col("Bad user auth in encrypted token, eg your key.key file is corrupt whilst simultaneously using steam auth");
+
+                is_steam_auth = false;
+            }
+            else
+            {
+                printf("Steam auth using only steam\n");
+
+                fauth.load_from_db_steamid(ctx, steam_id);
+
+                is_steam_auth = true;
+            }
+
+            if(should_create_account)
+            {
+                printf("Created Steam Account\n");
+
+                std::string to_ret = random_binary_string(128);
+
+                mongo_requester request;
+                request.set_prop("account_token_hex", binary_to_hex(to_ret));
+                request.set_prop("steam_id", all_shared->state.get_steam_id());
+
+                all_shared->state.set_auth(to_ret);
+
+                request.insert_in_db(ctx);
+
+                if(steam_auth.user_data.size() != 128)
+                {
+                    if(!fauth.load_from_db_steamid(ctx, steam_id))
+                        throw std::runtime_error("Something catastrophically wrong in the server");
+                }
+            }
+
+            users = fauth.users;
+        }
+
+        ///SO IMPORTANT
+        ///THE AUTH TOKEN HERE MAY NOT CORRESPOND TO THE STEAM ACCOUNT *BY DESIGN*
+        all_shared->state.set_auth(fauth.auth_token_binary);
+        all_shared->state.set_steam_id(steam_id);
+
+        std::string auth_string;
+
+        for(auto& i : users)
+        {
+            auth_string += " " + colour_string(i);
+        }
+
+        std::string full_string = "Users Found:";
+
+        if(auth_string == "")
+            full_string = "No Users Found. Type user <username> to register";
+
+        std::string auth_str = "";
+
+        if(is_steam_auth)
+        {
+            auth_str = "Auth (Steam) Success";
+        }
+        else
+        {
+            auth_str = "Auth (non-Steam) Success";
+        }
+
+        std::cout << auth_string << std::endl;
+
+        return "command " + make_success_col(auth_str) + "\n" + full_string + auth_string + "\n" + get_update_message();
     }
 
     return "command Command not understood";
