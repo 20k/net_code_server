@@ -196,7 +196,7 @@ void websocket_ssl_reformed(int in_port)
     conn.host("0.0.0.0", in_port, connection_type::SSL);
 
     std::map<int, std::shared_ptr<shared_command_handler_state>> user_states;
-    std::map<int, std::deque<std::string>> command_queue;
+    std::map<int, std::deque<nlohmann::json>> command_queue;
     std::map<int, sf::Clock> terminate_timers;
 
     sf::Clock ping_timer;
@@ -273,13 +273,13 @@ void websocket_ssl_reformed(int in_port)
 
                 if(handle_termination_shortcircuit(user_states[dat.id], parsed, terminate_timers[dat.id]))
                     continue;
+
+                command_queue[dat.id].push_back(parsed);
             }
             catch(...)
             {
                 continue;
             }
-
-            command_queue[dat.id].push_back(dat.data);
         }
 
         for(auto& i : user_states)
@@ -319,7 +319,7 @@ void websocket_ssl_reformed(int in_port)
 
             std::shared_ptr<shared_command_handler_state>& shared = user_states[i.first];
 
-            std::deque<std::string>& my_queue = i.second;
+            std::deque<nlohmann::json>& my_queue = i.second;
 
             if(my_queue.size() > 0)
             {

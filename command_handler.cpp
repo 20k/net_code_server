@@ -2658,7 +2658,7 @@ std::string handle_autocompletes_json(const std::string& username, const std::st
     return intro + obj.dump();
 }
 
-std::string handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str, bool conditional_async)
+std::string handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const nlohmann::json& str)
 {
     //lg::log("Log Command " + str);
 
@@ -2696,114 +2696,60 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
         }
     }
 
-    if(starts_with(str, client_command) || starts_with(str, client_command_tagged))
+    if(str["type"] == "generic_server_command")
     {
         std::string to_exec;
         std::string tag;
-        bool tagged = starts_with(str, client_command_tagged);
+        bool tagged = str.count("tag") > 0;
 
         if(tagged)
         {
-            int idx = client_command_tagged.size();
+            tag = str["tag"];
+        }
 
-            for(int i=idx; i < (int)str.size() && str[i] != ' '; i++)
+        to_exec = str["data"];
+
+        bool is_auth = false;
+
+        handle_command_return ret = handle_command_impl(all_shared, to_exec, is_auth);
+
+        if(ret.type == handle_command_return::return_type::DEFAULT)
+        {
+            if(is_auth)
             {
-                tag += str[i];
+                return "command_auth " + ret.val;
             }
 
-            int total_size = client_command_tagged.size() + tag.size() + 1;
-
-            if(total_size >= (int)str.size())
-                return "command_tagged " + tag + " invalid tag";
-
-            to_exec = std::string(str.begin() + client_command_tagged.size() + tag.size() + 1, str.end());
-        }
-        else
-            to_exec = std::string(str.begin() + client_command.size(), str.end());
-
-        auto func = [=]()
-        {
-            bool is_auth = false;
-
-            handle_command_return ret = handle_command_impl(all_shared, to_exec, is_auth);
-
-            if(ret.type == handle_command_return::return_type::DEFAULT)
+            if(tagged)
             {
-                if(is_auth)
-                {
-                    return "command_auth " + ret.val;
-                }
-
-                if(tagged)
-                {
-                    return "command_tagged " + tag + " " + ret.val;
-                }
-                else
-                {
-                    return "command " + ret.val;
-                }
+                return "command_tagged " + tag + " " + ret.val;
             }
-
-            if(ret.type == handle_command_return::return_type::RAW)
+            else
             {
-                return ret.val;
+                return "command " + ret.val;
             }
-
-            return std::string("command Error: This is unhandled");
-        };
-
-        if(conditional_async)
-        {
-            sthread([=]()
-                         {
-                            auto result = func();
-
-                            shared_data& shared = all_shared->shared;
-                            shared.add_back_write(result);
-
-                         }).detach();
-
-            return "";
         }
-        else
+
+        if(ret.type == handle_command_return::return_type::RAW)
         {
-            return func();
+            return ret.val;
         }
+
+        return std::string("command Error: This is unhandled");
     }
 
-    if(starts_with(str, client_chat) || starts_with(str, client_chat_respond))
+    if(str["type"] == "client_chat")
     {
-        bool respond = starts_with(str, client_chat_respond);
+        bool respond = str.count("respond") > 0 && ((int)str["respond"]) > 0;
 
-        int len = starts_with(str, client_chat) ? client_chat.size() : client_chat_respond.size();
+        std::string to_exec = str["data"];
 
-        std::string to_exec(str.begin() + len, str.end());
+        bool is_auth = false;
+        handle_command_return ret = handle_command_impl(all_shared, to_exec, is_auth);
 
-        if(conditional_async)
+        if(respond)
         {
-            sthread([=]()
-            {
-                bool is_auth = false;
-                handle_command_return ret = handle_command_impl(all_shared, to_exec, is_auth);
-
-                if(respond)
-                {
-                    return "chat_api_response " + ret.val;
-                }
-
-                return std::string();
-
-            }).detach();
-        }
-        else
-        {
-            bool is_auth = false;
-            handle_command_return ret = handle_command_impl(all_shared, to_exec, is_auth);
-
-            if(respond)
-            {
-                return "chat_api_response " + ret.val;
-            }
+            return "chat_api_response " + ret.val;
         }
 
         return "";
@@ -2881,11 +2827,11 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
     return "command Command not understood";
 }
 
-void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str)
+void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const nlohmann::json& data)
 {
     sthread([=]()
                 {
-                    std::string result = handle_command(all_shared, str);
+                    std::string result = handle_command(all_shared, data);
 
                     all_shared->execution_requested = false;
 
@@ -2898,6 +2844,7 @@ void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shar
                 }).detach();
 }
 
+#if 0
 void conditional_async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str)
 {
     std::string result = handle_command(all_shared, str, true);
@@ -2910,3 +2857,4 @@ void conditional_async_handle_command(std::shared_ptr<shared_command_handler_sta
     shared_data& shared = all_shared->shared;
     shared.add_back_write(result);
 }
+#endif // 0
