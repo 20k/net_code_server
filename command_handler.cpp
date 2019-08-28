@@ -754,8 +754,9 @@ std::string run_in_user_context(std::string username, std::string command, std::
                             j["width"] = width;
                             j["height"] = height;
                             j["script_name"] = get_global_string(ctx, "realtime_script_name");
+                            j["type"] = "command_realtime";
 
-                            all_shared.value()->shared.add_back_write("command_realtime_json " + j.dump());
+                            all_shared.value()->shared.add_back_write(j.dump());
                         }
                         catch(...){}
                     }
@@ -779,8 +780,9 @@ std::string run_in_user_context(std::string username, std::string command, std::
                                     json j;
                                     j["id"] = current_id;
                                     j["msg"] = str;
+                                    j["type"] = "command_realtime";
 
-                                    all_shared.value()->shared.add_back_write("command_realtime_json " + j.dump());
+                                    all_shared.value()->shared.add_back_write(j.dump());
                                 }
                                 catch(...){}
                             }
@@ -908,8 +910,9 @@ std::string run_in_user_context(std::string username, std::string command, std::
                             json j;
                             j["id"] = current_id;
                             j["close"] = true;
+                            j["type"] = "command_realtime";
 
-                            all_shared.value()->shared.add_back_write("command_realtime_json " + j.dump());
+                            all_shared.value()->shared.add_back_write(j.dump());
                         }
                         catch(...)
                         {
@@ -2757,7 +2760,7 @@ void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shar
 {
     sthread([=]()
                 {
-                    std::string result = handle_command(all_shared, data);
+                    nlohmann::json result = handle_command(all_shared, data);
 
                     all_shared->execution_requested = false;
 
@@ -2765,7 +2768,7 @@ void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shar
                         return;
 
                     shared_data& shared = all_shared->shared;
-                    shared.add_back_write(result);
+                    shared.add_back_write(result.dump());
 
                 }).detach();
 }

@@ -1462,7 +1462,7 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
     command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(ctx, "command_handler_state_pointer");
 
     if(found_ptr && get_caller_stack(ctx).size() > 0 && get_caller_stack(ctx)[0] == found_ptr->get_user_name())
-        send_async_message(ctx, handle_client_poll_json(my_user));
+        send_async_message(ctx, handle_client_poll_json(my_user).dump());
 
     return push_success(ctx);
 }

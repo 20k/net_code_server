@@ -69,7 +69,11 @@ duk_ret_t async_print(duk_context* ctx)
 
     if(found_ptr && get_caller_stack(ctx).size() > 0 && get_caller_stack(ctx)[0] == found_ptr->get_user_name())
     {
-        send_async_message(ctx, "command " + str);
+        nlohmann::json data;
+        data["type"] = "server_msg";
+        data["data"] = str;
+
+        send_async_message(ctx, data.dump());
         return push_success(ctx);
     }
 
@@ -101,7 +105,12 @@ duk_ret_t async_print_raw(duk_context* ctx)
 
     if(found_ptr && get_caller_stack(ctx).size() > 0 && get_caller_stack(ctx)[0] == found_ptr->get_user_name())
     {
-        send_async_message(ctx, "command_no_pad " + str);
+        nlohmann::json data;
+        data["type"] = "server_msg";
+        data["data"] = str;
+        data["no_pad"] = 1;
+
+        send_async_message(ctx, data.dump());
         return push_success(ctx);
     }
 
