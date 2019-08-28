@@ -204,6 +204,9 @@ void websocket_ssl_reformed(int in_port)
 
     while(1)
     {
+        try
+        {
+
         {
             std::optional<uint64_t> next_client = conn.has_new_client();
 
@@ -357,14 +360,23 @@ void websocket_ssl_reformed(int in_port)
                 nlohmann::json fake;
                 fake["type"] = "client_poll";
 
-                std::string out = handle_command(i.second, fake);
+                try
+                {
+                    std::string out = handle_command(i.second, fake);
 
-                write_data dat;
-                dat.id = i.first;
-                dat.data = out;
+                    write_data dat;
+                    dat.id = i.first;
+                    dat.data = out;
 
-                conn.write_to(dat);
+                    conn.write_to(dat);
+                }
+                catch(...){}
             }
+        }
+        }
+        catch(std::exception& e)
+        {
+            std::cout << "Critical Server Screwup " << e.what() << std::endl;
         }
 
         sf::sleep(sf::milliseconds(100));
