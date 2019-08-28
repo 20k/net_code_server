@@ -2367,12 +2367,7 @@ std::optional<std::vector<script_arg>> get_uniform_script_args(const std::string
 
 std::string handle_autocompletes_json(const std::string& username, const std::string& in)
 {
-    std::vector<std::string> dat = no_ss_split(in, " ");
-
-    if(dat.size() < 2)
-        return "server_scriptargs_invalid_json";
-
-    std::string script = dat[1];
+    std::string script = in;
 
     using json = nlohmann::json;
 
@@ -2538,7 +2533,7 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
         if(current_auth == "" || current_user == "")
             return "";
 
-        return handle_autocompletes_json(current_user, str);
+        return handle_autocompletes_json(current_user, str["data"]);
     }
 
     if(str["type"] == "key_auth")

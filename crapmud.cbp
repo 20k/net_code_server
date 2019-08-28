@@ -212,7 +212,7 @@
 			<Add option="-Wno-unused-parameter" />
 			<Add option="-Wno-unused-label" />
 			<Add option="-no-pie" />
-			<Add option="-DBOOST_STACKTRACE_USE_WINDBG" />
+			<Add option="-DBOOST_STACKTRACE_USE_BACKTRACE" />
 			<Add option="-DSERVER" />
 			<Add directory="deps" />
 		</Compiler>
