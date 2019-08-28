@@ -2392,19 +2392,29 @@ nlohmann::json handle_autocompletes_json(const std::string& username, const std:
     obj["script"] = script;
 
     if(!is_valid_full_name_string(script))
-        return "server_scriptargs_invalid_json " + obj.dump();
+    {
+        obj["type"] = "script_args_invalid";
+
+        return obj;
+    }
 
     if(SHOULD_RATELIMIT(username, AUTOCOMPLETES))
-        return "server_scriptargs_ratelimit_json " + obj.dump();
+    {
+        obj["type"] = "script_args_ratelimit";
+
+        return obj;
+    }
 
     auto opt_arg = get_uniform_script_args(script);
 
     if(!opt_arg.has_value())
-        return "server_scriptargs_invalid_json " + obj.dump();
+    {
+        obj["type"] = "script_args_invalid";
+
+        return obj;
+    }
 
     auto args = *opt_arg;
-
-    std::string intro = "server_scriptargs_json ";
 
     std::vector<std::string> keys;
     std::vector<std::string> vals;
