@@ -211,7 +211,8 @@
 			<Add option="-fno-strict-aliasing" />
 			<Add option="-Wno-unused-parameter" />
 			<Add option="-Wno-unused-label" />
-			<Add option="-DBOOST_STACKTRACE_USE_BACKTRACE" />
+			<Add option="-no-pie" />
+			<Add option="-DBOOST_STACKTRACE_USE_WINDBG" />
 			<Add option="-DSERVER" />
 			<Add directory="deps" />
 		</Compiler>
@@ -227,6 +228,8 @@
 			<Add option="-lcrypto" />
 			<Add option="-lssl" />
 			<Add option="-lbacktrace" />
+			<Add option="-ldl" />
+			<Add option="-fno-pie" />
 			<Add library="deps/steamworks_sdk_142/sdk/public/steam/lib/win64/libsdkencryptedappticket64.a" />
 		</Linker>
 		<Unit filename="ascii_helpers.cpp" />
