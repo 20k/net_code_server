@@ -57,209 +57,134 @@ std::vector<std::string> sanitise_input_vec(std::vector<std::string> vec)
     return vec;
 }
 
-bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handler_state>& all_shared, const std::string& str, sf::Clock& terminate_timer)
+bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handler_state>& all_shared, nlohmann::json data, sf::Clock& terminate_timer)
 {
-    std::string tstr = "client_terminate_scripts ";
-
-    if(starts_with(str, tstr))
+    if(data["type"] == "client_terminate_scripts")
     {
-        std::string to_parse(str.begin() + tstr.size(), str.end());
+        int id = data["id"];
 
-        try
+        if(id <= -1)
         {
-            using nlohmann::json;
-
-            json j = json::parse(to_parse);
-
-            int id = j["id"];
-
-            if(id <= -1)
-            {
-                all_shared->state.should_terminate_any_realtime = true;
-
-                terminate_timer.restart();
-            }
-            else
-            {
-                safe_lock_guard guard(all_shared->state.lock);
-
-                if(all_shared->state.should_terminate_realtime.size() > 100)
-                    all_shared->state.should_terminate_realtime.clear();
-
-                all_shared->state.should_terminate_realtime[id] = true;
-            }
-
-            return true;
+            all_shared->state.should_terminate_any_realtime = true;
+            terminate_timer.restart();
         }
-        catch(...)
+        else
         {
-            return true;
+            safe_lock_guard guard(all_shared->state.lock);
+
+            if(all_shared->state.should_terminate_realtime.size() > 100)
+                all_shared->state.should_terminate_realtime.clear();
+
+            all_shared->state.should_terminate_realtime[id] = true;
         }
 
         return true;
     }
 
-    std::string kstr = "client_script_keystrokes ";
-
-    if(starts_with(str, kstr))
+    if(data["type"] == "send_keystrokes_to_script")
     {
-        try
+        int id = data["id"];
+
+        ///todo
+        ///keystroke special funtime
+        ///create a push vector function
+        ///need to also have an internal map of key state
+        ///assume keys are not pressed when we get them the first time, dont do any magic
+
+        if(data.find("input_keys") != data.end())
         {
-            using nlohmann::json;
-
-            std::string to_parse(str.begin() + kstr.size(), str.end());
-
-            //std::cout << "parsed " << to_parse << std::endl;
-
-            json j = json::parse(to_parse);
-
-            int id = j["id"];
-
-            ///todo
-            ///keystroke special funtime
-            ///create a push vector function
-            ///need to also have an internal map of key state
-            ///assume keys are not pressed when we get them the first time, dont do any magic
-
-            if(j.find("input_keys") != j.end())
+            try
             {
-                try
+                std::vector<std::string> str = data["input_keys"];
+                str = sanitise_input_vec(str);
+
                 {
-                    std::vector<std::string> str = j["input_keys"];
-                    str = sanitise_input_vec(str);
-
-                    //for(auto& i : str)
-                    //    std::cout << "keystroke " << i << "\n";
-
-                    {
-                        safe_lock_guard guard(all_shared->state.lock);
-
-                        for(auto& i : str)
-                        {
-                            unprocessed_key_info info;
-                            info.key = i;
-                            info.is_repeat = all_shared->state.get_key_state(id)[i];
-
-                            all_shared->state.unprocessed_keystrokes[id].push_back(info);
-                        }
-
-                        while(all_shared->state.unprocessed_keystrokes[id].size() > 200)
-                        {
-                            all_shared->state.unprocessed_keystrokes[id].erase(all_shared->state.unprocessed_keystrokes[id].begin());
-                        }
-                    }
-                }
-                catch(...){}
-            }
-
-            if(j.find("pressed_keys") != j.end())
-            {
-                //std::cout << "presser\n";
-
-                try
-                {
-                    std::vector<std::string> str = j["pressed_keys"];
-                    str = sanitise_input_vec(str);
-
-                    /*for(auto& i : str)
-                    {
-                        std::cout << " dfdf " << i << std::endl;
-                    }*/
+                    safe_lock_guard guard(all_shared->state.lock);
 
                     for(auto& i : str)
                     {
-                        //std::cout << "Pressed " << i << std::endl;
+                        unprocessed_key_info info;
+                        info.key = i;
+                        info.is_repeat = all_shared->state.get_key_state(id)[i];
 
-                        all_shared->state.set_key_state(id, i, true);
+                        all_shared->state.unprocessed_keystrokes[id].push_back(info);
                     }
-                }
-                catch(...){}
-            }
 
-            if(j.find("released_keys") != j.end())
-            {
-                try
-                {
-                    std::vector<std::string> str = j["released_keys"];
-                    str = sanitise_input_vec(str);
-
-                    for(auto& i : str)
+                    while(all_shared->state.unprocessed_keystrokes[id].size() > 200)
                     {
-                        all_shared->state.set_key_state(id, i, false);
+                        all_shared->state.unprocessed_keystrokes[id].erase(all_shared->state.unprocessed_keystrokes[id].begin());
                     }
                 }
-                catch(...){}
             }
+            catch(...){}
+        }
 
-            return true;
-        }
-        catch(...)
+        if(data.find("pressed_keys") != data.end())
         {
-            return true;
+            try
+            {
+                std::vector<std::string> str = data["pressed_keys"];
+                str = sanitise_input_vec(str);
+
+                for(auto& i : str)
+                {
+                    all_shared->state.set_key_state(id, i, true);
+                }
+            }
+            catch(...){}
         }
+
+        if(data.find("released_keys") != data.end())
+        {
+            try
+            {
+                std::vector<std::string> str = data["released_keys"];
+                str = sanitise_input_vec(str);
+
+                for(auto& i : str)
+                {
+                    all_shared->state.set_key_state(id, i, false);
+                }
+            }
+            catch(...){}
+        }
+
+        return true;
     }
 
-    std::string istr = "client_script_info ";
-
-    if(starts_with(str, istr))
+    if(data["type"] == "send_script_info")
     {
-        try
-        {
-            using nlohmann::json;
+        int id = data["id"];
 
-            std::string to_parse(str.begin() + istr.size(), str.end());
-
-            json j = json::parse(to_parse);
-
-            int id = j["id"];
-
-            if(id < 0)
-                return true;
-
-            int width = j["width"];
-            int height = j["height"];
-
-            all_shared->state.set_width_height(id, width, height);
-
+        if(id < 0)
             return true;
-        }
-        catch(...)
-        {
-            return true;
-        }
+
+        int width = data["width"];
+        int height = data["height"];
+
+        all_shared->state.set_width_height(id, width, height);
+
+        return true;
     }
 
     std::string mstr = "client_script_mouseinput ";
 
-    if(starts_with(str, mstr))
+    if(data["type"] == "update_mouse_to_script")
     {
-        try
-        {
-            using nlohmann::json;
+        int id = data["id"];
 
-            std::string to_parse(str.begin() + mstr.size(), str.end());
-
-            json j = json::parse(to_parse);
-
-            int id = j["id"];
-
-            if(id < 0)
-                return true;
-
-            float mouse_x = j["mouse_x"];
-            float mouse_y = j["mouse_y"];
-
-            float mousewheel_x = j["mousewheel_x"];
-            float mousewheel_y = j["mousewheel_y"];
-
-            all_shared->state.add_mouse_state(id, {mouse_x, mouse_y}, {mousewheel_x, mousewheel_y});
-
+        if(id < 0)
             return true;
-        }
-        catch(...)
-        {
-            return true;
-        }
+
+        float mouse_x = data["mouse_x"];
+        float mouse_y = data["mouse_y"];
+
+        float mousewheel_x = data["mousewheel_x"];
+        float mousewheel_y = data["mousewheel_y"];
+
+        all_shared->state.add_mouse_state(id, {mouse_x, mouse_y}, {mousewheel_x, mousewheel_y});
+
+        return true;
     }
 
     return false;
@@ -340,8 +265,19 @@ void websocket_ssl_reformed(int in_port)
             if(dat.data.size() > 400000)
                 continue;
 
-            if(handle_termination_shortcircuit(user_states[dat.id], dat.data, terminate_timers[dat.id]))
+            nlohmann::json parsed;
+
+            try
+            {
+                parsed = nlohmann::json::parse(dat.data);
+
+                if(handle_termination_shortcircuit(user_states[dat.id], parsed, terminate_timers[dat.id]))
+                    continue;
+            }
+            catch(...)
+            {
                 continue;
+            }
 
             command_queue[dat.id].push_back(dat.data);
         }
