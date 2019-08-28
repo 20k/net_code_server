@@ -144,7 +144,7 @@ void test_hexbin()
     assert(hex_to_binary(hex) == test_string);
 }
 
-extern std::string handle_client_poll_json(user& usr);
+extern nlohmann::json handle_client_poll_json(user& usr);
 //extern std::string handle_client_poll_json_old(user& usr);
 
 void test_json()

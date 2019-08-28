@@ -1508,7 +1508,7 @@ bool is_allowed_user(const std::string& user)
     return banned.find(user) == banned.end();
 }
 
-struct handle_command_return
+/*struct handle_command_return
 {
     enum class return_type
     {
@@ -1536,37 +1536,44 @@ struct handle_command_return
         type = return_type::RAW;
         val = tag + " " + pval;
     }
-};
+};*/
 
-handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str, bool& is_auth)
+nlohmann::json make_response(const std::string& str)
 {
-    is_auth = false;
+    nlohmann::json data;
+    data["type"] = "server_msg";
+    data["data"] = str;
 
+    return data;
+}
+
+nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str)
+{
     printf("yay command\n");
 
     lg::log(str);
 
     if(strip_whitespace(tolower_str(str)) == "help" || strip_whitespace(tolower_str(str)) == "#help")
     {
-        return "Lost? Run #ada.access() to get started";
+        return make_response("Lost? Run #ada.access() to get started");
     }
     else if(starts_with(str, "user "))
     {
         if(all_shared->state.get_auth() == "")
-            return make_error_col("Please create account with \"register client\"");
+            return make_response(make_error_col("Please create account with \"register client\""));
 
         std::vector<std::string> split_string = no_ss_split(str, " ");
 
         if(split_string.size() != 2)
-            return make_error_col("Invalid Command Error");
+            return make_response(make_error_col("Invalid Command Error"));
 
         std::string user_name = strip_whitespace(split_string[1]);
 
         if(!is_valid_string(user_name))
-            return make_error_col("Invalid username");
+            return make_response(make_error_col("Invalid username"));
 
         if(!is_allowed_user(user_name))
-            return make_error_col("Claiming or using this specific username is disallowed. If you already own it you may #delete_user the user in question");
+            return make_response(make_error_col("Claiming or using this specific username is disallowed. If you already own it you may #delete_user the user in question"));
 
         bool user_exists = false;
 
@@ -1593,7 +1600,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             {
                 if(fnd.get_auth_token_hex() != all_shared->state.get_auth_hex())
                 {
-                    return make_error_col("Incorrect Auth, someone else has registered this account or you are using a different pc and key.key file");
+                    return make_response(make_error_col("Incorrect Auth, someone else has registered this account or you are using a different pc and key.key file"));
                 }
 
                 all_shared->state.set_user_name(fnd.name);
@@ -1638,13 +1645,13 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
                 to_check.load_from_db(mongo_ctx, all_shared->state.get_auth());
 
                 if(!to_check.valid)
-                    return make_error_col("Trying something sneaky eh?");
+                    return make_response(make_error_col("Trying something sneaky eh?"));
 
                 to_check.insert_user_exclusive(user_name);
                 to_check.overwrite_in_db(mongo_ctx);
             }
 
-            return "Switched to User";
+            return make_response("Switched to User");
         }
         else
         {
@@ -1659,7 +1666,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
                 to_check.load_from_db(mongo_ctx, fauth);
 
                 if(!to_check.valid)
-                    return make_error_col("Trying something sneaky eh 2?");
+                    return make_response(make_error_col("Trying something sneaky eh 2?"));
 
                 #ifdef TESTING
                 #define MAX_USERS 999
@@ -1668,7 +1675,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
                 #endif
 
                 if(to_check.users.size() >= MAX_USERS)
-                    return make_error_col("Max users " + std::to_string(to_check.users.size()) + "/" + std::to_string(MAX_USERS));
+                    return make_response(make_error_col("Max users " + std::to_string(to_check.users.size()) + "/" + std::to_string(MAX_USERS)));
 
                 to_check.insert_user_exclusive(user_name);
                 to_check.overwrite_in_db(mongo_ctx);
@@ -1697,23 +1704,23 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
             all_shared->state.set_user_name(cur_name);
 
-            return make_success_col("Constructed new User");
+            return make_response(make_success_col("Constructed new User"));
         }
     }
     else if(starts_with(str, "#delete_user "))
     {
-        return delete_user(all_shared->state, str);
+        return make_response(delete_user(all_shared->state, str));
     }
     else if(starts_with(str, "#down"))
     {
         if(all_shared->state.get_auth() == "")
-            return make_error_col("No Auth");
+            return make_response(make_error_col("No Auth"));
 
         std::vector<std::string> split_string = no_ss_split(str, " ");
 
         if(split_string.size() != 2)
         {
-            return "Syntax is #down scriptname";
+            return make_response("Syntax is #down scriptname");
         }
 
         std::string scriptname = strip_whitespace(split_string[1]);
@@ -1730,29 +1737,32 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             inf.load_from_db(mongo_ctx);
 
             if(!inf.valid)
-                return make_error_col("Could not find script " + fullname);
+                return make_response(make_error_col("Could not find script " + fullname));
 
             unparsed_source = inf.unparsed_source;
         }
 
-        handle_command_return ret(unparsed_source, "command_down " + fullname);
+        nlohmann::json data;
+        data["type"] = "script_down";
+        data["name"] = fullname;
+        data["data"] = unparsed_source;
 
-        return ret;
+        return data;
     }
     else if(starts_with(str, "#delete_steam_and_tie_to_auth"))
     {
         if(all_shared->state.get_auth() == "")
-            return make_error_col("No Auth");
+            return make_response(make_error_col("No Auth"));
 
         std::string auth_binary = all_shared->state.get_auth();
 
         if(auth_binary.size() != 128)
-            return make_error_col("User auth must be of length 256 in hex or 128 in binary");
+            return make_response(make_error_col("User auth must be of length 256 in hex or 128 in binary"));
 
         uint64_t steam_id = all_shared->state.get_steam_id();
 
         if(steam_id == 0)
-            return make_error_col("No steam auth");
+            return make_response(make_error_col("No steam auth"));
 
         {
             mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
@@ -1760,15 +1770,15 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             auth old_auth;
 
             if(!old_auth.load_from_db(ctx, auth_binary))
-                return make_error_col("key.key auth is not valid, this should be impossible if you're logged in");
+                return make_response(make_error_col("key.key auth is not valid, this should be impossible if you're logged in"));
 
             auth steam_user_auth;
 
             if(!steam_user_auth.load_from_db_steamid(ctx, steam_id))
-                return make_error_col("Steam Auth Failed?");
+                return make_response(make_error_col("Steam Auth Failed?"));
 
             if(old_auth.steam_id == steam_id)
-                return "Auth already tied to steam id";
+                return make_response("Auth already tied to steam id");
 
             ///this is just simply too dangerous
             /*mongo_requester request;
@@ -1787,29 +1797,31 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             old_auth.overwrite_in_db(ctx);
         }
 
-        return make_success_col("Success");
+        return make_response(make_success_col("Success"));
     }
     else if(starts_with(str, "#dl_auth"))
     {
-        is_auth = true;
+        nlohmann::json data;
+        data["type"] = "auth";
+        data["data"] = all_shared->state.get_auth();
 
-        return "secret " + all_shared->state.get_auth();
+        return data;
     }
     else if(starts_with(str, "#up ") || starts_with(str, "#dry ") || starts_with(str, "#up_es6 "))
     {
         if(all_shared->state.get_auth() == "")
-            return make_error_col("No Auth");
+            return make_response(make_error_col("No Auth"));
 
         std::vector<std::string> split_string = no_ss_split(str, " ");
 
         if(split_string.size() < 3)
         {
             if(starts_with(str, "#up "))
-                return "Syntax is #up scriptname or invalid scriptname";
+                return make_response("Syntax is #up scriptname or invalid scriptname");
             if(starts_with(str, "#dry "))
-                return "Syntax is #dry scriptname or invalid scriptname";
+                return make_response("Syntax is #dry scriptname or invalid scriptname");
             if(starts_with(str, "#up_es6 ")) ///this is not client facing
-                return "Syntax is #up scriptname or invalid scriptname";
+                return make_response("Syntax is #up scriptname or invalid scriptname");
         }
 
         std::string scriptname = strip_whitespace(split_string[1]);
@@ -1818,7 +1830,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
         if(!is_valid_full_name_string(fullname))
         {
-            return make_error_col("Invalid script name " + fullname);
+            return make_response(make_error_col("Invalid script name " + fullname));
         }
 
         auto begin_it = str.begin();
@@ -1865,7 +1877,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             duk_destroy_heap(ctx);
 
             if(compile_error != "")
-                return compile_error;
+                return make_response(compile_error);
 
             user cur;
 
@@ -1875,7 +1887,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
                 mongo_lock_proxy user_locks = get_global_mongo_user_info_context(-2);
 
                 if(!cur.load_from_db(user_locks, uname))
-                    return make_error_col("Bad User");
+                    return make_response(make_error_col("Bad User"));
             }
 
             std::map<std::string, double> user_details;
@@ -1908,19 +1920,19 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
                 rstr += "[Set as command line wrapper] ";
             }
 
-            return make_success_col(rstr + std::to_string(num_chars) + "/" + std::to_string(max_chars));
+            return make_response(make_success_col(rstr + std::to_string(num_chars) + "/" + std::to_string(max_chars)));
         }
     }
     else if(starts_with(str, "#remove "))
     {
         if(all_shared->state.get_auth() == "")
-            return make_error_col("No Auth");
+            return make_response(make_error_col("No Auth"));
 
         std::vector<std::string> split_string = no_ss_split(str, " ");
 
         if(split_string.size() < 2)
         {
-            return "Syntax is #remove scriptname";
+            return make_response("Syntax is #remove scriptname");
         }
 
         std::string scriptname = strip_whitespace(split_string[1]);
@@ -1928,7 +1940,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
         std::string fullname = all_shared->state.get_user_name() + "." + scriptname;
 
         if(!is_valid_full_name_string(fullname))
-            return make_error_col("Invalid script name " + fullname);
+            return make_response(make_error_col("Invalid script name " + fullname));
 
         {
             auto uname = all_shared->state.get_user_name();
@@ -1939,7 +1951,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             script_inf.name = uname + "." + scriptname;
 
             if(!script_inf.exists_in_db(mongo_ctx))
-                return make_error_col("Script not found");
+                return make_response(make_error_col("Script not found"));
 
             item::remove_from_db(mongo_ctx, script_inf.name);
         }
@@ -1951,12 +1963,12 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             str += " [Removed as command line wrapper]";
         }
 
-        return make_success_col(str);
+        return make_response(make_success_col(str));
     }
     else if(starts_with(str, "#public ") || starts_with(str, "#private "))
     {
         if(all_shared->state.get_auth() == "")
-            return make_error_col("No Auth");
+            return make_response(make_error_col("No Auth"));
 
         int in_public_state = starts_with(str, "#public ");
 
@@ -1964,7 +1976,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
 
         if(split_string.size() < 2)
         {
-            return "Syntax is #public scriptname or #private scriptname";
+            return make_response("Syntax is #public scriptname or #private scriptname");
         }
 
         std::string scriptname = strip_whitespace(split_string[1]);
@@ -1972,7 +1984,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
         std::string fullname = all_shared->state.get_user_name() + "." + scriptname;
 
         if(!is_valid_full_name_string(fullname))
-            return make_error_col("Invalid script name " + fullname);
+            return make_response(make_error_col("Invalid script name " + fullname));
 
         {
             auto uname = all_shared->state.get_user_name();
@@ -1983,7 +1995,7 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             script_inf.name = uname + "." + scriptname;
 
             if(!script_inf.load_from_db(mongo_ctx))
-                return make_error_col("Script not found");
+                return make_response(make_error_col("Script not found"));
 
             script_inf.in_public = in_public_state;
 
@@ -1992,9 +2004,9 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             //std::cout << "overwriting public " << script_inf.name << " public? " << script_inf.in_public << std::endl;
         }
 
-        return make_success_col("Success");
+        return make_response(make_success_col("Success"));
     }
-    #define ALLOW_SELF_AUTH
+    //#define ALLOW_SELF_AUTH
     #ifdef ALLOW_SELF_AUTH
     else if(starts_with(str, "register client"))
     {
@@ -2027,13 +2039,13 @@ handle_command_return handle_command_impl(std::shared_ptr<shared_command_handler
             mongo_nolock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
             if(!user().exists(mongo_user_info, name))
-                return "No account or not logged in";
+                return make_response("No account or not logged in");
         }
 
-        return run_in_user_context(name, str, all_shared);
+        return make_response(run_in_user_context(name, str, all_shared));
     }
 
-    return make_error_col("Command Not Found or Unimplemented");
+    return make_response(make_error_col("Command Not Found or Unimplemented"));
 }
 
 void strip_old_msg_or_notif(mongo_lock_proxy& ctx)
@@ -2267,7 +2279,7 @@ std::vector<std::string> get_channels_for_user(user& usr)
     return ret;
 }
 
-std::string handle_client_poll_json(user& usr)
+nlohmann::json handle_client_poll_json(user& usr)
 {
     std::vector<nlohmann::json> found = get_and_update_chat_msgs_for_user(usr);
     std::vector<std::string> channels = get_channels_for_user(usr);
@@ -2333,7 +2345,9 @@ std::string handle_client_poll_json(user& usr)
     all["user"] = usr.get_call_stack().back();
     all["root_user"] = usr.name;
 
-    return "chat_api_json " + all.dump();
+    all["type"] = "chat_api";
+
+    return all;
 }
 
 ///needs to handle script bundles
@@ -2365,7 +2379,7 @@ std::optional<std::vector<script_arg>> get_uniform_script_args(const std::string
     return args;
 }
 
-std::string handle_autocompletes_json(const std::string& username, const std::string& in)
+nlohmann::json handle_autocompletes_json(const std::string& username, const std::string& in)
 {
     std::string script = in;
 
@@ -2401,10 +2415,12 @@ std::string handle_autocompletes_json(const std::string& username, const std::st
     obj["keys"] = keys;
     obj["vals"] = vals;
 
-    return intro + obj.dump();
+    obj["type"] = "script_args";
+
+    return obj;
 }
 
-std::string handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const nlohmann::json& str)
+nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const nlohmann::json& str)
 {
     std::string current_user = all_shared->state.get_user_name();
     std::string current_auth = all_shared->state.get_auth();
@@ -2419,14 +2435,22 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
         {
             all_shared->state.set_user_name("");
 
-            return "command Invalid User";
+            nlohmann::json data;
+            data["type"] = "server_msg";
+            data["data"] = "Invalid User";
+
+            return data;
         }
 
         if(found.get_auth_token_binary() != current_auth)
         {
             all_shared->state.set_user_name("");
 
-            return "command Invalid Auth";
+            nlohmann::json data;
+            data["type"] = "server_msg";
+            data["data"] = "Invalid Auth";
+
+            return data;
         }
     }
 
@@ -2443,33 +2467,14 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
 
         to_exec = str["data"];
 
-        bool is_auth = false;
+        nlohmann::json data = handle_command_impl(all_shared, to_exec);
 
-        handle_command_return ret = handle_command_impl(all_shared, to_exec, is_auth);
-
-        if(ret.type == handle_command_return::return_type::DEFAULT)
+        if(tagged)
         {
-            if(is_auth)
-            {
-                return "command_auth " + ret.val;
-            }
-
-            if(tagged)
-            {
-                return "command_tagged " + tag + " " + ret.val;
-            }
-            else
-            {
-                return "command " + ret.val;
-            }
+            data["tag"] = tag;
         }
 
-        if(ret.type == handle_command_return::return_type::RAW)
-        {
-            return ret.val;
-        }
-
-        return std::string("command Error: This is unhandled");
+        return data;
     }
 
     if(str["type"] == "client_chat")
@@ -2478,15 +2483,18 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
 
         std::string to_exec = str["data"];
 
-        bool is_auth = false;
-        handle_command_return ret = handle_command_impl(all_shared, to_exec, is_auth);
+        nlohmann::json data = handle_command_impl(all_shared, to_exec);
 
         if(respond)
         {
-            return "chat_api_response " + ret.val;
+            nlohmann::json data;
+            data["type"] = "chat_api_response";
+            data["data"] = data["data"];
+
+            return data;
         }
 
-        return "";
+        return nlohmann::json();
     }
 
     ///matches both client poll and json
@@ -2496,10 +2504,10 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
     if(str["type"] == "client_poll" || str["type"] == "client_poll_json")
     {
         if(current_auth == "" || current_user == "")
-            return "";
+            return nlohmann::json();
 
         if(SHOULD_RATELIMIT(current_auth, POLL))
-            return "";
+            return nlohmann::json();
 
         {
             mongo_nolock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
@@ -2507,7 +2515,7 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
             user u1;
 
             if(!u1.load_from_db(mongo_user_info, current_user))
-                return "";
+                return nlohmann::json();
 
             all_shared->state.set_user_name(u1.name);
         }
@@ -2520,18 +2528,22 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
             mongo_nolock_proxy user_info = get_global_mongo_user_info_context(-2);
 
             if(!usr.load_from_db(user_info, cur_name))
-                return "command error invalid username in client_poll_json";
+            {
+                nlohmann::json data;
+                data["type"] = "server_msg";
+                data["data"] = "Error, invalid username in client_poll";
+
+                return data;
+            }
         }
 
-        auto ret = handle_client_poll_json(usr);
-
-        return ret;
+        return handle_client_poll_json(usr);
     }
 
     if(str["type"] == "autocomplete_request")
     {
         if(current_auth == "" || current_user == "")
-            return "";
+            return nlohmann::json();
 
         return handle_autocompletes_json(current_user, str["data"]);
     }
@@ -2539,16 +2551,34 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
     if(str["type"] == "key_auth")
     {
         if(str.count("data") == 0)
-            return "command " + make_error_col("No .data property in json key_auth");
+        {
+            nlohmann::json data;
+            data["type"] = "server_msg";
+            data["data"] = make_error_col("No .data property in json key_auth");
+
+            return data;
+        }
 
         printf("auth client\n");
         std::string auth_token = hex_to_binary(str["data"]);
 
         if(auth_token.length() > 140)
-            return "command " + make_error_col("Auth too long");
+        {
+            nlohmann::json data;
+            data["type"] = "server_msg";
+            data["data"] = make_error_col("Auth too long");
+
+            return data;
+        }
 
         if(auth_token.size() == 0)
-            return "command " + make_error_col("No auth token found");
+        {
+            nlohmann::json data;
+            data["type"] = "server_msg";
+            data["data"] = make_error_col("No auth token found");
+
+            return data;
+        }
 
         std::vector<std::string> users;
 
@@ -2560,7 +2590,13 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
             auth user_auth;
 
             if(!user_auth.load_from_db(ctx, auth_token))
-                return "command " + make_error_col("Auth Failed, have you run \"register client\" at least once?");
+            {
+                nlohmann::json data;
+                data["type"] = "server_msg";
+                data["data"] = make_error_col("Auth Failed, have you run \"register client\" at least once?");
+
+                return data;
+            }
 
             users = user_auth.users;
         }
@@ -2581,7 +2617,11 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
 
         std::cout << auth_string << std::endl;
 
-        return "command " + make_success_col("Auth Success") + "\n" + full_string + auth_string + "\n" + get_update_message();
+        nlohmann::json data;
+        data["type"] = "server_msg";
+        data["data"] = make_success_col("Auth Success") + "\n" + full_string + auth_string + "\n" + get_update_message();
+
+        return data;
     }
 
     if(str["type"] == "steam_auth")
@@ -2594,7 +2634,13 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
         std::optional<steam_auth_data> opt_steam_id = get_steam_auth(steam_encrypted_auth_token);
 
         if(!opt_steam_id.has_value())
-            return "command " + make_error_col("Error using steam auth, check your client's debug log");
+        {
+            nlohmann::json data;
+            data["type"] = "server_msg";
+            data["data"] = make_error_col("Error using steam auth, check your client's debug log");
+
+            return data;
+        }
 
         steam_auth_data steam_auth = opt_steam_id.value();
 
@@ -2620,7 +2666,13 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
                 printf("Steam auth using key token\n");
 
                 if(!fauth.load_from_db(ctx, steam_auth.user_data))
-                    return "command " + make_error_col("Bad user auth in encrypted token, eg your key.key file is corrupt whilst simultaneously using steam auth");
+                {
+                    nlohmann::json data;
+                    data["type"] = "server_msg";
+                    data["data"] = make_error_col("Bad user auth in encrypted token, eg your key.key file is corrupt whilst simultaneously using steam auth");
+
+                    return data;
+                }
 
                 is_steam_auth = false;
             }
@@ -2687,10 +2739,18 @@ std::string handle_command(std::shared_ptr<shared_command_handler_state> all_sha
 
         std::cout << auth_string << std::endl;
 
-        return "command " + make_success_col(auth_str) + "\n" + full_string + auth_string + "\n" + get_update_message();
+        nlohmann::json data;
+        data["type"] = "server_msg";
+        data["data"] = make_success_col(auth_str) + "\n" + full_string + auth_string + "\n" + get_update_message();;
+
+        return data;
     }
 
-    return "command Command not understood";
+    nlohmann::json data;
+    data["type"] = "server_msg";
+    data["data"] = "Command not understood";
+
+    return data;
 }
 
 void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const nlohmann::json& data)

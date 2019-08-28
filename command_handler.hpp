@@ -20,18 +20,18 @@ std::string run_in_user_context(std::string username, std::string command, std::
 void throwaway_user_thread(const std::string& username, const std::string& command, std::optional<float> custom_exec_time_s = std::nullopt, bool force_exec = false);
 
 ///context?
-std::string handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const nlohmann::json& str);
+nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const nlohmann::json& data);
 void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const nlohmann::json& data);
-void conditional_async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const nlohmann::json& str);
+void conditional_async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const nlohmann::json& data);
 
-std::string handle_autocompletes_json(const std::string& username, const std::string& in);
+nlohmann::json handle_autocompletes_json(const std::string& username, const std::string& in);
 
 std::string binary_to_hex(const std::string& in, bool swap_endianness = false);
 std::string hex_to_binary(const std::string& in, bool swap_endianness = false);
 std::string delete_user(command_handler_state& state, const std::string& str, bool cli_force = false);
 std::string rename_user_force(const std::string& from_name, const std::string& to_name);
 
-std::string handle_client_poll_json(user& usr);
+nlohmann::json handle_client_poll_json(user& usr);
 void strip_old_msg_or_notif(mongo_lock_proxy& ctx);
 
 namespace connection_type

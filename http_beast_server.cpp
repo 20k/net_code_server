@@ -243,9 +243,12 @@ void websocket_ssl_reformed(int in_port)
         {
             for(auto& i : user_states)
             {
+                nlohmann::json data;
+                data["type"] = "server_ping";
+
                 write_data wdat;
                 wdat.id = i.first;
-                wdat.data = "command_ping";
+                wdat.data = data.dump();
 
                 conn.write_to(wdat);
             }
