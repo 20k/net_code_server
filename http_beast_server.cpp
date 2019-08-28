@@ -362,11 +362,14 @@ void websocket_ssl_reformed(int in_port)
 
                 try
                 {
-                    std::string out = handle_command(i.second, fake);
+                    nlohmann::json out = handle_command(i.second, fake);
+
+                    if(out.count("type") == 0)
+                        continue;
 
                     write_data dat;
                     dat.id = i.first;
-                    dat.data = out;
+                    dat.data = out.dump();
 
                     conn.write_to(dat);
                 }

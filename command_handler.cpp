@@ -2774,7 +2774,7 @@ void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shar
 
                     all_shared->execution_requested = false;
 
-                    if(result == "")
+                    if(result.count("type") == 0)
                         return;
 
                     shared_data& shared = all_shared->shared;
