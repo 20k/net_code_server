@@ -1,0 +1,1 @@
+cbp2make -in crapmud.cbp -out makefile -unix
