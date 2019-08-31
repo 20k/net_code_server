@@ -130,9 +130,6 @@ mongo_context::mongo_context(mongo_database_type type)
         db = "npc_properties";
     }
 
-    ///hmm.. somewhat of a naming fuckup here
-    ///TODO:
-    ///When we full wipe and clean the db, normalise all names and passwords here
     if(type == mongo_database_type::NETWORK_PROPERTIES)
     {
         db = "all_networks";
