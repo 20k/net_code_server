@@ -9,7 +9,6 @@
 #include <boost/stacktrace.hpp>
 #endif // DEADLOCK_DETECTION
 
-#include <SFML/System.hpp>
 #include <thread>
 #include "stacktrace.hpp"
 #include "safe_thread.hpp"
@@ -26,8 +25,6 @@ void lock_internal::lock(const std::string& debug_info, size_t who)
     ///200 ms
     constexpr size_t max_microseconds_elapsed = 1000 * 20;
     bool sleeptime = false;
-
-    sf::Clock clk;
 
     size_t cycles = 1;
 

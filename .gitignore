@@ -5,3 +5,6 @@
 script_compile
 /script_compilation/node_modules/.bin
 /deps/steamworks_sdk_142/sdk
+SFML
+boost
+libs
