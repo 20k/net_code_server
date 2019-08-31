@@ -54,9 +54,6 @@ struct db_storage_backend
     static
     void make_backup(const std::string& to_where);
 
-    static
-    bool contains_banned_query(const nlohmann::json& js);
-
     void change_collection_unsafe(const std::string& coll, bool force_change = false);
 
     void insert_one(const nlohmann::json& json);

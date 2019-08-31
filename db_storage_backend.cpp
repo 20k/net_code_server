@@ -603,9 +603,6 @@ struct db_storage
 
     void insert_one(const database_type& db, const std::string& coll, const nlohmann::json& js)
     {
-        if(db_storage_backend::contains_banned_query(js))
-            return;
-
         database& cdb = get_db(db);
 
         std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
@@ -711,12 +708,6 @@ struct db_storage
     ///ensure that update can never contain CID_STRING
     void update_one(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
     {
-        if(db_storage_backend::contains_banned_query(selector))
-            return;
-
-        if(db_storage_backend::contains_banned_query(update))
-            return;
-
         /*if(update.count("parsed_source") > 0)
         {
             std::cout << "update " << update.at("parsed_source") << std::endl;
@@ -763,11 +754,6 @@ struct db_storage
 
     void update_many(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
     {
-        if(db_storage_backend::contains_banned_query(selector))
-            return;
-
-        if(db_storage_backend::contains_banned_query(update))
-            return;
 
         database& cdb = get_db(db);
 
@@ -787,12 +773,6 @@ struct db_storage
 
     std::vector<nlohmann::json> find_many(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& options)
     {
-        if(db_storage_backend::contains_banned_query(selector))
-            return std::vector<nlohmann::json>();
-
-        if(db_storage_backend::contains_banned_query(options))
-            return std::vector<nlohmann::json>();
-
         std::vector<nlohmann::json> ret;
 
         {
@@ -864,9 +844,6 @@ struct db_storage
 
     void remove_many(const database_type& db, const std::string& coll, const nlohmann::json& selector)
     {
-        if(db_storage_backend::contains_banned_query(selector))
-            return;
-
         database& cdb = get_db(db);
 
         std::lock_guard guard(cdb.get_lock(coll));
@@ -1154,33 +1131,6 @@ void init_db_storage_backend()
 void db_storage_backend::run_tests()
 {
     {
-        nlohmann::json js;
-        js["$where"] = "something";
-
-        assert(db_storage_backend::contains_banned_query(js) == true);
-    }
-
-    {
-        nlohmann::json js;
-        js["poop"] = "something";
-
-        assert(db_storage_backend::contains_banned_query(js) == false);
-    }
-
-    {
-        nlohmann::json js = 1;
-
-        assert(db_storage_backend::contains_banned_query(js) == false);
-    }
-
-    {
-        nlohmann::json js{1, 2, 3};
-
-        assert(db_storage_backend::contains_banned_query(js) == false);
-    }
-
-
-    {
         db_storage_backend backend(mongo_databases[(int)mongo_database_type::USER_PROPERTIES]);
 
         backend.change_collection_unsafe("i20k");
@@ -1370,40 +1320,6 @@ void db_storage_backend::run_tests()
 void db_storage_backend::make_backup(const std::string& to_where)
 {
     get_db_storage().make_backup(to_where);
-}
-
-bool db_storage_backend::contains_banned_query(const nlohmann::json& js)
-{
-    std::vector<std::string> banned
-    {
-        "$where",
-        "$expr",
-        "$maxTimeMS",
-        "$query",
-        "$showDiskLoc"
-    };
-
-    if(!js.is_object())
-        return false;
-
-    try
-    {
-        for(auto& i : js.get<nlohmann::json::object_t>())
-        {
-            for(auto& k : banned)
-            {
-                if(i.first == k)
-                    return true;
-            }
-        }
-    }
-    catch(...)
-    {
-        printf("Banned query exception\n");
-        return true;
-    }
-
-    return false;
 }
 
 void db_storage_backend::change_collection_unsafe(const std::string& coll, bool force_change)

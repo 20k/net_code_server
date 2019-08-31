@@ -9,18 +9,9 @@
 #include <atomic>
 #include <thread>
 #include "perfmon.hpp"
-//#include "mongoc_fwd.hpp"
 
 #include <nlohmann/json.hpp>
 #include "db_storage_backend.hpp"
-
-#define NO_MONGO
-
-#ifndef NO_MONGO
-#undef USE_MONGO
-#endif // NO_MONGO
-
-//#define USE_MONGO
 
 //#define DEADLOCK_DETECTION
 
@@ -63,14 +54,7 @@ struct lock_internal
     safe_mutex mut_lock;
     #endif // USE_STD_MUTEX
 
-    #ifdef USE_MONGO
-    mongoc_client_t* in_case_of_emergency = nullptr;
-
-    void lock(const std::string& debug_info, size_t who, mongoc_client_t* emergency);
-    #else
     void lock(const std::string& debug_info, size_t who);
-    #endif // USE_MONGO
-
     void unlock();
 };
 
@@ -79,14 +63,6 @@ struct lock_internal
 ///and get the client in a thread safe way
 struct mongo_context
 {
-    #ifdef USE_MONGO
-    mongoc_uri_t* uri = nullptr;
-    mongoc_client_pool_t* pool = nullptr;
-
-    mongoc_client_t* client = nullptr;
-    mongoc_database_t* database = nullptr;
-    #endif // NO_MONGO
-
     std::string last_db = "";
     mongo_database_type last_db_type = mongo_database_type::MONGO_COUNT;
 
@@ -114,20 +90,10 @@ struct mongo_context
 
     void map_lock_for();
 
-    #ifdef USE_MONGO
-    void make_lock(const std::string& debug_info, const std::string& collection, size_t who, mongoc_client_t* in_case_of_emergency);
-    #else
     void make_lock(const std::string& debug_info, const std::string& collection, size_t who);
-    #endif // USE_MONGO
-
     void make_unlock(const std::string& collection);
 
     void unlock_if(size_t who);
-
-    #ifdef USE_MONGO
-    mongoc_client_t* request_client();
-    void return_client(mongoc_client_t* pclient);
-    #endif // USE_MONGO
 
     ~mongo_context();
 };
@@ -141,29 +107,12 @@ struct mongo_interface
 {
     mongo_context* ctx = nullptr;
 
-    #ifdef USE_MONGO
-    mongoc_client_t* client = nullptr;
-    mongoc_database_t* database = nullptr;
-    mongoc_collection_t* collection = nullptr;
-    #endif // USE_MONGO
-
     db_storage_backend backend;
     bool enable_testing_backend = true;
 
     std::string last_collection;
 
-    //bool contains_banned_query(bson_t* bs) const;
-
     void change_collection_unsafe(const std::string& coll, bool force_change = false);
-
-    /*bson_t* make_bson_from_json(const std::string& json) const;
-    bson_t* make_bson_from_json_err(const std::string& json, std::string& err) const;*/
-
-    /*void insert_json_1(const std::string& script_host, const std::string& json);
-    std::string update_json_many(const std::string& script_host, const std::string& selector, const std::string& update);
-    std::string update_json_one(const std::string& selector, const std::string& update);
-    std::vector<std::string> find_json(const std::string& script_host, const std::string& json, const std::string& proj);
-    void remove_json(const std::string& script_host, const std::string& json);*/
 
     void insert_json_one_new(const nlohmann::json& json);
     std::string update_json_many_new(const nlohmann::json& selector, const nlohmann::json& update);
@@ -171,16 +120,8 @@ struct mongo_interface
     std::vector<nlohmann::json> find_json_new(const nlohmann::json& json, const nlohmann::json& opts);
     void remove_json_many_new(const nlohmann::json& json);
 
-
-    //mongo_interface(mongo_interface&&);
     mongo_interface(mongo_context* fctx);
     ~mongo_interface();
-
-    /*void insert_bson_1(const std::string& script_host, bson_t* bs);
-    std::string update_bson_many(const std::string& script_host, bson_t* selector, bson_t* update);
-    std::string update_bson_one(bson_t* selector, bson_t* update);
-    std::vector<std::string> find_bson(const std::string& script_host, bson_t* bs, bson_t* ps);
-    void remove_bson(const std::string& script_host, bson_t* bs);*/
 };
 
 struct mongo_shim
@@ -190,13 +131,6 @@ struct mongo_shim
 
     mongo_shim(mongo_context* fctx, int lock_id);
 };
-
-///thread local support on clang seems poor
-/*namespace tl
-{
-    thread_local int thread_id_storage_hack;
-    thread_local int print_performance_diagnostics;
-}*/
 
 struct mongo_lock_proxy
 {
@@ -257,13 +191,6 @@ struct mongo_requester
     std::map<std::string, int> sort_on;
 
     std::map<std::string, int> exists_check;
-    //std::map<std::string, std::string> gt_than;
-    //std::map<std::string, std::string> lt_than;
-
-    //std::map<std::string, int32_t> gt_than_i;
-    //std::map<std::string, int32_t> lt_than_i;
-
-    //int64_t limit = -1;
 
     bool has_prop(const std::string& str) const
     {
@@ -338,13 +265,6 @@ struct mongo_requester
         properties[key] = stringify_hack(value);
     }
 
-    /*template<typename T>
-    void set_prop_bin(const std::string& key, const T& value)
-    {
-        properties[key] = stringify_hack(value);
-        is_binary[key] = 1;
-    }*/
-
     template<typename T>
     void set_prop_int(const std::string& key, const T& value)
     {
@@ -384,61 +304,12 @@ struct mongo_requester
         is_arr[key] = 1;
     }
 
-    /*void set_limit(int64_t limit_)
-    {
-        limit = limit_;
-    }*/
-
     std::vector<mongo_requester> fetch_from_db(mongo_lock_proxy& ctx);
 
     void insert_in_db(mongo_lock_proxy& ctx);
 
-    //void append_property_to(bson_t* bson, const std::string& key);
-
-    //void append_properties_all_to(bson_t* bson);
-
     void append_property_json(nlohmann::json& js, const std::string& key);
     nlohmann::json get_all_properties_json();
-
-    /*void update_in_db_if_exists(mongo_lock_proxy& ctx, mongo_requester& set_to)
-    {
-        bson_t* to_select = bson_new();
-
-        bson_t child;
-
-        for(auto& i : properties)
-        {
-            bson_append_document_begin(to_select, i.first.c_str(), i.first.size(), &child);
-
-            BSON_APPEND_BOOL(&child, "$exists", true);
-
-            bson_append_document_end(to_select, &child);
-        }
-
-        for(auto& i : arr_props)
-        {
-            bson_append_document_begin(to_select, i.first.c_str(), i.first.size(), &child);
-
-            BSON_APPEND_BOOL(&child, "$exists", true);
-
-            bson_append_document_end(to_select, &child);
-        }
-
-        bson_t* to_update = bson_new();
-
-        BSON_APPEND_DOCUMENT_BEGIN(to_update, "$set", &child);
-
-        set_to.append_properties_all_to(&child);
-
-        bson_append_document_end(to_update, &child);
-
-        //std::cout << "JSON " << bson_as_json(to_select, nullptr) << " selector " << bson_as_json(to_update, nullptr) << std::endl;
-
-        ctx->update_bson_many(ctx->last_collection, to_select, to_update);
-
-        bson_destroy(to_update);
-        bson_destroy(to_select);
-    }*/
 
     void update_in_db_if_exact(mongo_lock_proxy& ctx, mongo_requester& set_to);
     void update_one_in_db_if_exact(mongo_lock_proxy& ctx, mongo_requester& set_to);
@@ -472,9 +343,6 @@ void update_in_db_if_exact(mongo_lock_proxy& ctx, nlohmann::json to_select, nloh
 
     to_set["$set"] = to_update;
 
-    //std::cout << "TO SET " << to_set.dump() << std::endl;
-    //std::cout << "TO select " << to_select.dump() << std::endl;
-
     ctx->update_json_many_new(to_select, to_set);
 }
 
@@ -482,21 +350,6 @@ inline
 void insert_in_db(mongo_lock_proxy& ctx, nlohmann::json to_insert)
 {
     ctx->insert_json_one_new(to_insert);
-}
-
-inline
-void mongo_tests(const std::string& coll)
-{
-    ///mongoc_client_t *client = mongoc_client_new ("mongodb://user:password@localhost/?authSource=mydb");
-
-    #if 0
-    mongo_context ctx(mongo_database_type::USER_ACCESSIBLE);
-    ctx.change_collection_unsafe(coll);
-
-    //ctx.insert_test_data();
-
-    ctx.insert_json_1(coll, "{\"name\": {\"first\":\"bum\", \"last\":\"test\"}}");
-    #endif // 0
 }
 
 extern std::array<mongo_context*, (int)mongo_database_type::MONGO_COUNT> mongo_databases;
