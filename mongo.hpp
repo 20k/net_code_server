@@ -94,8 +94,6 @@ struct mongo_context
     void make_unlock(const std::string& collection);
 
     void unlock_if(size_t who);
-
-    ~mongo_context();
 };
 
 int* tls_get_thread_id_storage_hack();
@@ -121,7 +119,6 @@ struct mongo_interface
     void remove_json_many_new(const nlohmann::json& json);
 
     mongo_interface(mongo_context* fctx);
-    ~mongo_interface();
 };
 
 struct mongo_shim

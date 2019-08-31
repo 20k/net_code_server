@@ -78,7 +78,6 @@ void lock_internal::unlock()
     #endif
 }
 
-
 mongo_context::mongo_context(mongo_database_type type)
 {
     std::string db = "Err";
@@ -157,8 +156,6 @@ mongo_context::mongo_context(mongo_database_type type)
     {
         if(i.first == type)
         {
-            std::string turi = "mongodb://20k_admin:james20kcaterpillarmongofun@localhost:27017/?authSource=admin";
-
             db = i.second;
 
             if(is_fixed_map[i.first])
@@ -305,12 +302,6 @@ void mongo_context::unlock_if(size_t who)
     }
 }
 
-mongo_context::~mongo_context()
-{
-
-}
-
-
 void mongo_interface::change_collection_unsafe(const std::string& coll, bool force_change)
 {
     if(enable_testing_backend)
@@ -327,7 +318,6 @@ void mongo_interface::change_collection_unsafe(const std::string& coll, bool for
 
     last_collection = coll;
 }
-
 
 void mongo_interface::insert_json_one_new(const nlohmann::json& json)
 {
@@ -443,11 +433,6 @@ mongo_interface::mongo_interface(mongo_context* fctx) : backend(fctx)
 
     other.moved_from = true;
 }*/
-
-mongo_interface::~mongo_interface()
-{
-
-}
 
 mongo_shim::mongo_shim(mongo_context* fctx, int plock_id)
 {
