@@ -161,11 +161,11 @@ duk_ret_t db_update(duk_context* ctx)
     nlohmann::json j1 = nlohmann::json::parse(json_1);
     nlohmann::json j2 = nlohmann::json::parse(json_2);
 
-    std::string error = mongo_ctx->update_json_many_new(j1, j2);
+    mongo_ctx->update_json_many_new(j1, j2);
 
     //std::cout << "update " << json_1 << " with " << json_2 << std::endl;
 
-    push_dukobject(ctx, "filter", json_1, "update", json_2, "error", error, "host", secret_script_host);
+    push_dukobject(ctx, "filter", json_1, "update", json_2, "host", secret_script_host);
 
     return 1;
 }
