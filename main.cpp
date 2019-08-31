@@ -29,7 +29,6 @@
 #include <libncclient/nc_util.hpp>
 #include <secret/secret.hpp>
 #include <secret/low_level_structure.hpp>
-#include <windows.h>
 #include "db_storage_backend.hpp"
 #include "auth.hpp"
 #include "safe_thread.hpp"

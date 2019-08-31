@@ -5,8 +5,6 @@
 #include "safe_thread.hpp"
 #include <atomic>
 
-//#include <windows.h>
-
 typedef struct
 {
     /* The double value in the union is there to ensure alignment is

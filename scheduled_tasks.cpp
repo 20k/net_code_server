@@ -1,5 +1,4 @@
 #include "scheduled_tasks.hpp"
-#include <windows.h>
 #include <secret/node.hpp>
 #include <secret/npc_manager.hpp>
 #include "rng.hpp"

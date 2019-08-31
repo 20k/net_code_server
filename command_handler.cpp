@@ -100,68 +100,8 @@ namespace script_management_mode
 
 void sleep_thread_for(sandbox_data* sand_data, sthread& t, int sleep_ms)
 {
-    pthread_t thread = t.native_handle();
-    void* native_handle = pthread_gethandle(thread);
-
-    #if 0
-    pthread_t my_handle = pthread_self();
-    void* my_native_handle = pthread_gethandle(my_handle);
-
-    pthread_t thread = t.native_handle();
-    void* native_handle = pthread_gethandle(thread);
-
-    SetThreadPriority(my_native_handle, THREAD_PRIORITY_ABOVE_NORMAL);
-    SetThreadPriority(native_handle, THREAD_PRIORITY_ABOVE_NORMAL);
-
-    SuspendThread(native_handle);
-
-    Sleep(sleep_ms);
-
-    /*if(sleep_ms > 1)
-        Sleep(sleep_ms - 1);
-
-    sf::Clock clk;
-
-    while(clk.getElapsedTime().asMilliseconds() < 1)
-    {
-    }*/
-
-    /*sf::Clock clk;
-
-    while(clk.getElapsedTime().asMicroseconds() / 1000. < sleep_ms)
-    {
-        if(sleep_ms - (int)clk.getElapsedTime().asMilliseconds() > 1)
-            Sleep(1);
-    }*/
-
-    ResumeThread(native_handle);
-
-
-    SetThreadPriority(my_native_handle, THREAD_PRIORITY_NORMAL);
-    SetThreadPriority(native_handle, THREAD_PRIORITY_NORMAL);
-    #endif // 0
-
-    //sthread::increase_priority();
-    /*SuspendThread(native_handle);
-
-    ///for some reason this is dangerous
-    ///critical sections
-    sthread::this_sleep(sleep_ms);
-
-    ResumeThread(native_handle);*/
-
     sand_data->sleep_for += sleep_ms;
     sthread::this_sleep(sleep_ms);
-
-    //sthread::normal_priority();
-
-
-    /*sf::Clock clk;
-
-    while(clk.getElapsedTime().asMicroseconds() / 1000. < sleep_ms)
-    {
-        //sthread::this_yield();
-    }*/
 }
 
 void async_realtime_script_handler(duk_context* nctx, shared_data& shared, command_handler_state& state, double& time_of_last_on_update, std::string& ret,
@@ -558,32 +498,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 sthread::this_sleep(active_time_slice_ms);
 
                 //accumulated_missed_sleep_time += sleeping_time_slice_ms * sleep_mult;
-
-                ///don't use any function which involves ANY lock in this branch
-                ///while the second thread is suspended, otherwise deadlock
-                //if(inf->holds_lock != nullptr && (*inf->holds_lock) == 0)
-                /*{
-                    void* native_handle = launch->winapi_handle();
-
-                    int csleep = accumulated_missed_sleep_time;
-
-                    SuspendThread(native_handle);
-
-                    sthread::this_sleep(csleep);
-
-                    ResumeThread(native_handle);
-
-                    //total_suspend_ms += csleep;
-                    accumulated_missed_sleep_time -= csleep;
-                }*/
-                /*else
-                {
-                    sthread::this_sleep((int)(sleeping_time_slice_ms * sleep_mult));
-
-                    #ifdef PERF_DIAGNOSTICS
-                    skip++;
-                    #endif // PERF_DIAGNOSTICS
-                }*/
 
                 sand_data->sleep_for += sleeping_time_slice_ms * sleep_mult;
 

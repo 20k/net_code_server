@@ -1,15 +1,20 @@
 #include "safe_thread.hpp"
+#ifdef __WIN32__
 #include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
 #include "mongo.hpp"
 #include <SFML/System/Sleep.hpp>
 
 void sthread::this_yield()
 {
+    #ifdef __WIN32__
     Sleep(0);
-
-    #ifndef __WIN32__
-    #error("doesn't work on linux");
-    #endif // __WIN32__
+    #else
+    sleep(0);
+    #endif
 }
 
 void sthread::low_yield()
@@ -17,19 +22,9 @@ void sthread::low_yield()
     std::this_thread::yield();
 }
 
-void sthread::this_unsafe_sleep(int milliseconds)
-{
-    sf::sleep(sf::milliseconds(milliseconds));
-}
-
 void sthread::this_sleep(int milliseconds)
 {
-    /*for(int i=0; i < milliseconds; i++)
-        Sleep(1);*/
-
-    this_unsafe_sleep(milliseconds);
-
-    //Sleep(milliseconds);
+    sf::sleep(sf::milliseconds(milliseconds));
 }
 
 lock_counter::lock_counter()

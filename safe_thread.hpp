@@ -16,13 +16,7 @@ struct sthread
     template<typename T, typename... U>
     sthread(T&& t, U&&... u) : thrd([](auto t, auto... u)
                                     {
-                                        //pthread_t thread = pthread_self();
-
-                                        //HANDLE h = pthread_gethandle(thread);
-
                                         stack_on_start();
-
-                                        //get_thread_registration().add(h);
 
                                         try{
                                             t(std::forward<U>(u)...);
@@ -37,8 +31,6 @@ struct sthread
                                             std::cout << "caught termination exception from thread" << std::endl;
                                             std::cout << "stack " << get_stacktrace() << std::endl;
                                         }
-
-                                        //get_thread_registration().rem(h);
 
                                     }, std::forward<T>(t), std::forward<U>(u)...)
     {
@@ -60,20 +52,11 @@ struct sthread
         return thrd.native_handle();
     }
 
-    void* winapi_handle()
-    {
-        pthread_t thread = native_handle();
-        void* native_handle = pthread_gethandle(thread);
-
-        return native_handle;
-    }
-
     static void this_yield();
 
     static void low_yield();
 
     static void this_sleep(int milliseconds);
-    static void this_unsafe_sleep(int milliseconds);
 
     /*static void increase_priority()
     {

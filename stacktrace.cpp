@@ -5,7 +5,6 @@
 #include <boost/filesystem.hpp>
 #include <iostream>
 #include <sstream>
-#include <windows.h>
 
 void signal_handler(int signum)
 {
