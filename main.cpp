@@ -3,14 +3,8 @@
 #include "stacktrace.hpp"
 
 #include <iostream>
-//#include <imgui/imgui.h>
-//#include <imgui/imgui-SFML.h>
-//#include <imgui/imgui_internal.h>
 #include <vec/vec.hpp>
-//#include <serialise/serialise.hpp>
-//#include <js/manager.hpp>
 #include <math.h>
-//#include <4space_server/networking.hpp>
 
 #include <algorithm>
 #include "script_util.hpp"

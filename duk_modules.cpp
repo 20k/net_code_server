@@ -7,7 +7,6 @@
 #include "duk_object_functions.hpp"
 #include <iostream>
 #include "memory_sandbox.hpp"
-#include <SFML/Graphics.hpp>
 #include <tinydir/tinydir.h>
 #include "directory_helpers.hpp"
 
