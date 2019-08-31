@@ -299,8 +299,7 @@ void mongo_context::unlock_if(size_t who)
 
 void mongo_interface::change_collection_unsafe(const std::string& coll, bool force_change)
 {
-    if(enable_testing_backend)
-        backend.change_collection_unsafe(coll, force_change);
+    backend.change_collection_unsafe(coll, force_change);
 
     if(ctx->is_fixed && !force_change)
     {
@@ -316,100 +315,27 @@ void mongo_interface::change_collection_unsafe(const std::string& coll, bool for
 
 void mongo_interface::insert_json_one_new(const nlohmann::json& json)
 {
-    if(enable_testing_backend)
-    {
-        backend.insert_one(json);
-    }
-    #ifndef ONLY_VALIDATION
-    else
-    #endif // ONLY_VALIDATION
-    {
-        throw std::runtime_error("Unimplemented mongo");
-        //insert_json_1(last_collection, json.dump());
-    }
+    backend.insert_one(json);
 }
 
-std::string mongo_interface::update_json_many_new(const nlohmann::json& selector, const nlohmann::json& update)
+void mongo_interface::update_json_many_new(const nlohmann::json& selector, const nlohmann::json& update)
 {
-    std::string res;
-
-    if(enable_testing_backend)
-    {
-        backend.update_many(selector, update);
-    }
-    #ifndef ONLY_VALIDATION
-    else
-    #endif // ONLY_VALIDATION
-    {
-        throw std::runtime_error("Unimplemented mongo");
-        //res = update_json_many(last_collection, selector.dump(), update.dump());
-    }
-
-    return res;
+    backend.update_many(selector, update);
 }
 
-std::string mongo_interface::update_json_one_new(const nlohmann::json& selector, const nlohmann::json& update)
+void mongo_interface::update_json_one_new(const nlohmann::json& selector, const nlohmann::json& update)
 {
-    std::string res;
-
-    if(enable_testing_backend)
-    {
-        backend.update_one(selector, update);
-    }
-    #ifndef ONLY_VALIDATION
-    else
-    #endif // ONLY_VALIDATION
-    {
-        throw std::runtime_error("Unimplemented mongo");
-        //res = update_json_one(selector.dump(), update.dump());
-    }
-
-    return res;
+    backend.update_one(selector, update);
 }
 
 std::vector<nlohmann::json> mongo_interface::find_json_new(const nlohmann::json& json, const nlohmann::json& opts)
 {
-    #ifndef ONLY_VALIDATION
-    if(!enable_testing_backend)
-    #endif // ONLY_VALIDATION
-    {
-        /*std::vector<std::string> found = find_json(last_collection, json.dump(), opts.dump());
-
-        std::vector<nlohmann::json> ret;
-
-        for(auto& i : found)
-        {
-            ret.push_back(nlohmann::json::parse(i));
-        }
-
-        return ret;*/
-
-        throw std::runtime_error("Unimplemented mongo");
-    }
-    #ifndef ONLY_VALIDATION
-    else
-    #endif // ONLY_VALIDATION
-    {
-        return backend.find_many(json, opts);
-    }
+    return backend.find_many(json, opts);
 }
-
 
 void mongo_interface::remove_json_many_new(const nlohmann::json& json)
 {
-    #ifndef ONLY_VALIDATION
-    if(!enable_testing_backend)
-    #endif // ONLY_VALIDATION
-    {
-
-    }
-    #ifndef ONLY_VALIDATION
-    else
-    #endif // ONLY_VALIDATION
-    if(enable_testing_backend)
-    {
-        backend.remove_many(json);
-    }
+    backend.remove_many(json);
 }
 
 mongo_interface::mongo_interface(mongo_context* fctx) : backend(fctx)

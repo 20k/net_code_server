@@ -362,9 +362,6 @@ int main()
     test_hexbin();
     initialse_db_all();
 
-    //auth::hacky_binary_conversion_check();
-    //user::fix_auth_problem();
-
     //#ifdef TESTING
     init_db_storage_backend();
     //#endif // TESTING

@@ -156,8 +156,6 @@ struct user
 
     static void launch_pump_events_thread();
 
-    static void fix_auth_problem();
-
 protected:
     //space_pos_t local_pos;
     timestamp_move_queue move_queue;

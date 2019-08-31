@@ -141,7 +141,6 @@ void auth::hacky_binary_conversion_check()
                         cp.set_prop("account_token_hex", hex_token);
 
                         mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
-                        //ctx.ctx.enable_testing_backend = false;
 
                         req.update_in_db_if_exact(ctx, cp);
                   });

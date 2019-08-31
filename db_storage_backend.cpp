@@ -907,83 +907,6 @@ db_storage& get_db_storage()
     return store;
 }
 
-void import_from_mongo()
-{
-    #ifdef USE_MONGO
-    db_storage& store = get_db_storage();
-
-    store.global_id = 0;
-
-    store.atomic_enabled = false;
-
-    for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
-    {
-        mongo_context* ctx = mongo_databases[idx];
-
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_context((mongo_database_type)idx, -2);
-        mongo_ctx.ctx.enable_testing_backend = false;
-
-        for(const std::string& collection : ctx->all_collections)
-        {
-            mongo_ctx.change_collection(collection, true);
-
-            std::vector<std::string> all = mongo_ctx->find_json(mongo_ctx->last_collection, "{}", "{}");
-
-            std::vector<nlohmann::json> js;
-
-            for(auto& i : all)
-            {
-                nlohmann::json found = nlohmann::json::parse(i);
-
-                //if(found.count(CID_STRING) == 0)
-                {
-                    found[CID_STRING] = store.get_next_id();
-                }
-
-                js.push_back(found);
-            }
-
-            if(!store.has_index((int)ctx->last_db_type))
-            {
-                store.all_data[(int)ctx->last_db_type].all_data[collection] = js;
-
-                for(auto& k : js)
-                {
-                    store.flush((int)ctx->last_db_type, collection, k);
-                }
-            }
-            else
-            {
-                std::string index = store.get_index((int)ctx->last_db_type);
-
-                for(auto& k : js)
-                {
-                    assert(k.count(index) > 0);
-
-                    std::string current_idx = k.at(index);
-
-                    std::map<std::string, nlohmann::json>& indices = store.all_data[(int)ctx->last_db_type].index_map[collection];
-
-                    indices[current_idx] = k;
-
-                    store.flush((int)ctx->last_db_type, collection, k);
-                }
-            }
-
-            store.all_data[(int)ctx->last_db_type].collection_imported[collection] = true;
-        }
-    }
-
-    store.atomic_enabled = true;
-
-    std::cout << "imported from mongo\n";
-    #else
-    throw std::runtime_error("Should not be possible (use mongo import from mongo)");
-    #endif
-
-    //exit(0);
-}
-
 void import_from_disk(bool force)
 {
     db_storage& store = get_db_storage();
@@ -1037,8 +960,6 @@ void import_from_disk(bool force)
 
 void init_db_storage_backend()
 {
-    ///importa data from mongo
-
     db_storage_backend::run_tests();
 
     db_storage& store = get_db_storage();
@@ -1081,14 +1002,7 @@ void init_db_storage_backend()
     store.indices[(int)mongo_database_type::NETWORK_PROPERTIES] = "name";
     store.indices[(int)mongo_database_type::MEMORY_CORE] = "owner";
 
-    if(!new_data)
-    {
-        import_from_mongo();
-    }
-    else
-    {
-        import_from_disk(false);
-    }
+    import_from_disk(false);
 
     //#define BACKUP
     #ifdef BACKUP

@@ -106,15 +106,14 @@ struct mongo_interface
     mongo_context* ctx = nullptr;
 
     db_storage_backend backend;
-    bool enable_testing_backend = true;
 
     std::string last_collection;
 
     void change_collection_unsafe(const std::string& coll, bool force_change = false);
 
     void insert_json_one_new(const nlohmann::json& json);
-    std::string update_json_many_new(const nlohmann::json& selector, const nlohmann::json& update);
-    std::string update_json_one_new(const nlohmann::json& selector, const nlohmann::json& update);
+    void update_json_many_new(const nlohmann::json& selector, const nlohmann::json& update);
+    void update_json_one_new(const nlohmann::json& selector, const nlohmann::json& update);
     std::vector<nlohmann::json> find_json_new(const nlohmann::json& json, const nlohmann::json& opts);
     void remove_json_many_new(const nlohmann::json& json);
 

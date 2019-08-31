@@ -1175,19 +1175,6 @@ void user::launch_pump_events_thread()
     sthread(event_pumper).detach();
 }
 
-void user::fix_auth_problem()
-{
-    /*for_each_user([](user& usr)
-                  {
-                        usr.auth_hex = binary_to_hex(usr.old_binary_auth);
-
-                        mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
-                        ctx.ctx.enable_testing_backend = false;
-
-                        usr.overwrite_user_in_db(ctx);
-                  });*/
-}
-
 std::vector<user> load_users(const std::vector<std::string>& names, int lock_id)
 {
     std::vector<user> ret;
