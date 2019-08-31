@@ -22,9 +22,7 @@ void lock_internal::lock(const std::string& debug_info, size_t who)
     #ifndef USE_STD_MUTEX
     sthread::this_yield();
 
-    ///200 ms
-    constexpr size_t max_microseconds_elapsed = 1000 * 20;
-    bool sleeptime = false;
+    //bool sleeptime = false;
 
     size_t cycles = 1;
 
