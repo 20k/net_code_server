@@ -540,21 +540,9 @@ void mongo_requester::insert_in_db(mongo_lock_proxy& ctx)
     ctx->insert_json_one_new(all_props);
 }
 
-void mongo_requester::append_property_json(nlohmann::json& js, const std::string& key)
-{
-    js[key] = props[key];
-}
-
 nlohmann::json mongo_requester::get_all_properties_json()
 {
-    nlohmann::json js;
-
-    for(auto& i : props)
-    {
-        append_property_json(js, i.first);
-    }
-
-    return js;
+    return props;
 }
 
 ///replace these with new version

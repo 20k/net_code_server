@@ -234,7 +234,6 @@ struct mongo_requester
 
     void insert_in_db(mongo_lock_proxy& ctx);
 
-    void append_property_json(nlohmann::json& js, const std::string& key);
     nlohmann::json get_all_properties_json();
 
     void update_in_db_if_exact(mongo_lock_proxy& ctx, mongo_requester& set_to);
