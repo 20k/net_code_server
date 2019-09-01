@@ -524,9 +524,15 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
             const std::string& key = pairs.first;
             const nlohmann::json& val = pairs.second;
 
-            if(val.is_number())
+            if(val.is_number_float())
             {
                 found.set_prop_double(key, (double)val);
+                continue;
+            }
+
+            if(val.is_number())
+            {
+                found.set_prop(key, val);
                 continue;
             }
 
