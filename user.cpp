@@ -77,9 +77,9 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     to_set.set_prop("user_port", user_port);
     #endif // USE_LOCS
     to_set.set_prop("initial_connection_setup", initial_connection_setup);
-    to_set.set_prop_array("owner_list", owner_list);
-    to_set.set_prop_array("call_stack", call_stack);
-    to_set.set_prop_array("users_i_have_access_to", users_i_have_access_to);
+    to_set.set_prop("owner_list", owner_list);
+    to_set.set_prop("call_stack", call_stack);
+    to_set.set_prop("users_i_have_access_to", users_i_have_access_to);
     to_set.set_prop("auth_hex", auth_hex);
     to_set.set_prop("hacked_progress", hacked_progress);
 
@@ -250,9 +250,9 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
     #endif // USE_LOCS
     request.set_prop("is_user", 1);
     request.set_prop("initial_connection_setup", initial_connection_setup);
-    request.set_prop_array("owner_list", std::vector<std::string>());
-    request.set_prop_array("call_stack", std::vector<std::string>());
-    request.set_prop_array("users_i_have_access_to", std::vector<std::string>());
+    request.set_prop("owner_list", std::vector<std::string>());
+    request.set_prop("call_stack", std::vector<std::string>());
+    request.set_prop("users_i_have_access_to", std::vector<std::string>());
 
     pos = sample_game_structure();
 
@@ -649,7 +649,7 @@ void user::add_allowed_user(const std::string& usr, mongo_lock_proxy& ctx)
 
     mongo_requester to_set;
     to_set.set_prop("name", name);
-    to_set.set_prop_array("owner_list", owner_list);
+    to_set.set_prop("owner_list", owner_list);
 
     filter.update_in_db_if_exact(ctx, to_set);
 
@@ -680,7 +680,7 @@ void user::remove_allowed_user(const std::string& usr, mongo_lock_proxy& ctx)
 
     mongo_requester to_set;
     to_set.set_prop("name", name);
-    to_set.set_prop_array("owner_list", owner_list);
+    to_set.set_prop("owner_list", owner_list);
 
     filter.update_in_db_if_exact(ctx, to_set);
 

@@ -1207,7 +1207,7 @@ void db_storage_backend::run_tests()
     ///compatability tests
     {
         mongo_requester req1;
-        req1.set_prop_int("prop", 1);
+        req1.set_prop("prop", 1);
 
         mongo_requester req2;
         req2.set_prop("prop", 1);

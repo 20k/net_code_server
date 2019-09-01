@@ -179,7 +179,6 @@ struct mongo_requester
     std::map<std::string, nlohmann::json> props;
 
     std::map<std::string, int> sort_on;
-
     std::map<std::string, int> exists_check;
 
     bool has_prop(const std::string& str) const
@@ -224,29 +223,11 @@ struct mongo_requester
     void set_prop(const std::string& key, const T& value)
     {
         props[key] = value;
-        //props[key] = stringify_hack(value);
-    }
-
-    template<typename T>
-    void set_prop_int(const std::string& key, const T& value)
-    {
-        props[key] = value;
     }
 
     void set_prop_sort_on(const std::string& key, int dir)
     {
         sort_on[key] = dir;
-    }
-
-    void set_prop_array(const std::string& key, const std::vector<std::string>& vals)
-    {
-        props[key] = vals;
-    }
-
-    template<typename T>
-    void set_prop_array(const std::string& key, const std::vector<T>& vals)
-    {
-        props[key] = vals;
     }
 
     std::vector<mongo_requester> fetch_from_db(mongo_lock_proxy& ctx);
