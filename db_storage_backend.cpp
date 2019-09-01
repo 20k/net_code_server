@@ -972,8 +972,6 @@ void init_db_storage_backend()
 
     std::cout << "RDATA " << resulting_data << std::endl;
 
-    bool new_data = false;
-
     if(resulting_data.size() == 0)
     {
         throw std::runtime_error("Yeah we're past this point! file explosion");
@@ -984,12 +982,7 @@ void init_db_storage_backend()
     else
     {
         store.global_id = atoll(resulting_data.c_str());
-
-        new_data = true;
     }
-
-    ///READ ID STORAGE FROM DISK
-    ///obviously unimplemented now
 
     for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
     {
@@ -1220,12 +1213,6 @@ void db_storage_backend::run_tests()
 
         //mongo_requester req4;
         //req4.set_prop("prop", val);
-
-        //std::cout << req1.get_all_properties_json() << std::endl;
-        //std::cout << req2.get_all_properties_json() << std::endl;
-
-        //std::cout << req3.get_all_properties_json() << std::endl;
-        //std::cout << req4.get_all_properties_json() << std::endl;
 
         assert(req1.get_all_properties_json() == req2.get_all_properties_json());
     }
