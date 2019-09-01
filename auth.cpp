@@ -124,28 +124,6 @@ void auth::insert_user_exclusive(const std::string& username)
     users.push_back(username);
 }
 
-void auth::hacky_binary_conversion_check()
-{
-    for_each_auth([](mongo_requester& req)
-                  {
-                        if(req.has_prop("account_token_hex"))
-                            return;
-
-                        std::string binary_token = req.get_prop("account_token");
-                        std::cout << "Converting auth token\n";
-
-                        std::string hex_token = binary_to_hex(binary_token);
-
-                        auto cp = req;
-
-                        cp.set_prop("account_token_hex", hex_token);
-
-                        mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
-
-                        req.update_in_db_if_exact(ctx, cp);
-                  });
-}
-
 enforce_constant_time::~enforce_constant_time()
 {
     while(clk.getElapsedTime().asMicroseconds() < 100 * 1000){}

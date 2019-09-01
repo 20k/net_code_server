@@ -27,8 +27,6 @@ struct auth
     void overwrite_in_db(mongo_lock_proxy& ctx);
 
     void insert_user_exclusive(const std::string& username);
-
-    static void hacky_binary_conversion_check();
 };
 
 struct enforce_constant_time

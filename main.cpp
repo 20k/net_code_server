@@ -319,6 +319,20 @@ int main()
 
     stack_on_start();
 
+
+    /*{
+        nlohmann::json test;
+        test["hi"] = 76561197983690027;
+
+        std::vector<unsigned char> vdumped = nlohmann::json::to_cbor(test);
+
+        std::string dumped(vdumped.begin(), vdumped.end());
+
+        nlohmann::json dpp = nlohmann::json::from_cbor(dumped);
+
+        std::cout << "DPP " << dpp["hi"] << std::endl;
+    }*/
+
     /*sthread([]()
                 {
                     //Sleep(5000);
