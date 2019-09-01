@@ -518,14 +518,7 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
     for(const nlohmann::json& obj : json_found_from_json)
     {
         mongo_requester found;
-
-        for(auto& pairs : obj.get<nlohmann::json::object_t>())
-        {
-            const std::string& key = pairs.first;
-            const nlohmann::json& val = pairs.second;
-
-            found.props[key] = val;
-        }
+        found.props = (std::map<std::string, nlohmann::json>)obj;
 
         alt_method.push_back(found);
     }
