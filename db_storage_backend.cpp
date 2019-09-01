@@ -968,7 +968,13 @@ void init_db_storage_backend()
 
     std::string root_file = ROOT_FILE;
 
-    std::string resulting_data = read_file(root_file);
+    std::string resulting_data;
+
+    try
+    {
+        resulting_data = read_file(root_file);
+    }
+    catch(...){}
 
     std::cout << "RDATA " << resulting_data << std::endl;
 

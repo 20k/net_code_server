@@ -381,7 +381,7 @@ int main()
 
     //#define SERVER_FIRST_TIME_EVER_RELEASE
     #ifdef SERVER_FIRST_TIME_EVER_RELEASE
-    #define FIXJOIN_CHANNELS
+    //#define FIXJOIN_CHANNELS
     #define REGENERATE_LINKS_AND_USERS
     #endif // SERVER_FIRST_TIME_EVER_RELEASE
 
@@ -469,8 +469,10 @@ int main()
     std::cout << "num broken " << num_broken << std::endl;
     #endif // FIX_BROKEN_NPCS
 
-    //manage.erase_all();
-    //manage.generate_up_to(150);
+    #ifdef SERVER_FIRST_TIME_EVER_RELEASE
+    manage.erase_all();
+    manage.generate_up_to(150);
+    #endif // SERVER_FIRST_TIME_EVER_RELEASE
 
     //#define FIXY_FIX_NPCS
     #ifdef FIXY_FIX_NPCS
@@ -541,8 +543,8 @@ int main()
 
     //#define REGENERATE_LINKS_AND_USERS
     #ifdef REGENERATE_LINKS_AND_USERS
-    manage.erase_intersystem_specials();
-    manage.for_each(low_level_structure::cleanup_invalid_users);
+    //manage.erase_intersystem_specials();
+    //manage.for_each(low_level_structure::cleanup_invalid_users);
 
     manage.harvest_existing_npcs();
 

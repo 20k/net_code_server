@@ -149,7 +149,7 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
         if(req.has_prop("call_stack"))
             call_stack = (std::vector<std::string>)req.get_prop_as_array("call_stack");
         if(req.has_prop("users_i_have_access_to"))
-            users_i_have_access_to = req.get_prop_as_array("users_i_have_access_to").get<std::vector<std::string>>();
+            users_i_have_access_to = (std::vector<std::string>)req.get_prop_as_array("users_i_have_access_to");
 
         for(int i=0; i < decltype(pos)::DIM; i++)
         {
