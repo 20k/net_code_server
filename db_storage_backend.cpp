@@ -1203,25 +1203,6 @@ void db_storage_backend::run_tests()
             assert(post_proj == data);
         }
     }
-
-    ///compatability tests
-    {
-        mongo_requester req1;
-        req1.set_prop("prop", 1);
-
-        mongo_requester req2;
-        req2.set_prop("prop", 1);
-
-        //uint64_t val = ((uint64_t)1 << 63) - 1;
-
-        //mongo_requester req3;
-        //req3.set_prop_int("prop", val);
-
-        //mongo_requester req4;
-        //req4.set_prop("prop", val);
-
-        assert(req1.get_all_properties_json() == req2.get_all_properties_json());
-    }
 }
 
 void db_storage_backend::make_backup(const std::string& to_where)
