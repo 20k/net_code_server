@@ -839,14 +839,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
             }
         }
 
-        if(terminated)
-        {
-            for(auto& i : mongo_databases)
-            {
-                i->unlock_if(local_thread_id);
-            }
-        }
-
         //managed_duktape_thread(&inf);
 
         //if(!terminated)

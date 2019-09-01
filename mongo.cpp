@@ -264,39 +264,6 @@ void mongo_context::make_unlock(const std::string& collection)
     lock.unlock();*/
 }
 
-void mongo_context::unlock_if(size_t who)
-{
-    //if(who == locked_by)
-    {
-        /*safe_lock_guard lck(internal_safety);
-
-        map_lock.lock();
-
-        per_collection_lock[last_collection];
-        auto found = per_collection_lock.find(last_collection);
-
-        map_lock.unlock();
-
-        if(found->second.locked_by == who)
-            found->second.unlock();
-
-        printf("Salvaged db\n");*/
-
-        map_lock_for();
-
-        for(auto& i : per_collection_lock)
-        {
-            if(i.second.locked_by == who)
-            {
-                i.second.unlock();
-                printf("salvaged db\n");
-            }
-        }
-
-        map_lock.unlock();
-    }
-}
-
 void mongo_interface::change_collection_unsafe(const std::string& coll, bool force_change)
 {
     backend.change_collection_unsafe(coll, force_change);

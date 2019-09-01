@@ -92,8 +92,6 @@ struct mongo_context
 
     void make_lock(const std::string& debug_info, const std::string& collection, size_t who);
     void make_unlock(const std::string& collection);
-
-    void unlock_if(size_t who);
 };
 
 int* tls_get_thread_id_storage_hack();
