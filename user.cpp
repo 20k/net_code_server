@@ -70,7 +70,7 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
 
     mongo_requester to_set;
     to_set.set_prop("name", name);
-    to_set.set_prop_double("cash", cash);
+    to_set.set_prop("cash", cash);
     to_set.set_prop("upgr_idx", upgr_idx);
     to_set.set_prop("loaded_upgr_idx", loaded_upgr_idx);
     #ifdef USE_LOCS
@@ -127,13 +127,13 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
         if(req.has_prop("name"))
             name = req.get_prop("name");
         if(req.has_prop("cash"))
-            cash = req.get_prop_as_double("cash");
+            cash = req.get_prop("cash");
         //if(req.has_prop("auth"))
         //    old_binary_auth = req.get_prop("auth");
         if(req.has_prop("auth_hex"))
             auth_hex = req.get_prop("auth_hex");
         if(req.has_prop("hacked_progress"))
-            hacked_progress = req.get_prop_as_double("hacked_progress");
+            hacked_progress = req.get_prop("hacked_progress");
         if(req.has_prop("upgr_idx"))
             upgr_idx = req.get_prop("upgr_idx");
         if(req.has_prop("loaded_upgr_idx"))
@@ -155,7 +155,7 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
         {
             if(req.has_prop("vector_pos" + std::to_string(i)))
             {
-                pos.v[i] = req.get_prop_as_double("vector_pos" + std::to_string(i));
+                pos.v[i] = req.get_prop("vector_pos" + std::to_string(i));
                 has_pos = true;
             }
         }
@@ -175,7 +175,7 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
 
             try
             {
-                move_queue = nlohmann::json::parse(req.get_prop("move_queue"));
+                move_queue = nlohmann::json::parse((std::string)req.get_prop("move_queue"));
             }
             catch(...)
             {
@@ -190,7 +190,7 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
         {
             try
             {
-                user_limits = nlohmann::json::parse(req.get_prop("limits"));
+                user_limits = nlohmann::json::parse((std::string)req.get_prop("limits"));
             }
             catch(...)
             {

@@ -176,14 +176,6 @@ typename std::enable_if<!std::is_fundamental<T>::value, std::string>::type  stri
 ///ok, support for arrays is now non negotiable
 struct mongo_requester
 {
-    //std::map<std::string, std::string> properties;
-    //std::map<std::string, int> is_binary;
-    std::map<std::string, int> is_integer;
-    std::map<std::string, int> is_double;
-    std::map<std::string, int> is_arr;
-
-    //std::map<std::string, std::vector<std::string>> arr_props;
-
     std::map<std::string, nlohmann::json> props;
 
     std::map<std::string, int> sort_on;
@@ -193,14 +185,6 @@ struct mongo_requester
     bool has_prop(const std::string& str) const
     {
         return props.find(str) != props.end();
-    }
-
-    std::string get_prop(const std::string& str) const
-    {
-        if(!has_prop(str))
-            return std::string();
-
-        return props.at(str);
     }
 
     ///uuh sure ok, this is super dodgy
@@ -228,10 +212,10 @@ struct mongo_requester
         return props.at(str);
     }
 
-    double get_prop_as_double(const std::string& str)
+    nlohmann::json get_prop(const std::string& str)
     {
         if(!has_prop(str))
-            return double();
+            return nlohmann::json();
 
         return props.at(str);
     }
@@ -247,14 +231,6 @@ struct mongo_requester
     void set_prop_int(const std::string& key, const T& value)
     {
         props[key] = value;
-        is_integer[key] = 1;
-    }
-
-    template<typename T>
-    void set_prop_double(const std::string& key, const T& value)
-    {
-        props[key] = value;
-        is_double[key] = 1;
     }
 
     void set_prop_sort_on(const std::string& key, int dir)
@@ -265,14 +241,12 @@ struct mongo_requester
     void set_prop_array(const std::string& key, const std::vector<std::string>& vals)
     {
         props[key] = vals;
-        is_arr[key] = 1;
     }
 
     template<typename T>
     void set_prop_array(const std::string& key, const std::vector<T>& vals)
     {
         props[key] = vals;
-        is_arr[key] = 1;
     }
 
     std::vector<mongo_requester> fetch_from_db(mongo_lock_proxy& ctx);

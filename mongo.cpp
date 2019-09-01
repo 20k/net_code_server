@@ -524,12 +524,6 @@ std::vector<mongo_requester> mongo_requester::fetch_from_db(mongo_lock_proxy& ct
             const std::string& key = pairs.first;
             const nlohmann::json& val = pairs.second;
 
-            if(val.is_number_float())
-            {
-                found.set_prop_double(key, (double)val);
-                continue;
-            }
-
             if(val.is_number())
             {
                 found.set_prop(key, val);
@@ -574,14 +568,7 @@ void mongo_requester::insert_in_db(mongo_lock_proxy& ctx)
 
 void mongo_requester::append_property_json(nlohmann::json& js, const std::string& key)
 {
-    if(is_integer[key])
-        js[key] = get_prop_as_integer(key);
-    else if(is_double[key])
-        js[key] = get_prop_as_double(key);
-    else if(is_arr[key])
-        js[key] = props[key];
-    else
-        js[key] = props[key];
+    js[key] = props[key];
 }
 
 nlohmann::json mongo_requester::get_all_properties_json()

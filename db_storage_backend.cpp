@@ -1210,7 +1210,7 @@ void db_storage_backend::run_tests()
         req1.set_prop_int("prop", 1);
 
         mongo_requester req2;
-        req2.set_prop_double("prop", 1);
+        req2.set_prop("prop", 1);
 
         //uint64_t val = ((uint64_t)1 << 63) - 1;
 

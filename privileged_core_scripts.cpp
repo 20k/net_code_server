@@ -539,7 +539,7 @@ duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(!req.has_prop("item_id"))
                 continue;
 
-            names.push_back("#" + req.get_prop("item_id"));
+            names.push_back("#" + (std::string)req.get_prop("item_id"));
         }
     }
 
@@ -561,7 +561,7 @@ duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(!loaded_user.has_loaded_item(item_id))
                 continue;
 
-            std::string name = usr + "." + req.get_prop("registered_as") + " `D[bundle]`";
+            std::string name = usr + "." + (std::string)req.get_prop("registered_as") + " `D[bundle]`";
 
             names.push_back(name);
         }
@@ -609,7 +609,7 @@ duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     for(mongo_requester& req : results)
     {
-        names.push_back("#" + req.get_prop("item_id"));
+        names.push_back("#" + (std::string)req.get_prop("item_id"));
     }
 
     if(pretty)
