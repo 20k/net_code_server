@@ -176,13 +176,15 @@ typename std::enable_if<!std::is_fundamental<T>::value, std::string>::type  stri
 ///ok, support for arrays is now non negotiable
 struct mongo_requester
 {
-    std::map<std::string, std::string> properties;
+    //std::map<std::string, std::string> properties;
     //std::map<std::string, int> is_binary;
     std::map<std::string, int> is_integer;
     std::map<std::string, int> is_double;
     std::map<std::string, int> is_arr;
 
-    std::map<std::string, std::vector<std::string>> arr_props;
+    //std::map<std::string, std::vector<std::string>> arr_props;
+
+    std::map<std::string, nlohmann::json> props;
 
     std::map<std::string, int> sort_on;
 
@@ -190,7 +192,7 @@ struct mongo_requester
 
     bool has_prop(const std::string& str) const
     {
-        return (properties.find(str) != properties.end()) || (arr_props.find(str) != arr_props.end());
+        return props.find(str) != props.end();
     }
 
     std::string get_prop(const std::string& str) const
@@ -198,15 +200,16 @@ struct mongo_requester
         if(!has_prop(str))
             return std::string();
 
-        return properties.at(str);
+        return props.at(str);
     }
 
-    std::vector<std::string> get_prop_as_array(const std::string& str)
+    ///uuh sure ok, this is super dodgy
+    nlohmann::json get_prop_as_array(const std::string& str)
     {
         if(!has_prop(str))
             return std::vector<std::string>();
 
-        return arr_props[str];
+        return props[str];
     }
 
     int64_t get_prop_as_integer(const std::string& str) const
@@ -214,14 +217,7 @@ struct mongo_requester
         if(!has_prop(str))
             return int64_t();
 
-        std::string prop = properties.at(str);
-
-        if(prop == "")
-            return 0;
-
-        long long val = atoll(prop.c_str());
-
-        return val;
+        return props.at(str);
     }
 
     uint64_t get_prop_as_uinteger(const std::string& str) const
@@ -229,15 +225,7 @@ struct mongo_requester
         if(!has_prop(str))
             return uint64_t();
 
-        std::string prop = properties.at(str);
-
-        if(prop == "")
-            return 0;
-
-        char* eptr = nullptr;
-        uint64_t val = strtoull(prop.c_str(), &eptr, 10);
-
-        return val;
+        return props.at(str);
     }
 
     double get_prop_as_double(const std::string& str)
@@ -245,33 +233,27 @@ struct mongo_requester
         if(!has_prop(str))
             return double();
 
-        std::string prop = properties[str];
-
-        if(prop == "")
-            return 0;
-
-        auto val = atof(prop.c_str());
-
-        return val;
+        return props.at(str);
     }
 
     template<typename T>
     void set_prop(const std::string& key, const T& value)
     {
-        properties[key] = stringify_hack(value);
+        props[key] = value;
+        //props[key] = stringify_hack(value);
     }
 
     template<typename T>
     void set_prop_int(const std::string& key, const T& value)
     {
-        properties[key] = stringify_hack(value);
+        props[key] = value;
         is_integer[key] = 1;
     }
 
     template<typename T>
     void set_prop_double(const std::string& key, const T& value)
     {
-        properties[key] = stringify_hack(value);
+        props[key] = value;
         is_double[key] = 1;
     }
 
@@ -282,21 +264,14 @@ struct mongo_requester
 
     void set_prop_array(const std::string& key, const std::vector<std::string>& vals)
     {
-        arr_props[key] = vals;
+        props[key] = vals;
         is_arr[key] = 1;
     }
 
     template<typename T>
     void set_prop_array(const std::string& key, const std::vector<T>& vals)
     {
-        std::vector<std::string> strs;
-
-        for(auto& i : vals)
-        {
-            strs.push_back(stringify_hack(i));
-        }
-
-        arr_props[key] = strs;
+        props[key] = vals;
         is_arr[key] = 1;
     }
 
@@ -317,7 +292,7 @@ template<>
 inline
 void mongo_requester::set_prop(const std::string& key, const bool& value)
 {
-    properties[key] = stringify_hack((int)value);
+    props[key] = (int)value;
 }
 
 inline

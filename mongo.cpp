@@ -573,21 +573,16 @@ void mongo_requester::append_property_json(nlohmann::json& js, const std::string
     else if(is_double[key])
         js[key] = get_prop_as_double(key);
     else if(is_arr[key])
-        js[key] = arr_props[key];
+        js[key] = props[key];
     else
-        js[key] = properties[key];
+        js[key] = props[key];
 }
 
 nlohmann::json mongo_requester::get_all_properties_json()
 {
     nlohmann::json js;
 
-    for(auto& i : properties)
-    {
-        append_property_json(js, i.first);
-    }
-
-    for(auto& i : arr_props)
+    for(auto& i : props)
     {
         append_property_json(js, i.first);
     }

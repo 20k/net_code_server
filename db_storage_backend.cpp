@@ -974,7 +974,7 @@ void init_db_storage_backend()
 
     if(resulting_data.size() == 0)
     {
-        throw std::runtime_error("Yeah we're past this point! file explosion");
+        //throw std::runtime_error("Yeah we're past this point! file explosion");
 
         store.atomic_write(root_file, std::to_string(0));
         //write_all(root_file, std::to_string(0));
