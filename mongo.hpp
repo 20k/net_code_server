@@ -21,10 +21,6 @@ enum class mongo_database_type
     USER_PROPERTIES,
     USER_ITEMS,
     GLOBAL_PROPERTIES,
-    #if 0
-    USER_AUTH,
-    #endif // 0
-    //CHAT_CHANNELS, ///deprecated
     PENDING_NOTIFS,
     CHAT_CHANNEL_PROPERTIES,
     NODE_PROPERTIES,

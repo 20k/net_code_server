@@ -99,11 +99,6 @@ mongo_context::mongo_context(mongo_database_type type)
         db = "global_properties";
     }
 
-    /*if(type == mongo_database_type::CHAT_CHANNELS)
-    {
-        db = "chat_channels";
-    }*/
-
     if(type == mongo_database_type::PENDING_NOTIFS)
     {
         db = "pending_notifs";
@@ -185,11 +180,6 @@ mongo_context::mongo_context(mongo_database_type type)
         default_collection = "global_properties";
         is_fixed = true;
     }
-
-    /*if(type == mongo_database_type::CHAT_CHANNELS)
-    {
-        change_collection("all_channels");
-    }*/
 
     /*if(type == mongo_database_type::PENDING_NOTIFS)
     {
