@@ -1009,36 +1009,6 @@ void init_db_storage_backend()
     #endif // BACKUP
 
     ///error with "unique_id" : "fragme_vgdajw_6153"
-
-    /*{
-        for_each_user([](user& usr)
-                      {
-
-                      });
-
-        for_each_npc([](npc_user& usr)
-                     {
-                         {
-                            mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
-
-                            npc_prop_list props;
-
-                            props.load_from_db(ctx, usr.name);
-                         }
-
-                         {
-                            get_nodes(usr.name, -2);
-                         }
-                     });
-
-        //mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
-
-        //user usr;
-        //usr.load_from_db(ctx, "i20k");
-    }*/
-
-
-    //exit(0);
 }
 
 void db_storage_backend::run_tests()
