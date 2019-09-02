@@ -1281,16 +1281,3 @@ size_t db_storage_backend::get_unique_id()
 {
     return get_db_storage().get_next_id();
 }
-
-void remove_mongo_id(nlohmann::json& in)
-{
-    if(in.count("_id") > 0)
-    {
-        in.erase(in.find("_id"));
-    }
-
-    if(in.count(CID_STRING) > 0)
-    {
-        in.erase(in.find(CID_STRING));
-    }
-}

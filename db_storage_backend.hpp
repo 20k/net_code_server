@@ -73,6 +73,4 @@ struct db_storage_backend
     db_storage_backend(mongo_context* fctx);
 };
 
-void remove_mongo_id(nlohmann::json& in);
-
 #endif // DB_STORAGE_BACKEND_HPP_INCLUDED
