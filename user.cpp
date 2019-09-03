@@ -292,10 +292,10 @@ std::map<std::string, double> user::get_properties_from_loaded_items(mongo_lock_
         item item_id;
         item_id.load_from_db(ctx, id);
 
-        ret["char_count"] += item_id.get_prop_as_double("char_count");
-        ret["script_slots"] += item_id.get_prop_as_double("script_slots");
-        ret["public_script_slots"] += item_id.get_prop_as_double("public_script_slots");
-        ret["network_links"] += item_id.get_prop_as_double("network_links");
+        ret["char_count"] += (int)item_id.get("char_count");
+        ret["script_slots"] += (int)item_id.get("script_slots");
+        ret["public_script_slots"] += (int)item_id.get("public_script_slots");
+        ret["network_links"] += (int)item_id.get("network_links");
     }
 
     return ret;

@@ -657,35 +657,35 @@ bool script_info::load_from_db(mongo_lock_proxy& ctx)
 
     item my_script;
 
-    my_script.set_prop("item_id", name);
-    my_script.set_prop("in_public", 0);
-    my_script.set_prop("trust", 0);
-    my_script.set_prop("owner", owner);
-    my_script.set_prop("is_script", 1);
+    my_script.set_as("item_id", name);
+    my_script.set_as("in_public", 0);
+    my_script.set_as("trust", 0);
+    my_script.set_as("owner", owner);
+    my_script.set_as("is_script", 1);
 
     my_script.load_from_db(ctx, name);
 
-    name = my_script.get_prop("item_id");
-    in_public = my_script.get_prop_as_integer("in_public");
+    name = my_script.get("item_id");
+    in_public = my_script.get("in_public");
     //name = my_script.get_prop("item_id");
-    owner = my_script.get_prop("owner");
+    owner = my_script.get("owner");
     //is_script = my_script.get_prop("is_script");
 
-    unparsed_source = my_script.get_prop("unparsed_source");
+    unparsed_source = my_script.get("unparsed_source");
 
     args = decltype(args)();
     params = decltype(params)();
 
-    args = my_script.get_prop_as_array("args");
-    params = my_script.get_prop_as_array("params");
+    args = (std::vector<std::string>)my_script.get("args");
+    params = (std::vector<std::string>)my_script.get("params");
 
-    parsed_source = my_script.get_prop("parsed_source");
-    seclevel = my_script.get_prop_as_integer("seclevel");
-    valid = my_script.get_prop_as_integer("valid");
+    parsed_source = my_script.get("parsed_source");
+    seclevel = my_script.get("seclevel");
+    valid = my_script.get("valid");
 
     //std::cout << "valid? " << valid << std::endl;
 
-    metadata.load_from_string(my_script.get_prop("metadata"));
+    metadata.load_from_string(my_script.get("metadata"));
 
     if(!valid || parsed_source.size() == 0)
     {
@@ -718,19 +718,19 @@ void script_info::overwrite_in_db(mongo_lock_proxy& ctx)
 
     item my_script;
 
-    my_script.set_prop("item_id", name);
-    my_script.set_prop("in_public", in_public);
-    my_script.set_prop("owner", owner);
-    my_script.set_prop("is_script", 1);
-    my_script.set_prop("unparsed_source", unparsed_source);
+    my_script.set_as("item_id", name);
+    my_script.set_as("in_public", in_public);
+    my_script.set_as("owner", owner);
+    my_script.set_as("is_script", 1);
+    my_script.set_as("unparsed_source", unparsed_source);
 
-    my_script.set_prop_array("args", args);
-    my_script.set_prop_array("params", params);
+    my_script.set_as("args", args);
+    my_script.set_as("params", params);
 
-    my_script.set_prop("parsed_source", parsed_source);
-    my_script.set_prop_int("seclevel", seclevel);
-    my_script.set_prop_int("valid", valid);
-    my_script.set_prop("metadata", metadata.dump());
+    my_script.set_as("parsed_source", parsed_source);
+    my_script.set_as("seclevel", seclevel);
+    my_script.set_as("valid", valid);
+    my_script.set_as("metadata", metadata.dump());
 
     //mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
 
@@ -738,35 +738,33 @@ void script_info::overwrite_in_db(mongo_lock_proxy& ctx)
         my_script.overwrite_in_db(ctx);
     else
     {
-        my_script.set_prop("trust", 0);
+        my_script.set_as("trust", 0);
         my_script.overwrite_in_db(ctx);
     }
 }
 
 void script_info::fill_as_bundle_compatible_item(item& my_script)
 {
-    //my_script.set_prop("item_id", name);
-    //my_script.set_prop("in_public", in_public);
-    //my_script.set_prop("owner", owner);
-    //my_script.set_prop("is_script", 1);
-    my_script.set_prop("unparsed_source", unparsed_source);
+    //my_script.set_as("item_id", name);
+    //my_script.set_as("in_public", in_public);
+    //my_script.set_as("owner", owner);
+    //my_script.set_as("is_script", 1);
+    my_script.set_as("unparsed_source", unparsed_source);
 
-    my_script.set_prop_array("args", args);
-    my_script.set_prop_array("params", params);
+    my_script.set_as("args", args);
+    my_script.set_as("params", params);
 
-    my_script.set_prop("parsed_source", parsed_source);
-    my_script.set_prop_int("seclevel", seclevel);
-    my_script.set_prop_int("valid", valid);
-    my_script.set_prop("metadata", metadata.dump());
+    my_script.set_as("parsed_source", parsed_source);
+    my_script.set_as("seclevel", seclevel);
+    my_script.set_as("valid", valid);
+    my_script.set_as("metadata", metadata.dump());
 }
 
 bool script_info::exists_in_db(mongo_lock_proxy& ctx)
 {
     item my_script;
 
-    my_script.set_prop("item_id", name);
-
-    //mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
+    my_script.set_as("item_id", name);
 
     return my_script.exists(ctx, name);
 }

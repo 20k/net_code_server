@@ -140,13 +140,12 @@ struct mongo_lock_proxy
 
     mongo_lock_proxy(const mongo_shim& shim, bool lock = true);
     mongo_lock_proxy(const mongo_lock_proxy&) = delete;
+    ~mongo_lock_proxy();
 
     void change_collection(const std::string& coll, bool force_change = false);
 
-    virtual void lock();
+    void lock();
     void unlock();
-
-    virtual ~mongo_lock_proxy();
 
     database_read_write_interface* operator->();
 };

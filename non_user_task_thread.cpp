@@ -135,15 +135,15 @@ void bot_thread()
                     next_item.load_from_db(mongo_ctx, item_id);
                 }
 
-                std::string type = next_item.get_prop("item_type");
+                int type = next_item.get("item_type");
 
-                if(type != std::to_string(item_types::AUTO_SCRIPT_RUNNER))
+                if(type != item_types::AUTO_SCRIPT_RUNNER)
                     continue;
 
                 //std::cout << "of type bot brain" << std::endl;
 
-                size_t found_time_ms = next_item.get_prop_as_long("last_run");
-                double run_s = next_item.get_prop_as_double("run_every_s");
+                size_t found_time_ms = next_item.get("last_run");
+                double run_s = next_item.get("run_every_s");
 
                 size_t next_time = found_time_ms + run_s * 1000;
 
@@ -154,7 +154,7 @@ void bot_thread()
                     ///WE'RE A VALID BOT BRAIN SCRIPT
                     ///RUN AND THEN BREAK
 
-                    next_item.set_prop("last_run", current_time);
+                    next_item.set_as("last_run", current_time);
 
                     {
                         mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);

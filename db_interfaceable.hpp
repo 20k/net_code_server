@@ -153,23 +153,6 @@ struct db_interfaceable
 
     virtual void serialise(bool ser){}
 
-    template<typename T, typename U>
-    bool force_conversion(const std::string& key, U cv)
-    {
-        try
-        {
-            auto found = data[key].template get<T>();
-
-            data[key] = cv(found);
-
-            return true;
-        }
-        catch(...)
-        {
-            return false;
-        }
-    }
-
     bool has(const std::string& key)
     {
         return data.count(key) > 0;
@@ -184,14 +167,18 @@ struct db_interfaceable
     template<typename T>
     void set_as(const std::string& key, const T& t)
     {
-        data[key] = t;
+        if constexpr(std::is_same_v<bool, T>)
+            data[key] = (int)t;
+        else
+            data[key] = t;
     }
 
-    ///for compatibility with legacy db classes
-    template<typename T>
-    void set_stringify_as(const std::string& key, const T& t)
+    nlohmann::json get(const std::string& key)
     {
-        data[key] = stringify_hack(t);
+        if(!has(key))
+            return nlohmann::json();
+
+        return data[key];
     }
 
     std::string get_stringify(const std::string& key)
@@ -382,27 +369,7 @@ struct db_interfaceable
         return found.size() >= 1;
     }
 
-    virtual bool is_valid(){return true;}
-
     virtual ~db_interfaceable(){}
-};
-
-template<typename T>
-std::vector<T> from_string(const std::vector<std::string>& in)
-{
-    std::vector<T> ret;
-
-    for(auto& i : in)
-    {
-        ret.push_back(atof(i.c_str()));
-    }
-
-    return ret;
-}
-
-struct test_dbable : db_interfaceable<test_dbable, MACRO_GET_STR("test_key")>
-{
-
 };
 
 #endif // DB_INTERFACEABLE_HPP_INCLUDED

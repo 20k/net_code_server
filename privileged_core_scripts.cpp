@@ -546,7 +546,7 @@ duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         mongo_requester request;
         request.set_prop("owner", usr);
-        request.set_prop("full", "1");
+        request.set_prop("full", 1);
         request.set_prop("item_type", (int)item_types::EMPTY_SCRIPT_BUNDLE);
 
         std::vector<mongo_requester> results = request.fetch_from_db(item_context);
@@ -599,7 +599,7 @@ duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     ///seclevel
     //request.set_prop("seclevel", num);
-    //request.set_prop("in_public", "1"); ///TODO: FOR WHEN YOU CAN UP PUBLIC
+    //request.set_prop("in_public", 1"; ///TODO: FOR WHEN YOU CAN UP PUBLIC
 
     mongo_lock_proxy item_context = get_global_mongo_user_items_context(get_thread_id(ctx));
 
@@ -1857,7 +1857,7 @@ std::string format_item(item& i, bool is_short, user& usr, user_nodes& nodes)
 
     std::string ret = "{\n";
 
-    bool is_open_source = i.get_prop_as_integer("open_source");
+    bool is_open_source = i.get("open_source");
 
     //for(auto& p : i.data)
     for(auto it = i.data.begin(); it != i.data.end(); it++)
@@ -1913,7 +1913,7 @@ nlohmann::json get_item_raw(item& i, bool is_short, user& usr, user_nodes& nodes
         return obj;
     }
 
-    bool is_open_source = i.get_prop_as_integer("open_source");
+    bool is_open_source = i.get("open_source");
 
     //for(auto& p : i.props.properties)
     for(auto it = i.data.begin(); it != i.data.end(); it++)
@@ -1975,7 +1975,7 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
         next.load_from_db(item_ctx, which);
     }
 
-    if(next.get_prop_as_integer("item_type") != (int)item_types::LOCK)
+    if((int)next.get("item_type") != (int)item_types::LOCK)
     {
         std::string tl = usr.index_to_item(load_idx);
         std::string tul = usr.index_to_item(unload_idx);
@@ -2729,10 +2729,10 @@ duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         found_bundle.load_from_db(item_lock, item_id);
 
-        if(found_bundle.get_prop("item_type") != std::to_string(item_types::EMPTY_SCRIPT_BUNDLE))
+        if((int)found_bundle.get("item_type") != item_types::EMPTY_SCRIPT_BUNDLE)
             return push_error(ctx, "Not a script bundle");
 
-        if(found_bundle.get_prop("full") != "0")
+        if((int)found_bundle.get("full") != 0)
             return push_error(ctx, "Not an empty script bundle");
 
         /*item found_script;
@@ -2751,7 +2751,7 @@ duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(!found_script.valid)
             return push_error(ctx, "Script invalid");
 
-        int max_storage = found_bundle.get_prop_as_integer("max_script_size");
+        int max_storage = found_bundle.get("max_script_size");
 
         if((int)found_script.unparsed_source.size() > max_storage)
             return push_error(ctx, "Empty bundle does not contain enough space");
@@ -2763,11 +2763,11 @@ duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
         {
             name += " [" + tag + "]";
 
-            found_bundle.set_prop("short_name", name);
+            found_bundle.set_as("short_name", name);
         }
 
         found_script.fill_as_bundle_compatible_item(found_bundle);
-        found_bundle.set_prop("full", 1);
+        found_bundle.set_as("full", 1);
 
         found_bundle.overwrite_in_db(item_lock);
     }
@@ -2820,13 +2820,13 @@ duk_ret_t item__register_bundle(priv_context& priv_ctx, duk_context* ctx, int sl
 
         found_bundle.load_from_db(item_lock, item_id);
 
-        if(found_bundle.get_prop("item_type") != std::to_string(item_types::EMPTY_SCRIPT_BUNDLE))
+        if((int)found_bundle.get("item_type") != item_types::EMPTY_SCRIPT_BUNDLE)
             return push_error(ctx, "Not a script bundle");
 
-        if(found_bundle.get_prop("full") != "1")
+        if((int)found_bundle.get("full") != 1)
             return push_error(ctx, "Not a full script bundle");
 
-        found_bundle.set_prop("registered_as", scriptname);
+        found_bundle.set_as("registered_as", scriptname);
 
         found_bundle.overwrite_in_db(item_lock);
     }
@@ -2887,7 +2887,7 @@ duk_ret_t item__configure_on_breach(priv_context& priv_ctx, duk_context* ctx, in
             return push_error(ctx, "No such item");
     }
 
-    if(it.get_prop_as_integer("item_type") != item_types::ON_BREACH)
+    if((int)it.get("item_type") != item_types::ON_BREACH)
         return push_error(ctx, "Wrong item type, must be on_breach");
 
     std::string new_name = on_breach_name_to_real_script_name(scriptname, priv_ctx.original_host);
@@ -2906,7 +2906,7 @@ duk_ret_t item__configure_on_breach(priv_context& priv_ctx, duk_context* ctx, in
 
     if(has_name && confirm)
     {
-        it.set_prop("script_name", scriptname);
+        it.set_as("script_name", scriptname);
 
         {
              mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
@@ -2980,7 +2980,7 @@ duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     if(test_item.transfer_to_user(get_caller(ctx), get_thread_id(ctx)))
-        duk_push_int(ctx, test_item.get_prop_as_integer("item_id"));
+        duk_push_int(ctx, (int)test_item.get("item_id"));
     else
         push_error(ctx, "Could not transfer item to caller");
 
@@ -3232,7 +3232,7 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(!it.load_from_db(mongo_ctx, item_id))
             continue;
 
-        if(it.get_prop_as_integer("item_type") == item_types::LOCK && nodes.any_contains_lock(item_id))
+        if((int)it.get("item_type") == item_types::LOCK && nodes.any_contains_lock(item_id))
         {
             if(loaded_lock)
                 return push_error(ctx, "Cannot steal more than one loaded lock");
@@ -3775,7 +3775,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
         for(item& it : all_items)
         {
-            if(it.get_prop_as_integer("item_type") == item_types::ON_BREACH && usr.has_loaded_item(it.get_prop("item_id")))
+            if((int)it.get("item_type") == item_types::ON_BREACH && usr.has_loaded_item(it.get_prop("item_id")))
             {
                 std::string script_name = it.get_prop("script_name");
 

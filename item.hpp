@@ -51,17 +51,6 @@ std::string array_to_str(const std::vector<std::string>& arr);
 
 struct item : db_interfaceable<item, MACRO_GET_STR("item_id")>
 {
-    template<typename T>
-    void set_prop(const std::string& str, const T& t)
-    {
-        set_stringify_as(str, t);
-    }
-
-    void set_prop_int(const std::string& str, int t)
-    {
-        set_as(str, t);
-    }
-
     std::string get_prop(const std::string& str)
     {
         if(!has(str))
@@ -77,87 +66,11 @@ struct item : db_interfaceable<item, MACRO_GET_STR("item_id")>
         }
     }
 
-    std::vector<std::string> get_prop_as_array(const std::string& str)
-    {
-        if(!has(str))
-            return std::vector<std::string>();
-
-        try
-        {
-            return get_as<std::vector<std::string>>(str);
-        }
-        catch(...)
-        {
-            return std::vector<std::string>();
-        }
-    }
-
-    int32_t get_prop_as_integer(const std::string& str)
-    {
-        return (int32_t)get_prop_as_long(str);
-    }
-
-    int64_t get_prop_as_long(const std::string& str)
-    {
-        if(!has(str))
-            return int64_t();
-
-        try
-        {
-            std::string prop = get_stringify(str);
-
-            if(prop == "")
-                return 0;
-
-            long long val = atoll(prop.c_str());
-
-            return val;
-        }
-        catch(...)
-        {
-            return 0;
-        }
-    }
-
-    double get_prop_as_double(const std::string& str)
-    {
-        if(!has(str))
-            return double();
-
-        try
-        {
-            std::string prop = get_as<std::string>(str);
-
-            if(prop == "")
-                return 0;
-
-            auto val = atof(prop.c_str());
-
-            return val;
-        }
-        catch(...)
-        {
-            return 0.;
-        }
-    }
-
-    void set_prop_array(const std::string& key, const std::vector<std::string>& vals)
-    {
-        std::vector<std::string> strs;
-
-        for(auto& i : vals)
-        {
-            strs.push_back(stringify_hack(i));
-        }
-
-        set_as(key, vals);
-    }
-
     void generate_set_id(mongo_lock_proxy& global_props_context)
     {
         int32_t id = get_new_id(global_props_context);
 
-        set_prop("item_id", id);
+        set_as("item_id", id);
     }
 
     int32_t get_new_id(mongo_lock_proxy& global_props_context);
@@ -176,13 +89,6 @@ struct item : db_interfaceable<item, MACRO_GET_STR("item_id")>
     void breach();
     bool is_breached();
 };
-
-template<>
-inline
-void item::set_prop(const std::string& str, const bool& b)
-{
-    set_stringify_as(str, (int)b);
-}
 
 extern
 double get_wall_time_s();

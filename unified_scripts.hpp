@@ -40,15 +40,15 @@ struct unified_script_info
 
     void make_from(item& t, const std::string& as_name)
     {
-        valid = t.get_prop("valid") == "1";
+        valid = t.get("valid") == 1;
         parsed_source = t.get_prop("parsed_source");
-        seclevel = t.get_prop_as_integer("seclevel");
-        in_public = t.get_prop_as_integer("in_public");
-        owner = t.get_prop_as_integer("owner");
+        seclevel = t.get("seclevel");
+        in_public = t.get("in_public");
+        owner = t.get("owner");
 
-        args = t.get_prop_as_array("args");
-        params = t.get_prop_as_array("params");
-        metadata.load_from_string(t.get_prop("metadata"));
+        args = (std::vector<std::string>)t.get("args");
+        params = (std::vector<std::string>)t.get("params");
+        metadata.load_from_string(t.get("metadata"));
 
         name = as_name;
         type = script_type::BUNDLE;
