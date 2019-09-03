@@ -213,10 +213,7 @@ mongo_context::mongo_context(mongo_database_type type)
 
 void mongo_context::map_lock_for()
 {
-    ///8 second lock
-    int time_ms = 8 * 1000;
-
-    while(!map_lock.try_lock_for(std::chrono::milliseconds(time_ms))){}
+    map_lock.lock();
 }
 
 void mongo_context::make_lock(const std::string& debug_info, const std::string& collection, size_t who)
