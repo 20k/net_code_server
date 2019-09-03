@@ -40,8 +40,8 @@ struct user
     //std::string auth;
     //std::string old_binary_auth;
     std::string auth_hex;
-    std::string upgr_idx;
-    std::string loaded_upgr_idx;
+    std::vector<std::string> upgr_idx;
+    std::vector<std::string> loaded_upgr_idx;
     #ifdef USE_LOCS
     std::string user_port;
     #endif // USE_LOCS
@@ -60,8 +60,6 @@ struct user
     std::vector<std::string> users_i_have_access_to;
 
     std::array<user_limit, user_limit::COUNT> user_limits;
-
-    std::string joined_channels;
 
     space_pos_t pos;
 
@@ -177,9 +175,12 @@ void for_each_user(const T& t)
         all = request.fetch_from_db(all_auth);
     }
 
-    for(auto& i : all)
+    for(mongo_requester& i : all)
     {
-        auto users = str_to_array(i.get_prop("users"));
+        if(!i.has_prop("users"))
+            continue;
+
+        auto users = (std::vector<std::string>)i.get_prop("users");
 
         for(std::string& usrname : users)
         {

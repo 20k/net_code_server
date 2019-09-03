@@ -2130,21 +2130,11 @@ std::vector<std::string> get_channels_for_user(user& usr)
 
     std::string name = usr.get_call_stack().back();
 
-    /*mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
-
-    user fuser;
-
-    if(!fuser.load_from_db(ctx, name))
-        return std::vector<std::string>();
-
-    return str_to_array(fuser.joined_channels);*/
-
     std::vector<std::string> ret;
 
     static std::vector<mongo_requester> all_data;
     static std::mutex lock;
     static sf::Clock clk;
-
 
     mongo_requester all;
     all.exists_check["channel_name"] = 1;
@@ -2173,7 +2163,7 @@ std::vector<std::string> get_channels_for_user(user& usr)
 
     for(auto& i : found)
     {
-        std::vector<std::string> users = str_to_array(i.get_prop("user_list"));
+        std::vector<std::string> users = (std::vector<std::string>)i.get_prop("user_list");
 
         for(auto& k : users)
         {

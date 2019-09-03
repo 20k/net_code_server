@@ -44,8 +44,6 @@ namespace item_types
 }
 
 bool array_contains(const std::vector<std::string>& arr, const std::string& str);
-std::vector<std::string> str_to_array(const std::string& str);
-std::string array_to_str(const std::vector<std::string>& arr);
 
 #define MAX_ITEMS 48
 
@@ -70,7 +68,7 @@ struct item : db_interfaceable<item, MACRO_GET_STR("item_id")>
     {
         int32_t id = get_new_id(global_props_context);
 
-        set_as("item_id", id);
+        set_as("item_id", std::to_string(id));
     }
 
     int32_t get_new_id(mongo_lock_proxy& global_props_context);

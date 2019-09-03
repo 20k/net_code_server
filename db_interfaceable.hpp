@@ -315,6 +315,8 @@ struct db_interfaceable
     {
         handle_serialise(data, true);
 
+        try{
+
         if(!exists(ctx, data[key_name].template get<std::string>()))
         {
             ///insert
@@ -332,6 +334,13 @@ struct db_interfaceable
             to_set["$set"] = data;
 
             ctx->update_json_one_new(selector, to_set);
+        }
+        }
+        catch(...)
+        {
+            std::cout << "Oopsie\n";
+
+            std::cout << data.dump() << std::endl;
         }
     }
 

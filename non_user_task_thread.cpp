@@ -67,7 +67,7 @@ void manhandle_away_critical_users()
 
             auto found_req = found[0];
 
-            auto arr = str_to_array(found_req.get_prop("users"));
+            auto arr = (std::vector<std::string>)found_req.get_prop("users");
 
             for(int i=0; i < (int)arr.size(); i++)
             {
@@ -79,7 +79,7 @@ void manhandle_away_critical_users()
                 }
             }
 
-            found_req.set_prop("users", array_to_str(arr));
+            found_req.set_prop("users", arr);
 
             req.update_in_db_if_exact(auth_db, found_req);
 

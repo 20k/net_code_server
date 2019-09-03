@@ -91,8 +91,6 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
 
     to_set.set_prop("move_queue", nlohmann::json(move_queue).dump());
 
-    to_set.set_prop("joined_channels", joined_channels);
-
     to_set.set_prop("limits", nlohmann::json(user_limits).dump());
 
     filter.update_one_in_db_if_exact(ctx, to_set);
@@ -135,9 +133,9 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
         if(req.has_prop("hacked_progress"))
             hacked_progress = req.get_prop("hacked_progress");
         if(req.has_prop("upgr_idx"))
-            upgr_idx = req.get_prop("upgr_idx");
+            upgr_idx = (std::vector<std::string>)req.get_prop("upgr_idx");
         if(req.has_prop("loaded_upgr_idx"))
-            loaded_upgr_idx = req.get_prop("loaded_upgr_idx");
+            loaded_upgr_idx = (std::vector<std::string>)req.get_prop("loaded_upgr_idx");
         #ifdef USE_LOCS
         if(req.has_prop("user_port"))
             user_port = req.get_prop("user_port");
@@ -182,9 +180,6 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
                 std::cout << "caught error in move queue\n";
             }
         }
-
-        if(req.has_prop("joined_channels"))
-            joined_channels = req.get_prop("joined_channels");
 
         if(req.has_prop("limits"))
         {
@@ -243,8 +238,8 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
     request.set_prop("name", name);
     //request.set_prop_bin("auth", auth);
     request.set_prop("auth_hex", binary_to_hex(auth));
-    request.set_prop("upgr_idx", "");
-    request.set_prop("loaded_upgr_idx", "");
+    request.set_prop("upgr_idx", std::vector<std::string>());
+    request.set_prop("loaded_upgr_idx", std::vector<std::string>());
     #ifdef USE_LOCS
     request.set_prop("user_port", generate_user_port());
     #endif // USE_LOCS
@@ -258,8 +253,6 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
 
     for(int i=0; i < decltype(pos)::DIM; i++)
         request.set_prop("vector_pos" + std::to_string(i), pos.v[i]);
-
-    request.set_prop("joined_channels", "");
 
     request.insert_in_db(ctx);
 
@@ -357,7 +350,7 @@ std::map<std::string, double> user::get_total_user_properties(int thread_id)
 
 bool user::has_loaded_item(const std::string& id)
 {
-    std::vector<std::string> items = str_to_array(loaded_upgr_idx);
+    std::vector<std::string> items = loaded_upgr_idx;
 
     for(auto& i : items)
     {
@@ -376,7 +369,7 @@ bool user::load_item(const std::string& id)
     if(has_loaded_item(id))
         return false;
 
-    std::vector<std::string> items = str_to_array(loaded_upgr_idx);
+    std::vector<std::string> items = loaded_upgr_idx;
 
     ///non blocking get total user properties
     if(items.size() >= get_total_user_properties(-2)["max_items"])
@@ -384,7 +377,7 @@ bool user::load_item(const std::string& id)
 
     items.push_back(id);
 
-    loaded_upgr_idx = array_to_str(items);
+    loaded_upgr_idx = items;
 
     return true;
 }
@@ -397,7 +390,7 @@ void user::unload_item(const std::string& id)
     if(!has_loaded_item(id))
         return;
 
-    std::vector<std::string> items = str_to_array(loaded_upgr_idx);
+    std::vector<std::string> items = loaded_upgr_idx;
 
     auto it = std::find(items.begin(), items.end(), id);
 
@@ -406,12 +399,12 @@ void user::unload_item(const std::string& id)
 
     items.erase(it);
 
-    loaded_upgr_idx = array_to_str(items);
+    loaded_upgr_idx = items;
 }
 
 std::vector<std::string> user::all_loaded_items()
 {
-    return str_to_array(loaded_upgr_idx);
+    return loaded_upgr_idx;
 }
 
 /*std::string user::get_loaded_callable_scriptname_source(mongo_lock_proxy& ctx, const std::string& full_name)
@@ -448,7 +441,7 @@ item user::get_loaded_callable_scriptname_item(mongo_lock_proxy& ctx, const std:
 
 std::vector<item> user::get_all_items(mongo_lock_proxy& ctx)
 {
-    std::vector<std::string> all_items = str_to_array(upgr_idx);
+    std::vector<std::string> all_items = upgr_idx;
 
     std::vector<item> ret;
 
@@ -467,12 +460,12 @@ std::vector<item> user::get_all_items(mongo_lock_proxy& ctx)
 
 std::vector<std::string> user::get_all_items()
 {
-    return str_to_array(upgr_idx);
+    return upgr_idx;
 }
 
 std::string user::index_to_item(int index)
 {
-    std::vector<std::string> items = str_to_array(upgr_idx);
+    std::vector<std::string> items = upgr_idx;
 
     if(index < 0 || index >= (int)items.size())
         return "";
@@ -482,7 +475,7 @@ std::string user::index_to_item(int index)
 
 int user::item_to_index(const std::string& item)
 {
-    auto items = str_to_array(upgr_idx);
+    auto items = upgr_idx;
 
     for(int i=0; i < (int)items.size(); i++)
     {
@@ -495,16 +488,16 @@ int user::item_to_index(const std::string& item)
 
 void user::append_item(const std::string& id)
 {
-    std::vector<std::string> items = str_to_array(upgr_idx);
+    std::vector<std::string> items = upgr_idx;
 
     items.push_back(id);
 
-    upgr_idx = array_to_str(items);
+    upgr_idx = items;
 }
 
 bool user::has_item(const std::string& id)
 {
-    std::vector<std::string> items = str_to_array(upgr_idx);
+    std::vector<std::string> items = upgr_idx;
 
     for(auto& i : items)
     {
@@ -519,7 +512,7 @@ void user::remove_item(const std::string& id)
 {
     unload_item(id);
 
-    std::vector<std::string> items = str_to_array(upgr_idx);
+    std::vector<std::string> items = upgr_idx;
 
     auto it = std::find(items.begin(), items.end(), id);
 
@@ -528,13 +521,13 @@ void user::remove_item(const std::string& id)
 
     items.erase(it);
 
-    upgr_idx = array_to_str(items);
+    upgr_idx = items;
 }
 
 void user::clear_items(int thread_id)
 {
-    upgr_idx = "";
-    loaded_upgr_idx = "";
+    upgr_idx = {};
+    loaded_upgr_idx = {};
 
     user_nodes nodes = get_nodes(name, thread_id);
 
@@ -552,7 +545,7 @@ void user::clear_items(int thread_id)
 
 int user::num_items()
 {
-    return str_to_array(upgr_idx).size();
+    return upgr_idx.size();
 }
 
 void user::cleanup_call_stack(int thread_id)

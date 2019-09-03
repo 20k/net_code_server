@@ -49,23 +49,6 @@ bool array_contains(const std::vector<std::string>& arr, const std::string& str)
     return false;
 }
 
-std::vector<std::string> str_to_array(const std::string& str)
-{
-    return no_ss_split(str, " ");
-}
-
-std::string array_to_str(const std::vector<std::string>& arr)
-{
-    std::string accum;
-
-    for(auto& i : arr)
-    {
-        accum += i + " ";
-    }
-
-    return accum;
-}
-
 bool item::transfer_to_user(const std::string& username, int thread_id)
 {
     {

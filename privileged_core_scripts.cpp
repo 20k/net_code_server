@@ -981,7 +981,7 @@ bool user_in_channel(mongo_lock_proxy& mongo_ctx, const std::string& username, c
     if(found.size() != 1)
         return false;
 
-    auto channel_users = str_to_array(found[0].get_prop("user_list"));
+    auto channel_users = (std::vector<std::string>)found[0].get_prop("user_list");
 
     return array_contains(channel_users, username);
 }
@@ -1036,7 +1036,7 @@ duk_ret_t channel__create(priv_context& priv_ctx, duk_context* ctx, int sl)
     mongo_requester to_insert;
     to_insert.set_prop("channel_name", chan);
     to_insert.set_prop("password", password);
-    to_insert.set_prop("user_list", array_to_str(user_list));
+    to_insert.set_prop("user_list", user_list);
 
     to_insert.insert_in_db(mongo_ctx);
 
@@ -1074,7 +1074,7 @@ duk_ret_t channel__join(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(found_channel.has_prop("password") && found_channel.get_prop("password") != password)
         return push_error(ctx, "Wrong Password");
 
-    std::vector<std::string> users = str_to_array(found_channel.get_prop("user_list"));
+    std::vector<std::string> users = (std::vector<std::string>)found_channel.get_prop("user_list");
 
     std::string username = get_caller(ctx);
 
@@ -1086,7 +1086,7 @@ duk_ret_t channel__join(priv_context& priv_ctx, duk_context* ctx, int sl)
     mongo_requester to_find = request;
 
     mongo_requester to_set;
-    to_set.set_prop("user_list", array_to_str(users));
+    to_set.set_prop("user_list", users);
 
     to_find.update_in_db_if_exact(mongo_ctx, to_set);
 
@@ -1115,7 +1115,7 @@ duk_ret_t channel__list(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     for(auto& i : found)
     {
-        std::vector<std::string> users = str_to_array(i.get_prop("user_list"));
+        std::vector<std::string> users = (std::vector<std::string>)i.get_prop("user_list");
 
         for(auto& k : users)
         {
@@ -1170,7 +1170,7 @@ duk_ret_t channel__leave(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     mongo_requester& found_channel = found[0];
 
-    std::vector<std::string> users = str_to_array(found_channel.get_prop("user_list"));
+    std::vector<std::string> users = (std::vector<std::string>)found_channel.get_prop("user_list");
 
     std::string username = get_caller(ctx);
 
@@ -1188,7 +1188,7 @@ duk_ret_t channel__leave(priv_context& priv_ctx, duk_context* ctx, int sl)
     mongo_requester to_find = request;
 
     mongo_requester to_set;
-    to_set.set_prop("user_list", array_to_str(users));
+    to_set.set_prop("user_list", users);
 
     to_find.update_in_db_if_exact(mongo_ctx, to_set);
 
@@ -1262,7 +1262,7 @@ duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         mongo_requester& chan = found[0];
 
-        std::vector<std::string> users = str_to_array(chan.get_prop("user_list"));
+        std::vector<std::string> users = (std::vector<std::string>)chan.get_prop("user_list");
 
         if(joining && array_contains(users, username))
             return push_error(ctx, "In channel");
@@ -1284,37 +1284,10 @@ duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         mongo_requester to_find = request;
 
         mongo_requester to_set;
-        to_set.set_prop("user_list", array_to_str(users));
+        to_set.set_prop("user_list", users);
 
         to_find.update_in_db_if_exact(mongo_ctx, to_set);
     }
-
-    ///this was disabled an extremely long time ago
-    /*{
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-
-        user found_user;
-
-        if(!found_user.load_from_db(mongo_ctx, get_caller(ctx)))
-            return push_error(ctx, "No such user, very bad error");
-
-        std::vector<std::string> chans = str_to_array(found_user.joined_channels);
-
-        if(to_join != "" && !array_contains(chans, to_join))
-        {
-            chans.push_back(to_join);
-        }
-
-        if(to_leave != "" && array_contains(chans, to_leave))
-        {
-            auto it = std::find(chans.begin(), chans.end(), to_leave);
-
-            chans.erase(it);
-        }
-
-        found_user.joined_channels = array_to_str(chans);
-        found_user.overwrite_user_in_db(mongo_ctx);
-    }*/
 
     if(to_create.size() > 0)
     {
@@ -1349,7 +1322,7 @@ std::vector<std::string> get_users_in_channel(mongo_lock_proxy& mongo_ctx, const
 
     mongo_requester& chan = found[0];
 
-    std::vector<std::string> users = str_to_array(chan.get_prop("user_list"));
+    std::vector<std::string> users = (std::vector<std::string>)chan.get_prop("user_list");
 
     return users;
 }
@@ -2084,7 +2057,7 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
-    std::vector<std::string> to_ret = str_to_array(found_user.upgr_idx);
+    std::vector<std::string> to_ret = found_user.upgr_idx;
 
     size_t current_time = get_wall_time();
 
