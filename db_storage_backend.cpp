@@ -325,12 +325,6 @@ void import_from_disk(bool force);
 
 struct db_storage
 {
-    //std::map<std::string, std::map<std::string, std::vector<nlohmann::json>>> all_data;
-
-    //std::mutex db_lock;
-
-    //std::map<database_type, database> all_data;
-
     std::array<database, (int)mongo_database_type::MONGO_COUNT> all_data;
     std::array<std::string, (int)mongo_database_type::MONGO_COUNT> indices;
 
@@ -708,23 +702,6 @@ struct db_storage
     ///ensure that update can never contain CID_STRING
     void update_one(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
     {
-        /*if(update.count("parsed_source") > 0)
-        {
-            std::cout << "update " << update.at("parsed_source") << std::endl;
-        }*/
-
-        /*bool checky = false;
-
-        if(update.count("$set") > 0)
-        {
-            if(update.at("$set").count("parsed_source") > 0)
-            {
-                std::cout << update.at("$set").at("parsed_source") << std::endl;
-
-                checky = true;
-            }
-        }*/
-
         database& cdb = get_db(db);
 
         std::lock_guard guard(cdb.get_lock(coll));
@@ -733,19 +710,7 @@ struct db_storage
 
         for_each_match_nolock(db, coll, selector, [&](nlohmann::json& js)
         {
-            /*if(checky)
-            {
-                std::cout << "Checkers!\n";
-
-                std::cout << "old parsed" << js.at("parsed_source") << std::endl;
-            }*/
-
             updater(js, update);
-
-            /*if(checky)
-            {
-                std::cout << "new parsed " << js << std::endl;
-            }*/
 
             flush(db, coll, js);
             return true;
@@ -754,7 +719,6 @@ struct db_storage
 
     void update_many(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update)
     {
-
         database& cdb = get_db(db);
 
         std::lock_guard guard(cdb.get_lock(coll));
@@ -766,7 +730,6 @@ struct db_storage
             updater(js, update);
 
             flush(db, coll, js);
-
             return false;
         });
     }
