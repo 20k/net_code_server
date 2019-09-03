@@ -95,23 +95,27 @@ int* tls_get_print_performance_diagnostics();
 int* tls_get_should_throw();
 int* tls_get_holds_lock();
 
-struct mongo_interface
+struct database_read_interface
 {
     mongo_context* ctx = nullptr;
-
     db_storage_backend backend;
-
     std::string last_collection;
 
     void change_collection_unsafe(const std::string& coll, bool force_change = false);
 
+    std::vector<nlohmann::json> find_json_new(const nlohmann::json& json, const nlohmann::json& opts);
+
+    database_read_interface(mongo_context* fctx);
+};
+
+struct database_read_write_interface : database_read_interface
+{
     void insert_json_one_new(const nlohmann::json& json);
     void update_json_many_new(const nlohmann::json& selector, const nlohmann::json& update);
     void update_json_one_new(const nlohmann::json& selector, const nlohmann::json& update);
-    std::vector<nlohmann::json> find_json_new(const nlohmann::json& json, const nlohmann::json& opts);
     void remove_json_many_new(const nlohmann::json& json);
 
-    mongo_interface(mongo_context* fctx);
+    database_read_write_interface(mongo_context* fctx);
 };
 
 struct mongo_shim
@@ -124,7 +128,7 @@ struct mongo_shim
 
 struct mongo_lock_proxy
 {
-    mongo_interface ctx;
+    database_read_write_interface ctx;
 
     size_t ilock_id = 0;
     int friendly_id = -1;
@@ -144,7 +148,7 @@ struct mongo_lock_proxy
 
     virtual ~mongo_lock_proxy();
 
-    mongo_interface* operator->();
+    database_read_write_interface* operator->();
 };
 
 struct mongo_nolock_proxy : mongo_lock_proxy
@@ -363,8 +367,6 @@ mongo_shim get_global_mongo_scheduled_task_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::SCHEDULED_TASK, lock_id);
 }
-
-using mongo_lock_low_level = mongo_lock_proxy;
 
 inline
 mongo_shim get_global_mongo_low_level_structure_context(int lock_id)

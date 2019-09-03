@@ -254,7 +254,7 @@ void mongo_context::make_unlock(const std::string& collection)
     lock.unlock();*/
 }
 
-void mongo_interface::change_collection_unsafe(const std::string& coll, bool force_change)
+void database_read_interface::change_collection_unsafe(const std::string& coll, bool force_change)
 {
     backend.change_collection_unsafe(coll, force_change);
 
@@ -270,47 +270,40 @@ void mongo_interface::change_collection_unsafe(const std::string& coll, bool for
     last_collection = coll;
 }
 
-void mongo_interface::insert_json_one_new(const nlohmann::json& json)
+void database_read_write_interface::insert_json_one_new(const nlohmann::json& json)
 {
     backend.insert_one(json);
 }
 
-void mongo_interface::update_json_many_new(const nlohmann::json& selector, const nlohmann::json& update)
+void database_read_write_interface::update_json_many_new(const nlohmann::json& selector, const nlohmann::json& update)
 {
     backend.update_many(selector, update);
 }
 
-void mongo_interface::update_json_one_new(const nlohmann::json& selector, const nlohmann::json& update)
+void database_read_write_interface::update_json_one_new(const nlohmann::json& selector, const nlohmann::json& update)
 {
     backend.update_one(selector, update);
 }
 
-std::vector<nlohmann::json> mongo_interface::find_json_new(const nlohmann::json& json, const nlohmann::json& opts)
+std::vector<nlohmann::json> database_read_interface::find_json_new(const nlohmann::json& json, const nlohmann::json& opts)
 {
     return backend.find_many(json, opts);
 }
 
-void mongo_interface::remove_json_many_new(const nlohmann::json& json)
+void database_read_write_interface::remove_json_many_new(const nlohmann::json& json)
 {
     backend.remove_many(json);
 }
 
-mongo_interface::mongo_interface(mongo_context* fctx) : backend(fctx)
+database_read_interface::database_read_interface(mongo_context* fctx) : backend(fctx)
 {
     ctx = fctx;
 }
 
-/*mongo_interface::mongo_interface(mongo_interface&& other)
+database_read_write_interface::database_read_write_interface(mongo_context* fctx) : database_read_interface(fctx)
 {
-    client = other.client;
-    ctx = other.ctx;
-    database = other.database;
-    collection = other.collection;
-    last_collection = other.last_collection;
-    moved_from = other.moved_from;
 
-    other.moved_from = true;
-}*/
+}
 
 mongo_shim::mongo_shim(mongo_context* fctx, int plock_id)
 {
@@ -437,7 +430,7 @@ mongo_nolock_proxy::mongo_nolock_proxy(const mongo_shim& shim) : mongo_lock_prox
 
 }
 
-mongo_interface* mongo_lock_low_level::operator->()
+database_read_write_interface* mongo_lock_proxy::operator->()
 {
     //lock();
 

@@ -1087,7 +1087,7 @@ void delete_structure_for(const std::string& name)
                 {
                     it = i.user_list->erase(it);
 
-                    mongo_lock_low_level ctx = get_global_mongo_low_level_structure_context(-2);
+                    mongo_lock_proxy ctx = get_global_mongo_low_level_structure_context(-2);
 
                     i.overwrite_in_db(ctx);
                 }
