@@ -17,10 +17,7 @@ void load_from_request(auth& ath, mongo_requester& i)
 
     if(i.has_prop("users"))
     {
-        std::string user_string = i.get_prop("users");
-
-        ///yeah kinda dumb
-        ath.users = no_ss_split(user_string, " ");
+        ath.users =  (std::vector<std::string>)i.get_prop("users");
     }
 
     if(i.has_prop("is_hex_encoding"))
@@ -88,25 +85,8 @@ void auth::overwrite_in_db(mongo_lock_proxy& ctx)
     mongo_requester request;
     request.set_prop("account_token_hex", auth_token_hex);
 
-    std::string accum;
-
-    for(auto& i : users)
-    {
-        accum += i + " ";
-    }
-
-    ///wtf?
-    ///this won't update auth if you have 0 users
-    ///I have no idea why this is like this but its definitely wrong
-    //if(accum.size() == 0)
-    //    return;
-
-    ///its a space
-    if(accum.size() > 0)
-        accum.pop_back();
-
     mongo_requester to_set;
-    to_set.set_prop("users", accum);
+    to_set.set_prop("users", users);
     to_set.set_prop("is_hex_encoding", is_hex_encoding);
     to_set.set_prop("steam_id", steam_id);
 

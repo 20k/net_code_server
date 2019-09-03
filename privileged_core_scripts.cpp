@@ -2115,7 +2115,12 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
         if(full)
             formatted += "]";
 
-        push_duk_val(ctx, preamble + formatted);
+        std::string res = preamble + formatted;
+
+        while(res.size() > 0 && res.back() == '\n')
+            res.pop_back();
+
+        push_duk_val(ctx, res);
     }
     else
     {
