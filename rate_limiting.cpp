@@ -24,10 +24,10 @@ void handle_sleep(sandbox_data* dat)
 
     if(val > 0)
     {
-        sf::sleep(sf::milliseconds(round(val)));
+        sf::sleep(sf::milliseconds(val));
     }
 
-    dat->sleep_for -= round(val);
+    dat->sleep_for -= val;
 }
 
 rate_limit global_rate_limit;

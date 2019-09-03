@@ -612,8 +612,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                 all_shared.value()->state.add_realtime_script(current_id);
 
-                //double last_time = get_wall_time();
-
                 bool is_valid = !duk_is_undefined(ctx, -1);
 
                 std::atomic_bool request_going{false};
@@ -728,12 +726,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                         bool long_sleep_requested = request_long_sleep;
 
-                        bool avoid_sleeping = false;
-
-                        //if(holds_lock)
-                        //    avoid_sleeping = *holds_lock > 0;
-
-                        if((current_frame_time_ms >= max_allowed_frame_time_ms + current_goodwill_ms || long_sleep_requested) && !avoid_sleeping)
+                        if(current_frame_time_ms >= max_allowed_frame_time_ms + current_goodwill_ms || long_sleep_requested)
                         {
                             //std::cout << "ftime " << current_frame_time_ms << std::endl;
 
@@ -742,11 +735,9 @@ std::string run_in_user_context(std::string username, std::string command, std::
                                 current_goodwill_ms -= current_frame_time_ms - max_allowed_frame_time_ms;
                             }
 
-
                             double work_units = current_frame_time_ms / (max_allowed_frame_time_ms);
                             work_units = clamp(work_units, 0., 1.);
                             all_shared.value()->state.set_realtime_script_delta(current_id, work_units);
-
 
                             ///THIS ISNT QUITE CORRECT
                             ///it makes the graphics programmer sad as frames will come out IRREGULARLY
@@ -756,11 +747,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
                             to_sleep = clamp(floor(to_sleep), 0., 200.);
 
                             to_sleep = to_sleep * all_shared.value()->live_work_units();
-
-                            //std::cout << "live work units " << all_shared.value()->live_work_units() << std::endl;
-
-                            //printf("%f sleeping for\n", to_sleep);
-
 
                             //sf::Clock slept_for;
 
@@ -789,14 +775,10 @@ std::string run_in_user_context(std::string username, std::string command, std::
                             current_frame_time_ms = 0;
                         }
 
-                        //sthread::increase_priority();
-
                         if(estimated_time_remaining >= 1.5f)
                             sthread::this_sleep(1);
                         else
                             sthread::low_yield();
-
-                        //sthread::normal_priority();
                     }
 
                     force_terminate = true;
@@ -839,8 +821,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
             }
         }
 
-        //managed_duktape_thread(&inf);
-
         //if(!terminated)
         try
         {
@@ -850,7 +830,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
             dukx_free_in_heap<std::shared_ptr<shared_command_handler_state>>(ctx, "all_shared_data");
             teardown_state(ctx);
 
-            //duk_destroy_heap(ctx);
             ectx.destroy();
         }
         catch(...)
@@ -860,11 +839,9 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         printf("cleaned up unsafe\n");
 
-
         if(launched_realtime)
         {
             all_shared.value()->state.remove_realtime_script(launched_realtime_id);;
-            //all_shared.value()->state.number_of_realtime_scripts_terminated++;
         }
 
         std::string ret = inf->ret;
