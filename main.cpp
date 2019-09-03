@@ -486,6 +486,27 @@ int main()
     #ifdef SERVER_FIRST_TIME_EVER_RELEASE
     manage.erase_all();
     manage.generate_up_to(150);
+
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
+
+        std::vector<std::string> chans{"global", "local", "help", "memes"};
+
+        for(auto& i : chans)
+        {
+            mongo_requester to_insert;
+            to_insert.set_prop("channel_name", i);
+
+            if(to_insert.fetch_from_db(mongo_ctx).size() == 0)
+            {
+                to_insert.set_prop("password", "");
+                to_insert.set_prop("user_list", std::vector<std::string>());
+
+                to_insert.insert_in_db(mongo_ctx);
+            }
+        }
+    }
+
     #endif // SERVER_FIRST_TIME_EVER_RELEASE
 
     //#define FIXY_FIX_NPCS
