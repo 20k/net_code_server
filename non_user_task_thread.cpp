@@ -101,49 +101,6 @@ void manhandle_thread()
 }
 #endif // ONE_TIME_MANHANDLE
 
-#if 0
-void fix_auth_errors()
-{
-    //while(1)
-    {
-        auto fix = [](mongo_requester& found_req)
-        {
-            mongo_requester req;
-            req.set_prop_bin("account_token", found_req.get_prop("account_token"));
-
-            auto arr = str_to_array(found_req.get_prop("users"));
-
-            for(int i=0; i < (int)arr.size(); i++)
-            {
-                mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
-
-                user usr;
-                usr.load_from_db(ctx, arr[i]);
-
-                std::string uauth = usr.auth;
-
-                if(uauth != req.get_prop("account_token") || !usr.valid)
-                {
-                    arr.erase(arr.begin() + i);
-                    i--;
-                    continue;
-                }
-            }
-
-            found_req.set_prop("users", array_to_str(arr));
-
-            {
-                mongo_lock_proxy all_auth = get_global_mongo_global_properties_context(-2);
-
-                req.update_in_db_if_exact(all_auth, found_req);
-            }
-        };
-
-        for_each_auth(fix);
-    }
-}
-#endif // 0
-
 extern size_t get_wall_time();
 
 void bot_thread()

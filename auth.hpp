@@ -36,26 +36,4 @@ struct enforce_constant_time
     ~enforce_constant_time();
 };
 
-template<typename T>
-inline
-void for_each_auth(const T& t)
-{
-    std::vector<mongo_requester> all;
-
-    {
-        mongo_lock_proxy all_auth = get_global_mongo_global_properties_context(-2);
-
-        mongo_requester request;
-
-        request.exists_check["account_token_hex"] = 1;
-
-        all = request.fetch_from_db(all_auth);
-    }
-
-    for(auto& i : all)
-    {
-        t(i);
-    }
-}
-
 #endif // AUTH_HPP_INCLUDED

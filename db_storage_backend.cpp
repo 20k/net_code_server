@@ -900,6 +900,24 @@ struct db_storage
     }
 };
 
+struct lmdb_storage
+{
+    void make_backup(const std::string& to_where);
+
+    size_t get_next_id();
+
+    void flush(const database_type& db, const std::string& coll, const nlohmann::json& data);
+    void flush_to(const std::string& root, const database_type& db, const std::string& coll, const nlohmann::json& data);
+    void disk_erase(const database_type& db, const std::string& coll, const nlohmann::json& data);
+
+    void import_collection_nolock(const database_type& db_idx, const std::string& coll);
+    void insert_one(const database_type& db, const std::string& coll, const nlohmann::json& js);
+    void update_one(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update);
+    void update_many(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& update);
+    std::vector<nlohmann::json> find_many(const database_type& db, const std::string& coll, const nlohmann::json& selector, const nlohmann::json& options);
+    void remove_many(const database_type& db, const std::string& coll, const nlohmann::json& selector);
+};
+
 db_storage& get_db_storage()
 {
     static db_storage store;
@@ -962,7 +980,7 @@ void init_db_storage_backend()
 {
     db_storage_backend::run_tests();
 
-    db_storage& store = get_db_storage();
+    auto& store = get_db_storage();
 
     mkdir(ROOT_STORE);
 
