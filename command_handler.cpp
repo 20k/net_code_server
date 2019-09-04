@@ -368,21 +368,17 @@ std::string run_in_user_context(std::string username, std::string command, std::
         static std::mutex id_mut;
 
         static std::map<std::string, int> auth_guard;
-        static int32_t gthread_id = 1;
-        int32_t local_thread_id;
+        static std::atomic_int gthread_id{1};
+        int32_t local_thread_id = gthread_id++;
 
+        if(!force_exec)
         {
             safe_lock_guard lk(id_mut);
 
-            local_thread_id = gthread_id++;
+            if(auth_guard[usr.get_auth_token_hex()] == 1)
+                return make_error_col("Cannot run two scripts at once in different contexts!");
 
-            if(!force_exec)
-            {
-                if(auth_guard[usr.get_auth_token_hex()] == 1)
-                    return make_error_col("Cannot run two scripts at once in different contexts!");
-
-                auth_guard[usr.get_auth_token_hex()] = 1;
-            }
+            auth_guard[usr.get_auth_token_hex()] = 1;
         }
 
         cleanup_auth_at_exit cleanup(id_mut, auth_guard, usr.get_auth_token_hex());
@@ -534,8 +530,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
             {
                 sand_data->terminate_semi_gracefully = true;
             }
-
-            //sthread::this_sleep(1);
         }
 
         #ifdef PERF_DIAGNOSTICS
