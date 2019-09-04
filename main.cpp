@@ -339,8 +339,6 @@ int main()
                     raise(SIGSEGV);
                 }).detach();*/
 
-    //std::cout << "STACKTRACE " << get_stacktrace() << std::endl;
-
     //raise(SIGSEGV);
 
     ///we don't talk about this
