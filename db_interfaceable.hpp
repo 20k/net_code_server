@@ -21,21 +21,13 @@ using json = nlohmann::json;
 ///when we write to the db, we need to update both
 ///so in practice, the strictly typed variables should pass through to the key/value store
 
-struct db_common
+template<typename T>
+struct db_val
 {
     std::string key;
-
-    db_common(const std::string& _key) : key(_key) {}
-
-    virtual ~db_common(){}
-};
-
-template<typename T>
-struct db_val : db_common
-{
     T val = T();
 
-    db_val(const std::string& _key) : db_common(_key) {}
+    db_val(const std::string& _key) : key(_key) {}
 
     template<typename U = T>
     void serialise(json& j, bool ser)
