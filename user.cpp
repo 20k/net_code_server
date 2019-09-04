@@ -2,7 +2,6 @@
 #include "rng.hpp"
 #include <libncclient/nc_util.hpp>
 #include <secret/node.hpp>
-#include "global_caching.hpp"
 #include <secret/npc_manager.hpp>
 #include "privileged_core_scripts.hpp"
 #include <secret/low_level_structure.hpp>

@@ -4,7 +4,6 @@
 #include <map>
 #include <nlohmann/json.hpp>
 #include "mongo.hpp"
-#include "global_caching.hpp"
 
 using json = nlohmann::json;
 
