@@ -31,8 +31,8 @@ struct script_info
     std::vector<std::string> params;
 
     int seclevel = 0;
-    bool valid = false;
-    bool in_public = false;
+    int valid = false;
+    int in_public = false;
 
     //void load_from_disk_with_db_metadata(const std::string& name);
 
@@ -59,7 +59,7 @@ struct script_data
     autos_t autocompletes;
     std::string parsed_source;
     int seclevel = 0;
-    bool valid = false;
+    int valid = false;
 
     std::string compile_error;
 };

@@ -40,7 +40,7 @@ struct unified_script_info
 
     void make_from(item& t, const std::string& as_name)
     {
-        valid = t.get("valid") == 1;
+        valid = (int)t.get("valid") == 1;
         parsed_source = t.get_prop("parsed_source");
         seclevel = t.get("seclevel");
         in_public = t.get("in_public");

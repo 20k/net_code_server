@@ -1830,7 +1830,7 @@ std::string format_item(item& i, bool is_short, user& usr, user_nodes& nodes)
 
     std::string ret = "{\n";
 
-    bool is_open_source = i.get("open_source");
+    bool is_open_source = (int)i.get("open_source");
 
     //for(auto& p : i.data)
     for(auto it = i.data.begin(); it != i.data.end(); it++)
@@ -1886,7 +1886,7 @@ nlohmann::json get_item_raw(item& i, bool is_short, user& usr, user_nodes& nodes
         return obj;
     }
 
-    bool is_open_source = i.get("open_source");
+    bool is_open_source = (int)i.get("open_source");
 
     //for(auto& p : i.props.properties)
     for(auto it = i.data.begin(); it != i.data.end(); it++)

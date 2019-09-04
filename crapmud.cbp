@@ -230,9 +230,10 @@
 			<Add option="-ldbgeng" />
 			<Add option="-lcrypto" />
 			<Add option="-lssl" />
-			<Add option="-lbacktrace" />
+			<Add option="-ldbgeng" />
 			<Add option="-ldl" />
 			<Add option="-fno-pie" />
+			<Add option="-lbacktrace" />
 			<Add library="deps/steamworks_sdk_142/sdk/public/steam/lib/win64/libsdkencryptedappticket64.a" />
 			<Add directory="deps/libs" />
 		</Linker>
