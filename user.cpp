@@ -191,8 +191,6 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
                 //std::cout << "caught error in limits" << std::endl;
             }
         }
-
-        all_found_props = req;
     }
 
     if(!has_pos)

@@ -4,13 +4,14 @@
 #include "mongo.hpp"
 #include "script_util.hpp"
 #include "item.hpp"
+#include <networking/serialisable_fwd.hpp>
 
 #include <secret/structure.hpp>
 #include "timestamped_position.hpp"
 
 struct low_level_structure;
 
-struct user_limit
+struct user_limit : serialisable, free_function
 {
     enum limit_type
     {
@@ -31,10 +32,8 @@ struct user_limit
 };
 
 ///ok. Need to fetch users out of the db
-struct user
+struct user : serialisable, free_function
 {
-    mongo_requester all_found_props;
-
     std::string name;
     double cash = 0;
     //std::string auth;
@@ -154,8 +153,6 @@ struct user
 
     static void launch_pump_events_thread();
 
-protected:
-    //space_pos_t local_pos;
     timestamp_move_queue move_queue;
 };
 

@@ -2,8 +2,8 @@
 #define TIMESTAMPED_POSITION_HPP_INCLUDED
 
 #include <vec/vec.hpp>
-
 #include <nlohmann/json.hpp>
+#include <networking/serialisable_fwd.hpp>
 
 namespace timestamped_move_type
 {
@@ -16,7 +16,7 @@ namespace timestamped_move_type
 
 using timestamped_move_t = timestamped_move_type::timestamped_move_type;
 
-struct timestamped_position
+struct timestamped_position : serialisable, free_function
 {
     timestamped_move_t type = timestamped_move_type::MOVE;
 
@@ -126,7 +126,7 @@ void from_json(const json& j, timestamped_position& p)
     }
 }
 
-struct timestamp_move_queue
+struct timestamp_move_queue : serialisable, free_function
 {
     std::vector<timestamped_position> timestamp_queue;
 
