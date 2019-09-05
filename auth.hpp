@@ -3,24 +3,20 @@
 
 #include <string>
 #include <vector>
-
-#include "mongo.hpp"
 #include <SFML/System.hpp>
+#include <networking/serialisable_fwd.hpp>
 
 struct mongo_lock_proxy;
 
 ///so the key thing to remember is
 ///every user and steam auth has a non steamauth
 ///but not every non steam auth will have a steam auth
-struct auth
+struct auth : serialisable, free_function
 {
-    bool valid = false;
-
     std::string auth_token_binary;
     std::string auth_token_hex;
     uint64_t steam_id = 0;
     std::vector<std::string> users;
-    bool is_hex_encoding = false;
 
     bool load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary);
     bool load_from_db_steamid(mongo_lock_proxy& ctx, uint64_t psteam_id);

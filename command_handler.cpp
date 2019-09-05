@@ -27,6 +27,8 @@
 #include <secret/tutorial.hpp>
 #include "exec_context.hpp"
 #include "steam_auth.hpp"
+#include <networking/serialisable.hpp>
+#include "serialisables.hpp"
 
 struct unsafe_info
 {
@@ -1520,9 +1522,8 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
                 mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
 
                 auth to_check;
-                to_check.load_from_db(mongo_ctx, all_shared->state.get_auth());
 
-                if(!to_check.valid)
+                if(!to_check.load_from_db(mongo_ctx, all_shared->state.get_auth()))
                     return make_response(make_error_col("Trying something sneaky eh?"));
 
                 to_check.insert_user_exclusive(user_name);
@@ -1541,9 +1542,8 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
                 mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
 
                 auth to_check;
-                to_check.load_from_db(mongo_ctx, fauth);
 
-                if(!to_check.valid)
+                if(!to_check.load_from_db(mongo_ctx, fauth))
                     return make_response(make_error_col("Trying something sneaky eh 2?"));
 
                 #ifdef TESTING
@@ -2569,13 +2569,14 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
 
                 std::string to_ret = random_binary_string(128);
 
-                mongo_requester request;
-                request.set_prop("account_token_hex", binary_to_hex(to_ret));
-                request.set_prop("steam_id", all_shared->state.get_steam_id());
+                auth to_insert;
+                to_insert.auth_token_hex = binary_to_hex(to_ret);
+                to_insert.auth_token_binary = to_ret;
+                to_insert.steam_id = all_shared->state.get_steam_id();
 
                 all_shared->state.set_auth(to_ret);
 
-                request.insert_in_db(ctx);
+                insert_in_db(ctx, serialise(to_insert, serialise_mode::DISK));
 
                 if(steam_auth.user_data.size() != 128)
                 {

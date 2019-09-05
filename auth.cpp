@@ -2,95 +2,54 @@
 #include "mongo.hpp"
 #include <libncclient/nc_util.hpp>
 #include "command_handler.hpp"
-
-///perform conversion of all auth tokens to base 64 so we can ditch mongos binary format
-
-void load_from_request(auth& ath, mongo_requester& i)
-{
-    if(i.has_prop("account_token_hex"))
-    {
-        ath.auth_token_hex = i.get_prop("account_token_hex");
-        ath.auth_token_binary = hex_to_binary(ath.auth_token_hex);
-
-        ath.valid = true;
-    }
-
-    if(i.has_prop("users"))
-    {
-        ath.users =  (std::vector<std::string>)i.get_prop("users");
-    }
-
-    if(i.has_prop("is_hex_encoding"))
-    {
-        ath.is_hex_encoding = i.get_prop_as_integer("is_hex_encoding");
-    }
-
-    if(i.has_prop("steam_id"))
-    {
-        ath.steam_id = i.get_prop_as_uinteger("steam_id");
-    }
-}
+#include <networking/serialisable.hpp>
+#include "serialisables.hpp"
 
 bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary_in)
 {
-    mongo_requester request;
-    request.set_prop("account_token_hex", binary_to_hex(auth_binary_in));
+    nlohmann::json req;
+    req["account_token_hex"] = binary_to_hex(auth_binary_in);
 
-    std::vector<mongo_requester> found = request.fetch_from_db(ctx);
+    std::vector<nlohmann::json> found = fetch_from_db(ctx, req);
 
     if(found.size() != 1)
-    {
-        //printf("Invalid user auth token\n");
-
         return false;
-    }
 
-    for(mongo_requester& i : found)
-    {
-        load_from_request(*this, i);
-    }
+    *this = auth();
 
-    return valid;
+    deserialise(found[0], *this, serialise_mode::DISK);
+
+    auth_token_binary = auth_binary_in;
+    auth_token_hex = hex_to_binary(auth_token_binary);
+
+    return true;
 }
 
 bool auth::load_from_db_steamid(mongo_lock_proxy& ctx, uint64_t psteam_id)
 {
     steam_id = psteam_id;
 
-    mongo_requester request;
-    request.set_prop("steam_id", psteam_id);
+    nlohmann::json req;
+    req["steam_id"] = steam_id;
 
-    std::vector<mongo_requester> found = request.fetch_from_db(ctx);
+    std::vector<nlohmann::json> found = fetch_from_db(ctx, req);
 
     if(found.size() != 1)
-    {
-        //printf("Invalid user auth token\n");
-
         return false;
-    }
 
-    for(mongo_requester& i : found)
-    {
-        load_from_request(*this, i);
-    }
+    deserialise(found[0], *this, serialise_mode::DISK);
 
-    return valid;
+    return true;
 }
 
 void auth::overwrite_in_db(mongo_lock_proxy& ctx)
 {
-    if(!valid)
-        return;
+    nlohmann::json req;
+    req["account_token_hex"] = auth_token_hex;
 
-    mongo_requester request;
-    request.set_prop("account_token_hex", auth_token_hex);
+    nlohmann::json data = serialise(*this, serialise_mode::DISK);
 
-    mongo_requester to_set;
-    to_set.set_prop("users", users);
-    to_set.set_prop("is_hex_encoding", is_hex_encoding);
-    to_set.set_prop("steam_id", steam_id);
-
-    request.update_in_db_if_exact(ctx, to_set);
+    update_in_db_if_exact(ctx, req, data);
 }
 
 void auth::insert_user_exclusive(const std::string& username)
