@@ -1,7 +1,6 @@
 #ifndef EVENT_MANAGER_HPP_INCLUDED
 #define EVENT_MANAGER_HPP_INCLUDED
 
-#include "db_interfaceable.hpp"
 #include "mongo.hpp"
 #include "safe_thread.hpp"
 #include <networking/serialisable_fwd.hpp>
