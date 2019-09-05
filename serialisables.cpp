@@ -4,6 +4,7 @@
 #include "auth.hpp"
 #include <secret/node.hpp>
 #include <secret/npc_manager.hpp>
+#include "event_manager.hpp"
 
 DEFINE_SERIALISE_FUNCTION(user_limit)
 {
@@ -124,6 +125,16 @@ DEFINE_SERIALISE_FUNCTION(npc_prop_list)
     DO_FSERIALISE(wh_puzz_set);
 }
 
+DEFINE_SERIALISE_FUNCTION(event::event_impl)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(id);
+    DO_FSERIALISE(user_name);
+    DO_FSERIALISE(unique_event_tag);
+    DO_FSERIALISE(complete);
+}
+
 template<typename T, typename U>
 bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
 {
@@ -181,3 +192,4 @@ void db_overwrite_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_nam
 }
 
 DEFINE_GENERIC_DB(npc_prop_list, std::string, name);
+DEFINE_GENERIC_DB(event::event_impl, std::string, id);

@@ -376,14 +376,14 @@ struct db_interfaceable
 
 #define DECLARE_GENERIC_DB(type, keytype) \
     bool db_disk_load(mongo_lock_proxy& ctx, type& val, const keytype& key_val); \
-    bool db_disk_exists(mongo_lock_proxy& ctx, const keytype& key_val); \
-    void db_disk_remove(mongo_lock_proxy& ctx, type& val); \
+    bool db_disk_exists(mongo_lock_proxy& ctx, const type& val); \
+    void db_disk_remove(mongo_lock_proxy& ctx, const type& val); \
     void db_disk_overwrite(mongo_lock_proxy& ctx, type& val);
 
 #define DEFINE_GENERIC_DB(type, keytype, key_name) \
     bool db_disk_load(mongo_lock_proxy& ctx, type& val, const keytype& key_val) {return db_load_impl(val, ctx, #key_name, key_val);} \
-    bool db_disk_exists(mongo_lock_proxy& ctx, const keytype& key_val) {return db_exists_impl(ctx, #key_name, key_val);} \
-    void db_disk_remove(mongo_lock_proxy& ctx, type& val) {return db_remove_impl(ctx, #key_name, val.key_name);} \
+    bool db_disk_exists(mongo_lock_proxy& ctx, const type& val) {return db_exists_impl(ctx, #key_name, val.key_name);} \
+    void db_disk_remove(mongo_lock_proxy& ctx, const type& val) {return db_remove_impl(ctx, #key_name, val.key_name);} \
     void db_disk_overwrite(mongo_lock_proxy& ctx, type& val) {return db_overwrite_impl(val, ctx, #key_name, val.key_name);}
 
 #endif // DB_INTERFACEABLE_HPP_INCLUDED

@@ -16,6 +16,14 @@ DECLARE_SERIALISE_FUNCTION(user_nodes);
 DECLARE_SERIALISE_FUNCTION(npc_prop);
 DECLARE_SERIALISE_FUNCTION(npc_prop_list);
 
+namespace event
+{
+    struct event_impl;
+}
+
+DECLARE_SERIALISE_FUNCTION(event::event_impl);
+
 DECLARE_GENERIC_DB(npc_prop_list, std::string);
+DECLARE_GENERIC_DB(event::event_impl, std::string);
 
 #endif // SERIALISABLES_HPP_INCLUDED

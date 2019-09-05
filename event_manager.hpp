@@ -4,23 +4,17 @@
 #include "db_interfaceable.hpp"
 #include "mongo.hpp"
 #include "safe_thread.hpp"
+#include <networking/serialisable_fwd.hpp>
+#include "serialisables.hpp"
 
 namespace event
 {
-    struct event_impl : db_interfaceable<event_impl, MACRO_GET_STR("id")>
+    struct event_impl : serialisable, free_function
     {
-        DB_VAL(std::string, user_name);
-        DB_VAL(std::string, unique_event_tag);
-        DB_VAL(bool, complete);
-
-        bool handle_serialise(nlohmann::json& j, bool ser) override
-        {
-            user_name.serialise(j, ser);
-            unique_event_tag.serialise(j, ser);
-            complete.serialise(j, ser);
-
-            return false;
-        }
+        std::string id;
+        std::string user_name;
+        std::string unique_event_tag;
+        bool complete = false;
     };
 
     struct db_saver
@@ -80,7 +74,7 @@ namespace event
                 mongo_nolock_proxy ctx = get_global_mongo_event_manager_context(-2);
                 ctx.change_collection(evt.user_name);
 
-                evt.overwrite_in_db(ctx);
+                db_disk_overwrite(ctx, evt);
             }
 
             auto i1 = transitory_map.find(evt.user_name);
@@ -180,7 +174,7 @@ namespace event
         evt.user_name = user_name;
         evt.unique_event_tag = unique_event_tag;
         evt.complete = true;
-        evt.set_key_data(std::to_string(db_storage_backend::get_unique_id()));
+        evt.id = std::to_string(db_storage_backend::get_unique_id());
 
         if(db_saver::in_progress(evt))
             return false;
