@@ -13,7 +13,6 @@ struct mongo_lock_proxy;
 ///but not every non steam auth will have a steam auth
 struct auth : serialisable, free_function
 {
-    std::string auth_token_binary;
     std::string auth_token_hex;
     uint64_t steam_id = 0;
     std::vector<std::string> users;

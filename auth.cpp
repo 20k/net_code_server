@@ -8,7 +8,7 @@
 bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary_in)
 {
     nlohmann::json req;
-    req["account_token_hex"] = binary_to_hex(auth_binary_in);
+    req["auth_token_hex"] = binary_to_hex(auth_binary_in);
 
     std::vector<nlohmann::json> found = fetch_from_db(ctx, req);
 
@@ -18,9 +18,6 @@ bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary_in
     *this = auth();
 
     deserialise(found[0], *this, serialise_mode::DISK);
-
-    auth_token_binary = auth_binary_in;
-    auth_token_hex = hex_to_binary(auth_token_binary);
 
     return true;
 }
@@ -45,7 +42,7 @@ bool auth::load_from_db_steamid(mongo_lock_proxy& ctx, uint64_t psteam_id)
 void auth::overwrite_in_db(mongo_lock_proxy& ctx)
 {
     nlohmann::json req;
-    req["account_token_hex"] = auth_token_hex;
+    req["auth_token_hex"] = auth_token_hex;
 
     nlohmann::json data = serialise(*this, serialise_mode::DISK);
 

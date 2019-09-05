@@ -2571,12 +2571,13 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
 
                 auth to_insert;
                 to_insert.auth_token_hex = binary_to_hex(to_ret);
-                to_insert.auth_token_binary = to_ret;
                 to_insert.steam_id = all_shared->state.get_steam_id();
 
                 all_shared->state.set_auth(to_ret);
 
                 insert_in_db(ctx, serialise(to_insert, serialise_mode::DISK));
+
+                insert_in_db(ctx, dat);
 
                 if(steam_auth.user_data.size() != 128)
                 {
@@ -2590,7 +2591,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
 
         ///SO IMPORTANT
         ///THE AUTH TOKEN HERE MAY NOT CORRESPOND TO THE STEAM ACCOUNT *BY DESIGN*
-        all_shared->state.set_auth(fauth.auth_token_binary);
+        all_shared->state.set_auth(hex_to_binary(fauth.auth_token_hex));
         all_shared->state.set_steam_id(steam_id);
 
         std::string auth_string;
