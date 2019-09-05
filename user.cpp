@@ -92,6 +92,7 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
     ctx.change_collection(name_);
 
     name = name_;
+    auth_hex = binary_to_hex(auth);
 
     if(!is_valid_string(name))
         return false;
