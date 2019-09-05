@@ -327,6 +327,8 @@
 		<Unit filename="scripting_api_fwrd.hpp" />
 		<Unit filename="seccallers.cpp" />
 		<Unit filename="seccallers.hpp" />
+		<Unit filename="serialisables.cpp" />
+		<Unit filename="serialisables.hpp" />
 		<Unit filename="shared_command_handler_state.hpp" />
 		<Unit filename="shared_duk_worker_state.cpp" />
 		<Unit filename="shared_duk_worker_state.hpp" />

@@ -247,19 +247,19 @@ void mongo_requester::set_prop(const std::string& key, const bool& value)
 }
 
 inline
-std::vector<nlohmann::json> fetch_from_db(mongo_lock_proxy& ctx, nlohmann::json fnd, nlohmann::json proj = {})
+std::vector<nlohmann::json> fetch_from_db(mongo_lock_proxy& ctx, const nlohmann::json& fnd, nlohmann::json proj = {})
 {
     return ctx->find_json_new(fnd, proj);
 }
 
 inline
-void remove_all_from_db(mongo_lock_proxy& ctx, nlohmann::json rem)
+void remove_all_from_db(mongo_lock_proxy& ctx, const nlohmann::json& rem)
 {
     ctx->remove_json_many_new(rem);
 }
 
 inline
-void update_in_db_if_exact(mongo_lock_proxy& ctx, nlohmann::json to_select, nlohmann::json to_update)
+void update_in_db_if_exact(mongo_lock_proxy& ctx, const nlohmann::json& to_select, const nlohmann::json& to_update)
 {
     nlohmann::json to_set;
 
@@ -269,7 +269,7 @@ void update_in_db_if_exact(mongo_lock_proxy& ctx, nlohmann::json to_select, nloh
 }
 
 inline
-void insert_in_db(mongo_lock_proxy& ctx, nlohmann::json to_insert)
+void insert_in_db(mongo_lock_proxy& ctx, const nlohmann::json& to_insert)
 {
     ctx->insert_json_one_new(to_insert);
 }

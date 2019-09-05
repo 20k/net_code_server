@@ -188,20 +188,6 @@ void test_locking()
     safe_lock_guard guard(mut);
 }
 
-void dump_test()
-{
-    timestamp_move_queue q;
-
-    nlohmann::json fun;
-    fun = q;
-
-    std::string str = fun.dump();
-
-    std::cout << "test dump " << str << " sep dump " << nlohmann::json(q).dump() << " incorrect dump " << nlohmann::json{q} << std::endl;
-
-    exit(0);
-}
-
 void tickle_cache()
 {
     for_each_npc([](npc_user& usr)

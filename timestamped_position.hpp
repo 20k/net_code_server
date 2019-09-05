@@ -73,59 +73,6 @@ struct timestamped_position : serialisable, free_function
     }
 };
 
-inline
-void to_json(nlohmann::json& j, const timestamped_position& p)
-{
-    j = nlohmann::json{
-        {"tp", p.type},
-        {"ts", p.timestamp},
-        {"x", p.position.x()},
-        {"y", p.position.y()},
-        {"z", p.position.z()},
-        {"nt", p.notif_on_finish},
-        {"sys", p.system_to_arrive_at},
-        };
-}
-
-inline
-void from_json(const json& j, timestamped_position& p)
-{
-    try
-    {
-        p.type = j.at("tp");
-    }
-    catch(...)
-    {
-
-    }
-
-    p.timestamp = j.at("ts");
-
-    p.position.x() = j.at("x");
-    p.position.y() = j.at("y");
-    p.position.z() = j.at("z");
-
-    ///sigh lack of schema
-    try
-    {
-        p.notif_on_finish = j.at("nt");
-    }
-    catch(...)
-    {
-
-    }
-
-    ///sigh lack of schema
-    try
-    {
-        p.system_to_arrive_at = j.at("sys");
-    }
-    catch(...)
-    {
-
-    }
-}
-
 struct timestamp_move_queue : serialisable, free_function
 {
     std::vector<timestamped_position> timestamp_queue;
@@ -216,18 +163,5 @@ struct timestamp_move_queue : serialisable, free_function
         }
     }
 };
-
-
-inline
-void to_json(nlohmann::json& j, const timestamp_move_queue& p)
-{
-    j["q"] = p.timestamp_queue;
-}
-
-inline
-void from_json(const json& j, timestamp_move_queue& p)
-{
-    p.timestamp_queue = j.at("q").get<std::vector<timestamped_position>>();
-}
 
 #endif // TIMESTAMPED_POSITION_HPP_INCLUDED

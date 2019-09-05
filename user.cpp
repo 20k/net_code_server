@@ -8,25 +8,8 @@
 #include "logging.hpp"
 #include "command_handler.hpp"
 #include "safe_thread.hpp"
-
-void to_json(nlohmann::json& j, const user_limit& limit)
-{
-    j = nlohmann::json{
-        {"p", limit.data},
-        {"t", limit.time_at},
-        };
-}
-
-void from_json(const nlohmann::json& j, user_limit& limit)
-{
-    limit.data = j.at("p");
-    limit.time_at = j.at("t");
-
-    if(isnan(limit.data) || isinf(limit.data))
-    {
-        limit.data = 1;
-    }
-}
+#include <networking/serialisable.hpp>
+#include "serialisables.hpp"
 
 ///could probably use this to implement the hour long window eh
 double user_limit::calculate_current_data(size_t time_ms)
@@ -54,45 +37,22 @@ double user_limit::calculate_current_data(size_t time_ms)
 
 user::user()
 {
-    /*for(int i=0; i < user_limit::limit_type::COUNT; i++)
-    {
-        user_limits[i].type = i;
-    }*/
+
 }
 
 void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
 {
     ctx.change_collection(name);
 
-    mongo_requester filter;
-    filter.set_prop("name", name);
+    nlohmann::json fetch;
+    fetch["name"] = name;
 
-    mongo_requester to_set;
-    to_set.set_prop("name", name);
-    to_set.set_prop("cash", cash);
-    to_set.set_prop("upgr_idx", upgr_idx);
-    to_set.set_prop("loaded_upgr_idx", loaded_upgr_idx);
-    #ifdef USE_LOCS
-    to_set.set_prop("user_port", user_port);
-    #endif // USE_LOCS
-    to_set.set_prop("initial_connection_setup", initial_connection_setup);
-    to_set.set_prop("owner_list", owner_list);
-    to_set.set_prop("call_stack", call_stack);
-    to_set.set_prop("users_i_have_access_to", users_i_have_access_to);
-    to_set.set_prop("auth_hex", auth_hex);
-    to_set.set_prop("hacked_progress", hacked_progress);
+    nlohmann::json to_set = serialise(*this, serialise_mode::DISK);
 
-    for(int i=0; i < decltype(pos)::DIM; i++)
-        to_set.set_prop("vector_pos" + std::to_string(i), pos.v[i]);
+    nlohmann::json setter;
+    setter["$set"] = to_set;
 
-    //for(int i=0; i < decltype(local_pos)::DIM; i++)
-    //    to_set.set_prop("vector_pos_local" + std::to_string(i), local_pos.v[i]);
-
-    to_set.set_prop("move_queue", nlohmann::json(move_queue).dump());
-
-    to_set.set_prop("limits", nlohmann::json(user_limits).dump());
-
-    filter.update_one_in_db_if_exact(ctx, to_set);
+    update_in_db_if_exact(ctx, fetch, setter);
 }
 
 bool user::exists(mongo_lock_proxy& ctx, const std::string& name_)
@@ -112,109 +72,17 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
     if(!exists(ctx, name_))
         return false;
 
-    bool has_pos = false;
+    nlohmann::json fetch;
+    fetch["name"] = name_;
 
-    mongo_requester request;
-    request.set_prop("name", name_);
+    std::vector<nlohmann::json> found = fetch_from_db(ctx, fetch);
 
-    auto found = request.fetch_from_db(ctx);
+    if(found.size() != 1)
+        return false;
 
-    for(mongo_requester& req : found)
-    {
-        if(req.has_prop("name"))
-            name = req.get_prop("name");
-        if(req.has_prop("cash"))
-            cash = req.get_prop("cash");
-        //if(req.has_prop("auth"))
-        //    old_binary_auth = req.get_prop("auth");
-        if(req.has_prop("auth_hex"))
-            auth_hex = req.get_prop("auth_hex");
-        if(req.has_prop("hacked_progress"))
-            hacked_progress = req.get_prop("hacked_progress");
-        if(req.has_prop("upgr_idx"))
-            upgr_idx = (std::vector<std::string>)req.get_prop("upgr_idx");
-        if(req.has_prop("loaded_upgr_idx"))
-            loaded_upgr_idx = (std::vector<std::string>)req.get_prop("loaded_upgr_idx");
-        #ifdef USE_LOCS
-        if(req.has_prop("user_port"))
-            user_port = req.get_prop("user_port");
-        #endif // USE_LOCS
-        if(req.has_prop("initial_connection_setup"))
-            initial_connection_setup = req.get_prop_as_integer("initial_connection_setup");
-        if(req.has_prop("owner_list"))
-            owner_list = (std::vector<std::string>)req.get_prop_as_array("owner_list");
-        if(req.has_prop("call_stack"))
-            call_stack = (std::vector<std::string>)req.get_prop_as_array("call_stack");
-        if(req.has_prop("users_i_have_access_to"))
-            users_i_have_access_to = (std::vector<std::string>)req.get_prop_as_array("users_i_have_access_to");
+    *this = user();
 
-        for(int i=0; i < decltype(pos)::DIM; i++)
-        {
-            if(req.has_prop("vector_pos" + std::to_string(i)))
-            {
-                pos.v[i] = req.get_prop("vector_pos" + std::to_string(i));
-                has_pos = true;
-            }
-        }
-
-        /*for(int i=0; i < decltype(local_pos)::DIM; i++)
-        {
-            if(req.has_prop("vector_pos_local" + std::to_string(i)))
-            {
-                local_pos.v[i] = req.get_prop_as_double("vector_pos_local" + std::to_string(i));
-                has_local_pos = true;
-            }
-        }*/
-
-        if(req.has_prop("move_queue"))
-        {
-            //std::cout << "hello " << req.get_prop("move_queue") << std::endl;
-
-            try
-            {
-                move_queue = nlohmann::json::parse((std::string)req.get_prop("move_queue"));
-            }
-            catch(...)
-            {
-                std::cout << "caught error in move queue\n";
-            }
-        }
-
-        if(req.has_prop("limits"))
-        {
-            try
-            {
-                user_limits = nlohmann::json::parse((std::string)req.get_prop("limits"));
-            }
-            catch(...)
-            {
-                //std::cout << "caught error in limits" << std::endl;
-            }
-        }
-    }
-
-    if(!has_pos)
-    {
-        pos = sample_game_structure();
-
-        overwrite_user_in_db(ctx);
-    }
-
-    /*if(local_pos == nv)
-    {
-        has_local_pos = false;
-    }*/
-
-    has_local_pos = move_queue.timestamp_queue.size() > 0;
-
-    #ifdef USE_LOCS
-    if(user_port == "")
-    {
-        user_port = generate_user_port();
-
-        overwrite_user_in_db(ctx);
-    }
-    #endif // USE_LOCS
+    deserialise(found[0], *this, serialise_mode::DISK);
 
     return true;
 }
@@ -231,27 +99,7 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
     if(exists(ctx, name))
         return false;
 
-    mongo_requester request;
-    request.set_prop("name", name);
-    //request.set_prop_bin("auth", auth);
-    request.set_prop("auth_hex", binary_to_hex(auth));
-    request.set_prop("upgr_idx", std::vector<std::string>());
-    request.set_prop("loaded_upgr_idx", std::vector<std::string>());
-    #ifdef USE_LOCS
-    request.set_prop("user_port", generate_user_port());
-    #endif // USE_LOCS
-    request.set_prop("is_user", 1);
-    request.set_prop("initial_connection_setup", initial_connection_setup);
-    request.set_prop("owner_list", std::vector<std::string>());
-    request.set_prop("call_stack", std::vector<std::string>());
-    request.set_prop("users_i_have_access_to", std::vector<std::string>());
-
-    pos = sample_game_structure();
-
-    for(int i=0; i < decltype(pos)::DIM; i++)
-        request.set_prop("vector_pos" + std::to_string(i), pos.v[i]);
-
-    request.insert_in_db(ctx);
+    insert_in_db(ctx, serialise(*this, serialise_mode::DISK));
 
     return true;
 }
@@ -264,11 +112,6 @@ std::string user::get_auth_token_hex()
 std::string user::get_auth_token_binary()
 {
     return hex_to_binary(auth_hex);
-}
-
-void user::delete_from_cache(const std::string& name_)
-{
-
 }
 
 std::map<std::string, double> user::get_properties_from_loaded_items(mongo_lock_proxy& ctx)
@@ -634,14 +477,7 @@ void user::add_allowed_user(const std::string& usr, mongo_lock_proxy& ctx)
 
     owner_list.push_back(usr);
 
-    mongo_requester filter;
-    filter.set_prop("name", name);
-
-    mongo_requester to_set;
-    to_set.set_prop("name", name);
-    to_set.set_prop("owner_list", owner_list);
-
-    filter.update_in_db_if_exact(ctx, to_set);
+    overwrite_user_in_db(ctx);
 
     user found_user;
 
@@ -665,14 +501,7 @@ void user::remove_allowed_user(const std::string& usr, mongo_lock_proxy& ctx)
 
     owner_list.erase(std::remove(owner_list.begin(), owner_list.end(), usr), owner_list.end());
 
-    mongo_requester filter;
-    filter.set_prop("name", name);
-
-    mongo_requester to_set;
-    to_set.set_prop("name", name);
-    to_set.set_prop("owner_list", owner_list);
-
-    filter.update_in_db_if_exact(ctx, to_set);
+    overwrite_user_in_db(ctx);
 
     user found_user;
 

@@ -1021,8 +1021,6 @@ void delete_user_for(const std::string& name)
         req.set_prop("name", name);
 
         req.remove_all_from_db(ctx);
-
-        user::delete_from_cache(name);
     }
 }
 
