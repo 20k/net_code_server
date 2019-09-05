@@ -1892,7 +1892,7 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
 
         mongo_requester request;
         //request.set_prop_bin("account_token", to_ret);
-        request.set_prop("account_token_hex", binary_to_hex(to_ret));
+        request.set_prop("auth_token_hex", binary_to_hex(to_ret));
 
         all_shared->state.set_auth(to_ret);
 
