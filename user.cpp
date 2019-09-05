@@ -165,23 +165,19 @@ std::map<std::string, double> user::get_total_user_properties(int thread_id)
         {
             mongo_nolock_proxy ctx = get_global_mongo_npc_properties_context(thread_id);
 
-            valid = props.load_from_db(ctx, name);
+            valid = db_disk_load(ctx, props, name);
         }
 
-        if(valid && props.has("vals") && props.has("props"))
+        if(valid)
         {
-            std::vector<int> enums = props.get_as<std::vector<int>>("props");
-            std::vector<float> vals = props.get_as<std::vector<float>>("vals");
+            std::optional<float> val = props.get_prop(npc_info::ITEM_CAP);
 
-            for(int i=0; i < (int)enums.size(); i++)
+            if(val.has_value())
             {
-                if(enums[i] == npc_info::ITEM_CAP)
-                {
-                    if(vals[i] > 0)
-                        found["max_items"] = MAX_ITEMS * 4;
-                    else if(vals[i] < 0)
-                        found["max_items"] = MAX_ITEMS / 2;
-                }
+                if(val.value() > 0)
+                    found["max_items"] = MAX_ITEMS * 4;
+                else if(val.value() < 0)
+                    found["max_items"] = MAX_ITEMS / 2;
             }
         }
     }
@@ -557,32 +553,18 @@ int user::get_default_network_links(int thread_id)
     {
         mongo_nolock_proxy ctx = get_global_mongo_npc_properties_context(thread_id);
 
-        if(!props.load_from_db(ctx, name))
+        if(!db_disk_load(ctx, props, name))
             return 4;
     }
 
-    if(props.has("vals") && props.has("props"))
+    std::optional<float> val = props.get_prop(npc_info::MAX_CONNECT);
+
+    if(val.has_value())
     {
-        std::vector<int> enums = props.get_as<std::vector<int>>("props");
-        std::vector<float> vals = props.get_as<std::vector<float>>("vals");
-
-        for(int i=0; i < (int)enums.size(); i++)
-        {
-            if(enums[i] == npc_info::MAX_CONNECT)
-            {
-                if(vals[i] > 0)
-                    base++;
-                else if(vals[i] < 0)
-                    base--;
-            }
-
-            #ifdef EXTRA_WARPY
-            if(enums[i] == npc_info::WARPY)
-            {
-                base += 4;
-            }
-            #endif // EXTRA_WARPY
-        }
+        if(val.value() > 0)
+            base++;
+        if(val.value() < 0)
+            base--;
     }
 
     if(base < 1)
