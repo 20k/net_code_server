@@ -1034,9 +1034,9 @@ void delete_npc_db_for(const std::string& name)
     mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
 
     npc_prop_list npc_props;
-    npc_props.set_as("name", name);
+    npc_props.name = name;
 
-    npc_props.remove_from_db(ctx);
+    db_disk_remove(ctx, npc_props);
 }
 
 void delete_links_for(const std::string& name)
@@ -1151,14 +1151,16 @@ std::string rename_user_force(const std::string& from_name, const std::string& t
             mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
 
             ///load old props
-            props.load_from_db(ctx, from_name);
+            //props.load_from_db(ctx, from_name);
+
+            db_disk_load(ctx, props, from_name);
             ///delete those bad boys
-            props.remove_from_db(ctx);
+            db_disk_remove(ctx, props);
 
             ///rename props
-            props.data[props.key_name] = to_name;
+            props.name = to_name;
             ///insert into db under new name
-            props.overwrite_in_db(ctx);
+            db_disk_overwrite(ctx, props);
         }
     }
 

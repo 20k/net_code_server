@@ -52,7 +52,7 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     nlohmann::json setter;
     setter["$set"] = to_set;
 
-    update_in_db_if_exact(ctx, fetch, setter);
+    ctx->update_json_one_new(fetch, setter);
 }
 
 bool user::exists(mongo_lock_proxy& ctx, const std::string& name_)

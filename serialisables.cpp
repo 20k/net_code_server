@@ -1,0 +1,183 @@
+#include "serialisables.hpp"
+#include <networking/serialisable.hpp>
+#include "user.hpp"
+#include "auth.hpp"
+#include <secret/node.hpp>
+#include <secret/npc_manager.hpp>
+
+DEFINE_SERIALISE_FUNCTION(user_limit)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(data);
+    DO_FSERIALISE(time_at);
+}
+
+DEFINE_SERIALISE_FUNCTION(timestamped_position)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(type);
+    DO_FSERIALISE(timestamp);
+    DO_FSERIALISE(position);
+    DO_FSERIALISE(notif_on_finish);
+    DO_FSERIALISE(system_to_arrive_at);
+}
+
+DEFINE_SERIALISE_FUNCTION(timestamp_move_queue)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(timestamp_queue);
+}
+
+DEFINE_SERIALISE_FUNCTION(user)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(name);
+    DO_FSERIALISE(cash);
+    DO_FSERIALISE(auth_hex);
+    DO_FSERIALISE(upgr_idx);
+    DO_FSERIALISE(loaded_upgr_idx);
+    DO_FSERIALISE(initial_connection_setup);
+    DO_FSERIALISE(call_stack);
+    DO_FSERIALISE(owner_list);
+    DO_FSERIALISE(users_i_have_access_to);
+    DO_FSERIALISE(user_limits);
+    DO_FSERIALISE(pos);
+    DO_FSERIALISE(has_local_pos);
+    DO_FSERIALISE(hacked_progress);
+    DO_FSERIALISE(move_queue);
+}
+
+DEFINE_SERIALISE_FUNCTION(auth)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(auth_token_hex);
+    DO_FSERIALISE(steam_id);
+    DO_FSERIALISE(users);
+}
+
+DEFINE_SERIALISE_FUNCTION(user_log_fragment)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(col);
+    DO_FSERIALISE(key);
+    DO_FSERIALISE(text);
+    DO_FSERIALISE(hide_key);
+}
+
+DEFINE_SERIALISE_FUNCTION(user_log)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(frags);
+}
+
+DEFINE_SERIALISE_FUNCTION(user_node)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(type);
+    DO_FSERIALISE(state);
+    DO_FSERIALISE(max_locks);
+    DO_FSERIALISE(owned_by);
+    DO_FSERIALISE(unique_id);
+    DO_FSERIALISE(attached_locks);
+    DO_FSERIALISE(connected_to);
+    DO_FSERIALISE(new_logs);
+    DO_FSERIALISE(time_last_breached_at_s);
+
+    if(ctx.serialisation && !ctx.encode)
+    {
+        while(me->new_logs.size() > MAX_LOGS)
+            me->new_logs.erase(me->new_logs.begin());
+    }
+}
+
+DEFINE_SERIALISE_FUNCTION(user_nodes)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(nodes);
+    DO_FSERIALISE(owned_by);
+    DO_FSERIALISE(owner);
+}
+
+DEFINE_SERIALISE_FUNCTION(npc_prop)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(val);
+    DO_FSERIALISE(cap);
+}
+
+DEFINE_SERIALISE_FUNCTION(npc_prop_list)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(name);
+    DO_FSERIALISE(props);
+    DO_FSERIALISE(wh_puzz_set);
+}
+
+template<typename T, typename U>
+bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
+{
+    if(!db_exists_impl(ctx, key_name, key_val))
+        return false;
+
+    nlohmann::json fetch;
+    fetch[key_name] = key_val;
+
+    std::vector<nlohmann::json> found = fetch_from_db(ctx, fetch);
+
+    if(found.size() != 1)
+        return false;
+
+    val = T();
+
+    deserialise(found[0], val, serialise_mode::DISK);
+
+    return true;
+}
+
+template<typename U>
+bool db_exists_impl(mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
+{
+    nlohmann::json to_find;
+    to_find[key_name] = key_val;
+    return ctx->find_json_new(to_find, nlohmann::json()).size() == 1;
+}
+
+template<typename U>
+void db_remove_impl(mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
+{
+    nlohmann::json to_remove;
+    to_remove[key_name] = key_val;
+    ctx->remove_json_many_new(to_remove);
+}
+
+template<typename T, typename U>
+void db_overwrite_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
+{
+    if(!db_exists_impl(ctx, key_name, key_val))
+    {
+        ctx->insert_json_one_new(serialise(val, serialise_mode::DISK));
+    }
+    else
+    {
+        nlohmann::json selector;
+        selector[key_name] = key_val;
+
+        nlohmann::json to_set;
+        to_set["$set"] = serialise(val, serialise_mode::DISK);
+
+        ctx->update_json_one_new(selector, to_set);
+    }
+}
+
+DEFINE_GENERIC_DB(npc_prop_list, std::string, name);

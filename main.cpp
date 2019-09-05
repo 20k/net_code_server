@@ -35,6 +35,7 @@
 #include "source_maps.hpp"
 #include <secret/special_user_scripts.hpp>
 #include "reoccurring_task_handler.hpp"
+#include "serialisables.hpp"
 
 void debug_terminal()
 {
@@ -196,7 +197,7 @@ void tickle_cache()
 
         mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
 
-        props.load_from_db(ctx, usr.name);
+        db_disk_load(ctx, props, usr.name);
 
         get_user_and_nodes(usr.name, -2);
     });
@@ -377,7 +378,7 @@ int main()
 
     //test_json();
 
-    //#define SERVER_FIRST_TIME_EVER_RELEASE
+    #define SERVER_FIRST_TIME_EVER_RELEASE
     #ifdef SERVER_FIRST_TIME_EVER_RELEASE
     //#define FIXJOIN_CHANNELS
     #define REGENERATE_LINKS_AND_USERS
