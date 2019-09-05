@@ -2577,8 +2577,6 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
 
                 insert_in_db(ctx, serialise(to_insert, serialise_mode::DISK));
 
-                insert_in_db(ctx, dat);
-
                 if(steam_auth.user_data.size() != 128)
                 {
                     if(!fauth.load_from_db_steamid(ctx, steam_id))
