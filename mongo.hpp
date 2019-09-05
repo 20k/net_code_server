@@ -30,7 +30,6 @@ enum class mongo_database_type
     LOW_LEVEL_STRUCTURE,
     QUEST_MANAGER,
     EVENT_MANAGER,
-    MEMORY_CORE,
     MONGO_COUNT
 };
 
@@ -383,12 +382,6 @@ inline
 mongo_shim get_global_mongo_event_manager_context(int lock_id)
 {
     return get_global_mongo_context(mongo_database_type::EVENT_MANAGER, lock_id);
-}
-
-inline
-mongo_shim get_global_mongo_memory_core_context(int lock_id)
-{
-    return get_global_mongo_context(mongo_database_type::MEMORY_CORE, lock_id);
 }
 
 #endif // MONGO_HPP_INCLUDED
