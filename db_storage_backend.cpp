@@ -329,6 +329,7 @@ struct db_storage
     std::array<std::string, (int)mongo_database_type::MONGO_COUNT> indices;
 
     size_t global_id = 0;
+    size_t reserved_global_id = 0;
     mutex_t id_guard;
 
     bool atomic_enabled = true;
@@ -440,11 +441,14 @@ struct db_storage
     {
         std::lock_guard guard(id_guard);
 
-        size_t val = global_id++;
+        if(global_id == reserved_global_id)
+        {
+            reserved_global_id += 1024;
 
-        atomic_write(ROOT_FILE, std::to_string(global_id));
+            atomic_write(ROOT_FILE, std::to_string(reserved_global_id));
+        }
 
-        return val;
+        return global_id++;
     }
 
     ///todo: make atomic
@@ -951,6 +955,7 @@ void init_db_storage_backend()
     else
     {
         store.global_id = atoll(resulting_data.c_str());
+        store.reserved_global_id = store.global_id;
     }
 
     for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
