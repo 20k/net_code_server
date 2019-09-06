@@ -281,7 +281,17 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
             duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk);
             sandbox_data* sand_data = (sandbox_data*)mem_funcs_duk.udata;
 
-            handle_sleep(sand_data);
+            double max_frame_time_ms = (1./sand_data->realtime_framerate) * 1000.;
+
+            while(elapsed.getElapsedTime().asMicroseconds() / 1000. < max_frame_time_ms)
+            {
+                sf::sleep(sf::milliseconds(1));
+            }
+
+            sand_data->clk.restart();
+            sand_data->realtime_ms_awake_elapsed = 0;
+
+            //handle_sleep(sand_data);
 
             frame_in_flight = false;
 
@@ -289,17 +299,19 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
 
             request_long_sleep = true;
 
-            //std::cout << "Full frame too " << elapsed.getElapsedTime().asMicroseconds() / 1000. << std::endl;
+            std::cout << "Full frame too " << elapsed.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
             double exec_time = elapsed.getElapsedTime().asMicroseconds() / 1000.;
             avg_exec_time = (avg_exec_time + exec_time)/2.;
 
             duk_gc(ctx, 0);
 
-            while(!frame_in_flight && !force_terminate)
+            /*while(!frame_in_flight && !force_terminate)
             {
                 sthread::this_sleep(1);
-            }
+            }*/
+
+            //sthread::this_sleep(1);
 
             should_fire_frame = false;
 
@@ -665,6 +677,8 @@ std::string run_in_user_context(std::string username, std::string command, std::
                         all_shared.value()->shared.add_back_write(j.dump());
                     }
 
+                    sand_data->is_realtime = true;
+
                     sthread thrd = sthread(async_realtime_script_handler, ctx, std::ref(cqueue), std::ref(cstate), std::ref(inf->ret),
                                                    std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate),
                                                    std::ref(avg_exec_time), std::ref(holds_lock), std::ref(safe_to_terminate),
@@ -714,11 +728,14 @@ std::string run_in_user_context(std::string username, std::string command, std::
                         if(update_check())
                             break;
 
+                        sf::sleep(sf::milliseconds(1));
+
+                        #if 0
                         bool once_through = false;
 
                         while(frame_in_flight)
                         {
-                            double sleep_time_ms = 0;
+                            /*double sleep_time_ms = 0;
                             double awake_time_ms = 0;
 
                             bool should_break = false;
@@ -740,7 +757,13 @@ std::string run_in_user_context(std::string username, std::string command, std::
                                 sleep_time_ms += sleep_clock.restart().asMicroseconds() / 1000.;
                             }
 
-                            sleep_time_ms -= to_sleep;
+                            sleep_time_ms -= to_sleep;*/
+
+                            double awake_time_ms = 0;
+
+                            bool should_break = false;
+
+                            double sleep_debt_ms = 0;
 
                             sf::Clock allowed_clock;
 
@@ -755,10 +778,29 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                                 sf::sleep(sf::milliseconds(1));
 
-                                awake_time_ms += allowed_clock.restart().asMicroseconds() / 1000.;
+                                double done = allowed_clock.restart().asMicroseconds() / 1000.;
+
+                                awake_time_ms += done;
+                                sleep_debt_ms += done * (max_frame_time_ms - max_allowed_frame_time_ms) / max_allowed_frame_time_ms;
                             }
 
                             awake_time_ms -= max_allowed_frame_time_ms;
+
+                            double sleep_time_ms = 0;
+
+                            sf::Clock sleep_clock;
+
+                            while(sleep_time_ms < sleep_debt_ms)
+                            {
+                                if(update_check())
+                                    should_break = true;
+
+                                //sf::sleep(sf::milliseconds(1));
+
+                                sleep_thread_for(sand_data, thrd, 1);
+
+                                sleep_time_ms += sleep_clock.restart().asMicroseconds() / 1000.;
+                            }
 
                             if(awake_time_ms < 0)
                                 awake_time_ms = 0;
@@ -775,7 +817,9 @@ std::string run_in_user_context(std::string username, std::string command, std::
                             once_through = true;
                         }
 
+
                         frame_in_flight = true;
+                        #endif // 0
                     }
 
                     force_terminate = true;

@@ -4,6 +4,7 @@
 #include "scripting_api.hpp"
 #include "safe_thread.hpp"
 #include <atomic>
+#include <SFML/System.hpp>
 
 typedef struct
 {
@@ -35,6 +36,13 @@ struct sandbox_data
     std::atomic_bool terminate_semi_gracefully{false};
     std::atomic_bool terminate_realtime_gracefully{false};
     std::atomic_int sleep_for{0};
+
+    bool is_awake{false};
+    bool is_realtime{false};
+    int realtime_framerate{60};
+    double realtime_ms_awake_elapsed{0};
+    double realtime_ms_asleep_elapsed{0};
+    sf::Clock clk;
 };
 
 static void *sandbox_alloc(void *udata, duk_size_t size)
