@@ -1,7 +1,10 @@
 #ifndef QUEST_MANAGER_HPP_INCLUDED
 #define QUEST_MANAGER_HPP_INCLUDED
 
-#include "db_interfaceable.hpp"
+#include <string>
+#include <vector>
+#include <nlohmann/json.hpp>
+#include "serialisables.hpp"
 
 namespace quest_type
 {
@@ -90,13 +93,14 @@ struct quest_cash_send_data
     void update_json(nlohmann::json& json);
 };
 
-struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
+struct quest : serialisable, free_function
 {
+    std::string id;
     ///who's this quest being done for?
-    DB_VAL(std::string, user_for);
+    std::string user_for;
 
-    DB_VAL(std::string, name);
-    DB_VAL(std::string, description);
+    std::string name;
+    std::string description;
 
     using data_type = std::pair<quest_type::type, nlohmann::json>;
     using map_type = std::vector<data_type>;
@@ -104,21 +108,8 @@ struct quest : db_interfaceable<quest, MACRO_GET_STR("id")>
     ///maps quest type to a user to arbitrary json
     ///so the way this is expected to operate is that we run a script, and that script keeps track of what we're doing
     ///also note to self: generally try to cut down on the number of threads in the application
-    DB_VAL(map_type, quest_data);
-    DB_VAL(std::string, run_on_complete);
-
-    bool handle_serialise(json& j, bool ser) override
-    {
-        quest_data.serialise(j, ser);
-        user_for.serialise(j, ser);
-
-        name.serialise(j, ser);
-        description.serialise(j, ser);
-
-        run_on_complete.serialise(j, ser);
-
-        return false;
-    }
+    map_type quest_data;
+    std::string run_on_complete;
 
     bool is_index_completed(int idx);
 

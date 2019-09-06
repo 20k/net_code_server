@@ -7145,8 +7145,7 @@ duk_ret_t mission__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_quest_manager_context(get_thread_id(ctx));
 
-        test.overwrite_in_db(mongo_ctx);
-
+        db_disk_overwrite(mongo_ctx, test);
     }
 
     test.send_new_quest_alert_to(get_thread_id(ctx), get_caller(ctx));

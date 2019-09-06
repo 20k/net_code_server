@@ -6,6 +6,7 @@
 #include <secret/npc_manager.hpp>
 #include "event_manager.hpp"
 #include "scheduled_tasks.hpp"
+#include "quest_manager.hpp"
 
 DEFINE_SERIALISE_FUNCTION(user_limit)
 {
@@ -148,6 +149,18 @@ DEFINE_SERIALISE_FUNCTION(task_data_db)
     DO_FSERIALISE(count_offset);
 }
 
+DEFINE_SERIALISE_FUNCTION(quest)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(id);
+    DO_FSERIALISE(user_for);
+    DO_FSERIALISE(name);
+    DO_FSERIALISE(description);
+    DO_FSERIALISE(quest_data);
+    DO_FSERIALISE(run_on_complete);
+}
+
 template<typename T, typename U>
 bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
 {
@@ -231,4 +244,5 @@ std::vector<T> db_load_all_impl(mongo_lock_proxy& ctx, const std::string& key_na
 DEFINE_GENERIC_DB(npc_prop_list, std::string, name);
 DEFINE_GENERIC_DB(event_impl, std::string, id);
 DEFINE_GENERIC_DB(task_data_db, std::string, id);
+DEFINE_GENERIC_DB(quest, std::string, id);
 

@@ -1084,7 +1084,7 @@ void delete_quests_for(const std::string& name)
 
     for(auto& i : all)
     {
-        i.remove_from_db(ctx);
+        db_disk_remove(ctx, i);
     }
 }
 
