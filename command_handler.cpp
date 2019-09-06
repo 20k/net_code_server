@@ -585,7 +585,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                     if(found.size() == 0)
                     {
-                        req.set_prop("worker_id_gid", 0);
+                        req.set_prop("worker_id_gid", 1);
 
                         req.insert_in_db(mctx);
                     }
