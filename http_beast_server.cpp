@@ -382,7 +382,7 @@ void websocket_ssl_reformed(int in_port)
             std::cout << "Critical Server Screwup " << e.what() << std::endl;
         }
 
-        sf::sleep(sf::milliseconds(100));
+        sf::sleep(sf::milliseconds(1));
     }
 }
 
