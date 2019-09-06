@@ -106,7 +106,7 @@ void sleep_thread_for(sandbox_data* sand_data, sthread& t, int sleep_ms)
     sthread::this_sleep(sleep_ms);
 }
 
-void async_realtime_script_handler(duk_context* nctx, shared_data& shared, command_handler_state& state, double& time_of_last_on_update, std::string& ret,
+void async_realtime_script_handler(duk_context* nctx, shared_data& shared, command_handler_state& state, std::string& ret,
                                    std::atomic_bool& terminated, std::atomic_bool& request_long_sleep, std::atomic_bool& fedback, int current_id,
                                    std::atomic_bool& force_terminate, std::atomic<double>& avg_exec_time, volatile int*& holds_lock, std::atomic_bool& safe_to_terminate)
 {
@@ -634,9 +634,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 std::atomic<double> avg_exec_time = 0;
                 double estimated_time_remaining = max_allowed_frame_time_ms;
 
-                double time_of_last_on_update = get_wall_time();
-
-
                 sf::Clock clk;
 
                 if(is_valid)
@@ -669,7 +666,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                         catch(...){}
                     }
 
-                    sthread thrd = sthread(async_realtime_script_handler, ctx, std::ref(cqueue), std::ref(cstate), std::ref(time_of_last_on_update), std::ref(inf->ret),
+                    sthread thrd = sthread(async_realtime_script_handler, ctx, std::ref(cqueue), std::ref(cstate), std::ref(inf->ret),
                                                    std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate),
                                                    std::ref(avg_exec_time), std::ref(holds_lock), std::ref(safe_to_terminate));
 
