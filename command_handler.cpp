@@ -278,6 +278,8 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
 
             double max_frame_time_ms = (1./current_framerate) * 1000.;
 
+            ///remember to set work units here
+
             while(elapsed.getElapsedTime().asMicroseconds() / 1000. < max_frame_time_ms)
             {
                 sf::sleep(sf::milliseconds(1));
@@ -406,6 +408,8 @@ std::string run_in_user_context(std::string username, std::string command, std::
             dukx_put_pointer(ctx, &all_shared.value()->state, "command_handler_state_pointer");
 
             dukx_allocate_in_heap(ctx, all_shared.value(), "all_shared_data");
+
+            sand_data->all_shared = all_shared.value();
         }
         else
         {
@@ -418,28 +422,22 @@ std::string run_in_user_context(std::string username, std::string command, std::
         inf->usr = &usr;
         inf->command = command;
         inf->ectx = &ectx;
-
-        sthread* launch = new sthread(managed_duktape_thread, inf, local_thread_id);
+        sand_data->is_static = true;
+        sand_data->max_elapsed_time_ms = 5000;
 
         if(all_shared.has_value())
         {
             all_shared.value()->state.number_of_oneshot_scripts++;
         }
 
-        //launch->detach();
-
-        bool terminated = false;
-
-        //sf::Clock clk;
-        #ifdef TESTING
         float max_time_ms = 5000;
-        #else
-        float max_time_ms = 5000;
-        #endif
         float db_grace_time_ms = 2000;
 
         if(custom_exec_time_s.has_value())
+        {
             max_time_ms = custom_exec_time_s.value() * 1000.;
+            sand_data->max_elapsed_time_ms = custom_exec_time_s.value() * 1000;
+        }
 
         auto time_start = std::chrono::high_resolution_clock::now();
 
@@ -461,9 +459,11 @@ std::string run_in_user_context(std::string username, std::string command, std::
         int skip = 0;
         #endif // PERF_DIAGNOSTICS
 
-        while(!inf->finished)
+        managed_duktape_thread(inf, local_thread_id);
+
+        //while(!inf->finished)
         {
-            int sleep_mult = 1;
+            /*int sleep_mult = 1;
 
             if(all_shared.has_value())
             {
@@ -473,49 +473,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 {
                     sand_data->terminate_semi_gracefully = true;
                 }
-            }
-
-            #ifdef ACTIVE_TIME_MANAGEMENT
-            {
-                sthread::this_sleep(active_time_slice_ms);
-
-                //accumulated_missed_sleep_time += sleeping_time_slice_ms * sleep_mult;
-
-                sand_data->sleep_for += sleeping_time_slice_ms * sleep_mult;
-
-                sthread::this_sleep(sleeping_time_slice_ms * sleep_mult);
-                ///else continue
-            }
-            #endif // ACTIVE_TIME_MANAGEMENT
-
-            auto time_current = std::chrono::high_resolution_clock::now();
-
-            auto diff = time_current - time_start;
-
-            auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
-
-            double elapsed = dur.count();
-
-            if(elapsed >= max_time_ms + db_grace_time_ms * 10 && !displayed_warning)
-            {
-                printf("Warning, long running thread\n");
-                displayed_warning = true;
-            }
-
-            if(elapsed >= max_time_ms + db_grace_time_ms)
-            {
-                *tls_get_should_throw() = 2;
-            }
-
-            if(elapsed >= max_time_ms + db_grace_time_ms/2)
-            {
-                *tls_get_should_throw() = 1;
-            }
-
-            if(elapsed >= max_time_ms)
-            {
-                sand_data->terminate_semi_gracefully = true;
-            }
+            }*/
         }
 
         #ifdef PERF_DIAGNOSTICS
@@ -541,10 +499,10 @@ std::string run_in_user_context(std::string username, std::string command, std::
         bool launched_realtime = false;
         int launched_realtime_id = 0;
 
-        if(inf->finished && !terminated)
+        if(inf->finished)
         {
-            launch->join();
-            delete launch;
+            //launch->join();
+            //delete launch;
 
             if(current_mode == script_management_mode::REALTIME && all_shared.has_value() && !sand_data->terminate_semi_gracefully && !sand_data->terminate_realtime_gracefully)
             {
@@ -613,6 +571,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                     }
 
                     sand_data->is_realtime = true;
+                    sand_data->is_static = false;
 
                     auto update_check = [&]()
                     {
@@ -653,6 +612,8 @@ std::string run_in_user_context(std::string username, std::string command, std::
                         return false;
                     };
 
+                    sand_data->realtime_script_id = current_id;
+
                     ///remember, need to also set work units and do other things!
                     async_realtime_script_handler(ctx, cstate, inf->ret, current_id, update_check);
 
@@ -674,9 +635,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
         //if(!terminated)
         try
         {
-            if(terminated)
-                printf("Attempting unsafe resource cleanup\n");
-
             dukx_free_in_heap<std::shared_ptr<shared_command_handler_state>>(ctx, "all_shared_data");
             teardown_state(ctx);
 
@@ -696,11 +654,8 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         std::string ret = inf->ret;
 
-        if(!terminated)
-        {
-            delete inf;
-            inf = nullptr;
-        }
+        delete inf;
+        inf = nullptr;
 
         return ret;
     }

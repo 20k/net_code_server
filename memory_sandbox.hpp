@@ -5,6 +5,7 @@
 #include "safe_thread.hpp"
 #include <atomic>
 #include <SFML/System.hpp>
+#include <memory>
 
 typedef struct
 {
@@ -30,8 +31,18 @@ static void sandbox_dump_memstate(void)
 #endif
 }
 
+struct command_handler_state;
+struct shared_command_handler_state;
+
 struct sandbox_data
 {
+    std::shared_ptr<shared_command_handler_state> all_shared = nullptr;
+    int realtime_script_id = -1;
+    sf::Clock full_run_clock;
+    std::atomic_bool is_static{false};
+    float max_elapsed_time_ms = 0;
+    double ms_awake_elapsed_static = 0;
+
     size_t total_allocated = 0;
     std::atomic_bool terminate_semi_gracefully{false};
     std::atomic_bool terminate_realtime_gracefully{false};

@@ -3,6 +3,7 @@
 
 #include "command_handler_state.hpp"
 #include "command_handler.hpp"
+#include "shared_data.hpp"
 
 struct shared_command_handler_state
 {
