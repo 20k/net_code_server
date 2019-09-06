@@ -681,18 +681,12 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                             if(str != "")
                             {
-                                try
-                                {
-                                    using json = nlohmann::json;
+                                nlohmann::json j;
+                                j["id"] = current_id;
+                                j["msg"] = str;
+                                j["type"] = "command_realtime";
 
-                                    json j;
-                                    j["id"] = current_id;
-                                    j["msg"] = str;
-                                    j["type"] = "command_realtime";
-
-                                    all_shared.value()->shared.add_back_write(j.dump());
-                                }
-                                catch(...){}
+                                all_shared.value()->shared.add_back_write(j.dump());
                             }
                         }
 
