@@ -16,14 +16,11 @@ bool shared_duk_worker_state::is_realtime()
     return is_realtime_script;
 }
 
-void shared_duk_worker_state::set_output_data(const std::string& str)
+void shared_duk_worker_state::add_output_data(const std::string& str)
 {
     safe_lock_guard guard(lck);
 
-    if(realtime_output_data == str)
-        return;
-
-    realtime_output_data = str;
+    realtime_output_data.push_back(str);
     has_output_data = true;
 }
 
@@ -34,11 +31,16 @@ std::string shared_duk_worker_state::consume_output_data()
     if(!has_output_data)
         return "";
 
+    if(realtime_output_data.size() == 0)
+        return "";
+
     has_output_data = false;
 
-    std::string ret = realtime_output_data;
+    std::string f = realtime_output_data.front();
 
-    return ret;
+    realtime_output_data.erase(realtime_output_data.begin());
+
+    return f;
 }
 
 bool shared_duk_worker_state::has_output_data_available()

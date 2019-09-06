@@ -369,7 +369,7 @@ duk_ret_t async_pipe(duk_context* ctx)
         str = str + " [Truncated, > " + std::to_string(MAX_MESSAGE_SIZE) + "]";;
     }
 
-    shared_state->set_output_data(str);
+    shared_state->add_output_data(str);
 
     return 0;
 }

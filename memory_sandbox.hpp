@@ -32,9 +32,9 @@ static void sandbox_dump_memstate(void)
 struct sandbox_data
 {
     size_t total_allocated = 0;
-    volatile bool terminate_semi_gracefully = false;
-    volatile bool terminate_realtime_gracefully = false;
-    std::atomic<int> sleep_for{0};
+    std::atomic_bool terminate_semi_gracefully{false};
+    std::atomic_bool terminate_realtime_gracefully{false};
+    std::atomic_int sleep_for{0};
 };
 
 static void *sandbox_alloc(void *udata, duk_size_t size)

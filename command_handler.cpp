@@ -229,8 +229,6 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
             {
                 double current_dt = clk.restart().asMicroseconds() / 1000.;
 
-                //std::cout << " dt " << current_dt << std::endl;
-
                 duk_push_string(ctx, "on_update");
                 duk_push_number(ctx, current_dt);
 
@@ -291,10 +289,10 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
 
             duk_gc(ctx, 0);
 
-            while(!fedback)
+            /*while(!fedback)
             {
-                sthread::low_yield();
-            }
+                sthread::this_sleep(1);
+            }*/
 
             //sthread::normal_priority();
 
@@ -621,6 +619,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 ///default is 60
                 double current_framerate = get_global_number(ctx, "framerate_limit");
 
+
                 current_framerate = clamp(current_framerate, 1., 60.);
 
                 const double max_frame_time_ms = (1./current_framerate) * 1000.;
@@ -632,9 +631,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 volatile int* holds_lock = nullptr;
 
                 std::atomic<double> avg_exec_time = 0;
-                double estimated_time_remaining = max_allowed_frame_time_ms;
-
-                sf::Clock clk;
 
                 if(is_valid)
                 {
@@ -670,102 +666,86 @@ std::string run_in_user_context(std::string username, std::string command, std::
                                                    std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate),
                                                    std::ref(avg_exec_time), std::ref(holds_lock), std::ref(safe_to_terminate));
 
+                    double sleep_time_ms = 0;
+                    double awake_time_ms = 0;
+
                     while(!force_terminate)
                     {
-                        if(shared_duk_state->has_output_data_available())
+                        auto update_check = [&]()
                         {
-                            std::string str = shared_duk_state->consume_output_data();
-
-                            if(str != "")
+                            while(shared_duk_state->has_output_data_available())
                             {
-                                nlohmann::json j;
-                                j["id"] = current_id;
-                                j["msg"] = str;
-                                j["type"] = "command_realtime";
+                                std::string str = shared_duk_state->consume_output_data();
 
-                                all_shared.value()->shared.add_back_write(j.dump());
+                                if(str != "")
+                                {
+                                    nlohmann::json j;
+                                    j["id"] = current_id;
+                                    j["msg"] = str;
+                                    j["type"] = "command_realtime";
+
+                                    all_shared.value()->shared.add_back_write(j.dump());
+                                }
                             }
+
+                            if(all_shared.value()->state.should_terminate_any_realtime)
+                                return true;
+
+                            {
+                                safe_lock_guard guard(all_shared.value()->state.lock);
+
+                                if(all_shared.value()->state.should_terminate_realtime[current_id])
+                                    return true;
+                            }
+
+                            if(!shared_duk_state->is_realtime())
+                                return true;
+
+                            if(all_shared.value()->live_work_units() > 10)
+                                return true;
+
+                            shared_duk_state->set_key_state(all_shared.value()->state.get_key_state(current_id));
+                            shared_duk_state->set_mouse_pos(all_shared.value()->state.get_mouse_pos(current_id));
+
+                            return false;
+                        };
+
+                        double to_sleep = max_frame_time_ms - max_allowed_frame_time_ms;
+
+                        sf::Clock sleep_clock;
+
+                        bool should_break = false;
+
+                        while(sleep_time_ms < to_sleep)
+                        {
+                            if(update_check())
+                                should_break = true;
+
+                            sleep_thread_for(sand_data, thrd, 1);
+
+                            sleep_time_ms += sleep_clock.restart().asMicroseconds() / 1000.;
                         }
 
-                        if(all_shared.value()->state.should_terminate_any_realtime)
-                            break;
+                        sleep_time_ms -= to_sleep;
 
+                        //fedback = true;
+
+                        sf::Clock allowed_clock;
+
+                        while(awake_time_ms < max_allowed_frame_time_ms)
                         {
-                            safe_lock_guard guard(all_shared.value()->state.lock);
+                            if(update_check())
+                                should_break = true;
 
-                            if(all_shared.value()->state.should_terminate_realtime[current_id])
-                                break;
+                            sf::sleep(sf::milliseconds(1));
+
+                            awake_time_ms += allowed_clock.restart().asMicroseconds() / 1000.;
                         }
 
-                        if(!shared_duk_state->is_realtime())
+                        awake_time_ms -= max_allowed_frame_time_ms;
+
+                        if(should_break)
                             break;
-
-                        if(all_shared.value()->live_work_units() > 10)
-                            break;
-
-                        shared_duk_state->set_key_state(all_shared.value()->state.get_key_state(current_id));
-                        shared_duk_state->set_mouse_pos(all_shared.value()->state.get_mouse_pos(current_id));
-
-                        double dt_ms = clk.restart().asMicroseconds() / 1000.;
-
-                        current_frame_time_ms += dt_ms;
-                        estimated_time_remaining -= dt_ms;
-
-                        bool long_sleep_requested = request_long_sleep;
-
-                        if(current_frame_time_ms >= max_allowed_frame_time_ms + current_goodwill_ms || long_sleep_requested)
-                        {
-                            //std::cout << "ftime " << current_frame_time_ms << std::endl;
-
-                            if(current_frame_time_ms >= max_allowed_frame_time_ms)
-                            {
-                                current_goodwill_ms -= current_frame_time_ms - max_allowed_frame_time_ms;
-                            }
-
-                            double work_units = current_frame_time_ms / (max_allowed_frame_time_ms);
-                            work_units = clamp(work_units, 0., 1.);
-                            all_shared.value()->state.set_realtime_script_delta(current_id, work_units);
-
-                            ///THIS ISNT QUITE CORRECT
-                            ///it makes the graphics programmer sad as frames will come out IRREGULARLY
-                            ///needs to take into account the extra time we've elapsed for
-                            double to_sleep = max_frame_time_ms - current_frame_time_ms;
-
-                            to_sleep = clamp(floor(to_sleep), 0., 200.);
-
-                            to_sleep = to_sleep * all_shared.value()->live_work_units();
-
-                            //sf::Clock slept_for;
-
-                            sleep_thread_for(sand_data, thrd, to_sleep);
-
-                            estimated_time_remaining = avg_exec_time;
-
-                            //std::cout << "slept for " << slept_for.getElapsedTime().asMicroseconds() / 1000. << std::endl;
-
-                            clk.restart();
-
-                            if(long_sleep_requested)
-                            {
-                                request_long_sleep = false;
-
-                                fedback = true;
-                            }
-
-                            if(current_frame_time_ms < max_allowed_frame_time_ms)
-                            {
-                                current_goodwill_ms += max_allowed_frame_time_ms - current_frame_time_ms;
-                            }
-
-                            current_goodwill_ms = clamp(current_goodwill_ms, 0.f, max_goodwill_ms);
-
-                            current_frame_time_ms = 0;
-                        }
-
-                        if(estimated_time_remaining >= 1.5f)
-                            sthread::this_sleep(1);
-                        else
-                            sthread::low_yield();
                     }
 
                     force_terminate = true;
