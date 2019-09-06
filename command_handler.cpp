@@ -2299,8 +2299,6 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
         printf("auth client\n");
         std::string auth_token = hex_to_binary(str["data"]);
 
-        std::cout << "alen " << auth_token.size() << std::endl;
-
         if(auth_token.length() > 140)
         {
             nlohmann::json data;
