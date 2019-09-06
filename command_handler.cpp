@@ -461,21 +461,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         managed_duktape_thread(inf, local_thread_id);
 
-        //while(!inf->finished)
-        {
-            /*int sleep_mult = 1;
-
-            if(all_shared.has_value())
-            {
-                sleep_mult = all_shared.value()->live_work_units();
-
-                if(all_shared.value()->live_work_units() > 10)
-                {
-                    sand_data->terminate_semi_gracefully = true;
-                }
-            }*/
-        }
-
         #ifdef PERF_DIAGNOSTICS
         std::cout << "TOTAL SUSPEND " << total_suspend_ms << std::endl;
         std::cout << "TOTAL RUNTIME " << runtime.getElapsedTime().asMilliseconds() << std::endl;
