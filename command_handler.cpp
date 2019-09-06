@@ -106,14 +106,14 @@ void sleep_thread_for(sandbox_data* sand_data, sthread& t, int sleep_ms)
     sthread::this_sleep(sleep_ms);
 }
 
-void async_realtime_script_handler(duk_context* nctx, shared_data& shared, command_handler_state& state, std::string& ret,
-                                   std::atomic_bool& terminated, std::atomic_bool& request_long_sleep, std::atomic_bool& fedback, int current_id,
-                                   std::atomic_bool& force_terminate, std::atomic<double>& avg_exec_time, volatile int*& holds_lock, std::atomic_bool& safe_to_terminate,
-                                   std::atomic_bool& frame_in_flight, std::atomic_bool& should_fire_frame)
+template<typename T>
+void async_realtime_script_handler(duk_context* nctx, command_handler_state& state, std::string& ret,
+                                   int current_id, T& callback)
 {
-    sf::Clock clk;
+    double current_framerate = get_global_number(nctx, "framerate_limit");
+    current_framerate = clamp(current_framerate, 1., 60.);
 
-    avg_exec_time = 4;
+    sf::Clock clk;
 
     duk_push_thread_new_globalenv(nctx);
     duk_context* ctx = duk_get_context(nctx, -1);
@@ -121,23 +121,18 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
     duk_dup(nctx, -2);
 
     duk_xmove_top(ctx, nctx, 1);
-
-    holds_lock = tls_get_holds_lock();
-
-    should_fire_frame = false;
-
     //duk_context* ctx = nctx;
 
     /*MAKE_PERF_COUNTER();
     mongo_diagnostics diagnostic_scope;*/
+
+    bool force_terminate = false;
 
     while(!force_terminate)
     {
         try
         {
             sf::Clock elapsed;
-
-            frame_in_flight = true;
 
             bool any = false;
 
@@ -281,45 +276,20 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
             duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk);
             sandbox_data* sand_data = (sandbox_data*)mem_funcs_duk.udata;
 
-            double max_frame_time_ms = (1./sand_data->realtime_framerate) * 1000.;
+            double max_frame_time_ms = (1./current_framerate) * 1000.;
 
             while(elapsed.getElapsedTime().asMicroseconds() / 1000. < max_frame_time_ms)
             {
                 sf::sleep(sf::milliseconds(1));
             }
 
+            if(callback())
+                break;
+
             sand_data->clk.restart();
             sand_data->realtime_ms_awake_elapsed = 0;
 
-            //handle_sleep(sand_data);
-
-            frame_in_flight = false;
-
-            //sthread::increase_priority();
-
-            request_long_sleep = true;
-
-            std::cout << "Full frame too " << elapsed.getElapsedTime().asMicroseconds() / 1000. << std::endl;
-
-            double exec_time = elapsed.getElapsedTime().asMicroseconds() / 1000.;
-            avg_exec_time = (avg_exec_time + exec_time)/2.;
-
             duk_gc(ctx, 0);
-
-            /*while(!frame_in_flight && !force_terminate)
-            {
-                sthread::this_sleep(1);
-            }*/
-
-            //sthread::this_sleep(1);
-
-            should_fire_frame = false;
-
-            request_long_sleep = false;
-
-            //sthread::normal_priority();
-
-            fedback = false;
         }
         catch(...)
         {
@@ -331,13 +301,6 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
     }
 
     duk_pop(ctx);
-
-    terminated = true;
-
-    while(!safe_to_terminate)
-    {
-
-    }
 }
 
 struct execution_blocker_guard
@@ -631,37 +594,9 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                 bool is_valid = !duk_is_undefined(ctx, -1);
 
-                std::atomic_bool request_going{false};
-                std::atomic_bool request_finished{true};
-                std::atomic_bool fedback{false};
-
-                ///finished last means did we execute the last element in the chain
-                ///so that we dont execute more than one whole sequence in a frame
-                std::atomic_bool finished_last{false};
-
-                ///default is 60
-                double current_framerate = get_global_number(ctx, "framerate_limit");
-
-                current_framerate = clamp(current_framerate, 1., 60.);
-
-                const double max_frame_time_ms = (1./current_framerate) * 1000.;
-                const double max_allowed_frame_time_ms = max_frame_time_ms/4; ///before we sleep for (max_frame - max_allowed)
-
-                volatile int* holds_lock = nullptr;
-
-                std::atomic<double> avg_exec_time = 0;
-
                 if(is_valid)
                 {
                     command_handler_state& cstate = all_shared.value()->state;
-                    shared_data& cqueue = all_shared.value()->shared;
-
-                    std::atomic_bool terminated{false};
-                    std::atomic_bool request_long_sleep{false};
-                    std::atomic_bool force_terminate{false};
-                    std::atomic_bool safe_to_terminate{false};
-                    std::atomic_bool frame_in_flight{false};
-                    std::atomic_bool should_fire_frame{true};
 
                     ///pipe window size
                     {
@@ -679,182 +614,56 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                     sand_data->is_realtime = true;
 
-                    sthread thrd = sthread(async_realtime_script_handler, ctx, std::ref(cqueue), std::ref(cstate), std::ref(inf->ret),
-                                                   std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate),
-                                                   std::ref(avg_exec_time), std::ref(holds_lock), std::ref(safe_to_terminate),
-                                                   std::ref(frame_in_flight), std::ref(should_fire_frame));
-
-                    while(!force_terminate)
+                    auto update_check = [&]()
                     {
-                        auto update_check = [&]()
+                        while(shared_duk_state->has_output_data_available())
                         {
-                            while(shared_duk_state->has_output_data_available())
+                            std::string str = shared_duk_state->consume_output_data();
+
+                            if(str != "")
                             {
-                                std::string str = shared_duk_state->consume_output_data();
+                                nlohmann::json j;
+                                j["id"] = current_id;
+                                j["msg"] = str;
+                                j["type"] = "command_realtime";
 
-                                if(str != "")
-                                {
-                                    nlohmann::json j;
-                                    j["id"] = current_id;
-                                    j["msg"] = str;
-                                    j["type"] = "command_realtime";
-
-                                    all_shared.value()->shared.add_back_write(j.dump());
-                                }
+                                all_shared.value()->shared.add_back_write(j.dump());
                             }
-
-                            if(all_shared.value()->state.should_terminate_any_realtime)
-                                return true;
-
-                            {
-                                safe_lock_guard guard(all_shared.value()->state.lock);
-
-                                if(all_shared.value()->state.should_terminate_realtime[current_id])
-                                    return true;
-                            }
-
-                            if(!shared_duk_state->is_realtime())
-                                return true;
-
-                            if(all_shared.value()->live_work_units() > 10)
-                                return true;
-
-                            shared_duk_state->set_key_state(all_shared.value()->state.get_key_state(current_id));
-                            shared_duk_state->set_mouse_pos(all_shared.value()->state.get_mouse_pos(current_id));
-
-                            return false;
-                        };
-
-                        if(update_check())
-                            break;
-
-                        sf::sleep(sf::milliseconds(1));
-
-                        #if 0
-                        bool once_through = false;
-
-                        while(frame_in_flight)
-                        {
-                            /*double sleep_time_ms = 0;
-                            double awake_time_ms = 0;
-
-                            bool should_break = false;
-
-                            double to_sleep = max_frame_time_ms - max_allowed_frame_time_ms;
-
-                            sf::Clock sleep_clock;
-
-                            while(sleep_time_ms < to_sleep)
-                            {
-                                if(update_check())
-                                    should_break = true;
-
-                                if(once_through && !frame_in_flight)
-                                    break;
-
-                                sleep_thread_for(sand_data, thrd, 1);
-
-                                sleep_time_ms += sleep_clock.restart().asMicroseconds() / 1000.;
-                            }
-
-                            sleep_time_ms -= to_sleep;*/
-
-                            double awake_time_ms = 0;
-
-                            bool should_break = false;
-
-                            double sleep_debt_ms = 0;
-
-                            sf::Clock allowed_clock;
-
-                            ///better solution would be to accumulate sleep debt for every ms active, then pay it off unconditionally
-                            while(awake_time_ms < max_allowed_frame_time_ms)
-                            {
-                                if(update_check())
-                                    should_break = true;
-
-                                if(once_through && !frame_in_flight)
-                                    break;
-
-                                sf::sleep(sf::milliseconds(1));
-
-                                double done = allowed_clock.restart().asMicroseconds() / 1000.;
-
-                                awake_time_ms += done;
-                                sleep_debt_ms += done * (max_frame_time_ms - max_allowed_frame_time_ms) / max_allowed_frame_time_ms;
-                            }
-
-                            awake_time_ms -= max_allowed_frame_time_ms;
-
-                            double sleep_time_ms = 0;
-
-                            sf::Clock sleep_clock;
-
-                            while(sleep_time_ms < sleep_debt_ms)
-                            {
-                                if(update_check())
-                                    should_break = true;
-
-                                //sf::sleep(sf::milliseconds(1));
-
-                                sleep_thread_for(sand_data, thrd, 1);
-
-                                sleep_time_ms += sleep_clock.restart().asMicroseconds() / 1000.;
-                            }
-
-                            if(awake_time_ms < 0)
-                                awake_time_ms = 0;
-
-                            if(sleep_time_ms < 0)
-                                sleep_time_ms = 0;
-
-                            if(should_break)
-                            {
-                                force_terminate = true;
-                                break;
-                            }
-
-                            once_through = true;
                         }
 
+                        if(all_shared.value()->state.should_terminate_any_realtime)
+                            return true;
 
-                        frame_in_flight = true;
-                        #endif // 0
-                    }
+                        {
+                            safe_lock_guard guard(all_shared.value()->state.lock);
 
-                    force_terminate = true;
-                    fedback = true;
-                    safe_to_terminate = true;
+                            if(all_shared.value()->state.should_terminate_realtime[current_id])
+                                return true;
+                        }
 
-                    sthread::this_sleep(50);
+                        if(!shared_duk_state->is_realtime())
+                            return true;
 
-                    //sand_data->terminate_semi_gracefully = true;
-                    sand_data->terminate_realtime_gracefully = true;
+                        if(all_shared.value()->live_work_units() > 10)
+                            return true;
 
-                    thrd.join();
+                        shared_duk_state->set_key_state(all_shared.value()->state.get_key_state(current_id));
+                        shared_duk_state->set_mouse_pos(all_shared.value()->state.get_mouse_pos(current_id));
 
-                    while(!terminated)
-                    {
+                        return false;
+                    };
 
-                    }
+                    ///remember, need to also set work units and do other things!
+                    async_realtime_script_handler(ctx, cstate, inf->ret, current_id, update_check);
 
                     if(shared_duk_state->close_window_on_exit())
                     {
-                        try
-                        {
-                            using json = nlohmann::json;
+                        nlohmann::json j;
+                        j["id"] = current_id;
+                        j["close"] = true;
+                        j["type"] = "command_realtime";
 
-                            json j;
-                            j["id"] = current_id;
-                            j["close"] = true;
-                            j["type"] = "command_realtime";
-
-                            all_shared.value()->shared.add_back_write(j.dump());
-                        }
-                        catch(...)
-                        {
-
-                        }
+                        all_shared.value()->shared.add_back_write(j.dump());
                     }
                 }
 
@@ -1731,7 +1540,7 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
     {
         nlohmann::json data;
         data["type"] = "auth";
-        data["data"] = all_shared->state.get_auth();
+        data["data"] = binary_to_hex(all_shared->state.get_auth());
 
         return data;
     }
@@ -2489,6 +2298,8 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
 
         printf("auth client\n");
         std::string auth_token = hex_to_binary(str["data"]);
+
+        std::cout << "alen " << auth_token.size() << std::endl;
 
         if(auth_token.length() > 140)
         {

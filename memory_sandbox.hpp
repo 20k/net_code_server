@@ -37,11 +37,8 @@ struct sandbox_data
     std::atomic_bool terminate_realtime_gracefully{false};
     std::atomic_int sleep_for{0};
 
-    bool is_awake{false};
-    bool is_realtime{false};
-    int realtime_framerate{60};
+    std::atomic_bool is_realtime{false};
     double realtime_ms_awake_elapsed{0};
-    double realtime_ms_asleep_elapsed{0};
     sf::Clock clk;
 };
 
