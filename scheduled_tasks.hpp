@@ -7,9 +7,10 @@
 #include <vector>
 #include <mutex>
 #include <thread>
-#include <nlohmann/json.hpp>
-#include "db_interfaceable.hpp"
 #include "safe_thread.hpp"
+#include "serialisables.hpp"
+#include <networking/serialisable_fwd.hpp>
+#include "mongo.hpp"
 
 struct scheduled_tasks;
 
@@ -33,27 +34,15 @@ namespace task_type
     };
 }
 
-
-struct task_data_db : db_interfaceable<task_data_db, MACRO_GET_STR("id")>
+struct task_data_db : serialisable, free_function
 {
-    DB_VAL(double, start_time_s);
-    DB_VAL(double, end_time_s);
-    DB_VAL(bool, called_callback);
-    DB_VAL(task_type::task_type, type);
-    DB_VAL(std::vector<std::string>, udata);
-    DB_VAL(int, count_offset);
-
-    bool handle_serialise(json& j, bool ser) override
-    {
-        start_time_s.serialise(j, ser);
-        end_time_s.serialise(j, ser);
-        called_callback.serialise(j, ser);
-        type.serialise(j, ser);
-        udata.serialise(j, ser);
-        count_offset.serialise(j, ser);
-
-        return false;
-    }
+    std::string id;
+    double start_time_s;
+    double end_time_s;
+    bool called_callback;
+    task_type::task_type type;
+    std::vector<std::string> udata;
+    int count_offset;
 
     bool finished()
     {
@@ -75,7 +64,7 @@ struct scheduled_tasks
         {
             mongo_lock_proxy ctx = get_global_mongo_scheduled_task_context(-2);
 
-            all = task_data_db::fetch_all_from_db(ctx);
+            all = db_disk_load_all(ctx, task_data_db());
         }
 
         {
@@ -119,7 +108,7 @@ struct scheduled_tasks
         {
             mongo_lock_proxy ctx = get_global_mongo_scheduled_task_context(-2);
 
-            d.remove_from_db(ctx);
+            db_disk_remove(ctx, d);
         }
     }
 
@@ -140,7 +129,7 @@ struct scheduled_tasks
 
             cnt = counter++;
             tdd.count_offset = cnt;
-            tdd.set_key_data(std::to_string(cnt));
+            tdd.id = std::to_string(cnt);
 
             task_data[cnt] = tdd;
         }
@@ -148,7 +137,7 @@ struct scheduled_tasks
         {
             mongo_nolock_proxy ctx = get_global_mongo_scheduled_task_context(thread_id);
 
-            tdd.overwrite_in_db(ctx);
+            db_disk_overwrite(ctx, tdd);
         }
 
         return cnt;

@@ -6,16 +6,16 @@
 #include <networking/serialisable_fwd.hpp>
 #include "serialisables.hpp"
 
+struct event_impl : serialisable, free_function
+{
+    std::string id;
+    std::string user_name;
+    std::string unique_event_tag;
+    bool complete = false;
+};
+
 namespace event
 {
-    struct event_impl : serialisable, free_function
-    {
-        std::string id;
-        std::string user_name;
-        std::string unique_event_tag;
-        bool complete = false;
-    };
-
     struct db_saver
     {
         bool owns = false;

@@ -5,6 +5,7 @@
 #include <secret/node.hpp>
 #include <secret/npc_manager.hpp>
 #include "event_manager.hpp"
+#include "scheduled_tasks.hpp"
 
 DEFINE_SERIALISE_FUNCTION(user_limit)
 {
@@ -125,7 +126,7 @@ DEFINE_SERIALISE_FUNCTION(npc_prop_list)
     DO_FSERIALISE(wh_puzz_set);
 }
 
-DEFINE_SERIALISE_FUNCTION(event::event_impl)
+DEFINE_SERIALISE_FUNCTION(event_impl)
 {
     SERIALISE_SETUP();
 
@@ -133,6 +134,18 @@ DEFINE_SERIALISE_FUNCTION(event::event_impl)
     DO_FSERIALISE(user_name);
     DO_FSERIALISE(unique_event_tag);
     DO_FSERIALISE(complete);
+}
+
+DEFINE_SERIALISE_FUNCTION(task_data_db)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(start_time_s);
+    DO_FSERIALISE(end_time_s);
+    DO_FSERIALISE(called_callback);
+    DO_FSERIALISE(type);
+    DO_FSERIALISE(udata);
+    DO_FSERIALISE(count_offset);
 }
 
 template<typename T, typename U>
@@ -191,5 +204,31 @@ void db_overwrite_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_nam
     }
 }
 
+template<typename T>
+std::vector<T> db_load_all_impl(mongo_lock_proxy& ctx, const std::string& key_name)
+{
+    nlohmann::json exist;
+    exist["$exists"] = true;
+
+    nlohmann::json to_find;
+    to_find[key_name] = exist;
+
+    auto found = ctx->find_json_new(to_find, nlohmann::json());
+
+    std::vector<T> ret;
+    ret.reserve(found.size());
+
+    for(auto& i : found)
+    {
+        T& next = ret.emplace_back();
+
+        deserialise(i, next, serialise_mode::DISK);
+    }
+
+    return ret;
+}
+
 DEFINE_GENERIC_DB(npc_prop_list, std::string, name);
-DEFINE_GENERIC_DB(event::event_impl, std::string, id);
+DEFINE_GENERIC_DB(event_impl, std::string, id);
+DEFINE_GENERIC_DB(task_data_db, std::string, id);
+
