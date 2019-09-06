@@ -3,7 +3,6 @@
 
 #include "command_handler_state.hpp"
 #include "command_handler.hpp"
-#include <libncclient/socket.hpp>
 
 struct shared_command_handler_state
 {

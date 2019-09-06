@@ -108,7 +108,8 @@ void sleep_thread_for(sandbox_data* sand_data, sthread& t, int sleep_ms)
 
 void async_realtime_script_handler(duk_context* nctx, shared_data& shared, command_handler_state& state, std::string& ret,
                                    std::atomic_bool& terminated, std::atomic_bool& request_long_sleep, std::atomic_bool& fedback, int current_id,
-                                   std::atomic_bool& force_terminate, std::atomic<double>& avg_exec_time, volatile int*& holds_lock, std::atomic_bool& safe_to_terminate)
+                                   std::atomic_bool& force_terminate, std::atomic<double>& avg_exec_time, volatile int*& holds_lock, std::atomic_bool& safe_to_terminate,
+                                   std::atomic_bool& frame_in_flight, std::atomic_bool& should_fire_frame)
 {
     sf::Clock clk;
 
@@ -123,6 +124,8 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
 
     holds_lock = tls_get_holds_lock();
 
+    should_fire_frame = false;
+
     //duk_context* ctx = nctx;
 
     /*MAKE_PERF_COUNTER();
@@ -133,6 +136,8 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
         try
         {
             sf::Clock elapsed;
+
+            frame_in_flight = true;
 
             bool any = false;
 
@@ -278,6 +283,8 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
 
             handle_sleep(sand_data);
 
+            frame_in_flight = false;
+
             //sthread::increase_priority();
 
             request_long_sleep = true;
@@ -289,10 +296,14 @@ void async_realtime_script_handler(duk_context* nctx, shared_data& shared, comma
 
             duk_gc(ctx, 0);
 
-            /*while(!fedback)
+            while(!frame_in_flight && !force_terminate)
             {
                 sthread::this_sleep(1);
-            }*/
+            }
+
+            should_fire_frame = false;
+
+            request_long_sleep = false;
 
             //sthread::normal_priority();
 
@@ -619,14 +630,10 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 ///default is 60
                 double current_framerate = get_global_number(ctx, "framerate_limit");
 
-
                 current_framerate = clamp(current_framerate, 1., 60.);
 
                 const double max_frame_time_ms = (1./current_framerate) * 1000.;
                 const double max_allowed_frame_time_ms = max_frame_time_ms/4; ///before we sleep for (max_frame - max_allowed)
-                double current_frame_time_ms = 0;
-                double current_goodwill_ms = 0;
-                double max_goodwill_ms = (6./16.) * max_frame_time_ms;
 
                 volatile int* holds_lock = nullptr;
 
@@ -641,33 +648,27 @@ std::string run_in_user_context(std::string username, std::string command, std::
                     std::atomic_bool request_long_sleep{false};
                     std::atomic_bool force_terminate{false};
                     std::atomic_bool safe_to_terminate{false};
+                    std::atomic_bool frame_in_flight{false};
+                    std::atomic_bool should_fire_frame{true};
 
                     ///pipe window size
                     {
                         auto [width, height] = shared_duk_state->get_width_height();
 
-                        try
-                        {
-                            using json = nlohmann::json;
+                        nlohmann::json j;
+                        j["id"] = current_id;
+                        j["width"] = width;
+                        j["height"] = height;
+                        j["script_name"] = get_global_string(ctx, "realtime_script_name");
+                        j["type"] = "command_realtime";
 
-                            json j;
-                            j["id"] = current_id;
-                            j["width"] = width;
-                            j["height"] = height;
-                            j["script_name"] = get_global_string(ctx, "realtime_script_name");
-                            j["type"] = "command_realtime";
-
-                            all_shared.value()->shared.add_back_write(j.dump());
-                        }
-                        catch(...){}
+                        all_shared.value()->shared.add_back_write(j.dump());
                     }
 
                     sthread thrd = sthread(async_realtime_script_handler, ctx, std::ref(cqueue), std::ref(cstate), std::ref(inf->ret),
                                                    std::ref(terminated), std::ref(request_long_sleep), std::ref(fedback), current_id, std::ref(force_terminate),
-                                                   std::ref(avg_exec_time), std::ref(holds_lock), std::ref(safe_to_terminate));
-
-                    double sleep_time_ms = 0;
-                    double awake_time_ms = 0;
+                                                   std::ref(avg_exec_time), std::ref(holds_lock), std::ref(safe_to_terminate),
+                                                   std::ref(frame_in_flight), std::ref(should_fire_frame));
 
                     while(!force_terminate)
                     {
@@ -710,42 +711,71 @@ std::string run_in_user_context(std::string username, std::string command, std::
                             return false;
                         };
 
-                        double to_sleep = max_frame_time_ms - max_allowed_frame_time_ms;
-
-                        sf::Clock sleep_clock;
-
-                        bool should_break = false;
-
-                        while(sleep_time_ms < to_sleep)
-                        {
-                            if(update_check())
-                                should_break = true;
-
-                            sleep_thread_for(sand_data, thrd, 1);
-
-                            sleep_time_ms += sleep_clock.restart().asMicroseconds() / 1000.;
-                        }
-
-                        sleep_time_ms -= to_sleep;
-
-                        //fedback = true;
-
-                        sf::Clock allowed_clock;
-
-                        while(awake_time_ms < max_allowed_frame_time_ms)
-                        {
-                            if(update_check())
-                                should_break = true;
-
-                            sf::sleep(sf::milliseconds(1));
-
-                            awake_time_ms += allowed_clock.restart().asMicroseconds() / 1000.;
-                        }
-
-                        awake_time_ms -= max_allowed_frame_time_ms;
-
-                        if(should_break)
+                        if(update_check())
                             break;
+
+                        bool once_through = false;
+
+                        while(frame_in_flight)
+                        {
+                            double sleep_time_ms = 0;
+                            double awake_time_ms = 0;
+
+                            bool should_break = false;
+
+                            double to_sleep = max_frame_time_ms - max_allowed_frame_time_ms;
+
+                            sf::Clock sleep_clock;
+
+                            while(sleep_time_ms < to_sleep)
+                            {
+                                if(update_check())
+                                    should_break = true;
+
+                                if(once_through && !frame_in_flight)
+                                    break;
+
+                                sleep_thread_for(sand_data, thrd, 1);
+
+                                sleep_time_ms += sleep_clock.restart().asMicroseconds() / 1000.;
+                            }
+
+                            sleep_time_ms -= to_sleep;
+
+                            sf::Clock allowed_clock;
+
+                            ///better solution would be to accumulate sleep debt for every ms active, then pay it off unconditionally
+                            while(awake_time_ms < max_allowed_frame_time_ms)
+                            {
+                                if(update_check())
+                                    should_break = true;
+
+                                if(once_through && !frame_in_flight)
+                                    break;
+
+                                sf::sleep(sf::milliseconds(1));
+
+                                awake_time_ms += allowed_clock.restart().asMicroseconds() / 1000.;
+                            }
+
+                            awake_time_ms -= max_allowed_frame_time_ms;
+
+                            if(awake_time_ms < 0)
+                                awake_time_ms = 0;
+
+                            if(sleep_time_ms < 0)
+                                sleep_time_ms = 0;
+
+                            if(should_break)
+                            {
+                                force_terminate = true;
+                                break;
+                            }
+
+                            once_through = true;
+                        }
+
+                        frame_in_flight = true;
                     }
 
                     force_terminate = true;

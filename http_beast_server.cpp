@@ -1,5 +1,3 @@
-#include <libncclient/socket.hpp>
-
 #include "http_beast_server.hpp"
 #include "non_user_task_thread.hpp"
 #include "shared_data.hpp"

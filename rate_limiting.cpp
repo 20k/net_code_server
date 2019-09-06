@@ -24,6 +24,19 @@ void handle_sleep(sandbox_data* dat)
 
     if(val > 0)
     {
+        /*double diff = 0;
+
+        sf::Clock clk;
+
+        while(diff < val)
+        {
+            sf::sleep(sf::milliseconds(1));
+
+            diff += clk.restart().asMicroseconds() / 1000.;
+        }
+
+        dat->sleep_for -= floor(diff);*/
+
         sf::sleep(sf::milliseconds(val));
     }
 
