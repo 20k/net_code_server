@@ -89,8 +89,6 @@ void handle_sleep(sandbox_data* dat)
         if(dat->ms_awake_elapsed_static > 100)
             dat->ms_awake_elapsed_static = 100;
 
-        float db_grace_time_ms = 2000;
-
         while(dat->ms_awake_elapsed_static >= awake_time)
         {
             sf::sleep(sf::milliseconds(sleep_time));
