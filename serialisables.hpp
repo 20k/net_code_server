@@ -45,5 +45,6 @@ DECLARE_GENERIC_DB(task_data_db, std::string);
 DECLARE_GENERIC_DB(quest, std::string);
 DECLARE_GENERIC_DB(low_level_structure, std::string);
 DECLARE_GENERIC_DB(item, std::string);
+DECLARE_GENERIC_DB(user, std::string);
 
 #endif // SERIALISABLES_HPP_INCLUDED

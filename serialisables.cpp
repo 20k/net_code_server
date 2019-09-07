@@ -309,3 +309,4 @@ DEFINE_GENERIC_DB(task_data_db, std::string, id);
 DEFINE_GENERIC_DB(quest, std::string, id);
 DEFINE_GENERIC_DB(low_level_structure, std::string, name);
 DEFINE_GENERIC_DB(item, std::string, item_id);
+DEFINE_GENERIC_DB(user, std::string, name);

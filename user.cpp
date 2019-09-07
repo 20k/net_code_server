@@ -44,47 +44,22 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
 {
     ctx.change_collection(name);
 
-    nlohmann::json fetch;
-    fetch["name"] = name;
-
-    nlohmann::json to_set = serialise(*this, serialise_mode::DISK);
-
-    nlohmann::json setter;
-    setter["$set"] = to_set;
-
-    ctx->update_json_one_new(fetch, setter);
+    db_disk_overwrite(ctx, *this);
 }
 
 bool user::exists(mongo_lock_proxy& ctx, const std::string& name_)
 {
     ctx.change_collection(name_);
+    name = name_;
 
-    mongo_requester req;
-    req.set_prop("name", name_);
-
-    return req.fetch_from_db(ctx).size() == 1;
+    return db_disk_exists(ctx, *this);
 }
 
 bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
 {
     ctx.change_collection(name_);
 
-    if(!exists(ctx, name_))
-        return false;
-
-    nlohmann::json fetch;
-    fetch["name"] = name_;
-
-    std::vector<nlohmann::json> found = fetch_from_db(ctx, fetch);
-
-    if(found.size() != 1)
-        return false;
-
-    *this = user();
-
-    deserialise(found[0], *this, serialise_mode::DISK);
-
-    return true;
+    return db_disk_load(ctx, *this, name_);
 }
 
 bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, const std::string& auth)
@@ -100,8 +75,7 @@ bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, c
     if(exists(ctx, name))
         return false;
 
-    insert_in_db(ctx, serialise(*this, serialise_mode::DISK));
-
+    db_disk_overwrite(ctx, *this);
     return true;
 }
 
