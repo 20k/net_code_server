@@ -387,8 +387,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         sandbox_data* sand_data = (sandbox_data*)funcs.udata;
 
-        //fully_freeze(ctx, "JSON", "Array", "parseInt", "parseFloat", "Math", "Date", "Error", "Number", "Object", "Duktape");
-
         usr.cleanup_call_stack(local_thread_id);
         std::string executing_under = usr.get_call_stack().back();
 
@@ -418,10 +416,11 @@ std::string run_in_user_context(std::string username, std::string command, std::
             dukx_put_pointer(ctx, nullptr, "all_shared_data");
         }
 
-        unsafe_info* inf = new unsafe_info;
-        inf->usr = &usr;
-        inf->command = command;
-        inf->ectx = &ectx;
+        unsafe_info inf;
+        inf.usr = &usr;
+        inf.command = command;
+        inf.ectx = &ectx;
+
         sand_data->is_static = true;
         sand_data->max_elapsed_time_ms = 5000;
 
@@ -430,41 +429,21 @@ std::string run_in_user_context(std::string username, std::string command, std::
             all_shared.value()->state.number_of_oneshot_scripts++;
         }
 
-        float max_time_ms = 5000;
-        float db_grace_time_ms = 2000;
-
         if(custom_exec_time_s.has_value())
         {
-            max_time_ms = custom_exec_time_s.value() * 1000.;
             sand_data->max_elapsed_time_ms = custom_exec_time_s.value() * 1000;
         }
 
-        auto time_start = std::chrono::high_resolution_clock::now();
-
-        #define ACTIVE_TIME_MANAGEMENT
-        #ifdef ACTIVE_TIME_MANAGEMENT
-        int active_time_slice_ms = 1;
-        int sleeping_time_slice_ms = 1;
-        #endif // ACTIVE_TIME_MANAGEMENT
-
-        bool displayed_warning = false;
-
         script_management_mode::mode current_mode = script_management_mode::DEFAULT;
 
-        //int accumulated_missed_sleep_time = 0;
-
         #ifdef PERF_DIAGNOSTICS
-        int total_suspend_ms = 0;
         sf::Clock runtime;
-        int skip = 0;
         #endif // PERF_DIAGNOSTICS
 
-        managed_duktape_thread(inf, local_thread_id);
+        managed_duktape_thread(&inf, local_thread_id);
 
         #ifdef PERF_DIAGNOSTICS
-        std::cout << "TOTAL SUSPEND " << total_suspend_ms << std::endl;
         std::cout << "TOTAL RUNTIME " << runtime.getElapsedTime().asMilliseconds() << std::endl;
-        std::cout << "TOTAL SKIP " << skip << std::endl;
         #endif // PERF_DIAGNOSTICS
 
         *tls_get_should_throw() = 0;
@@ -484,7 +463,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
         bool launched_realtime = false;
         int launched_realtime_id = 0;
 
-        if(inf->finished)
+        if(inf.finished)
         {
             //launch->join();
             //delete launch;
@@ -600,7 +579,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                     sand_data->realtime_script_id = current_id;
 
                     ///remember, need to also set work units and do other things!
-                    async_realtime_script_handler(ctx, cstate, inf->ret, current_id, update_check);
+                    async_realtime_script_handler(ctx, cstate, inf.ret, current_id, update_check);
 
                     if(shared_duk_state->close_window_on_exit())
                     {
@@ -617,36 +596,23 @@ std::string run_in_user_context(std::string username, std::string command, std::
             }
         }
 
-        //if(!terminated)
-        try
-        {
-            dukx_free_in_heap<std::shared_ptr<shared_command_handler_state>>(ctx, "all_shared_data");
-            teardown_state(ctx);
+        dukx_free_in_heap<std::shared_ptr<shared_command_handler_state>>(ctx, "all_shared_data");
+        teardown_state(ctx);
 
-            ectx.destroy();
-        }
-        catch(...)
-        {
-            printf("Failed to cleanup resources\n");
-        }
+        ectx.destroy();
 
-        printf("cleaned up unsafe\n");
+        printf("cleaned up resources\n");
 
         if(launched_realtime)
         {
             all_shared.value()->state.remove_realtime_script(launched_realtime_id);;
         }
 
-        std::string ret = inf->ret;
-
-        delete inf;
-        inf = nullptr;
-
-        return ret;
+        return inf.ret;
     }
     catch(...)
     {
-        return "Caught exception";
+        return "Caught exception in script execution";
     }
 }
 
