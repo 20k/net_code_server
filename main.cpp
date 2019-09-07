@@ -208,7 +208,7 @@ void tickle_item_cache()
     mongo_nolock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
     item it;
-    it.load_from_db(mongo_ctx, "0");
+    db_disk_load(mongo_ctx, it, "0");
 }
 
 void termination_func()
@@ -829,7 +829,7 @@ int main()
             {
                 mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
-                if(!id.load_from_db(mongo_ctx, item_id))
+                if(!db_disk_load(mongo_ctx, id, item_id))
                 {
                     std::cout << "no such item with id " << item_id << std::endl;
                     continue;
@@ -853,7 +853,7 @@ int main()
             {
                 mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
-                if(!id.load_from_db(mongo_ctx, item_id))
+                if(db_disk_load(mongo_ctx, id, item_id))
                 {
                     std::cout << "no such item with id " << item_id << std::endl;
                     continue;

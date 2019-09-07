@@ -76,7 +76,7 @@ bool item::transfer_to_user(const std::string& username, int thread_id)
         set_as("owner", username);
         mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
 
-        overwrite_in_db(item_ctx);
+        db_disk_overwrite(item_ctx, *this);
     }
 
     return true;
@@ -113,7 +113,8 @@ bool item::transfer_from_to_by_index(int index, const std::string& from, const s
     {
         mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
 
-        load_from_db(item_ctx, item_id);
+        db_disk_load(item_ctx, *this, item_id);
+
         set_as("owner", to);
         set_as("item_id", item_id);
 
@@ -121,7 +122,7 @@ bool item::transfer_from_to_by_index(int index, const std::string& from, const s
         if((int)get("item_type") == item_types::EMPTY_SCRIPT_BUNDLE)
             set_as("registered_as", "");
 
-        overwrite_in_db(item_ctx);
+        db_disk_overwrite(item_ctx, *this);
     }
 
     {
@@ -180,7 +181,7 @@ std::vector<item> load_items(mongo_lock_proxy& items_ctx, const std::vector<std:
     {
         item it;
 
-        if(!it.load_from_db(items_ctx, i))
+        if(!db_disk_load(items_ctx, it, i))
             continue;
 
         ret.push_back(it);
@@ -285,7 +286,8 @@ void item_types::give_item_to(item& new_item, const std::string& to, int thread_
 
     {
         mongo_nolock_proxy mongo_ctx = get_global_mongo_user_items_context(thread_id);
-        new_item.overwrite_in_db(mongo_ctx);
+
+        db_disk_overwrite(mongo_ctx, new_item);
     }
 
     new_item.transfer_to_user(to, thread_id);

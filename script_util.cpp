@@ -659,11 +659,10 @@ bool script_info::load_from_db(mongo_lock_proxy& ctx)
 
     my_script.set_as("item_id", name);
     my_script.set_as("in_public", 0);
-    my_script.set_as("trust", 0);
     my_script.set_as("owner", owner);
     my_script.set_as("is_script", 1);
 
-    my_script.load_from_db(ctx, name);
+    db_disk_load(ctx, my_script, name);
 
     name = my_script.get("item_id");
     in_public = my_script.get("in_public");
@@ -732,15 +731,7 @@ void script_info::overwrite_in_db(mongo_lock_proxy& ctx)
     my_script.set_as("valid", valid);
     my_script.set_as("metadata", metadata.dump());
 
-    //mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
-
-    if(my_script.exists(ctx, name))
-        my_script.overwrite_in_db(ctx);
-    else
-    {
-        my_script.set_as("trust", 0);
-        my_script.overwrite_in_db(ctx);
-    }
+    db_disk_overwrite(ctx, my_script);
 }
 
 void script_info::fill_as_bundle_compatible_item(item& my_script)
@@ -766,7 +757,7 @@ bool script_info::exists_in_db(mongo_lock_proxy& ctx)
 
     my_script.set_as("item_id", name);
 
-    return my_script.exists(ctx, name);
+    db_disk_exists(ctx, my_script);
 }
 
 #if 0

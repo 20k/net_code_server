@@ -1588,7 +1588,10 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
             if(!script_inf.exists_in_db(mongo_ctx))
                 return make_response(make_error_col("Script not found"));
 
-            item::remove_from_db(mongo_ctx, script_inf.name);
+            item titem;
+            titem.item_id = script_inf.name;
+
+            db_disk_remove(mongo_ctx, titem);
         }
 
         std::string str = "Script removed from server";

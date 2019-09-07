@@ -132,7 +132,7 @@ void bot_thread()
                 {
                     mongo_nolock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
-                    next_item.load_from_db(mongo_ctx, item_id);
+                    db_disk_load(mongo_ctx, next_item, item_id);
                 }
 
                 int type = next_item.get("item_type");
@@ -158,7 +158,7 @@ void bot_thread()
 
                     {
                         mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
-                        next_item.overwrite_in_db(mongo_ctx);
+                        db_disk_overwrite(mongo_ctx, next_item);
                     }
 
                     std::cout << "running script autorun " << found_user.name << std::endl;

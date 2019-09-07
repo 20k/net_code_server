@@ -8,6 +8,7 @@
 #include "scheduled_tasks.hpp"
 #include "quest_manager.hpp"
 #include <secret/low_level_structure.hpp>
+#include "item.hpp"
 
 DEFINE_SERIALISE_FUNCTION(user_limit)
 {
@@ -174,6 +175,14 @@ DEFINE_SERIALISE_FUNCTION(low_level_structure)
     DO_FSERIALISE(user_list);
 }
 
+DEFINE_SERIALISE_FUNCTION(item)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(item_id);
+    DO_FSERIALISE(data);
+}
+
 template<typename T, typename U>
 bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
 {
@@ -271,4 +280,4 @@ DEFINE_GENERIC_DB(event_impl, std::string, id);
 DEFINE_GENERIC_DB(task_data_db, std::string, id);
 DEFINE_GENERIC_DB(quest, std::string, id);
 DEFINE_GENERIC_DB(low_level_structure, std::string, name);
-
+DEFINE_GENERIC_DB(item, std::string, item_id);

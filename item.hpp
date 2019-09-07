@@ -5,7 +5,8 @@
 #include <vector>
 #include <utility>
 #include "mongo.hpp"
-#include "db_interfaceable.hpp"
+#include <networking/serialisable_fwd.hpp>
+#include "serialisables.hpp"
 
 struct mongo_lock_proxy;
 
@@ -47,8 +48,51 @@ bool array_contains(const std::vector<std::string>& arr, const std::string& str)
 
 #define MAX_ITEMS 48
 
-struct item : db_interfaceable<item, MACRO_GET_STR("item_id")>
+struct item : serialisable, free_function
 {
+    std::string item_id;
+    nlohmann::json data;
+
+    bool has(const std::string& str)
+    {
+        return data.count(str) > 0;
+    }
+
+    std::string get_stringify(const std::string& key)
+    {
+        nlohmann::json j = data[key];
+
+        if(j.type() == nlohmann::json::value_t::string)
+        {
+            return j.get<std::string>();
+        }
+
+        return j.dump();
+    }
+
+    template<typename T>
+    void set_as(const std::string& key, const T& t)
+    {
+        if constexpr(std::is_same_v<T, std::string>)
+        {
+            if(key == "item_id")
+                item_id = t;
+        }
+
+        if constexpr(std::is_same_v<bool, T>)
+            data[key] = (int)t;
+        else
+            data[key] = t;
+    }
+
+    nlohmann::json get(const std::string& key)
+    {
+        if(!has(key))
+            return nlohmann::json();
+
+        return data[key];
+    }
+
     std::string get_prop(const std::string& str)
     {
         if(!has(str))
@@ -68,7 +112,7 @@ struct item : db_interfaceable<item, MACRO_GET_STR("item_id")>
     {
         int32_t id = get_new_id(global_props_context);
 
-        set_as("item_id", std::to_string(id));
+        item_id = std::to_string(id);
     }
 
     int32_t get_new_id(mongo_lock_proxy& global_props_context);
@@ -99,7 +143,7 @@ void for_each_item(T t)
     {
         mongo_lock_proxy ctx = get_global_mongo_user_items_context(-2);
 
-        id = item::fetch_all_from_db(ctx);
+        id = db_disk_load_all(ctx, item());
     }
 
     for(auto& i : id)

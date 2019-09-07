@@ -1942,10 +1942,12 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
     {
         mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
 
-        if(!next.exists(item_ctx, which))
+        next.item_id = which;
+
+        if(!db_disk_exists(item_ctx, next))
             return "Something weird happened";
 
-        next.load_from_db(item_ctx, which);
+        db_disk_load(item_ctx, next, which);
     }
 
     if((int)next.get("item_type") != (int)item_types::LOCK)
@@ -1978,9 +1980,9 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
             mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
 
             item lock;
-            lock.load_from_db(item_ctx, to_load);
+            db_disk_load(item_ctx, lock, to_load);
             lock.breach();
-            lock.overwrite_in_db(item_ctx);
+            db_disk_overwrite(item_ctx, lock);
 
             nodes.load_lock_to_any(item_ctx, to_load);
         }
@@ -1998,9 +2000,9 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
             if(node->can_load_lock(item_ctx, to_load))
             {
                 item lock;
-                lock.load_from_db(item_ctx, to_load);
+                db_disk_load(item_ctx, lock, to_load);
                 lock.breach();
-                lock.overwrite_in_db(item_ctx);
+                db_disk_overwrite(item_ctx, lock);
 
                 node->load_lock(to_load);
             }
@@ -2082,7 +2084,7 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
         for(std::string& item_id : to_ret)
         {
             item next;
-            next.load_from_db(mongo_ctx, item_id);
+            db_disk_load(mongo_ctx, next, item_id);
 
             if(!full)
             {
@@ -2134,7 +2136,7 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
         for(std::string& item_id : to_ret)
         {
             item next;
-            next.load_from_db(mongo_ctx, item_id);
+            db_disk_load(mongo_ctx, next, item_id);
 
             auto data = get_item_raw(next, !full, found_user, nodes);
             data["idx"] = index++;
@@ -2187,11 +2189,11 @@ duk_ret_t item__cull(priv_context& priv_ctx, duk_context* ctx, int sl)
         mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
         item found;
-        found.load_from_db(items_ctx, id);
+        db_disk_load(items_ctx, found, id);
 
         create_destroy_item_notif(ctx, get_caller(ctx), found.get_prop("short_name"));
 
-        found.remove_from_db(items_ctx);
+        db_disk_remove(items_ctx, found);
     }
 
     usr.remove_item(id);
@@ -2518,7 +2520,7 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
 
         mongo_nolock_proxy mongo_context = get_global_mongo_user_items_context(-2);
 
-        if(!it.load_from_db(mongo_context, item_id))
+        if(!db_disk_load(mongo_context, it, item_id))
             return push_error(ctx, "No such item");
 
         found_item_description = it.get_prop("short_name") + "/" + item_id;
@@ -2701,11 +2703,12 @@ duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
         mongo_lock_proxy item_lock = get_global_mongo_user_items_context(get_thread_id(ctx));
 
         item found_bundle;
+        found_bundle.item_id = item_id;
 
-        if(!found_bundle.exists(item_lock, item_id))
+        if(!db_disk_exists(item_lock, found_bundle))
             return push_error(ctx, "No such item");
 
-        found_bundle.load_from_db(item_lock, item_id);
+        db_disk_load(item_lock, found_bundle, item_id);
 
         if((int)found_bundle.get("item_type") != item_types::EMPTY_SCRIPT_BUNDLE)
             return push_error(ctx, "Not a script bundle");
@@ -2747,7 +2750,7 @@ duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
         found_script.fill_as_bundle_compatible_item(found_bundle);
         found_bundle.set_as("full", 1);
 
-        found_bundle.overwrite_in_db(item_lock);
+        db_disk_overwrite(item_lock, found_bundle);
     }
 
     return push_success(ctx);
@@ -2792,11 +2795,12 @@ duk_ret_t item__register_bundle(priv_context& priv_ctx, duk_context* ctx, int sl
         mongo_lock_proxy item_lock = get_global_mongo_user_items_context(get_thread_id(ctx));
 
         item found_bundle;
+        found_bundle.item_id = item_id;
 
-        if(!found_bundle.exists(item_lock, item_id))
+        if(!db_disk_exists(item_lock, found_bundle))
             return push_error(ctx, "No such item");
 
-        found_bundle.load_from_db(item_lock, item_id);
+        db_disk_load(item_lock, found_bundle, item_id);
 
         if((int)found_bundle.get("item_type") != item_types::EMPTY_SCRIPT_BUNDLE)
             return push_error(ctx, "Not a script bundle");
@@ -2806,7 +2810,7 @@ duk_ret_t item__register_bundle(priv_context& priv_ctx, duk_context* ctx, int sl
 
         found_bundle.set_as("registered_as", scriptname);
 
-        found_bundle.overwrite_in_db(item_lock);
+        db_disk_overwrite(item_lock, found_bundle);
     }
 
     return push_success(ctx);
@@ -2861,7 +2865,7 @@ duk_ret_t item__configure_on_breach(priv_context& priv_ctx, duk_context* ctx, in
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
-        if(!it.load_from_db(mongo_ctx, item_id))
+        if(!db_disk_load(mongo_ctx, it, item_id))
             return push_error(ctx, "No such item");
     }
 
@@ -2889,7 +2893,7 @@ duk_ret_t item__configure_on_breach(priv_context& priv_ctx, duk_context* ctx, in
         {
              mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
-             it.overwrite_in_db(mongo_ctx);
+             db_disk_overwrite(mongo_ctx, it);
         }
 
         return push_success(ctx, "Set on_breach script name to " + new_name);
@@ -3207,7 +3211,7 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         item it;
 
-        if(!it.load_from_db(mongo_ctx, item_id))
+        if(!db_disk_load(mongo_ctx, it, item_id))
             continue;
 
         if((int)it.get("item_type") == item_types::LOCK && nodes.any_contains_lock(item_id))
@@ -3245,7 +3249,7 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
             {
                 it.force_rotate();
 
-                it.overwrite_in_db(mongo_ctx);
+                db_disk_overwrite(mongo_ctx, it);
             }
         }
 
@@ -3628,7 +3632,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
                 ///synchronous so that multiple things don't rotate
                 mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
-                i.overwrite_in_db(item_ctx);
+                db_disk_overwrite(item_ctx, i);
 
                 ///todo: send a chats.tell to victim here
             }
@@ -3664,7 +3668,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
                     ///wants to be synchronous so that we don't overlap writes
                     mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
-                    i.overwrite_in_db(item_ctx);
+                    db_disk_overwrite(item_ctx, i);
                 }
             }
         }
@@ -4023,14 +4027,14 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
             mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
 
             item i1, i2;
-            i1.load_from_db(items_ctx, items[0]);
-            i2.load_from_db(items_ctx, items[1]);
+            db_disk_load(items_ctx, i1, items[0]);
+            db_disk_load(items_ctx, i2, items[1]);
 
             i1.breach();
             i2.breach();
 
-            i1.overwrite_in_db(items_ctx);
-            i2.overwrite_in_db(items_ctx);
+            db_disk_overwrite(items_ctx, i1);
+            db_disk_overwrite(items_ctx, i2);
         }
 
         return push_success(ctx);
@@ -4279,14 +4283,14 @@ std::vector<nlohmann::json> get_net_view_data_arr(network_accessibility_info& in
 {
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    std::vector<json> all_npc_data;
+    std::vector<nlohmann::json> all_npc_data;
 
     for(auto& i : info.ring_ordered_names)
     {
         const std::string& name = i;
         vec3f pos = info.global_pos[name];
 
-        json j;
+        nlohmann::json j;
         j["name"] = name;
         j["x"] = pos.x();
         j["y"] = pos.y();
@@ -4332,7 +4336,7 @@ std::string get_net_view_data_str(std::vector<nlohmann::json>& all_npc_data, boo
     std::vector<std::string> all_positions{"Position"};
     std::vector<std::string> all_links{"Links"};
 
-    for(json& j : all_npc_data)
+    for(nlohmann::json& j : all_npc_data)
     {
         std::string name = j["name"];
         vec3f pos = (vec3f){j["x"], j["y"], j["z"]};
@@ -5904,14 +5908,14 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
     else
     {
-        std::vector<json> all_npc_data;
+        std::vector<nlohmann::json> all_npc_data;
 
         for(auto& i : info.ring_ordered_names)
         {
             const std::string& name = i;
             vec3f pos = info.global_pos[name];
 
-            json j;
+            nlohmann::json j;
             j["name"] = name;
             j["x"] = pos.x();
             j["y"] = pos.y();
@@ -5954,7 +5958,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
             all_npc_data.push_back(j);
         }
 
-        json final_data = all_npc_data;
+        nlohmann::json final_data = all_npc_data;
 
         push_duk_val(ctx, final_data);
     }
@@ -6479,7 +6483,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         network_accessibility_info info = playspace_network_manage.generate_network_accessibility_from(ctx, target.name, n_count);
 
-        std::vector<json> all_npc_data = get_net_view_data_arr(info);
+        std::vector<nlohmann::json> all_npc_data = get_net_view_data_arr(info);
 
         //array_data["links"] = all_npc_data;
 

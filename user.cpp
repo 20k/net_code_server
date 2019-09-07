@@ -124,7 +124,7 @@ std::map<std::string, double> user::get_properties_from_loaded_items(mongo_lock_
     for(std::string& id : all_items)
     {
         item item_id;
-        item_id.load_from_db(ctx, id);
+        db_disk_load(ctx, item_id, id);
 
         ret["char_count"] += (int)item_id.get("char_count");
         ret["script_slots"] += (int)item_id.get("script_slots");
@@ -267,7 +267,7 @@ item user::get_loaded_callable_scriptname_item(mongo_lock_proxy& ctx, const std:
     for(auto& id : loaded)
     {
         item next;
-        next.load_from_db(ctx, id);
+        db_disk_load(ctx, next, id);
 
         if(name + "." + next.get_prop("registered_as") == full_name)
             return next;
@@ -286,7 +286,7 @@ std::vector<item> user::get_all_items(mongo_lock_proxy& ctx)
     {
         item next;
 
-        if(!next.load_from_db(ctx, id))
+        if(!db_disk_load(ctx, next, id))
             continue;
 
         ret.push_back(next);
