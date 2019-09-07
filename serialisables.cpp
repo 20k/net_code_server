@@ -239,6 +239,34 @@ void db_overwrite_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_nam
     }
 }
 
+template<>
+void db_overwrite_impl<item, std::string>(item& val, mongo_lock_proxy& ctx, const std::string& key_name, const std::string& item_id)
+{
+    nlohmann::json as_ser = serialise(val, serialise_mode::DISK);
+
+    nlohmann::json hacky_data = as_ser["data"];
+
+    for(auto& i : hacky_data.items())
+    {
+        as_ser[i.key()] = i.value();
+    }
+
+    if(!db_exists_impl(ctx, key_name, item_id))
+    {
+        ctx->insert_json_one_new(as_ser);
+    }
+    else
+    {
+        nlohmann::json selector;
+        selector[key_name] = item_id;
+
+        nlohmann::json to_set;
+        to_set["$set"] = as_ser;
+
+        ctx->update_json_one_new(selector, to_set);
+    }
+}
+
 template<typename T>
 std::vector<T> db_load_all_impl(mongo_lock_proxy& ctx, const std::string& key_name)
 {

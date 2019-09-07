@@ -2958,7 +2958,7 @@ duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
-        test_item.overwrite_in_db(mongo_ctx);
+        db_disk_overwrite(mongo_ctx, test_item);
     }
 
     if(test_item.transfer_to_user(get_caller(ctx), get_thread_id(ctx)))
