@@ -34,7 +34,7 @@ struct unsafe_info
 {
     user* usr;
     std::string command;
-    volatile int finished = 0;
+    int finished = 0;
     exec_context* ectx;
 
     std::string ret;
