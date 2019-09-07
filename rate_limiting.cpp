@@ -102,7 +102,7 @@ void handle_sleep(sandbox_data* dat)
         {
             sf::sleep(sf::milliseconds(sleep_time));
             dat->clk.restart();
-            dat->ms_awake_elapsed_static -= 1;
+            dat->ms_awake_elapsed_static -= awake_time;
         }
 
         double elapsed_ms = dat->full_run_clock.getElapsedTime().asMicroseconds() / 1000.;
