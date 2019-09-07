@@ -15,7 +15,6 @@
 				<Compiler>
 					<Add option="-Og" />
 					<Add option="-g" />
-					<Add option="-Og" />
 					<Add option="-DLOCAL_IP" />
 				</Compiler>
 				<ExtraCommands>
@@ -214,6 +213,7 @@
 			<Add option="-Wno-unused-parameter" />
 			<Add option="-Wno-unused-label" />
 			<Add option="-no-pie" />
+			<Add option="-Werror=return-type" />
 			<Add option="-DBOOST_STACKTRACE_USE_BACKTRACE" />
 			<Add option="-DSERVER" />
 			<Add directory="deps" />
@@ -229,7 +229,6 @@
 			<Add option="-ldbgeng" />
 			<Add option="-lcrypto" />
 			<Add option="-lssl" />
-			<Add option="-ldbgeng" />
 			<Add option="-ldl" />
 			<Add option="-fno-pie" />
 			<Add option="-lbacktrace" />

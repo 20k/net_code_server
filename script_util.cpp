@@ -664,7 +664,7 @@ bool script_info::load_from_db(mongo_lock_proxy& ctx)
 
     db_disk_load(ctx, my_script, name);
 
-    name = my_script.get("item_id");
+    //name = my_script.get("item_id");
     in_public = my_script.get("in_public");
     //name = my_script.get_prop("item_id");
     owner = my_script.get("owner");
@@ -757,7 +757,7 @@ bool script_info::exists_in_db(mongo_lock_proxy& ctx)
 
     my_script.set_as("item_id", name);
 
-    db_disk_exists(ctx, my_script);
+    return db_disk_exists(ctx, my_script);
 }
 
 #if 0
