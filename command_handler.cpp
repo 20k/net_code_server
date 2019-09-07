@@ -807,15 +807,15 @@ void delete_structure_for(const std::string& name)
 
         for(low_level_structure& i : low_level_structure_manage.systems)
         {
-            for(auto it = (*i.user_list).begin(); it != (*i.user_list).end();)
+            for(auto it = i.user_list.begin(); it != i.user_list.end();)
             {
                 if(*it == name)
                 {
-                    it = i.user_list->erase(it);
+                    it = i.user_list.erase(it);
 
                     mongo_lock_proxy ctx = get_global_mongo_low_level_structure_context(-2);
 
-                    i.overwrite_in_db(ctx);
+                    db_disk_remove(ctx, i);
                 }
                 else
                 {

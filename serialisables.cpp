@@ -7,6 +7,7 @@
 #include "event_manager.hpp"
 #include "scheduled_tasks.hpp"
 #include "quest_manager.hpp"
+#include <secret/low_level_structure.hpp>
 
 DEFINE_SERIALISE_FUNCTION(user_limit)
 {
@@ -161,6 +162,18 @@ DEFINE_SERIALISE_FUNCTION(quest)
     DO_FSERIALISE(run_on_complete);
 }
 
+DEFINE_SERIALISE_FUNCTION(low_level_structure)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(name);
+    DO_FSERIALISE(px);
+    DO_FSERIALISE(py);
+    DO_FSERIALISE(pz);
+    DO_FSERIALISE(radius);
+    DO_FSERIALISE(user_list);
+}
+
 template<typename T, typename U>
 bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
 {
@@ -241,8 +254,21 @@ std::vector<T> db_load_all_impl(mongo_lock_proxy& ctx, const std::string& key_na
     return ret;
 }
 
+template<typename T>
+void db_remove_all_impl(mongo_lock_proxy& ctx, const std::string& key_name)
+{
+    nlohmann::json exist;
+    exist["$exists"] = true;
+
+    nlohmann::json to_find;
+    to_find[key_name] = exist;
+
+    ctx->remove_json_many_new(to_find);
+}
+
 DEFINE_GENERIC_DB(npc_prop_list, std::string, name);
 DEFINE_GENERIC_DB(event_impl, std::string, id);
 DEFINE_GENERIC_DB(task_data_db, std::string, id);
 DEFINE_GENERIC_DB(quest, std::string, id);
+DEFINE_GENERIC_DB(low_level_structure, std::string, name);
 

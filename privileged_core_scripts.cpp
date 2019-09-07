@@ -5562,11 +5562,11 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
         {
             low_level_structure* next = to_test[current_ring].front();
 
-            explored[*next->name] = true;
+            explored[next->name] = true;
 
-            info.rings[*next->name] = current_ring;
-            info.global_pos[*next->name] = next->get_pos();
-            info.ring_ordered_names.push_back(*next->name);
+            info.rings[next->name] = current_ring;
+            info.global_pos[next->name] = next->get_pos();
+            info.ring_ordered_names.push_back(next->name);
 
             to_test[current_ring].pop_front();
 
@@ -5595,9 +5595,9 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         for(auto& i : systems)
         {
-            info.rings[*i.name] = 0;
-            info.global_pos[*i.name] = i.get_pos();
-            info.ring_ordered_names.push_back(*i.name);
+            info.rings[i.name] = 0;
+            info.global_pos[i.name] = i.get_pos();
+            info.ring_ordered_names.push_back(i.name);
         }
     }
 
@@ -5635,9 +5635,9 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
             flags = (ascii::ascii_render_flags)(flags | ascii::COLOUR_BY_SECLEVEL);
         }
 
-        std::string result = ascii_render_from_accessibility_info(info, buffer, pos, 0.07f, flags, *structure.name);
+        std::string result = ascii_render_from_accessibility_info(info, buffer, pos, 0.07f, flags, structure.name);
 
-        result = "Current Sys: " + colour_string(*structure.name) + "\n" + result;
+        result = "Current Sys: " + colour_string(structure.name) + "\n" + result;
 
         push_duk_val(ctx, extra_args + result);
     }
@@ -5655,8 +5655,8 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             if(low_level_opt.has_value())
             {
-                info.ring_ordered_names.push_back(*low_level_opt.value()->name);
-                info.global_pos[*low_level_opt.value()->name] = low_level_opt.value()->get_pos();
+                info.ring_ordered_names.push_back(low_level_opt.value()->name);
+                info.global_pos[low_level_opt.value()->name] = low_level_opt.value()->get_pos();
             }
         }
 
@@ -5898,7 +5898,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         seclevel_string += "(`" + col + to_string_with_enforced_variable_dp(structure.calculate_seclevel(), 2) + "` - `" + col + sstring + "`)";
 
-        result = "Current Sys: " + colour_string(*structure.name) + "\n" + seclevel_string + "\n" + result;
+        result = "Current Sys: " + colour_string(structure.name) + "\n" + seclevel_string + "\n" + result;
 
         push_duk_val(ctx, result);
     }
@@ -6376,7 +6376,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     //std::string sector_string = "Sector: " + usr.fetch_sector();
     //total_msg += sector_string;
 
-    std::string system_string = "System: " + colour_string(*current_sys.name);
+    std::string system_string = "System: " + colour_string(current_sys.name);
     total_msg += system_string + "\n";
 
     double maximum_warp_distance = MAXIMUM_WARP_DISTANCE;
@@ -6417,7 +6417,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
                 low_level_structure& structure = *connected_sys_opt.value();
 
-                connected_system = *structure.name;
+                connected_system = structure.name;
                 found_system = connected_sys_opt.value();
                 destination_user = &usr;
 
@@ -6899,7 +6899,7 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
         std::string rstr = extra_args;
 
         //rstr += "Limits due to Security Levels:\n";
-        rstr += "System: " + colour_string(*sys_base.name) + " (`" + seclevel_fraction_to_colour(seclevel_2) + to_string_with_enforced_variable_dp(seclevel_2, 2) + "`)\n";
+        rstr += "System: " + colour_string(sys_base.name) + " (`" + seclevel_fraction_to_colour(seclevel_2) + to_string_with_enforced_variable_dp(seclevel_2, 2) + "`)\n";
 
         if(user_name != "")
         {
@@ -6907,7 +6907,7 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
         else if(sys_opt.has_value() && sys_name != "")
         {
-            rstr += "Target: " + colour_string(*sys.name) + " (`" + seclevel_fraction_to_colour(seclevel_1) + to_string_with_enforced_variable_dp(seclevel_1, 2) + "`)\n";
+            rstr += "Target: " + colour_string(sys.name) + " (`" + seclevel_fraction_to_colour(seclevel_1) + to_string_with_enforced_variable_dp(seclevel_1, 2) + "`)\n";
         }
 
         /*rstr += "Sendable Cash (passive): " + to_string_with_enforced_variable_dp(cash_send, 2) + "\n";
@@ -6945,7 +6945,7 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
     else
     {
         nlohmann::json ret;
-        ret["current_system"] = *sys_base.name;
+        ret["current_system"] = sys_base.name;
         ret["current_seclevel"] = seclevel_2;
 
         if(user_name != "")

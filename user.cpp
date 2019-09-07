@@ -899,7 +899,7 @@ void user::pump_notifications(int lock_id)
 
                         target_system.steal_user(*this, current_system, u2.get_local_pos(), u1.get_local_pos(), i);
 
-                        create_notification(lock_id, name, make_notif_col("-Arrived at " + *target_system.name + "-"));
+                        create_notification(lock_id, name, make_notif_col("-Arrived at " + target_system.name + "-"));
 
                         #ifdef DEBUG_WARP
                         ///the problem is that we reset the move queue in steal user
