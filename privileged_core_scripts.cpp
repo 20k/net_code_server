@@ -1463,15 +1463,6 @@ duk_ret_t msg__tell(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     size_t real_time = get_wall_time();
 
-    /*mongo_requester to_insert;
-    to_insert.set_prop("user", get_caller(ctx));
-    to_insert.set_prop("is_tell", 1);
-    to_insert.set_prop("msg", msg);
-    to_insert.set_prop("time_ms", real_time);
-    to_insert.set_prop("processed", 0);
-
-    to_insert.insert_in_db(mongo_ctx);*/
-
     nlohmann::json to_insert;
     to_insert["user"] = get_caller(ctx);
     to_insert["is_tell"] = 1;
@@ -1606,9 +1597,6 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
     mongo_ctx.change_collection(get_caller(ctx));
 
     ///ALARM: ALARM: RATE LIMIT
-
-    //mongo_requester request;
-
     nlohmann::json request;
 
     if(!is_tell)
