@@ -36,7 +36,6 @@ struct unsafe_info
     std::string command;
     volatile int finished = 0;
     exec_context* ectx;
-    volatile int* holds_lock = nullptr;
 
     std::string ret;
 };
@@ -55,8 +54,6 @@ void managed_duktape_thread(unsafe_info* info, size_t tid)
     ///set thread storage hack
     ///convert from int to size_t
     *tls_get_thread_id_storage_hack() = (size_t)tid;
-
-    info->holds_lock = tls_get_holds_lock();
 
     info->ectx->safe_exec(unsafe_wrapper, *info->ectx, *info);
 
@@ -465,9 +462,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         if(inf.finished)
         {
-            //launch->join();
-            //delete launch;
-
             if(current_mode == script_management_mode::REALTIME && all_shared.has_value() && !sand_data->terminate_semi_gracefully && !sand_data->terminate_realtime_gracefully)
             {
                 /*MAKE_PERF_COUNTER();
@@ -475,8 +469,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                 exec_guard.unblock();
                 cleanup.unblock();
-
-                //all_shared.value()->state.number_of_realtime_scripts++;
 
                 launched_realtime = true;
 
