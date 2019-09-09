@@ -2125,11 +2125,11 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
 
         if(respond)
         {
-            nlohmann::json data;
-            data["type"] = "chat_api_response";
-            data["data"] = data["data"];
+            nlohmann::json ndata;
+            ndata["type"] = "chat_api_response";
+            ndata["data"] = data["data"];
 
-            return data;
+            return ndata;
         }
 
         return nlohmann::json();
