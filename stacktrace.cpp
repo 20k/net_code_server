@@ -33,6 +33,7 @@ void stack_on_start()
     ::signal(SIGSEGV, &signal_handler);
     ::signal(SIGABRT, &signal_handler);
 
+    #ifdef __WIN32__
     if (boost::filesystem::exists("./backtrace.dump"))
     {
         // there is a backtrace
@@ -48,6 +49,7 @@ void stack_on_start()
 
         rename("./backtrace.dump", "./backtrace_1.dump");
     }
+    #endif // __WIN32__
 }
 
 std::string get_stacktrace()

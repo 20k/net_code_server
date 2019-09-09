@@ -185,12 +185,26 @@
 				<Option object_output="obj/LRelease/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option projectCompilerOptionsRelation="0" />
+				<Option projectLinkerOptionsRelation="0" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-std=c++1z" />
 					<Add option="-g" />
 					<Add option="-march=nehalem" />
+					<Add option="-DBOOST_STACKTRACE_USE_BACKTRACE" />
+					<Add option="-DSERVER" />
 					<Add option="-DLOCAL_IP" />
 				</Compiler>
+				<Linker>
+					<Add option="-O2" />
+					<Add option="-lsfml-system" />
+					<Add option="-lcrypto" />
+					<Add option="-lssl" />
+					<Add option="-fno-pie" />
+					<Add option="-lbacktrace" />
+					<Add option="-pthread" />
+				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
