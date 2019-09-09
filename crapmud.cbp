@@ -192,6 +192,7 @@
 					<Add option="-std=c++1z" />
 					<Add option="-g" />
 					<Add option="-march=nehalem" />
+					<Add option="-no-pie" />
 					<Add option="-DLOCAL_IP" />
 				</Compiler>
 				<Linker>
@@ -220,6 +221,7 @@
 					<Add option="-std=c++1z" />
 					<Add option="-g" />
 					<Add option="-march=nehalem" />
+					<Add option="-no-pie" />
 					<Add option="-DEXTERN_IP" />
 				</Compiler>
 				<Linker>

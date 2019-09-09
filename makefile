@@ -129,7 +129,7 @@ DEP_RELEASEANDTESTLTO =
 OUT_RELEASEANDTESTLTO = bin/ReleaseTestLTO/crapmud
 
 INC_LINUXRELEASE = $(INC)
-CFLAGS_LINUXRELEASE = $(CFLAGS) -O3 -std=c++1z -g -march=nehalem -DLOCAL_IP
+CFLAGS_LINUXRELEASE = $(CFLAGS) -O3 -std=c++1z -g -march=nehalem -no-pie -DLOCAL_IP
 RESINC_LINUXRELEASE = $(RESINC)
 RCFLAGS_LINUXRELEASE = $(RCFLAGS)
 LIBDIR_LINUXRELEASE = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/linux64
@@ -140,7 +140,7 @@ DEP_LINUXRELEASE =
 OUT_LINUXRELEASE = bin/LRelease/crapmud
 
 INC_LINUXDEPLOY = $(INC)
-CFLAGS_LINUXDEPLOY = $(CFLAGS) -O3 -std=c++1z -g -march=nehalem -DEXTERN_IP
+CFLAGS_LINUXDEPLOY = $(CFLAGS) -O3 -std=c++1z -g -march=nehalem -no-pie -DEXTERN_IP
 RESINC_LINUXDEPLOY = $(RESINC)
 RCFLAGS_LINUXDEPLOY = $(RCFLAGS)
 LIBDIR_LINUXDEPLOY = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/linux64
