@@ -185,8 +185,8 @@
 				<Option object_output="obj/LRelease/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option projectCompilerOptionsRelation="0" />
-				<Option projectLinkerOptionsRelation="0" />
+				<Option projectCompilerOptionsRelation="1" />
+				<Option projectLinkerOptionsRelation="1" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-std=c++1z" />
@@ -204,6 +204,7 @@
 					<Add option="-fno-pie" />
 					<Add option="-lbacktrace" />
 					<Add option="-pthread" />
+					<Add option="-ldl" />
 				</Linker>
 			</Target>
 		</Build>
