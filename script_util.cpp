@@ -427,7 +427,7 @@ std::string process_resulting_code(std::string in)
 
 std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, const std::string& in)
 {
-    std::string compiler_dir = "compile/";
+    std::string compiler_dir = "./compile/";
 
     #ifdef __WIN32__
     mkdir(compiler_dir.c_str());
