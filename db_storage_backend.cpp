@@ -12,8 +12,13 @@
 #include <fstream>
 #include <libncclient/nc_util.hpp>
 
+#ifdef __WIN32__
 #define ROOT_STORE "C:/net_code_storage"
 #define ROOT_FILE "C:/net_code_storage/gid"
+#else
+#define ROOT_STORE "~/net_code_storage"
+#define ROOT_FILE "~/net_code_storage/gid"
+#endif
 
 #include "rate_limiting.hpp"
 #include "stacktrace.hpp"
