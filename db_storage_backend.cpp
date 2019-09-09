@@ -16,8 +16,8 @@
 #define ROOT_STORE "C:/net_code_storage"
 #define ROOT_FILE "C:/net_code_storage/gid"
 #else
-#define ROOT_STORE "~/net_code_storage"
-#define ROOT_FILE "~/net_code_storage/gid"
+#define ROOT_STORE "/net_code_storage"
+#define ROOT_FILE "/net_code_storage/gid"
 #endif
 
 #include "rate_limiting.hpp"
@@ -971,12 +971,20 @@ void init_db_storage_backend()
         //throw std::runtime_error("Yeah we're past this point! file explosion");
 
         store.atomic_write(root_file, std::to_string(0));
+
+        std::cout << "writing to " << root_file << std::endl;
         //write_all(root_file, std::to_string(0));
     }
     else
     {
         store.global_id = atoll(resulting_data.c_str());
         store.reserved_global_id = store.global_id;
+    }
+
+    if(!file_exists(root_file))
+    {
+        printf("Failed root file\n");
+        exit(4);
     }
 
     for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)

@@ -568,7 +568,7 @@ int main()
 
     manage.harvest_existing_npcs();
 
-    manage.for_each(low_level_structure::layout_internal_users);
+    manage.for_each(&low_level_structure::layout_internal_users);
 
     manage.connect_systems_together();
     #endif // REGENERATE_LINKS_AND_USERS

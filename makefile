@@ -14,9 +14,9 @@ WINDRES = windres
 INC = -Ideps
 CFLAGS = -Wnon-virtual-dtor -Winit-self -Wunreachable-code -Wextra -Wall -std=c++1z -fexceptions -Wno-narrowing -fno-strict-aliasing -Wno-unused-parameter -Wno-unused-label -no-pie -Werror=return-type -DBOOST_STACKTRACE_USE_BACKTRACE -DSERVER
 RESINC = 
-LIBDIR = -Ldeps/libs
-LIB = deps/steamworks_sdk_142/sdk/public/steam/lib/win64/libsdkencryptedappticket64.a
-LDFLAGS = -lmingw32 -lsfml-system -lws2_32 -lboost_system-mt -lmswsock -lole32 -lboost_filesystem-mt -ldbgeng -lcrypto -lssl -ldl -fno-pie -lbacktrace
+LIBDIR = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/win64
+LIB = 
+LDFLAGS = -lmingw32 -lsfml-system -lws2_32 -lboost_system-mt -lmswsock -lole32 -lboost_filesystem-mt -ldbgeng -lcrypto -lssl -ldl -fno-pie -lbacktrace -lsdkencryptedappticket64
 
 INC_DEBUG = $(INC)
 CFLAGS_DEBUG = $(CFLAGS) -Og -g -DLOCAL_IP
@@ -132,9 +132,9 @@ INC_LINUXRELEASE = $(INC)
 CFLAGS_LINUXRELEASE =  -O2 -std=c++1z -g -march=nehalem -DBOOST_STACKTRACE_USE_BACKTRACE -DSERVER -DLOCAL_IP
 RESINC_LINUXRELEASE = $(RESINC)
 RCFLAGS_LINUXRELEASE = $(RCFLAGS)
-LIBDIR_LINUXRELEASE = $(LIBDIR)
+LIBDIR_LINUXRELEASE = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/linux64
 LIB_LINUXRELEASE = $(LIB)
-LDFLAGS_LINUXRELEASE =  -O2 -lsfml-system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl
+LDFLAGS_LINUXRELEASE =  -O2 -lsfml-system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket
 OBJDIR_LINUXRELEASE = obj/LRelease
 DEP_LINUXRELEASE = 
 OUT_LINUXRELEASE = bin/LRelease/crapmud

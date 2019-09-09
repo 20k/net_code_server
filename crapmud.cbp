@@ -187,6 +187,7 @@
 				<Option compiler="gcc" />
 				<Option projectCompilerOptionsRelation="1" />
 				<Option projectLinkerOptionsRelation="1" />
+				<Option projectLibDirsRelation="1" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-std=c++1z" />
@@ -205,6 +206,9 @@
 					<Add option="-lbacktrace" />
 					<Add option="-pthread" />
 					<Add option="-ldl" />
+					<Add option="-lsdkencryptedappticket" />
+					<Add directory="deps/libs" />
+					<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/linux64" />
 				</Linker>
 			</Target>
 		</Build>
@@ -240,8 +244,9 @@
 			<Add option="-ldl" />
 			<Add option="-fno-pie" />
 			<Add option="-lbacktrace" />
-			<Add library="deps/steamworks_sdk_142/sdk/public/steam/lib/win64/libsdkencryptedappticket64.a" />
+			<Add option="-lsdkencryptedappticket64" />
 			<Add directory="deps/libs" />
+			<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/win64" />
 		</Linker>
 		<Unit filename="ascii_helpers.cpp" />
 		<Unit filename="ascii_helpers.hpp" />
