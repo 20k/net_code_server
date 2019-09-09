@@ -1,0 +1,23 @@
+{
+  "name": "script_compile",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.1.2",
+    "@babel/core": "^7.1.2",
+    "@babel/preset-typescript": "^7.1.0",
+    "babel-plugin-transform-remove-strict-mode": "0.0.2",
+    "babel-preset-es2015-without-strict": "0.0.4",
+    "typescript": "^3.1.6"
+  },
+  "dependencies": {
+    "@babel/polyfill": "^7.0.0",
+    "npm": "^6.4.1"
+  }
+}
