@@ -9,7 +9,13 @@ void time_structure::from_time_ms(size_t time_code_ms)
     time_t tt = std::chrono::system_clock::to_time_t(chron);
 
     tm utc_tm;
+
+    ///this seems like literally the most pointlessly divergent platform behaviour
+    #ifdef __WIN32__
     gmtime_s(&utc_tm, &tt);
+    #else
+    gmtime_r(&tt, &utc_tm);
+    #endif
 
     /*tm local_tm;
     localtime_r(&tt, &local_tm);*/
