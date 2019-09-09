@@ -129,15 +129,26 @@ DEP_RELEASEANDTESTLTO =
 OUT_RELEASEANDTESTLTO = bin/ReleaseTestLTO/crapmud
 
 INC_LINUXRELEASE = $(INC)
-CFLAGS_LINUXRELEASE =  -O2 -std=c++1z -g -march=nehalem -DBOOST_STACKTRACE_USE_BACKTRACE -DSERVER -DLOCAL_IP
+CFLAGS_LINUXRELEASE = $(CFLAGS) -O3 -std=c++1z -g -march=nehalem -DLOCAL_IP
 RESINC_LINUXRELEASE = $(RESINC)
 RCFLAGS_LINUXRELEASE = $(RCFLAGS)
 LIBDIR_LINUXRELEASE = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/linux64
 LIB_LINUXRELEASE = $(LIB)
-LDFLAGS_LINUXRELEASE =  -O2 -lsfml-system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket
+LDFLAGS_LINUXRELEASE =  -O3 -lsfml-system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket
 OBJDIR_LINUXRELEASE = obj/LRelease
 DEP_LINUXRELEASE = 
 OUT_LINUXRELEASE = bin/LRelease/crapmud
+
+INC_LINUXDEPLOY = $(INC)
+CFLAGS_LINUXDEPLOY = $(CFLAGS) -O3 -std=c++1z -g -march=nehalem -DEXTERN_IP
+RESINC_LINUXDEPLOY = $(RESINC)
+RCFLAGS_LINUXDEPLOY = $(RCFLAGS)
+LIBDIR_LINUXDEPLOY = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/linux64
+LIB_LINUXDEPLOY = $(LIB)
+LDFLAGS_LINUXDEPLOY =  -O3 -lsfml-system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket
+OBJDIR_LINUXDEPLOY = obj/LDeploy
+DEP_LINUXDEPLOY = 
+OUT_LINUXDEPLOY = bin/LDeploy/crapmud
 
 OBJ_DEBUG = $(OBJDIR_DEBUG)/scheduled_tasks.o $(OBJDIR_DEBUG)/safe_thread.o $(OBJDIR_DEBUG)/rng.o $(OBJDIR_DEBUG)/reoccurring_task_handler.o $(OBJDIR_DEBUG)/rate_limiting.o $(OBJDIR_DEBUG)/quest_manager.o $(OBJDIR_DEBUG)/privileged_core_scripts.o $(OBJDIR_DEBUG)/perfmon.o $(OBJDIR_DEBUG)/non_user_task_thread.o $(OBJDIR_DEBUG)/mongo.o $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/logging.o $(OBJDIR_DEBUG)/user.o $(OBJDIR_DEBUG)/unified_scripts.o $(OBJDIR_DEBUG)/time.o $(OBJDIR_DEBUG)/steam_auth.o $(OBJDIR_DEBUG)/stacktrace.o $(OBJDIR_DEBUG)/source_maps.o $(OBJDIR_DEBUG)/shared_duk_worker_state.o $(OBJDIR_DEBUG)/serialisables.o $(OBJDIR_DEBUG)/seccallers.o $(OBJDIR_DEBUG)/script_util.o $(OBJDIR_DEBUG)/script_metadata.o $(OBJDIR_DEBUG)/deps/secret/node.o $(OBJDIR_DEBUG)/deps/secret/low_level_structure.o $(OBJDIR_DEBUG)/deps/secret/loot_gen.o $(OBJDIR_DEBUG)/deps/secret/initial_link_setup.o $(OBJDIR_DEBUG)/deps/secret/common.o $(OBJDIR_DEBUG)/deps/networking/serialisable.o $(OBJDIR_DEBUG)/deps/networking/networking.o $(OBJDIR_DEBUG)/deps/networking/beast_compilation_unit.o $(OBJDIR_DEBUG)/db_storage_backend.o $(OBJDIR_DEBUG)/command_handler_state.o $(OBJDIR_DEBUG)/command_handler.o $(OBJDIR_DEBUG)/auth.o $(OBJDIR_DEBUG)/ascii_helpers.o $(OBJDIR_DEBUG)/item.o $(OBJDIR_DEBUG)/http_beast_server.o $(OBJDIR_DEBUG)/exec_context.o $(OBJDIR_DEBUG)/event_manager.o $(OBJDIR_DEBUG)/duktape.o $(OBJDIR_DEBUG)/duk_object_functions.o $(OBJDIR_DEBUG)/duk_modules.o $(OBJDIR_DEBUG)/duk_module_duktape.o $(OBJDIR_DEBUG)/deps/secret/tutorial.o $(OBJDIR_DEBUG)/deps/secret/structure.o $(OBJDIR_DEBUG)/deps/secret/special_user_scripts.o $(OBJDIR_DEBUG)/deps/secret/secret.o $(OBJDIR_DEBUG)/deps/secret/one_shots.o $(OBJDIR_DEBUG)/deps/secret/one_shot_core.o $(OBJDIR_DEBUG)/deps/secret/npc_manager.o
 
@@ -161,9 +172,11 @@ OBJ_RELEASEANDTESTLTO = $(OBJDIR_RELEASEANDTESTLTO)/scheduled_tasks.o $(OBJDIR_R
 
 OBJ_LINUXRELEASE = $(OBJDIR_LINUXRELEASE)/scheduled_tasks.o $(OBJDIR_LINUXRELEASE)/safe_thread.o $(OBJDIR_LINUXRELEASE)/rng.o $(OBJDIR_LINUXRELEASE)/reoccurring_task_handler.o $(OBJDIR_LINUXRELEASE)/rate_limiting.o $(OBJDIR_LINUXRELEASE)/quest_manager.o $(OBJDIR_LINUXRELEASE)/privileged_core_scripts.o $(OBJDIR_LINUXRELEASE)/perfmon.o $(OBJDIR_LINUXRELEASE)/non_user_task_thread.o $(OBJDIR_LINUXRELEASE)/mongo.o $(OBJDIR_LINUXRELEASE)/main.o $(OBJDIR_LINUXRELEASE)/logging.o $(OBJDIR_LINUXRELEASE)/user.o $(OBJDIR_LINUXRELEASE)/unified_scripts.o $(OBJDIR_LINUXRELEASE)/time.o $(OBJDIR_LINUXRELEASE)/steam_auth.o $(OBJDIR_LINUXRELEASE)/stacktrace.o $(OBJDIR_LINUXRELEASE)/source_maps.o $(OBJDIR_LINUXRELEASE)/shared_duk_worker_state.o $(OBJDIR_LINUXRELEASE)/serialisables.o $(OBJDIR_LINUXRELEASE)/seccallers.o $(OBJDIR_LINUXRELEASE)/script_util.o $(OBJDIR_LINUXRELEASE)/script_metadata.o $(OBJDIR_LINUXRELEASE)/deps/secret/node.o $(OBJDIR_LINUXRELEASE)/deps/secret/low_level_structure.o $(OBJDIR_LINUXRELEASE)/deps/secret/loot_gen.o $(OBJDIR_LINUXRELEASE)/deps/secret/initial_link_setup.o $(OBJDIR_LINUXRELEASE)/deps/secret/common.o $(OBJDIR_LINUXRELEASE)/deps/networking/serialisable.o $(OBJDIR_LINUXRELEASE)/deps/networking/networking.o $(OBJDIR_LINUXRELEASE)/deps/networking/beast_compilation_unit.o $(OBJDIR_LINUXRELEASE)/db_storage_backend.o $(OBJDIR_LINUXRELEASE)/command_handler_state.o $(OBJDIR_LINUXRELEASE)/command_handler.o $(OBJDIR_LINUXRELEASE)/auth.o $(OBJDIR_LINUXRELEASE)/ascii_helpers.o $(OBJDIR_LINUXRELEASE)/item.o $(OBJDIR_LINUXRELEASE)/http_beast_server.o $(OBJDIR_LINUXRELEASE)/exec_context.o $(OBJDIR_LINUXRELEASE)/event_manager.o $(OBJDIR_LINUXRELEASE)/duktape.o $(OBJDIR_LINUXRELEASE)/duk_object_functions.o $(OBJDIR_LINUXRELEASE)/duk_modules.o $(OBJDIR_LINUXRELEASE)/duk_module_duktape.o $(OBJDIR_LINUXRELEASE)/deps/secret/tutorial.o $(OBJDIR_LINUXRELEASE)/deps/secret/structure.o $(OBJDIR_LINUXRELEASE)/deps/secret/special_user_scripts.o $(OBJDIR_LINUXRELEASE)/deps/secret/secret.o $(OBJDIR_LINUXRELEASE)/deps/secret/one_shots.o $(OBJDIR_LINUXRELEASE)/deps/secret/one_shot_core.o $(OBJDIR_LINUXRELEASE)/deps/secret/npc_manager.o
 
-all: debug release deploy releaseandtest debugbacktrace debugtest dmimic releaseandtestwithdebuginfo rdclang rt_prof releaseandtestlto linuxrelease
+OBJ_LINUXDEPLOY = $(OBJDIR_LINUXDEPLOY)/scheduled_tasks.o $(OBJDIR_LINUXDEPLOY)/safe_thread.o $(OBJDIR_LINUXDEPLOY)/rng.o $(OBJDIR_LINUXDEPLOY)/reoccurring_task_handler.o $(OBJDIR_LINUXDEPLOY)/rate_limiting.o $(OBJDIR_LINUXDEPLOY)/quest_manager.o $(OBJDIR_LINUXDEPLOY)/privileged_core_scripts.o $(OBJDIR_LINUXDEPLOY)/perfmon.o $(OBJDIR_LINUXDEPLOY)/non_user_task_thread.o $(OBJDIR_LINUXDEPLOY)/mongo.o $(OBJDIR_LINUXDEPLOY)/main.o $(OBJDIR_LINUXDEPLOY)/logging.o $(OBJDIR_LINUXDEPLOY)/user.o $(OBJDIR_LINUXDEPLOY)/unified_scripts.o $(OBJDIR_LINUXDEPLOY)/time.o $(OBJDIR_LINUXDEPLOY)/steam_auth.o $(OBJDIR_LINUXDEPLOY)/stacktrace.o $(OBJDIR_LINUXDEPLOY)/source_maps.o $(OBJDIR_LINUXDEPLOY)/shared_duk_worker_state.o $(OBJDIR_LINUXDEPLOY)/serialisables.o $(OBJDIR_LINUXDEPLOY)/seccallers.o $(OBJDIR_LINUXDEPLOY)/script_util.o $(OBJDIR_LINUXDEPLOY)/script_metadata.o $(OBJDIR_LINUXDEPLOY)/deps/secret/node.o $(OBJDIR_LINUXDEPLOY)/deps/secret/low_level_structure.o $(OBJDIR_LINUXDEPLOY)/deps/secret/loot_gen.o $(OBJDIR_LINUXDEPLOY)/deps/secret/initial_link_setup.o $(OBJDIR_LINUXDEPLOY)/deps/secret/common.o $(OBJDIR_LINUXDEPLOY)/deps/networking/serialisable.o $(OBJDIR_LINUXDEPLOY)/deps/networking/networking.o $(OBJDIR_LINUXDEPLOY)/deps/networking/beast_compilation_unit.o $(OBJDIR_LINUXDEPLOY)/db_storage_backend.o $(OBJDIR_LINUXDEPLOY)/command_handler_state.o $(OBJDIR_LINUXDEPLOY)/command_handler.o $(OBJDIR_LINUXDEPLOY)/auth.o $(OBJDIR_LINUXDEPLOY)/ascii_helpers.o $(OBJDIR_LINUXDEPLOY)/item.o $(OBJDIR_LINUXDEPLOY)/http_beast_server.o $(OBJDIR_LINUXDEPLOY)/exec_context.o $(OBJDIR_LINUXDEPLOY)/event_manager.o $(OBJDIR_LINUXDEPLOY)/duktape.o $(OBJDIR_LINUXDEPLOY)/duk_object_functions.o $(OBJDIR_LINUXDEPLOY)/duk_modules.o $(OBJDIR_LINUXDEPLOY)/duk_module_duktape.o $(OBJDIR_LINUXDEPLOY)/deps/secret/tutorial.o $(OBJDIR_LINUXDEPLOY)/deps/secret/structure.o $(OBJDIR_LINUXDEPLOY)/deps/secret/special_user_scripts.o $(OBJDIR_LINUXDEPLOY)/deps/secret/secret.o $(OBJDIR_LINUXDEPLOY)/deps/secret/one_shots.o $(OBJDIR_LINUXDEPLOY)/deps/secret/one_shot_core.o $(OBJDIR_LINUXDEPLOY)/deps/secret/npc_manager.o
 
-clean: clean_debug clean_release clean_deploy clean_releaseandtest clean_debugbacktrace clean_debugtest clean_dmimic clean_releaseandtestwithdebuginfo clean_rdclang clean_rt_prof clean_releaseandtestlto clean_linuxrelease
+all: debug release deploy releaseandtest debugbacktrace debugtest dmimic releaseandtestwithdebuginfo rdclang rt_prof releaseandtestlto linuxrelease linuxdeploy
+
+clean: clean_debug clean_release clean_deploy clean_releaseandtest clean_debugbacktrace clean_debugtest clean_dmimic clean_releaseandtestwithdebuginfo clean_rdclang clean_rt_prof clean_releaseandtestlto clean_linuxrelease clean_linuxdeploy
 
 before_debug: 
 	test -d bin/Debug || mkdir -p bin/Debug
@@ -2072,5 +2085,178 @@ clean_linuxrelease:
 	rm -rf $(OBJDIR_LINUXRELEASE)/deps/secret
 	rm -rf $(OBJDIR_LINUXRELEASE)/deps/networking
 
-.PHONY: before_debug after_debug clean_debug before_release after_release clean_release before_deploy after_deploy clean_deploy before_releaseandtest after_releaseandtest clean_releaseandtest before_debugbacktrace after_debugbacktrace clean_debugbacktrace before_debugtest after_debugtest clean_debugtest before_dmimic after_dmimic clean_dmimic before_releaseandtestwithdebuginfo after_releaseandtestwithdebuginfo clean_releaseandtestwithdebuginfo before_rt_prof after_rt_prof clean_rt_prof before_releaseandtestlto after_releaseandtestlto clean_releaseandtestlto before_linuxrelease after_linuxrelease clean_linuxrelease
+before_linuxdeploy: 
+	test -d bin/LDeploy || mkdir -p bin/LDeploy
+	test -d $(OBJDIR_LINUXDEPLOY) || mkdir -p $(OBJDIR_LINUXDEPLOY)
+	test -d $(OBJDIR_LINUXDEPLOY)/deps/secret || mkdir -p $(OBJDIR_LINUXDEPLOY)/deps/secret
+	test -d $(OBJDIR_LINUXDEPLOY)/deps/networking || mkdir -p $(OBJDIR_LINUXDEPLOY)/deps/networking
+
+after_linuxdeploy: 
+
+linuxdeploy: before_linuxdeploy out_linuxdeploy after_linuxdeploy
+
+out_linuxdeploy: before_linuxdeploy $(OBJ_LINUXDEPLOY) $(DEP_LINUXDEPLOY)
+	$(LD) $(LIBDIR_LINUXDEPLOY) -o $(OUT_LINUXDEPLOY) $(OBJ_LINUXDEPLOY)  $(LDFLAGS_LINUXDEPLOY) $(LIB_LINUXDEPLOY)
+
+$(OBJDIR_LINUXDEPLOY)/scheduled_tasks.o: scheduled_tasks.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c scheduled_tasks.cpp -o $(OBJDIR_LINUXDEPLOY)/scheduled_tasks.o
+
+$(OBJDIR_LINUXDEPLOY)/safe_thread.o: safe_thread.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c safe_thread.cpp -o $(OBJDIR_LINUXDEPLOY)/safe_thread.o
+
+$(OBJDIR_LINUXDEPLOY)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c rng.cpp -o $(OBJDIR_LINUXDEPLOY)/rng.o
+
+$(OBJDIR_LINUXDEPLOY)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c reoccurring_task_handler.cpp -o $(OBJDIR_LINUXDEPLOY)/reoccurring_task_handler.o
+
+$(OBJDIR_LINUXDEPLOY)/rate_limiting.o: rate_limiting.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c rate_limiting.cpp -o $(OBJDIR_LINUXDEPLOY)/rate_limiting.o
+
+$(OBJDIR_LINUXDEPLOY)/quest_manager.o: quest_manager.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c quest_manager.cpp -o $(OBJDIR_LINUXDEPLOY)/quest_manager.o
+
+$(OBJDIR_LINUXDEPLOY)/privileged_core_scripts.o: privileged_core_scripts.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c privileged_core_scripts.cpp -o $(OBJDIR_LINUXDEPLOY)/privileged_core_scripts.o
+
+$(OBJDIR_LINUXDEPLOY)/perfmon.o: perfmon.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c perfmon.cpp -o $(OBJDIR_LINUXDEPLOY)/perfmon.o
+
+$(OBJDIR_LINUXDEPLOY)/non_user_task_thread.o: non_user_task_thread.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c non_user_task_thread.cpp -o $(OBJDIR_LINUXDEPLOY)/non_user_task_thread.o
+
+$(OBJDIR_LINUXDEPLOY)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c mongo.cpp -o $(OBJDIR_LINUXDEPLOY)/mongo.o
+
+$(OBJDIR_LINUXDEPLOY)/main.o: main.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c main.cpp -o $(OBJDIR_LINUXDEPLOY)/main.o
+
+$(OBJDIR_LINUXDEPLOY)/logging.o: logging.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c logging.cpp -o $(OBJDIR_LINUXDEPLOY)/logging.o
+
+$(OBJDIR_LINUXDEPLOY)/user.o: user.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c user.cpp -o $(OBJDIR_LINUXDEPLOY)/user.o
+
+$(OBJDIR_LINUXDEPLOY)/unified_scripts.o: unified_scripts.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c unified_scripts.cpp -o $(OBJDIR_LINUXDEPLOY)/unified_scripts.o
+
+$(OBJDIR_LINUXDEPLOY)/time.o: time.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c time.cpp -o $(OBJDIR_LINUXDEPLOY)/time.o
+
+$(OBJDIR_LINUXDEPLOY)/steam_auth.o: steam_auth.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c steam_auth.cpp -o $(OBJDIR_LINUXDEPLOY)/steam_auth.o
+
+$(OBJDIR_LINUXDEPLOY)/stacktrace.o: stacktrace.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c stacktrace.cpp -o $(OBJDIR_LINUXDEPLOY)/stacktrace.o
+
+$(OBJDIR_LINUXDEPLOY)/source_maps.o: source_maps.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c source_maps.cpp -o $(OBJDIR_LINUXDEPLOY)/source_maps.o
+
+$(OBJDIR_LINUXDEPLOY)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c shared_duk_worker_state.cpp -o $(OBJDIR_LINUXDEPLOY)/shared_duk_worker_state.o
+
+$(OBJDIR_LINUXDEPLOY)/serialisables.o: serialisables.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c serialisables.cpp -o $(OBJDIR_LINUXDEPLOY)/serialisables.o
+
+$(OBJDIR_LINUXDEPLOY)/seccallers.o: seccallers.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c seccallers.cpp -o $(OBJDIR_LINUXDEPLOY)/seccallers.o
+
+$(OBJDIR_LINUXDEPLOY)/script_util.o: script_util.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c script_util.cpp -o $(OBJDIR_LINUXDEPLOY)/script_util.o
+
+$(OBJDIR_LINUXDEPLOY)/script_metadata.o: script_metadata.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c script_metadata.cpp -o $(OBJDIR_LINUXDEPLOY)/script_metadata.o
+
+$(OBJDIR_LINUXDEPLOY)/deps/secret/node.o: deps/secret/node.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/secret/node.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/secret/node.o
+
+$(OBJDIR_LINUXDEPLOY)/deps/secret/low_level_structure.o: deps/secret/low_level_structure.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/secret/low_level_structure.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/secret/low_level_structure.o
+
+$(OBJDIR_LINUXDEPLOY)/deps/secret/loot_gen.o: deps/secret/loot_gen.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/secret/loot_gen.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/secret/loot_gen.o
+
+$(OBJDIR_LINUXDEPLOY)/deps/secret/initial_link_setup.o: deps/secret/initial_link_setup.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/secret/initial_link_setup.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/secret/initial_link_setup.o
+
+$(OBJDIR_LINUXDEPLOY)/deps/secret/common.o: deps/secret/common.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/secret/common.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/secret/common.o
+
+$(OBJDIR_LINUXDEPLOY)/deps/networking/serialisable.o: deps/networking/serialisable.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/networking/serialisable.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/networking/serialisable.o
+
+$(OBJDIR_LINUXDEPLOY)/deps/networking/networking.o: deps/networking/networking.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/networking/networking.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/networking/networking.o
+
+$(OBJDIR_LINUXDEPLOY)/deps/networking/beast_compilation_unit.o: deps/networking/beast_compilation_unit.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/networking/beast_compilation_unit.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/networking/beast_compilation_unit.o
+
+$(OBJDIR_LINUXDEPLOY)/db_storage_backend.o: db_storage_backend.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c db_storage_backend.cpp -o $(OBJDIR_LINUXDEPLOY)/db_storage_backend.o
+
+$(OBJDIR_LINUXDEPLOY)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c command_handler_state.cpp -o $(OBJDIR_LINUXDEPLOY)/command_handler_state.o
+
+$(OBJDIR_LINUXDEPLOY)/command_handler.o: command_handler.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c command_handler.cpp -o $(OBJDIR_LINUXDEPLOY)/command_handler.o
+
+$(OBJDIR_LINUXDEPLOY)/auth.o: auth.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c auth.cpp -o $(OBJDIR_LINUXDEPLOY)/auth.o
+
+$(OBJDIR_LINUXDEPLOY)/ascii_helpers.o: ascii_helpers.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c ascii_helpers.cpp -o $(OBJDIR_LINUXDEPLOY)/ascii_helpers.o
+
+$(OBJDIR_LINUXDEPLOY)/item.o: item.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c item.cpp -o $(OBJDIR_LINUXDEPLOY)/item.o
+
+$(OBJDIR_LINUXDEPLOY)/http_beast_server.o: http_beast_server.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c http_beast_server.cpp -o $(OBJDIR_LINUXDEPLOY)/http_beast_server.o
+
+$(OBJDIR_LINUXDEPLOY)/exec_context.o: exec_context.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c exec_context.cpp -o $(OBJDIR_LINUXDEPLOY)/exec_context.o
+
+$(OBJDIR_LINUXDEPLOY)/event_manager.o: event_manager.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c event_manager.cpp -o $(OBJDIR_LINUXDEPLOY)/event_manager.o
+
+$(OBJDIR_LINUXDEPLOY)/duktape.o: duktape.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c duktape.cpp -o $(OBJDIR_LINUXDEPLOY)/duktape.o
+
+$(OBJDIR_LINUXDEPLOY)/duk_object_functions.o: duk_object_functions.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c duk_object_functions.cpp -o $(OBJDIR_LINUXDEPLOY)/duk_object_functions.o
+
+$(OBJDIR_LINUXDEPLOY)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c duk_modules.cpp -o $(OBJDIR_LINUXDEPLOY)/duk_modules.o
+
+$(OBJDIR_LINUXDEPLOY)/duk_module_duktape.o: duk_module_duktape.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c duk_module_duktape.cpp -o $(OBJDIR_LINUXDEPLOY)/duk_module_duktape.o
+
+$(OBJDIR_LINUXDEPLOY)/deps/secret/tutorial.o: deps/secret/tutorial.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/secret/tutorial.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/secret/tutorial.o
+
+$(OBJDIR_LINUXDEPLOY)/deps/secret/structure.o: deps/secret/structure.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/secret/structure.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/secret/structure.o
+
+$(OBJDIR_LINUXDEPLOY)/deps/secret/special_user_scripts.o: deps/secret/special_user_scripts.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/secret/special_user_scripts.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/secret/special_user_scripts.o
+
+$(OBJDIR_LINUXDEPLOY)/deps/secret/secret.o: deps/secret/secret.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/secret/secret.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/secret/secret.o
+
+$(OBJDIR_LINUXDEPLOY)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/secret/one_shots.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/secret/one_shots.o
+
+$(OBJDIR_LINUXDEPLOY)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/secret/one_shot_core.o
+
+$(OBJDIR_LINUXDEPLOY)/deps/secret/npc_manager.o: deps/secret/npc_manager.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/secret/npc_manager.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/secret/npc_manager.o
+
+clean_linuxdeploy: 
+	rm -f $(OBJ_LINUXDEPLOY) $(OUT_LINUXDEPLOY)
+	rm -rf bin/LDeploy
+	rm -rf $(OBJDIR_LINUXDEPLOY)
+	rm -rf $(OBJDIR_LINUXDEPLOY)/deps/secret
+	rm -rf $(OBJDIR_LINUXDEPLOY)/deps/networking
+
+.PHONY: before_debug after_debug clean_debug before_release after_release clean_release before_deploy after_deploy clean_deploy before_releaseandtest after_releaseandtest clean_releaseandtest before_debugbacktrace after_debugbacktrace clean_debugbacktrace before_debugtest after_debugtest clean_debugtest before_dmimic after_dmimic clean_dmimic before_releaseandtestwithdebuginfo after_releaseandtestwithdebuginfo clean_releaseandtestwithdebuginfo before_rt_prof after_rt_prof clean_rt_prof before_releaseandtestlto after_releaseandtestlto clean_releaseandtestlto before_linuxrelease after_linuxrelease clean_linuxrelease before_linuxdeploy after_linuxdeploy clean_linuxdeploy
 

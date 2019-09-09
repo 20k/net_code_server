@@ -185,20 +185,45 @@
 				<Option object_output="obj/LRelease/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option projectCompilerOptionsRelation="1" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
-					<Add option="-O2" />
+					<Add option="-O3" />
 					<Add option="-std=c++1z" />
 					<Add option="-g" />
 					<Add option="-march=nehalem" />
-					<Add option="-DBOOST_STACKTRACE_USE_BACKTRACE" />
-					<Add option="-DSERVER" />
 					<Add option="-DLOCAL_IP" />
 				</Compiler>
 				<Linker>
-					<Add option="-O2" />
+					<Add option="-O3" />
+					<Add option="-lsfml-system" />
+					<Add option="-lcrypto" />
+					<Add option="-lssl" />
+					<Add option="-fno-pie" />
+					<Add option="-lbacktrace" />
+					<Add option="-pthread" />
+					<Add option="-ldl" />
+					<Add option="-lsdkencryptedappticket" />
+					<Add directory="deps/libs" />
+					<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/linux64" />
+				</Linker>
+			</Target>
+			<Target title="LinuxDeploy">
+				<Option output="bin/LDeploy/crapmud" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/LDeploy/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="1" />
+				<Option projectLibDirsRelation="1" />
+				<Compiler>
+					<Add option="-O3" />
+					<Add option="-std=c++1z" />
+					<Add option="-g" />
+					<Add option="-march=nehalem" />
+					<Add option="-DEXTERN_IP" />
+				</Compiler>
+				<Linker>
+					<Add option="-O3" />
 					<Add option="-lsfml-system" />
 					<Add option="-lcrypto" />
 					<Add option="-lssl" />
