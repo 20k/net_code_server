@@ -5,6 +5,7 @@
 #include <vector>
 #include <random>
 #include <algorithm>
+#include <cstring>
 
 std::string random_binary_string(int len);
 

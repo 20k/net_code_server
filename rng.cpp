@@ -1,5 +1,7 @@
 #include "rng.hpp"
 
+#ifdef __WIN32__
+
 #include <windows.h>
 #include <Wincrypt.h>
 
@@ -33,3 +35,29 @@ std::string random_binary_string(int len)
 
     return to_ret;
 }
+
+#else
+
+#include <stdio.h>
+
+std::string random_binary_string(int len)
+{
+    if(len == 0)
+        return "";
+
+    FILE* fp = fopen("/dev/urandom", "rb");
+
+    if(fp == nullptr)
+        throw std::runtime_error("Could not read urandom");
+
+    std::string ret;
+    ret.resize(len);
+
+    fread(&ret[0], len * sizeof(char), 1, fp);
+
+    fclose(fp);
+
+    return ret;
+}
+
+#endif

@@ -921,7 +921,7 @@ int main()
 
         write_all_bin(command + ".key", key);
 
-        Sleep(50);
+        sf::sleep(sf::milliseconds(50));
     }
 
     return 0;
