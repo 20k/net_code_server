@@ -5,7 +5,11 @@
 #include "duk_object_functions.hpp"
 #include <memory>
 #include "logging.hpp"
+#ifdef __WIN32__
 #include <shellapi.h>
+#else
+#include <sys/stat.h>
+#endif
 #include <dirent.h>
 #include "source_maps.hpp"
 
@@ -425,7 +429,11 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
 {
     std::string compiler_dir = "compile/";
 
+    #ifdef __WIN32__
     mkdir(compiler_dir.c_str());
+    #else
+    mkdir(compiler_dir.c_str(), 0777);
+    #endif
 
     std::string phase_1 = compiler_dir + file_name + ".out1.js";
 

@@ -4,7 +4,11 @@
 #include <secret/npc_manager.hpp>
 
 #include <tinydir/tinydir.h>
+#ifdef __WIN32__
 #include <direct.h>
+#else
+#include <sys/stat.h>
+#endif
 #include <fstream>
 #include <libncclient/nc_util.hpp>
 
@@ -465,11 +469,19 @@ struct db_storage
 
         std::string db_dir = root + "/" + std::to_string((int)db);
 
+        #ifdef __WIN32__
         mkdir(db_dir.c_str());
+        #else
+        mkdir(db_dir.c_str(), 0777);
+        #endif // __WIN32__
 
         std::string collection_dir = db_dir + "/" + coll;
 
+        #ifdef __WIN32__
         mkdir(collection_dir.c_str());
+        #else
+        mkdir(collection_dir.c_str(), 0777);
+        #endif // __WIN32__
 
         std::string final_dir = collection_dir + "/" + std::to_string((size_t)data.at(CID_STRING));
 
@@ -931,7 +943,11 @@ void init_db_storage_backend()
 
     auto& store = get_db_storage();
 
+    #ifdef __WIN32__
     mkdir(ROOT_STORE);
+    #else
+    mkdir(ROOT_STORE, 0777);
+    #endif // __WIN32__
 
     std::string root_file = ROOT_FILE;
 
