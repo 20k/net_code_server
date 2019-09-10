@@ -783,8 +783,13 @@ int main()
     {
         std::string command;
 
-
         std::getline(std::cin, command);
+
+        if(command.size() == 0)
+        {
+            sf::sleep(sf::milliseconds(1000));
+            continue;
+        }
 
         if(starts_with(command, "#rename"))
         {
