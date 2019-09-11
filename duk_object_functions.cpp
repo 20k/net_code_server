@@ -297,7 +297,7 @@ duk_ret_t dukx_wrap_ctx(duk_context* ctx)
 
     duk_push_current_function(ctx);
     duk_xmove_top(new_ctx, ctx, 1);
-    duk_get_prop_string(new_ctx, -1, DUKX_HIDDEN_SYMBOL("WRAPPED").c_str());
+    duk_get_prop_string(new_ctx, -1, DUK_HIDDEN_SYMBOL("WRAPPED"));
     duk_remove(new_ctx, -2);
 
     duk_xmove_top(ctx, new_ctx, 1);
@@ -310,7 +310,7 @@ duk_ret_t dukx_wrap_ctx(duk_context* ctx)
     ///ok so we have [thread, argstop]
     ///we want to replace the first arg with the hidden body
     ///[new -> cfunc]
-    duk_push_c_function(new_ctx, t, top);
+    duk_push_c_lightfunc(new_ctx, t, top, top, 0);
     ///[old -> thread]
     ///[new -> cfunc, argstop]
     duk_xmove_top(new_ctx, ctx, top);
