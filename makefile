@@ -150,6 +150,28 @@ OBJDIR_LINUXDEPLOY = obj/LDeploy
 DEP_LINUXDEPLOY = 
 OUT_LINUXDEPLOY = bin/LDeploy/crapmud
 
+INC_MAKELINUXRELEASEWSL = $(INC)
+CFLAGS_MAKELINUXRELEASEWSL = $(CFLAGS)
+RESINC_MAKELINUXRELEASEWSL = $(RESINC)
+RCFLAGS_MAKELINUXRELEASEWSL = $(RCFLAGS)
+LIBDIR_MAKELINUXRELEASEWSL = 
+LIB_MAKELINUXRELEASEWSL = $(LIB)
+LDFLAGS_MAKELINUXRELEASEWSL = 
+OBJDIR_MAKELINUXRELEASEWSL = obj/LRelease
+DEP_MAKELINUXRELEASEWSL = 
+OUT_MAKELINUXRELEASEWSL = bin/LRelease/crapmud
+
+INC_MAKELINUXDEPLOYWSL = $(INC)
+CFLAGS_MAKELINUXDEPLOYWSL = $(CFLAGS)
+RESINC_MAKELINUXDEPLOYWSL = $(RESINC)
+RCFLAGS_MAKELINUXDEPLOYWSL = $(RCFLAGS)
+LIBDIR_MAKELINUXDEPLOYWSL = 
+LIB_MAKELINUXDEPLOYWSL = $(LIB)
+LDFLAGS_MAKELINUXDEPLOYWSL = 
+OBJDIR_MAKELINUXDEPLOYWSL = obj/LDeploy
+DEP_MAKELINUXDEPLOYWSL = 
+OUT_MAKELINUXDEPLOYWSL = bin/LDeploy/crapmud
+
 OBJ_DEBUG = $(OBJDIR_DEBUG)/scheduled_tasks.o $(OBJDIR_DEBUG)/safe_thread.o $(OBJDIR_DEBUG)/rng.o $(OBJDIR_DEBUG)/reoccurring_task_handler.o $(OBJDIR_DEBUG)/rate_limiting.o $(OBJDIR_DEBUG)/quest_manager.o $(OBJDIR_DEBUG)/privileged_core_scripts.o $(OBJDIR_DEBUG)/perfmon.o $(OBJDIR_DEBUG)/non_user_task_thread.o $(OBJDIR_DEBUG)/mongo.o $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/logging.o $(OBJDIR_DEBUG)/user.o $(OBJDIR_DEBUG)/unified_scripts.o $(OBJDIR_DEBUG)/time.o $(OBJDIR_DEBUG)/steam_auth.o $(OBJDIR_DEBUG)/stacktrace.o $(OBJDIR_DEBUG)/source_maps.o $(OBJDIR_DEBUG)/shared_duk_worker_state.o $(OBJDIR_DEBUG)/serialisables.o $(OBJDIR_DEBUG)/seccallers.o $(OBJDIR_DEBUG)/script_util.o $(OBJDIR_DEBUG)/script_metadata.o $(OBJDIR_DEBUG)/deps/secret/node.o $(OBJDIR_DEBUG)/deps/secret/low_level_structure.o $(OBJDIR_DEBUG)/deps/secret/loot_gen.o $(OBJDIR_DEBUG)/deps/secret/initial_link_setup.o $(OBJDIR_DEBUG)/deps/secret/common.o $(OBJDIR_DEBUG)/deps/networking/serialisable.o $(OBJDIR_DEBUG)/deps/networking/networking.o $(OBJDIR_DEBUG)/deps/networking/beast_compilation_unit.o $(OBJDIR_DEBUG)/db_storage_backend.o $(OBJDIR_DEBUG)/command_handler_state.o $(OBJDIR_DEBUG)/command_handler.o $(OBJDIR_DEBUG)/auth.o $(OBJDIR_DEBUG)/ascii_helpers.o $(OBJDIR_DEBUG)/item.o $(OBJDIR_DEBUG)/http_beast_server.o $(OBJDIR_DEBUG)/exec_context.o $(OBJDIR_DEBUG)/event_manager.o $(OBJDIR_DEBUG)/duktape.o $(OBJDIR_DEBUG)/duk_object_functions.o $(OBJDIR_DEBUG)/duk_modules.o $(OBJDIR_DEBUG)/duk_module_duktape.o $(OBJDIR_DEBUG)/deps/secret/tutorial.o $(OBJDIR_DEBUG)/deps/secret/structure.o $(OBJDIR_DEBUG)/deps/secret/special_user_scripts.o $(OBJDIR_DEBUG)/deps/secret/secret.o $(OBJDIR_DEBUG)/deps/secret/one_shots.o $(OBJDIR_DEBUG)/deps/secret/one_shot_core.o $(OBJDIR_DEBUG)/deps/secret/npc_manager.o
 
 OBJ_RELEASE = $(OBJDIR_RELEASE)/scheduled_tasks.o $(OBJDIR_RELEASE)/safe_thread.o $(OBJDIR_RELEASE)/rng.o $(OBJDIR_RELEASE)/reoccurring_task_handler.o $(OBJDIR_RELEASE)/rate_limiting.o $(OBJDIR_RELEASE)/quest_manager.o $(OBJDIR_RELEASE)/privileged_core_scripts.o $(OBJDIR_RELEASE)/perfmon.o $(OBJDIR_RELEASE)/non_user_task_thread.o $(OBJDIR_RELEASE)/mongo.o $(OBJDIR_RELEASE)/main.o $(OBJDIR_RELEASE)/logging.o $(OBJDIR_RELEASE)/user.o $(OBJDIR_RELEASE)/unified_scripts.o $(OBJDIR_RELEASE)/time.o $(OBJDIR_RELEASE)/steam_auth.o $(OBJDIR_RELEASE)/stacktrace.o $(OBJDIR_RELEASE)/source_maps.o $(OBJDIR_RELEASE)/shared_duk_worker_state.o $(OBJDIR_RELEASE)/serialisables.o $(OBJDIR_RELEASE)/seccallers.o $(OBJDIR_RELEASE)/script_util.o $(OBJDIR_RELEASE)/script_metadata.o $(OBJDIR_RELEASE)/deps/secret/node.o $(OBJDIR_RELEASE)/deps/secret/low_level_structure.o $(OBJDIR_RELEASE)/deps/secret/loot_gen.o $(OBJDIR_RELEASE)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASE)/deps/secret/common.o $(OBJDIR_RELEASE)/deps/networking/serialisable.o $(OBJDIR_RELEASE)/deps/networking/networking.o $(OBJDIR_RELEASE)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASE)/db_storage_backend.o $(OBJDIR_RELEASE)/command_handler_state.o $(OBJDIR_RELEASE)/command_handler.o $(OBJDIR_RELEASE)/auth.o $(OBJDIR_RELEASE)/ascii_helpers.o $(OBJDIR_RELEASE)/item.o $(OBJDIR_RELEASE)/http_beast_server.o $(OBJDIR_RELEASE)/exec_context.o $(OBJDIR_RELEASE)/event_manager.o $(OBJDIR_RELEASE)/duktape.o $(OBJDIR_RELEASE)/duk_object_functions.o $(OBJDIR_RELEASE)/duk_modules.o $(OBJDIR_RELEASE)/duk_module_duktape.o $(OBJDIR_RELEASE)/deps/secret/tutorial.o $(OBJDIR_RELEASE)/deps/secret/structure.o $(OBJDIR_RELEASE)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASE)/deps/secret/secret.o $(OBJDIR_RELEASE)/deps/secret/one_shots.o $(OBJDIR_RELEASE)/deps/secret/one_shot_core.o $(OBJDIR_RELEASE)/deps/secret/npc_manager.o
@@ -174,9 +196,13 @@ OBJ_LINUXRELEASE = $(OBJDIR_LINUXRELEASE)/scheduled_tasks.o $(OBJDIR_LINUXRELEAS
 
 OBJ_LINUXDEPLOY = $(OBJDIR_LINUXDEPLOY)/scheduled_tasks.o $(OBJDIR_LINUXDEPLOY)/safe_thread.o $(OBJDIR_LINUXDEPLOY)/rng.o $(OBJDIR_LINUXDEPLOY)/reoccurring_task_handler.o $(OBJDIR_LINUXDEPLOY)/rate_limiting.o $(OBJDIR_LINUXDEPLOY)/quest_manager.o $(OBJDIR_LINUXDEPLOY)/privileged_core_scripts.o $(OBJDIR_LINUXDEPLOY)/perfmon.o $(OBJDIR_LINUXDEPLOY)/non_user_task_thread.o $(OBJDIR_LINUXDEPLOY)/mongo.o $(OBJDIR_LINUXDEPLOY)/main.o $(OBJDIR_LINUXDEPLOY)/logging.o $(OBJDIR_LINUXDEPLOY)/user.o $(OBJDIR_LINUXDEPLOY)/unified_scripts.o $(OBJDIR_LINUXDEPLOY)/time.o $(OBJDIR_LINUXDEPLOY)/steam_auth.o $(OBJDIR_LINUXDEPLOY)/stacktrace.o $(OBJDIR_LINUXDEPLOY)/source_maps.o $(OBJDIR_LINUXDEPLOY)/shared_duk_worker_state.o $(OBJDIR_LINUXDEPLOY)/serialisables.o $(OBJDIR_LINUXDEPLOY)/seccallers.o $(OBJDIR_LINUXDEPLOY)/script_util.o $(OBJDIR_LINUXDEPLOY)/script_metadata.o $(OBJDIR_LINUXDEPLOY)/deps/secret/node.o $(OBJDIR_LINUXDEPLOY)/deps/secret/low_level_structure.o $(OBJDIR_LINUXDEPLOY)/deps/secret/loot_gen.o $(OBJDIR_LINUXDEPLOY)/deps/secret/initial_link_setup.o $(OBJDIR_LINUXDEPLOY)/deps/secret/common.o $(OBJDIR_LINUXDEPLOY)/deps/networking/serialisable.o $(OBJDIR_LINUXDEPLOY)/deps/networking/networking.o $(OBJDIR_LINUXDEPLOY)/deps/networking/beast_compilation_unit.o $(OBJDIR_LINUXDEPLOY)/db_storage_backend.o $(OBJDIR_LINUXDEPLOY)/command_handler_state.o $(OBJDIR_LINUXDEPLOY)/command_handler.o $(OBJDIR_LINUXDEPLOY)/auth.o $(OBJDIR_LINUXDEPLOY)/ascii_helpers.o $(OBJDIR_LINUXDEPLOY)/item.o $(OBJDIR_LINUXDEPLOY)/http_beast_server.o $(OBJDIR_LINUXDEPLOY)/exec_context.o $(OBJDIR_LINUXDEPLOY)/event_manager.o $(OBJDIR_LINUXDEPLOY)/duktape.o $(OBJDIR_LINUXDEPLOY)/duk_object_functions.o $(OBJDIR_LINUXDEPLOY)/duk_modules.o $(OBJDIR_LINUXDEPLOY)/duk_module_duktape.o $(OBJDIR_LINUXDEPLOY)/deps/secret/tutorial.o $(OBJDIR_LINUXDEPLOY)/deps/secret/structure.o $(OBJDIR_LINUXDEPLOY)/deps/secret/special_user_scripts.o $(OBJDIR_LINUXDEPLOY)/deps/secret/secret.o $(OBJDIR_LINUXDEPLOY)/deps/secret/one_shots.o $(OBJDIR_LINUXDEPLOY)/deps/secret/one_shot_core.o $(OBJDIR_LINUXDEPLOY)/deps/secret/npc_manager.o
 
-all: debug release deploy releaseandtest debugbacktrace debugtest dmimic releaseandtestwithdebuginfo rdclang rt_prof releaseandtestlto linuxrelease linuxdeploy
+OBJ_MAKELINUXRELEASEWSL = 
 
-clean: clean_debug clean_release clean_deploy clean_releaseandtest clean_debugbacktrace clean_debugtest clean_dmimic clean_releaseandtestwithdebuginfo clean_rdclang clean_rt_prof clean_releaseandtestlto clean_linuxrelease clean_linuxdeploy
+OBJ_MAKELINUXDEPLOYWSL = 
+
+all: debug release deploy releaseandtest debugbacktrace debugtest dmimic releaseandtestwithdebuginfo rdclang rt_prof releaseandtestlto linuxrelease linuxdeploy makelinuxreleasewsl makelinuxdeploywsl
+
+clean: clean_debug clean_release clean_deploy clean_releaseandtest clean_debugbacktrace clean_debugtest clean_dmimic clean_releaseandtestwithdebuginfo clean_rdclang clean_rt_prof clean_releaseandtestlto clean_linuxrelease clean_linuxdeploy clean_makelinuxreleasewsl clean_makelinuxdeploywsl
 
 before_debug: 
 	test -d bin/Debug || mkdir -p bin/Debug
@@ -2258,5 +2284,37 @@ clean_linuxdeploy:
 	rm -rf $(OBJDIR_LINUXDEPLOY)/deps/secret
 	rm -rf $(OBJDIR_LINUXDEPLOY)/deps/networking
 
-.PHONY: before_debug after_debug clean_debug before_release after_release clean_release before_deploy after_deploy clean_deploy before_releaseandtest after_releaseandtest clean_releaseandtest before_debugbacktrace after_debugbacktrace clean_debugbacktrace before_debugtest after_debugtest clean_debugtest before_dmimic after_dmimic clean_dmimic before_releaseandtestwithdebuginfo after_releaseandtestwithdebuginfo clean_releaseandtestwithdebuginfo before_rt_prof after_rt_prof clean_rt_prof before_releaseandtestlto after_releaseandtestlto clean_releaseandtestlto before_linuxrelease after_linuxrelease clean_linuxrelease before_linuxdeploy after_linuxdeploy clean_linuxdeploy
+before_makelinuxreleasewsl: 
+	update_makefile.bat
+	wsl make -j4 linuxrelease
+	test -d bin/LRelease || mkdir -p bin/LRelease
+
+after_makelinuxreleasewsl: 
+
+makelinuxreleasewsl: before_makelinuxreleasewsl out_makelinuxreleasewsl after_makelinuxreleasewsl
+
+out_makelinuxreleasewsl: before_makelinuxreleasewsl $(OBJ_MAKELINUXRELEASEWSL) $(DEP_MAKELINUXRELEASEWSL)
+	$(LD) $(LIBDIR_MAKELINUXRELEASEWSL) -o $(OUT_MAKELINUXRELEASEWSL) $(OBJ_MAKELINUXRELEASEWSL)  $(LDFLAGS_MAKELINUXRELEASEWSL) $(LIB_MAKELINUXRELEASEWSL)
+
+clean_makelinuxreleasewsl: 
+	rm -f $(OBJ_MAKELINUXRELEASEWSL) $(OUT_MAKELINUXRELEASEWSL)
+	rm -rf bin/LRelease
+
+before_makelinuxdeploywsl: 
+	update_makefile.bat
+	wsl make -j4 linuxdeploy
+	test -d bin/LDeploy || mkdir -p bin/LDeploy
+
+after_makelinuxdeploywsl: 
+
+makelinuxdeploywsl: before_makelinuxdeploywsl out_makelinuxdeploywsl after_makelinuxdeploywsl
+
+out_makelinuxdeploywsl: before_makelinuxdeploywsl $(OBJ_MAKELINUXDEPLOYWSL) $(DEP_MAKELINUXDEPLOYWSL)
+	$(LD) $(LIBDIR_MAKELINUXDEPLOYWSL) -o $(OUT_MAKELINUXDEPLOYWSL) $(OBJ_MAKELINUXDEPLOYWSL)  $(LDFLAGS_MAKELINUXDEPLOYWSL) $(LIB_MAKELINUXDEPLOYWSL)
+
+clean_makelinuxdeploywsl: 
+	rm -f $(OBJ_MAKELINUXDEPLOYWSL) $(OUT_MAKELINUXDEPLOYWSL)
+	rm -rf bin/LDeploy
+
+.PHONY: before_debug after_debug clean_debug before_release after_release clean_release before_deploy after_deploy clean_deploy before_releaseandtest after_releaseandtest clean_releaseandtest before_debugbacktrace after_debugbacktrace clean_debugbacktrace before_debugtest after_debugtest clean_debugtest before_dmimic after_dmimic clean_dmimic before_releaseandtestwithdebuginfo after_releaseandtestwithdebuginfo clean_releaseandtestwithdebuginfo before_rt_prof after_rt_prof clean_rt_prof before_releaseandtestlto after_releaseandtestlto clean_releaseandtestlto before_linuxrelease after_linuxrelease clean_linuxrelease before_linuxdeploy after_linuxdeploy clean_linuxdeploy before_makelinuxreleasewsl after_makelinuxreleasewsl clean_makelinuxreleasewsl before_makelinuxdeploywsl after_makelinuxdeploywsl clean_makelinuxdeploywsl
 
