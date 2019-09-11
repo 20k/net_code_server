@@ -109,6 +109,7 @@ duk_ret_t dukx_proxy_get(duk_context* ctx)
         duk_pop(ctx);
     }*/
 
+
     duk_dup(ctx, 1);
 
     std::string_view sview = duk_safe_to_string_view(ctx, -1);

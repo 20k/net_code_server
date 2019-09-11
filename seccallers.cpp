@@ -137,7 +137,7 @@ duk_ret_t db_insert(duk_context* ctx)
 
     //mongo_ctx->insert_json_1(secret_script_host, json);
 
-    mongo_ctx->insert_json_one_new(json);
+    mongo_ctx->insert_json_one_new(nlohmann::json::parse(json));
 
     //std::cout << "json " << json << std::endl;
 
