@@ -791,6 +791,9 @@ int main()
             continue;
         }
 
+        if(command == "#exit")
+            exit(0);
+
         if(starts_with(command, "#rename"))
         {
             std::cout << "enter user start name " << std::endl;

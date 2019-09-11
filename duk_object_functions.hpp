@@ -6,6 +6,7 @@
 //#include <map>
 #include <string>
 #include <vector>
+#include <string_view>
 
 #include "scripting_api.hpp"
 #include <nlohmann/json.hpp>
@@ -484,6 +485,18 @@ std::string duk_safe_to_std_string(duk_context* ctx, duk_idx_t idx)
 }
 
 inline
+std::string_view duk_safe_to_string_view(duk_context* ctx, duk_idx_t idx)
+{
+    duk_size_t out = 0;
+    const char* ptr = duk_safe_to_lstring(ctx, idx, &out);
+
+    if(ptr == nullptr || out == 0)
+        return std::string_view("", 0);
+
+    return std::string_view(ptr, out);
+}
+
+inline
 std::string duk_safe_get_prop_string(duk_context* ctx, duk_idx_t idx, const std::string& key)
 {
     if(duk_get_top(ctx) <= 0)
@@ -748,234 +761,6 @@ void dukx_push_c_function_with_hidden(duk_context* ctx, T& t, int nargs, U... u)
 
 void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t idx);
 void dukx_sanitise_in_place(duk_context* ctx, duk_idx_t idx);
-
-inline
-duk_ret_t dukx_proxy_get_prototype_of(duk_context* ctx)
-{
-    //printf("gproto\n");
-
-    duk_get_prototype(ctx, 0);
-
-    //duk_push_undefined(ctx);
-
-    return 1;
-}
-
-inline
-duk_ret_t dukx_proxy_set_prototype_of(duk_context* ctx)
-{
-    //printf("sproto\n");
-
-    duk_set_prototype(ctx, 0);
-
-    duk_push_true(ctx);
-
-    return 1;
-}
-
-///uuh
-inline
-duk_ret_t dukx_proxy_is_extensible(duk_context* ctx)
-{
-    //printf("ext\n");
-
-    duk_push_true(ctx);
-    return 1;
-}
-
-inline
-duk_ret_t dukx_proxy_prevent_extension(duk_context* ctx)
-{
-    //printf("pext\n");
-
-    return 0;
-}
-
-inline
-duk_ret_t dukx_proxy_get_own_property(duk_context* ctx)
-{
-    //printf("gprop\n");
-
-    duk_get_prop_desc(ctx, 0, 0);
-    return 1;
-}
-
-inline
-duk_ret_t dukx_proxy_define_property(duk_context* ctx)
-{
-    //printf("dprop\n");
-
-    duk_push_true(ctx);
-    return 1;
-}
-
-inline
-duk_ret_t dukx_proxy_has(duk_context* ctx)
-{
-    //printf("hprop\n");
-
-    duk_push_boolean(ctx, duk_has_prop(ctx, 0));
-    return 1;
-}
-
-inline
-duk_ret_t dukx_stringify_parse(duk_context* ctx)
-{
-    duk_push_current_function(ctx);
-    duk_get_prop_string(ctx, -1, DUKX_HIDDEN_SYMBOL("json_me_harder").c_str());
-    duk_dup(ctx, -1);
-    duk_json_encode(ctx, -1);
-    duk_json_decode(ctx, -1);
-
-    return 1;
-}
-
-///HEY
-///THIS FUNCTION IS AN EXCEPTION
-///MUST HANDLE ITS OWN SANITISATION
-///AS SOMETIMES IT LETS SLIP SOMETHING THAT ISNT SANITISED ON PURPOSE
-inline
-duk_ret_t dukx_proxy_get(duk_context* ctx)
-{
-    //printf("get\n");
-
-    //duk_pop(ctx);
-
-    /*int top = duk_get_top(ctx);
-
-    for(int i=0; i < top; i++)
-    {
-        duk_dup(ctx, i);
-
-        //printf("stack top: %i\n", duk_get_top(ctx));
-
-        printf("%i val %s\n", i, duk_safe_to_string(ctx, -1));
-
-        duk_pop(ctx);
-    }*/
-
-    duk_dup(ctx, 1);
-
-    std::string str = duk_safe_to_std_string(ctx, -1);
-
-    duk_pop(ctx);
-
-    ///return target
-
-    ///NO SANITISE PASTH
-    if(str == "toJSON")
-    {
-        duk_pop(ctx);
-        duk_pop(ctx);
-
-        duk_push_c_function(ctx, dukx_stringify_parse, 0);
-        duk_dup(ctx, -2);
-        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("json_me_harder").c_str());
-
-        //duk_push_true(ctx);
-        //duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("no_proxy").c_str());
-
-        /*duk_def_prop(ctx, -1,
-             DUK_DEFPROP_HAVE_WRITABLE |
-             DUK_DEFPROP_HAVE_ENUMERABLE | DUK_DEFPROP_ENUMERABLE |
-             DUK_DEFPROP_HAVE_CONFIGURABLE | DUK_DEFPROP_FORCE);*/
-
-        duk_freeze(ctx, -1);
-
-        //printf("stringify\n");
-
-        //duk_pop(ctx);
-        return 1;
-    }
-
-    /*if(str == "valueOf")
-    {
-        duk_pop(ctx);
-        duk_pop(ctx);
-        ///needs to be a function
-        duk_push_object(ctx);
-        return 1;
-    }*/
-
-    duk_pop(ctx);
-
-    if(!duk_get_prop(ctx, 0))
-        duk_push_undefined(ctx);
-
-    dukx_sanitise_in_place(ctx, -1);
-
-    return 1;
-}
-
-inline
-duk_ret_t dukx_proxy_set(duk_context* ctx)
-{
-    //printf("set\n");
-
-    ///remove receiver
-    duk_remove(ctx, 3);
-
-    duk_push_boolean(ctx, duk_put_prop(ctx, 0));
-
-    return 1;
-}
-
-inline
-duk_ret_t dukx_proxy_delete_property(duk_context* ctx)
-{
-    //printf("del\n");
-
-    duk_push_boolean(ctx, duk_del_prop(ctx, 0));
-
-    return 1;
-}
-
-inline
-std::vector<std::string> dukx_get_keys(duk_context* ctx)
-{
-    std::vector<std::string> keys;
-
-    duk_enum(ctx, -1, 0);
-    while(duk_next(ctx, -1, 0))
-    {
-        keys.push_back(duk_safe_to_std_string(ctx, -1));
-        duk_pop(ctx);
-    }
-
-    //std::cout << "fnum keys " << keys.size() << std::endl;
-
-    duk_pop(ctx);
-
-    return keys;
-}
-
-inline
-void dukx_hack_in_keys(duk_context* ctx, duk_idx_t idx, const std::vector<std::string>& keys)
-{
-    for(auto& i : keys)
-    {
-        duk_push_number(ctx, 0.f);
-        duk_put_prop_string(ctx, -1 + idx, i.c_str());
-    }
-}
-
-duk_ret_t dukx_proxy_apply(duk_context* ctx);
-
-inline
-duk_ret_t dukx_proxy_construct(duk_context* ctx)
-{
-    //printf("pcst\n");
-
-    duk_push_true(ctx);
-
-    return 1;
-}
-
-inline
-duk_ret_t dukx_dummy(duk_context* ctx)
-{
-    return 0;
-}
 
 inline
 void dukx_push_fixed_buffer(duk_context* ctx, const std::string& buffer)
