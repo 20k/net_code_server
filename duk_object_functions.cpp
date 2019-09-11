@@ -438,7 +438,7 @@ duk_ret_t dukx_proxy_apply(duk_context* ctx)
 
 void dukx_make_proxy_base_from(duk_context* ctx, duk_idx_t idx)
 {
-    std::vector<std::string> rkeys = dukx_get_keys(ctx);
+    //std::vector<std::string> rkeys = dukx_get_keys(ctx);
 
     if(duk_is_function(ctx, idx))
         duk_push_c_function(ctx, dukx_dummy, 0);
