@@ -1,0 +1,5 @@
+g++ -shared -fPIC -Wall -Wextra -O3 -Wl,-soname,libduktape.so.202 duktape.c -o libduktape.so.202.20200
+
+ ./tools/configure.py --output-directory c:/duk_fun_13 -DDUK_USE_CPP_EXCEPTIONS -DDUK_USE_EXEC_TIMEOUT_CHECK -DDUK_OPT_INTERRUPT_COUNTER -DDUK_USE_INTERRUPT_COUNTER --option-file my_options.yaml
+ 
+ -DDUK_USE_FATAL_HANDLER(udata,msg)=do { const char *fatal_msg = (msg); fprintf(stderr, "*** FAT/AL ERROR: %s\n", fatal_msg ? fatal_msg : "no message"); abort(); } while (0)

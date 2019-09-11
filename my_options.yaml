@@ -1,0 +1,17 @@
+DUK_USE_FATAL_HANDLER:
+  verbatim: |
+    #define DUK_USE_FATAL_HANDLER(udata,msg) do { \
+            const char *fatal_msg = (msg); /* avoid double evaluation */ \
+            (void) udata; \
+            fprintf(stderr, "*** FATAL ERROR: %s\n", fatal_msg ? fatal_msg : "no message"); \
+            fflush(stderr); \
+            abort(); \
+        } while (0)
+        
+DUK_USE_EXEC_TIMEOUT_CHECK:
+    verbatim: |
+        extern int my_timeout_check(void* udata);
+        #define DUK_OPT_EXEC_TIMEOUT_CHECK my_timeout_check
+        #define DUK_USE_EXEC_TIMEOUT_CHECK my_timeout_check
+
+DUK_USE_VOLUNTARY_GC: false
