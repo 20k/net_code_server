@@ -61,7 +61,7 @@ duk_ret_t js_call(duk_context* ctx, int sl);
 
 std::string js_unified_force_call_data(exec_context& ctx, const std::string& data, const std::string& host);
 
-void register_funcs(duk_context* ctx, int seclevel, const std::string& script_host, bool polyfill);
+void register_funcs(duk_context* ctx, int seclevel, const std::string& script_host, bool polyfill = true);
 
 duk_ret_t err(duk_context* ctx);
 std::string add_freeze(const std::string& name);

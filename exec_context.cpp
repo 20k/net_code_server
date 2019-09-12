@@ -42,7 +42,6 @@ void exec_context::stash_context(const std::string& host, int seclevel, int stac
     stashed_contexts[host][seclevel] = new_context;
 }
 
-#if 0
 void* exec_context::get_new_context_for(const std::string& host, int seclevel)
 {
     //void* ptr = stashed_contexts[host][seclevel];
@@ -74,7 +73,6 @@ void* exec_context::get_new_context_for(const std::string& host, int seclevel)
         return ptr;
     }*/
 }
-#endif // 0
 
 exec_context* exec_from_ctx(duk_context* ctx)
 {
