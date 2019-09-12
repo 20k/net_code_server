@@ -276,6 +276,41 @@ template<duk_c_function t>
 inline
 duk_ret_t dukx_wrap_ctx(duk_context* ctx)
 {
+    ///args are on the stack, top is number of args
+    int top = duk_get_top(ctx);
+
+    ///[...args, function]
+    duk_push_current_function(ctx);
+    ///[...args, function, internal object]
+    duk_get_prop_string(ctx, -1, DUK_HIDDEN_SYMBOL("WRAPPED"));
+    ///[...args, internal object]
+    duk_remove(ctx, -2);
+
+    ///[internal object, ...args1-n]
+    //duk_replace(ctx, -1 - top);
+    duk_replace(ctx, -1 - top);
+
+    duk_push_c_lightfunc(ctx, t, top, top, 0);
+
+    ///[func, internal object, ...args1-n]
+    duk_insert(ctx, -1 - top);
+
+    duk_int_t rc = duk_pcall(ctx, top);
+
+    ///value on stack
+    if(t != dukx_proxy_get && t != dukx_proxy_own_keys)
+        dukx_sanitise_in_place(ctx, -1);
+    else
+    {
+        ///do nothing
+    }
+
+    if(rc != DUK_EXEC_SUCCESS)
+        return duk_throw(ctx);
+
+    return 1;
+
+    #if 0
     #define OLD_GLOBAL_SWAP
     #ifdef OLD_GLOBAL_SWAP
     ///[arg1, arg2... argtop]
@@ -392,6 +427,7 @@ duk_ret_t dukx_wrap_ctx(duk_context* ctx)
     return 1;
 
     #endif // OLD_GLOBAL_SWAP
+    #endif // 0
 }
 ///its sanitise in place thats slow
 
