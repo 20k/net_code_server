@@ -644,13 +644,70 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
     //exec_stack stk(ectx, new_ctx);
 
-    if(!compile_and_push(new_ctx, wrapper))
-    {
-        std::string err = duk_safe_to_string(new_ctx, -1);
+    duk_idx_t fidx = duk_push_thread_new_globalenv(new_ctx);
+    duk_context* temporary_ctx = duk_get_context(new_ctx, fidx);
+    register_funcs(temporary_ctx, seclevel, get_script_host(ctx), true);
 
-        duk_pop(new_ctx);
+    auto prep_context = [seclevel, caller, script_host, calling_script, base_caller](duk_context* old, duk_context* next)
+    {
+        duk_push_heap_stash(next);
+        duk_push_int(next, seclevel);
+        duk_put_prop_string(next, -2, "last_seclevel");
+        duk_pop(next);
+
+        duk_idx_t id = duk_push_object(next); ///[object]
+        duk_push_string(next, caller.c_str()); ///[object -> caller]
+        duk_put_prop_string(next, id, "caller"); ///[object]
+
+        duk_push_string(next, script_host.c_str());
+        duk_put_prop_string(next, id, "script_host");
+
+        duk_push_string(next, calling_script.c_str());
+        duk_put_prop_string(next, id, "calling_script");
+
+        duk_push_string(next, base_caller.c_str());
+        duk_put_prop_string(next, id, "base_caller");
+
+        ///duplicate current object, put it into the global object
+        duk_push_global_object(next);
+        duk_dup(next, -2);
+        duk_put_prop_string(next, -2, "context");
+        duk_pop(next);
+
+        #define USE_PROXY
+
+        ///[object] is on the stack, aka context
+
+        ///this is probably whats breaking the case when ctx == new_ctx
+        if(!duk_is_object(old, -2))
+            duk_push_undefined(next);
+        else
+        {
+            duk_dup(old, -2);
+            ///push args
+
+            #ifndef USE_PROXY
+            duk_xmove_top(next, old, 1);
+            #else
+            dukx_sanitise_move_value(old, next, -1);
+            #endif // USE_PROXY
+        }
+
+        duk_push_global_object(next);
+        duk_dup(next, -2);
+        duk_put_prop_string(next, -2, "args");
+        duk_pop(next);
+    };
+
+    if(!compile_and_push(temporary_ctx, wrapper))
+    {
+        std::string err = duk_safe_to_string(temporary_ctx, -1);
+
+        duk_pop(temporary_ctx);
 
         printf("compile failed: %s\n", err.c_str());
+
+        duk_pop(new_ctx);
 
         //stk.early_out();
 
@@ -658,134 +715,76 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
     }
     else
     {
-        duk_push_heap_stash(new_ctx);
-        duk_push_int(new_ctx, seclevel);
-        duk_put_prop_string(new_ctx, -2, "last_seclevel");
-        duk_pop(new_ctx);
+        prep_context(ctx, temporary_ctx);
 
-        duk_idx_t id = duk_push_object(new_ctx); ///[object]
-        duk_push_string(new_ctx, caller.c_str()); ///[object -> caller]
-        duk_put_prop_string(new_ctx, id, "caller"); ///[object]
+        int moved = 3;
 
-        duk_push_string(new_ctx, script_host.c_str());
-        duk_put_prop_string(new_ctx, id, "script_host");
+        duk_xmove_top(new_ctx, temporary_ctx, moved);
+        duk_remove(new_ctx, -1 - moved); ///removes temporary ctx
 
-        duk_push_string(new_ctx, calling_script.c_str());
-        duk_put_prop_string(new_ctx, id, "calling_script");
+        //prep_context(ctx, new_ctx);
 
-        duk_push_string(new_ctx, base_caller.c_str());
-        duk_put_prop_string(new_ctx, id, "base_caller");
-
-        ///duplicate current object, put it into the global object
-        duk_push_global_object(new_ctx);
-        duk_dup(new_ctx, -2);
-        duk_put_prop_string(new_ctx, -2, "context");
-        duk_pop(new_ctx);
-
-        int nargs = 2;
-
-        #define USE_PROXY
-
-        ///[object] is on the stack, aka context
-
-        ///this is probably whats breaking the case when ctx == new_ctx
-        if(!duk_is_object(ctx, -2))
-            duk_push_undefined(new_ctx);
-        else
-        {
-            duk_dup(ctx, -2);
-            ///push args
-
-            #ifndef USE_PROXY
-            duk_xmove_top(new_ctx, ctx, 1);
-            #else
-            dukx_sanitise_move_value(ctx, new_ctx, -1);
-            #endif // USE_PROXY
-        }
-
-        duk_push_global_object(new_ctx);
-        duk_dup(new_ctx, -2);
-        duk_put_prop_string(new_ctx, -2, "args");
-        duk_pop(new_ctx);
+        //duk_push_object(new_ctx);
+        //duk_set_global_object(new_ctx);
 
         ///now we have [object, args] on the stack 2
 
+        int nargs = 2;
+
+        ///now we have [thread] on stack 1, and [object, args] on stack 2
+        ///stack 2 now has [val]
+        duk_int_t ret_val = duk_pcall(new_ctx, nargs);
+
+        #ifndef USE_PROXY
+        duk_xmove_top(ctx, new_ctx, 1);
+        #else
+        dukx_sanitise_move_value(new_ctx, ctx, -1);
+        #endif // USE_PROXY
+
+        bool timeout = is_script_timeout(ctx);
+
+        if(ret_val != DUK_EXEC_SUCCESS && !timeout)
         {
-            ///now we have [thread] on stack 1, and [object, args] on stack 2
-            ///stack 2 now has [val]
-            duk_int_t ret_val = duk_pcall(new_ctx, nargs);
+            std::string error_prop;
 
-            //if(ret_val == DUK_EXEC_SUCCESS)
+            if(duk_has_prop_string(ctx, -1, "lineNumber"))
             {
-                try
-                {
-                    #ifndef USE_PROXY
-                    duk_xmove_top(ctx, new_ctx, 1);
-                    #else
-                    dukx_sanitise_move_value(new_ctx, ctx, -1);
-                    #endif // USE_PROXY
-                }
-                catch(...)
-                {
-
-                }
+                error_prop = std::to_string(duk_get_prop_string_as_int(ctx, -1, "lineNumber", 0));
             }
-            /*else
+
+            /*std::string error_stack;
+
+            if(duk_has_prop_string(sd.ctx, -1, "stack"))
             {
-                duk_xmove_top(sd.ctx, new_ctx, 1);
+                error_stack = std::to_string(duk_get_prop_string(sd.ctx, -1, "stack"));
             }*/
 
+            std::string err = duk_safe_to_std_string(ctx, -1);
 
-            //stk.early_out();
+            duk_pop(ctx);
 
-            ///stack 2 is now empty, and stack 1 now has [thread, val]
-            //duk_xmove_top(sd.ctx, new_ctx, 1);
+            /*#ifdef TESTING
+            error_prop += ". " + error_stack;
+            #endif // TESTING*/
 
-            bool timeout = is_script_timeout(ctx);
+            if(error_prop == "")
+                push_dukobject(ctx, "ok", false, "msg", err);
+            else
+                push_dukobject(ctx, "ok", false, "msg", err + ". Line Number: " + error_prop);
+        }
 
-            if(ret_val != DUK_EXEC_SUCCESS && !timeout)
-            {
-                std::string error_prop;
+        if(!is_top_level)
+        {
+            ///this essentially rethrows an exception
+            ///if we're not top level, and we've timedout
+            COOPERATE_KILL();
+        }
 
-                if(duk_has_prop_string(ctx, -1, "lineNumber"))
-                {
-                    error_prop = std::to_string(duk_get_prop_string_as_int(ctx, -1, "lineNumber", 0));
-                }
+        if(ret_val != DUK_EXEC_SUCCESS && is_top_level && timeout)
+        {
+            duk_pop(ctx);
 
-                /*std::string error_stack;
-
-                if(duk_has_prop_string(sd.ctx, -1, "stack"))
-                {
-                    error_stack = std::to_string(duk_get_prop_string(sd.ctx, -1, "stack"));
-                }*/
-
-                std::string err = duk_safe_to_std_string(ctx, -1);
-
-                duk_pop(ctx);
-
-                /*#ifdef TESTING
-                error_prop += ". " + error_stack;
-                #endif // TESTING*/
-
-                if(error_prop == "")
-                    push_dukobject(ctx, "ok", false, "msg", err);
-                else
-                    push_dukobject(ctx, "ok", false, "msg", err + ". Line Number: " + error_prop);
-            }
-
-            if(!is_top_level)
-            {
-                ///this essentially rethrows an exception
-                ///if we're not top level, and we've timedout
-                COOPERATE_KILL();
-            }
-
-            if(ret_val != DUK_EXEC_SUCCESS && is_top_level && timeout)
-            {
-                duk_pop(ctx);
-
-                push_dukobject(ctx, "ok", false, "msg", "Ran for longer than 5000ms and timed out");
-            }
+            push_dukobject(ctx, "ok", false, "msg", "Ran for longer than 5000ms and timed out");
         }
     }
 
