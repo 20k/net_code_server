@@ -644,9 +644,9 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
     //exec_stack stk(ectx, new_ctx);
 
-    duk_idx_t fidx = duk_push_thread_new_globalenv(new_ctx);
+    /*duk_idx_t fidx = duk_push_thread_new_globalenv(new_ctx);
     duk_context* temporary_ctx = duk_get_context(new_ctx, fidx);
-    register_funcs(temporary_ctx, seclevel, get_script_host(ctx), true);
+    register_funcs(temporary_ctx, seclevel, get_script_host(ctx), true);*/
 
     auto prep_context = [seclevel, caller, script_host, calling_script, base_caller](duk_context* old, duk_context* next)
     {
@@ -699,11 +699,11 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
         duk_pop(next);
     };
 
-    if(!compile_and_push(temporary_ctx, wrapper))
+    if(!compile_and_push(new_ctx, wrapper))
     {
-        std::string err = duk_safe_to_string(temporary_ctx, -1);
+        std::string err = duk_safe_to_string(new_ctx, -1);
 
-        duk_pop(temporary_ctx);
+        //duk_pop(temporary_ctx);
 
         printf("compile failed: %s\n", err.c_str());
 
@@ -715,12 +715,19 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
     }
     else
     {
-        prep_context(ctx, temporary_ctx);
+        /*prep_context(ctx, temporary_ctx);
 
         int moved = 3;
 
         duk_xmove_top(new_ctx, temporary_ctx, moved);
-        duk_remove(new_ctx, -1 - moved); ///removes temporary ctx
+        duk_remove(new_ctx, -1 - moved); ///removes temporary ctx*/
+
+        int moved = 1;
+
+        duk_xmove_top(new_ctx, ctx, moved);
+        duk_remove(new_ctx, -1 - moved);
+
+        prep_context(ctx, new_ctx);
 
         //prep_context(ctx, new_ctx);
 
