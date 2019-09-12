@@ -37,6 +37,7 @@
 #include "reoccurring_task_handler.hpp"
 #include "serialisables.hpp"
 
+#if 0
 void debug_terminal()
 {
     user current_user;
@@ -100,7 +101,7 @@ void debug_terminal()
             std::string data_source = get_script_from_name_string(base_scripts_string, strip_whitespace(fullname));
 
             duk_context* ctx = duk_create_heap_default();
-            register_funcs(ctx, 0, "core");
+            register_funcs(ctx, 0, "core", true);
 
             script_inf.load_from_unparsed_source(ctx, data_source, script, true, false);
 
@@ -128,6 +129,7 @@ void debug_terminal()
         }
     }
 }
+#endif // 0
 
 void test_hexbin()
 {
