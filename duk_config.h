@@ -2879,7 +2879,10 @@ extern int my_timeout_check(void* udata);
     } while (0)
     
 
+#undef DUK_USE_HSTRING_ARRIDX
 #define DUK_USE_INTERRUPT_COUNTER
+#define DUK_USE_ROM_OBJECTS
+#define DUK_USE_ROM_STRINGS
 #undef DUK_USE_VOLUNTARY_GC
 
 /*
@@ -2978,7 +2981,6 @@ extern int my_timeout_check(void* udata);
 #define DUK_USE_HOBJECT_ENTRY_MINGROW_DIVISOR 8
 #define DUK_USE_HOBJECT_HASH_PART
 #define DUK_USE_HOBJECT_HASH_PROP_LIMIT 8
-#define DUK_USE_HSTRING_ARRIDX
 #define DUK_USE_HSTRING_CLEN
 #undef DUK_USE_HSTRING_EXTDATA
 #define DUK_USE_HSTRING_LAZY_CLEN
@@ -3032,9 +3034,7 @@ extern int my_timeout_check(void* udata);
 #define DUK_USE_REGEXP_SUPPORT
 #undef DUK_USE_ROM_GLOBAL_CLONE
 #undef DUK_USE_ROM_GLOBAL_INHERIT
-#undef DUK_USE_ROM_OBJECTS
 #define DUK_USE_ROM_PTRCOMP_FIRST 63488L
-#undef DUK_USE_ROM_STRINGS
 #define DUK_USE_SECTION_B
 #undef DUK_USE_SELF_TESTS
 #define DUK_USE_SHEBANG_COMMENTS
