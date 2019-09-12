@@ -1141,6 +1141,8 @@ bool is_allowed_user(const std::string& user)
     }
 
     banned.insert("db");
+    banned.insert("core");
+    banned.insert("extern");
 
     return banned.find(user) == banned.end();
 }
