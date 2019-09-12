@@ -610,20 +610,6 @@ duk_ret_t deliberate_hang(duk_context* ctx)
     return 0;
 }
 
-duk_ret_t global_test(duk_context* ctx)
-{
-    duk_push_global_object(ctx);
-    duk_push_string(ctx, "TEST STRING");
-    duk_put_prop_string(ctx, -2, "key");
-
-    duk_push_object(ctx);
-    duk_set_global_object(ctx);
-
-    duk_get_prop_string(ctx, -1, "key");
-    std::cout << duk_safe_to_std_string(ctx, -1) << std::endl;
-    return 1;
-}
-
 ///returns true on success, false on failure
 bool compile_and_push(duk_context* ctx, const std::string& data)
 {
@@ -1113,24 +1099,6 @@ std::string add_freeze(const std::string& name)
     return " global." + name + " = deepFreeze(global." + name + ");\n";
 }
 
-#if 0
-void do_freeze(duk_context* ctx, const std::string& name, std::string& script_accumulate)
-{
-    duk_push_global_object(ctx);
-
-    duk_push_string(ctx, name.c_str());
-
-    duk_def_prop(ctx, -2,
-             DUK_DEFPROP_HAVE_WRITABLE |
-             DUK_DEFPROP_HAVE_ENUMERABLE | DUK_DEFPROP_ENUMERABLE |
-             DUK_DEFPROP_HAVE_CONFIGURABLE);
-
-    duk_pop(ctx);
-
-    script_accumulate += add_freeze(name);
-}
-#endif // 0
-
 void remove_func(duk_context* ctx, const std::string& name)
 {
     duk_push_global_object(ctx);
@@ -1145,22 +1113,6 @@ duk_ret_t dummy(duk_context* ctx)
 {
     return 0;
 }
-
-void inject_hacky_Symbol(duk_context* ctx)
-{
-    duk_push_global_object(ctx);
-
-    duk_push_c_function(ctx, &dummy, 0);
-    //duk_put_prop_string(ctx, -2, "Symbol");
-
-    duk_push_string(ctx, "__Symbol_iterator");
-    duk_put_prop_string(ctx, -2, "iterator");
-
-    duk_put_prop_string(ctx, -2, "Symbol");
-
-    duk_pop(ctx);
-}
-
 
 template<typename T>
 inline
@@ -1361,7 +1313,6 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
 
     #ifdef TESTING
     inject_c_function(ctx, deliberate_hang, "deliberate_hang", 0);
-    inject_c_function(ctx, global_test, "global_test", 0);
     #endif // TESTING
 
     inject_console_log(ctx);
@@ -1372,8 +1323,6 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
         dukx_setup_db_proxy(ctx);
     }
     //#endif // TESTING
-
-    inject_hacky_Symbol(ctx);
 
     if(polyfill)
         dukx_inject_modules(ctx);
