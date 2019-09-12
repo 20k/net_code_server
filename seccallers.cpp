@@ -644,13 +644,19 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
     //exec_stack stk(ectx, new_ctx);
 
-    if(!compile_and_push(new_ctx, wrapper))
-    {
-        std::string err = duk_safe_to_string(new_ctx, -1);
+    duk_idx_t fidx = duk_push_thread_new_globalenv(new_ctx);
+    duk_context* temporary_ctx = duk_get_context(new_ctx, fidx);
+    register_funcs(temporary_ctx, seclevel, get_script_host(ctx), true);
 
-        duk_pop(new_ctx);
+    if(!compile_and_push(temporary_ctx, wrapper))
+    {
+        std::string err = duk_safe_to_string(temporary_ctx, -1);
+
+        duk_pop(temporary_ctx);
 
         printf("compile failed: %s\n", err.c_str());
+
+        duk_pop(new_ctx);
 
         //stk.early_out();
 
@@ -658,6 +664,9 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
     }
     else
     {
+        duk_xmove_top(new_ctx, temporary_ctx, 1);
+        duk_remove(new_ctx, -2);
+
         duk_push_heap_stash(new_ctx);
         duk_push_int(new_ctx, seclevel);
         duk_put_prop_string(new_ctx, -2, "last_seclevel");
@@ -708,6 +717,9 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
         duk_put_prop_string(new_ctx, -2, "args");
         duk_pop(new_ctx);
 
+        //duk_push_object(new_ctx);
+        //duk_set_global_object(new_ctx);
+
         ///now we have [object, args] on the stack 2
 
         {
@@ -715,26 +727,11 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
             ///stack 2 now has [val]
             duk_int_t ret_val = duk_pcall(new_ctx, nargs);
 
-            //if(ret_val == DUK_EXEC_SUCCESS)
-            {
-                try
-                {
-                    #ifndef USE_PROXY
-                    duk_xmove_top(ctx, new_ctx, 1);
-                    #else
-                    dukx_sanitise_move_value(new_ctx, ctx, -1);
-                    #endif // USE_PROXY
-                }
-                catch(...)
-                {
-
-                }
-            }
-            /*else
-            {
-                duk_xmove_top(sd.ctx, new_ctx, 1);
-            }*/
-
+            #ifndef USE_PROXY
+            duk_xmove_top(ctx, new_ctx, 1);
+            #else
+            dukx_sanitise_move_value(new_ctx, ctx, -1);
+            #endif // USE_PROXY
 
             //stk.early_out();
 
