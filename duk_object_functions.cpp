@@ -491,7 +491,7 @@ void dukx_sanitise_in_place(duk_context* dst_ctx, duk_idx_t idx)
     if(duk_is_primitive(dst_ctx, idx))
         return;
 
-    if(duk_has_prop_string(dst_ctx, idx, DUKX_HIDDEN_SYMBOL("PROX").c_str()))
+    if(duk_has_prop_string(dst_ctx, idx, DUK_HIDDEN_SYMBOL("PROX")))
         return;
 
     dukx_make_proxy_base_from(dst_ctx, idx);
@@ -518,7 +518,7 @@ void dukx_sanitise_in_place(duk_context* dst_ctx, duk_idx_t idx)
     duk_push_proxy(dst_ctx, 0);
 
     duk_push_true(dst_ctx);
-    duk_put_prop_string(dst_ctx, -2, DUKX_HIDDEN_SYMBOL("PROX").c_str());
+    duk_put_prop_string(dst_ctx, -2, DUK_HIDDEN_SYMBOL("PROX"));
 
     ///[to_wrap, proxy]
     duk_remove(dst_ctx, -1 + idx);
