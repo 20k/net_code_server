@@ -40,6 +40,28 @@ OBJDIR_RELEASE = obj/Release
 DEP_RELEASE = 
 OUT_RELEASE = bin/Release/crapmud
 
+INC_RELEASENOSYMBOLS = $(INC)
+CFLAGS_RELEASENOSYMBOLS = $(CFLAGS) -O2 -march=nehalem -DLOCAL_IP
+RESINC_RELEASENOSYMBOLS = $(RESINC)
+RCFLAGS_RELEASENOSYMBOLS = $(RCFLAGS)
+LIBDIR_RELEASENOSYMBOLS = $(LIBDIR)
+LIB_RELEASENOSYMBOLS = $(LIB)
+LDFLAGS_RELEASENOSYMBOLS = $(LDFLAGS)
+OBJDIR_RELEASENOSYMBOLS = obj/ReleaseNoSymbols
+DEP_RELEASENOSYMBOLS = 
+OUT_RELEASENOSYMBOLS = bin/ReleaseNoSymbols/crapmud
+
+INC_PROFILE = $(INC)
+CFLAGS_PROFILE = $(CFLAGS) -O2 -pg -march=nehalem -DLOCAL_IP
+RESINC_PROFILE = $(RESINC)
+RCFLAGS_PROFILE = $(RCFLAGS)
+LIBDIR_PROFILE = $(LIBDIR)
+LIB_PROFILE = $(LIB)
+LDFLAGS_PROFILE = $(LDFLAGS) -O2 -pg -lgmon
+OBJDIR_PROFILE = obj/Profile
+DEP_PROFILE = 
+OUT_PROFILE = bin/Profile/crapmud
+
 INC_DEPLOY = $(INC)
 CFLAGS_DEPLOY = $(CFLAGS) -fexpensive-optimizations -O3 -g -march=nehalem -Wlogical-op -Wduplicated-cond -Wduplicated-branches -DEXTERN_IP
 RESINC_DEPLOY = $(RESINC)
@@ -176,6 +198,10 @@ OBJ_DEBUG = $(OBJDIR_DEBUG)/scheduled_tasks.o $(OBJDIR_DEBUG)/safe_thread.o $(OB
 
 OBJ_RELEASE = $(OBJDIR_RELEASE)/scheduled_tasks.o $(OBJDIR_RELEASE)/safe_thread.o $(OBJDIR_RELEASE)/rng.o $(OBJDIR_RELEASE)/reoccurring_task_handler.o $(OBJDIR_RELEASE)/rate_limiting.o $(OBJDIR_RELEASE)/quest_manager.o $(OBJDIR_RELEASE)/privileged_core_scripts.o $(OBJDIR_RELEASE)/perfmon.o $(OBJDIR_RELEASE)/non_user_task_thread.o $(OBJDIR_RELEASE)/mongo.o $(OBJDIR_RELEASE)/main.o $(OBJDIR_RELEASE)/logging.o $(OBJDIR_RELEASE)/user.o $(OBJDIR_RELEASE)/unified_scripts.o $(OBJDIR_RELEASE)/time.o $(OBJDIR_RELEASE)/steam_auth.o $(OBJDIR_RELEASE)/stacktrace.o $(OBJDIR_RELEASE)/source_maps.o $(OBJDIR_RELEASE)/shared_duk_worker_state.o $(OBJDIR_RELEASE)/serialisables.o $(OBJDIR_RELEASE)/seccallers.o $(OBJDIR_RELEASE)/script_util.o $(OBJDIR_RELEASE)/script_metadata.o $(OBJDIR_RELEASE)/deps/secret/node.o $(OBJDIR_RELEASE)/deps/secret/low_level_structure.o $(OBJDIR_RELEASE)/deps/secret/loot_gen.o $(OBJDIR_RELEASE)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASE)/deps/secret/common.o $(OBJDIR_RELEASE)/deps/networking/serialisable.o $(OBJDIR_RELEASE)/deps/networking/networking.o $(OBJDIR_RELEASE)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASE)/db_storage_backend.o $(OBJDIR_RELEASE)/command_handler_state.o $(OBJDIR_RELEASE)/command_handler.o $(OBJDIR_RELEASE)/auth.o $(OBJDIR_RELEASE)/ascii_helpers.o $(OBJDIR_RELEASE)/item.o $(OBJDIR_RELEASE)/http_beast_server.o $(OBJDIR_RELEASE)/exec_context.o $(OBJDIR_RELEASE)/event_manager.o $(OBJDIR_RELEASE)/duktape.o $(OBJDIR_RELEASE)/duk_object_functions.o $(OBJDIR_RELEASE)/duk_modules.o $(OBJDIR_RELEASE)/duk_module_duktape.o $(OBJDIR_RELEASE)/deps/secret/tutorial.o $(OBJDIR_RELEASE)/deps/secret/structure.o $(OBJDIR_RELEASE)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASE)/deps/secret/secret.o $(OBJDIR_RELEASE)/deps/secret/one_shots.o $(OBJDIR_RELEASE)/deps/secret/one_shot_core.o $(OBJDIR_RELEASE)/deps/secret/npc_manager.o
 
+OBJ_RELEASENOSYMBOLS = $(OBJDIR_RELEASENOSYMBOLS)/scheduled_tasks.o $(OBJDIR_RELEASENOSYMBOLS)/safe_thread.o $(OBJDIR_RELEASENOSYMBOLS)/rng.o $(OBJDIR_RELEASENOSYMBOLS)/reoccurring_task_handler.o $(OBJDIR_RELEASENOSYMBOLS)/rate_limiting.o $(OBJDIR_RELEASENOSYMBOLS)/quest_manager.o $(OBJDIR_RELEASENOSYMBOLS)/privileged_core_scripts.o $(OBJDIR_RELEASENOSYMBOLS)/perfmon.o $(OBJDIR_RELEASENOSYMBOLS)/non_user_task_thread.o $(OBJDIR_RELEASENOSYMBOLS)/mongo.o $(OBJDIR_RELEASENOSYMBOLS)/main.o $(OBJDIR_RELEASENOSYMBOLS)/logging.o $(OBJDIR_RELEASENOSYMBOLS)/user.o $(OBJDIR_RELEASENOSYMBOLS)/unified_scripts.o $(OBJDIR_RELEASENOSYMBOLS)/time.o $(OBJDIR_RELEASENOSYMBOLS)/steam_auth.o $(OBJDIR_RELEASENOSYMBOLS)/stacktrace.o $(OBJDIR_RELEASENOSYMBOLS)/source_maps.o $(OBJDIR_RELEASENOSYMBOLS)/shared_duk_worker_state.o $(OBJDIR_RELEASENOSYMBOLS)/serialisables.o $(OBJDIR_RELEASENOSYMBOLS)/seccallers.o $(OBJDIR_RELEASENOSYMBOLS)/script_util.o $(OBJDIR_RELEASENOSYMBOLS)/script_metadata.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/node.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/low_level_structure.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/loot_gen.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/common.o $(OBJDIR_RELEASENOSYMBOLS)/deps/networking/serialisable.o $(OBJDIR_RELEASENOSYMBOLS)/deps/networking/networking.o $(OBJDIR_RELEASENOSYMBOLS)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASENOSYMBOLS)/db_storage_backend.o $(OBJDIR_RELEASENOSYMBOLS)/command_handler_state.o $(OBJDIR_RELEASENOSYMBOLS)/command_handler.o $(OBJDIR_RELEASENOSYMBOLS)/auth.o $(OBJDIR_RELEASENOSYMBOLS)/ascii_helpers.o $(OBJDIR_RELEASENOSYMBOLS)/item.o $(OBJDIR_RELEASENOSYMBOLS)/http_beast_server.o $(OBJDIR_RELEASENOSYMBOLS)/exec_context.o $(OBJDIR_RELEASENOSYMBOLS)/event_manager.o $(OBJDIR_RELEASENOSYMBOLS)/duktape.o $(OBJDIR_RELEASENOSYMBOLS)/duk_object_functions.o $(OBJDIR_RELEASENOSYMBOLS)/duk_modules.o $(OBJDIR_RELEASENOSYMBOLS)/duk_module_duktape.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/tutorial.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/structure.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/secret.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/one_shots.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/one_shot_core.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/npc_manager.o
+
+OBJ_PROFILE = $(OBJDIR_PROFILE)/scheduled_tasks.o $(OBJDIR_PROFILE)/safe_thread.o $(OBJDIR_PROFILE)/rng.o $(OBJDIR_PROFILE)/reoccurring_task_handler.o $(OBJDIR_PROFILE)/rate_limiting.o $(OBJDIR_PROFILE)/quest_manager.o $(OBJDIR_PROFILE)/privileged_core_scripts.o $(OBJDIR_PROFILE)/perfmon.o $(OBJDIR_PROFILE)/non_user_task_thread.o $(OBJDIR_PROFILE)/mongo.o $(OBJDIR_PROFILE)/main.o $(OBJDIR_PROFILE)/logging.o $(OBJDIR_PROFILE)/user.o $(OBJDIR_PROFILE)/unified_scripts.o $(OBJDIR_PROFILE)/time.o $(OBJDIR_PROFILE)/steam_auth.o $(OBJDIR_PROFILE)/stacktrace.o $(OBJDIR_PROFILE)/source_maps.o $(OBJDIR_PROFILE)/shared_duk_worker_state.o $(OBJDIR_PROFILE)/serialisables.o $(OBJDIR_PROFILE)/seccallers.o $(OBJDIR_PROFILE)/script_util.o $(OBJDIR_PROFILE)/script_metadata.o $(OBJDIR_PROFILE)/deps/secret/node.o $(OBJDIR_PROFILE)/deps/secret/low_level_structure.o $(OBJDIR_PROFILE)/deps/secret/loot_gen.o $(OBJDIR_PROFILE)/deps/secret/initial_link_setup.o $(OBJDIR_PROFILE)/deps/secret/common.o $(OBJDIR_PROFILE)/deps/networking/serialisable.o $(OBJDIR_PROFILE)/deps/networking/networking.o $(OBJDIR_PROFILE)/deps/networking/beast_compilation_unit.o $(OBJDIR_PROFILE)/db_storage_backend.o $(OBJDIR_PROFILE)/command_handler_state.o $(OBJDIR_PROFILE)/command_handler.o $(OBJDIR_PROFILE)/auth.o $(OBJDIR_PROFILE)/ascii_helpers.o $(OBJDIR_PROFILE)/item.o $(OBJDIR_PROFILE)/http_beast_server.o $(OBJDIR_PROFILE)/exec_context.o $(OBJDIR_PROFILE)/event_manager.o $(OBJDIR_PROFILE)/duktape.o $(OBJDIR_PROFILE)/duk_object_functions.o $(OBJDIR_PROFILE)/duk_modules.o $(OBJDIR_PROFILE)/duk_module_duktape.o $(OBJDIR_PROFILE)/deps/secret/tutorial.o $(OBJDIR_PROFILE)/deps/secret/structure.o $(OBJDIR_PROFILE)/deps/secret/special_user_scripts.o $(OBJDIR_PROFILE)/deps/secret/secret.o $(OBJDIR_PROFILE)/deps/secret/one_shots.o $(OBJDIR_PROFILE)/deps/secret/one_shot_core.o $(OBJDIR_PROFILE)/deps/secret/npc_manager.o
+
 OBJ_DEPLOY = $(OBJDIR_DEPLOY)/scheduled_tasks.o $(OBJDIR_DEPLOY)/safe_thread.o $(OBJDIR_DEPLOY)/rng.o $(OBJDIR_DEPLOY)/reoccurring_task_handler.o $(OBJDIR_DEPLOY)/rate_limiting.o $(OBJDIR_DEPLOY)/quest_manager.o $(OBJDIR_DEPLOY)/privileged_core_scripts.o $(OBJDIR_DEPLOY)/perfmon.o $(OBJDIR_DEPLOY)/non_user_task_thread.o $(OBJDIR_DEPLOY)/mongo.o $(OBJDIR_DEPLOY)/main.o $(OBJDIR_DEPLOY)/logging.o $(OBJDIR_DEPLOY)/user.o $(OBJDIR_DEPLOY)/unified_scripts.o $(OBJDIR_DEPLOY)/time.o $(OBJDIR_DEPLOY)/steam_auth.o $(OBJDIR_DEPLOY)/stacktrace.o $(OBJDIR_DEPLOY)/source_maps.o $(OBJDIR_DEPLOY)/shared_duk_worker_state.o $(OBJDIR_DEPLOY)/serialisables.o $(OBJDIR_DEPLOY)/seccallers.o $(OBJDIR_DEPLOY)/script_util.o $(OBJDIR_DEPLOY)/script_metadata.o $(OBJDIR_DEPLOY)/deps/secret/node.o $(OBJDIR_DEPLOY)/deps/secret/low_level_structure.o $(OBJDIR_DEPLOY)/deps/secret/loot_gen.o $(OBJDIR_DEPLOY)/deps/secret/initial_link_setup.o $(OBJDIR_DEPLOY)/deps/secret/common.o $(OBJDIR_DEPLOY)/deps/networking/serialisable.o $(OBJDIR_DEPLOY)/deps/networking/networking.o $(OBJDIR_DEPLOY)/deps/networking/beast_compilation_unit.o $(OBJDIR_DEPLOY)/db_storage_backend.o $(OBJDIR_DEPLOY)/command_handler_state.o $(OBJDIR_DEPLOY)/command_handler.o $(OBJDIR_DEPLOY)/auth.o $(OBJDIR_DEPLOY)/ascii_helpers.o $(OBJDIR_DEPLOY)/item.o $(OBJDIR_DEPLOY)/http_beast_server.o $(OBJDIR_DEPLOY)/exec_context.o $(OBJDIR_DEPLOY)/event_manager.o $(OBJDIR_DEPLOY)/duktape.o $(OBJDIR_DEPLOY)/duk_object_functions.o $(OBJDIR_DEPLOY)/duk_modules.o $(OBJDIR_DEPLOY)/duk_module_duktape.o $(OBJDIR_DEPLOY)/deps/secret/tutorial.o $(OBJDIR_DEPLOY)/deps/secret/structure.o $(OBJDIR_DEPLOY)/deps/secret/special_user_scripts.o $(OBJDIR_DEPLOY)/deps/secret/secret.o $(OBJDIR_DEPLOY)/deps/secret/one_shots.o $(OBJDIR_DEPLOY)/deps/secret/one_shot_core.o $(OBJDIR_DEPLOY)/deps/secret/npc_manager.o
 
 OBJ_RELEASEANDTEST = $(OBJDIR_RELEASEANDTEST)/scheduled_tasks.o $(OBJDIR_RELEASEANDTEST)/safe_thread.o $(OBJDIR_RELEASEANDTEST)/rng.o $(OBJDIR_RELEASEANDTEST)/reoccurring_task_handler.o $(OBJDIR_RELEASEANDTEST)/rate_limiting.o $(OBJDIR_RELEASEANDTEST)/quest_manager.o $(OBJDIR_RELEASEANDTEST)/privileged_core_scripts.o $(OBJDIR_RELEASEANDTEST)/perfmon.o $(OBJDIR_RELEASEANDTEST)/non_user_task_thread.o $(OBJDIR_RELEASEANDTEST)/mongo.o $(OBJDIR_RELEASEANDTEST)/main.o $(OBJDIR_RELEASEANDTEST)/logging.o $(OBJDIR_RELEASEANDTEST)/user.o $(OBJDIR_RELEASEANDTEST)/unified_scripts.o $(OBJDIR_RELEASEANDTEST)/time.o $(OBJDIR_RELEASEANDTEST)/steam_auth.o $(OBJDIR_RELEASEANDTEST)/stacktrace.o $(OBJDIR_RELEASEANDTEST)/source_maps.o $(OBJDIR_RELEASEANDTEST)/shared_duk_worker_state.o $(OBJDIR_RELEASEANDTEST)/serialisables.o $(OBJDIR_RELEASEANDTEST)/seccallers.o $(OBJDIR_RELEASEANDTEST)/script_util.o $(OBJDIR_RELEASEANDTEST)/script_metadata.o $(OBJDIR_RELEASEANDTEST)/deps/secret/node.o $(OBJDIR_RELEASEANDTEST)/deps/secret/low_level_structure.o $(OBJDIR_RELEASEANDTEST)/deps/secret/loot_gen.o $(OBJDIR_RELEASEANDTEST)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASEANDTEST)/deps/secret/common.o $(OBJDIR_RELEASEANDTEST)/deps/networking/serialisable.o $(OBJDIR_RELEASEANDTEST)/deps/networking/networking.o $(OBJDIR_RELEASEANDTEST)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASEANDTEST)/db_storage_backend.o $(OBJDIR_RELEASEANDTEST)/command_handler_state.o $(OBJDIR_RELEASEANDTEST)/command_handler.o $(OBJDIR_RELEASEANDTEST)/auth.o $(OBJDIR_RELEASEANDTEST)/ascii_helpers.o $(OBJDIR_RELEASEANDTEST)/item.o $(OBJDIR_RELEASEANDTEST)/http_beast_server.o $(OBJDIR_RELEASEANDTEST)/exec_context.o $(OBJDIR_RELEASEANDTEST)/event_manager.o $(OBJDIR_RELEASEANDTEST)/duktape.o $(OBJDIR_RELEASEANDTEST)/duk_object_functions.o $(OBJDIR_RELEASEANDTEST)/duk_modules.o $(OBJDIR_RELEASEANDTEST)/duk_module_duktape.o $(OBJDIR_RELEASEANDTEST)/deps/secret/tutorial.o $(OBJDIR_RELEASEANDTEST)/deps/secret/structure.o $(OBJDIR_RELEASEANDTEST)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASEANDTEST)/deps/secret/secret.o $(OBJDIR_RELEASEANDTEST)/deps/secret/one_shots.o $(OBJDIR_RELEASEANDTEST)/deps/secret/one_shot_core.o $(OBJDIR_RELEASEANDTEST)/deps/secret/npc_manager.o
@@ -200,9 +226,9 @@ OBJ_MAKELINUXRELEASEWSL =
 
 OBJ_MAKELINUXDEPLOYWSL = 
 
-all: debug release deploy releaseandtest debugbacktrace debugtest dmimic releaseandtestwithdebuginfo rdclang rt_prof releaseandtestlto linuxrelease linuxdeploy makelinuxreleasewsl makelinuxdeploywsl
+all: debug release releasenosymbols profile deploy releaseandtest debugbacktrace debugtest dmimic releaseandtestwithdebuginfo rdclang rt_prof releaseandtestlto linuxrelease linuxdeploy makelinuxreleasewsl makelinuxdeploywsl
 
-clean: clean_debug clean_release clean_deploy clean_releaseandtest clean_debugbacktrace clean_debugtest clean_dmimic clean_releaseandtestwithdebuginfo clean_rdclang clean_rt_prof clean_releaseandtestlto clean_linuxrelease clean_linuxdeploy clean_makelinuxreleasewsl clean_makelinuxdeploywsl
+clean: clean_debug clean_release clean_releasenosymbols clean_profile clean_deploy clean_releaseandtest clean_debugbacktrace clean_debugtest clean_dmimic clean_releaseandtestwithdebuginfo clean_rdclang clean_rt_prof clean_releaseandtestlto clean_linuxrelease clean_linuxdeploy clean_makelinuxreleasewsl clean_makelinuxdeploywsl
 
 before_debug: 
 	test -d bin/Debug || mkdir -p bin/Debug
@@ -550,6 +576,352 @@ clean_release:
 	rm -rf $(OBJDIR_RELEASE)
 	rm -rf $(OBJDIR_RELEASE)/deps/secret
 	rm -rf $(OBJDIR_RELEASE)/deps/networking
+
+before_releasenosymbols: 
+	test -d bin/ReleaseNoSymbols || mkdir -p bin/ReleaseNoSymbols
+	test -d $(OBJDIR_RELEASENOSYMBOLS) || mkdir -p $(OBJDIR_RELEASENOSYMBOLS)
+	test -d $(OBJDIR_RELEASENOSYMBOLS)/deps/secret || mkdir -p $(OBJDIR_RELEASENOSYMBOLS)/deps/secret
+	test -d $(OBJDIR_RELEASENOSYMBOLS)/deps/networking || mkdir -p $(OBJDIR_RELEASENOSYMBOLS)/deps/networking
+
+after_releasenosymbols: 
+
+releasenosymbols: before_releasenosymbols out_releasenosymbols after_releasenosymbols
+
+out_releasenosymbols: before_releasenosymbols $(OBJ_RELEASENOSYMBOLS) $(DEP_RELEASENOSYMBOLS)
+	$(LD) $(LIBDIR_RELEASENOSYMBOLS) -o $(OUT_RELEASENOSYMBOLS) $(OBJ_RELEASENOSYMBOLS)  $(LDFLAGS_RELEASENOSYMBOLS) $(LIB_RELEASENOSYMBOLS)
+
+$(OBJDIR_RELEASENOSYMBOLS)/scheduled_tasks.o: scheduled_tasks.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c scheduled_tasks.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/scheduled_tasks.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/safe_thread.o: safe_thread.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c safe_thread.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/safe_thread.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c rng.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/rng.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c reoccurring_task_handler.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/reoccurring_task_handler.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/rate_limiting.o: rate_limiting.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c rate_limiting.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/rate_limiting.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/quest_manager.o: quest_manager.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c quest_manager.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/quest_manager.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/privileged_core_scripts.o: privileged_core_scripts.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c privileged_core_scripts.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/privileged_core_scripts.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/perfmon.o: perfmon.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c perfmon.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/perfmon.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/non_user_task_thread.o: non_user_task_thread.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c non_user_task_thread.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/non_user_task_thread.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c mongo.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/mongo.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/main.o: main.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c main.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/main.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/logging.o: logging.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c logging.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/logging.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/user.o: user.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c user.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/user.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/unified_scripts.o: unified_scripts.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c unified_scripts.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/unified_scripts.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/time.o: time.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c time.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/time.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/steam_auth.o: steam_auth.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c steam_auth.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/steam_auth.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/stacktrace.o: stacktrace.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c stacktrace.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/stacktrace.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/source_maps.o: source_maps.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c source_maps.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/source_maps.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c shared_duk_worker_state.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/shared_duk_worker_state.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/serialisables.o: serialisables.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c serialisables.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/serialisables.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/seccallers.o: seccallers.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c seccallers.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/seccallers.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/script_util.o: script_util.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c script_util.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/script_util.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/script_metadata.o: script_metadata.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c script_metadata.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/script_metadata.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/deps/secret/node.o: deps/secret/node.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/secret/node.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/node.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/deps/secret/low_level_structure.o: deps/secret/low_level_structure.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/secret/low_level_structure.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/low_level_structure.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/deps/secret/loot_gen.o: deps/secret/loot_gen.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/secret/loot_gen.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/loot_gen.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/deps/secret/initial_link_setup.o: deps/secret/initial_link_setup.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/secret/initial_link_setup.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/initial_link_setup.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/deps/secret/common.o: deps/secret/common.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/secret/common.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/common.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/deps/networking/serialisable.o: deps/networking/serialisable.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/networking/serialisable.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/networking/serialisable.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/deps/networking/networking.o: deps/networking/networking.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/networking/networking.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/networking/networking.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/deps/networking/beast_compilation_unit.o: deps/networking/beast_compilation_unit.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/networking/beast_compilation_unit.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/networking/beast_compilation_unit.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/db_storage_backend.o: db_storage_backend.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c db_storage_backend.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/db_storage_backend.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c command_handler_state.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/command_handler_state.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/command_handler.o: command_handler.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c command_handler.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/command_handler.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/auth.o: auth.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c auth.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/auth.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/ascii_helpers.o: ascii_helpers.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c ascii_helpers.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/ascii_helpers.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/item.o: item.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c item.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/item.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/http_beast_server.o: http_beast_server.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c http_beast_server.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/http_beast_server.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/exec_context.o: exec_context.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c exec_context.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/exec_context.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/event_manager.o: event_manager.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c event_manager.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/event_manager.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/duktape.o: duktape.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c duktape.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/duktape.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/duk_object_functions.o: duk_object_functions.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c duk_object_functions.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/duk_object_functions.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c duk_modules.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/duk_modules.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/duk_module_duktape.o: duk_module_duktape.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c duk_module_duktape.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/duk_module_duktape.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/deps/secret/tutorial.o: deps/secret/tutorial.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/secret/tutorial.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/tutorial.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/deps/secret/structure.o: deps/secret/structure.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/secret/structure.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/structure.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/deps/secret/special_user_scripts.o: deps/secret/special_user_scripts.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/secret/special_user_scripts.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/special_user_scripts.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/deps/secret/secret.o: deps/secret/secret.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/secret/secret.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/secret.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/secret/one_shots.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/one_shots.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/one_shot_core.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/deps/secret/npc_manager.o: deps/secret/npc_manager.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/secret/npc_manager.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/npc_manager.o
+
+clean_releasenosymbols: 
+	rm -f $(OBJ_RELEASENOSYMBOLS) $(OUT_RELEASENOSYMBOLS)
+	rm -rf bin/ReleaseNoSymbols
+	rm -rf $(OBJDIR_RELEASENOSYMBOLS)
+	rm -rf $(OBJDIR_RELEASENOSYMBOLS)/deps/secret
+	rm -rf $(OBJDIR_RELEASENOSYMBOLS)/deps/networking
+
+before_profile: 
+	test -d bin/Profile || mkdir -p bin/Profile
+	test -d $(OBJDIR_PROFILE) || mkdir -p $(OBJDIR_PROFILE)
+	test -d $(OBJDIR_PROFILE)/deps/secret || mkdir -p $(OBJDIR_PROFILE)/deps/secret
+	test -d $(OBJDIR_PROFILE)/deps/networking || mkdir -p $(OBJDIR_PROFILE)/deps/networking
+
+after_profile: 
+
+profile: before_profile out_profile after_profile
+
+out_profile: before_profile $(OBJ_PROFILE) $(DEP_PROFILE)
+	$(LD) $(LIBDIR_PROFILE) -o $(OUT_PROFILE) $(OBJ_PROFILE)  $(LDFLAGS_PROFILE) $(LIB_PROFILE)
+
+$(OBJDIR_PROFILE)/scheduled_tasks.o: scheduled_tasks.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c scheduled_tasks.cpp -o $(OBJDIR_PROFILE)/scheduled_tasks.o
+
+$(OBJDIR_PROFILE)/safe_thread.o: safe_thread.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c safe_thread.cpp -o $(OBJDIR_PROFILE)/safe_thread.o
+
+$(OBJDIR_PROFILE)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c rng.cpp -o $(OBJDIR_PROFILE)/rng.o
+
+$(OBJDIR_PROFILE)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c reoccurring_task_handler.cpp -o $(OBJDIR_PROFILE)/reoccurring_task_handler.o
+
+$(OBJDIR_PROFILE)/rate_limiting.o: rate_limiting.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c rate_limiting.cpp -o $(OBJDIR_PROFILE)/rate_limiting.o
+
+$(OBJDIR_PROFILE)/quest_manager.o: quest_manager.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c quest_manager.cpp -o $(OBJDIR_PROFILE)/quest_manager.o
+
+$(OBJDIR_PROFILE)/privileged_core_scripts.o: privileged_core_scripts.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c privileged_core_scripts.cpp -o $(OBJDIR_PROFILE)/privileged_core_scripts.o
+
+$(OBJDIR_PROFILE)/perfmon.o: perfmon.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c perfmon.cpp -o $(OBJDIR_PROFILE)/perfmon.o
+
+$(OBJDIR_PROFILE)/non_user_task_thread.o: non_user_task_thread.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c non_user_task_thread.cpp -o $(OBJDIR_PROFILE)/non_user_task_thread.o
+
+$(OBJDIR_PROFILE)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c mongo.cpp -o $(OBJDIR_PROFILE)/mongo.o
+
+$(OBJDIR_PROFILE)/main.o: main.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c main.cpp -o $(OBJDIR_PROFILE)/main.o
+
+$(OBJDIR_PROFILE)/logging.o: logging.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c logging.cpp -o $(OBJDIR_PROFILE)/logging.o
+
+$(OBJDIR_PROFILE)/user.o: user.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c user.cpp -o $(OBJDIR_PROFILE)/user.o
+
+$(OBJDIR_PROFILE)/unified_scripts.o: unified_scripts.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c unified_scripts.cpp -o $(OBJDIR_PROFILE)/unified_scripts.o
+
+$(OBJDIR_PROFILE)/time.o: time.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c time.cpp -o $(OBJDIR_PROFILE)/time.o
+
+$(OBJDIR_PROFILE)/steam_auth.o: steam_auth.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c steam_auth.cpp -o $(OBJDIR_PROFILE)/steam_auth.o
+
+$(OBJDIR_PROFILE)/stacktrace.o: stacktrace.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c stacktrace.cpp -o $(OBJDIR_PROFILE)/stacktrace.o
+
+$(OBJDIR_PROFILE)/source_maps.o: source_maps.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c source_maps.cpp -o $(OBJDIR_PROFILE)/source_maps.o
+
+$(OBJDIR_PROFILE)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c shared_duk_worker_state.cpp -o $(OBJDIR_PROFILE)/shared_duk_worker_state.o
+
+$(OBJDIR_PROFILE)/serialisables.o: serialisables.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c serialisables.cpp -o $(OBJDIR_PROFILE)/serialisables.o
+
+$(OBJDIR_PROFILE)/seccallers.o: seccallers.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c seccallers.cpp -o $(OBJDIR_PROFILE)/seccallers.o
+
+$(OBJDIR_PROFILE)/script_util.o: script_util.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c script_util.cpp -o $(OBJDIR_PROFILE)/script_util.o
+
+$(OBJDIR_PROFILE)/script_metadata.o: script_metadata.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c script_metadata.cpp -o $(OBJDIR_PROFILE)/script_metadata.o
+
+$(OBJDIR_PROFILE)/deps/secret/node.o: deps/secret/node.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/secret/node.cpp -o $(OBJDIR_PROFILE)/deps/secret/node.o
+
+$(OBJDIR_PROFILE)/deps/secret/low_level_structure.o: deps/secret/low_level_structure.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/secret/low_level_structure.cpp -o $(OBJDIR_PROFILE)/deps/secret/low_level_structure.o
+
+$(OBJDIR_PROFILE)/deps/secret/loot_gen.o: deps/secret/loot_gen.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/secret/loot_gen.cpp -o $(OBJDIR_PROFILE)/deps/secret/loot_gen.o
+
+$(OBJDIR_PROFILE)/deps/secret/initial_link_setup.o: deps/secret/initial_link_setup.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/secret/initial_link_setup.cpp -o $(OBJDIR_PROFILE)/deps/secret/initial_link_setup.o
+
+$(OBJDIR_PROFILE)/deps/secret/common.o: deps/secret/common.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/secret/common.cpp -o $(OBJDIR_PROFILE)/deps/secret/common.o
+
+$(OBJDIR_PROFILE)/deps/networking/serialisable.o: deps/networking/serialisable.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/networking/serialisable.cpp -o $(OBJDIR_PROFILE)/deps/networking/serialisable.o
+
+$(OBJDIR_PROFILE)/deps/networking/networking.o: deps/networking/networking.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/networking/networking.cpp -o $(OBJDIR_PROFILE)/deps/networking/networking.o
+
+$(OBJDIR_PROFILE)/deps/networking/beast_compilation_unit.o: deps/networking/beast_compilation_unit.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/networking/beast_compilation_unit.cpp -o $(OBJDIR_PROFILE)/deps/networking/beast_compilation_unit.o
+
+$(OBJDIR_PROFILE)/db_storage_backend.o: db_storage_backend.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c db_storage_backend.cpp -o $(OBJDIR_PROFILE)/db_storage_backend.o
+
+$(OBJDIR_PROFILE)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c command_handler_state.cpp -o $(OBJDIR_PROFILE)/command_handler_state.o
+
+$(OBJDIR_PROFILE)/command_handler.o: command_handler.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c command_handler.cpp -o $(OBJDIR_PROFILE)/command_handler.o
+
+$(OBJDIR_PROFILE)/auth.o: auth.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c auth.cpp -o $(OBJDIR_PROFILE)/auth.o
+
+$(OBJDIR_PROFILE)/ascii_helpers.o: ascii_helpers.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c ascii_helpers.cpp -o $(OBJDIR_PROFILE)/ascii_helpers.o
+
+$(OBJDIR_PROFILE)/item.o: item.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c item.cpp -o $(OBJDIR_PROFILE)/item.o
+
+$(OBJDIR_PROFILE)/http_beast_server.o: http_beast_server.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c http_beast_server.cpp -o $(OBJDIR_PROFILE)/http_beast_server.o
+
+$(OBJDIR_PROFILE)/exec_context.o: exec_context.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c exec_context.cpp -o $(OBJDIR_PROFILE)/exec_context.o
+
+$(OBJDIR_PROFILE)/event_manager.o: event_manager.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c event_manager.cpp -o $(OBJDIR_PROFILE)/event_manager.o
+
+$(OBJDIR_PROFILE)/duktape.o: duktape.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c duktape.cpp -o $(OBJDIR_PROFILE)/duktape.o
+
+$(OBJDIR_PROFILE)/duk_object_functions.o: duk_object_functions.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c duk_object_functions.cpp -o $(OBJDIR_PROFILE)/duk_object_functions.o
+
+$(OBJDIR_PROFILE)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c duk_modules.cpp -o $(OBJDIR_PROFILE)/duk_modules.o
+
+$(OBJDIR_PROFILE)/duk_module_duktape.o: duk_module_duktape.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c duk_module_duktape.cpp -o $(OBJDIR_PROFILE)/duk_module_duktape.o
+
+$(OBJDIR_PROFILE)/deps/secret/tutorial.o: deps/secret/tutorial.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/secret/tutorial.cpp -o $(OBJDIR_PROFILE)/deps/secret/tutorial.o
+
+$(OBJDIR_PROFILE)/deps/secret/structure.o: deps/secret/structure.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/secret/structure.cpp -o $(OBJDIR_PROFILE)/deps/secret/structure.o
+
+$(OBJDIR_PROFILE)/deps/secret/special_user_scripts.o: deps/secret/special_user_scripts.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/secret/special_user_scripts.cpp -o $(OBJDIR_PROFILE)/deps/secret/special_user_scripts.o
+
+$(OBJDIR_PROFILE)/deps/secret/secret.o: deps/secret/secret.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/secret/secret.cpp -o $(OBJDIR_PROFILE)/deps/secret/secret.o
+
+$(OBJDIR_PROFILE)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/secret/one_shots.cpp -o $(OBJDIR_PROFILE)/deps/secret/one_shots.o
+
+$(OBJDIR_PROFILE)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_PROFILE)/deps/secret/one_shot_core.o
+
+$(OBJDIR_PROFILE)/deps/secret/npc_manager.o: deps/secret/npc_manager.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/secret/npc_manager.cpp -o $(OBJDIR_PROFILE)/deps/secret/npc_manager.o
+
+clean_profile: 
+	rm -f $(OBJ_PROFILE) $(OUT_PROFILE)
+	rm -rf bin/Profile
+	rm -rf $(OBJDIR_PROFILE)
+	rm -rf $(OBJDIR_PROFILE)/deps/secret
+	rm -rf $(OBJDIR_PROFILE)/deps/networking
 
 before_deploy: 
 	test -d bin/Deploy || mkdir -p bin/Deploy
@@ -2316,5 +2688,5 @@ clean_makelinuxdeploywsl:
 	rm -f $(OBJ_MAKELINUXDEPLOYWSL) $(OUT_MAKELINUXDEPLOYWSL)
 	rm -rf bin/LDeploy
 
-.PHONY: before_debug after_debug clean_debug before_release after_release clean_release before_deploy after_deploy clean_deploy before_releaseandtest after_releaseandtest clean_releaseandtest before_debugbacktrace after_debugbacktrace clean_debugbacktrace before_debugtest after_debugtest clean_debugtest before_dmimic after_dmimic clean_dmimic before_releaseandtestwithdebuginfo after_releaseandtestwithdebuginfo clean_releaseandtestwithdebuginfo before_rt_prof after_rt_prof clean_rt_prof before_releaseandtestlto after_releaseandtestlto clean_releaseandtestlto before_linuxrelease after_linuxrelease clean_linuxrelease before_linuxdeploy after_linuxdeploy clean_linuxdeploy before_makelinuxreleasewsl after_makelinuxreleasewsl clean_makelinuxreleasewsl before_makelinuxdeploywsl after_makelinuxdeploywsl clean_makelinuxdeploywsl
+.PHONY: before_debug after_debug clean_debug before_release after_release clean_release before_releasenosymbols after_releasenosymbols clean_releasenosymbols before_profile after_profile clean_profile before_deploy after_deploy clean_deploy before_releaseandtest after_releaseandtest clean_releaseandtest before_debugbacktrace after_debugbacktrace clean_debugbacktrace before_debugtest after_debugtest clean_debugtest before_dmimic after_dmimic clean_dmimic before_releaseandtestwithdebuginfo after_releaseandtestwithdebuginfo clean_releaseandtestwithdebuginfo before_rt_prof after_rt_prof clean_rt_prof before_releaseandtestlto after_releaseandtestlto clean_releaseandtestlto before_linuxrelease after_linuxrelease clean_linuxrelease before_linuxdeploy after_linuxdeploy clean_linuxdeploy before_makelinuxreleasewsl after_makelinuxreleasewsl clean_makelinuxreleasewsl before_makelinuxdeploywsl after_makelinuxdeploywsl clean_makelinuxdeploywsl
 
