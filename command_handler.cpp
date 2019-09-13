@@ -108,7 +108,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                                    int current_id, T& callback)
 {
     double current_framerate = get_global_number(nctx, "framerate_limit");
-    current_framerate = clamp(current_framerate, 1., 60.);
+    current_framerate = clamp(current_framerate, 1., 30.);
 
     sf::Clock clk;
 
