@@ -674,7 +674,7 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
         duk_put_prop_string(next, -2, "context");
         duk_pop(next);
 
-        #define USE_PROXY
+        //#define USE_PROXY
 
         ///[object] is on the stack, aka context
 

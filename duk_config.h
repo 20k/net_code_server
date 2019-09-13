@@ -2865,11 +2865,17 @@ typedef struct duk_hthread duk_context;
  *  Forced options
  */
 
+#define DUK_USE_ARRAY_FASTPATH
+#define DUK_USE_ARRAY_PROP_FASTPATH
 #define DUK_USE_CPP_EXCEPTIONS
+#undef DUK_USE_ES6_OBJECT_PROTO_PROPERTY
+#undef DUK_USE_ES6_OBJECT_SETPROTOTYPEOF
 extern int my_timeout_check(void* udata);
 #define DUK_OPT_EXEC_TIMEOUT_CHECK my_timeout_check
 #define DUK_USE_EXEC_TIMEOUT_CHECK my_timeout_check
 
+#define DUK_USE_FASTINT
+#define DUK_USE_FAST_REFCOUNT_DEFAULT
 #define DUK_USE_FATAL_HANDLER(udata,msg) do { \
         const char *fatal_msg = (msg); /* avoid double evaluation */ \
         (void) udata; \
@@ -2879,7 +2885,14 @@ extern int my_timeout_check(void* udata);
     } while (0)
     
 
+#define DUK_USE_HEX_FASTPATH
+#define DUK_USE_IDCHAR_FASTPATH
 #define DUK_USE_INTERRUPT_COUNTER
+#define DUK_USE_LITCACHE_SIZE 1024
+#undef DUK_USE_PACKED_TVAL
+#undef DUK_USE_PREFER_SIZE
+#undef DUK_USE_STRHASH_DENSE
+#define DUK_USE_STRHASH_SKIP_SHIFT 5
 #undef DUK_USE_VOLUNTARY_GC
 
 /*
@@ -2888,8 +2901,6 @@ extern int my_timeout_check(void* udata);
 
 #undef DUK_USE_ALLOW_UNDEFINED_BEHAVIOR
 #define DUK_USE_ARRAY_BUILTIN
-#define DUK_USE_ARRAY_FASTPATH
-#define DUK_USE_ARRAY_PROP_FASTPATH
 #undef DUK_USE_ASSERTIONS
 #define DUK_USE_AUGMENT_ERROR_CREATE
 #define DUK_USE_AUGMENT_ERROR_THROW
@@ -2930,8 +2941,6 @@ extern int my_timeout_check(void* udata);
 #define DUK_USE_ERRCREATE
 #define DUK_USE_ERRTHROW
 #define DUK_USE_ES6
-#define DUK_USE_ES6_OBJECT_PROTO_PROPERTY
-#define DUK_USE_ES6_OBJECT_SETPROTOTYPEOF
 #define DUK_USE_ES6_PROXY
 #define DUK_USE_ES6_REGEXP_SYNTAX
 #define DUK_USE_ES6_UNICODE_ESCAPE
@@ -2949,8 +2958,6 @@ extern int my_timeout_check(void* udata);
 #undef DUK_USE_EXPLICIT_NULL_INIT
 #undef DUK_USE_EXTSTR_FREE
 #undef DUK_USE_EXTSTR_INTERN_CHECK
-#undef DUK_USE_FASTINT
-#define DUK_USE_FAST_REFCOUNT_DEFAULT
 #define DUK_USE_FATAL_MAXLEN 128
 #define DUK_USE_FINALIZER_SUPPORT
 #undef DUK_USE_FINALIZER_TORTURE
@@ -2968,7 +2975,6 @@ extern int my_timeout_check(void* udata);
 #undef DUK_USE_HEAPPTR16
 #undef DUK_USE_HEAPPTR_DEC16
 #undef DUK_USE_HEAPPTR_ENC16
-#define DUK_USE_HEX_FASTPATH
 #define DUK_USE_HEX_SUPPORT
 #define DUK_USE_HOBJECT_ARRAY_ABANDON_LIMIT 2
 #define DUK_USE_HOBJECT_ARRAY_FAST_RESIZE_LIMIT 9
@@ -2983,7 +2989,6 @@ extern int my_timeout_check(void* udata);
 #undef DUK_USE_HSTRING_EXTDATA
 #define DUK_USE_HSTRING_LAZY_CLEN
 #define DUK_USE_HTML_COMMENTS
-#define DUK_USE_IDCHAR_FASTPATH
 #undef DUK_USE_INJECT_HEAP_ALLOC_ERROR
 #undef DUK_USE_INTERRUPT_DEBUG_FIXUP
 #define DUK_USE_JC
@@ -2999,7 +3004,6 @@ extern int my_timeout_check(void* udata);
 #define DUK_USE_JX
 #define DUK_USE_LEXER_SLIDING_WINDOW
 #undef DUK_USE_LIGHTFUNC_BUILTINS
-#define DUK_USE_LITCACHE_SIZE 256
 #define DUK_USE_MARK_AND_SWEEP_RECLIMIT 256
 #define DUK_USE_MATH_BUILTIN
 #define DUK_USE_NATIVE_CALL_RECLIMIT 1000
@@ -3018,7 +3022,6 @@ extern int my_timeout_check(void* udata);
 #undef DUK_USE_PARANOID_ERRORS
 #define DUK_USE_PC2LINE
 #define DUK_USE_PERFORMANCE_BUILTIN
-#undef DUK_USE_PREFER_SIZE
 #undef DUK_USE_PROMISE_BUILTIN
 #define DUK_USE_PROVIDE_DEFAULT_ALLOC_FUNCTIONS
 #undef DUK_USE_REFCOUNT16
@@ -3041,8 +3044,6 @@ extern int my_timeout_check(void* udata);
 #undef DUK_USE_SHUFFLE_TORTURE
 #define DUK_USE_SOURCE_NONBMP
 #undef DUK_USE_STRHASH16
-#undef DUK_USE_STRHASH_DENSE
-#define DUK_USE_STRHASH_SKIP_SHIFT 5
 #define DUK_USE_STRICT_DECL
 #undef DUK_USE_STRICT_UTF8_SOURCE
 #define DUK_USE_STRING_BUILTIN
