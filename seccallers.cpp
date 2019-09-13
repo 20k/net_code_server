@@ -638,7 +638,7 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
     duk_idx_t thr_idx = duk_push_thread_new_globalenv(ctx);
     duk_context* new_ctx = duk_get_context(ctx, thr_idx);
-    register_funcs(new_ctx, seclevel, get_script_host(ctx), true);
+    //register_funcs(new_ctx, seclevel, get_script_host(ctx), true);
 
     std::string wrapper = data;
 
@@ -717,15 +717,16 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
     {
         prep_context(ctx, temporary_ctx);
 
+        duk_push_global_stash(new_ctx);
+        duk_get_global_string(temporary_ctx, "Duktape");
+        duk_xmove_top(new_ctx, temporary_ctx, 1);
+        duk_put_prop_string(new_ctx, -2, DUK_HIDDEN_SYMBOL("module:Duktape"));
+        duk_pop(new_ctx);
+
         int moved = 3;
 
         duk_xmove_top(new_ctx, temporary_ctx, moved);
         duk_remove(new_ctx, -1 - moved); ///removes temporary ctx
-
-        //prep_context(ctx, new_ctx);
-
-        //duk_push_object(new_ctx);
-        //duk_set_global_object(new_ctx);
 
         ///now we have [object, args] on the stack 2
 
