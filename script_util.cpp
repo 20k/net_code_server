@@ -28,9 +28,7 @@
 
 std::string attach_cli_wrapper(const std::string& str)
 {
-    std::string req = "require(\"@babel/polyfill\");\n";
-
-    return req + "(function mainfunc(context, args){return (" + str + ")})";
+    return str;
 }
 
 std::string attach_unparsed_wrapper(std::string str)

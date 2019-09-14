@@ -631,7 +631,7 @@ duk_int_t dukx_pcall_copy(duk_context* ctx, duk_idx_t nargs)
     return duk_pcall(ctx, nargs);
 }
 
-std::string compile_and_call(duk_context* ctx, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script, bool polyfill)
+std::string compile_and_call(duk_context* ctx, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script, bool is_cli)
 {
     if(data.size() == 0)
     {
@@ -639,8 +639,6 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
         return "Script not found";
     }
-
-    std::cout << "data " << data << std::endl;
 
     std::string script_host = get_script_host(ctx);
     std::string base_caller = get_base_caller(ctx);
@@ -747,23 +745,35 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
         int top = duk_get_top(temporary_ctx);
 
-        ///script execution is in two phases
-        ///the first phase executes all the requires and returns a function object which is user code
-        ///the second phase executes user code
-        ///the reason for this is that phase 1 needs to execute in the real global, and phase 2 in the bad global
-        duk_int_t ret_requires = dukx_pcall_copy(temporary_ctx, nargs);
-
-        ///don't bother trying to clean up
-        if(ret_requires != DUK_EXEC_SUCCESS)
+        if(!is_cli)
         {
-            std::string error_prop = duk_safe_to_std_string(ctx, -1);
+            ///script execution is in two phases
+            ///the first phase executes all the requires and returns a function object which is user code
+            ///the second phase executes user code
+            ///the reason for this is that phase 1 needs to execute in the real global, and phase 2 in the bad global
+            duk_int_t ret_requires = dukx_pcall_copy(temporary_ctx, nargs);
 
-            std::cout << "Failed to execute require block " << error_prop << std::endl;
+            ///don't bother trying to clean up
+            if(ret_requires != DUK_EXEC_SUCCESS)
+            {
+                std::string error_prop = duk_safe_to_std_string(ctx, -1);
 
-            throw std::runtime_error("Failed to execute require block " + error_prop);
+                std::cout << "Failed to execute require block " << error_prop << std::endl;
+
+                throw std::runtime_error("Failed to execute require block " + error_prop);
+            }
+
+            duk_replace(temporary_ctx, -2 - nargs);
         }
+        else
+        {
+            duk_eval_string(temporary_ctx, "require(\"@babel/polyfill\");");
 
-        duk_replace(temporary_ctx, -2 - nargs);
+            duk_push_global_object(temporary_ctx);
+            duk_push_c_function(ctx, dummy, 1);
+            duk_put_prop_string(temporary_ctx, -2, "require");
+            duk_pop(temporary_ctx);
+        }
 
         int moved = 3;
 
@@ -774,7 +784,10 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
         ///now we have [thread] on stack 1, and [object, args] on stack 2
         ///stack 2 now has [val]
-        duk_int_t ret_val = duk_pcall(new_ctx, nargs);
+        duk_int_t ret_val = DUK_EXEC_ERROR;
+
+        ret_val = duk_pcall(new_ctx, nargs);
+
 
         #ifndef USE_PROXY
         duk_xmove_top(ctx, new_ctx, 1);
@@ -1061,13 +1074,13 @@ std::string js_unified_force_call_data(exec_context& ectx, const std::string& da
 
     bool first_invoke_valid = unified_invoke.valid;
 
-    bool polyfill = false;
+    bool is_cli = false;
 
     if(!unified_invoke.valid || unified_invoke.type == unified_script_info::script_type::BUNDLE)
     {
         script_info dummy;
         dummy.load_from_unparsed_source(ctx, attach_cli_wrapper(data), host + ".invoke", false, true);
-        polyfill = true;
+        is_cli = true;
 
         unified_invoke.make_from(dummy);
     }
@@ -1091,7 +1104,7 @@ std::string js_unified_force_call_data(exec_context& ectx, const std::string& da
         duk_put_prop_string(ctx, -2, "command");
     }
 
-    std::string extra = compile_and_call(ctx, unified_invoke.parsed_source, get_caller(ctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke", polyfill);
+    std::string extra = compile_and_call(ctx, unified_invoke.parsed_source, get_caller(ctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke", is_cli);
 
     if(!duk_is_object_coercible(ctx, -1))
     {

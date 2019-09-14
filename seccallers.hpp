@@ -67,5 +67,6 @@ duk_ret_t err(duk_context* ctx);
 std::string add_freeze(const std::string& name);
 
 void remove_func(duk_context* ctx, const std::string& name);
+duk_ret_t dummy(duk_context* ctx);
 
 #endif // SECCALLERS_HPP_INCLUDED
