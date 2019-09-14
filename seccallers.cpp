@@ -768,11 +768,6 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
         else
         {
             duk_eval_string(temporary_ctx, "require(\"@babel/polyfill\");");
-
-            duk_push_global_object(temporary_ctx);
-            duk_push_c_function(ctx, dummy, 1);
-            duk_put_prop_string(temporary_ctx, -2, "require");
-            duk_pop(temporary_ctx);
         }
 
         int moved = 3;
