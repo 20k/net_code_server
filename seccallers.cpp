@@ -754,7 +754,9 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
         {
             std::string error_prop = duk_safe_to_std_string(ctx, -1);
 
-            throw std::runtime_error("Failed to execute require blocks " + error_prop);
+            std::cout << "Failed to execute require block " << error_prop << std::endl;
+
+            throw std::runtime_error("Failed to execute require block " + error_prop);
         }
 
         duk_replace(temporary_ctx, -2 - nargs);
@@ -769,8 +771,6 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
         ///now we have [thread] on stack 1, and [object, args] on stack 2
         ///stack 2 now has [val]
         duk_int_t ret_val = duk_pcall(new_ctx, nargs);
-
-        //std::cout << "ISFUNC? " << duk_is_function(new_ctx, -1) << std::endl;
 
         #ifndef USE_PROXY
         duk_xmove_top(ctx, new_ctx, 1);
