@@ -743,8 +743,6 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
         int nargs = 2;
 
-        int top = duk_get_top(temporary_ctx);
-
         if(!is_cli)
         {
             ///script execution is in two phases
