@@ -1,0 +1,42 @@
+ duktape.cpp | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/duktape.cpp b/duktape.cpp
+index 2ab8708..9d9becc 100644
+--- a/duktape.cpp
++++ b/duktape.cpp
+@@ -14021,8 +14021,8 @@ static duk_uint8_t *duk__load_func(duk_hthread *thr, duk_uint8_t *p, duk_uint8_t
+ 		 */
+ 		duk_push_object(thr);
+ 		DUK_ASSERT(!duk_is_bare_object(thr, -1));
+-		duk_dup_m2(thr);
+-		duk_xdef_prop_stridx_short(thr, -2, DUK_STRIDX_CONSTRUCTOR, DUK_PROPDESC_FLAGS_WC);  /* func.prototype.constructor = func */
++		//duk_dup_m2(thr);
++		//duk_xdef_prop_stridx_short(thr, -2, DUK_STRIDX_CONSTRUCTOR, DUK_PROPDESC_FLAGS_WC);  /* func.prototype.constructor = func */
+ 		duk_compact_m1(thr);
+ 		duk_xdef_prop_stridx_short(thr, -2, DUK_STRIDX_PROTOTYPE, DUK_PROPDESC_FLAGS_W);
+ 	}
+@@ -61620,8 +61620,8 @@ DUK_INTERNAL void duk_hthread_create_builtin_objects(duk_hthread *thr) {
+ 			 */
+ 			t--;
+ 			DUK_DDD(DUK_DDDPRINT("set external constructor: built-in %ld", (long) t));
+-			duk_dup(thr, (duk_idx_t) t);
+-			duk_xdef_prop_stridx(thr, (duk_idx_t) i, DUK_STRIDX_CONSTRUCTOR, DUK_PROPDESC_FLAGS_WC);
++			//duk_dup(thr, (duk_idx_t) t);
++			//duk_xdef_prop_stridx(thr, (duk_idx_t) i, DUK_STRIDX_CONSTRUCTOR, DUK_PROPDESC_FLAGS_WC);
+ 		}
+ 
+ 		/* normal valued properties */
+@@ -80893,9 +80893,9 @@ void duk_js_push_closure(duk_hthread *thr,
+ 
+ 	if (add_auto_proto) {
+ 		duk_push_object(thr);  /* -> [ ... closure template newobj ] */
+-		duk_dup_m3(thr);       /* -> [ ... closure template newobj closure ] */
+-		duk_xdef_prop_stridx_short(thr, -2, DUK_STRIDX_CONSTRUCTOR, DUK_PROPDESC_FLAGS_WC);  /* -> [ ... closure template newobj ] */
+-		duk_compact(thr, -1);  /* compact the prototype */
++		//duk_dup_m3(thr);       /* -> [ ... closure template newobj closure ] */
++		//duk_xdef_prop_stridx_short(thr, -2, DUK_STRIDX_CONSTRUCTOR, DUK_PROPDESC_FLAGS_WC);  /* -> [ ... closure template newobj ] */
++		//duk_compact(thr, -1);  /* compact the prototype */
+ 		duk_xdef_prop_stridx_short(thr, -3, DUK_STRIDX_PROTOTYPE, DUK_PROPDESC_FLAGS_W);     /* -> [ ... closure template ] */
+ 	}
+ 
