@@ -775,6 +775,12 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
             duk_pop(temporary_ctx);
         }
 
+        duk_push_global_object(temporary_ctx);
+        duk_get_prop_string(temporary_ctx, -1, "Object");
+        duk_del_prop_string(temporary_ctx, -1, "getPrototypeOf");
+        duk_pop(temporary_ctx);
+        duk_pop(temporary_ctx);
+
         int moved = 3;
 
         duk_xmove_top(new_ctx, temporary_ctx, moved);
