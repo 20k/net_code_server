@@ -619,6 +619,18 @@ bool compile_and_push(duk_context* ctx, const std::string& data)
     return duk_pcompile(ctx, DUK_COMPILE_EVAL) == 0;
 }
 
+duk_int_t dukx_pcall_copy(duk_context* ctx, duk_idx_t nargs)
+{
+    duk_dup(ctx, -1 - nargs);
+
+    for(int i=0; i < nargs; i++)
+    {
+        duk_dup(ctx, -1 - nargs);
+    }
+
+    return duk_pcall(ctx, nargs);
+}
+
 std::string compile_and_call(duk_context* ctx, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script, bool polyfill)
 {
     if(data.size() == 0)
@@ -647,6 +659,8 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
     duk_set_global_object(new_ctx);
 
     std::string wrapper = data;
+
+    //std::cout << "COMPILING " << wrapper << std::endl;
 
     //exec_stack stk(ectx, new_ctx);
 
@@ -729,6 +743,22 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
         duk_put_prop_string(new_ctx, -2, DUK_HIDDEN_SYMBOL("module:Duktape"));
         duk_pop(new_ctx);
 
+        int nargs = 2;
+
+        int top = duk_get_top(temporary_ctx);
+
+        duk_int_t ret_requires = dukx_pcall_copy(temporary_ctx, nargs);
+
+        ///don't bother trying to clean up
+        if(ret_requires != DUK_EXEC_SUCCESS)
+        {
+            std::string error_prop = duk_safe_to_std_string(ctx, -1);
+
+            throw std::runtime_error("Failed to execute require blocks " + error_prop);
+        }
+
+        duk_replace(temporary_ctx, -2 - nargs);
+
         int moved = 3;
 
         duk_xmove_top(new_ctx, temporary_ctx, moved);
@@ -736,11 +766,11 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
         ///now we have [object, args] on the stack 2
 
-        int nargs = 2;
-
         ///now we have [thread] on stack 1, and [object, args] on stack 2
         ///stack 2 now has [val]
         duk_int_t ret_val = duk_pcall(new_ctx, nargs);
+
+        //std::cout << "ISFUNC? " << duk_is_function(new_ctx, -1) << std::endl;
 
         #ifndef USE_PROXY
         duk_xmove_top(ctx, new_ctx, 1);
@@ -1032,7 +1062,7 @@ std::string js_unified_force_call_data(exec_context& ectx, const std::string& da
     if(!unified_invoke.valid || unified_invoke.type == unified_script_info::script_type::BUNDLE)
     {
         script_info dummy;
-        dummy.load_from_unparsed_source(ctx, data, host + ".invoke", false, true);
+        dummy.load_from_unparsed_source(ctx, attach_cli_wrapper(data), host + ".invoke", false, true);
         polyfill = true;
 
         unified_invoke.make_from(dummy);

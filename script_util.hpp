@@ -50,7 +50,7 @@ struct script_info
 };
 
 bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out);
-//std::string attach_cli_wrapper(const std::string& data_in);
+std::string attach_cli_wrapper(const std::string& data_in);
 std::string attach_unparsed_wrapper(std::string str);
 
 struct script_data

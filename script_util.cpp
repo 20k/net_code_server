@@ -26,14 +26,16 @@
     return "require(\"@babel/polyfill\");\n" + data_in;
 }*/
 
-std::string function_wrap(const std::string& str)
+std::string attach_cli_wrapper(const std::string& str)
 {
-    return "(function(){" + str + "})()";
+    std::string req = "require(\"@babel/polyfill\");\n";
+
+    return req + "(function mainfunc(context, args){return (" + str + ")})";
 }
 
 std::string attach_unparsed_wrapper(std::string str)
 {
-    return "(" + str + ")(context, args)";
+    return "(function mainfunc(context, args){return (" + str + ")(context, args)})";
 }
 
 bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out)
