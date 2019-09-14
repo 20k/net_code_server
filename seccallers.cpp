@@ -780,14 +780,9 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
         duk_xmove_top(new_ctx, temporary_ctx, moved);
         duk_remove(new_ctx, -1 - moved); ///removes temporary ctx
 
-        ///now we have [object, args] on the stack 2
-
         ///now we have [thread] on stack 1, and [object, args] on stack 2
-        ///stack 2 now has [val]
-        duk_int_t ret_val = DUK_EXEC_ERROR;
-
-        ret_val = duk_pcall(new_ctx, nargs);
-
+        ///stack 2 has [val] afterwards
+        duk_int_t ret_val = duk_pcall(new_ctx, nargs);
 
         #ifndef USE_PROXY
         duk_xmove_top(ctx, new_ctx, 1);
