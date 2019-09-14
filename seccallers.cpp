@@ -619,7 +619,7 @@ bool compile_and_push(duk_context* ctx, const std::string& data)
     return duk_pcompile(ctx, DUK_COMPILE_EVAL) == 0;
 }
 
-std::string compile_and_call(duk_context* ctx, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script)
+std::string compile_and_call(duk_context* ctx, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script, bool polyfill)
 {
     if(data.size() == 0)
     {
@@ -627,6 +627,8 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
         return "Script not found";
     }
+
+    std::cout << "data " << data << std::endl;
 
     std::string script_host = get_script_host(ctx);
     std::string base_caller = get_base_caller(ctx);
@@ -637,8 +639,12 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
     //duk_context* new_ctx = (duk_context*)ectx.get_new_context_for(get_script_host(ctx), seclevel);
 
     duk_idx_t thr_idx = duk_push_thread_new_globalenv(ctx);
+    //duk_idx_t thr_idx = duk_push_thread(ctx);
     duk_context* new_ctx = duk_get_context(ctx, thr_idx);
     //register_funcs(new_ctx, seclevel, get_script_host(ctx), true);
+
+    duk_push_object(new_ctx);
+    duk_set_global_object(new_ctx);
 
     std::string wrapper = data;
 
@@ -979,7 +985,7 @@ duk_ret_t js_call(duk_context* ctx, int sl)
                 throw std::runtime_error("Ectx is nullptr in js_call");
             }*/
 
-            compile_and_call(ctx, load, get_caller(ctx), false, script.seclevel, false, full_script);
+            compile_and_call(ctx, load, get_caller(ctx), false, script.seclevel, false, full_script, false);
         }
 
         set_script_info(ctx, full_script);
@@ -1021,10 +1027,13 @@ std::string js_unified_force_call_data(exec_context& ectx, const std::string& da
 
     bool first_invoke_valid = unified_invoke.valid;
 
+    bool polyfill = false;
+
     if(!unified_invoke.valid || unified_invoke.type == unified_script_info::script_type::BUNDLE)
     {
         script_info dummy;
-        dummy.load_from_unparsed_source(ctx, attach_cli_wrapper(data), host + ".invoke", false, true);
+        dummy.load_from_unparsed_source(ctx, data, host + ".invoke", false, true);
+        polyfill = true;
 
         unified_invoke.make_from(dummy);
     }
@@ -1048,7 +1057,7 @@ std::string js_unified_force_call_data(exec_context& ectx, const std::string& da
         duk_put_prop_string(ctx, -2, "command");
     }
 
-    std::string extra = compile_and_call(ctx, unified_invoke.parsed_source, get_caller(ctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke");
+    std::string extra = compile_and_call(ctx, unified_invoke.parsed_source, get_caller(ctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke", polyfill);
 
     if(!duk_is_object_coercible(ctx, -1))
     {

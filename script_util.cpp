@@ -21,19 +21,14 @@
 
 ///then, when we want to load, we look from the db
 
-std::string attach_cli_wrapper(const std::string& data_in)
+/*std::string attach_cli_wrapper(const std::string& data_in)
 {
     return "require(\"@babel/polyfill\");\n" + data_in;
-}
+}*/
 
 std::string function_wrap(const std::string& str)
 {
     return "(function(){" + str + "})()";
-}
-
-std::string arg_function_wrap(const std::string& str)
-{
-    return "(function(context, args){" + str + "})(context, args)";
 }
 
 std::string attach_unparsed_wrapper(std::string str)
@@ -43,13 +38,7 @@ std::string attach_unparsed_wrapper(std::string str)
 
 bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out)
 {
-    //std::string prologue = "function INTERNAL_TEST(context, args)\n{\nvar IVAR = ";
-    //std::string endlogue = "\n\nreturn IVAR(context, args);\n\n}\n";
-
-    std::string prologue = "";
-    std::string endlogue = "";
-
-    std::string wrapper = prologue + function_wrap(script.parsed_source) + endlogue;
+    std::string wrapper = script.parsed_source;
 
     duk_push_string(ctx, wrapper.c_str());
     duk_push_string(ctx, "test-name");
@@ -83,32 +72,6 @@ bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out
 
         return true;
     }
-}
-
-std::string attach_wrapper(const std::string& data_in, bool stringify, bool direct)
-{
-    std::string prologue = "function INTERNAL_TEST()\n{\nvar IVAR = ";
-    std::string endlogue = "\n\nreturn IVAR(context, args);\n\n}\n";
-
-    if(stringify)
-    {
-        endlogue = "\n\nreturn JSON.stringify(IVAR(context, args));\n\n}\n";
-    }
-
-    if(direct && stringify)
-    {
-        endlogue = "\n\nreturn JSON.stringify(IVAR);\n\n}\n";
-    }
-
-    if(direct && !stringify)
-    {
-        endlogue = "\n\n return IVAR }";
-    }
-
-    if(!direct)
-        return prologue + function_wrap(data_in) + endlogue;
-    else
-        return prologue + data_in + endlogue;
 }
 
 bool string_is_in(const std::string& str, const std::vector<std::string>& in)
