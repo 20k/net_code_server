@@ -747,6 +747,10 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
         int top = duk_get_top(temporary_ctx);
 
+        ///script execution is in two phases
+        ///the first phase executes all the requires and returns a function object which is user code
+        ///the second phase executes user code
+        ///the reason for this is that phase 1 needs to execute in the real global, and phase 2 in the bad global
         duk_int_t ret_requires = dukx_pcall_copy(temporary_ctx, nargs);
 
         ///don't bother trying to clean up
