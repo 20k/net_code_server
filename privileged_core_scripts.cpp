@@ -1808,7 +1808,7 @@ std::string format_item(item& i, bool is_short, user& usr, user_nodes& nodes)
     {
         std::string str = i.get_prop("short_name");
 
-        if(nodes.any_contains_lock(i.get_prop("item_id")))
+        if(nodes.any_contains_lock(i.item_id))
         {
             str += " [on_node]";
         }
@@ -1847,10 +1847,10 @@ std::string format_item(item& i, bool is_short, user& usr, user_nodes& nodes)
         ret += "    " + it.key() + ": " + str + ",\n";
     }
 
-    if(usr.has_loaded_item(i.get_prop("item_id")))
+    if(usr.has_loaded_item(i.item_id))
         ret += "    loaded: true\n";
 
-    if(nodes.any_contains_lock(i.get_prop("item_id")))
+    if(nodes.any_contains_lock(i.item_id))
         ret += "    on_node: true";
 
     return ret + "}";
@@ -1861,10 +1861,10 @@ nlohmann::json get_item_raw(item& i, bool is_short, user& usr, user_nodes& nodes
 {
     nlohmann::json obj;
 
-    if(usr.has_loaded_item(i.get_prop("item_id")))
+    if(usr.has_loaded_item(i.item_id))
         obj["loaded"] = true;
 
-    if(nodes.any_contains_lock(i.get_prop("item_id")))
+    if(nodes.any_contains_lock(i.item_id))
         obj["on_node"] = true;
 
     if(is_short)
@@ -2071,12 +2071,14 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
 
         for(std::string& item_id : to_ret)
         {
+            std::cout << "my id " << item_id << std::endl;
+
             item next;
             db_disk_load(mongo_ctx, next, item_id);
 
             if(!full)
             {
-                if(found_user.has_loaded_item(next.get_prop("item_id")))
+                if(found_user.has_loaded_item(next.item_id))
                     formatted += "`D" + std::to_string(idx) + "`: ";
                 else if(nodes.any_contains_lock(item_id))
                     formatted += "`L" + std::to_string(idx) + "`: ";
@@ -3745,7 +3747,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
         for(item& it : all_items)
         {
-            if((int)it.get("item_type") == item_types::ON_BREACH && usr.has_loaded_item(it.get_prop("item_id")))
+            if((int)it.get("item_type") == item_types::ON_BREACH && usr.has_loaded_item(it.item_id))
             {
                 std::string script_name = it.get_prop("script_name");
 

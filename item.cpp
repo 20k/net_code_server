@@ -65,7 +65,7 @@ bool item::transfer_to_user(const std::string& username, int thread_id)
         if(temp.num_items() >= max_items)
             return false;
 
-        std::string my_id = get_prop("item_id");
+        std::string my_id = item_id;
 
         temp.append_item(my_id);
 

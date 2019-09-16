@@ -113,6 +113,8 @@ struct item : serialisable, free_function
         int32_t id = get_new_id(global_props_context);
 
         item_id = std::to_string(id);
+
+        set_as("item_id", item_id);
     }
 
     int32_t get_new_id(mongo_lock_proxy& global_props_context);

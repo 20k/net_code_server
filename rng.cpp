@@ -1,4 +1,5 @@
 #include "rng.hpp"
+#include <assert.h>
 
 #ifdef __WIN32__
 
@@ -53,9 +54,11 @@ std::string random_binary_string(int len)
     std::string ret;
     ret.resize(len);
 
-    fread(&ret[0], len * sizeof(char), 1, fp);
+    int rval = fread(&ret[0], 1, len * sizeof(char), fp);
 
     fclose(fp);
+
+    assert(rval == len);
 
     return ret;
 }

@@ -244,12 +244,15 @@ void db_overwrite_impl<item, std::string>(item& val, mongo_lock_proxy& ctx, cons
 {
     nlohmann::json as_ser = serialise(val, serialise_mode::DISK);
 
-    nlohmann::json hacky_data = as_ser["data"];
+    nlohmann::json hacky_data = val.data;
+    hacky_data["item_id"] = val.item_id;
 
     for(auto& i : hacky_data.items())
     {
         as_ser[i.key()] = i.value();
     }
+
+    as_ser["item_id"] = val.item_id;
 
     if(!db_exists_impl(ctx, key_name, item_id))
     {
