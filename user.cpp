@@ -942,7 +942,7 @@ void event_pumper()
                         sthread::this_sleep(1);
                      });
 
-        sthread::this_sleep(1);
+        sthread::this_sleep(10);
     }
 }
 
