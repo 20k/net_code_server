@@ -2071,8 +2071,6 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
 
         for(std::string& item_id : to_ret)
         {
-            std::cout << "my id " << item_id << std::endl;
-
             item next;
             db_disk_load(mongo_ctx, next, item_id);
 
