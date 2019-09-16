@@ -114,7 +114,7 @@ void bot_thread()
 
         auto check_autorun = [&](user& found_user)
         {
-            sthread::this_sleep(1);
+            sthread::this_sleep(5);
 
             {
                 std::string err;

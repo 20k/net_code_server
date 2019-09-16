@@ -182,7 +182,7 @@ void for_each_user(const T& t)
             user usr;
 
             {
-                mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
+                mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
 
                 if(!usr.load_from_db(ctx, usrname))
                     continue;
