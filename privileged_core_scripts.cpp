@@ -2494,7 +2494,7 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
     user to_user;
 
     {
-        mongo_nolock_proxy mongo_context = get_global_mongo_user_info_context(-2);
+        mongo_lock_proxy mongo_context = get_global_mongo_user_info_context(-2);
 
         if(!from_user.load_from_db(mongo_context, from))
             return push_error(ctx, "No user from");
@@ -2557,7 +2557,7 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
     }
 
     {
-        mongo_nolock_proxy mongo_context = get_global_mongo_user_info_context(-2);
+        mongo_lock_proxy mongo_context = get_global_mongo_user_info_context(-2);
 
         from_user.overwrite_user_in_db(mongo_context);
         to_user.overwrite_user_in_db(mongo_context);
@@ -6602,7 +6602,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                         my_user.set_local_pos(my_user.get_local_pos());
 
                         {
-                            mongo_lock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+                            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
 
                             my_user.overwrite_user_in_db(mongo_ctx);
                         }
