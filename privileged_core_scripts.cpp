@@ -6831,9 +6831,18 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
     sys_current_opt = low_level_structure_manage.get_system_of(get_caller(ctx));
 
     if(sys_name != "")
+    {
         sys_opt = low_level_structure_manage.get_system_from_name(sys_name);
+    }
     else if(user_name != "")
+    {
+        playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+        if(!playspace_network_manage.has_accessible_path_to(ctx, user_name, get_caller(ctx), (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
+            return push_error(ctx, "No path");
+
         sys_opt = low_level_structure_manage.get_system_of(user_name);
+    }
     else
         sys_opt = sys_current_opt;
 
