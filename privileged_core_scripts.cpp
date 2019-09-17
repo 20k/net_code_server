@@ -2472,9 +2472,9 @@ duk_ret_t item__unload(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
-duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, const std::string& from, const std::string& to, bool is_pvp)
+duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, user& from_user, user& to_user, bool is_pvp)
 {
-    if(from == to)
+    if(from_user.name == to_user.name)
         return push_success(ctx, "Item definitely transferred to a different user");
 
     float items_to_destroy_link = 100;
@@ -2482,26 +2482,13 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
     #ifdef XFER_PATHS
-    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, to, from, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, 1.f / items_to_destroy_link);
+    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, to_user.name, from_user.name, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, 1.f / items_to_destroy_link);
 
     if(path.size() == 0)
         return push_error(ctx, "No path to user through the network");
     #endif // XFER_PATHS
 
     std::string found_item_description;
-
-    user from_user;
-    user to_user;
-
-    {
-        mongo_lock_proxy mongo_context = get_global_mongo_user_info_context(-2);
-
-        if(!from_user.load_from_db(mongo_context, from))
-            return push_error(ctx, "No user from");
-
-        if(!to_user.load_from_db(mongo_context, to))
-            return push_error(ctx, "No user to");
-    }
 
     {
         item it;
@@ -2558,14 +2545,10 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
 
     #endif // SECLEVEL_FUNCTIONS
 
-    bool any_wrote = false;
-
     item placeholder;
 
-    if(placeholder.transfer_from_to_by_index(from_user.item_to_index(item_id), from, to, get_thread_id(ctx)))
+    if(placeholder.transfer_from_to_by_index(from_user.item_to_index(item_id), from_user, to_user, get_thread_id(ctx)))
     {
-        any_wrote = true;
-
         user_log next;
         next.add("type", "item_xfer", "N");
 
@@ -2575,47 +2558,28 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
 
         //std::string xfer = "`NItem xfer` | from: " + from  + ", to: " + to + ", name: " + found_item_description;
 
-        next.add("from", from, string_to_colour(from));
-        next.add("to", to, string_to_colour(to));
+        next.add("from", from_user.name, string_to_colour(from_user.name));
+        next.add("to", to_user.name, string_to_colour(to_user.name));
         next.add("name", found_item_description, "");
 
-        make_logs_on(ctx, from, user_node_info::ITEM_SEG, {next});
-        make_logs_on(ctx, to, user_node_info::ITEM_SEG, {next});
+        make_logs_on(ctx, from_user.name, user_node_info::ITEM_SEG, {next});
+        make_logs_on(ctx, to_user.name, user_node_info::ITEM_SEG, {next});
 
         //duk_push_int(ctx, placeholder.get_prop_as_integer("item_id"));
 
-        create_xfer_item_notif(ctx, from, to, placeholder.get_prop("short_name"));
+        create_xfer_item_notif(ctx, from_user.name, to_user.name, placeholder.get_prop("short_name"));
 
         push_success(ctx);
     }
     else
         push_error(ctx, "Could not xfer");
 
-    #ifdef SECLEVEL_FUNCTIONS
-    if(!any_wrote)
-    {
-        mongo_lock_proxy mongo_context = get_global_mongo_user_info_context(-2);
-
-        from_user.overwrite_user_in_db(mongo_context);
-        to_user.overwrite_user_in_db(mongo_context);
-    }
-    #endif // SECLEVEL_FUNCTIONS
-
     return 1;
 }
 
-duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::string& from, const std::string& to, bool is_pvp)
+duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, user& from, user& to, bool is_pvp)
 {
-    user usr;
-
-    {
-        mongo_nolock_proxy mongo_context = get_global_mongo_user_info_context(-2);
-
-        if(!usr.load_from_db(mongo_context, from))
-            return push_error(ctx, "No user from");
-    }
-
-    return push_xfer_item_id_with_logs(ctx, usr.index_to_item(item_idx), from, to, is_pvp);
+    return push_xfer_item_id_with_logs(ctx, from.index_to_item(item_idx), from, to, is_pvp);
 }
 
 duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
@@ -2635,6 +2599,14 @@ duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!user_and_nodes.has_value())
         return push_error(ctx, "No such user/really catastrophic error");
 
+    std::optional user_and_nodes_to = get_user_and_nodes(to, get_thread_id(ctx));
+
+    if(!user_and_nodes_to)
+        return push_error(ctx, "Destination user does not exist");
+
+    user& usr_from = user_and_nodes->first;
+    user& usr_to = user_and_nodes_to->first;
+
     int offset = 0;
 
     if(is_arr)
@@ -2649,12 +2621,19 @@ duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(ret != "")
             push_error(ctx, ret + " for index " + std::to_string(item_idx));
         else
-            push_xfer_item_with_logs(ctx, item_idx, from, to, false);
+            push_xfer_item_with_logs(ctx, item_idx, usr_from, usr_to, false);
 
         if(is_arr)
             duk_put_prop_index(ctx, -2, offset);
 
         offset++;
+    }
+
+    {
+        mongo_lock_proxy mctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        usr_from.overwrite_user_in_db(mctx);
+        usr_to.overwrite_user_in_db(mctx);
     }
 
     return 1;
@@ -3260,6 +3239,11 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     int idx = 0;
 
+    mongo_lock_proxy steal_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+    user to_user;
+    to_user.load_from_db(steal_ctx, get_caller(ctx));
+
     for(auto& item_id : item_ids)
     {
         std::string accum;
@@ -3268,16 +3252,16 @@ duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(ret != "")
             push_error(ctx, ret);
         else
-            push_xfer_item_id_with_logs(ctx, item_id, from, get_caller(ctx), true);
+            push_xfer_item_id_with_logs(ctx, item_id, found_user, to_user, true);
 
         if(is_arr)
             duk_put_prop_index(ctx, -2, idx);
 
         idx++;
-
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
-        found_user.load_from_db(mongo_ctx, from);
     }
+
+    to_user.overwrite_user_in_db(steal_ctx);
+    found_user.overwrite_user_in_db(steal_ctx);
 
     return 1;
 }

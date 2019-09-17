@@ -11,6 +11,12 @@
 #include <networking/serialisable.hpp>
 #include "serialisables.hpp"
 
+template<typename T, typename U>
+void erase_remove(T& v, const U& val)
+{
+    v.erase(std::remove(v.begin(), v.end(), val), v.end());
+}
+
 ///could probably use this to implement the hour long window eh
 double user_limit::calculate_current_data(size_t time_ms)
 {
@@ -201,16 +207,7 @@ void user::unload_item(const std::string& id)
     if(!has_loaded_item(id))
         return;
 
-    std::vector<std::string> items = loaded_upgr_idx;
-
-    auto it = std::find(items.begin(), items.end(), id);
-
-    if(it == items.end())
-        return;
-
-    items.erase(it);
-
-    loaded_upgr_idx = items;
+    erase_remove(loaded_upgr_idx, id);
 }
 
 std::vector<std::string> user::all_loaded_items()
@@ -302,6 +299,9 @@ void user::append_item(const std::string& id)
     if(id == "")
         throw std::runtime_error("Tried to add bad item id");
 
+    if(has_item(id))
+        throw std::runtime_error("Already has item");
+
     upgr_idx.push_back(id);
 }
 
@@ -322,16 +322,7 @@ void user::remove_item(const std::string& id)
 {
     unload_item(id);
 
-    std::vector<std::string> items = upgr_idx;
-
-    auto it = std::find(items.begin(), items.end(), id);
-
-    if(it == items.end())
-        return;
-
-    items.erase(it);
-
-    upgr_idx = items;
+    erase_remove(upgr_idx, id);
 }
 
 void user::clear_items(int thread_id)

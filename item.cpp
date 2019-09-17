@@ -82,22 +82,13 @@ bool item::transfer_to_user(const std::string& username, int thread_id)
     return true;
 }
 
-bool item::transfer_from_to_by_index(int index, const std::string& from, const std::string& to, int thread_id)
+bool item::transfer_from_to_by_index(int index, user& u1, user& u2, int thread_id)
 {
-    if(from == to)
+    if(u1.name == u2.name)
         return true;
 
-    user u1, u2;
-
-    {
-        mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
-
-        if(!u1.load_from_db(user_ctx, from))
-            return false;
-
-        if(!u2.load_from_db(user_ctx, to))
-            return false;
-    }
+    ///u1 is from
+    ///u2 is to
 
     std::string item_id = u1.index_to_item(index);
 
@@ -107,15 +98,47 @@ bool item::transfer_from_to_by_index(int index, const std::string& from, const s
     if(u2.num_items() >= u2.get_total_user_properties(thread_id)["max_items"])
         return false;
 
+    std::cout << "ITEM ID " << item_id << " WITH INDEX " << index << std::endl;
+
+    std::cout << "FROM " << u1.name << std::endl;
+
+    for(auto& i : u1.upgr_idx)
+    {
+        std::cout << i << std::endl;
+    }
+
+    std::cout << "TO " << u2.name << std::endl;
+
+    for(auto& i : u2.upgr_idx)
+    {
+        std::cout << i << std::endl;
+    }
+
     u1.remove_item(item_id);
     u2.append_item(item_id);
+
+    std::cout << "FROM AFTER " << u1.name << std::endl;
+
+    for(auto& i : u1.upgr_idx)
+    {
+        std::cout << i << std::endl;
+    }
+
+    std::cout << "TO " << u2.name << std::endl;
+
+    for(auto& i : u2.upgr_idx)
+    {
+        std::cout << i << std::endl;
+    }
+
+    std::cout << "DONE\n";
 
     {
         mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
 
         db_disk_load(item_ctx, *this, item_id);
 
-        set_as("owner", to);
+        set_as("owner", u2.name);
         set_as("item_id", item_id);
 
         ///unregister script bundle
@@ -125,11 +148,11 @@ bool item::transfer_from_to_by_index(int index, const std::string& from, const s
         db_disk_overwrite(item_ctx, *this);
     }
 
-    {
+    /*{
         mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
         u1.overwrite_user_in_db(user_ctx);
         u2.overwrite_user_in_db(user_ctx);
-    }
+    }*/
 
     return true;
 }

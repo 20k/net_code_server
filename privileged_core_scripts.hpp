@@ -142,7 +142,7 @@ duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t item__unload(priv_context& priv_ctx, duk_context* ctx, int sl);
 
-duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, const std::string& from, const std::string& to, bool is_pvp);
+duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, user& from, user& to, bool is_pvp);
 
 duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl);
 

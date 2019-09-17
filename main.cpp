@@ -299,6 +299,49 @@ void cleanup_notifs()
     }).detach();
 }
 
+template<typename T>
+void dedup_container(T& in)
+{
+    std::sort(in.begin(), in.end());
+    auto last = std::unique(in.begin(), in.end());
+    in.erase(last, in.end());
+}
+
+template<typename T, typename U>
+auto find_by_val(const T& c, const U& val)
+{
+    return std::find(c.begin(), c.end(), val);
+}
+
+void undupe_items()
+{
+    for_each_user([](user& u1)
+    {
+        /*for_each_user([&u1](user& u2)
+        {
+            if(u1.name == u2.name)
+                return;
+
+            dedup_container(u2.loaded_upgr_idx);
+            dedup_container(u2.upgr_idx);
+
+            for(auto& i : u1.upgr_idx)
+            {
+                u2.remove_item(i);
+            }
+
+            mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
+            u2.overwrite_user_in_db(ctx);
+        });*/
+
+        u1.upgr_idx = {};
+        u1.loaded_upgr_idx = {};
+
+        mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
+        u1.overwrite_user_in_db(ctx);
+    });
+}
+
 ///making sure this ends up in the right repo
 int main()
 {
@@ -366,6 +409,8 @@ int main()
     //#ifdef TESTING
     init_db_storage_backend();
     //#endif // TESTING
+
+    //undupe_items();
 
     sthread([]()
            {
