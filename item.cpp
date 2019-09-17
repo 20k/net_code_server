@@ -98,7 +98,7 @@ bool item::transfer_from_to_by_index(int index, user& u1, user& u2, int thread_i
     if(u2.num_items() >= u2.get_total_user_properties(thread_id)["max_items"])
         return false;
 
-    std::cout << "ITEM ID " << item_id << " WITH INDEX " << index << std::endl;
+    /*std::cout << "ITEM ID " << item_id << " WITH INDEX " << index << std::endl;
 
     std::cout << "FROM " << u1.name << std::endl;
 
@@ -112,12 +112,12 @@ bool item::transfer_from_to_by_index(int index, user& u1, user& u2, int thread_i
     for(auto& i : u2.upgr_idx)
     {
         std::cout << i << std::endl;
-    }
+    }*/
 
     u1.remove_item(item_id);
     u2.append_item(item_id);
 
-    std::cout << "FROM AFTER " << u1.name << std::endl;
+    /*std::cout << "FROM AFTER " << u1.name << std::endl;
 
     for(auto& i : u1.upgr_idx)
     {
@@ -131,7 +131,7 @@ bool item::transfer_from_to_by_index(int index, user& u1, user& u2, int thread_i
         std::cout << i << std::endl;
     }
 
-    std::cout << "DONE\n";
+    std::cout << "DONE\n";*/
 
     {
         mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
