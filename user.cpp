@@ -299,11 +299,10 @@ int user::item_to_index(const std::string& item)
 
 void user::append_item(const std::string& id)
 {
-    std::vector<std::string> items = upgr_idx;
+    if(id == "")
+        throw std::runtime_error("Tried to add bad item id");
 
-    items.push_back(id);
-
-    upgr_idx = items;
+    upgr_idx.push_back(id);
 }
 
 bool user::has_item(const std::string& id)

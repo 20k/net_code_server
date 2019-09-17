@@ -2556,18 +2556,16 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
         }
     }
 
-    {
-        mongo_lock_proxy mongo_context = get_global_mongo_user_info_context(-2);
-
-        from_user.overwrite_user_in_db(mongo_context);
-        to_user.overwrite_user_in_db(mongo_context);
-    }
     #endif // SECLEVEL_FUNCTIONS
+
+    bool any_wrote = false;
 
     item placeholder;
 
     if(placeholder.transfer_from_to_by_index(from_user.item_to_index(item_id), from, to, get_thread_id(ctx)))
     {
+        any_wrote = true;
+
         user_log next;
         next.add("type", "item_xfer", "N");
 
@@ -2592,6 +2590,16 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, con
     }
     else
         push_error(ctx, "Could not xfer");
+
+    #ifdef SECLEVEL_FUNCTIONS
+    if(!any_wrote)
+    {
+        mongo_lock_proxy mongo_context = get_global_mongo_user_info_context(-2);
+
+        from_user.overwrite_user_in_db(mongo_context);
+        to_user.overwrite_user_in_db(mongo_context);
+    }
+    #endif // SECLEVEL_FUNCTIONS
 
     return 1;
 }
