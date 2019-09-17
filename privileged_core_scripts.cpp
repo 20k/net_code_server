@@ -4662,6 +4662,7 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     usr.call_stack = call_stack;
 
+    ///local:true means only for script call
     if(!has_local)
     {
         mongo_lock_proxy user_db = get_global_mongo_user_info_context(get_thread_id(ctx));
