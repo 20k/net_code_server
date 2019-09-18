@@ -1308,7 +1308,7 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
                 #ifdef TESTING
                 #define MAX_USERS 999
                 #else // TESTING
-                #define MAX_USERS 8
+                #define MAX_USERS 5
                 #endif
 
                 if(to_check.users.size() >= MAX_USERS)
