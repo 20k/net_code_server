@@ -435,6 +435,17 @@ duk_ret_t set_realtime_framerate_limit(duk_context* ctx)
     return 0;
 }
 
+duk_ret_t set_is_square_font(duk_context* ctx)
+{
+    COOPERATE_KILL();
+
+    bool is_square = dukx_is_truthy(ctx, -1);
+
+    set_global_number(ctx, "square_font", is_square);
+
+    return 0;
+}
+
 duk_ret_t is_key_down(duk_context* ctx)
 {
     COOPERATE_KILL();
@@ -481,6 +492,7 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
     quick_register(ctx, "script_host", script_host.c_str());
     quick_register(ctx, "script_ending", script_ending.c_str());
     set_global_number(ctx, "framerate_limit", 60);
+    set_global_number(ctx, "square_font", 0);
 
     duk_push_int(ctx, 0);
     duk_put_prop_string(ctx, -2, "DB_ID");
@@ -1361,6 +1373,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     inject_c_function(ctx, mouse_get_position, "mouse_get_position", 0);
     inject_c_function(ctx, get_string_col, "get_string_col", 1);
     inject_c_function(ctx, set_realtime_framerate_limit, "set_realtime_framerate_limit", 1);
+    inject_c_function(ctx, set_is_square_font, "set_is_square_font", 1);
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);

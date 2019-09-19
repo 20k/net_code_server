@@ -38,6 +38,7 @@ duk_ret_t is_realtime_script(duk_context* ctx);
 duk_ret_t set_close_window_on_exit(duk_context* ctx);
 duk_ret_t set_start_window_size(duk_context* ctx);
 duk_ret_t set_realtime_framerate_limit(duk_context* ctx);
+duk_ret_t set_is_square_font(duk_context* ctx);
 duk_ret_t is_key_down(duk_context* ctx);
 duk_ret_t mouse_get_position(duk_context* ctx);
 

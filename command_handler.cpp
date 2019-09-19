@@ -282,7 +282,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                 sf::sleep(sf::milliseconds(1));
             }
 
-            if(callback())
+            if(callback(ctx))
                 break;
 
             sand_data->clk.restart();
@@ -529,7 +529,9 @@ std::string run_in_user_context(std::string username, std::string command, std::
                     sand_data->is_realtime = true;
                     sand_data->is_static = false;
 
-                    auto update_check = [&]()
+                    bool last_use_square_font = false;
+
+                    auto update_check = [&](duk_context* ctx)
                     {
                         while(shared_duk_state->has_output_data_available())
                         {
@@ -564,6 +566,19 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                         shared_duk_state->set_key_state(all_shared.value()->state.get_key_state(current_id));
                         shared_duk_state->set_mouse_pos(all_shared.value()->state.get_mouse_pos(current_id));
+
+                        bool is_square = get_global_number(ctx, "square_font") > 0;
+
+                        if(is_square != last_use_square_font)
+                        {
+                            nlohmann::json j;
+                            j["id"] = current_id;
+                            j["square_font"] = is_square;
+
+                            all_shared.value()->shared.add_back_write(j.dump());
+
+                            last_use_square_font = is_square;
+                        }
 
                         return false;
                     };
