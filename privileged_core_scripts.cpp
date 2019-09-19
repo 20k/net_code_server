@@ -2204,6 +2204,9 @@ duk_ret_t item__cull(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     int offset = 0;
 
+    if(is_arr)
+        duk_push_array(ctx);
+
     std::sort(indices.begin(), indices.end(), [](const auto& i1, const auto& i2){return i1 > i2;});
 
     for(int idx : indices)
