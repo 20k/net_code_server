@@ -2890,7 +2890,7 @@ duk_ret_t item__configure_on_breach(priv_context& priv_ctx, duk_context* ctx, in
     return 1;
 }
 
-#ifdef TESTING
+#if defined(TESTING) || defined(EXTRAS)
 duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();

@@ -151,8 +151,8 @@ duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t item__register_bundle(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t item__configure_on_breach(priv_context& priv_ctx, duk_context* ctx, int sl);
-#ifdef TESTING
 
+#if defined(TESTING) || defined(EXTRAS)
 duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl);
 #endif // TESTING
 
@@ -325,7 +325,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(msg__recent, 2),
     REGISTER_FUNCTION_PRIV(users__me, 0),
     REGISTER_FUNCTION_PRIV(users__accessible, 0),
-    #ifdef TESTING
+    #if defined(TESTING) || defined(EXTRAS)
     REGISTER_FUNCTION_PRIV(item__create, 0),
     #endif // TESTING
     REGISTER_FUNCTION_PRIV(item__steal, 1),
