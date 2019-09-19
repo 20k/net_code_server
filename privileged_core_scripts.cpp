@@ -2146,13 +2146,54 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
     }
 }
 
+std::pair<bool, std::vector<int>> check_get_index_property(duk_context* ctx)
+{
+    if(!duk_has_prop_string(ctx, -1, "idx") && !dukx_is_prop_truthy(ctx, -1, "idx"))
+        return {false, std::vector<int>()};
+
+    bool is_arr = false;
+
+    std::vector<int> ret;
+
+    duk_get_prop_string(ctx, -1, "idx");
+
+    if(duk_is_number(ctx, -1))
+    {
+        ret.push_back(duk_get_int(ctx, -1));
+
+        is_arr = false;
+    }
+
+    if(duk_is_array(ctx, -1))
+    {
+        duk_size_t n = duk_get_length(ctx, -1);
+
+        for(int i=0; i < (int)n && i < 1000; i++)
+        {
+            duk_get_prop_index(ctx, -1, i);
+
+            if(duk_is_number(ctx, -1))
+            {
+                ret.push_back(duk_get_number(ctx, -1));
+            }
+
+            duk_pop(ctx);
+        }
+
+        is_arr = true;
+    }
+
+    duk_pop(ctx);
+
+    return {is_arr, ret};
+}
 
 duk_ret_t item__cull(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
-    int idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
+    auto [is_arr, indices] = check_get_index_property(ctx);
 
-    if(idx < 0)
-        return push_error(ctx, "Idx out of range");
+    if(indices.size() == 0)
+        return push_error(ctx, "Index must be number or array of numbers, eg idx:0 or idx:[1, 2, 3]");
 
     auto opt_user_and_nodes = get_user_and_nodes(get_caller(ctx), get_thread_id(ctx));
 
@@ -2160,31 +2201,44 @@ duk_ret_t item__cull(priv_context& priv_ctx, duk_context* ctx, int sl)
         return push_error(ctx, "Catastrophic error Blue Walrus in item.cull");
 
     user& usr = opt_user_and_nodes->first;
-    std::string id = usr.index_to_item(idx);
 
-    if(id == "")
-        return push_error(ctx, "No such item");
+    int offset = 0;
 
-    std::string accum;
+    std::sort(indices.begin(), indices.end(), [](const auto& i1, const auto& i2){return i1 > i2;});
 
-    auto ret = load_item_raw(-1, -1, idx, opt_user_and_nodes->first, opt_user_and_nodes->second, accum, get_thread_id(ctx));
-
-    if(ret != "")
-        return push_error(ctx, ret);
-
-
+    for(int idx : indices)
     {
-        mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+        std::string id = usr.index_to_item(idx);
 
-        item found;
-        db_disk_load(items_ctx, found, id);
+        if(id == "")
+            return push_error(ctx, "No such item");
 
-        create_destroy_item_notif(ctx, get_caller(ctx), found.get_prop("short_name"));
+        std::string accum;
 
-        db_disk_remove(items_ctx, found);
+        auto ret = load_item_raw(-1, -1, idx, opt_user_and_nodes->first, opt_user_and_nodes->second, accum, get_thread_id(ctx));
+
+        if(ret != "")
+            push_error(ctx, ret);
+        else
+            push_success(ctx, ret);
+
+        if(is_arr)
+            duk_put_prop_index(ctx, -2, offset);
+
+        {
+            mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+
+            item found;
+            db_disk_load(items_ctx, found, id);
+
+            create_destroy_item_notif(ctx, get_caller(ctx), found.get_prop("short_name"));
+
+            db_disk_remove(items_ctx, found);
+        }
+
+        usr.remove_item(id);
+        offset++;
     }
-
-    usr.remove_item(id);
 
     {
         mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
@@ -2192,7 +2246,7 @@ duk_ret_t item__cull(priv_context& priv_ctx, duk_context* ctx, int sl)
         usr.overwrite_user_in_db(user_ctx);
     }
 
-    return push_success(ctx, "Success");
+    return 1;
 }
 
 
@@ -2283,50 +2337,6 @@ duk_ret_t item__list(priv_context& priv_ctx, duk_context* ctx, int sl)
     push_internal_items_view(ctx, !is_arr, full, user_and_node_opt->second, user_and_node_opt->first, "", false);
 
     return 1;
-}
-
-std::pair<bool, std::vector<int>> check_get_index_property(duk_context* ctx)
-{
-    if(!duk_has_prop_string(ctx, -1, "idx") && !dukx_is_prop_truthy(ctx, -1, "idx"))
-        return {false, std::vector<int>()};
-
-    bool is_arr = false;
-
-    std::vector<int> ret;
-
-    duk_get_prop_string(ctx, -1, "idx");
-
-    if(duk_is_number(ctx, -1))
-    {
-        ret.push_back(duk_get_int(ctx, -1));
-
-        is_arr = false;
-    }
-
-    if(duk_is_array(ctx, -1))
-    {
-        duk_size_t n = duk_get_length(ctx, -1);
-
-        for(int i=0; i < (int)n && i < 1000; i++)
-        {
-            duk_get_prop_index(ctx, -1, i);
-
-            if(duk_is_number(ctx, -1))
-            {
-                ret.push_back(duk_get_number(ctx, -1));
-            }
-
-            duk_pop(ctx);
-        }
-
-        is_arr = true;
-    }
-
-    duk_pop(ctx);
-
-    //std::sort(ret.begin(), ret.end());
-
-    return {is_arr, ret};
 }
 
 duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl)
@@ -2611,6 +2621,8 @@ duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(is_arr)
         duk_push_array(ctx);
+
+    std::sort(indices.begin(), indices.end(), [](const auto& i1, const auto& i2){return i1 > i2;});
 
     for(auto& item_idx : indices)
     {
