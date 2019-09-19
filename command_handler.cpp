@@ -512,9 +512,13 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 {
                     command_handler_state& cstate = all_shared.value()->state;
 
+                    bool last_use_square_font = false;
+
                     ///pipe window size
                     {
                         auto [width, height] = shared_duk_state->get_width_height();
+
+                        bool is_square = get_global_number(ctx, "square_font") > 0;
 
                         nlohmann::json j;
                         j["id"] = current_id;
@@ -522,14 +526,15 @@ std::string run_in_user_context(std::string username, std::string command, std::
                         j["height"] = height;
                         j["script_name"] = get_global_string(ctx, "realtime_script_name");
                         j["type"] = "command_realtime";
+                        j["square_font"] = is_square;
 
                         all_shared.value()->shared.add_back_write(j.dump());
+
+                        last_use_square_font = is_square;
                     }
 
                     sand_data->is_realtime = true;
                     sand_data->is_static = false;
-
-                    bool last_use_square_font = false;
 
                     auto update_check = [&](duk_context* ctx)
                     {
@@ -573,8 +578,8 @@ std::string run_in_user_context(std::string username, std::string command, std::
                         {
                             nlohmann::json j;
                             j["id"] = current_id;
-                            j["square_font"] = is_square;
                             j["type"] = "command_realtime";
+                            j["square_font"] = is_square;
 
                             all_shared.value()->shared.add_back_write(j.dump());
 
