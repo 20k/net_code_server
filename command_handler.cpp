@@ -574,6 +574,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                             nlohmann::json j;
                             j["id"] = current_id;
                             j["square_font"] = is_square;
+                            j["type"] = "command_realtime";
 
                             all_shared.value()->shared.add_back_write(j.dump());
 
