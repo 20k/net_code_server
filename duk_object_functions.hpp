@@ -783,4 +783,13 @@ void dukx_set_getter(duk_context* ctx, duk_idx_t idx, const std::string& propert
 void dukx_set_setter(duk_context* ctx, duk_idx_t idx, const std::string& property, duk_c_function func);
 void dukx_set_getter_setter(duk_context* ctx, duk_idx_t idx, const std::string& property, duk_c_function getter, duk_c_function setter);
 
+inline
+bool dukx_has_prop_string(duk_context* ctx, duk_idx_t idx, std::string_view view)
+{
+    if(duk_is_undefined(ctx, idx))
+        return false;
+
+    return duk_has_prop_lstring(ctx, idx, view.data(), view.size());
+}
+
 #endif // DUK_OBJECT_FUNCTIONS_HPP_INCLUDED

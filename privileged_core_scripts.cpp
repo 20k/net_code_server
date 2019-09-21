@@ -5986,18 +5986,18 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     double fraction = 1.f;
 
-    if(duk_has_prop_string(ctx, -1, "fraction"))
+    if(dukx_has_prop_string(ctx, -1, "fraction"))
         fraction = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "fraction", 1);
-    if(duk_has_prop_string(ctx, -1, "frac"))
+    if(dukx_has_prop_string(ctx, -1, "frac"))
         fraction = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "frac", 1);
-    if(duk_has_prop_string(ctx, -1, "f"))
+    if(dukx_has_prop_string(ctx, -1, "f"))
         fraction = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "f", 1);
 
     double move_offset = 0.f;
 
-    if(duk_has_prop_string(ctx, -1, "offset"))
+    if(dukx_has_prop_string(ctx, -1, "offset"))
         move_offset = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "offset", 1);
-    if(duk_has_prop_string(ctx, -1, "o"))
+    if(dukx_has_prop_string(ctx, -1, "o"))
         move_offset = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "o", 1);
 
     if(!my_user_opt.has_value())
