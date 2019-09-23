@@ -33,7 +33,7 @@ enum class mongo_database_type
     MONGO_COUNT
 };
 
-//#define USE_STD_MUTEX
+#define USE_STD_MUTEX
 
 struct lock_internal
 {
@@ -66,8 +66,7 @@ struct mongo_context
     std::vector<std::string> all_collections;
 
     ///thread safety of below map
-    ///make timed
-    std::recursive_timed_mutex map_lock;
+    std::mutex map_lock;
 
     ///this isn't for thread safety, this is for marshalling db access
     std::map<std::string, lock_internal> per_collection_lock;
@@ -82,8 +81,6 @@ struct mongo_context
 
     ///if we ever have to add another db, make this fully data driven with structs and definitions and the like
     mongo_context(mongo_database_type type);
-
-    void map_lock_for();
 
     void make_lock(const std::string& debug_info, const std::string& collection, size_t who);
     void make_unlock(const std::string& collection);

@@ -209,29 +209,28 @@ mongo_context::mongo_context(mongo_database_type type)
     }
 }
 
-void mongo_context::map_lock_for()
-{
-    map_lock.lock();
-}
-
 void mongo_context::make_lock(const std::string& debug_info, const std::string& collection, size_t who)
 {
-    map_lock_for();
+    lock_internal* found = nullptr;
 
-    auto& found = per_collection_lock[collection];
+    {
+        std::lock_guard guard(map_lock);
 
-    map_lock.unlock();
+        found = &per_collection_lock[collection];
+    }
 
-    found.lock(debug_info, who);
+    found->lock(debug_info, who);
 }
 
 void mongo_context::make_unlock(const std::string& collection)
 {
-    map_lock_for();
+    lock_internal* found = nullptr;
 
-    auto& found = per_collection_lock[collection];
+    {
+        std::lock_guard guard(map_lock);
 
-    map_lock.unlock();
+        found = &per_collection_lock[collection];
+    }
 
     #ifdef DEADLOCK_DETECTION
     {
@@ -243,7 +242,7 @@ void mongo_context::make_unlock(const std::string& collection)
     lg::log("Unlocking ", collection);
     #endif // DEADLOCK_DETECTION
 
-    found.unlock();
+    found->unlock();
 
     /*locked_by = -1;
     lock.unlock();*/
