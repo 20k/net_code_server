@@ -991,6 +991,8 @@
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
 		</Unit>
+		<Unit filename="deps/secret/structure_generation_2.cpp" />
+		<Unit filename="deps/secret/structure_generation_2.hpp" />
 		<Unit filename="deps/secret/tutorial.cpp">
 			<Option target="Debug" />
 			<Option target="Release" />
