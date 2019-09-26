@@ -5699,6 +5699,122 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     return 1;
 }
 
+#ifdef SYSTEM_TESTING
+duk_ret_t sys__debug_view(priv_context& priv_ctx, duk_context* ctx, int sl)
+{
+
+    //std::string str = duk_safe_get_prop_string(ctx, -1, "sys");
+    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
+    std::string found_target = duk_safe_get_prop_string(ctx, -1, "user");
+
+    bool has_fit = dukx_is_prop_truthy(ctx, -1, "fit");
+
+    int found_w = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "w", 80);
+    int found_h = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "h", 40);
+
+    float found_scale = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "scale", 1.f);
+
+    found_w = clamp(found_w, 5, 300);
+    found_h = clamp(found_h, 5, 200);
+
+    bool has_target = found_target.size() > 0;
+
+    if(found_target == "")
+        found_target = get_caller(ctx);
+
+    if(!dukx_is_prop_truthy(ctx, -1, "scale"))
+    {
+        if(has_target)
+            found_scale = 0.5f;
+        else
+            found_scale = 0.5f;
+    }
+
+    found_scale = clamp(found_scale, 0.1f, 10.f);
+
+    user target_user;
+
+    {
+        mongo_nolock_proxy lock = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        if(!target_user.load_from_db(lock, found_target))
+            return push_error(ctx, "Error: Target does not exist");
+    }
+
+    //low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
+
+    user my_user;
+
+    {
+        mongo_nolock_proxy lock = get_global_mongo_user_info_context(get_thread_id(ctx));
+
+        if(!my_user.load_from_db(lock, get_caller(ctx)))
+            return push_error(ctx, "Error: Does not exist");
+    }
+
+    ///disables cross system stuff
+    //if(!target_user.is_allowed_user(my_user.name) && !low_level_structure_manage.in_same_system(target_user.name, my_user.name))
+    //    return push_error(ctx, "Cannot sys.view cross systems on non owned users");
+
+    int n_count = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", -1);
+
+    if(n_count < -1)
+        n_count = -1;
+
+    if(n_count > 99)
+        n_count = 99;
+
+    std::vector<std::vector<std::string>> buffer = ascii_make_buffer({found_w, found_h}, false);
+
+    network_accessibility_info info;
+
+    network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, target_user.name, n_count, (path_info::path_info)(path_info::NONE | path_info::SKIP_SYSTEM_CHECKS));
+
+    info = network_accessibility_info::merge_together(info, cur);
+
+    auto links = playspace_network_manage.get_links(target_user.name);
+
+    for(auto& i : links)
+        std::cout << "CNUM " << i << std::endl;
+
+    if(!is_arr)
+    {
+        std::string from = get_caller(ctx);
+
+        vec3f pos = {0,0,0};
+
+        if(has_target)
+            pos = info.global_pos[target_user.name];
+
+        ascii::ascii_render_flags flags = ascii::NONE;
+
+        if(has_fit)
+        {
+            flags = (ascii::ascii_render_flags)(flags | ascii::FIT_TO_AREA | ascii::HIGHLIGHT_USER);
+        }
+
+        std::string result = ascii_render_from_accessibility_info(info, buffer, pos, found_scale, flags, target_user.name);
+
+        std::string seclevel_string = "Seclevel: ";
+
+        int seclevel = 0;
+        std::string sstring = seclevel_to_string(seclevel);
+
+        std::string col = string_to_colour(sstring);
+
+        seclevel_string += "(`" + col + to_string_with_enforced_variable_dp(seclevel, 2) + "` - `" + col + sstring + "`)";
+
+        result = "Current Sys: " + colour_string("dummy") + "\n" + seclevel_string + "\n" + result;
+
+        push_duk_val(ctx, result);
+    }
+
+    return 1;
+}
+
+#endif // SYSTEM_TESTING
+
 duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();

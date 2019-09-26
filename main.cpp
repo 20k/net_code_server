@@ -36,6 +36,7 @@
 #include <secret/special_user_scripts.hpp>
 #include "reoccurring_task_handler.hpp"
 #include "serialisables.hpp"
+#include <secret/structure_generation_2.hpp>
 
 #if 0
 void debug_terminal()
@@ -424,6 +425,12 @@ int main()
     #endif // TESTING
 
     //test_json();
+
+    #define INIT_TEST_BACK
+    #ifdef INIT_TEST_BACK
+    dungeon_generator dgen;
+    dgen.make(10, 10);
+    #endif // INIT_TEST_BACK
 
     //#define SERVER_FIRST_TIME_EVER_RELEASE
     #ifdef SERVER_FIRST_TIME_EVER_RELEASE

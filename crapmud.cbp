@@ -43,6 +43,7 @@
 					<Add option="-O2" />
 					<Add option="-march=nehalem" />
 					<Add option="-DLOCAL_IP" />
+					<Add option="-DSYSTEM_TESTING" />
 				</Compiler>
 			</Target>
 			<Target title="Profile">
