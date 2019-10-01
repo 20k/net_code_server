@@ -429,7 +429,7 @@ int main()
     #define INIT_TEST_BACK
     #ifdef INIT_TEST_BACK
     dungeon_generator dgen;
-    dgen.make(10, 10);
+    dgen.make(40, 10, 0);
     #endif // INIT_TEST_BACK
 
     //#define SERVER_FIRST_TIME_EVER_RELEASE
