@@ -428,8 +428,11 @@ int main()
 
     #define INIT_TEST_BACK
     #ifdef INIT_TEST_BACK
-    dungeon_generator dgen;
-    dgen.make(40, 10, 0);
+    //dungeon_generator dgen;
+    //dgen.make(40, 10, 0);
+
+    city_generator cgen;
+    cgen.make(50, 0, "mcmurdo");
     #endif // INIT_TEST_BACK
 
     //#define SERVER_FIRST_TIME_EVER_RELEASE
