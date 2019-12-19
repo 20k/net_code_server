@@ -188,11 +188,8 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
     return false;
 }
 
-void websocket_ssl_reformed(int in_port)
+void websocket_server(connection& conn)
 {
-    connection conn;
-    conn.host("0.0.0.0", in_port, connection_type::SSL);
-
     std::map<int, std::shared_ptr<shared_command_handler_state>> user_states;
     std::map<int, std::deque<nlohmann::json>> command_queue;
     std::map<int, sf::Clock> terminate_timers;
@@ -388,9 +385,16 @@ void boot_connection_handlers()
 {
     start_non_user_task_thread();
 
-    sthread(websocket_ssl_reformed, HOST_WEBSOCKET_SSL_PORT).detach();
-    sthread(websocket_ssl_reformed, HOST_WEBSOCKET_SSL_PORT_2).detach();
+    connection* c1 = new connection;
+    c1->host("0.0.0.0", HOST_WEBSOCKET_SSL_PORT, connection_type::SSL);
 
-    //sthread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT).detach();
-    //sthread(websocket_ssl_test_server, HOST_WEBSOCKET_SSL_PORT_2).detach();
+    connection* c2 = new connection;
+    c2->host("0.0.0.0", HOST_WEBSOCKET_SSL_PORT_2, connection_type::SSL);
+
+    connection* c3 = new connection;
+    c3->host("0.0.0.0", HOST_WEBSOCKET_PORT, connection_type::PLAIN);
+
+    sthread(websocket_server, std::ref(*c1)).detach();
+    sthread(websocket_server, std::ref(*c2)).detach();
+    sthread(websocket_server, std::ref(*c3)).detach();
 }
