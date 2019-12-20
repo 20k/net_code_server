@@ -982,9 +982,9 @@ int main()
 
         std::cout << "found" << std::endl;
 
-        std::string key = usr.get_auth_token_binary();
+        std::string key = usr.get_auth_token_hex();
 
-        write_all_bin(command + ".key", key);
+        write_all_bin(command + "_hex.key", key);
 
         sf::sleep(sf::milliseconds(50));
     }
