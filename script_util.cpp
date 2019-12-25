@@ -402,7 +402,11 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
 
     write_all_bin(phase_1, in);
 
+    #ifdef __WIN32__
+    std::string res = capture_exec("c:/stuff/nodejs/node.exe script_compile/transpile.js " + phase_1);
+    #else
     std::string res = capture_exec("node script_compile/transpile.js " + phase_1);
+    #endif // __WIN32__
 
     nlohmann::json data;
 
