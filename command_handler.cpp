@@ -2281,6 +2281,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
         nlohmann::json data;
         data["type"] = "server_msg";
         data["data"] = make_success_col("Auth Success") + "\n" + full_string + auth_string + "\n" + get_update_message();
+        data["authenticated"] = 1;
 
         return data;
     }
@@ -2402,7 +2403,8 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
 
         nlohmann::json data;
         data["type"] = "server_msg";
-        data["data"] = make_success_col(auth_str) + "\n" + full_string + auth_string + "\n" + get_update_message();;
+        data["data"] = make_success_col(auth_str) + "\n" + full_string + auth_string + "\n" + get_update_message();
+        data["authenticated"] = 1;
 
         return data;
     }
