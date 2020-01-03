@@ -431,8 +431,8 @@ int main()
     //dungeon_generator dgen;
     //dgen.make(40, 10, 0);
 
-    city_generator cgen;
-    cgen.make(50, 0, "mcmurdo");
+    //city_generator cgen;
+    //cgen.make(50, 0, "mcmurdo");
     #endif // INIT_TEST_BACK
 
     //#define SERVER_FIRST_TIME_EVER_RELEASE
