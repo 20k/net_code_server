@@ -247,9 +247,6 @@ namespace js
         ///parent index
         std::variant<std::monostate, int, std::string> indices;
 
-        ///needs .is_xyz
-        ///needs the ability to be empty
-
         ///pushes a fresh object
         value(duk_context* ctx);
         value(duk_context* ctx, int idx);
