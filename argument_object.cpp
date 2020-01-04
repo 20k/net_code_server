@@ -310,12 +310,14 @@ js::value& js::value::operator=(std::nullopt_t t)
     {
         if(indices.index() == 1)
         {
-            duk_del_prop_index(ctx, idx, std::get<int>(indices));
+            duk_del_prop_index(ctx, parent_idx, std::get<int>(indices));
         }
         else
         {
-            duk_del_prop_lstring(ctx, idx, std::get<std::string>(indices).c_str(), std::get<std::string>(indices).size());
+            duk_del_prop_lstring(ctx, parent_idx, std::get<std::string>(indices).c_str(), std::get<std::string>(indices).size());
         }
+
+        duk_remove(ctx, idx);
     }
 
     idx = -1;
@@ -510,6 +512,18 @@ struct js_val_tester
         assert((std::string)tobj["key"] == "value");
 
         assert(duk_get_top(ctx) == 4);
+
+        tobj["key"] = std::nullopt;
+
+        assert(tobj["key"].is_empty());
+
+        tobj["key"] = (int64_t)53;
+
+        assert((int64_t)tobj["key"] == 53);
+
+        tobj = std::nullopt;
+
+        assert(duk_get_top(ctx) == 3);
 
         printf("Done js val testers\n");
     }
