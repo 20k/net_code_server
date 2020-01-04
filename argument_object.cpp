@@ -386,6 +386,19 @@ struct js_val_tester
 
         assert(duk_get_top(ctx) == 3);
 
+        duk_push_object(ctx);
+
+        duk_push_string(ctx, "key");
+        duk_push_string(ctx, "value");
+
+        duk_put_prop(ctx, -3);
+
+        js::value tobj(ctx, -1);
+
+        assert((std::string)tobj["key"] == "value");
+
+        assert(duk_get_top(ctx) == 4);
+
         printf("Done js val testers\n");
     }
 };
