@@ -293,8 +293,6 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
             break;
         }
     }
-
-    //duk_pop(ctx);
 }
 
 struct execution_blocker_guard
