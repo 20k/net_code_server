@@ -264,6 +264,7 @@ namespace js
         bool is_array();
         bool is_map();
         bool is_empty();
+        bool is_function();
 
         value& operator=(const char* v);
         value& operator=(const std::string& v);
@@ -344,5 +345,33 @@ namespace js
             return duk_equals(v1.ctx, v1.idx, v2.idx);
         }
     };
+
+    template<typename... T>
+    inline
+    value call(value& func, T&&... vals)
+    {
+        duk_dup(func.ctx, func.idx);
+
+        (duk_dup(func.ctx, vals.idx), ...);
+
+        int num = sizeof...(vals);
+
+        ///== 0 is success
+        if(duk_pcall(func.ctx, num) == 0)
+        {
+            return js::value(func.ctx, -1);
+        }
+
+        return js::value(func.ctx, -1);
+    }
+
+    template<typename I, typename... T>
+    inline
+    value call_prop(value& obj, const I& key, T&&... vals)
+    {
+        js::value func = obj[key];
+
+        return call(func, std::forward<T>(vals)...);
+    }
 }
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED
