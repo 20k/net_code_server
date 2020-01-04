@@ -247,8 +247,20 @@ namespace arg
 
 namespace js
 {
+    struct value_context
+    {
+        std::vector<int> free_stack;
+        context_t* ctx = nullptr;
+
+        value_context(context_t* ctx);
+    };
+
+    ///ok so
+    ///kind of fucked this entirely, because using absolute stack indices
+    ///problem is... they shuffle around
     struct value
     {
+        value_context* vctx = nullptr;
         context_t* ctx = nullptr;
         int idx = -1;
         int parent_idx = -1;
@@ -256,11 +268,12 @@ namespace js
         std::variant<std::monostate, int, std::string> indices;
 
         ///pushes a fresh object
-        value(duk_context* ctx);
-        value(duk_context* ctx, int idx);
-        value(duk_context* ctx, value& base, const std::string& key);
-        value(duk_context* ctx, value& base, int key);
-        value(duk_context* ctx, value& base, const char* key);
+        value(const value& other);
+        value(value_context& ctx);
+        value(value_context& ctx, int idx);
+        value(value_context& ctx, value& base, const std::string& key);
+        value(value_context& ctx, value& base, int key);
+        value(value_context& ctx, value& base, const char* key);
         ~value();
 
         bool has(const std::string& key);
@@ -280,6 +293,7 @@ namespace js
         value& operator=(int v);
         value& operator=(double v);
         value& operator=(std::nullopt_t v);
+        value& operator=(const value& right);
 
         template<typename T>
         value& operator=(const std::vector<T>& in)
@@ -359,19 +373,27 @@ namespace js
     inline
     std::pair<bool, value> call(value& func, T&&... vals)
     {
+        printf("TOP %i\n", duk_get_top(func.ctx));
+
         duk_dup(func.ctx, func.idx);
 
         (duk_dup(func.ctx, vals.idx), ...);
 
         int num = sizeof...(vals);
 
+        printf("NUM %i\n", num);
+
         ///== 0 is success
         if(duk_pcall(func.ctx, num) == 0)
         {
-            return {true, js::value(func.ctx, -1)};
+            printf("PCALL TOP %i %i\n", duk_get_top(func.ctx), duk_get_top_index(func.ctx));
+
+            return {true, js::value(*func.vctx, -1)};
         }
 
-        return {false, js::value(func.ctx, -1)};
+        printf("DCALL\n");
+
+        return {false, js::value(*func.vctx, -1)};
     }
 
     template<typename I, typename... T>
@@ -379,6 +401,8 @@ namespace js
     std::pair<bool, value> call_prop(value& obj, const I& key, T&&... vals)
     {
         js::value func = obj[key];
+
+        printf("STACK INDEX %i\n", func.idx);
 
         return call(func, std::forward<T>(vals)...);
     }

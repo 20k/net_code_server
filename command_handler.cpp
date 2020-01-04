@@ -124,7 +124,9 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
     /*MAKE_PERF_COUNTER();
     mongo_diagnostics diagnostic_scope;*/
 
-    js::value args(ctx, -1);
+    js::value_context vctx(ctx);
+
+    js::value args(vctx, -1);
 
     bool force_terminate = false;
 
@@ -136,7 +138,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
 
             bool any = false;
 
-            if(args.has("on_wheelmoved"))
+            /*if(args.has("on_wheelmoved"))
             {
                 if(state.has_mousewheel_state(current_id))
                 {
@@ -241,11 +243,17 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                 }
 
                 any = true;
-            }
+            }*/
 
             if(args.has("on_draw"))
             {
+                printf("Precall\n");
+
                 auto [success, result] = js::call_prop(args, "on_draw");
+
+                printf("RIDX %i\n", result.idx);
+
+                printf("Postcall\n");
 
                 if(!success)
                 {
@@ -254,10 +262,16 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                     break;
                 }
 
+                printf("Prepipe\n");
+
                 async_pipe(ctx);
+
+                printf("Postpipe\n");
 
                 any = true;
             }
+
+            printf("Postdestroy\n");
 
             if(!any)
             {
@@ -294,7 +308,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
         }
     }
 
-    duk_pop(ctx);
+    //duk_pop(ctx);
 }
 
 struct execution_blocker_guard

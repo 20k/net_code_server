@@ -202,6 +202,11 @@ namespace
     duk_xmove_top(ctx, _ctx, 1);
 }*/
 
+js::value_context::value_context(context_t* _ctx) : ctx(_ctx)
+{
+
+}
+
 stack_manage::stack_manage(js::value& in) : sh(in)
 {
     if(sh.indices.index() == 0)
@@ -333,12 +338,47 @@ js::value& js::value::operator=(std::nullopt_t t)
     return *this;
 }
 
-js::value::value(duk_context* _ctx) : ctx(_ctx)
+js::value& js::value::operator=(const value& right)
+{
+    if(idx == -1 && right.idx == -1)
+        return *this;
+
+    if(idx == -1)
+    {
+        duk_dup(ctx, right.idx);
+        idx = duk_get_top_index(ctx);
+        parent_idx = right.parent_idx;
+        indices = right.indices;
+    }
+    else
+    {
+        duk_remove(ctx, idx);
+        duk_dup(ctx, right.idx);
+        idx = duk_get_top_index(ctx);
+        parent_idx = right.parent_idx;
+        indices = right.indices;
+    }
+
+    return *this;
+}
+
+js::value::value(const js::value& value)
+{
+    vctx = value.vctx;
+    ctx = value.ctx;
+    parent_idx = value.parent_idx;
+    indices = value.indices;
+
+    duk_dup(ctx, value.idx);
+    idx = duk_get_top_index(ctx);
+}
+
+js::value::value(js::value_context& _vctx) : vctx(&_vctx), ctx(_vctx.ctx)
 {
     idx = duk_push_object(ctx);
 }
 
-js::value::value(duk_context* _ctx, int _idx) : ctx(_ctx), idx(_idx)
+js::value::value(js::value_context& _vctx, int _idx) : vctx(&_vctx), ctx(_vctx.ctx), idx(_idx)
 {
     if(idx < 0)
     {
@@ -349,7 +389,7 @@ js::value::value(duk_context* _ctx, int _idx) : ctx(_ctx), idx(_idx)
     }
 }
 
-js::value::value(duk_context* _ctx, js::value& base, const std::string& key) : ctx(_ctx)
+js::value::value(js::value_context& _vctx, js::value& base, const std::string& key) : vctx(&_vctx), ctx(_vctx.ctx)
 {
     parent_idx = base.idx;
     indices = key;
@@ -368,7 +408,7 @@ js::value::value(duk_context* _ctx, js::value& base, const std::string& key) : c
         throw std::runtime_error("bad idx < 0");
 }
 
-js::value::value(duk_context* _ctx, js::value& base, int key) : ctx(_ctx)
+js::value::value(js::value_context& _vctx, js::value& base, int key) : vctx(&_vctx), ctx(_vctx.ctx)
 {
     parent_idx = base.idx;
     indices = key;
@@ -387,7 +427,7 @@ js::value::value(duk_context* _ctx, js::value& base, int key) : ctx(_ctx)
         throw std::runtime_error("bad idx < 0");
 }
 
-js::value::value(duk_context* _ctx, js::value& base, const char* key) : ctx(_ctx)
+js::value::value(js::value_context& _vctx, js::value& base, const char* key) : vctx(&_vctx), ctx(_vctx.ctx)
 {
     parent_idx = base.idx;
     indices = std::string(key);
@@ -408,23 +448,27 @@ js::value::value(duk_context* _ctx, js::value& base, const char* key) : ctx(_ctx
 
 js::value::~value()
 {
+    printf("Preremove\n");
+
     if(idx != -1)
         duk_remove(ctx, idx);
+
+    printf("Postremove\n");
 }
 
 js::value js::value::operator[](int64_t val)
 {
-    return js::value(ctx, *this, val);
+    return js::value(*vctx, *this, val);
 }
 
 js::value js::value::operator[](const std::string& val)
 {
-    return js::value(ctx, *this, val);
+    return js::value(*vctx, *this, val);
 }
 
 js::value js::value::operator[](const char* val)
 {
-    return js::value(ctx, *this, val);
+    return js::value(*vctx, *this, val);
 }
 
 bool js::value::has(const std::string& key)
@@ -494,15 +538,17 @@ struct js_val_tester
     {
         duk_context* ctx = duk_create_heap_default();
 
-        js::value val(ctx);
+        js::value_context vctx(ctx);
+
+        js::value val(vctx);
         val = (int64_t)53;
 
         assert((int64_t)val == 53);
 
         assert(duk_get_top(ctx) == 1);
 
-        js::value root(ctx);
-        js::value base(ctx, root, "hello");
+        js::value root(vctx);
+        js::value base(vctx, root, "hello");
         base = (int64_t)53;
 
         assert((int64_t)root["hello"] == 53);
@@ -516,7 +562,7 @@ struct js_val_tester
 
         duk_put_prop(ctx, -3);
 
-        js::value tobj(ctx, -1);
+        js::value tobj(vctx, -1);
 
         printf("PRETOP %i\n", duk_get_top(ctx));
 
@@ -542,7 +588,7 @@ struct js_val_tester
         test_object["hithere"] = 12;
         test_object["pooper"] = 55;
 
-        js::value fmap(ctx);
+        js::value fmap(vctx);
         fmap = test_object;
 
         assert((int64_t)fmap["hithere"] == 12);
