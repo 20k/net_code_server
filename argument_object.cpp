@@ -191,7 +191,7 @@ namespace
 }
 #endif // 0
 
-stack_helper::stack_helper(duk_context* _ctx, int _idx)
+/*js::value::value(duk_context* _ctx, int _idx)
 {
     duk_idx_t thr_idx = duk_push_thread(_ctx);
     ctx = duk_get_context(_ctx, thr_idx);
@@ -200,9 +200,9 @@ stack_helper::stack_helper(duk_context* _ctx, int _idx)
 
     duk_dup(ctx, -1 + _idx);
     duk_xmove_top(ctx, _ctx, 1);
-}
+}*/
 
-stack_manage::stack_manage(stack_helper& in) : sh(in)
+stack_manage::stack_manage(js::value& in) : sh(in)
 {
     if(sh.indices.index() == 0)
     {
@@ -229,7 +229,7 @@ stack_manage::~stack_manage()
     }
 }
 
-/*void dukx_push(duk_context* ctx, const stack_helper& v)
+/*void dukx_push(duk_context* ctx, const js::value& v)
 {
     if(v.indices.index() == 0)
         duk_dup(ctx, v.idx);
@@ -244,7 +244,7 @@ stack_manage::~stack_manage()
     }
 }*/
 
-stack_helper& stack_helper::operator=(const char* v)
+js::value& js::value::operator=(const char* v)
 {
     stack_manage m(*this);
 
@@ -253,7 +253,7 @@ stack_helper& stack_helper::operator=(const char* v)
     return *this;
 }
 
-stack_helper& stack_helper::operator=(const std::string& v)
+js::value& js::value::operator=(const std::string& v)
 {
     stack_manage m(*this);
 
@@ -262,7 +262,7 @@ stack_helper& stack_helper::operator=(const std::string& v)
     return *this;
 }
 
-stack_helper& stack_helper::operator=(int64_t v)
+js::value& js::value::operator=(int64_t v)
 {
     stack_manage m(*this);
 
@@ -271,7 +271,7 @@ stack_helper& stack_helper::operator=(int64_t v)
     return *this;
 }
 
-stack_helper& stack_helper::operator=(double v)
+js::value& js::value::operator=(double v)
 {
     stack_manage m(*this);
 
@@ -280,7 +280,7 @@ stack_helper& stack_helper::operator=(double v)
     return *this;
 }
 
-/*stack_helper& stack_helper::operator=(const std::vector<stack_helper>& v)
+/*js::value& js::value::operator=(const std::vector<js::value>& v)
 {
     stack_manage m(*this);
 
@@ -295,9 +295,19 @@ stack_helper& stack_helper::operator=(double v)
     return *this;
 }*/
 
-/*stack_helper& stack_helper::operator=(const std::map<stack_helper, stack_helper>& v);*/
+/*js::value& js::value::operator=(const std::map<js::value, js::value>& v);*/
 
-stack_helper::~stack_helper()
+js::value::value(duk_context* _ctx) : ctx(_ctx)
 {
-    duk_pop_n(ctx, duk_get_top(ctx));
+    idx = duk_push_object(ctx);
+}
+
+js::value::value(duk_context* _ctx, int _idx) : ctx(_ctx), idx(_idx)
+{
+
+}
+
+js::value::~value()
+{
+    //duk_pop_n(ctx, duk_get_top(ctx));
 }

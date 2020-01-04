@@ -67,12 +67,15 @@ struct argument_object
 };
 #endif // 0
 
-struct stack_helper;
+namespace js
+{
+    struct value;
+}
 
 struct stack_manage
 {
-    stack_helper& sh;
-    stack_manage(stack_helper& in);
+    js::value& sh;
+    stack_manage(js::value& in);
     ~stack_manage();
 };
 
@@ -221,65 +224,63 @@ namespace arg
     }
 }
 
-struct stack_helper
+namespace js
 {
-    context_t* ctx = nullptr;
-    int idx = -1;
-    std::variant<std::monostate, int, std::string> indices;
-
-    stack_helper(){}
-
-    template<typename T>
-    stack_helper(T&& t)
+    struct value
     {
-        *this = t;
-    }
+        context_t* ctx = nullptr;
+        int idx = -1;
+        std::variant<std::monostate, int, std::string> indices;
 
-    stack_helper& operator=(const char* v);
-    stack_helper& operator=(const std::string& v);
-    stack_helper& operator=(int64_t v);
-    stack_helper& operator=(double v);
+        ///pushes a fresh object
+        value(duk_context* ctx);
+        value(duk_context* ctx, int idx);
 
-    template<typename T>
-    stack_helper& operator=(const std::vector<T>& in)
-    {
-        stack_manage m(*this);
+        value& operator=(const char* v);
+        value& operator=(const std::string& v);
+        value& operator=(int64_t v);
+        value& operator=(double v);
 
-        arg::dukx_push(ctx, in);
+        template<typename T>
+        value& operator=(const std::vector<T>& in)
+        {
+            stack_manage m(*this);
 
-        return *this;
-    }
+            arg::dukx_push(ctx, in);
 
-    template<typename T, typename U>
-    stack_helper& operator=(const std::map<T, U>& in)
-    {
-        stack_manage m(*this);
+            return *this;
+        }
 
-        arg::dukx_push(ctx, in);
+        template<typename T, typename U>
+        value& operator=(const std::map<T, U>& in)
+        {
+            stack_manage m(*this);
 
-        return *this;
-    }
+            arg::dukx_push(ctx, in);
 
-    /*stack_helper& operator=(const std::vector<stack_helper>& v);
-    stack_helper& operator=(const std::map<stack_helper, stack_helper>& v);
-    stack_helper& operator=(std::function<stack_helper(stack_helper&)> v);*/
+            return *this;
+        }
 
-    operator std::string();
-    operator int64_t();
-    operator double();
-    template<typename T>
-    operator std::vector<T>()
-    {
+        /*value& operator=(const std::vector<value>& v);
+        value& operator=(const std::map<value, value>& v);
+        value& operator=(std::function<value(value&)> v);*/
 
-    }
-    //operator std::vector<stack_helper>();
-    //operator std::map<stack_helper, stack_helper>();
+        operator std::string();
+        operator int64_t();
+        operator double();
+        template<typename T>
+        operator std::vector<T>()
+        {
 
-    stack_helper& operator[](int64_t val);
-    stack_helper& operator[](const std::string& str);
+        }
+        //operator std::vector<value>();
+        //operator std::map<value, value>();
 
-    stack_helper(duk_context* _ctx, int _idx = -1);
-    ~stack_helper();
-};
+        value& operator[](int64_t val);
+        value& operator[](const std::string& str);
 
+        //value(duk_context* _ctx, int _idx = -1);
+        ~value();
+    };
+}
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED
