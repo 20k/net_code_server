@@ -93,6 +93,9 @@ struct stack_dupper
 
     ~stack_dupper()
     {
+        if(tidx != duk_get_top_index(ctx))
+            throw std::runtime_error("BAD STACK DUP");
+
         duk_remove(ctx, tidx);
     }
 };
@@ -253,6 +256,9 @@ namespace js
         context_t* ctx = nullptr;
 
         value_context(context_t* ctx);
+
+        void free(int idx);
+        //bool is_free(int idx);
     };
 
     ///ok so
@@ -373,25 +379,17 @@ namespace js
     inline
     std::pair<bool, value> call(value& func, T&&... vals)
     {
-        printf("TOP %i\n", duk_get_top(func.ctx));
-
         duk_dup(func.ctx, func.idx);
 
         (duk_dup(func.ctx, vals.idx), ...);
 
         int num = sizeof...(vals);
 
-        printf("NUM %i\n", num);
-
         ///== 0 is success
         if(duk_pcall(func.ctx, num) == 0)
         {
-            printf("PCALL TOP %i %i\n", duk_get_top(func.ctx), duk_get_top_index(func.ctx));
-
             return {true, js::value(*func.vctx, -1)};
         }
-
-        printf("DCALL\n");
 
         return {false, js::value(*func.vctx, -1)};
     }
@@ -401,8 +399,6 @@ namespace js
     std::pair<bool, value> call_prop(value& obj, const I& key, T&&... vals)
     {
         js::value func = obj[key];
-
-        printf("STACK INDEX %i\n", func.idx);
 
         return call(func, std::forward<T>(vals)...);
     }

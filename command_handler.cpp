@@ -247,13 +247,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
 
             if(args.has("on_draw"))
             {
-                printf("Precall\n");
-
                 auto [success, result] = js::call_prop(args, "on_draw");
-
-                printf("RIDX %i\n", result.idx);
-
-                printf("Postcall\n");
 
                 if(!success)
                 {
@@ -262,11 +256,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                     break;
                 }
 
-                printf("Prepipe\n");
-
                 async_pipe(ctx);
-
-                printf("Postpipe\n");
 
                 any = true;
             }

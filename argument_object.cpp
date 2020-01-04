@@ -207,6 +207,48 @@ js::value_context::value_context(context_t* _ctx) : ctx(_ctx)
 
 }
 
+void js::value_context::free(int idx)
+{
+    if((int)free_stack.size() < idx + 1)
+    {
+        free_stack.resize(idx + 1);
+    }
+
+    free_stack[idx] = 1;
+
+    int duk_top = duk_get_top(ctx);
+    int my_top = free_stack.size();
+
+    if(duk_top > my_top)
+        return;
+
+    free_stack.resize(duk_top);
+
+    int num_poppable = 0;
+
+    for(int i=duk_top - 1; i >= 0; i--)
+    {
+        if(free_stack[i] == 1)
+            num_poppable++;
+        else
+            break;
+    }
+
+    if(num_poppable == 0)
+        return;
+
+    duk_pop_n(ctx, num_poppable);
+    free_stack.resize(duk_get_top(ctx));
+}
+
+/*js::value_context::is_free(int idx)
+{
+    int top_index = duk_get_top_index(ctx);
+    int my_top = (int)free_stack.size() - 1;
+
+    if(top_index)
+}*/
+
 stack_manage::stack_manage(js::value& in) : sh(in)
 {
     if(sh.indices.index() == 0)
@@ -318,7 +360,8 @@ js::value& js::value::operator=(std::nullopt_t t)
 
     if(indices.index() == 0)
     {
-        duk_remove(ctx, idx);
+        vctx->free(idx);
+        //duk_remove(ctx, idx);
     }
     else
     {
@@ -331,7 +374,8 @@ js::value& js::value::operator=(std::nullopt_t t)
             duk_del_prop_lstring(ctx, parent_idx, std::get<std::string>(indices).c_str(), std::get<std::string>(indices).size());
         }
 
-        duk_remove(ctx, idx);
+        vctx->free(idx);
+        //duk_remove(ctx, idx);
     }
 
     idx = -1;
@@ -352,7 +396,8 @@ js::value& js::value::operator=(const value& right)
     }
     else
     {
-        duk_remove(ctx, idx);
+        vctx->free(idx);
+        //duk_remove(ctx, idx);
         duk_dup(ctx, right.idx);
         idx = duk_get_top_index(ctx);
         parent_idx = right.parent_idx;
@@ -448,12 +493,8 @@ js::value::value(js::value_context& _vctx, js::value& base, const char* key) : v
 
 js::value::~value()
 {
-    printf("Preremove\n");
-
     if(idx != -1)
-        duk_remove(ctx, idx);
-
-    printf("Postremove\n");
+        vctx->free(idx);
 }
 
 js::value js::value::operator[](int64_t val)
