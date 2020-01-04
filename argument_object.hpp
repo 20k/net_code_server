@@ -100,6 +100,18 @@ struct stack_dupper
 namespace arg
 {
     inline
+    std::string safe_to_string(duk_context* ctx, duk_idx_t idx)
+    {
+        duk_size_t out = 0;
+        const char* ptr = duk_safe_to_lstring(ctx, idx, &out);
+
+        if(ptr == nullptr || out == 0)
+            return std::string();
+
+        return std::string(ptr, out);
+    }
+
+    inline
     void dukx_push(duk_context* ctx, const char* v)
     {
         duk_push_string(ctx, v);
@@ -164,12 +176,8 @@ namespace arg
     void dukx_get(duk_context* ctx, int idx, std::string& out)
     {
         stack_dupper sdup(ctx, idx);
-        const char* s = duk_get_string(ctx, sdup.tidx);
-
-        if(s == nullptr)
-            out = "";
-        else
-            out = s;
+        duk_dup(ctx, sdup.tidx);
+        out = safe_to_string(ctx, idx);
     }
 
     inline
