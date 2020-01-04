@@ -225,7 +225,17 @@ stack_manage::~stack_manage()
     }
     else
     {
-        duk_put_prop(sh.ctx, sh.idx);
+        ///replace property on parent
+        duk_put_prop(sh.ctx, sh.parent_idx);
+
+        ///update stack object as well
+        if(sh.indices.index() == 1)
+            duk_push_int(sh.ctx, std::get<1>(sh.indices));
+        else
+            duk_push_string(sh.ctx, std::get<2>(sh.indices).c_str());
+
+        duk_get_prop(sh.ctx, sh.parent_idx);
+        duk_replace(sh.ctx, sh.idx);
     }
 }
 
@@ -280,23 +290,6 @@ js::value& js::value::operator=(double v)
     return *this;
 }
 
-/*js::value& js::value::operator=(const std::vector<js::value>& v)
-{
-    stack_manage m(*this);
-
-    duk_idx_t tidx = duk_push_array(ctx);
-
-    for(int x=0; x < v.size(); x++)
-    {
-        dukx_push(ctx, v[i]);
-        duk_put_prop_index()
-    }
-
-    return *this;
-}*/
-
-/*js::value& js::value::operator=(const std::map<js::value, js::value>& v);*/
-
 js::value::value(duk_context* _ctx) : ctx(_ctx)
 {
     idx = duk_push_object(ctx);
@@ -304,10 +297,29 @@ js::value::value(duk_context* _ctx) : ctx(_ctx)
 
 js::value::value(duk_context* _ctx, int _idx) : ctx(_ctx), idx(_idx)
 {
+    if(idx < 0)
+    {
+        idx = duk_get_top(ctx) + idx;
 
+        if(idx < 0)
+            throw std::runtime_error("bad idx < 0");
+    }
 }
 
 js::value::~value()
 {
-    //duk_pop_n(ctx, duk_get_top(ctx));
+    duk_remove(ctx, idx);
+}
+
+js::value& js::value::operator[](int64_t val)
+{
+    js::value ret(ctx, -1);
+
+    duk_get_prop_index(ctx, idx, val);
+
+    ret.idx = duk_get_top(ctx);
+    ret.indices = val;
+    ret.parent_idx = idx;
+
+    return ret;
 }

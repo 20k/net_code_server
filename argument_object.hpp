@@ -230,6 +230,7 @@ namespace js
     {
         context_t* ctx = nullptr;
         int idx = -1;
+        int parent_idx = -1;
         ///parent index
         std::variant<std::monostate, int, std::string> indices;
 
