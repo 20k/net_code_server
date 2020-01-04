@@ -202,52 +202,100 @@ stack_helper::stack_helper(duk_context* _ctx, int _idx)
     duk_xmove_top(ctx, _ctx, 1);
 }
 
-struct stack_manage
+stack_manage::stack_manage(stack_helper& in) : sh(in)
 {
-    stack_helper& sh;
-
-    stack_manage(stack_helper& in) : sh(in)
+    if(sh.indices.index() == 0)
     {
-        if(sh.indices.index() == 0)
-        {
-            ///nothing
-        }
-        else
-        {
-            if(sh.indices.index() == 1)
-                duk_push_int(sh.ctx, std::get<1>(sh.indices));
-            else
-                duk_push_string(sh.ctx, std::get<2>(sh.indices).c_str());
-        }
+        ///nothing
     }
-
-    ~stack_manage()
+    else
     {
-        if(sh.indices.index() == 0)
-        {
-            duk_replace(sh.ctx, sh.idx);
-        }
+        if(sh.indices.index() == 1)
+            duk_push_int(sh.ctx, std::get<1>(sh.indices));
         else
-        {
-            duk_put_prop(sh.ctx, sh.idx);
-        }
+            duk_push_string(sh.ctx, std::get<2>(sh.indices).c_str());
     }
-};
+}
+
+stack_manage::~stack_manage()
+{
+    if(sh.indices.index() == 0)
+    {
+        duk_replace(sh.ctx, sh.idx);
+    }
+    else
+    {
+        duk_put_prop(sh.ctx, sh.idx);
+    }
+}
+
+/*void dukx_push(duk_context* ctx, const stack_helper& v)
+{
+    if(v.indices.index() == 0)
+        duk_dup(ctx, v.idx);
+    else
+    {
+        if(v.indices.index() == 1)
+            duk_push_int(ctx, std::get<1>(v.indices));
+        else
+            duk_push_string(ctx, std::get<2>(v.indices).c_str());
+
+        duk_get_prop(ctx, v.idx);
+    }
+}*/
 
 stack_helper& stack_helper::operator=(const char* v)
 {
     stack_manage m(*this);
 
-    duk_push_string(ctx, v);
+    arg::dukx_push(ctx, v);
 
     return *this;
 }
 
-stack_helper& stack_helper::operator=(const std::string& v);
-stack_helper& stack_helper::operator=(int64_t v);
-stack_helper& stack_helper::operator=(double v);
-stack_helper& stack_helper::operator=(const std::vector<stack_helper>& v);
-stack_helper& stack_helper::operator=(const std::map<stack_helper, stack_helper>& v);
+stack_helper& stack_helper::operator=(const std::string& v)
+{
+    stack_manage m(*this);
+
+    arg::dukx_push(ctx, v);
+
+    return *this;
+}
+
+stack_helper& stack_helper::operator=(int64_t v)
+{
+    stack_manage m(*this);
+
+    arg::dukx_push(ctx, v);
+
+    return *this;
+}
+
+stack_helper& stack_helper::operator=(double v)
+{
+    stack_manage m(*this);
+
+    arg::dukx_push(ctx, v);
+
+    return *this;
+}
+
+/*stack_helper& stack_helper::operator=(const std::vector<stack_helper>& v)
+{
+    stack_manage m(*this);
+
+    duk_idx_t tidx = duk_push_array(ctx);
+
+    for(int x=0; x < v.size(); x++)
+    {
+        dukx_push(ctx, v[i]);
+        duk_put_prop_index()
+    }
+
+    return *this;
+}*/
+
+/*stack_helper& stack_helper::operator=(const std::map<stack_helper, stack_helper>& v);*/
 
 stack_helper::~stack_helper()
 {

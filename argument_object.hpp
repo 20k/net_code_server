@@ -7,6 +7,8 @@
 #include <optional>
 #include <functional>
 #include <tuple>
+#include "duktape.h"
+#include <assert.h>
 
 #include "scripting_api_fwrd.hpp"
 
@@ -65,6 +67,164 @@ struct argument_object
 };
 #endif // 0
 
+struct stack_helper;
+
+struct stack_manage
+{
+    stack_helper& sh;
+    stack_manage(stack_helper& in);
+    ~stack_manage();
+};
+
+struct stack_dupper
+{
+    duk_context* ctx;
+    int idx;
+    duk_idx_t tidx;
+
+    stack_dupper(duk_context* _ctx, int _idx) : ctx(_ctx), idx(_idx)
+    {
+        duk_dup(ctx, idx);
+        tidx = duk_get_top(ctx);
+    }
+
+    ~stack_dupper()
+    {
+        duk_remove(ctx, tidx);
+    }
+};
+
+namespace arg
+{
+    inline
+    void dukx_push(duk_context* ctx, const char* v)
+    {
+        duk_push_string(ctx, v);
+    }
+
+    inline
+    void dukx_push(duk_context* ctx, const std::string& v)
+    {
+        duk_push_lstring(ctx, v.c_str(), v.size());
+    }
+
+    inline
+    void dukx_push(duk_context* ctx, int64_t v)
+    {
+        if(v <= INT_MAX && v >= INT_MIN)
+            duk_push_int(ctx, v);
+        else
+            duk_push_number(ctx, v);
+    }
+
+    inline
+    void dukx_push(duk_context* ctx, double v)
+    {
+        duk_push_number(ctx, v);
+    }
+
+    template<typename T>
+    inline
+    void dukx_push(duk_context* ctx, const std::vector<T>& v)
+    {
+        duk_idx_t tidx = duk_push_array(ctx);
+
+        for(int i=0; i < (int)v.size(); i++)
+        {
+            dukx_push(ctx, v[i]);
+            duk_put_prop_index(ctx, tidx, i);
+        }
+
+        duk_pop(ctx);
+    }
+
+    template<typename T, typename U>
+    inline
+    void dukx_push(duk_context* ctx, const std::map<T, U>& v)
+    {
+        duk_idx_t tidx = duk_push_object(ctx);
+
+        for(const auto& i : v)
+        {
+            dukx_push(i.first);
+            dukx_push(i.second);
+
+            duk_put_prop(ctx, tidx);
+        }
+
+        duk_pop(ctx);
+    }
+
+    inline
+    void dukx_get(duk_context* ctx, int idx, std::string& out)
+    {
+        stack_dupper sdup(ctx, idx);
+        const char* s = duk_get_string(ctx, sdup.tidx);
+
+        if(s == nullptr)
+            out = "";
+        else
+            out = s;
+    }
+
+    inline
+    void dukx_get(duk_context* ctx, int idx, int64_t& out)
+    {
+        stack_dupper sdup(ctx, idx);
+        out = duk_get_number(ctx, sdup.tidx);
+    }
+
+    inline
+    void dukx_get(duk_context* ctx, int idx, double& out)
+    {
+        stack_dupper sdup(ctx, idx);
+        out = duk_get_number(ctx, sdup.tidx);
+    }
+
+    template<typename T>
+    inline
+    void dukx_get(duk_context* ctx, int idx, std::vector<T>& out)
+    {
+        stack_dupper sdup(ctx, idx);
+
+        duk_size_t arrsizet = duk_get_length(ctx, sdup.tidx);
+
+        out.resize(arrsizet);
+
+        for(int i=0; i < arrsizet; i++)
+        {
+            duk_get_prop_index(ctx, sdup.tidx, i);
+
+            out[i] = dukx_get<T>(ctx, -1);
+
+            duk_pop(ctx);
+        }
+    }
+
+    template<typename T, typename U>
+    inline
+    void dukx_get(duk_context* ctx, int idx, std::map<T, U>& out)
+    {
+        stack_dupper sdup(ctx, idx);
+
+        duk_enum(ctx, sdup.tidx, 0);
+
+        while(duk_next(ctx, -1, 1))
+        {
+            T key;
+            dukx_get(ctx, -2, key);
+            U val;
+            dukx_get(ctx, -1, val);
+
+            out[key] = val;
+
+            duk_pop_2(ctx);
+        }
+
+        duk_pop(ctx);
+    }
+}
+
 struct stack_helper
 {
     context_t* ctx = nullptr;
@@ -83,15 +243,41 @@ struct stack_helper
     stack_helper& operator=(const std::string& v);
     stack_helper& operator=(int64_t v);
     stack_helper& operator=(double v);
-    stack_helper& operator=(const std::vector<stack_helper>& v);
+
+    template<typename T>
+    stack_helper& operator=(const std::vector<T>& in)
+    {
+        stack_manage m(*this);
+
+        arg::dukx_push(ctx, in);
+
+        return *this;
+    }
+
+    template<typename T, typename U>
+    stack_helper& operator=(const std::map<T, U>& in)
+    {
+        stack_manage m(*this);
+
+        arg::dukx_push(ctx, in);
+
+        return *this;
+    }
+
+    /*stack_helper& operator=(const std::vector<stack_helper>& v);
     stack_helper& operator=(const std::map<stack_helper, stack_helper>& v);
-    stack_helper& operator=(std::function<stack_helper(stack_helper&)> v);
+    stack_helper& operator=(std::function<stack_helper(stack_helper&)> v);*/
 
     operator std::string();
     operator int64_t();
     operator double();
-    operator std::vector<stack_helper>();
-    operator std::map<stack_helper, stack_helper>();
+    template<typename T>
+    operator std::vector<T>()
+    {
+
+    }
+    //operator std::vector<stack_helper>();
+    //operator std::map<stack_helper, stack_helper>();
 
     stack_helper& operator[](int64_t val);
     stack_helper& operator[](const std::string& str);
