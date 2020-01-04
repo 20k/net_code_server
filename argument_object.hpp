@@ -234,6 +234,9 @@ namespace js
         ///parent index
         std::variant<std::monostate, int, std::string> indices;
 
+        ///needs .is_xyz
+        ///needs the ability to be empty
+
         ///pushes a fresh object
         value(duk_context* ctx);
         value(duk_context* ctx, int idx);
@@ -241,6 +244,10 @@ namespace js
         value(duk_context* ctx, value& base, int key);
         value(duk_context* ctx, value& base, const char* key);
         ~value();
+
+        bool has(const std::string& key);
+        bool has(int key);
+        bool has(const char* key);
 
         value& operator=(const char* v);
         value& operator=(const std::string& v);

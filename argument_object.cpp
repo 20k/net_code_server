@@ -311,7 +311,7 @@ js::value::value(duk_context* _ctx, js::value& base, const std::string& key) : c
     parent_idx = base.idx;
     indices = key;
 
-    duk_get_prop_string(ctx, parent_idx, key.c_str());
+    duk_get_prop_lstring(ctx, parent_idx, key.c_str(), key.size());
 
     idx = duk_get_top_index(ctx);
 
@@ -363,6 +363,21 @@ js::value js::value::operator[](const std::string& val)
 js::value js::value::operator[](const char* val)
 {
     return js::value(ctx, *this, val);
+}
+
+bool js::value::has(const std::string& key)
+{
+    return duk_has_prop_lstring(ctx, idx, key.c_str(), key.size());
+}
+
+bool js::value::has(int key)
+{
+    return duk_has_prop_index(ctx, idx, key);
+}
+
+bool js::value::has(const char* key)
+{
+    return duk_has_prop_string(ctx, idx, key);
 }
 
 struct js_val_tester
