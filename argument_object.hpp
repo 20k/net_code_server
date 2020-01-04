@@ -230,11 +230,13 @@ namespace js
     {
         context_t* ctx = nullptr;
         int idx = -1;
+        ///parent index
         std::variant<std::monostate, int, std::string> indices;
 
         ///pushes a fresh object
         value(duk_context* ctx);
         value(duk_context* ctx, int idx);
+        ~value();
 
         value& operator=(const char* v);
         value& operator=(const std::string& v);
@@ -261,26 +263,45 @@ namespace js
             return *this;
         }
 
-        /*value& operator=(const std::vector<value>& v);
-        value& operator=(const std::map<value, value>& v);
-        value& operator=(std::function<value(value&)> v);*/
+        operator std::string()
+        {
+            std::string ret;
+            arg::dukx_get(ctx, idx, ret);
+            return ret;
+        }
 
-        operator std::string();
-        operator int64_t();
-        operator double();
+        operator int64_t()
+        {
+            int64_t ret;
+            arg::dukx_get(ctx, idx, ret);
+            return ret;
+        }
+
+        operator double()
+        {
+            double ret;
+            arg::dukx_get(ctx, idx, ret);
+            return ret;
+        }
+
         template<typename T>
         operator std::vector<T>()
         {
-
+            std::vector<T> ret;
+            arg::dukx_get(ctx, idx, ret);
+            return ret;
         }
-        //operator std::vector<value>();
-        //operator std::map<value, value>();
+
+        template<typename T, typename U>
+        operator std::map<T, U>()
+        {
+            std::map<T, U> ret;
+            arg::dukx_get(ctx, idx, ret);
+            return ret;
+        }
 
         value& operator[](int64_t val);
         value& operator[](const std::string& str);
-
-        //value(duk_context* _ctx, int _idx = -1);
-        ~value();
     };
 }
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED
