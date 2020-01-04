@@ -329,6 +329,8 @@
 			<Add directory="deps/libs" />
 			<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/win64" />
 		</Linker>
+		<Unit filename="argument_object.cpp" />
+		<Unit filename="argument_object.hpp" />
 		<Unit filename="ascii_helpers.cpp">
 			<Option target="Debug" />
 			<Option target="Release" />
