@@ -88,7 +88,7 @@ struct stack_dupper
     stack_dupper(duk_context* _ctx, int _idx) : ctx(_ctx), idx(_idx)
     {
         duk_dup(ctx, idx);
-        tidx = duk_get_top(ctx);
+        tidx = duk_get_top_index(ctx);
     }
 
     ~stack_dupper()

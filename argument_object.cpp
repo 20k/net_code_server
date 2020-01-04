@@ -299,7 +299,7 @@ js::value::value(duk_context* _ctx, int _idx) : ctx(_ctx), idx(_idx)
 {
     if(idx < 0)
     {
-        idx = duk_get_top(ctx) + idx;
+        idx = duk_get_top_index(ctx);
 
         if(idx < 0)
             throw std::runtime_error("bad idx < 0");
@@ -317,7 +317,7 @@ js::value js::value::operator[](int64_t val)
 
     duk_get_prop_index(ctx, idx, val);
 
-    ret.idx = duk_get_top(ctx);
+    ret.idx = duk_get_top_index(ctx);
     ret.indices = val;
     ret.parent_idx = idx;
 
