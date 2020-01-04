@@ -138,13 +138,13 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
 
             bool any = false;
 
-            /*if(args.has("on_wheelmoved"))
+            if(args.has("on_wheelmoved"))
             {
                 if(state.has_mousewheel_state(current_id))
                 {
                     vec2f wheel = state.consume_mousewheel_state(current_id);
 
-                    js::value local_args(ctx);
+                    js::value local_args(vctx);
                     local_args["x"] = wheel.x();
                     local_args["y"] = wheel.y();
 
@@ -170,7 +170,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                     width_height.first = clamp(width_height.first, 5, 400);
                     width_height.second = clamp(width_height.second, 5, 400);
 
-                    js::value local_args(ctx);
+                    js::value local_args(vctx);
                     local_args["width"] = width_height.first;
                     local_args["height"] = width_height.second;
 
@@ -206,10 +206,10 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                     bool is_repeat = unprocessed_keystrokes[0].is_repeat;
                     unprocessed_keystrokes.erase(unprocessed_keystrokes.begin());
 
-                    js::value local_args1(ctx);
+                    js::value local_args1(vctx);
                     local_args1 = c;
 
-                    js::value local_args2(ctx);
+                    js::value local_args2(vctx);
                     local_args2 = is_repeat;
 
                     auto [success, result] = js::call_prop(args, "on_input", local_args1, local_args2);
@@ -230,7 +230,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
             {
                 double current_dt = clk.restart().asMicroseconds() / 1000.;
 
-                js::value local_args(ctx);
+                js::value local_args(vctx);
                 local_args = current_dt;
 
                 auto [success, result] = js::call_prop(args, "on_update", local_args);
@@ -243,7 +243,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                 }
 
                 any = true;
-            }*/
+            }
 
             if(args.has("on_draw"))
             {
@@ -260,8 +260,6 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
 
                 any = true;
             }
-
-            printf("Postdestroy\n");
 
             if(!any)
             {

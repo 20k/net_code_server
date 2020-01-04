@@ -94,7 +94,7 @@ struct stack_dupper
     ~stack_dupper()
     {
         if(tidx != duk_get_top_index(ctx))
-            throw std::runtime_error("BAD STACK DUP");
+            assert(false);
 
         duk_remove(ctx, tidx);
     }
@@ -258,7 +258,6 @@ namespace js
         value_context(context_t* ctx);
 
         void free(int idx);
-        //bool is_free(int idx);
     };
 
     ///ok so

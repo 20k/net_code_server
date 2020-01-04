@@ -241,14 +241,6 @@ void js::value_context::free(int idx)
     free_stack.resize(duk_get_top(ctx));
 }
 
-/*js::value_context::is_free(int idx)
-{
-    int top_index = duk_get_top_index(ctx);
-    int my_top = (int)free_stack.size() - 1;
-
-    if(top_index)
-}*/
-
 stack_manage::stack_manage(js::value& in) : sh(in)
 {
     if(sh.indices.index() == 0)
