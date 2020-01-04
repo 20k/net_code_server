@@ -284,8 +284,6 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
 
             sand_data->clk.restart();
             sand_data->realtime_ms_awake_elapsed = 0;
-
-            duk_gc(ctx, 0);
         }
         catch(...)
         {
