@@ -288,6 +288,15 @@ js::value& js::value::operator=(int64_t v)
     return *this;
 }
 
+js::value& js::value::operator=(int v)
+{
+    stack_manage m(*this);
+
+    arg::dukx_push(ctx, v);
+
+    return *this;
+}
+
 js::value& js::value::operator=(double v)
 {
     stack_manage m(*this);
@@ -509,7 +518,11 @@ struct js_val_tester
 
         js::value tobj(ctx, -1);
 
+        printf("PRETOP %i\n", duk_get_top(ctx));
+
         assert((std::string)tobj["key"] == "value");
+
+        printf("TOP %i\n", duk_get_top(ctx));
 
         assert(duk_get_top(ctx) == 4);
 

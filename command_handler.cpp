@@ -142,18 +142,18 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                 {
                     vec2f wheel = state.consume_mousewheel_state(current_id);
 
-                    duk_push_string(ctx, "on_wheelmoved");
-                    push_dukobject(ctx, "x", wheel.x(), "y", wheel.y());
+                    js::value local_args(ctx);
+                    local_args["x"] = wheel.x();
+                    local_args["y"] = wheel.y();
 
-                    if(duk_pcall_prop(ctx, -3, 1) != DUK_EXEC_SUCCESS)
+                    auto [success, result] = js::call_prop(args, "on_wheelmoved", local_args);
+
+                    if(!success)
                     {
-                        ret = duk_safe_to_std_string(ctx, -1);
+                        ret = (std::string)result;
                         force_terminate = true;
-                        duk_pop(ctx);
                         break;
                     }
-
-                    duk_pop(ctx);
                 }
 
                 any = true;
@@ -168,18 +168,18 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                     width_height.first = clamp(width_height.first, 5, 400);
                     width_height.second = clamp(width_height.second, 5, 400);
 
-                    duk_push_string(ctx, "on_resize");
-                    push_dukobject(ctx, "width", width_height.first, "height", width_height.second);
+                    js::value local_args(ctx);
+                    local_args["width"] = width_height.first;
+                    local_args["height"] = width_height.second;
 
-                    if(duk_pcall_prop(ctx, -3, 1) != DUK_EXEC_SUCCESS)
+                    auto [success, result] = js::call_prop(args, "on_resize", local_args);
+
+                    if(!success)
                     {
-                        ret = duk_safe_to_std_string(ctx, -1);
+                        ret = (std::string)result;
                         force_terminate = true;
-                        duk_pop(ctx);
                         break;
                     }
-
-                    duk_pop(ctx);
                 }
 
                 ///DONT SET real_operation
@@ -204,21 +204,20 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                     bool is_repeat = unprocessed_keystrokes[0].is_repeat;
                     unprocessed_keystrokes.erase(unprocessed_keystrokes.begin());
 
-                    //std::cout << "called on_input " << get_wall_time() << " " << c << std::endl;
+                    js::value local_args1(ctx);
+                    local_args1 = c;
 
-                    duk_push_string(ctx, "on_input");
-                    duk_push_string(ctx, c.c_str());
-                    push_duk_val(ctx, is_repeat);
+                    js::value local_args2(ctx);
+                    local_args2 = is_repeat;
 
-                    if(duk_pcall_prop(ctx, -4, 2) != DUK_EXEC_SUCCESS)
+                    auto [success, result] = js::call_prop(args, "on_input", local_args1, local_args2);
+
+                    if(!success)
                     {
-                        ret = duk_safe_to_std_string(ctx, -1);
+                        ret = (std::string)result;
                         force_terminate = true;
-                        duk_pop(ctx);
                         break;
                     }
-
-                    duk_pop(ctx);
                 }
 
                 ///DONT SET real_operation
@@ -229,40 +228,33 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
             {
                 double current_dt = clk.restart().asMicroseconds() / 1000.;
 
-                duk_push_string(ctx, "on_update");
-                duk_push_number(ctx, current_dt);
+                js::value local_args(ctx);
+                local_args = current_dt;
 
-                if(duk_pcall_prop(ctx, -3, 1) != DUK_EXEC_SUCCESS)
+                auto [success, result] = js::call_prop(args, "on_update", local_args);
+
+                if(!success)
                 {
-                    ret = duk_safe_to_std_string(ctx, -1);
+                    ret = (std::string)result;
                     force_terminate = true;
-                    duk_pop(ctx);
                     break;
                 }
-
-                duk_pop(ctx);
 
                 any = true;
             }
 
             if(args.has("on_draw"))
             {
-                duk_push_string(ctx, "on_draw");
+                auto [success, result] = js::call_prop(args, "on_draw");
 
-                if(duk_pcall_prop(ctx, -2, 0) != DUK_EXEC_SUCCESS)
+                if(!success)
                 {
-                    ret = duk_safe_to_std_string(ctx, -1);
+                    ret = (std::string)result;
                     force_terminate = true;
-                    duk_pop(ctx);
                     break;
                 }
 
-                if(!duk_is_undefined(ctx, -1))
-                {
-                    async_pipe(ctx);
-                }
-
-                duk_pop(ctx);
+                async_pipe(ctx);
 
                 any = true;
             }

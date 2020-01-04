@@ -100,18 +100,6 @@ struct stack_dupper
 namespace arg
 {
     inline
-    std::string safe_to_string(duk_context* ctx, duk_idx_t idx)
-    {
-        duk_size_t out = 0;
-        const char* ptr = duk_safe_to_lstring(ctx, idx, &out);
-
-        if(ptr == nullptr || out == 0)
-            return std::string();
-
-        return std::string(ptr, out);
-    }
-
-    inline
     void dukx_push(duk_context* ctx, const char* v)
     {
         duk_push_string(ctx, v);
@@ -176,8 +164,20 @@ namespace arg
     void dukx_get(duk_context* ctx, int idx, std::string& out)
     {
         stack_dupper sdup(ctx, idx);
+
         duk_dup(ctx, sdup.tidx);
-        out = safe_to_string(ctx, idx);
+
+        duk_size_t flen = 0;
+        const char* ptr = duk_safe_to_lstring(ctx, -1, &flen);
+
+        if(ptr == nullptr || flen == 0)
+        {
+            duk_pop(ctx);
+            return;
+        }
+
+        out = std::string(ptr, flen);
+        duk_pop(ctx);
     }
 
     inline
@@ -277,6 +277,7 @@ namespace js
         value& operator=(const char* v);
         value& operator=(const std::string& v);
         value& operator=(int64_t v);
+        value& operator=(int v);
         value& operator=(double v);
         value& operator=(std::nullopt_t v);
 
@@ -356,7 +357,7 @@ namespace js
 
     template<typename... T>
     inline
-    value call(value& func, T&&... vals)
+    std::pair<bool, value> call(value& func, T&&... vals)
     {
         duk_dup(func.ctx, func.idx);
 
@@ -367,15 +368,15 @@ namespace js
         ///== 0 is success
         if(duk_pcall(func.ctx, num) == 0)
         {
-            return js::value(func.ctx, -1);
+            return {true, js::value(func.ctx, -1)};
         }
 
-        return js::value(func.ctx, -1);
+        return {false, js::value(func.ctx, -1)};
     }
 
     template<typename I, typename... T>
     inline
-    value call_prop(value& obj, const I& key, T&&... vals)
+    std::pair<bool, value> call_prop(value& obj, const I& key, T&&... vals)
     {
         js::value func = obj[key];
 
