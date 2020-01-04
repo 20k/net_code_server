@@ -29,6 +29,7 @@
 #include "steam_auth.hpp"
 #include <networking/serialisable.hpp>
 #include "serialisables.hpp"
+#include "argument_object.hpp"
 
 struct unsafe_info
 {
@@ -123,6 +124,8 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
     /*MAKE_PERF_COUNTER();
     mongo_diagnostics diagnostic_scope;*/
 
+    js::value args(ctx, -1);
+
     bool force_terminate = false;
 
     while(!force_terminate)
@@ -133,7 +136,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
 
             bool any = false;
 
-            if(duk_has_prop_string(ctx, -1, "on_wheelmoved"))
+            if(args.has("on_wheelmoved"))
             {
                 if(state.has_mousewheel_state(current_id))
                 {
@@ -156,7 +159,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                 any = true;
             }
 
-            if(duk_has_prop_string(ctx, -1, "on_resize"))
+            if(args.has("on_resize"))
             {
                 if(state.has_new_width_height(current_id))
                 {
@@ -183,7 +186,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                 any = true;
             }
 
-            if(duk_has_prop_string(ctx, -1, "on_input"))
+            if(args.has("on_input"))
             {
                 std::vector<unprocessed_key_info> unprocessed_keystrokes;
 
@@ -222,7 +225,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                 any = true;
             }
 
-            if(duk_has_prop_string(ctx, -1, "on_update"))
+            if(args.has("on_update"))
             {
                 double current_dt = clk.restart().asMicroseconds() / 1000.;
 
@@ -242,7 +245,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                 any = true;
             }
 
-            if(duk_has_prop_string(ctx, -1, "on_draw"))
+            if(args.has("on_draw"))
             {
                 duk_push_string(ctx, "on_draw");
 
