@@ -311,7 +311,7 @@ js::value::~value()
     duk_remove(ctx, idx);
 }
 
-js::value& js::value::operator[](int64_t val)
+js::value js::value::operator[](int64_t val)
 {
     js::value ret(ctx, -1);
 
@@ -322,4 +322,22 @@ js::value& js::value::operator[](int64_t val)
     ret.parent_idx = idx;
 
     return ret;
+}
+
+struct js_val_tester
+{
+    js_val_tester()
+    {
+        duk_context* ctx = duk_create_heap_default();
+
+        js::value val(ctx);
+        val = (int64_t)53;
+
+        assert((int64_t)val == 53);
+    }
+};
+
+namespace
+{
+    js_val_tester tester;
 }
