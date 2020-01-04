@@ -535,6 +535,12 @@ struct js_val_tester
         assert((int64_t)fmap["hithere"] == 12);
         assert((int64_t)fmap["pooper"] == 55);
 
+        std::map<std::string, int> out_map = fmap;
+
+        assert(out_map.size() == 2);
+        assert(out_map["hithere"] == 12);
+        assert(out_map["pooper"] == 55);
+
         printf("Done js val testers\n");
     }
 };
