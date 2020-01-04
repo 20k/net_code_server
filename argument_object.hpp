@@ -180,6 +180,13 @@ namespace arg
     }
 
     inline
+    void dukx_get(duk_context* ctx, int idx, int& out)
+    {
+        stack_dupper sdup(ctx, idx);
+        out = duk_get_int(ctx, sdup.tidx);
+    }
+
+    inline
     void dukx_get(duk_context* ctx, int idx, double& out)
     {
         stack_dupper sdup(ctx, idx);
@@ -297,6 +304,13 @@ namespace js
         operator int64_t()
         {
             int64_t ret;
+            arg::dukx_get(ctx, idx, ret);
+            return ret;
+        }
+
+        operator int()
+        {
+            int ret;
             arg::dukx_get(ctx, idx, ret);
             return ret;
         }
