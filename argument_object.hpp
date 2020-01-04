@@ -134,8 +134,6 @@ namespace arg
             dukx_push(ctx, v[i]);
             duk_put_prop_index(ctx, tidx, i);
         }
-
-        duk_pop(ctx);
     }
 
     template<typename T, typename U>
@@ -151,8 +149,6 @@ namespace arg
 
             duk_put_prop(ctx, tidx);
         }
-
-        duk_pop(ctx);
     }
 
     inline
