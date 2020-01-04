@@ -237,6 +237,9 @@ namespace js
         ///pushes a fresh object
         value(duk_context* ctx);
         value(duk_context* ctx, int idx);
+        value(duk_context* ctx, value& base, const std::string& key);
+        value(duk_context* ctx, value& base, int key);
+        value(duk_context* ctx, value& base, const char* key);
         ~value();
 
         value& operator=(const char* v);
@@ -303,6 +306,7 @@ namespace js
 
         value operator[](int64_t val);
         value operator[](const std::string& str);
+        value operator[](const char* str);
 
         friend bool operator==(const value& v1, const value& v2)
         {

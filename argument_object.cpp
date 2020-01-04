@@ -306,6 +306,45 @@ js::value::value(duk_context* _ctx, int _idx) : ctx(_ctx), idx(_idx)
     }
 }
 
+js::value::value(duk_context* _ctx, js::value& base, const std::string& key) : ctx(_ctx)
+{
+    parent_idx = base.idx;
+    indices = key;
+
+    duk_get_prop_string(ctx, parent_idx, key.c_str());
+
+    idx = duk_get_top_index(ctx);
+
+    if(idx < 0)
+        throw std::runtime_error("bad idx < 0");
+}
+
+js::value::value(duk_context* _ctx, js::value& base, int key) : ctx(_ctx)
+{
+    parent_idx = base.idx;
+    indices = key;
+
+    duk_get_prop_index(ctx, parent_idx, key);
+
+    idx = duk_get_top_index(ctx);
+
+    if(idx < 0)
+        throw std::runtime_error("bad idx < 0");
+}
+
+js::value::value(duk_context* _ctx, js::value& base, const char* key) : ctx(_ctx)
+{
+    parent_idx = base.idx;
+    indices = std::string(key);
+
+    duk_get_prop_string(ctx, parent_idx, key);
+
+    idx = duk_get_top_index(ctx);
+
+    if(idx < 0)
+        throw std::runtime_error("bad idx < 0");
+}
+
 js::value::~value()
 {
     duk_remove(ctx, idx);
@@ -313,15 +352,17 @@ js::value::~value()
 
 js::value js::value::operator[](int64_t val)
 {
-    js::value ret(ctx, -1);
+    return js::value(ctx, *this, val);
+}
 
-    duk_get_prop_index(ctx, idx, val);
+js::value js::value::operator[](const std::string& val)
+{
+    return js::value(ctx, *this, val);
+}
 
-    ret.idx = duk_get_top_index(ctx);
-    ret.indices = val;
-    ret.parent_idx = idx;
-
-    return ret;
+js::value js::value::operator[](const char* val)
+{
+    return js::value(ctx, *this, val);
 }
 
 struct js_val_tester
@@ -334,6 +375,18 @@ struct js_val_tester
         val = (int64_t)53;
 
         assert((int64_t)val == 53);
+
+        assert(duk_get_top(ctx) == 1);
+
+        js::value root(ctx);
+        js::value base(ctx, root, "hello");
+        base = (int64_t)53;
+
+        assert((int64_t)root["hello"] == 53);
+
+        assert(duk_get_top(ctx) == 3);
+
+        printf("Done js val testers\n");
     }
 };
 
