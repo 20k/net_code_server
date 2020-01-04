@@ -1,5 +1,7 @@
 #include "argument_object.hpp"
+#include "duktape.h"
 
+#if 0
 #include <assert.h>
 
 value_object& value_object::operator=(const std::string& v)
@@ -129,19 +131,20 @@ bool operator<(const value_object& l, const value_object& r)
     if(l.var.index() > r.var.index())
         return false;
 
-    if(l.var.index() != 5)
+    if(l.var.index() != 6)
     {
         CHECK_INDEX(0);
         CHECK_INDEX(1);
         CHECK_INDEX(2);
         CHECK_INDEX(3);
         CHECK_INDEX(4);
+        CHECK_INDEX(5);
 
         throw std::runtime_error("Error in < for value object");
     }
     else
     {
-        return get_address(std::get<5>(l.var)) < get_address(std::get<5>(r.var));
+        return get_address(std::get<6>(l.var)) < get_address(std::get<6>(r.var));
     }
 
     //return l.var < r.var;
@@ -186,4 +189,67 @@ namespace
 {
     tester t;
 }
+#endif // 0
 
+stack_helper::stack_helper(duk_context* _ctx, int _idx)
+{
+    duk_idx_t thr_idx = duk_push_thread(_ctx);
+    ctx = duk_get_context(_ctx, thr_idx);
+
+    idx = 0;
+
+    duk_dup(ctx, -1 + _idx);
+    duk_xmove_top(ctx, _ctx, 1);
+}
+
+struct stack_manage
+{
+    stack_helper& sh;
+
+    stack_manage(stack_helper& in) : sh(in)
+    {
+        if(sh.indices.index() == 0)
+        {
+            ///nothing
+        }
+        else
+        {
+            if(sh.indices.index() == 1)
+                duk_push_int(sh.ctx, std::get<1>(sh.indices));
+            else
+                duk_push_string(sh.ctx, std::get<2>(sh.indices).c_str());
+        }
+    }
+
+    ~stack_manage()
+    {
+        if(sh.indices.index() == 0)
+        {
+            duk_replace(sh.ctx, sh.idx);
+        }
+        else
+        {
+            duk_put_prop(sh.ctx, sh.idx);
+        }
+    }
+};
+
+stack_helper& stack_helper::operator=(const char* v)
+{
+    stack_manage m(*this);
+
+    duk_push_string(ctx, v);
+
+    return *this;
+}
+
+stack_helper& stack_helper::operator=(const std::string& v);
+stack_helper& stack_helper::operator=(int64_t v);
+stack_helper& stack_helper::operator=(double v);
+stack_helper& stack_helper::operator=(const std::vector<stack_helper>& v);
+stack_helper& stack_helper::operator=(const std::map<stack_helper, stack_helper>& v);
+
+stack_helper::~stack_helper()
+{
+    duk_pop_n(ctx, duk_get_top(ctx));
+}
