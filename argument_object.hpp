@@ -121,6 +121,12 @@ namespace arg
     }
 
     inline
+    void dukx_push(duk_context* ctx, int v)
+    {
+        duk_push_int(ctx, v);
+    }
+
+    inline
     void dukx_push(duk_context* ctx, double v)
     {
         duk_push_number(ctx, v);
@@ -147,8 +153,8 @@ namespace arg
 
         for(const auto& i : v)
         {
-            dukx_push(i.first);
-            dukx_push(i.second);
+            dukx_push(ctx, i.first);
+            dukx_push(ctx, i.second);
 
             duk_put_prop(ctx, tidx);
         }

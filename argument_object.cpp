@@ -525,6 +525,16 @@ struct js_val_tester
 
         assert(duk_get_top(ctx) == 3);
 
+        std::map<std::string, int> test_object;
+        test_object["hithere"] = 12;
+        test_object["pooper"] = 55;
+
+        js::value fmap(ctx);
+        fmap = test_object;
+
+        assert((int64_t)fmap["hithere"] == 12);
+        assert((int64_t)fmap["pooper"] == 55);
+
         printf("Done js val testers\n");
     }
 };
