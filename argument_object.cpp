@@ -221,7 +221,10 @@ stack_manage::~stack_manage()
 {
     if(sh.indices.index() == 0)
     {
-        duk_replace(sh.ctx, sh.idx);
+        if(sh.idx != -1)
+            duk_replace(sh.ctx, sh.idx);
+        else
+            sh.idx = duk_get_top_index(sh.ctx);
     }
     else
     {
@@ -235,7 +238,11 @@ stack_manage::~stack_manage()
             duk_push_string(sh.ctx, std::get<2>(sh.indices).c_str());
 
         duk_get_prop(sh.ctx, sh.parent_idx);
-        duk_replace(sh.ctx, sh.idx);
+
+        if(sh.idx != -1)
+            duk_replace(sh.ctx, sh.idx);
+        else
+            sh.idx = duk_get_top_index(sh.ctx);
     }
 }
 
@@ -290,6 +297,31 @@ js::value& js::value::operator=(double v)
     return *this;
 }
 
+js::value& js::value::operator=(std::nullopt_t t)
+{
+    if(idx == -1)
+        return *this;
+
+    if(indices.index() == 0)
+    {
+        duk_remove(ctx, idx);
+    }
+    else
+    {
+        if(indices.index() == 1)
+        {
+            duk_del_prop_index(ctx, idx, std::get<int>(indices));
+        }
+        else
+        {
+            duk_del_prop_lstring(ctx, idx, std::get<std::string>(indices).c_str(), std::get<std::string>(indices).size());
+        }
+    }
+
+    idx = -1;
+    return *this;
+}
+
 js::value::value(duk_context* _ctx) : ctx(_ctx)
 {
     idx = duk_push_object(ctx);
@@ -311,6 +343,12 @@ js::value::value(duk_context* _ctx, js::value& base, const std::string& key) : c
     parent_idx = base.idx;
     indices = key;
 
+    if(parent_idx == -1)
+        throw std::runtime_error("Empty parent");
+
+    if(!base.has(key))
+        return;
+
     duk_get_prop_lstring(ctx, parent_idx, key.c_str(), key.size());
 
     idx = duk_get_top_index(ctx);
@@ -323,6 +361,12 @@ js::value::value(duk_context* _ctx, js::value& base, int key) : ctx(_ctx)
 {
     parent_idx = base.idx;
     indices = key;
+
+    if(parent_idx == -1)
+        throw std::runtime_error("Empty parent");
+
+    if(!base.has(key))
+        return;
 
     duk_get_prop_index(ctx, parent_idx, key);
 
@@ -337,6 +381,12 @@ js::value::value(duk_context* _ctx, js::value& base, const char* key) : ctx(_ctx
     parent_idx = base.idx;
     indices = std::string(key);
 
+    if(parent_idx == -1)
+        throw std::runtime_error("Empty parent");
+
+    if(!base.has(key))
+        return;
+
     duk_get_prop_string(ctx, parent_idx, key);
 
     idx = duk_get_top_index(ctx);
@@ -347,7 +397,8 @@ js::value::value(duk_context* _ctx, js::value& base, const char* key) : ctx(_ctx
 
 js::value::~value()
 {
-    duk_remove(ctx, idx);
+    if(idx != -1)
+        duk_remove(ctx, idx);
 }
 
 js::value js::value::operator[](int64_t val)
@@ -367,17 +418,63 @@ js::value js::value::operator[](const char* val)
 
 bool js::value::has(const std::string& key)
 {
+    if(idx == -1)
+        return false;
+
     return duk_has_prop_lstring(ctx, idx, key.c_str(), key.size());
 }
 
 bool js::value::has(int key)
 {
+    if(idx == -1)
+        return false;
+
     return duk_has_prop_index(ctx, idx, key);
 }
 
 bool js::value::has(const char* key)
 {
+    if(idx == -1)
+        return false;
+
     return duk_has_prop_string(ctx, idx, key);
+}
+
+bool js::value::is_string()
+{
+    if(idx == -1)
+        return false;
+
+    return duk_is_string(ctx, idx);
+}
+
+bool js::value::is_number()
+{
+    if(idx == -1)
+        return false;
+
+    return duk_is_number(ctx, idx);
+}
+
+bool js::value::is_array()
+{
+    if(idx == -1)
+        return false;
+
+    return duk_is_array(ctx, idx);
+}
+
+bool js::value::is_map()
+{
+    if(idx == -1)
+        return false;
+
+    return duk_is_object(ctx, idx);
+}
+
+bool js::value::is_empty()
+{
+    return idx == -1;
 }
 
 struct js_val_tester

@@ -249,10 +249,17 @@ namespace js
         bool has(int key);
         bool has(const char* key);
 
+        bool is_string();
+        bool is_number();
+        bool is_array();
+        bool is_map();
+        bool is_empty();
+
         value& operator=(const char* v);
         value& operator=(const std::string& v);
         value& operator=(int64_t v);
         value& operator=(double v);
+        value& operator=(std::nullopt_t v);
 
         template<typename T>
         value& operator=(const std::vector<T>& in)
