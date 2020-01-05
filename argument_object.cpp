@@ -592,7 +592,9 @@ void test_func_with_args(int one, std::string two)
 
 std::string test_func_with_return(double one, std::string two)
 {
-    return "";
+    printf("Called with %lf %s\n", one, two.c_str());
+
+    return "poopy";
 }
 
 struct js_val_tester
@@ -663,11 +665,24 @@ struct js_val_tester
         assert(out_map["hithere"] == 12);
         assert(out_map["pooper"] == 55);
 
-        js::value func(vctx);
-        //func.set<test_func_with_return>();
-        //func = &test_func_with_return;
-        //func.set(&test_func_with_return);
-        func = js::function<test_func_with_return>;
+        {
+            js::value func(vctx);
+            func = js::function<test_func_with_return>;
+
+            js::value a1(vctx);
+            a1 = 12;
+
+            js::value some_string(vctx);
+            some_string = "poopersdf";
+
+            auto [res, retval] = js::call(func, a1, some_string);
+
+            std::string rvals = retval;
+
+            printf("Found %s\n", rvals.c_str());
+
+            assert(rvals == "poopy");
+        }
 
         //js_funcptr_t fptr = js_wrapper<test_func_with_return>;
 
