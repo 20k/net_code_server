@@ -5,11 +5,9 @@
 #include <vector>
 #include <map>
 #include <optional>
-#include <functional>
 #include <tuple>
 #include "duktape.h"
 #include <assert.h>
-#include <iostream>
 
 #include "scripting_api_fwrd.hpp"
 

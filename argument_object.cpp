@@ -601,6 +601,14 @@ bool js::value::is_empty()
     return idx == -1;
 }
 
+bool js::value::is_function()
+{
+    if(idx == -1)
+        return false;
+
+    return duk_is_function(ctx, idx);
+}
+
 void js::value::release()
 {
     released = true;
@@ -717,10 +725,6 @@ struct js_val_tester
 
             assert(duk_get_top(ctx) == 8);
         }
-
-        //js_funcptr_t fptr = js_wrapper<test_func_with_return>;
-
-        //static_assert(std::is_same_v<decltype(js_dummy), decltype(js_wrapper<test_func_with_return>)>);
 
         printf("Done js val testers\n");
     }
