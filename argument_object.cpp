@@ -399,6 +399,16 @@ js::value& js::value::operator=(const value& right)
     return *this;
 }
 
+js::value& js::value::operator=(js_funcptr_t fptr)
+{
+    stack_manage m(*this);
+
+    arg::dukx_push(ctx, fptr);
+
+    return *this;
+}
+
+
 js::value::value(const js::value& value)
 {
     vctx = value.vctx;
@@ -485,7 +495,7 @@ js::value::value(js::value_context& _vctx, js::value& base, const char* key) : v
 
 js::value::~value()
 {
-    if(idx != -1)
+    if(idx != -1 && !released)
         vctx->free(idx);
 }
 
@@ -563,6 +573,11 @@ bool js::value::is_map()
 bool js::value::is_empty()
 {
     return idx == -1;
+}
+
+void js::value::release()
+{
+    released = true;
 }
 
 void test_func()

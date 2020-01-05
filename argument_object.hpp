@@ -100,123 +100,6 @@ struct stack_dupper
     }
 };
 
-template<typename T, typename... U>
-inline
-constexpr int num_args(T(*fptr)(U...))
-{
-    return sizeof...(U);
-}
-
-template<typename T, typename... U>
-inline
-constexpr int num_rets(T(*fptr)(U...))
-{
-    return !std::is_same_v<void, T>;
-}
-
-template<typename T, typename... U>
-inline
-std::tuple<U...> tup_args(T(*fptr)(U...))
-{
-    return std::tuple<U...>();
-}
-
-namespace js
-{
-    struct value_context;
-    struct value;
-}
-
-template<typename T>
-T extract_element(js::value_context& vctx, int idx, int stack_base)
-{
-    js::value val(vctx, stack_base + idx);
-
-    return (T)val;
-}
-
-template<typename tup, std::size_t... Is>
-inline
-void set_args(js::value_context& vctx, tup& t, std::index_sequence<Is...>, int stack_base)
-{
-    ((std::get<Is>(t) = extract_element<std::tuple_element_t<Is, tup>>(vctx, Is, stack_base)), ...);
-}
-
-template<typename T, typename... U>
-inline
-duk_ret_t js_safe_function_decomposed(duk_context* ctx, void* udata, T(*func)(U...))
-{
-    js::value_context vctx(ctx);
-
-    constexpr int nargs = sizeof...(U);
-    std::tuple<U...> tup = tup_args(func);
-
-    int stack_base = duk_get_top(ctx) - nargs;
-
-    std::index_sequence_for<U...> iseq;
-
-    set_args(vctx, tup, iseq, stack_base);
-
-    /*std::apply([](auto... v)
-    {
-        ((std::get<))
-    }, tup);*/
-
-    return 1;
-}
-
-template<auto func>
-inline
-duk_ret_t js_safe_function(duk_context* ctx, void* udata)
-{
-    /*constexpr int nargs = num_args(func);
-
-    auto tup = tup_args(func);
-
-    int stack_base = (duk_get_top(ctx) - nargs);
-
-    js::value_context vctx(ctx);
-
-    std::index_sequence_for<
-
-    std::apply([](auto... v)
-    {
-
-    }, tup);*/
-
-    /*for(int i=0; i < nargs; i++)
-    {
-        js::value val(vctx, stack_base + i);
-
-        std::get<
-    }*/
-
-    return js_safe_function_decomposed(ctx, udata, func);
-
-    //return 1;
-}
-
-template<auto func>
-inline
-duk_ret_t js_decompose(duk_context* ctx)
-{
-    int nargs = num_args(func);
-    int nrets = num_rets(func);
-
-    if(duk_safe_call(ctx, &js_safe_function<func>, nullptr, nargs, nrets) != DUK_EXEC_SUCCESS)
-    {
-        throw std::runtime_error("Bad function call for duktape");
-    }
-
-    return nrets;
-}
-
-inline
-duk_ret_t js_dummy(duk_context* ctx)
-{
-    return 1;
-}
-
 using js_funcptr_t = duk_ret_t(*)(duk_context*);
 
 namespace arg
@@ -427,6 +310,7 @@ namespace js
         context_t* ctx = nullptr;
         int idx = -1;
         int parent_idx = -1;
+        bool released = false;
         ///parent index
         std::variant<std::monostate, int, std::string> indices;
 
@@ -449,6 +333,9 @@ namespace js
         bool is_map();
         bool is_empty();
         bool is_function();
+
+        ///stop managing element
+        void release();
 
         value& operator=(const char* v);
         value& operator=(const std::string& v);
@@ -478,14 +365,7 @@ namespace js
             return *this;
         }
 
-        value& operator=(js_funcptr_t fptr)
-        {
-            stack_manage m(*this);
-
-            arg::dukx_push(ctx, fptr);
-
-            return *this;
-        }
+        value& operator=(js_funcptr_t fptr);
 
         /*template<typename T, typename... U>
         value& operator=(T(*&fptr)(U... args))
@@ -577,13 +457,6 @@ namespace js
         }
     };
 
-    template<auto func>
-    inline
-    duk_ret_t function(duk_context* ctx)
-    {
-        return js_decompose<func>(ctx);
-    }
-
     template<typename... T>
     inline
     std::pair<bool, value> call(value& func, T&&... vals)
@@ -610,6 +483,110 @@ namespace js
         js::value func = obj[key];
 
         return call(func, std::forward<T>(vals)...);
+    }
+
+    template<typename T, typename... U>
+    inline
+    constexpr int num_args(T(*fptr)(U...))
+    {
+        return sizeof...(U);
+    }
+
+    template<typename T, typename... U>
+    inline
+    constexpr int num_rets(T(*fptr)(U...))
+    {
+        return !std::is_same_v<void, T>;
+    }
+
+    template<typename T, typename... U>
+    inline
+    std::tuple<U...> tup_args(T(*fptr)(U...))
+    {
+        return std::tuple<U...>();
+    }
+
+    template<typename T>
+    T extract_element(js::value_context& vctx, int idx, int stack_base)
+    {
+        js::value val(vctx, stack_base + idx);
+        val.release();
+
+        return (T)val;
+    }
+
+    template<typename tup, std::size_t... Is>
+    inline
+    void set_args(js::value_context& vctx, tup& t, std::index_sequence<Is...>, int stack_base)
+    {
+        ((std::get<Is>(t) = extract_element<std::tuple_element_t<Is, tup>>(vctx, Is, stack_base)), ...);
+    }
+
+    template<typename T, typename... U>
+    inline
+    duk_ret_t js_safe_function_decomposed(duk_context* ctx, void* udata, T(*func)(U...))
+    {
+        js::value_context vctx(ctx);
+
+        constexpr int nargs = sizeof...(U);
+        std::tuple<U...> tup = tup_args(func);
+
+        int stack_base = duk_get_top(ctx) - nargs;
+
+        std::index_sequence_for<U...> iseq;
+
+        set_args(vctx, tup, iseq, stack_base);
+
+        if constexpr(std::is_same_v<void, T>)
+        {
+            std::apply(func, tup);
+            return DUK_EXEC_SUCCESS;
+        }
+        else
+        {
+            auto rval = std::apply(func, tup);
+
+            js::value v(vctx);
+            v.release(); ///intentionally leave on duktape stack
+            v = rval;
+
+            return DUK_EXEC_SUCCESS;
+        }
+    }
+
+    template<auto func>
+    inline
+    duk_ret_t js_safe_function(duk_context* ctx, void* udata)
+    {
+        return js_safe_function_decomposed(ctx, udata, func);
+    }
+
+    template<auto func>
+    inline
+    duk_ret_t js_decompose(duk_context* ctx)
+    {
+        int nargs = num_args(func);
+        int nrets = num_rets(func);
+
+        if(duk_safe_call(ctx, &js_safe_function<func>, nullptr, nargs, nrets) != DUK_EXEC_SUCCESS)
+        {
+            throw std::runtime_error("Bad function call for duktape");
+        }
+
+        return nrets;
+    }
+
+    inline
+    duk_ret_t js_dummy(duk_context* ctx)
+    {
+        return 1;
+    }
+
+    template<auto func>
+    inline
+    duk_ret_t function(duk_context* ctx)
+    {
+        return js_decompose<func>(ctx);
     }
 }
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED
