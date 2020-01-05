@@ -166,39 +166,6 @@ namespace arg
         }
     }
 
-    /*template<typename T, typename... U>
-    inline
-    void dukx_push(duk_context* ctx, T(*fptr)(U... args))
-    {
-        const char* hidden_args = "\xFFa";
-
-        int nargs = sizeof...(args);
-
-        int nrets = 1;
-
-        if constexpr(std::is_same_v<T, void>)
-        {
-            nrets = 0;
-        }
-
-        duk_push_c_function(ctx, js_wrapper, nargs);
-        duk_put_prop_string(ctx, )
-    }*/
-
-    /*template<typename T, T& func, typename U, typename... V>
-    inline
-    void dukx_push_func(duk_context* ctx, U(*fptr)(V...))
-    {
-        duk_push_c_function(ctx, js_wrapper<fptr>, sizeof...(V));
-    }*/
-
-    /*template<auto func>
-    inline
-    void dukx_push_func(duk_context* ctx)
-    {
-        duk_push_c_function(ctx, &js_wrapper<func>, num_args(func));
-    }*/
-
     inline
     void dukx_push(duk_context* ctx, js_funcptr_t fptr)
     {
@@ -368,42 +335,6 @@ namespace js
 
         value& operator=(js_funcptr_t fptr);
 
-        /*template<typename T, typename... U>
-        value& operator=(T(*&fptr)(U... args))
-        {
-            stack_manage m(*this);
-
-            arg::dukx_push_func<fptr>(ctx);
-
-            //arg::dukx_push_func<decltype(fptr), fptr>(ctx, fptr);
-
-            return *this;
-        }*/
-
-        /*template<auto func>
-        value& set()
-        {
-            stack_manage m(*this);
-
-            arg::dukx_push_func<func>(ctx);
-
-            return *this;
-        }*/
-
-        #if 0
-        template<typename T, typename... U>
-        value& set(T(*fptr)(U... u))
-        {
-            stack_manage m(*this);
-
-            //arg::dukx_push_func<fpptr>(ctx);
-
-            return *this;
-        }
-        #endif // 0
-
-
-
         operator std::string()
         {
             std::string ret;
@@ -537,7 +468,7 @@ namespace js
         if constexpr(std::is_same_v<void, T>)
         {
             std::apply(func, tup);
-            return DUK_EXEC_SUCCESS;
+            return 0;
         }
         else
         {
@@ -546,10 +477,7 @@ namespace js
             js::value v(vctx);
             v.release(); ///intentionally leave on duktape stack
             v = rval;
-
-            std::cout << "RVAL " << rval << " " << v.idx << " TOP " << duk_get_top(ctx) << std::endl;
-
-            return DUK_EXEC_SUCCESS;
+            return 1;
         }
     }
 
@@ -567,22 +495,12 @@ namespace js
         int nargs = num_args(func);
         int nrets = num_rets(func);
 
-        printf("NRETS %i\n", nrets);
-
         if(duk_safe_call(ctx, &js_safe_function<func>, nullptr, nargs, nrets) != DUK_EXEC_SUCCESS)
         {
             throw std::runtime_error("Bad function call for duktape");
         }
 
-        std::cout << "DUKS " << duk_get_string(ctx, -1) << std::endl;
-
         return nrets;
-    }
-
-    inline
-    duk_ret_t js_dummy(duk_context* ctx)
-    {
-        return 1;
     }
 
     template<auto func>
