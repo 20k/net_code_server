@@ -497,7 +497,6 @@ js::value::~value()
 {
     if(idx != -1 && !released)
     {
-        printf("Free %i\n", idx);
         vctx->free(idx);
     }
 }
@@ -668,6 +667,8 @@ struct js_val_tester
         assert(out_map["hithere"] == 12);
         assert(out_map["pooper"] == 55);
 
+        assert(duk_get_top(ctx) == 4);
+
         {
             js::value func(vctx);
             func = js::function<test_func_with_return>;
@@ -678,6 +679,8 @@ struct js_val_tester
             js::value some_string(vctx);
             some_string = "poopersdf";
 
+            assert(duk_get_top(ctx) == 7);
+
             auto [res, retval] = js::call(func, a1, some_string);
 
             std::string rvals = retval;
@@ -685,6 +688,10 @@ struct js_val_tester
             printf("Found %s\n", rvals.c_str());
 
             assert(rvals == "poopy");
+
+            printf("TOP %i\n", duk_get_top(ctx));
+
+            assert(duk_get_top(ctx) == 8);
         }
 
         //js_funcptr_t fptr = js_wrapper<test_func_with_return>;
