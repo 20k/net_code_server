@@ -496,7 +496,10 @@ js::value::value(js::value_context& _vctx, js::value& base, const char* key) : v
 js::value::~value()
 {
     if(idx != -1 && !released)
+    {
+        printf("Free %i\n", idx);
         vctx->free(idx);
+    }
 }
 
 js::value js::value::operator[](int64_t val)

@@ -9,6 +9,7 @@
 #include <tuple>
 #include "duktape.h"
 #include <assert.h>
+#include <iostream>
 
 #include "scripting_api_fwrd.hpp"
 
@@ -467,13 +468,9 @@ namespace js
 
         int num = sizeof...(vals);
 
-        ///== 0 is success
-        if(duk_pcall(func.ctx, num) == 0)
-        {
-            return {true, js::value(*func.vctx, -1)};
-        }
+        bool success = duk_pcall(func.ctx, num) == 0;
 
-        return {false, js::value(*func.vctx, -1)};
+        return {success, js::value(*func.vctx, -1)};
     }
 
     template<typename I, typename... T>
@@ -550,6 +547,8 @@ namespace js
             v.release(); ///intentionally leave on duktape stack
             v = rval;
 
+            std::cout << "RVAL " << rval << " " << v.idx << " TOP " << duk_get_top(ctx) << std::endl;
+
             return DUK_EXEC_SUCCESS;
         }
     }
@@ -568,10 +567,14 @@ namespace js
         int nargs = num_args(func);
         int nrets = num_rets(func);
 
+        printf("NRETS %i\n", nrets);
+
         if(duk_safe_call(ctx, &js_safe_function<func>, nullptr, nargs, nrets) != DUK_EXEC_SUCCESS)
         {
             throw std::runtime_error("Bad function call for duktape");
         }
+
+        std::cout << "DUKS " << duk_get_string(ctx, -1) << std::endl;
 
         return nrets;
     }
