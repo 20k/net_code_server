@@ -100,6 +100,50 @@ struct stack_dupper
     }
 };
 
+template<typename T, typename... U>
+inline
+int num_args(T(*fptr)(U...))
+{
+    return sizeof...(U);
+}
+
+template<typename T, typename... U>
+inline
+int num_rets(T(*fptr)(U...))
+{
+    return !std::is_same_v<void, T>;
+}
+
+template<auto func>
+inline
+duk_ret_t js_safe_function(duk_context* ctx, void* udata)
+{
+    return 1;
+}
+
+template<auto func>
+inline
+duk_ret_t js_decompose(duk_context* ctx)
+{
+    int nargs = num_args(func);
+    int nrets = num_rets(func);
+
+    if(duk_safe_call(ctx, &js_safe_function<func>, nullptr, nargs, nrets) != DUK_EXEC_SUCCESS)
+    {
+        throw std::runtime_error("Bad function call for duktape");
+    }
+
+    return nrets;
+}
+
+inline
+duk_ret_t js_dummy(duk_context* ctx)
+{
+    return 1;
+}
+
+using js_funcptr_t = duk_ret_t(*)(duk_context*);
+
 namespace arg
 {
     inline
@@ -161,6 +205,45 @@ namespace arg
 
             duk_put_prop(ctx, tidx);
         }
+    }
+
+    /*template<typename T, typename... U>
+    inline
+    void dukx_push(duk_context* ctx, T(*fptr)(U... args))
+    {
+        const char* hidden_args = "\xFFa";
+
+        int nargs = sizeof...(args);
+
+        int nrets = 1;
+
+        if constexpr(std::is_same_v<T, void>)
+        {
+            nrets = 0;
+        }
+
+        duk_push_c_function(ctx, js_wrapper, nargs);
+        duk_put_prop_string(ctx, )
+    }*/
+
+    /*template<typename T, T& func, typename U, typename... V>
+    inline
+    void dukx_push_func(duk_context* ctx, U(*fptr)(V...))
+    {
+        duk_push_c_function(ctx, js_wrapper<fptr>, sizeof...(V));
+    }*/
+
+    /*template<auto func>
+    inline
+    void dukx_push_func(duk_context* ctx)
+    {
+        duk_push_c_function(ctx, &js_wrapper<func>, num_args(func));
+    }*/
+
+    inline
+    void dukx_push(duk_context* ctx, js_funcptr_t fptr)
+    {
+        duk_push_c_function(ctx, fptr, DUK_VARARGS);
     }
 
     inline
@@ -320,6 +403,51 @@ namespace js
             return *this;
         }
 
+        value& operator=(js_funcptr_t fptr)
+        {
+            stack_manage m(*this);
+
+            arg::dukx_push(ctx, fptr);
+
+            return *this;
+        }
+
+        /*template<typename T, typename... U>
+        value& operator=(T(*&fptr)(U... args))
+        {
+            stack_manage m(*this);
+
+            arg::dukx_push_func<fptr>(ctx);
+
+            //arg::dukx_push_func<decltype(fptr), fptr>(ctx, fptr);
+
+            return *this;
+        }*/
+
+        /*template<auto func>
+        value& set()
+        {
+            stack_manage m(*this);
+
+            arg::dukx_push_func<func>(ctx);
+
+            return *this;
+        }*/
+
+        #if 0
+        template<typename T, typename... U>
+        value& set(T(*fptr)(U... u))
+        {
+            stack_manage m(*this);
+
+            //arg::dukx_push_func<fpptr>(ctx);
+
+            return *this;
+        }
+        #endif // 0
+
+
+
         operator std::string()
         {
             std::string ret;
@@ -373,6 +501,13 @@ namespace js
             return duk_equals(v1.ctx, v1.idx, v2.idx);
         }
     };
+
+    template<auto func>
+    inline
+    duk_ret_t function(duk_context* ctx)
+    {
+        return js_decompose<func>(ctx);
+    }
 
     template<typename... T>
     inline

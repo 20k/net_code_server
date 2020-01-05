@@ -565,6 +565,21 @@ bool js::value::is_empty()
     return idx == -1;
 }
 
+void test_func()
+{
+
+}
+
+void test_func_with_args(int one, std::string two)
+{
+
+}
+
+std::string test_func_with_return(double one, std::string two)
+{
+    return "";
+}
+
 struct js_val_tester
 {
     js_val_tester()
@@ -632,6 +647,16 @@ struct js_val_tester
         assert(out_map.size() == 2);
         assert(out_map["hithere"] == 12);
         assert(out_map["pooper"] == 55);
+
+        js::value func(vctx);
+        //func.set<test_func_with_return>();
+        //func = &test_func_with_return;
+        //func.set(&test_func_with_return);
+        func = js::function<test_func_with_return>;
+
+        //js_funcptr_t fptr = js_wrapper<test_func_with_return>;
+
+        //static_assert(std::is_same_v<decltype(js_dummy), decltype(js_wrapper<test_func_with_return>)>);
 
         printf("Done js val testers\n");
     }
