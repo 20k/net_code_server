@@ -284,6 +284,7 @@ namespace js
 
         ///pushes a fresh object
         value(const value& other);
+        value(value&& other);
         value(value_context& ctx);
         value(value_context& ctx, int idx);
         value(value_context& ctx, value& base, const std::string& key);
@@ -312,6 +313,7 @@ namespace js
         value& operator=(double v);
         value& operator=(std::nullopt_t v);
         value& operator=(const value& right);
+        value& operator=(value&& right);
 
         template<typename T>
         value& operator=(const std::vector<T>& in)

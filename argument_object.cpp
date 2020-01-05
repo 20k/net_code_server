@@ -420,6 +420,30 @@ js::value::value(const js::value& value)
     idx = duk_get_top_index(ctx);
 }
 
+js::value::value(js::value&& other)
+{
+    vctx = other.vctx;
+    ctx = other.ctx;
+    idx = other.idx;
+    parent_idx = other.parent_idx;
+    released = other.released;
+    indices = other.indices;
+    other.released = true;
+}
+
+js::value& js::value::operator=(js::value&& other)
+{
+    vctx = other.vctx;
+    ctx = other.ctx;
+    idx = other.idx;
+    parent_idx = other.parent_idx;
+    released = other.released;
+    indices = other.indices;
+    other.released = true;
+
+    return *this;
+}
+
 js::value::value(js::value_context& _vctx) : vctx(&_vctx), ctx(_vctx.ctx)
 {
     idx = duk_push_object(ctx);
