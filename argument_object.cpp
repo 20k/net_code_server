@@ -422,6 +422,9 @@ js::value::value(const js::value& value)
 
 js::value::value(js::value&& other)
 {
+    if(other.released)
+        throw std::runtime_error("Attempted to move from a released value");
+
     vctx = other.vctx;
     ctx = other.ctx;
     idx = other.idx;
@@ -433,6 +436,9 @@ js::value::value(js::value&& other)
 
 js::value& js::value::operator=(js::value&& other)
 {
+    if(other.released)
+        throw std::runtime_error("Attempted to move from a released value");
+
     vctx = other.vctx;
     ctx = other.ctx;
     idx = other.idx;
