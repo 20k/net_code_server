@@ -267,9 +267,6 @@ namespace js
         void free(int idx);
     };
 
-    ///ok so
-    ///kind of fucked this entirely, because using absolute stack indices
-    ///problem is... they shuffle around
     struct value
     {
         value_context* vctx = nullptr;
