@@ -102,23 +102,98 @@ struct stack_dupper
 
 template<typename T, typename... U>
 inline
-int num_args(T(*fptr)(U...))
+constexpr int num_args(T(*fptr)(U...))
 {
     return sizeof...(U);
 }
 
 template<typename T, typename... U>
 inline
-int num_rets(T(*fptr)(U...))
+constexpr int num_rets(T(*fptr)(U...))
 {
     return !std::is_same_v<void, T>;
+}
+
+template<typename T, typename... U>
+inline
+std::tuple<U...> tup_args(T(*fptr)(U...))
+{
+    return std::tuple<U...>();
+}
+
+namespace js
+{
+    struct value_context;
+    struct value;
+}
+
+template<typename T>
+T extract_element(js::value_context& vctx, int idx, int stack_base)
+{
+    js::value val(vctx, stack_base + idx);
+
+    return (T)val;
+}
+
+template<typename tup, std::size_t... Is>
+inline
+void set_args(js::value_context& vctx, tup& t, std::index_sequence<Is...>, int stack_base)
+{
+    ((std::get<Is>(t) = extract_element<std::tuple_element_t<Is, tup>>(vctx, Is, stack_base)), ...);
+}
+
+template<typename T, typename... U>
+inline
+duk_ret_t js_safe_function_decomposed(duk_context* ctx, void* udata, T(*func)(U...))
+{
+    js::value_context vctx(ctx);
+
+    constexpr int nargs = sizeof...(U);
+    std::tuple<U...> tup = tup_args(func);
+
+    int stack_base = duk_get_top(ctx) - nargs;
+
+    std::index_sequence_for<U...> iseq;
+
+    set_args(vctx, tup, iseq, stack_base);
+
+    /*std::apply([](auto... v)
+    {
+        ((std::get<))
+    }, tup);*/
+
+    return 1;
 }
 
 template<auto func>
 inline
 duk_ret_t js_safe_function(duk_context* ctx, void* udata)
 {
-    return 1;
+    /*constexpr int nargs = num_args(func);
+
+    auto tup = tup_args(func);
+
+    int stack_base = (duk_get_top(ctx) - nargs);
+
+    js::value_context vctx(ctx);
+
+    std::index_sequence_for<
+
+    std::apply([](auto... v)
+    {
+
+    }, tup);*/
+
+    /*for(int i=0; i < nargs; i++)
+    {
+        js::value val(vctx, stack_base + i);
+
+        std::get<
+    }*/
+
+    return js_safe_function_decomposed(ctx, udata, func);
+
+    //return 1;
 }
 
 template<auto func>
