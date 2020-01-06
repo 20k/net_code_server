@@ -508,6 +508,13 @@ namespace js
     }
 
     js::value get_global(value_context& vctx);
-    void* get_sandbox_data(value_context& vctx);
+    void* get_sandbox_data_impl(value_context& vctx);
+
+    template<typename T>
+    inline
+    T* get_sandbox_data(value_context& vctx)
+    {
+        return (T*)get_sandbox_data_impl(vctx);
+    }
 }
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED
