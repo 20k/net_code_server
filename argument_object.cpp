@@ -620,6 +620,19 @@ void js::value::release()
     released = true;
 }
 
+js::value js::get_global(js::value_context& vctx)
+{
+    duk_push_global_object(vctx.ctx);
+
+    return js::value(vctx, -1);
+}
+
+void* js::get_sandbox_data(value_context& vctx)
+{
+    duk_memory_functions mem_funcs_duk; duk_get_memory_functions(vctx.ctx, &mem_funcs_duk);
+    return mem_funcs_duk.udata;
+}
+
 void test_func()
 {
 

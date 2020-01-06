@@ -506,5 +506,8 @@ namespace js
     {
         return js_decompose<func>(ctx);
     }
+
+    js::value get_global(value_context& vctx);
+    void* get_sandbox_data(value_context& vctx);
 }
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED
