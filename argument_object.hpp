@@ -431,20 +431,35 @@ namespace js
         return std::tuple<U...>();
     }
 
-    template<typename T>
-    T extract_element(js::value_context& vctx, int idx, int stack_base)
+    template<typename T, int N, typename... U>
+    inline
+    void extract_element(std::tuple<U...>& tup, js::value_context& vctx, int stack_base)
     {
-        js::value val(vctx, stack_base + idx);
-        val.release();
+        if constexpr(std::is_same_v<T, js::value_context&> && N == 0)
+        {
+            std::get<N>(tup) = &vctx;
+        }
+        else
+        {
+            js::value val(vctx, stack_base + N);
+            val.release();
 
-        return (T)val;
+            std::get<N>(tup) = (T)val;
+        }
     }
 
     template<typename tup, std::size_t... Is>
     inline
     void set_args(js::value_context& vctx, tup& t, std::index_sequence<Is...>, int stack_base)
     {
-        ((std::get<Is>(t) = extract_element<std::tuple_element_t<Is, tup>>(vctx, Is, stack_base)), ...);
+        (extract_element<std::tuple_element_t<Is, tup>, Is>(t, vctx, stack_base), ...);
+    }
+
+    template<typename T, typename... U>
+    inline
+    constexpr bool is_first_context()
+    {
+        return std::is_same_v<T, js::value_context*>;
     }
 
     template<typename T, typename... U>
@@ -457,6 +472,14 @@ namespace js
         std::tuple<U...> tup = tup_args(func);
 
         int stack_base = duk_get_top(ctx) - nargs;
+
+        if constexpr(nargs > 0)
+        {
+            if constexpr(is_first_context<U...>())
+            {
+                stack_base++;
+            }
+        }
 
         std::index_sequence_for<U...> iseq;
 
