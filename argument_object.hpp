@@ -516,5 +516,13 @@ namespace js
     {
         return (T*)get_sandbox_data_impl(vctx);
     }
+
+    template<typename T>
+    js::value make_value(js::value_context& vctx, const T& t)
+    {
+        js::value v(vctx);
+        v = t;
+        return std::move(v);
+    }
 }
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED
