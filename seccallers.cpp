@@ -1393,8 +1393,12 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
 
     js::value_context vctx(ctx);
 
-    inject_new_c_function<is_realtime_script>(vctx, "is_realtime_script");
-    inject_new_c_function<timeout_yield>(vctx, "timeout_yield");
+    /*inject_new_c_function<is_realtime_script>(vctx, "is_realtime_script");
+    inject_new_c_function<timeout_yield>(vctx, "timeout_yield");*/
+
+    js::value global = js::get_global(vctx);
+    js::add_key_value(global, "is_realtime_script", js::function<is_realtime_script>);
+    js::add_key_value(global, "timeout_yield", js::function<timeout_yield>);
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);

@@ -562,11 +562,23 @@ namespace js
     }
 
     template<typename T>
+    inline
     js::value make_value(js::value_context& vctx, const T& t)
     {
         js::value v(vctx);
         v = t;
         return v;
+    }
+
+    template<typename T, typename U>
+    inline
+    js::value add_key_value(js::value& base, const T& key, const U& val)
+    {
+        assert(base.vctx);
+
+        js::value nval(*base.vctx, base, key);
+        nval = val;
+        return nval;
     }
 }
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED
