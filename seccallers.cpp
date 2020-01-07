@@ -118,11 +118,9 @@ duk_ret_t async_print_raw(duk_context* ctx)
 	return push_error(ctx, "No pointer or wrong user");
 }
 
-duk_ret_t timeout_yield(duk_context* ctx)
+void timeout_yield(js::value_context* vctx)
 {
-    COOPERATE_KILL();
-
-    return 0;
+    COOPERATE_KILL_VCTX();
 }
 
 duk_ret_t db_insert(duk_context* ctx)
@@ -1382,11 +1380,9 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     inject_c_function(ctx, async_print, "async_print", DUK_VARARGS);
     inject_c_function(ctx, async_print_raw, "async_print_raw", DUK_VARARGS);
 
-    inject_c_function(ctx, timeout_yield, "timeout_yield",  0);
     inject_c_function(ctx, async_pipe, "async_pipe",  1);
     inject_c_function(ctx, set_is_realtime_script, "set_is_realtime_script", 0);
     inject_c_function(ctx, terminate_realtime, "terminate_realtime", 0);
-    //inject_c_function(ctx, is_realtime_script, "is_realtime_script", 0);
     inject_c_function(ctx, set_close_window_on_exit, "set_close_window_on_exit", 0);
     inject_c_function(ctx, set_start_window_size, "set_start_window_size", 1);
     inject_c_function(ctx, is_key_down, "is_key_down", 1);
@@ -1398,6 +1394,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     js::value_context vctx(ctx);
 
     inject_new_c_function<is_realtime_script>(vctx, "is_realtime_script");
+    inject_new_c_function<timeout_yield>(vctx, "timeout_yield");
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);
