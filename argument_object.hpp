@@ -412,9 +412,19 @@ namespace js
 
     template<typename T, typename... U>
     inline
+    constexpr bool is_first_context()
+    {
+        return std::is_same_v<T, js::value_context*>;
+    }
+
+    template<typename T, typename... U>
+    inline
     constexpr int num_args(T(*fptr)(U...))
     {
-        return sizeof...(U);
+        if constexpr(is_first_context<U...>())
+            return sizeof...(U) - 1;
+        else
+            return sizeof...(U);
     }
 
     template<typename T, typename... U>
@@ -435,11 +445,14 @@ namespace js
     inline
     void extract_element(std::tuple<U...>& tup, js::value_context& vctx, int stack_base)
     {
-        if constexpr(std::is_same_v<T, js::value_context&> && N == 0)
+        constexpr bool is_first_value = std::is_same_v<T, js::value_context*> && N == 0;
+
+        if constexpr(is_first_value)
         {
             std::get<N>(tup) = &vctx;
         }
-        else
+
+        if constexpr(!is_first_value)
         {
             js::value val(vctx, stack_base + N);
             val.release();
@@ -457,29 +470,14 @@ namespace js
 
     template<typename T, typename... U>
     inline
-    constexpr bool is_first_context()
-    {
-        return std::is_same_v<T, js::value_context*>;
-    }
-
-    template<typename T, typename... U>
-    inline
     duk_ret_t js_safe_function_decomposed(duk_context* ctx, void* udata, T(*func)(U...))
     {
         js::value_context vctx(ctx);
 
-        constexpr int nargs = sizeof...(U);
+        int nargs = num_args(func);
         std::tuple<U...> tup = tup_args(func);
 
         int stack_base = duk_get_top(ctx) - nargs;
-
-        if constexpr(nargs > 0)
-        {
-            if constexpr(is_first_context<U...>())
-            {
-                stack_base++;
-            }
-        }
 
         std::index_sequence_for<U...> iseq;
 
@@ -545,7 +543,7 @@ namespace js
     {
         js::value v(vctx);
         v = t;
-        return std::move(v);
+        return v;
     }
 }
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED

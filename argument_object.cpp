@@ -1,5 +1,6 @@
 #include "argument_object.hpp"
 #include "duktape.h"
+#include <iostream>
 
 #if 0
 #include <assert.h>
@@ -650,6 +651,15 @@ std::string test_func_with_return(double one, std::string two)
     return "poopy";
 }
 
+double test_func_with_context(js::value_context* ctx, std::string one, double two)
+{
+    assert(ctx);
+
+    printf("Called with %s %lf\n", one.c_str(), two);
+
+    return 256;
+}
+
 struct js_val_tester
 {
     js_val_tester()
@@ -734,6 +744,8 @@ struct js_val_tester
 
             auto [res, retval] = js::call(func, a1, some_string);
 
+            assert(res);
+
             std::string rvals = retval;
 
             printf("Found %s\n", rvals.c_str());
@@ -743,6 +755,24 @@ struct js_val_tester
             printf("TOP %i\n", duk_get_top(ctx));
 
             assert(duk_get_top(ctx) == 8);
+        }
+
+        {
+            js::value func(vctx);
+            func = js::function<test_func_with_context>;
+
+            js::value a2 = js::make_value(vctx, std::string("hello"));
+            js::value a3 = js::make_value(vctx, 2345.);
+
+            auto [res, retvalue] = js::call(func, a2, a3);
+
+            std::cout << "FOUND " << (std::string)retvalue << std::endl;
+
+            assert(res);
+
+            double rval = retvalue;
+
+            assert(rval == 256);
         }
 
         printf("Done js val testers\n");
