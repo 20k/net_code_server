@@ -516,7 +516,7 @@ namespace js
 
         if(duk_safe_call(ctx, &js_safe_function<func>, nullptr, nargs, nrets) != DUK_EXEC_SUCCESS)
         {
-            //throw std::runtime_error("Bad function call for duktape");
+            throw std::runtime_error("Bad function call for duktape");
         }
 
         return nrets;
