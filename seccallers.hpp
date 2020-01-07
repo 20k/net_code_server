@@ -34,7 +34,6 @@ duk_ret_t db_find(duk_context* ctx);
 
 duk_ret_t db_remove(duk_context* ctx);
 
-duk_ret_t set_is_realtime_script(duk_context* ctx);
 void async_pipe(js::value_context* vctx, std::string str);
 
 duk_ret_t set_close_window_on_exit(duk_context* ctx);

@@ -337,20 +337,20 @@ duk_ret_t db_remove(duk_context* ctx)
     return 0;
 }
 
-duk_ret_t set_is_realtime_script(duk_context* ctx)
+void set_is_realtime_script(js::value_context* vctx)
 {
-    COOPERATE_KILL();
+    COOPERATE_KILL_VCTX();
 
-    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(ctx);
+    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(vctx->ctx);
 
     shared_state->set_realtime();
 
-    std::string s1 = get_script_host(ctx);
-    std::string s2 = get_script_ending(ctx);
+    std::string s1 = get_script_host(vctx->ctx);
+    std::string s2 = get_script_ending(vctx->ctx);
 
-    set_global_string(ctx, "realtime_script_name", s1 + "." + s2);
+    js::value stash = js::get_heap_stash(*vctx);
 
-    return 0;
+    js::add_key_value(stash, "realtime_script_name", s1 + "." + s2);
 }
 
 void async_pipe(js::value_context* vctx, std::string str)
@@ -1366,7 +1366,6 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     inject_c_function(ctx, async_print, "async_print", DUK_VARARGS);
     inject_c_function(ctx, async_print_raw, "async_print_raw", DUK_VARARGS);
 
-    inject_c_function(ctx, set_is_realtime_script, "set_is_realtime_script", 0);
     inject_c_function(ctx, terminate_realtime, "terminate_realtime", 0);
     inject_c_function(ctx, set_close_window_on_exit, "set_close_window_on_exit", 0);
     inject_c_function(ctx, set_start_window_size, "set_start_window_size", 1);
@@ -1382,6 +1381,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     js::add_key_value(global, "is_realtime_script", js::function<is_realtime_script>);
     js::add_key_value(global, "timeout_yield", js::function<timeout_yield>);
     js::add_key_value(global, "async_pipe", js::function<async_pipe>);
+    js::add_key_value(global, "set_is_realtime_script", js::function<set_is_realtime_script>);
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);

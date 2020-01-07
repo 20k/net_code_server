@@ -645,6 +645,13 @@ js::value js::get_global(js::value_context& vctx)
     return js::value(vctx, -1);
 }
 
+js::value js::get_heap_stash(js::value_context& vctx)
+{
+    duk_push_heap_stash(vctx.ctx);
+
+    return js::value(vctx, -1);
+}
+
 void* js::get_sandbox_data_impl(value_context& vctx)
 {
     duk_memory_functions mem_funcs_duk; duk_get_memory_functions(vctx.ctx, &mem_funcs_duk);

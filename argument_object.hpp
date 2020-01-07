@@ -552,6 +552,7 @@ namespace js
     }
 
     js::value get_global(value_context& vctx);
+    js::value get_heap_stash(value_context& vctx);
     void* get_sandbox_data_impl(value_context& vctx);
 
     template<typename T>
