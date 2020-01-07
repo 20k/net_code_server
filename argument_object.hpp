@@ -136,6 +136,12 @@ namespace arg
         duk_push_number(ctx, v);
     }
 
+    inline
+    void dukx_push(duk_context* ctx, bool v)
+    {
+        duk_push_boolean(ctx, v);
+    }
+
     template<typename T>
     inline
     void dukx_push(duk_context* ctx, const std::vector<T>& v)
@@ -209,6 +215,13 @@ namespace arg
     {
         stack_dupper sdup(ctx, idx);
         out = duk_get_number(ctx, sdup.tidx);
+    }
+
+    inline
+    void dukx_get(duk_context* ctx, int idx, bool& out)
+    {
+        stack_dupper sdup(ctx, idx);
+        out = duk_get_boolean(ctx, sdup.tidx);
     }
 
     template<typename T>
@@ -297,6 +310,7 @@ namespace js
         bool is_map();
         bool is_empty();
         bool is_function();
+        bool is_boolean();
 
         ///stop managing element
         void release();
@@ -306,6 +320,7 @@ namespace js
         value& operator=(int64_t v);
         value& operator=(int v);
         value& operator=(double v);
+        value& operator=(bool v);
         value& operator=(std::nullopt_t v);
         value& operator=(const value& right);
         value& operator=(value&& right);
@@ -356,6 +371,13 @@ namespace js
         operator double()
         {
             double ret;
+            arg::dukx_get(ctx, idx, ret);
+            return ret;
+        }
+
+        operator bool()
+        {
+            bool ret;
             arg::dukx_get(ctx, idx, ret);
             return ret;
         }

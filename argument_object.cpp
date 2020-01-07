@@ -346,6 +346,15 @@ js::value& js::value::operator=(double v)
     return *this;
 }
 
+js::value& js::value::operator=(bool v)
+{
+    stack_manage m(*this);
+
+    arg::dukx_push(ctx, v);
+
+    return *this;
+}
+
 js::value& js::value::operator=(std::nullopt_t t)
 {
     if(idx == -1)
@@ -614,6 +623,14 @@ bool js::value::is_function()
         return false;
 
     return duk_is_function(ctx, idx);
+}
+
+bool js::value::is_boolean()
+{
+    if(idx == -1)
+        return false;
+
+    return duk_is_boolean(ctx, idx);
 }
 
 void js::value::release()

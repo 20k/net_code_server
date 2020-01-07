@@ -13,6 +13,7 @@
 #include "quest_manager.hpp"
 #include "duk_modules.hpp"
 #include "exec_context.hpp"
+#include "argument_object.hpp"
 
 int my_timeout_check(void* udata)
 {
@@ -374,7 +375,7 @@ duk_ret_t async_pipe(duk_context* ctx)
     return 0;
 }
 
-duk_ret_t is_realtime_script(duk_context* ctx)
+/*duk_ret_t is_realtime_script(duk_context* ctx)
 {
     COOPERATE_KILL();
 
@@ -383,6 +384,15 @@ duk_ret_t is_realtime_script(duk_context* ctx)
     duk_push_boolean(ctx, shared_state->is_realtime());
 
     return 1;
+}*/
+
+bool is_realtime_script(js::value_context* vctx)
+{
+    COOPERATE_KILL_VCTX();
+
+    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(vctx->ctx);
+
+    return shared_state->is_realtime();
 }
 
 duk_ret_t set_close_window_on_exit(duk_context* ctx)
@@ -1181,6 +1191,16 @@ duk_ret_t dummy(duk_context* ctx)
     return 0;
 }
 
+template<auto func>
+inline
+void inject_new_c_function(js::value_context& vctx, const std::string& name)
+{
+    js::value glob = js::get_global(vctx);
+
+    js::value funcref = js::value(vctx, glob, name);
+    funcref = js::function<func>;
+}
+
 template<typename T>
 inline
 void inject_c_function(duk_context *ctx, T& t, const std::string& str, int nargs)
@@ -1366,7 +1386,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     inject_c_function(ctx, async_pipe, "async_pipe",  1);
     inject_c_function(ctx, set_is_realtime_script, "set_is_realtime_script", 0);
     inject_c_function(ctx, terminate_realtime, "terminate_realtime", 0);
-    inject_c_function(ctx, is_realtime_script, "is_realtime_script", 0);
+    //inject_c_function(ctx, is_realtime_script, "is_realtime_script", 0);
     inject_c_function(ctx, set_close_window_on_exit, "set_close_window_on_exit", 0);
     inject_c_function(ctx, set_start_window_size, "set_start_window_size", 1);
     inject_c_function(ctx, is_key_down, "is_key_down", 1);
@@ -1374,6 +1394,10 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     inject_c_function(ctx, get_string_col, "get_string_col", 1);
     inject_c_function(ctx, set_realtime_framerate_limit, "set_realtime_framerate_limit", 1);
     inject_c_function(ctx, set_is_square_font, "set_is_square_font", 1);
+
+    js::value_context vctx(ctx);
+
+    inject_new_c_function<is_realtime_script>(vctx, "is_realtime_script");
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);
