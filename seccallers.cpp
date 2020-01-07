@@ -369,17 +369,6 @@ void async_pipe(js::value_context* vctx, std::string str)
     shared_state->add_output_data(str);
 }
 
-/*duk_ret_t is_realtime_script(duk_context* ctx)
-{
-    COOPERATE_KILL();
-
-    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(ctx);
-
-    duk_push_boolean(ctx, shared_state->is_realtime());
-
-    return 1;
-}*/
-
 bool is_realtime_script(js::value_context* vctx)
 {
     COOPERATE_KILL_VCTX();
@@ -389,15 +378,13 @@ bool is_realtime_script(js::value_context* vctx)
     return shared_state->is_realtime();
 }
 
-duk_ret_t set_close_window_on_exit(duk_context* ctx)
+void set_close_window_on_exit(js::value_context* vctx)
 {
-    COOPERATE_KILL();
+    COOPERATE_KILL_VCTX();
 
-    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(ctx);
+    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(vctx->ctx);
 
     shared_state->set_close_window_on_exit();
-
-    return 0;
 }
 
 duk_ret_t set_start_window_size(duk_context* ctx)
@@ -1367,7 +1354,6 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     inject_c_function(ctx, async_print_raw, "async_print_raw", DUK_VARARGS);
 
     inject_c_function(ctx, terminate_realtime, "terminate_realtime", 0);
-    inject_c_function(ctx, set_close_window_on_exit, "set_close_window_on_exit", 0);
     inject_c_function(ctx, set_start_window_size, "set_start_window_size", 1);
     inject_c_function(ctx, is_key_down, "is_key_down", 1);
     inject_c_function(ctx, mouse_get_position, "mouse_get_position", 0);
@@ -1382,6 +1368,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     js::add_key_value(global, "timeout_yield", js::function<timeout_yield>);
     js::add_key_value(global, "async_pipe", js::function<async_pipe>);
     js::add_key_value(global, "set_is_realtime_script", js::function<set_is_realtime_script>);
+    js::add_key_value(global, "set_close_window_on_exit", js::function<set_close_window_on_exit>);
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);
