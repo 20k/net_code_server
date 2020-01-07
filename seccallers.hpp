@@ -6,6 +6,11 @@
 #include <string>
 #include <vector>
 
+namespace js
+{
+    struct value_context;
+}
+
 struct shared_duk_worker_state;
 
 struct exec_context;
@@ -30,7 +35,7 @@ duk_ret_t db_find(duk_context* ctx);
 duk_ret_t db_remove(duk_context* ctx);
 
 duk_ret_t set_is_realtime_script(duk_context* ctx);
-duk_ret_t async_pipe(duk_context* ctx);
+void async_pipe(js::value_context* vctx, std::string str);
 
 duk_ret_t set_close_window_on_exit(duk_context* ctx);
 duk_ret_t set_start_window_size(duk_context* ctx);

@@ -256,7 +256,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                     break;
                 }
 
-                async_pipe(ctx);
+                async_pipe(&vctx, (std::string)result);
 
                 any = true;
             }

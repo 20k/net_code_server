@@ -353,13 +353,11 @@ duk_ret_t set_is_realtime_script(duk_context* ctx)
     return 0;
 }
 
-duk_ret_t async_pipe(duk_context* ctx)
+void async_pipe(js::value_context* vctx, std::string str)
 {
-    COOPERATE_KILL();
+    COOPERATE_KILL_VCTX();
 
-    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(ctx);
-
-    std::string str = duk_safe_to_std_string(ctx, -1);
+    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(vctx->ctx);
 
     if(str.size() > MAX_MESSAGE_SIZE)
     {
@@ -369,8 +367,6 @@ duk_ret_t async_pipe(duk_context* ctx)
     }
 
     shared_state->add_output_data(str);
-
-    return 0;
 }
 
 /*duk_ret_t is_realtime_script(duk_context* ctx)
@@ -1189,16 +1185,6 @@ duk_ret_t dummy(duk_context* ctx)
     return 0;
 }
 
-template<auto func>
-inline
-void inject_new_c_function(js::value_context& vctx, const std::string& name)
-{
-    js::value glob = js::get_global(vctx);
-
-    js::value funcref = js::value(vctx, glob, name);
-    funcref = js::function<func>;
-}
-
 template<typename T>
 inline
 void inject_c_function(duk_context *ctx, T& t, const std::string& str, int nargs)
@@ -1380,7 +1366,6 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     inject_c_function(ctx, async_print, "async_print", DUK_VARARGS);
     inject_c_function(ctx, async_print_raw, "async_print_raw", DUK_VARARGS);
 
-    inject_c_function(ctx, async_pipe, "async_pipe",  1);
     inject_c_function(ctx, set_is_realtime_script, "set_is_realtime_script", 0);
     inject_c_function(ctx, terminate_realtime, "terminate_realtime", 0);
     inject_c_function(ctx, set_close_window_on_exit, "set_close_window_on_exit", 0);
@@ -1393,12 +1378,10 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
 
     js::value_context vctx(ctx);
 
-    /*inject_new_c_function<is_realtime_script>(vctx, "is_realtime_script");
-    inject_new_c_function<timeout_yield>(vctx, "timeout_yield");*/
-
     js::value global = js::get_global(vctx);
     js::add_key_value(global, "is_realtime_script", js::function<is_realtime_script>);
     js::add_key_value(global, "timeout_yield", js::function<timeout_yield>);
+    js::add_key_value(global, "async_pipe", js::function<async_pipe>);
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);
