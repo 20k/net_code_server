@@ -148,6 +148,17 @@ void handle_sleep(sandbox_data* dat);
                          } \
                          handle_sleep(sand_data);
 
+#define COOPERATE_KILL_VCTX() sandbox_data* sand_data = js::get_sandbox_data<sandbox_data>(vctx); \
+                              if(sand_data->terminate_semi_gracefully) \
+                              { printf("Cooperating with kill\n");\
+                                  throw std::runtime_error("Script ran for more than 5000ms and was cooperatively terminated");\
+                              } \
+                              if(sand_data->terminate_realtime_gracefully) \
+                              { printf("Cooperating with kill realtime\n"); \
+                                 throw std::runtime_error("Terminated realtime script"); \
+                              } \
+                              handle_sleep(sand_data);
+
 #define COOPERATE_KILL_THREAD_LOCAL() if(*tls_get_should_throw() == 1) { throw std::runtime_error("Script ran for more than 5000ms and was cooperatively terminated"); }
 #define COOPERATE_KILL_THREAD_LOCAL_URGENT() if(*tls_get_should_throw() >= 2) { throw std::runtime_error("Script ran for more than 5000ms and was cooperatively terminated (overran significantly)"); }
 
