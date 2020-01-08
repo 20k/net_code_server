@@ -580,6 +580,30 @@ bool js::value::has(const char* key)
     return duk_has_prop_string(ctx, idx, key);
 }
 
+js::value js::value::get(const std::string& key)
+{
+    if(!has(key))
+        return js::make_value(*vctx, std::nullopt);
+
+    return js::value(*vctx, *this, key);
+}
+
+js::value js::value::get(int key)
+{
+    if(!has(key))
+        return js::make_value(*vctx, std::nullopt);
+
+    return js::value(*vctx, *this, key);
+}
+
+js::value js::value::get(const char* key)
+{
+    if(!has(key))
+        return js::make_value(*vctx, std::nullopt);
+
+    return js::value(*vctx, *this, key);
+}
+
 bool js::value::is_string()
 {
     if(idx == -1)
@@ -631,6 +655,14 @@ bool js::value::is_boolean()
         return false;
 
     return duk_is_boolean(ctx, idx);
+}
+
+bool js::value::is_undefined()
+{
+    if(idx == -1)
+        return false;
+
+    return duk_is_undefined(ctx, idx);
 }
 
 void js::value::release()

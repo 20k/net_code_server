@@ -304,6 +304,10 @@ namespace js
         bool has(int key);
         bool has(const char* key);
 
+        value get(const std::string& key);
+        value get(int key);
+        value get(const char* key);
+
         bool is_string();
         bool is_number();
         bool is_array();
@@ -311,6 +315,7 @@ namespace js
         bool is_empty();
         bool is_function();
         bool is_boolean();
+        bool is_undefined();
 
         ///stop managing element
         void release();
@@ -463,7 +468,7 @@ namespace js
         return std::tuple<U...>();
     }
 
-    template<typename T, int N, typename... U>
+    /*template<typename T, int N, typename... U>
     inline
     void extract_element(std::tuple<U...>& tup, js::value_context& vctx, int stack_base)
     {
@@ -488,6 +493,35 @@ namespace js
     void set_args(js::value_context& vctx, tup& t, std::index_sequence<Is...>, int stack_base)
     {
         (extract_element<std::tuple_element_t<Is, tup>, Is>(t, vctx, stack_base), ...);
+    }*/
+
+    template<typename T, int N>
+    inline
+    T get_element(js::value_context& vctx, int stack_base)
+    {
+        constexpr bool is_first_value = std::is_same_v<T, js::value_context*> && N == 0;
+
+        if constexpr(is_first_value)
+        {
+            return &vctx;
+        }
+
+        if constexpr(!is_first_value)
+        {
+            js::value val(vctx, stack_base + N);
+            val.release();
+
+            return val;
+        }
+    }
+
+    template<typename... U, std::size_t... Is>
+    inline
+    std::tuple<U...> get_args(js::value_context& vctx, std::index_sequence<Is...>, int stack_base)
+    {
+        //auto rval = std::make_tuple<U...>((get_element<U, Is>(vctx, stack_base)));
+
+        return std::make_tuple(get_element<U, Is>(vctx, stack_base)...);
     }
 
     template<typename T, typename... U>
@@ -496,7 +530,7 @@ namespace js
     {
         js::value_context vctx(ctx);
 
-        std::tuple<U...> tup = tup_args(func);
+        //std::tuple<U...> tup = tup_args(func);
 
         int stack_offset = sizeof...(U);
 
@@ -504,7 +538,9 @@ namespace js
 
         std::index_sequence_for<U...> iseq;
 
-        set_args(vctx, tup, iseq, stack_base);
+        //set_args(vctx, tup, iseq, stack_base);
+
+        auto tup = get_args<U...>(vctx, iseq, stack_base);
 
         if constexpr(std::is_same_v<void, T>)
         {

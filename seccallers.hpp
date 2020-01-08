@@ -36,7 +36,6 @@ duk_ret_t db_remove(duk_context* ctx);
 
 void async_pipe(js::value_context* vctx, std::string str);
 
-duk_ret_t set_start_window_size(duk_context* ctx);
 duk_ret_t set_realtime_framerate_limit(duk_context* ctx);
 duk_ret_t set_is_square_font(duk_context* ctx);
 duk_ret_t is_key_down(duk_context* ctx);
@@ -47,8 +46,6 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
 void teardown_state(duk_context* ctx);
 
 duk_ret_t get_string_col(duk_context* ctx);
-
-duk_ret_t terminate_realtime(duk_context* ctx);
 
 duk_ret_t hash_d(duk_context* ctx);
 
