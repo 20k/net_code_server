@@ -461,40 +461,6 @@ namespace js
         return !std::is_same_v<void, T>;
     }
 
-    template<typename T, typename... U>
-    inline
-    std::tuple<U...> tup_args(T(*fptr)(U...))
-    {
-        return std::tuple<U...>();
-    }
-
-    /*template<typename T, int N, typename... U>
-    inline
-    void extract_element(std::tuple<U...>& tup, js::value_context& vctx, int stack_base)
-    {
-        constexpr bool is_first_value = std::is_same_v<T, js::value_context*> && N == 0;
-
-        if constexpr(is_first_value)
-        {
-            std::get<N>(tup) = &vctx;
-        }
-
-        if constexpr(!is_first_value)
-        {
-            js::value val(vctx, stack_base + N);
-            val.release();
-
-            std::get<N>(tup) = (T)val;
-        }
-    }
-
-    template<typename tup, std::size_t... Is>
-    inline
-    void set_args(js::value_context& vctx, tup& t, std::index_sequence<Is...>, int stack_base)
-    {
-        (extract_element<std::tuple_element_t<Is, tup>, Is>(t, vctx, stack_base), ...);
-    }*/
-
     template<typename T, int N>
     inline
     T get_element(js::value_context& vctx, int stack_base)
@@ -521,8 +487,6 @@ namespace js
     inline
     std::tuple<U...> get_args(js::value_context& vctx, std::index_sequence<Is...>, int stack_base)
     {
-        //auto rval = std::make_tuple<U...>((get_element<U, Is>(vctx, stack_base)));
-
         return std::make_tuple(get_element<U, Is>(vctx, stack_base)...);
     }
 
@@ -532,15 +496,11 @@ namespace js
     {
         js::value_context vctx(ctx);
 
-        //std::tuple<U...> tup = tup_args(func);
-
         int stack_offset = sizeof...(U);
 
         int stack_base = duk_get_top(ctx) - stack_offset;
 
         std::index_sequence_for<U...> iseq;
-
-        //set_args(vctx, tup, iseq, stack_base);
 
         auto tup = get_args<U...>(vctx, iseq, stack_base);
 
