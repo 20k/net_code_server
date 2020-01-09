@@ -509,7 +509,9 @@ namespace js
         if constexpr(!is_first_value)
         {
             js::value val(vctx, stack_base + N);
-            val.release();
+
+            if constexpr(!std::is_same_v<T, js::value>)
+                val.release();
 
             return val;
         }
@@ -551,10 +553,20 @@ namespace js
         {
             auto rval = std::apply(func, tup);
 
-            js::value v(vctx);
-            v.release(); ///intentionally leave on duktape stack
-            v = rval;
-            return 1;
+            if constexpr(std::is_same_v<T, js::value>)
+            {
+                rval.release();
+                return 1;
+            }
+            else
+            {
+                js::value v(vctx);
+                v = rval;
+
+                v.release(); ///intentionally leave on duktape stack
+
+                return 1;
+            }
         }
     }
 

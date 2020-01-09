@@ -360,6 +360,7 @@ js::value& js::value::operator=(std::nullopt_t t)
     if(idx == -1)
         return *this;
 
+
     if(indices.index() == 0)
     {
         vctx->free(idx);
@@ -389,6 +390,11 @@ js::value& js::value::operator=(const value& right)
     if(idx == -1 && right.idx == -1)
         return *this;
 
+    if(idx != -1 && !released)
+    {
+        vctx->free(idx);
+    }
+
     if(idx == -1)
     {
         duk_dup(ctx, right.idx);
@@ -405,6 +411,8 @@ js::value& js::value::operator=(const value& right)
         parent_idx = right.parent_idx;
         indices = right.indices;
     }
+
+    //released = right.released;
 
     return *this;
 }
@@ -439,7 +447,7 @@ js::value::value(js::value&& other)
     ctx = other.ctx;
     idx = other.idx;
     parent_idx = other.parent_idx;
-    released = other.released;
+    //released = other.released;
     indices = other.indices;
     other.released = true;
 }
@@ -449,11 +457,16 @@ js::value& js::value::operator=(js::value&& other)
     if(other.released)
         throw std::runtime_error("Attempted to move from a released value");
 
+    if(idx != -1 && !released)
+    {
+        vctx->free(idx);
+    }
+
     vctx = other.vctx;
     ctx = other.ctx;
     idx = other.idx;
     parent_idx = other.parent_idx;
-    released = other.released;
+    //released = other.released;
     indices = other.indices;
     other.released = true;
 
@@ -716,6 +729,11 @@ double test_func_with_context(js::value_context* ctx, std::string one, double tw
     return 256;
 }
 
+js::value test_js_val(js::value_context* ctx, js::value val)
+{
+    return js::value(*ctx);
+}
+
 struct js_val_tester
 {
     js_val_tester()
@@ -829,6 +847,19 @@ struct js_val_tester
             double rval = retvalue;
 
             assert(rval == 256);
+        }
+
+        {
+            js::value func(vctx);
+            func = js::function<test_js_val>;
+
+            js::value a3 = js::make_value(vctx, "hello");
+
+            auto [res, va] = js::call(func, a3);
+
+            std::cout << "FOUND2 " << (std::string)va << std::endl;
+
+            assert(res);
         }
 
         printf("Done js val testers\n");

@@ -443,6 +443,38 @@ void set_close_window_on_exit(js::value_context* vctx)
     return ret;
 }*/
 
+js::value set_start_window_size(js::value_context* vctx, js::value val)
+{
+    js::value ret(*vctx);
+
+    if(val.is_undefined())
+    {
+        ret["ok"] = false;
+        ret["msg"] = "Usage: set_start_window_size({width:10, height:25});";
+
+        return ret;
+    }
+
+    if(!val.has("width") || !val.has("height"))
+    {
+        ret["ok"] = false;
+        ret["msg"] = "Must have width *and* height property";
+
+        return ret;
+    }
+
+    int width = val.get("width");
+    int height = val.get("height");
+
+    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(vctx->ctx);
+
+    shared_state->set_width_height(width, height);
+
+    ret["ok"] = true;
+
+    return ret;
+}
+
 duk_ret_t set_realtime_framerate_limit(duk_context* ctx)
 {
     COOPERATE_KILL();
@@ -1403,7 +1435,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     js::add_key_value(global, "set_is_realtime_script", js::function<set_is_realtime_script>);
     js::add_key_value(global, "set_close_window_on_exit", js::function<set_close_window_on_exit>);
     js::add_key_value(global, "terminate_realtime", js::function<terminate_realtime>);
-    //js::add_key_value(global, "set_start_window_size", js::function<set_start_window_size>);
+    js::add_key_value(global, "set_start_window_size", js::function<set_start_window_size>);
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);
