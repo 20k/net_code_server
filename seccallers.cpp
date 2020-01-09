@@ -405,68 +405,59 @@ js::value set_start_window_size(js::value_context* vctx, js::value val)
     return js::make_success(*vctx);
 }
 
-duk_ret_t set_realtime_framerate_limit(duk_context* ctx)
+js::value set_realtime_framerate_limit(js::value_context* vctx, js::value arg)
 {
-    COOPERATE_KILL();
+    COOPERATE_KILL_VCTX();
 
-    if(!duk_is_number(ctx, -1))
-        return push_error(ctx, "Usage: set_realtime_framerate_limit(limit)");
+    if(!arg.is_number())
+        return js::make_error(*vctx, "Usage: set_realtime_framerate_limit(limit)");
 
-    double val = duk_get_number(ctx, -1);
+    double val = arg;
 
     if(!isfinite(val))
-        return push_error(ctx, "Must be finite");
+        return js::make_error(*vctx, "Must be finite");
 
     val = clamp(val, 1, 60);
 
-    set_global_number(ctx, "framerate_limit", val);
+    set_global_number(vctx->ctx, "framerate_limit", val);
 
-    return 0;
+    return js::make_success(*vctx);
 }
 
-duk_ret_t set_is_square_font(duk_context* ctx)
+void set_is_square_font(js::value_context* vctx, js::value arg)
 {
-    COOPERATE_KILL();
+    COOPERATE_KILL_VCTX();
 
-    bool is_square = dukx_is_truthy(ctx, -1);
+    bool is_square = arg.is_truthy();
 
-    set_global_number(ctx, "square_font", is_square);
-
-    return 0;
+    set_global_number(vctx->ctx, "square_font", is_square);
 }
 
-duk_ret_t is_key_down(duk_context* ctx)
+bool is_key_down(js::value_context* vctx, js::value arg)
 {
-    COOPERATE_KILL();
+    COOPERATE_KILL_VCTX();
 
-    if(!duk_is_string(ctx, -1))
-    {
-        push_duk_val(ctx, false);
+    if(!arg.is_string())
         return false;
-    }
 
-    std::string str = duk_safe_to_std_string(ctx, -1);
+    std::string str = arg;
 
-    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(ctx);
+    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(vctx->ctx);
 
-    push_duk_val(ctx, (bool)shared_state->is_key_down(str));
-
-    return 1;
+    return shared_state->is_key_down(str);
 }
 
-duk_ret_t mouse_get_position(duk_context* ctx)
+std::map<std::string, double> mouse_get_position(js::value_context* vctx)
 {
-    COOPERATE_KILL();
+    COOPERATE_KILL_VCTX();
 
-    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(ctx);
+    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(vctx->ctx);
 
-    vec2f dim = shared_state->get_mouse_pos();
+    vec2f pos = shared_state->get_mouse_pos();
 
-    dim = clamp(dim, 0.f, 200.f);
+    pos = clamp(pos, 0.f, 1000.f);
 
-    push_dukobject(ctx, "x", dim.x(), "y", dim.y());
-
-    return 1;
+    return {{"x", pos.x()}, {"y", pos.y()}};
 }
 
 void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack, shared_duk_worker_state* shared_state)
@@ -1349,12 +1340,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     inject_c_function(ctx, async_print, "async_print", DUK_VARARGS);
     inject_c_function(ctx, async_print_raw, "async_print_raw", DUK_VARARGS);
 
-    //inject_c_function(ctx, set_start_window_size, "set_start_window_size", 1);
-    inject_c_function(ctx, is_key_down, "is_key_down", 1);
-    inject_c_function(ctx, mouse_get_position, "mouse_get_position", 0);
     inject_c_function(ctx, get_string_col, "get_string_col", 1);
-    inject_c_function(ctx, set_realtime_framerate_limit, "set_realtime_framerate_limit", 1);
-    inject_c_function(ctx, set_is_square_font, "set_is_square_font", 1);
 
     js::value_context vctx(ctx);
 
@@ -1366,6 +1352,10 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     js::add_key_value(global, "set_close_window_on_exit", js::function<set_close_window_on_exit>);
     js::add_key_value(global, "terminate_realtime", js::function<terminate_realtime>);
     js::add_key_value(global, "set_start_window_size", js::function<set_start_window_size>);
+    js::add_key_value(global, "set_realtime_framerate_limit", js::function<set_realtime_framerate_limit>);
+    js::add_key_value(global, "set_is_square_font", js::function<set_is_square_font>);
+    js::add_key_value(global, "is_key_down", js::function<is_key_down>);
+    js::add_key_value(global, "mouse_get_position", js::function<mouse_get_position>);
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);

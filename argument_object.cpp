@@ -678,6 +678,24 @@ bool js::value::is_undefined()
     return duk_is_undefined(ctx, idx);
 }
 
+bool is_truthy(duk_context* ctx, duk_idx_t idx)
+{
+    duk_dup(ctx, idx);
+    bool success = duk_to_boolean(ctx, -1);
+
+    duk_pop(ctx);
+
+    return success;
+}
+
+bool js::value::is_truthy()
+{
+    if(idx == -1)
+        return false;
+
+    return ::is_truthy(ctx, idx);
+}
+
 void js::value::release()
 {
     released = true;

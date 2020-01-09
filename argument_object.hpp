@@ -316,6 +316,7 @@ namespace js
         bool is_function();
         bool is_boolean();
         bool is_undefined();
+        bool is_truthy();
 
         ///stop managing element
         void release();
