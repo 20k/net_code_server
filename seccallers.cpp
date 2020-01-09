@@ -387,81 +387,13 @@ void set_close_window_on_exit(js::value_context* vctx)
     shared_state->set_close_window_on_exit();
 }
 
-/*duk_ret_t set_start_window_size(duk_context* ctx)
-{
-    COOPERATE_KILL();
-
-    if(duk_is_undefined(ctx, -1) || !duk_is_object_coercible(ctx, -1))
-        return push_error(ctx, "Usage: set_start_window_size({width:10, height:25});");
-
-    if(!duk_has_prop_string(ctx, -1, "width") || !duk_has_prop_string(ctx, -1, "height"))
-        return push_error(ctx, "Must have width *and* height property");
-
-    int width = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "width", 10.);
-    int height = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "height", 10.);
-
-    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(ctx);
-
-    shared_state->set_width_height(width, height);
-
-    return 0;
-}*/
-
-/*std::map<std::string, js::value> set_start_window_size(js::value_context* vctx, js::value val)
-{
-    std::map<std::string, js::value> ret;
-
-    if(val.is_undefined())
-    {
-        js::value msg = js::make_value(*vctx, "Usage: set_start_window_size({width:10, height:25});");
-
-        ret["ok"] = js::make_value(*vctx, false);
-        ret["msg"] = msg;
-
-        return ret;
-    }
-
-    if(!val.has("width") || !val.has("height"))
-    {
-        js::value msg = js::make_value(*vctx, "Must have width *and* height property");
-
-        ret["ok"] = js::make_value(*vctx, false);
-        ret["msg"] = msg;
-
-        return ret;
-    }
-
-    int width = val.get("width");
-    int height = val.get("height");
-
-    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(vctx->ctx);
-
-    shared_state->set_width_height(width, height);
-
-    ret["ok"] = js::make_value(*vctx, true);
-
-    return ret;
-}*/
-
 js::value set_start_window_size(js::value_context* vctx, js::value val)
 {
-    js::value ret(*vctx);
-
     if(val.is_undefined())
-    {
-        ret["ok"] = false;
-        ret["msg"] = "Usage: set_start_window_size({width:10, height:25});";
-
-        return ret;
-    }
+        return js::make_error(*vctx, "Usage: set_start_window_size({width:10, height:25});");
 
     if(!val.has("width") || !val.has("height"))
-    {
-        ret["ok"] = false;
-        ret["msg"] = "Must have width *and* height property";
-
-        return ret;
-    }
+        return js::make_error(*vctx, "Must have width *and* height property");
 
     int width = val.get("width");
     int height = val.get("height");
@@ -470,9 +402,7 @@ js::value set_start_window_size(js::value_context* vctx, js::value val)
 
     shared_state->set_width_height(width, height);
 
-    ret["ok"] = true;
-
-    return ret;
+    return js::make_success(*vctx);
 }
 
 duk_ret_t set_realtime_framerate_limit(duk_context* ctx)

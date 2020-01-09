@@ -579,6 +579,27 @@ namespace js
         return v;
     }
 
+    ///this is a convention, not a formal type
+    template<typename T>
+    inline
+    js::value make_error(js::value_context& vctx, const T& msg)
+    {
+        js::value v(vctx);
+        v["ok"] = false;
+        v["msg"] = msg;
+
+        return v;
+    }
+
+    inline
+    js::value make_success(js::value_context& vctx)
+    {
+        js::value v(vctx);
+        v["ok"] = true;
+
+        return v;
+    }
+
     template<typename T, typename U>
     inline
     js::value add_key_value(js::value& base, const T& key, const U& val)
