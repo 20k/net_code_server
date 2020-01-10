@@ -695,10 +695,19 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
         duk_xmove_top(new_ctx, temporary_ctx, moved);
         duk_remove(new_ctx, -1 - moved); ///removes temporary ctx
 
+        /*duk_push_context_dump(new_ctx);
+
+        js::value_context vctx(new_ctx);
+        js::value val(vctx, -1);
+        val.release();
+
+        std::cout << "GOT " << (std::string)val << std::endl;
+
+        duk_pop(new_ctx);*/
+
         ///now we have [thread] on stack 1, and [object, args] on stack 2
         ///stack 2 has [val] afterwards
         duk_int_t ret_val = duk_pcall(new_ctx, nargs);
-
         #ifndef USE_PROXY
         duk_xmove_top(ctx, new_ctx, 1);
         #else
@@ -1406,7 +1415,7 @@ js::value sl_call(js::value_context* vctx, std::string script_name, js::value as
     js::value current_function = js::get_current_function(*vctx);
     std::string secret_script_host = current_function.get_hidden("script_host");
 
-    val.add("script_host", secret_script_host);
+    val.add_hidden("script_host", secret_script_host);
 
     return val;
 }
@@ -1451,7 +1460,7 @@ js::value os_call(js::value_context* vctx, std::string script_name, js::value as
     js::value current_function = js::get_current_function(*vctx);
     std::string secret_script_host = current_function.get_hidden("script_host");
 
-    val.add("script_host", secret_script_host);
+    val.add_hidden("script_host", secret_script_host);
 
     return val;
 }
