@@ -33,7 +33,7 @@ bool can_run(int csec_level, int maximum_sec)
 
 ///could potentially use __FUNCTION__ here
 ///as it should work across msvc/gcc/clang... but... technically not portable
-#define SL_GUARD(x) if(!can_run(sl, x)){ push_error(ctx, "Security level guarantee failed"); return 1; }
+#define SL_GUARD(x) if(!can_run(sl, x)){ return js::make_error(*vctx, "Security level guarantee failed"); }
 
 struct priv_func_info
 {

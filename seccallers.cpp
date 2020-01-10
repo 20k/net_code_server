@@ -794,7 +794,8 @@ void async_launch_script_name(duk_context* ctx, int sl, const std::string& sname
     sthr.detach();
 }
 
-duk_ret_t js_call(duk_context* ctx, int sl)
+#if 0
+js::value js_call(js::value_context* vctx, int sl, js::value arg)
 {
     COOPERATE_KILL();
 
@@ -971,6 +972,174 @@ duk_ret_t js_call(duk_context* ctx, int sl)
 
     return result;
 }
+#endif // 0
+
+js::value js_call(js::value_context* vctx, int sl, js::value arg)
+{
+    COOPERATE_KILL_VCTX();
+
+    js::value current_function = js::get_current_function(*vctx);
+
+    std::string secret_script_host = current_function.get_hidden("script_host");
+
+    /*duk_push_current_function(ctx);
+
+    bool is_async = false;
+
+    if(!get_duk_keyvalue(ctx, "is_async", is_async))
+        return push_error(ctx, "Missing is_async flag");
+
+    //std::cout << "is_async " << is_async << std::endl;
+
+    if(!get_duk_keyvalue(ctx, "FUNCTION_NAME", to_call_fullname))
+    {
+        duk_pop(ctx);
+
+        duk_push_undefined(ctx);
+
+        push_error(ctx, "Bad script name, this is the developer scolding you, you know what you did");
+        return 1;
+    }
+
+    duk_pop(ctx);*/
+
+    if(!current_function.has("is_async"))
+        return js::make_error(*vctx, "Missing is_async flag");
+
+    if(!current_function.has("FUNCTION_NAME"))
+        return js::make_error(*vctx, "Bad script name, this is the developer scolding you, you know what you did");
+
+    std::string to_call_fullname = current_function.get("FUNCTION_NAME");
+    bool is_async = current_function.get("is_async");
+
+    if(!is_valid_full_name_string(to_call_fullname))
+        return js::make_error(*vctx, "Bad script name, don't do this :)");
+
+
+    ///current script
+    //std::string full_script = get_script_host(ctx) + "." + get_script_ending(ctx);
+
+    std::string full_script = secret_script_host + "." + get_script_ending(vctx->ctx);
+
+    quest_script_data qdata;
+    qdata.target = to_call_fullname;
+
+    quest_manager& qm = get_global_quest_manager();
+
+    ///IF IS PRIVILEGED SCRIPT, RETURN THAT CFUNC
+    if(privileged_functions.find(to_call_fullname) != privileged_functions.end())
+    {
+        SL_GUARD(privileged_functions[to_call_fullname].sec_level);
+
+        ///use ORIGINAL script host
+        priv_context priv_ctx(get_script_host(vctx->ctx), to_call_fullname);
+
+        //set_script_info(ctx, to_call_fullname);
+
+        js::value arg_dup(*vctx, arg);
+        arg_dup.release();
+
+        duk_ret_t result = privileged_functions[to_call_fullname].func(priv_ctx, vctx->ctx, sl);
+
+        js::value ret(*vctx);
+
+        if(result > 0)
+        {
+            ret = js::value(*vctx, -1);
+        }
+        else
+        {
+            ret = js::undefined;
+        }
+
+        qm.process(get_thread_id(vctx->ctx), get_caller(vctx->ctx), qdata);
+
+        //set_script_info(ctx, full_script);
+
+        return ret;
+    }
+
+    ///so, this indent and everything under if(!script.valid)
+    ///needs to be chained into one general "get_script" method
+
+    std::string script_err;
+
+    unified_script_info script = unified_script_loading(get_thread_id(vctx->ctx), to_call_fullname, script_err);
+
+    //std::cout << "script source findy " << script.parsed_source << " name " << script.name << std::endl;
+
+    if(!script.valid)
+    {
+        std::string err = script_err == "" ? "Tried to run a non existent or invalid script" : script_err;
+
+        return js::make_error(*vctx, err);
+    }
+
+    #ifdef ENFORCE_PRIVATE
+    std::string caller = get_caller(ctx);
+
+    if(!script.in_public && caller != script.owner)
+        return push_error(ctx, "Script is private");
+    #endif // ENFORCE_PRIVATE
+
+    SL_GUARD(script.seclevel);
+
+    std::string load = script.parsed_source;
+
+    //std::cout << load << std::endl;
+
+    js::value ret(*vctx);
+
+    if(!script.is_c_shim)
+    {
+        if(is_async)
+        {
+            std::shared_ptr<shared_command_handler_state>* shared_state = dukx_get_pointer<std::shared_ptr<shared_command_handler_state>>(vctx->ctx, "all_shared_data");
+
+            if(shared_state == nullptr)
+                return js::make_error(*vctx, "Cannot launch async scripts in this context (bot brain, on_breach, or other throwaway script?)");
+
+            set_script_info(vctx->ctx, to_call_fullname);
+
+            std::cout << "launched async\n";
+
+            async_launch_script_name(vctx->ctx, sl, to_call_fullname, *shared_state);
+
+            ret = js::make_success(*vctx);
+        }
+        else
+        {
+            set_script_info(vctx->ctx, to_call_fullname);
+
+            js::value arg_dup(*vctx, arg);
+
+            compile_and_call(vctx->ctx, load, get_caller(vctx->ctx), false, script.seclevel, false, full_script, false);
+
+            ret = js::value(*vctx, -1);
+        }
+
+        set_script_info(vctx->ctx, full_script);
+    }
+    else
+    {
+        duk_push_c_function(vctx->ctx, special_scripts::get_special_user_function(script.c_shim_name), 1);
+
+        int nargs = 1;
+
+        js::value arg_dup(*vctx, arg);
+        arg_dup.release();
+
+        duk_pcall(vctx->ctx, nargs);
+
+        ret = js::value(*vctx, -1);
+
+        //result = (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name](sd.ctx, sl);
+    }
+
+    qm.process(get_thread_id(vctx->ctx), get_caller(vctx->ctx), qdata);
+
+    return ret;
+}
 
 std::string js_unified_force_call_data(exec_context& ectx, const std::string& data, const std::string& host)
 {
@@ -1100,7 +1269,7 @@ void inject_c_function(duk_context *ctx, T& t, const std::string& str, int nargs
 	duk_put_global_string(ctx, str.c_str());
 }
 
-template<int N>
+/*template<int N>
 static
 duk_ret_t jxs_call(duk_context* ctx)
 {
@@ -1111,9 +1280,21 @@ duk_ret_t jxs_call(duk_context* ctx)
     set_global_int(ctx, "last_seclevel", current_seclevel);
 
     return ret;
-}
+}*/
 
 template<int N>
+js::value jxs_call(js::value_context* vctx, js::value val)
+{
+    int current_seclevel = get_global_int(vctx->ctx, "last_secleve");
+
+    js::value ret = js_call(vctx, N, val);
+
+    set_global_int(vctx->ctx, "last_seclevel", current_seclevel);
+
+    return ret;
+}
+
+/*template<int N>
 duk_ret_t jxos_call(duk_context* ctx)
 {
     int current_seclevel = get_global_int(ctx, "last_seclevel");
@@ -1142,8 +1323,38 @@ duk_ret_t jxos_call(duk_context* ctx)
     duk_pop(ctx);
 
     return ret;
+}*/
+
+template<int N>
+js::value jxos_call(js::value_context* vctx, js::value val)
+{
+    int current_seclevel = get_global_int(vctx->ctx, "last_seclevel");
+
+    std::vector<std::string> old_caller_stack = get_caller_stack(vctx->ctx);
+    std::string old_caller = get_caller(vctx->ctx);
+
+    std::string new_caller = get_script_host(vctx->ctx);
+
+    {
+        js::value heap = js::get_heap_stash(*vctx);
+        heap.add("caller", new_caller);
+        heap.add("caller_stack", std::vector<std::string>{new_caller});
+    }
+
+    js::value ret = js_call(vctx, N, val);
+
+    set_global_int(vctx->ctx, "last_seclevel", current_seclevel);
+
+    {
+        js::value heap = js::get_heap_stash(*vctx);
+        heap.add("caller", old_caller);
+        heap.add("caller_stack", old_caller_stack);
+    }
+
+    return ret;
 }
 
+#if 0
 ///so ideally this would provide validation
 ///pass through context and set appropriately
 ///and modify args
@@ -1172,7 +1383,33 @@ duk_ret_t sl_call(duk_context* ctx)
 
     return 1;
 }
+#endif // 0
 
+///so ideally this would provide validation
+///pass through context and set appropriately
+///and modify args
+template<int N>
+inline
+js::value sl_call(js::value_context* vctx, std::string script_name, js::value async)
+{
+    static_assert(N >= 0 && N <= 4);
+
+    bool async_launch = async.is_truthy();
+
+    js::value val = js::make_value(*vctx, js::function<jxs_call<N>>);
+    val.add("FUNCTION_NAME", script_name);
+    val.add("call", err);
+    val.add("is_async", async_launch);
+
+    js::value current_function = js::get_current_function(*vctx);
+    std::string secret_script_host = current_function.get_hidden("script_host");
+
+    val.add("script_host", secret_script_host);
+
+    return val;
+}
+
+/*
 template<int N>
 inline
 duk_ret_t os_call(duk_context* ctx)
@@ -1194,6 +1431,27 @@ duk_ret_t os_call(duk_context* ctx)
     freeze_duk(ctx);
 
     return 1;
+}*/
+
+template<int N>
+inline
+js::value os_call(js::value_context* vctx, std::string script_name, js::value async)
+{
+    static_assert(N >= 0 && N <= 4);
+
+    bool async_launch = async.is_truthy();
+
+    js::value val = js::make_value(*vctx, js::function<jxos_call<N>>);
+    val.add("FUNCTION_NAME", script_name);
+    val.add("call", err);
+    val.add("is_async", async_launch);
+
+    js::value current_function = js::get_current_function(*vctx);
+    std::string secret_script_host = current_function.get_hidden("script_host");
+
+    val.add("script_host", secret_script_host);
+
+    return val;
 }
 
 void inject_console_log(duk_context* ctx)
@@ -1222,15 +1480,15 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     remove_func(ctx, "db_remove");
     remove_func(ctx, "db_update");*/
 
-    inject_c_function(ctx, os_call<0>, "os_call", 2, "script_host", script_host);
+    /*inject_c_function(ctx, os_call<0>, "os_call", 2, "script_host", script_host);
 
     inject_c_function(ctx, os_call<4>, "ofs_call", 2, "script_host", script_host);
     inject_c_function(ctx, os_call<3>, "ohs_call", 2, "script_host", script_host);
     inject_c_function(ctx, os_call<2>, "oms_call", 2, "script_host", script_host);
     inject_c_function(ctx, os_call<1>, "ols_call", 2, "script_host", script_host);
-    inject_c_function(ctx, os_call<0>, "ons_call", 2, "script_host", script_host);
+    inject_c_function(ctx, os_call<0>, "ons_call", 2, "script_host", script_host);*/
 
-    if(seclevel <= 4)
+    /*if(seclevel <= 4)
     {
         inject_c_function(ctx, sl_call<4>, "fs_call", 2, "script_host", script_host);
     }
@@ -1245,7 +1503,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
         inject_c_function(ctx, sl_call<1>, "ls_call", 2, "script_host", script_host);
 
     if(seclevel <= 0)
-        inject_c_function(ctx, sl_call<0>, "ns_call", 2, "script_host", script_host);
+        inject_c_function(ctx, sl_call<0>, "ns_call", 2, "script_host", script_host);*/
 
     inject_c_function(ctx, native_print, "print", DUK_VARARGS);
     inject_c_function(ctx, async_print, "async_print", DUK_VARARGS);
@@ -1277,6 +1535,28 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
         js::add_key_value(global, "db_remove", js::function<db_remove>).add_hidden("script_host", script_host);
         js::add_key_value(global, "db_update", js::function<db_update>).add_hidden("script_host", script_host);
     }
+
+    if(seclevel <= 4)
+        js::add_key_value(global, "fs_call", js::function<sl_call<4>>).add_hidden("script_host", script_host);
+
+    if(seclevel <= 3)
+        js::add_key_value(global, "hs_call", js::function<sl_call<3>>).add_hidden("script_host", script_host);
+
+    if(seclevel <= 2)
+        js::add_key_value(global, "ms_call", js::function<sl_call<2>>).add_hidden("script_host", script_host);
+
+    if(seclevel <= 1)
+        js::add_key_value(global, "ls_call", js::function<sl_call<1>>).add_hidden("script_host", script_host);
+
+    if(seclevel <= 0)
+        js::add_key_value(global, "ns_call", js::function<sl_call<0>>).add_hidden("script_host", script_host);
+
+    js::add_key_value(global, "os_call", js::function<os_call<0>>).add_hidden("script_host", script_host);
+    js::add_key_value(global, "ofs_call", js::function<os_call<4>>).add_hidden("script_host", script_host);
+    js::add_key_value(global, "ohs_call", js::function<os_call<3>>).add_hidden("script_host", script_host);
+    js::add_key_value(global, "oms_call", js::function<os_call<2>>).add_hidden("script_host", script_host);
+    js::add_key_value(global, "ols_call", js::function<os_call<1>>).add_hidden("script_host", script_host);
+    js::add_key_value(global, "ons_call", js::function<os_call<0>>).add_hidden("script_host", script_host);
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);
