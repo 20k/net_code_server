@@ -101,6 +101,11 @@ struct stack_dupper
 
 using js_funcptr_t = duk_ret_t(*)(duk_context*);
 
+namespace js
+{
+    struct undefined_t;
+}
+
 namespace arg
 {
     inline
@@ -174,6 +179,12 @@ namespace arg
     void dukx_push(duk_context* ctx, js_funcptr_t fptr)
     {
         duk_push_c_function(ctx, fptr, DUK_VARARGS);
+    }
+
+    inline
+    void dukx_push(duk_context* ctx, const js::undefined_t&)
+    {
+        duk_push_undefined(ctx);
     }
 
     inline
@@ -270,6 +281,9 @@ namespace arg
 
 namespace js
 {
+    struct undefined_t{};
+    const static inline undefined_t undefined;
+
     struct value_context
     {
         std::vector<int> free_stack;
@@ -330,6 +344,7 @@ namespace js
         value& operator=(std::nullopt_t v);
         value& operator=(const value& right);
         value& operator=(value&& right);
+        value& operator=(undefined_t);
 
         template<typename T>
         value& operator=(const std::vector<T>& in)

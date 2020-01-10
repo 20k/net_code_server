@@ -426,6 +426,14 @@ js::value& js::value::operator=(js_funcptr_t fptr)
     return *this;
 }
 
+js::value& js::value::operator=(js::undefined_t)
+{
+    stack_manage m(*this);
+
+    arg::dukx_push(ctx, js::undefined);
+
+    return *this;
+}
 
 js::value::value(const js::value& value)
 {

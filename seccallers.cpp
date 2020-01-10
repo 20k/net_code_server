@@ -489,18 +489,14 @@ void teardown_state(duk_context* ctx)
     delete shared_state;
 }
 
-duk_ret_t get_string_col(duk_context* ctx)
+std::string get_string_col(js::value val)
 {
-    if(!duk_is_string(ctx, -1))
-        return 0;
+    if(!val.is_string())
+        return "A";
 
-    std::string str = duk_safe_to_std_string(ctx, -1);
+    std::string str = val;
 
-    std::string c = string_to_colour(str);
-
-    push_duk_val(ctx, c);
-
-    return 1;
+    return string_to_colour(str);
 }
 
 void terminate_realtime(js::value_context* vctx)
@@ -1340,8 +1336,6 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     inject_c_function(ctx, async_print, "async_print", DUK_VARARGS);
     inject_c_function(ctx, async_print_raw, "async_print_raw", DUK_VARARGS);
 
-    inject_c_function(ctx, get_string_col, "get_string_col", 1);
-
     js::value_context vctx(ctx);
 
     js::value global = js::get_global(vctx);
@@ -1356,6 +1350,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     js::add_key_value(global, "set_is_square_font", js::function<set_is_square_font>);
     js::add_key_value(global, "is_key_down", js::function<is_key_down>);
     js::add_key_value(global, "mouse_get_position", js::function<mouse_get_position>);
+    js::add_key_value(global, "get_string_col", js::function<get_string_col>);
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);
