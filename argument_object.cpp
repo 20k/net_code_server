@@ -210,6 +210,8 @@ js::value_context::value_context(context_t* _ctx) : ctx(_ctx)
 
 void js::value_context::free(int idx)
 {
+    assert(idx >= 0);
+
     if((int)free_stack.size() < idx + 1)
     {
         free_stack.resize(idx + 1);
@@ -417,6 +419,8 @@ js::value& js::value::operator=(const value& right)
 
     duk_dup(ctx, right.idx);
 
+    printf("Valeq\n");
+
     return *this;
 }
 
@@ -456,6 +460,8 @@ js::value::value(const js::value& value)
 
     duk_dup(ctx, value.idx);
     idx = duk_get_top_index(ctx);
+
+    printf("Other\n");
 }
 
 js::value::value(js::value_context& vctx, const value& other) : js::value::value(other)
@@ -475,6 +481,8 @@ js::value::value(js::value&& other)
     //released = other.released;
     indices = other.indices;
     other.released = true;
+
+    printf("MoveOther");
 }
 
 js::value& js::value::operator=(js::value&& other)
@@ -482,10 +490,17 @@ js::value& js::value::operator=(js::value&& other)
     if(other.released)
         throw std::runtime_error("Attempted to move from a released value");
 
+    printf("My idx %i\n", idx);
+    printf("Other idx %i\n", other.idx);
+
     if(idx != -1 && !released)
     {
         vctx->free(idx);
+
+        printf("Move free\n");
     }
+
+    printf("Moveeq");
 
     vctx = other.vctx;
     ctx = other.ctx;
@@ -586,11 +601,17 @@ std::string js::value::to_json()
 
     duk_dup(ctx, idx);
 
-    std::string str = duk_json_encode(ctx, -1);
+    const char* str = duk_json_encode(ctx, -1);
+
+    if(str == nullptr)
+    {
+        duk_pop(ctx);
+        return "";
+    }
 
     duk_pop(ctx);
 
-    return str;
+    return std::string(str);
 }
 
 js::value js::value::operator[](int64_t val)
@@ -765,6 +786,14 @@ bool js::value::is_truthy()
     return ::is_truthy(ctx, idx);
 }
 
+bool js::value::is_object_coercible()
+{
+    if(idx == -1)
+        return false;
+
+    return duk_is_object_coercible(ctx, idx);
+}
+
 void js::value::release()
 {
     released = true;
@@ -775,6 +804,12 @@ js::value js::get_global(js::value_context& vctx)
     duk_push_global_object(vctx.ctx);
 
     return js::value(vctx, -1);
+}
+
+void js::set_global(js::value_context& vctx, const js::value& val)
+{
+    duk_dup(vctx.ctx, val.idx);
+    duk_set_global_object(vctx.ctx);
 }
 
 js::value js::get_current_function(js::value_context& vctx)
@@ -815,12 +850,28 @@ void js::dump_stack(js::value_context& vctx)
 
 std::pair<bool, js::value> js::compile(js::value_context& vctx, const std::string& data)
 {
-    duk_push_lstring(vctx.ctx, data.c_str(), data.size());
+    duk_push_string(vctx.ctx, data.c_str());
     duk_push_string(vctx.ctx, "test-name");
 
-    bool success = duk_pcompile(vctx.ctx, DUK_COMPILE_EVAL);
+    bool success = duk_pcompile(vctx.ctx, DUK_COMPILE_EVAL) == 0;
 
     return {success, js::value(vctx, -1)};
+}
+
+js::value js::xfer_between_contexts(js::value_context& destination, const js::value& val)
+{
+    if(destination.ctx == val.ctx)
+        throw std::runtime_error("Bad same contexts");
+
+    printf("Predup %i\n", val.idx);
+
+    duk_dup(val.ctx, val.idx);
+
+    printf("Postdup %i\n", val.idx);
+
+    duk_xmove_top(destination.ctx, val.ctx, 1);
+
+    return js::value(destination, -1);
 }
 
 void test_func()

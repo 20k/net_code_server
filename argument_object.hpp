@@ -376,6 +376,7 @@ namespace js
         bool is_boolean();
         bool is_undefined();
         bool is_truthy();
+        bool is_object_coercible();
 
         ///stop managing element
         void release();
@@ -481,6 +482,11 @@ namespace js
     inline
     std::pair<bool, value> call(value& func, T&&... vals)
     {
+        bool all_same = ((vals.ctx == func.ctx) && ...);
+
+        if(!all_same)
+            throw std::runtime_error("Not same contexts");
+
         duk_dup(func.ctx, func.idx);
 
         (duk_dup(func.ctx, vals.idx), ...);
@@ -635,6 +641,7 @@ namespace js
     }
 
     js::value get_global(value_context& vctx);
+    void set_global(value_context& vctx, const js::value& val);
     js::value get_current_function(value_context& vctx);
     js::value get_this(value_context& vctx);
     js::value get_heap_stash(value_context& vctx);
@@ -689,6 +696,7 @@ namespace js
     }
 
     std::pair<bool, js::value> compile(js::value_context& vctx, const std::string& data);
+    js::value xfer_between_contexts(js::value_context& destination, const js::value& val);
 
     void dump_stack(js::value_context& vctx);
 }
