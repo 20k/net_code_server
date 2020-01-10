@@ -419,6 +419,8 @@ namespace js
             return ret;
         }
 
+        std::string to_json();
+
         value operator[](int64_t val);
         value operator[](const std::string& str);
         value operator[](const char* str);

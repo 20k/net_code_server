@@ -562,6 +562,20 @@ js::value::~value()
     }
 }
 
+std::string js::value::to_json()
+{
+    if(idx == -1)
+        return "{}";
+
+    duk_dup(ctx, idx);
+
+    std::string str = duk_json_encode(ctx, -1);
+
+    duk_pop(ctx);
+
+    return str;
+}
+
 js::value js::value::operator[](int64_t val)
 {
     return js::value(*vctx, *this, val);

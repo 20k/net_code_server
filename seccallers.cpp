@@ -506,32 +506,24 @@ void terminate_realtime(js::value_context* vctx)
     shared_state->disable_realtime();
 }
 
-duk_ret_t hash_d(duk_context* ctx)
+void hash_d(js::value_context* vctx, js::value val)
 {
-    COOPERATE_KILL();
+    COOPERATE_KILL_VCTX();
 
-    if(get_caller(ctx) != get_script_host(ctx))
-    {
-        return 0;
-    }
+    if(get_caller(vctx->ctx) != get_script_host(vctx->ctx))
+        return;
 
-    std::string str = duk_json_encode(ctx, -1);
+    std::string as_json = val.to_json();
 
-    duk_push_heap_stash(ctx);
-    duk_get_prop_string(ctx, -1, "HASH_D");
+    js::value heap_stash = js::get_heap_stash(*vctx);
 
-    std::string fstr = duk_safe_to_string(ctx, -1);
+    js::value hash_d_prop = heap_stash.get("HASH_D");
 
-    fstr += str + "\n";
+    std::string fstr = (std::string)hash_d_prop;
 
-    duk_pop_n(ctx, 1);
+    fstr += as_json + "\n";
 
-    duk_push_string(ctx, fstr.c_str());
-    duk_put_prop_string(ctx, -2, "HASH_D");
-
-    duk_pop_n(ctx, 2);
-
-    return 0;
+    hash_d_prop = fstr;
 }
 
 std::string get_hash_d(duk_context* ctx)
@@ -1322,8 +1314,6 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     if(seclevel <= 0)
         inject_c_function(ctx, sl_call<0>, "ns_call", 2, "script_host", script_host);
 
-    inject_c_function(ctx, hash_d, "hash_d", 1);
-
     if(seclevel <= 3)
     {
         inject_c_function(ctx, db_insert, "db_insert", 1, "script_host", script_host);
@@ -1351,6 +1341,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     js::add_key_value(global, "is_key_down", js::function<is_key_down>);
     js::add_key_value(global, "mouse_get_position", js::function<mouse_get_position>);
     js::add_key_value(global, "get_string_col", js::function<get_string_col>);
+    js::add_key_value(global, "hash_d", js::function<hash_d>);
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);
