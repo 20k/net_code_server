@@ -569,8 +569,6 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
     std::string wrapper = data;
 
-    //std::cout << "COMPILING " << wrapper << std::endl;
-
     //exec_stack stk(ectx, new_ctx);
 
     duk_idx_t fidx = duk_push_thread_new_globalenv(new_ctx);
@@ -656,12 +654,6 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
         if(!is_cli)
         {
-            {
-                printf("Pre In !is_cli\n");
-                js::value_context vctx(temporary_ctx);
-                js::dump_stack(vctx);
-            }
-
             ///script execution is in two phases
             ///the first phase executes all the requires and returns a function object which is user code
             ///the second phase executes user code
@@ -678,19 +670,7 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
                 throw std::runtime_error("Failed to execute require block " + error_prop);
             }
 
-            {
-                printf("Second In !is_cli\n");
-                js::value_context vctx(temporary_ctx);
-                js::dump_stack(vctx);
-            }
-
-            duk_replace(temporary_ctx, -2 - args);
-
-            {
-                printf("In !is_cli\n");
-                js::value_context vctx(temporary_ctx);
-                js::dump_stack(vctx);
-            }
+            duk_replace(temporary_ctx, -2 - nargs);
         }
         else
         {
@@ -1131,15 +1111,9 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
             js::value arg_dup(*vctx, arg);
             arg_dup.release();
 
-            std::cout << "FULL " << script.name << std::endl;
-
-            js::dump_stack(*vctx);
-
             compile_and_call(vctx->ctx, load, get_caller(vctx->ctx), false, script.seclevel, false, full_script, false);
 
             ret = js::value(*vctx, -1);
-
-            std::cout << "ret? " << (std::string)ret << std::endl;
         }
 
         set_script_info(vctx->ctx, full_script);

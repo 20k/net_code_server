@@ -33,7 +33,7 @@ std::string attach_cli_wrapper(const std::string& str)
 
 std::string attach_unparsed_wrapper(std::string str)
 {
-    return "(function mainfunc(context, args){return (" + str + ")(context, args)})";
+    return "(function mainfunc(context, args){var func = (" + str + "); return func(context, args);})";
 }
 
 bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out)
