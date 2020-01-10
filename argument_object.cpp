@@ -813,6 +813,16 @@ void js::dump_stack(js::value_context& vctx)
     std::cout << "GOT " << (std::string)val << std::endl;
 }
 
+std::pair<bool, js::value> js::compile(js::value_context& vctx, const std::string& data)
+{
+    duk_push_lstring(vctx.ctx, data.c_str(), data.size());
+    duk_push_string(vctx.ctx, "test-name");
+
+    bool success = duk_pcompile(vctx.ctx, DUK_COMPILE_EVAL);
+
+    return {success, js::value(vctx, -1)};
+}
+
 void test_func()
 {
 

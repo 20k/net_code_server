@@ -688,6 +688,8 @@ namespace js
         return nval;
     }
 
+    std::pair<bool, js::value> compile(js::value_context& vctx, const std::string& data);
+
     void dump_stack(js::value_context& vctx);
 }
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED
