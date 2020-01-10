@@ -472,6 +472,8 @@ namespace js
         value operator[](const std::string& str);
         value operator[](const char* str);
 
+        void pack();
+
         friend bool operator==(const value& v1, const value& v2)
         {
             return duk_equals(v1.ctx, v1.idx, v2.idx);

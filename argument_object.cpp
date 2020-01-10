@@ -857,6 +857,39 @@ js::value js::xfer_between_contexts(js::value_context& destination, const js::va
     return js::value(destination, -1);
 }
 
+void js::value::pack()
+{
+    if(idx <= 0)
+        return;
+
+    if(duk_get_top_index(ctx) != idx)
+        return;
+
+    int cidx = idx - 1;
+
+    while(cidx > 0 && vctx->free_stack.at(cidx) == 1)
+    {
+        cidx--;
+    }
+
+    ///cidx occupied, increment to get first free space
+    cidx++;
+
+    if(cidx >= idx - 1)
+        return;
+
+    if(vctx->free_stack.at(cidx) != 1)
+        throw std::runtime_error("Expected 1 in free stack");
+
+    vctx->free_stack.at(cidx) = 0;
+
+    duk_dup(ctx, idx);
+    duk_replace(ctx, cidx);
+
+    vctx->free(idx);
+    idx = cidx;
+}
+
 void test_func()
 {
 

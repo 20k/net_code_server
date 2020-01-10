@@ -1011,13 +1011,9 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
         {
             set_script_info(vctx->ctx, to_call_fullname);
 
-            int start_top = duk_get_top(vctx->ctx);
-
             auto [msg, res] = compile_and_call(*vctx, arg, load, get_caller(vctx->ctx), false, script.seclevel, false, full_script, false);
 
-            int end_top = duk_get_top(vctx->ctx);
-
-            printf("TOPyy %i %i\n", start_top, end_top);
+            res.pack();
 
             ret = res;
         }
