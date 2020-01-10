@@ -169,19 +169,6 @@ duk_ret_t db_update(duk_context* ctx)
     return 1;
 }
 
-void parse_push_json(duk_context* ctx, const std::vector<std::string>& jsons)
-{
-    duk_idx_t arr_idx = duk_push_array(ctx);
-
-    for(int i=0; i < (int)jsons.size(); i++)
-    {
-        duk_push_string(ctx, jsons[i].c_str());
-        duk_json_decode(ctx, -1);
-
-        duk_put_prop_index(ctx, arr_idx, i);
-    }
-}
-
 duk_ret_t db_find_all(duk_context* ctx)
 {
     COOPERATE_KILL();
@@ -214,8 +201,6 @@ duk_ret_t db_find_all(duk_context* ctx)
         return 0;
 
     std::vector<nlohmann::json> db_data = mongo_ctx->find_json_new(nlohmann::json::parse(json), nlohmann::json::parse(proj));
-
-    //parse_push_json(ctx, db_data);
 
     push_duk_val(ctx, db_data);
 
