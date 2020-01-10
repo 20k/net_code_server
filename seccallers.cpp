@@ -1169,10 +1169,9 @@ std::string js_unified_force_call_data(exec_context& ectx, const std::string& da
     return ret;
 }
 
-duk_ret_t err(duk_context* ctx)
+js::value err(js::value_context* vctx)
 {
-    push_error(ctx, "Scriptor syntax is the same as function call syntax, do not use .call");
-    return 1;
+    return js::make_error(*vctx, "Scriptor syntax is the same as function call syntax, do not use .call");
 }
 
 void remove_func(duk_context* ctx, const std::string& name)
@@ -1244,7 +1243,7 @@ js::value sl_call(js::value_context* vctx, std::string script_name, js::value as
 
     js::value val = js::make_value(*vctx, js::function<jxs_call<N>>);
     val.add("FUNCTION_NAME", script_name);
-    val.add("call", err);
+    val.add("call", js::function<err>);
     val.add("is_async", async_launch);
 
     js::value current_function = js::get_current_function(*vctx);
@@ -1265,7 +1264,7 @@ js::value os_call(js::value_context* vctx, std::string script_name, js::value as
 
     js::value val = js::make_value(*vctx, js::function<jxos_call<N>>);
     val.add("FUNCTION_NAME", script_name);
-    val.add("call", err);
+    val.add("call", js::function<err>);
     val.add("is_async", async_launch);
 
     js::value current_function = js::get_current_function(*vctx);
@@ -1278,25 +1277,22 @@ js::value os_call(js::value_context* vctx, std::string script_name, js::value as
 
 void register_funcs(duk_context* ctx, int seclevel, const std::string& script_host, bool polyfill)
 {
-    remove_func(ctx, "fs_call");
-    remove_func(ctx, "hs_call");
-    remove_func(ctx, "ms_call");
-    remove_func(ctx, "ls_call");
-    remove_func(ctx, "ns_call");
-    remove_func(ctx, "os_call");
-
-    /*remove_func(ctx, "db_insert");
-    remove_func(ctx, "db_find");
-    remove_func(ctx, "db_remove");
-    remove_func(ctx, "db_update");*/
-
-    //inject_c_function(ctx, native_print, "print", DUK_VARARGS);
-    //inject_c_function(ctx, async_print, "async_print", DUK_VARARGS);
-    //inject_c_function(ctx, async_print_raw, "async_print_raw", DUK_VARARGS);
-
     js::value_context vctx(ctx);
 
     js::value global = js::get_global(vctx);
+
+    global.del("fs_call");
+    global.del("hs_call");
+    global.del("ms_call");
+    global.del("ls_call");
+    global.del("ns_call");
+    global.del("os_call");
+    global.del("ofs_call");
+    global.del("ohs_call");
+    global.del("oms_call");
+    global.del("ols_call");
+    global.del("ons_call");
+
     js::add_key_value(global, "is_realtime_script", js::function<is_realtime_script>);
     js::add_key_value(global, "timeout_yield", js::function<timeout_yield>);
     js::add_key_value(global, "async_pipe", js::function<async_pipe>);

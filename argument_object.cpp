@@ -676,6 +676,16 @@ js::value js::value::get_hidden(const std::string& key)
     return js::value(*vctx, *this, rkey);
 }
 
+bool js::value::del(const std::string& key)
+{
+    if(!has(key))
+        return false;
+
+    js::value val(*vctx, *this, key);
+    val = std::nullopt;
+    return true;
+}
+
 bool js::value::is_string()
 {
     if(idx == -1)

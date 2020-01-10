@@ -349,6 +349,8 @@ namespace js
         value get(const char* key);
         value get_hidden(const std::string& key);
 
+        bool del(const std::string& key);
+
         template<typename T>
         js::value add(const std::string& key, const T& val)
         {
