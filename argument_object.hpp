@@ -109,6 +109,20 @@ namespace js
 
 namespace arg
 {
+    void dukx_push(duk_context* ctx, const char* v);
+    void dukx_push(duk_context* ctx, const std::string& v);
+    void dukx_push(duk_context* ctx, int64_t v);
+    void dukx_push(duk_context* ctx, int v);
+    void dukx_push(duk_context* ctx, double v);
+    void dukx_push(duk_context* ctx, bool v);
+    template<typename T>
+    void dukx_push(duk_context* ctx, const std::vector<T>& v);
+    template<typename T, typename U>
+    void dukx_push(duk_context* ctx, const std::map<T, U>& v);
+    void dukx_push(duk_context* ctx, js_funcptr_t fptr);
+    void dukx_push(duk_context* ctx, const js::undefined_t&);
+    void dukx_push(duk_context* ctx, const nlohmann::json& in);
+
     inline
     void dukx_push(duk_context* ctx, const char* v)
     {
@@ -156,7 +170,7 @@ namespace arg
 
         for(int i=0; i < (int)v.size(); i++)
         {
-            dukx_push<T>(ctx, v[i]);
+            dukx_push(ctx, v[i]);
             duk_put_prop_index(ctx, tidx, i);
         }
     }
