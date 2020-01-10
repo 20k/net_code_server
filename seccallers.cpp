@@ -60,77 +60,45 @@ void native_print(js::value_context* vctx, std::string str)
     print_obj = print_str;
 }
 
-duk_ret_t async_print(duk_context* ctx)
+js::value async_print(js::value_context* vctx, std::string what)
 {
-    COOPERATE_KILL();
-    RATELIMIT_DUK(ASYNC_PRINT);
+    COOPERATE_KILL_VCTX();
+    RATELIMIT_JS(ASYNC_PRINT);
 
-    std::string str;
+    command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(vctx->ctx, "command_handler_state_pointer");
 
-    int nargs = duk_get_top(ctx);
-
-    for(int i=0; i < nargs; i++)
-    {
-        if(i != nargs-1)
-        {
-            str += duk_safe_to_std_string(ctx, i) + " ";
-        }
-        else
-        {
-            str += duk_safe_to_std_string(ctx, i);
-        }
-    }
-
-    command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(ctx, "command_handler_state_pointer");
-
-    if(found_ptr && get_caller_stack(ctx).size() > 0 && get_caller_stack(ctx)[0] == found_ptr->get_user_name())
+    if(found_ptr && get_caller_stack(vctx->ctx).size() > 0 && get_caller_stack(vctx->ctx)[0] == found_ptr->get_user_name())
     {
         nlohmann::json data;
         data["type"] = "server_msg";
-        data["data"] = str;
+        data["data"] = what;
 
-        send_async_message(ctx, data.dump());
-        return push_success(ctx);
+        send_async_message(vctx->ctx, data.dump());
+        return js::make_success(*vctx);
     }
 
-	return push_error(ctx, "No pointer or wrong user");
+	return js::make_error(*vctx, "No pointer or wrong user");
 }
 
-duk_ret_t async_print_raw(duk_context* ctx)
+js::value async_print_raw(js::value_context* vctx, std::string what)
 {
-    COOPERATE_KILL();
-    RATELIMIT_DUK(ASYNC_PRINT);
+    COOPERATE_KILL_VCTX();
+    RATELIMIT_JS(ASYNC_PRINT);
 
-    std::string str;
+    command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(vctx->ctx, "command_handler_state_pointer");
 
-    int nargs = duk_get_top(ctx);
-
-    for(int i=0; i < nargs; i++)
-    {
-        if(i != nargs-1)
-        {
-            str += duk_safe_to_std_string(ctx, i) + " ";
-        }
-        else
-        {
-            str += duk_safe_to_std_string(ctx, i);
-        }
-    }
-
-    command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(ctx, "command_handler_state_pointer");
-
-    if(found_ptr && get_caller_stack(ctx).size() > 0 && get_caller_stack(ctx)[0] == found_ptr->get_user_name())
+    if(found_ptr && get_caller_stack(vctx->ctx).size() > 0 && get_caller_stack(vctx->ctx)[0] == found_ptr->get_user_name())
     {
         nlohmann::json data;
         data["type"] = "server_msg";
-        data["data"] = str;
+        data["data"] = what;
         data["no_pad"] = 1;
 
-        send_async_message(ctx, data.dump());
-        return push_success(ctx);
+        send_async_message(vctx->ctx, data.dump());
+        return js::make_success(*vctx);
     }
 
-	return push_error(ctx, "No pointer or wrong user");
+	return js::make_error(*vctx, "No pointer or wrong user");
 }
 
 void timeout_yield(js::value_context* vctx)
@@ -1347,18 +1315,6 @@ js::value os_call(js::value_context* vctx, std::string script_name, js::value as
     return val;
 }
 
-void inject_console_log(duk_context* ctx)
-{
-    duk_push_global_object(ctx);
-
-    duk_push_object(ctx);
-    duk_push_c_function(ctx, async_print, DUK_VARARGS);
-    duk_put_prop_string(ctx, -2, "log");
-    duk_put_prop_string(ctx, -2, "console");
-
-    duk_pop(ctx);
-}
-
 void register_funcs(duk_context* ctx, int seclevel, const std::string& script_host, bool polyfill)
 {
     remove_func(ctx, "fs_call");
@@ -1374,8 +1330,8 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     remove_func(ctx, "db_update");*/
 
     //inject_c_function(ctx, native_print, "print", DUK_VARARGS);
-    inject_c_function(ctx, async_print, "async_print", DUK_VARARGS);
-    inject_c_function(ctx, async_print_raw, "async_print_raw", DUK_VARARGS);
+    //inject_c_function(ctx, async_print, "async_print", DUK_VARARGS);
+    //inject_c_function(ctx, async_print_raw, "async_print_raw", DUK_VARARGS);
 
     js::value_context vctx(ctx);
 
@@ -1427,6 +1383,8 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     js::add_key_value(global, "ons_call", js::function<os_call<0>>).add_hidden("script_host", script_host);
 
     js::add_key_value(global, "print", js::function<native_print>);
+    js::add_key_value(global, "async_print", js::function<async_print>);
+    js::add_key_value(global, "async_print_raw", js::function<async_print_raw>);
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);
@@ -1436,7 +1394,12 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     inject_c_function(ctx, deliberate_hang, "deliberate_hang", 0);
     #endif // TESTING
 
-    inject_console_log(ctx);
+    ///console.log
+    {
+        js::value console(vctx);
+        js::add_key_value(console, "log", js::function<async_print>);
+        js::add_key_value(global, "console", console);
+    }
 
     //#ifdef TESTING
     if(seclevel <= 3)

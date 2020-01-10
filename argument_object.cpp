@@ -390,12 +390,7 @@ js::value& js::value::operator=(const value& right)
     if(idx == -1 && right.idx == -1)
         return *this;
 
-    if(idx != -1 && !released)
-    {
-        vctx->free(idx);
-    }
-
-    if(idx == -1)
+    /*if(idx == -1)
     {
         duk_dup(ctx, right.idx);
         idx = duk_get_top_index(ctx);
@@ -404,7 +399,9 @@ js::value& js::value::operator=(const value& right)
     }
     else
     {
-        vctx->free(idx);
+        if(!released)
+            vctx->free(idx);
+
         //duk_remove(ctx, idx);
         duk_dup(ctx, right.idx);
         idx = duk_get_top_index(ctx);
@@ -413,6 +410,12 @@ js::value& js::value::operator=(const value& right)
     }
 
     //released = right.released;
+
+    return *this;*/
+
+    stack_manage m(*this);
+
+    duk_dup(ctx, right.idx);
 
     return *this;
 }

@@ -125,6 +125,8 @@ struct sandbox_data;
 void handle_sleep(sandbox_data* dat);
 
 #define RATELIMIT_DUK(type) if(!get_global_rate_limit()->try_call(get_caller(ctx), rate::type)) {push_error(ctx, "Rate Limit"); return 1;}
+#define RATELIMIT_JS(type) if(!get_global_rate_limit()->try_call(get_caller(vctx->ctx), rate::type)) {return js::make_error(*vctx, "Rate Limit");}
+
 #define SHOULD_RATELIMIT(name, type) !get_global_rate_limit()->try_call(name, rate::type)
 
 #define CAN_RUN_ONCE_EVERY(username, ratelimit_name, every) get_global_rate_limit()->try_call_manual(username, ratelimit_name, every, every, every + 1)
