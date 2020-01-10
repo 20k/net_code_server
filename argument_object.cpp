@@ -791,6 +791,15 @@ void* js::get_sandbox_data_impl(value_context& vctx)
     return mem_funcs_duk.udata;
 }
 
+void js::dump_stack(js::value_context& vctx)
+{
+    duk_push_context_dump(vctx.ctx);
+
+    js::value val(vctx, -1);
+
+    std::cout << "GOT " << (std::string)val << std::endl;
+}
+
 void test_func()
 {
 

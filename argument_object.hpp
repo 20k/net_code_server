@@ -685,5 +685,7 @@ namespace js
         nval = val;
         return nval;
     }
+
+    void dump_stack(js::value_context& vctx);
 }
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED

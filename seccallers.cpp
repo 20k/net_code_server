@@ -695,16 +695,6 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
         duk_xmove_top(new_ctx, temporary_ctx, moved);
         duk_remove(new_ctx, -1 - moved); ///removes temporary ctx
 
-        /*duk_push_context_dump(new_ctx);
-
-        js::value_context vctx(new_ctx);
-        js::value val(vctx, -1);
-        val.release();
-
-        std::cout << "GOT " << (std::string)val << std::endl;
-
-        duk_pop(new_ctx);*/
-
         ///now we have [thread] on stack 1, and [object, args] on stack 2
         ///stack 2 has [val] afterwards
         duk_int_t ret_val = duk_pcall(new_ctx, nargs);
@@ -1121,6 +1111,8 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
 
             js::value arg_dup(*vctx, arg);
             arg_dup.release();
+
+            std::cout << "FULL " << script.name << std::endl;
 
             compile_and_call(vctx->ctx, load, get_caller(vctx->ctx), false, script.seclevel, false, full_script, false);
 
