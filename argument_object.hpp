@@ -8,6 +8,7 @@
 #include <tuple>
 #include "duktape.h"
 #include <assert.h>
+#include <nlohmann/json.hpp>
 
 #include "scripting_api_fwrd.hpp"
 
@@ -155,7 +156,7 @@ namespace arg
 
         for(int i=0; i < (int)v.size(); i++)
         {
-            dukx_push(ctx, v[i]);
+            dukx_push<T>(ctx, v[i]);
             duk_put_prop_index(ctx, tidx, i);
         }
     }
@@ -185,6 +186,15 @@ namespace arg
     void dukx_push(duk_context* ctx, const js::undefined_t&)
     {
         duk_push_undefined(ctx);
+    }
+
+    inline
+    void dukx_push(duk_context* ctx, const nlohmann::json& in)
+    {
+        std::string str = in.dump();
+
+        duk_push_lstring(ctx, str.c_str(), str.size());
+        duk_json_decode(ctx, -1);
     }
 
     inline
@@ -363,6 +373,7 @@ namespace js
         value& operator=(const value& right);
         value& operator=(value&& right);
         value& operator=(undefined_t);
+        value& operator=(const nlohmann::json&);
 
         template<typename T>
         value& operator=(const std::vector<T>& in)
@@ -580,6 +591,13 @@ namespace js
         int nargs = num_args(func);
         int nrets = num_rets(func);
 
+        int top = duk_get_top(ctx);
+
+        for(int i=top; i < nargs; i++)
+        {
+            duk_push_undefined(ctx);
+        }
+
         if(duk_safe_call(ctx, &js_safe_function<func>, nullptr, nargs, nrets) != DUK_EXEC_SUCCESS)
         {
             js::value_context vctx(ctx);
@@ -601,6 +619,7 @@ namespace js
 
     js::value get_global(value_context& vctx);
     js::value get_current_function(value_context& vctx);
+    js::value get_this(value_context& vctx);
     js::value get_heap_stash(value_context& vctx);
     void* get_sandbox_data_impl(value_context& vctx);
 

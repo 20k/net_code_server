@@ -435,6 +435,15 @@ js::value& js::value::operator=(js::undefined_t)
     return *this;
 }
 
+js::value& js::value::operator=(const nlohmann::json& in)
+{
+    stack_manage m(*this);
+
+    arg::dukx_push(ctx, in);
+
+    return *this;
+}
+
 js::value::value(const js::value& value)
 {
     vctx = value.vctx;
@@ -753,6 +762,13 @@ js::value js::get_global(js::value_context& vctx)
 js::value js::get_current_function(js::value_context& vctx)
 {
     duk_push_current_function(vctx.ctx);
+
+    return js::value(vctx, -1);
+}
+
+js::value js::get_this(js::value_context& vctx)
+{
+    duk_push_this(vctx.ctx);
 
     return js::value(vctx, -1);
 }
