@@ -271,25 +271,18 @@ duk_ret_t db_find(duk_context* ctx)
 {
     COOPERATE_KILL();
 
-    int nargs = duk_get_top(ctx);
-
     std::string json = "";//duk_json_encode(ctx, -1);
     std::string proj = "";
 
-    if(nargs == 2)
-    {
-        json = duk_json_encode(ctx, 0);
+    if(duk_is_undefined(ctx, 0))
+        return push_error(ctx, "First argument must not be undefined");
+
+    json = duk_json_encode(ctx, 0);
+
+    if(!duk_is_undefined(ctx, 1))
         proj = std::string("{ \"projection\" : ") + duk_json_encode(ctx, 1) + " }";
-    }
-
-    if(nargs == 1)
-    {
-        json = duk_json_encode(ctx, 0);
+    else
         proj = "{}";
-    }
-
-    if(nargs == 0 || nargs > 2)
-        return push_error(ctx, "Invalid number of args");
 
     duk_push_object(ctx);
 
@@ -1317,7 +1310,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     if(seclevel <= 3)
     {
         inject_c_function(ctx, db_insert, "db_insert", 1, "script_host", script_host);
-        inject_c_function(ctx, db_find, "db_find", DUK_VARARGS, "script_host", script_host);
+        inject_c_function(ctx, db_find, "db_find", 2, "script_host", script_host);
         inject_c_function(ctx, db_remove, "db_remove", 1, "script_host", script_host);
         inject_c_function(ctx, db_update, "db_update", 2, "script_host", script_host);
     }
