@@ -1015,7 +1015,6 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
     if(!is_valid_full_name_string(to_call_fullname))
         return js::make_error(*vctx, "Bad script name, don't do this :)");
 
-
     ///current script
     //std::string full_script = get_script_host(ctx) + "." + get_script_ending(ctx);
 
@@ -1112,10 +1111,13 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
             set_script_info(vctx->ctx, to_call_fullname);
 
             js::value arg_dup(*vctx, arg);
+            arg_dup.release();
 
             compile_and_call(vctx->ctx, load, get_caller(vctx->ctx), false, script.seclevel, false, full_script, false);
 
             ret = js::value(*vctx, -1);
+
+            std::cout << "ret? " << (std::string)ret << std::endl;
         }
 
         set_script_info(vctx->ctx, full_script);

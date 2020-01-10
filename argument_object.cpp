@@ -455,6 +455,11 @@ js::value::value(const js::value& value)
     idx = duk_get_top_index(ctx);
 }
 
+js::value::value(js::value_context& vctx, const value& other) : js::value::value(other)
+{
+
+}
+
 js::value::value(js::value&& other)
 {
     if(other.released)
