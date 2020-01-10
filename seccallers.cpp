@@ -980,27 +980,6 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
 
     std::string secret_script_host = current_function.get_hidden("script_host");
 
-    /*duk_push_current_function(ctx);
-
-    bool is_async = false;
-
-    if(!get_duk_keyvalue(ctx, "is_async", is_async))
-        return push_error(ctx, "Missing is_async flag");
-
-    //std::cout << "is_async " << is_async << std::endl;
-
-    if(!get_duk_keyvalue(ctx, "FUNCTION_NAME", to_call_fullname))
-    {
-        duk_pop(ctx);
-
-        duk_push_undefined(ctx);
-
-        push_error(ctx, "Bad script name, this is the developer scolding you, you know what you did");
-        return 1;
-    }
-
-    duk_pop(ctx);*/
-
     if(!current_function.has("is_async"))
         return js::make_error(*vctx, "Missing is_async flag");
 
@@ -1267,19 +1246,6 @@ void inject_c_function(duk_context *ctx, T& t, const std::string& str, int nargs
 	duk_put_global_string(ctx, str.c_str());
 }
 
-/*template<int N>
-static
-duk_ret_t jxs_call(duk_context* ctx)
-{
-    int current_seclevel = get_global_int(ctx, "last_seclevel");
-
-    duk_ret_t ret = js_call(ctx, N);
-
-    set_global_int(ctx, "last_seclevel", current_seclevel);
-
-    return ret;
-}*/
-
 template<int N>
 js::value jxs_call(js::value_context* vctx, js::value val)
 {
@@ -1291,37 +1257,6 @@ js::value jxs_call(js::value_context* vctx, js::value val)
 
     return ret;
 }
-
-/*template<int N>
-duk_ret_t jxos_call(duk_context* ctx)
-{
-    int current_seclevel = get_global_int(ctx, "last_seclevel");
-
-    std::vector<std::string> old_caller_stack = get_caller_stack(ctx);
-    std::string old_caller = get_caller(ctx);
-
-    std::string new_caller = get_script_host(ctx);
-
-    duk_push_heap_stash(ctx);
-
-    quick_register(ctx, "caller", new_caller.c_str());
-    quick_register_generic(ctx, "caller_stack", std::vector<std::string>{new_caller});
-
-    duk_pop(ctx);
-
-    duk_ret_t ret = js_call(ctx, N);
-
-    set_global_int(ctx, "last_seclevel", current_seclevel);
-
-    duk_push_heap_stash(ctx);
-
-    quick_register(ctx, "caller", old_caller.c_str());
-    quick_register_generic(ctx, "caller_stack", old_caller_stack);
-
-    duk_pop(ctx);
-
-    return ret;
-}*/
 
 template<int N>
 js::value jxos_call(js::value_context* vctx, js::value val)
@@ -1352,37 +1287,6 @@ js::value jxos_call(js::value_context* vctx, js::value val)
     return ret;
 }
 
-#if 0
-///so ideally this would provide validation
-///pass through context and set appropriately
-///and modify args
-template<int N>
-inline
-duk_ret_t sl_call(duk_context* ctx)
-{
-    static_assert(N >= 0 && N <= 4);
-
-    std::string str = duk_require_string(ctx, -2);
-
-    bool async_launch = dukx_is_truthy(ctx, -1);
-
-    //std::cout << "truthy " << async_launch << std::endl;
-
-    duk_push_c_function(ctx, &jxs_call<N>, 1);
-
-    put_duk_keyvalue(ctx, "FUNCTION_NAME", str);
-    put_duk_keyvalue(ctx, "call", err);
-    put_duk_keyvalue(ctx, "is_async", async_launch);
-
-    std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
-    dukx_put_hidden_prop(ctx, -1, "script_host", secret_script_host);
-
-    freeze_duk(ctx);
-
-    return 1;
-}
-#endif // 0
-
 ///so ideally this would provide validation
 ///pass through context and set appropriately
 ///and modify args
@@ -1406,30 +1310,6 @@ js::value sl_call(js::value_context* vctx, std::string script_name, js::value as
 
     return val;
 }
-
-/*
-template<int N>
-inline
-duk_ret_t os_call(duk_context* ctx)
-{
-    std::string str = duk_require_string(ctx, -2);
-
-    bool async_launch = dukx_is_truthy(ctx, -1);
-
-    ///???
-    duk_push_c_function(ctx, &jxos_call<N>, 1);
-
-    put_duk_keyvalue(ctx, "FUNCTION_NAME", str);
-    put_duk_keyvalue(ctx, "call", err);
-    put_duk_keyvalue(ctx, "is_async", async_launch);
-
-    std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
-    dukx_put_hidden_prop(ctx, -1, "script_host", secret_script_host);
-
-    freeze_duk(ctx);
-
-    return 1;
-}*/
 
 template<int N>
 inline
@@ -1477,31 +1357,6 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     remove_func(ctx, "db_find");
     remove_func(ctx, "db_remove");
     remove_func(ctx, "db_update");*/
-
-    /*inject_c_function(ctx, os_call<0>, "os_call", 2, "script_host", script_host);
-
-    inject_c_function(ctx, os_call<4>, "ofs_call", 2, "script_host", script_host);
-    inject_c_function(ctx, os_call<3>, "ohs_call", 2, "script_host", script_host);
-    inject_c_function(ctx, os_call<2>, "oms_call", 2, "script_host", script_host);
-    inject_c_function(ctx, os_call<1>, "ols_call", 2, "script_host", script_host);
-    inject_c_function(ctx, os_call<0>, "ons_call", 2, "script_host", script_host);*/
-
-    /*if(seclevel <= 4)
-    {
-        inject_c_function(ctx, sl_call<4>, "fs_call", 2, "script_host", script_host);
-    }
-
-    if(seclevel <= 3)
-        inject_c_function(ctx, sl_call<3>, "hs_call", 2, "script_host", script_host);
-
-    if(seclevel <= 2)
-        inject_c_function(ctx, sl_call<2>, "ms_call", 2, "script_host", script_host);
-
-    if(seclevel <= 1)
-        inject_c_function(ctx, sl_call<1>, "ls_call", 2, "script_host", script_host);
-
-    if(seclevel <= 0)
-        inject_c_function(ctx, sl_call<0>, "ns_call", 2, "script_host", script_host);*/
 
     inject_c_function(ctx, native_print, "print", DUK_VARARGS);
     inject_c_function(ctx, async_print, "async_print", DUK_VARARGS);
@@ -1575,6 +1430,4 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
 
     if(polyfill)
         dukx_inject_modules(ctx);
-
-    //fully_freeze(ctx, "hash_d", "db_insert", "db_find", "db_remove", "db_update");
 }
