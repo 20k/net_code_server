@@ -167,46 +167,6 @@ duk_ret_t db_update(duk_context* ctx)
     return 1;
 }
 
-#if 0
-duk_ret_t db_find_all(duk_context* ctx)
-{
-    COOPERATE_KILL();
-
-    std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
-
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
-    mongo_ctx.change_collection(secret_script_host);
-
-    duk_push_this(ctx);
-
-    duk_get_prop_string(ctx, -1, "JSON");
-    std::string json = duk_get_string(ctx, -1);
-    duk_pop(ctx);
-
-    duk_get_prop_string(ctx, -1, "PROJ");
-    std::string proj = duk_get_string(ctx, -1);
-    duk_pop(ctx);
-
-    duk_get_prop_string(ctx, -1, "DB_CALLER");
-    std::string caller = duk_get_string(ctx, -1);
-    duk_pop(ctx);
-
-    //std::cout << "json " << json << std::endl;
-
-    ///remove get prop db info
-    duk_pop(ctx);
-
-    if(caller != get_caller(ctx))
-        return 0;
-
-    std::vector<nlohmann::json> db_data = mongo_ctx->find_json_new(nlohmann::json::parse(json), nlohmann::json::parse(proj));
-
-    push_duk_val(ctx, db_data);
-
-    return 1;
-}
-#endif // 0
-
 js::value db_find_all(js::value_context* vctx)
 {
     COOPERATE_KILL_VCTX();
@@ -230,53 +190,6 @@ js::value db_find_all(js::value_context* vctx)
 
     return js::make_value(*vctx, db_data);
 }
-
-#if 0
-duk_ret_t db_find_one(duk_context* ctx)
-{
-    COOPERATE_KILL();
-
-    std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
-
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
-    mongo_ctx.change_collection(secret_script_host);
-
-    duk_push_this(ctx);
-
-    duk_get_prop_string(ctx, -1, "JSON");
-    std::string json = duk_get_string(ctx, -1);
-    duk_pop(ctx);
-
-    duk_get_prop_string(ctx, -1, "PROJ");
-    std::string proj = duk_get_string(ctx, -1);
-    duk_pop(ctx);
-
-    duk_get_prop_string(ctx, -1, "DB_CALLER");
-    std::string caller = duk_get_string(ctx, -1);
-    duk_pop(ctx);
-
-    //std::cout << "json " << json << std::endl;
-
-    ///remove get prop db info
-    duk_pop(ctx);
-
-    if(caller != get_caller(ctx))
-        return 0;
-
-    std::vector<nlohmann::json> db_data = mongo_ctx->find_json_new(nlohmann::json::parse(json), nlohmann::json::parse(proj));
-
-    if(db_data.size() == 0)
-    {
-        duk_push_undefined(ctx);
-    }
-    else
-    {
-        push_duk_val(ctx, db_data[0]);
-    }
-
-    return 1;
-}
-#endif // 0
 
 js::value db_find_one(js::value_context* vctx)
 {
@@ -308,54 +221,6 @@ js::value db_find_one(js::value_context* vctx)
         return js::make_value(*vctx, db_data[0]);
     }
 }
-
-#if 0
-duk_ret_t db_find(duk_context* ctx)
-{
-    COOPERATE_KILL();
-
-    std::string json = "";//duk_json_encode(ctx, -1);
-    std::string proj = "";
-
-    if(duk_is_undefined(ctx, 0))
-        return push_error(ctx, "First argument must not be undefined");
-
-    json = duk_json_encode(ctx, 0);
-
-    if(!duk_is_undefined(ctx, 1))
-        proj = std::string("{ \"projection\" : ") + duk_json_encode(ctx, 1) + " }";
-    else
-        proj = "{}";
-
-    duk_push_object(ctx);
-
-    duk_push_string(ctx, json.c_str());
-    duk_put_prop_string(ctx, -2, "JSON");
-
-    duk_push_string(ctx, proj.c_str());
-    duk_put_prop_string(ctx, -2, "PROJ");
-
-    duk_push_string(ctx, get_caller(ctx).c_str());
-    duk_put_prop_string(ctx, -2, "DB_CALLER");
-
-    //[object]
-    /*duk_push_c_function(ctx, db_find_all, 0);
-    duk_put_prop_string(ctx, -2, "array");
-
-    duk_push_c_function(ctx, db_find_one, 0);
-    duk_put_prop_string(ctx, -2, "first");*/
-
-    dukx_push_c_function_with_hidden(ctx, db_find_all, 0, "script_host", dukx_get_hidden_prop_on_this(ctx, "script_host"));
-    duk_put_prop_string(ctx, -2, "array");
-
-    dukx_push_c_function_with_hidden(ctx, db_find_one, 0, "script_host", dukx_get_hidden_prop_on_this(ctx, "script_host"));
-    duk_put_prop_string(ctx, -2, "first");
-
-    duk_freeze(ctx, -1);
-
-    return 1;
-}
-#endif // 0
 
 js::value db_find(js::value_context* vctx, js::value json_obj, js::value proj_obj)
 {
@@ -1412,10 +1277,12 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     js::add_key_value(global, "get_string_col", js::function<get_string_col>);
     js::add_key_value(global, "hash_d", js::function<hash_d>);
 
+    if(seclevel <= 4)
+        js::add_key_value(global, "db_find", js::function<db_find>).add_hidden("script_host", script_host);
+
     if(seclevel <= 3)
     {
         js::add_key_value(global, "db_insert", js::function<db_insert>).add_hidden("script_host", script_host);
-        js::add_key_value(global, "db_find", js::function<db_find>).add_hidden("script_host", script_host);
     }
 
     /*#ifdef TESTING
