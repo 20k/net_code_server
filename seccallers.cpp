@@ -123,24 +123,22 @@ void timeout_yield(js::value_context* vctx)
     COOPERATE_KILL_VCTX();
 }
 
-duk_ret_t db_insert(duk_context* ctx)
+std::string db_insert(js::value_context* vctx, js::value arg)
 {
-    COOPERATE_KILL();
+    COOPERATE_KILL_VCTX();
 
-    std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
+    js::value this_bound = js::get_current_function(*vctx);
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+    std::string secret_script_host = this_bound.get_hidden("script_host");
+
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx->ctx));
     mongo_ctx.change_collection(secret_script_host);
 
-    std::string json = duk_json_encode(ctx, -1);
-
-    //mongo_ctx->insert_json_1(secret_script_host, json);
+    std::string json = arg.to_json();
 
     mongo_ctx->insert_json_one_new(nlohmann::json::parse(json));
 
-    //std::cout << "json " << json << std::endl;
-
-    return 1;
+    return json;
 }
 
 duk_ret_t db_update(duk_context* ctx)
@@ -1294,7 +1292,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
 
     if(seclevel <= 3)
     {
-        inject_c_function(ctx, db_insert, "db_insert", 1, "script_host", script_host);
+        //inject_c_function(ctx, db_insert, "db_insert", 1, "script_host", script_host);
         inject_c_function(ctx, db_find, "db_find", 2, "script_host", script_host);
         inject_c_function(ctx, db_remove, "db_remove", 1, "script_host", script_host);
         inject_c_function(ctx, db_update, "db_update", 2, "script_host", script_host);
@@ -1320,6 +1318,11 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     js::add_key_value(global, "mouse_get_position", js::function<mouse_get_position>);
     js::add_key_value(global, "get_string_col", js::function<get_string_col>);
     js::add_key_value(global, "hash_d", js::function<hash_d>);
+
+    if(seclevel <= 3)
+    {
+        js::add_key_value(global, "db_insert", js::function<db_insert>).add_hidden("script_host", script_host);
+    }
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);

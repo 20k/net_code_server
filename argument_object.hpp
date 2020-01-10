@@ -309,18 +309,36 @@ namespace js
         value(value&& other);
         value(value_context& ctx);
         value(value_context& ctx, int idx);
-        value(value_context& ctx, value& base, const std::string& key);
-        value(value_context& ctx, value& base, int key);
-        value(value_context& ctx, value& base, const char* key);
+        value(value_context& ctx, const value& base, const std::string& key);
+        value(value_context& ctx, const value& base, int key);
+        value(value_context& ctx, const value& base, const char* key);
         ~value();
 
-        bool has(const std::string& key);
-        bool has(int key);
-        bool has(const char* key);
+        bool has(const std::string& key) const;
+        bool has(int key) const;
+        bool has(const char* key) const;
+        bool has_hidden(const std::string& key) const;
 
         value get(const std::string& key);
         value get(int key);
         value get(const char* key);
+        value get_hidden(const std::string& key);
+
+        template<typename T>
+        js::value add(const std::string& key, const T& val)
+        {
+            auto jval = js::value(*vctx, *this, key);
+            jval = val;
+            return jval;
+        }
+
+        template<typename T>
+        js::value add_hidden(const std::string& key, const T& val)
+        {
+            auto jval = js::value(*vctx, *this, "\xFF" + key);
+            jval = val;
+            return jval;
+        }
 
         bool is_string();
         bool is_number();
@@ -564,7 +582,11 @@ namespace js
 
         if(duk_safe_call(ctx, &js_safe_function<func>, nullptr, nargs, nrets) != DUK_EXEC_SUCCESS)
         {
-            throw std::runtime_error("Bad function call for duktape");
+            js::value_context vctx(ctx);
+            js::value vc(vctx, -1);
+            vc.release();
+
+            throw std::runtime_error("Bad function call for duktape " + (std::string)vc);
         }
 
         return nrets;
@@ -578,6 +600,7 @@ namespace js
     }
 
     js::value get_global(value_context& vctx);
+    js::value get_current_function(value_context& vctx);
     js::value get_heap_stash(value_context& vctx);
     void* get_sandbox_data_impl(value_context& vctx);
 

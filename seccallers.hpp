@@ -19,20 +19,17 @@ int my_timeout_check(void* udata);
 
 duk_ret_t native_print(duk_context *ctx);
 
+/*
 ///#db.i, r, f, u, u1, us,
 duk_ret_t db_insert(duk_context* ctx);
-
 duk_ret_t db_update(duk_context* ctx);
-
 duk_ret_t db_find_all(duk_context* ctx);
-
 duk_ret_t db_find_one(duk_context* ctx);
 
 ///count, first, array
 
 duk_ret_t db_find(duk_context* ctx);
-
-duk_ret_t db_remove(duk_context* ctx);
+duk_ret_t db_remove(duk_context* ctx);*/
 
 void async_pipe(js::value_context* vctx, std::string str);
 

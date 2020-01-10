@@ -497,7 +497,7 @@ js::value::value(js::value_context& _vctx, int _idx) : vctx(&_vctx), ctx(_vctx.c
     }
 }
 
-js::value::value(js::value_context& _vctx, js::value& base, const std::string& key) : vctx(&_vctx), ctx(_vctx.ctx)
+js::value::value(js::value_context& _vctx, const js::value& base, const std::string& key) : vctx(&_vctx), ctx(_vctx.ctx)
 {
     parent_idx = base.idx;
     indices = key;
@@ -516,7 +516,7 @@ js::value::value(js::value_context& _vctx, js::value& base, const std::string& k
         throw std::runtime_error("bad idx < 0");
 }
 
-js::value::value(js::value_context& _vctx, js::value& base, int key) : vctx(&_vctx), ctx(_vctx.ctx)
+js::value::value(js::value_context& _vctx, const js::value& base, int key) : vctx(&_vctx), ctx(_vctx.ctx)
 {
     parent_idx = base.idx;
     indices = key;
@@ -535,7 +535,7 @@ js::value::value(js::value_context& _vctx, js::value& base, int key) : vctx(&_vc
         throw std::runtime_error("bad idx < 0");
 }
 
-js::value::value(js::value_context& _vctx, js::value& base, const char* key) : vctx(&_vctx), ctx(_vctx.ctx)
+js::value::value(js::value_context& _vctx, const js::value& base, const char* key) : vctx(&_vctx), ctx(_vctx.ctx)
 {
     parent_idx = base.idx;
     indices = std::string(key);
@@ -591,7 +591,7 @@ js::value js::value::operator[](const char* val)
     return js::value(*vctx, *this, val);
 }
 
-bool js::value::has(const std::string& key)
+bool js::value::has(const std::string& key) const
 {
     if(idx == -1)
         return false;
@@ -599,7 +599,7 @@ bool js::value::has(const std::string& key)
     return duk_has_prop_lstring(ctx, idx, key.c_str(), key.size());
 }
 
-bool js::value::has(int key)
+bool js::value::has(int key) const
 {
     if(idx == -1)
         return false;
@@ -607,12 +607,22 @@ bool js::value::has(int key)
     return duk_has_prop_index(ctx, idx, key);
 }
 
-bool js::value::has(const char* key)
+bool js::value::has(const char* key) const
 {
     if(idx == -1)
         return false;
 
     return duk_has_prop_string(ctx, idx, key);
+}
+
+bool js::value::has_hidden(const std::string& key) const
+{
+    if(idx == -1)
+       return false;
+
+    std::string rkey = "\xFF" + key;
+
+    return has(rkey);
 }
 
 js::value js::value::get(const std::string& key)
@@ -637,6 +647,16 @@ js::value js::value::get(const char* key)
         return js::make_value(*vctx, std::nullopt);
 
     return js::value(*vctx, *this, key);
+}
+
+js::value js::value::get_hidden(const std::string& key)
+{
+    if(!has_hidden(key))
+        return js::make_value(*vctx, std::nullopt);
+
+    std::string rkey = "\xFF" + key;
+
+    return js::value(*vctx, *this, rkey);
 }
 
 bool js::value::is_string()
@@ -730,6 +750,13 @@ js::value js::get_global(js::value_context& vctx)
     return js::value(vctx, -1);
 }
 
+js::value js::get_current_function(js::value_context& vctx)
+{
+    duk_push_current_function(vctx.ctx);
+
+    return js::value(vctx, -1);
+}
+
 js::value js::get_heap_stash(js::value_context& vctx)
 {
     duk_push_heap_stash(vctx.ctx);
@@ -772,6 +799,11 @@ double test_func_with_context(js::value_context* ctx, std::string one, double tw
 js::value test_js_val(js::value_context* ctx, js::value val)
 {
     return js::value(*ctx);
+}
+
+std::string test_error(js::value_context* vctx, js::value val)
+{
+    return "hi";
 }
 
 struct js_val_tester
@@ -898,6 +930,18 @@ struct js_val_tester
             auto [res, va] = js::call(func, a3);
 
             std::cout << "FOUND2 " << (std::string)va << std::endl;
+
+            assert(res);
+        }
+
+        {
+            js::value glob = js::get_global(vctx);
+            js::value func = js::add_key_value(glob, "test_error", js::function<test_error>);
+
+            js::value a1(vctx);
+            a1 = "asdf";
+
+            auto [res, va] = js::call_prop(glob, "test_error", a1);
 
             assert(res);
         }
