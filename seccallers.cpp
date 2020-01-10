@@ -22,7 +22,7 @@ int my_timeout_check(void* udata)
     return 0;
 }
 
-duk_ret_t native_print(duk_context *ctx)
+/*duk_ret_t native_print(duk_context *ctx)
 {
 	COOPERATE_KILL();
 
@@ -43,6 +43,21 @@ duk_ret_t native_print(duk_context *ctx)
     duk_pop_n(ctx, 2);
 
 	return 0;
+}*/
+
+void native_print(js::value_context* vctx, std::string str)
+{
+    COOPERATE_KILL_VCTX();
+
+    js::value heap = js::get_heap_stash(*vctx);
+
+    js::value print_obj = heap.get("print_str");
+
+    std::string print_str = print_obj;
+
+    print_str += str;
+
+    print_obj = print_str;
 }
 
 duk_ret_t async_print(duk_context* ctx)
@@ -1358,7 +1373,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     remove_func(ctx, "db_remove");
     remove_func(ctx, "db_update");*/
 
-    inject_c_function(ctx, native_print, "print", DUK_VARARGS);
+    //inject_c_function(ctx, native_print, "print", DUK_VARARGS);
     inject_c_function(ctx, async_print, "async_print", DUK_VARARGS);
     inject_c_function(ctx, async_print_raw, "async_print_raw", DUK_VARARGS);
 
@@ -1410,6 +1425,8 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     js::add_key_value(global, "oms_call", js::function<os_call<2>>).add_hidden("script_host", script_host);
     js::add_key_value(global, "ols_call", js::function<os_call<1>>).add_hidden("script_host", script_host);
     js::add_key_value(global, "ons_call", js::function<os_call<0>>).add_hidden("script_host", script_host);
+
+    js::add_key_value(global, "print", js::function<native_print>);
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);

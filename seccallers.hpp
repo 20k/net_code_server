@@ -17,8 +17,6 @@ struct exec_context;
 
 int my_timeout_check(void* udata);
 
-duk_ret_t native_print(duk_context *ctx);
-
 /*
 ///#db.i, r, f, u, u1, us,
 duk_ret_t db_insert(duk_context* ctx);
