@@ -141,30 +141,28 @@ std::string db_insert(js::value_context* vctx, js::value arg)
     return json;
 }
 
-duk_ret_t db_update(duk_context* ctx)
+js::value db_update(js::value_context* vctx, js::value json_1_arg, js::value json_2_arg)
 {
-    COOPERATE_KILL();
+    js::value current_func = js::get_current_function(*vctx);
+    std::string secret_script_host = current_func.get_hidden("script_host");
 
-    std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
-
-    //std::cout << "SECRET HOST " << secret_script_host << std::endl;
-
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx->ctx));
     mongo_ctx.change_collection(secret_script_host);
 
-    std::string json_1 = duk_json_encode(ctx, 0);
-    std::string json_2 = duk_json_encode(ctx, 1);
+    std::string json_1 = json_1_arg.to_json();
+    std::string json_2 = json_2_arg.to_json();
 
     nlohmann::json j1 = nlohmann::json::parse(json_1);
     nlohmann::json j2 = nlohmann::json::parse(json_2);
 
     mongo_ctx->update_json_many_new(j1, j2);
 
-    //std::cout << "update " << json_1 << " with " << json_2 << std::endl;
+    js::value ret(*vctx);
+    ret.add("filter", json_1);
+    ret.add("update", json_2);
+    ret.add("host", secret_script_host);
 
-    push_dukobject(ctx, "filter", json_1, "update", json_2, "host", secret_script_host);
-
-    return 1;
+    return ret;
 }
 
 js::value db_find_all(js::value_context* vctx)
@@ -226,7 +224,7 @@ js::value db_find(js::value_context* vctx, js::value json_obj, js::value proj_ob
 {
     COOPERATE_KILL_VCTX();
 
-    std::string json = "";//duk_json_encode(ctx, -1);
+    std::string json = "";
     std::string proj = "";
 
     if(json_obj.is_undefined())
@@ -255,20 +253,21 @@ js::value db_find(js::value_context* vctx, js::value json_obj, js::value proj_ob
     return ret;
 }
 
-duk_ret_t db_remove(duk_context* ctx)
+std::string db_remove(js::value_context* vctx, js::value arg)
 {
-    COOPERATE_KILL();
+    COOPERATE_KILL_VCTX();
 
-    std::string secret_script_host = dukx_get_hidden_prop_on_this(ctx, "script_host");
+    js::value current_func = js::get_current_function(*vctx);
+    std::string secret_script_host = current_func.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx->ctx));
     mongo_ctx.change_collection(secret_script_host);
 
-    std::string json = duk_json_encode(ctx, -1);
+    std::string json = arg.to_json();
 
     mongo_ctx->remove_json_many_new(nlohmann::json::parse(json));
 
-    return 0;
+    return json;
 }
 
 void set_is_realtime_script(js::value_context* vctx)
@@ -1248,14 +1247,6 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     if(seclevel <= 0)
         inject_c_function(ctx, sl_call<0>, "ns_call", 2, "script_host", script_host);
 
-    if(seclevel <= 3)
-    {
-        //inject_c_function(ctx, db_insert, "db_insert", 1, "script_host", script_host);
-        //inject_c_function(ctx, db_find, "db_find", 2, "script_host", script_host);
-        inject_c_function(ctx, db_remove, "db_remove", 1, "script_host", script_host);
-        inject_c_function(ctx, db_update, "db_update", 2, "script_host", script_host);
-    }
-
     inject_c_function(ctx, native_print, "print", DUK_VARARGS);
     inject_c_function(ctx, async_print, "async_print", DUK_VARARGS);
     inject_c_function(ctx, async_print_raw, "async_print_raw", DUK_VARARGS);
@@ -1283,6 +1274,8 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     if(seclevel <= 3)
     {
         js::add_key_value(global, "db_insert", js::function<db_insert>).add_hidden("script_host", script_host);
+        js::add_key_value(global, "db_remove", js::function<db_remove>).add_hidden("script_host", script_host);
+        js::add_key_value(global, "db_update", js::function<db_update>).add_hidden("script_host", script_host);
     }
 
     /*#ifdef TESTING
