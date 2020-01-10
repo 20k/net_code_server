@@ -490,20 +490,6 @@ void send_async_message(duk_context* ctx, const std::string& message)
     shared->add_back_write(message);
 }
 
-duk_ret_t deliberate_hang(duk_context* ctx)
-{
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
-
-    std::cout << "my id " << *tls_get_thread_id_storage_hack() << std::endl;
-
-    while(1)
-    {
-
-    }
-
-    return 0;
-}
-
 ///returns true on success, false on failure
 bool compile_and_push(duk_context* ctx, const std::string& data)
 {
@@ -1189,11 +1175,6 @@ duk_ret_t err(duk_context* ctx)
     return 1;
 }
 
-std::string add_freeze(const std::string& name)
-{
-    return " global." + name + " = deepFreeze(global." + name + ");\n";
-}
-
 void remove_func(duk_context* ctx, const std::string& name)
 {
     duk_push_global_object(ctx);
@@ -1207,26 +1188,6 @@ void remove_func(duk_context* ctx, const std::string& name)
 duk_ret_t dummy(duk_context* ctx)
 {
     return 0;
-}
-
-template<typename T>
-inline
-void inject_c_function(duk_context *ctx, T& t, const std::string& str, int nargs)
-{
-    duk_push_c_function(ctx, &t, nargs);
-
-	duk_put_global_string(ctx, str.c_str());
-}
-
-template<typename T, typename... U>
-inline
-void inject_c_function(duk_context *ctx, T& t, const std::string& str, int nargs, U... u)
-{
-    duk_push_c_function(ctx, &t, nargs);
-	push_dukobject(ctx, u...);
-    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("HIDDEN_OBJ").c_str());
-
-	duk_put_global_string(ctx, str.c_str());
 }
 
 template<int N>
@@ -1389,10 +1350,6 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);
     #endif // TESTING*/
-
-    #ifdef TESTING
-    inject_c_function(ctx, deliberate_hang, "deliberate_hang", 0);
-    #endif // TESTING
 
     ///console.log
     {
