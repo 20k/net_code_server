@@ -656,6 +656,12 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
 
         if(!is_cli)
         {
+            {
+                printf("Pre In !is_cli\n");
+                js::value_context vctx(temporary_ctx);
+                js::dump_stack(vctx);
+            }
+
             ///script execution is in two phases
             ///the first phase executes all the requires and returns a function object which is user code
             ///the second phase executes user code
@@ -672,7 +678,19 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
                 throw std::runtime_error("Failed to execute require block " + error_prop);
             }
 
-            duk_replace(temporary_ctx, -2 - nargs);
+            {
+                printf("Second In !is_cli\n");
+                js::value_context vctx(temporary_ctx);
+                js::dump_stack(vctx);
+            }
+
+            duk_replace(temporary_ctx, -2 - args);
+
+            {
+                printf("In !is_cli\n");
+                js::value_context vctx(temporary_ctx);
+                js::dump_stack(vctx);
+            }
         }
         else
         {
@@ -698,6 +716,7 @@ std::string compile_and_call(duk_context* ctx, const std::string& data, std::str
         ///now we have [thread] on stack 1, and [object, args] on stack 2
         ///stack 2 has [val] afterwards
         duk_int_t ret_val = duk_pcall(new_ctx, nargs);
+
         #ifndef USE_PROXY
         duk_xmove_top(ctx, new_ctx, 1);
         #else
@@ -1113,6 +1132,8 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
             arg_dup.release();
 
             std::cout << "FULL " << script.name << std::endl;
+
+            js::dump_stack(*vctx);
 
             compile_and_call(vctx->ctx, load, get_caller(vctx->ctx), false, script.seclevel, false, full_script, false);
 

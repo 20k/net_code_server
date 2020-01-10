@@ -726,15 +726,6 @@ bool dukx_is_prop_truthy(duk_context* ctx, duk_idx_t idx, const std::string& key
 
 #define DUKX_HIDDEN_SYMBOL(x) (std::string("\xFF") + x)
 
-template<typename T, typename... U>
-inline
-void dukx_push_c_function_with_hidden(duk_context* ctx, T& t, int nargs, U... u)
-{
-    duk_push_c_function(ctx, &t, nargs);
-	push_dukobject(ctx, u...);
-    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("HIDDEN_OBJ").c_str());
-}
-
 void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t idx);
 void dukx_sanitise_in_place(duk_context* ctx, duk_idx_t idx);
 
