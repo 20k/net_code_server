@@ -535,9 +535,6 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
     js::value new_ctx_popper(vctx, -1);
 
-    /*duk_push_object(new_ctx);
-    duk_set_global_object(new_ctx);*/
-
     js::value_context new_vctx(new_ctx);
 
     {
@@ -545,11 +542,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         js::set_global(new_vctx, new_global);
     }
 
-    printf("Here1\n");
-
     std::string wrapper = data;
-
-    //exec_stack stk(ectx, new_ctx);
 
     duk_idx_t fidx = duk_push_thread_new_globalenv(new_ctx);
     duk_context* temporary_ctx = duk_get_context(new_ctx, fidx);
@@ -559,61 +552,6 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
     js::value_context temporary_vctx(temporary_ctx);
 
-    printf("Here2\n");
-
-    auto prep_context = [seclevel, caller, script_host, calling_script, base_caller](js::value_context& old, js::value_context& next)
-    {
-        #if 0
-        duk_push_heap_stash(next);
-        duk_push_int(next, seclevel);
-        duk_put_prop_string(next, -2, "last_seclevel");
-        duk_pop(next);
-
-        duk_idx_t id = duk_push_object(next); ///[object]
-        duk_push_string(next, caller.c_str()); ///[object -> caller]
-        duk_put_prop_string(next, id, "caller"); ///[object]
-
-        duk_push_string(next, script_host.c_str());
-        duk_put_prop_string(next, id, "script_host");
-
-        duk_push_string(next, calling_script.c_str());
-        duk_put_prop_string(next, id, "calling_script");
-
-        duk_push_string(next, base_caller.c_str());
-        duk_put_prop_string(next, id, "base_caller");
-
-        ///duplicate current object, put it into the global object
-        duk_push_global_object(next);
-        duk_dup(next, -2);
-        duk_put_prop_string(next, -2, "context");
-        duk_pop(next);
-
-        //#define USE_PROXY
-
-        ///[object] is on the stack, aka context
-
-        ///this is probably whats breaking the case when ctx == new_ctx
-        if(!duk_is_object(old, -2))
-            duk_push_undefined(next);
-        else
-        {
-            duk_dup(old, -2);
-            ///push args
-
-            #ifndef USE_PROXY
-            duk_xmove_top(next, old, 1);
-            #else
-            dukx_sanitise_move_value(old, next, -1);
-            #endif // USE_PROXY
-        }
-
-        duk_push_global_object(next);
-        duk_dup(next, -2);
-        duk_put_prop_string(next, -2, "args");
-        duk_pop(next);
-        #endif // 0
-    };
-
     auto [compile_success, compiled_func] = js::compile(temporary_vctx, wrapper);
 
     if(!compile_success)
@@ -622,18 +560,10 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
         printf("compile failed: %s\n", err.c_str());
 
-        //stk.early_out();
-
         ret = js::make_value(vctx, "Syntax or Compile Error: " + err);
-
-        //duk_push_string(ctx, "Syntax or Compile Error");
     }
     else
     {
-        printf("Here3\n");
-
-        //prep_context(ctx, temporary_ctx);
-
         js::value next_heap(temporary_vctx);
         next_heap.add("last_seclevel", seclevel);
 
@@ -644,8 +574,6 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         context.add("calling_script", calling_script);
         context.add("base_caller", base_caller);
 
-        printf("Here4\n");
-
         js::value glob = js::get_global(temporary_vctx);
         js::add_key_value(glob, "context", context);
 
@@ -654,9 +582,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         if(!arg.is_object_coercible())
             next_arg = js::undefined;
         else
-            next_arg = js::xfer_between_contexts(vctx, arg);
-
-        printf("Here5\n");
+            next_arg = js::xfer_between_contexts(temporary_vctx, arg);
 
         js::add_key_value(glob, "args", next_arg);
 
@@ -669,47 +595,9 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
             duk_pop(new_ctx);
         }
 
-        printf("Here6\n");
-
         int nargs = 2;
 
         js::value temp_ret(temporary_vctx);
-
-        printf("Existing idx %i\n", temp_ret.idx);
-
-        #if 0
-        if(!is_cli)
-        {
-            ///script execution is in two phases
-            ///the first phase executes all the requires and returns a function object which is user code
-            ///the second phase executes user code
-            ///the reason for this is that phase 1 needs to execute in the real global, and phase 2 in the bad global
-            duk_int_t ret_requires = dukx_pcall_copy(temporary_ctx, nargs);
-
-            ///don't bother trying to clean up
-            if(ret_requires != DUK_EXEC_SUCCESS)
-            {
-                std::string error_prop = duk_safe_to_std_string(ctx, -1);
-
-                std::cout << "Failed to execute require block " << error_prop << std::endl;
-
-                throw std::runtime_error("Failed to execute require block " + error_prop);
-            }
-
-            duk_replace(temporary_ctx, -2 - nargs);
-        }
-        else
-        {
-            duk_eval_string(temporary_ctx, "require(\"@babel/polyfill\");");
-
-            duk_push_global_object(temporary_ctx);
-            duk_push_c_function(ctx, dummy, 1);
-            duk_put_prop_string(temporary_ctx, -2, "require");
-            duk_pop(temporary_ctx);
-        }
-        #endif // 0
-
-        printf("Here7\n");
 
         if(!is_cli)
         {
@@ -727,12 +615,9 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         {
             duk_eval_string(temporary_ctx, "require(\"@babel/polyfill\");");
             duk_push_global_object(temporary_ctx);
-            duk_push_c_function(vctx.ctx, dummy, 1);
+            duk_push_c_function(temporary_ctx, dummy, 1);
             duk_put_prop_string(temporary_ctx, -2, "require");
             duk_pop(temporary_ctx);
-
-            ///something wrong happening with stack management here
-            //temp_ret = js::value(temporary_vctx, -1);
 
             temp_ret = compiled_func;
         }
@@ -743,28 +628,16 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
             js_object.del("getPrototypeOf");
         }
 
-        printf("Here8\n");
+        /*int moved = 3;
 
-        int moved = 3;
-
-        /*duk_xmove_top(new_ctx, temporary_ctx, moved);
+        duk_xmove_top(new_ctx, temporary_ctx, moved);
         duk_remove(new_ctx, -1 - moved); ///removes temporary ctx*/
-
-        printf("TOP %i\n", duk_get_top(temporary_ctx));
 
         js::value new_func = js::xfer_between_contexts(new_vctx, temp_ret);
         js::value new_context = js::xfer_between_contexts(new_vctx, context);
         js::value new_args = js::xfer_between_contexts(new_vctx, next_arg);
 
-        ///now we have [thread] on stack 1, and [object, args] on stack 2
-        ///stack 2 has [val] afterwards
-        //duk_int_t ret_val = duk_pcall(new_ctx, nargs);
-
-        printf("Precall1\n");
-
         auto [success, found_val] = js::call(new_func, new_context, new_args);
-
-        printf("Postcall1\n");
 
         /*#ifndef USE_PROXY
         duk_xmove_top(ctx, new_ctx, 1);
@@ -773,8 +646,6 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         #endif // USE_PROXY*/
 
         ret = js::xfer_between_contexts(vctx, found_val);
-
-        printf("Postxfer\n");
 
         bool timeout = is_script_timeout(vctx.ctx);
 
@@ -806,8 +677,6 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         {
             ret = js::make_error(vctx, "Ran for longer than 5000ms and timed out");
         }
-
-        printf("Postcrap\n");
     }
 
     std::string str = get_hash_d(vctx.ctx);
@@ -819,8 +688,6 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
     }
 
     std::string extra = get_print_str(vctx.ctx);
-
-    printf("Prereturn");
 
     return {extra, ret};
 }
@@ -1144,7 +1011,13 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
         {
             set_script_info(vctx->ctx, to_call_fullname);
 
+            int start_top = duk_get_top(vctx->ctx);
+
             auto [msg, res] = compile_and_call(*vctx, arg, load, get_caller(vctx->ctx), false, script.seclevel, false, full_script, false);
+
+            int end_top = duk_get_top(vctx->ctx);
+
+            printf("TOPyy %i %i\n", start_top, end_top);
 
             ret = res;
         }

@@ -419,8 +419,6 @@ js::value& js::value::operator=(const value& right)
 
     duk_dup(ctx, right.idx);
 
-    printf("Valeq\n");
-
     return *this;
 }
 
@@ -460,8 +458,6 @@ js::value::value(const js::value& value)
 
     duk_dup(ctx, value.idx);
     idx = duk_get_top_index(ctx);
-
-    printf("Other\n");
 }
 
 js::value::value(js::value_context& vctx, const value& other) : js::value::value(other)
@@ -481,8 +477,6 @@ js::value::value(js::value&& other)
     //released = other.released;
     indices = other.indices;
     other.released = true;
-
-    printf("MoveOther");
 }
 
 js::value& js::value::operator=(js::value&& other)
@@ -490,17 +484,10 @@ js::value& js::value::operator=(js::value&& other)
     if(other.released)
         throw std::runtime_error("Attempted to move from a released value");
 
-    printf("My idx %i\n", idx);
-    printf("Other idx %i\n", other.idx);
-
     if(idx != -1 && !released)
     {
         vctx->free(idx);
-
-        printf("Move free\n");
     }
-
-    printf("Moveeq");
 
     vctx = other.vctx;
     ctx = other.ctx;
@@ -863,11 +850,7 @@ js::value js::xfer_between_contexts(js::value_context& destination, const js::va
     if(destination.ctx == val.ctx)
         throw std::runtime_error("Bad same contexts");
 
-    printf("Predup %i\n", val.idx);
-
     duk_dup(val.ctx, val.idx);
-
-    printf("Postdup %i\n", val.idx);
 
     duk_xmove_top(destination.ctx, val.ctx, 1);
 
