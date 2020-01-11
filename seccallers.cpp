@@ -579,7 +579,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
         ret = js::xfer_between_contexts(vctx, found_val);
 
-        bool timeout = is_script_timeout(vctx.ctx);
+        bool timeout = is_script_timeout(vctx);
 
         if(!success && !timeout)
         {

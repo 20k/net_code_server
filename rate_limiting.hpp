@@ -164,9 +164,12 @@ void handle_sleep(sandbox_data* dat);
 #define COOPERATE_KILL_THREAD_LOCAL() if(*tls_get_should_throw() == 1) { throw std::runtime_error("Script ran for more than 5000ms and was cooperatively terminated"); }
 #define COOPERATE_KILL_THREAD_LOCAL_URGENT() if(*tls_get_should_throw() >= 2) { throw std::runtime_error("Script ran for more than 5000ms and was cooperatively terminated (overran significantly)"); }
 
-typedef struct duk_hthread duk_context;
+namespace js
+{
+    struct value_context;
+}
 
-bool is_script_timeout(duk_context* ctx);
+bool is_script_timeout(js::value_context& vctx);
 
 extern rate_limit global_rate_limit;
 
