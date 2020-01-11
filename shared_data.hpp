@@ -12,38 +12,27 @@ struct shared_data
     std::deque<std::string> write_queue;
     std::string user;
 
-    std::string auth;
-    bool send_auth = false;
-
-    std::mutex ilock;
-
-    void make_lock()
-    {
-        ilock.lock();
-    }
-
-    void make_unlock()
-    {
-        ilock.unlock();
-    }
+    std::mutex read_lock;
+    std::mutex write_lock;
+    std::mutex user_lock;
 
     bool has_front_read()
     {
-        std::lock_guard<std::mutex> lk(ilock);
+        std::lock_guard<std::mutex> lk(read_lock);
 
         return read_queue.size() > 0;
     }
 
     bool has_front_write()
     {
-        std::lock_guard<std::mutex> lk(ilock);
+        std::lock_guard<std::mutex> lk(write_lock);
 
         return write_queue.size() > 0;
     }
 
     std::string get_front_read()
     {
-        std::lock_guard<std::mutex> lk(ilock);
+        std::lock_guard<std::mutex> lk(read_lock);
 
         std::string ret = read_queue.front();
 
@@ -54,7 +43,7 @@ struct shared_data
 
     std::string get_front_write()
     {
-        std::lock_guard<std::mutex> lk(ilock);
+        std::lock_guard<std::mutex> lk(write_lock);
 
         std::string ret = write_queue.front();
 
@@ -65,28 +54,28 @@ struct shared_data
 
     void add_back_write(const std::string& str)
     {
-        std::lock_guard<std::mutex> lk(ilock);
+        std::lock_guard<std::mutex> lk(write_lock);
 
         write_queue.push_back(str);
     }
 
     void add_back_read(const std::string& str)
     {
-        std::lock_guard<std::mutex> lk(ilock);
+        std::lock_guard<std::mutex> lk(read_lock);
 
         read_queue.push_back(str);
     }
 
     void set_user(const std::string& in)
     {
-        std::lock_guard<std::mutex> lk(ilock);
+        std::lock_guard<std::mutex> lk(user_lock);
 
         user = in;
     }
 
     std::string get_user()
     {
-        std::lock_guard<std::mutex> lk(ilock);
+        std::lock_guard<std::mutex> lk(user_lock);
 
         return user;
     }
