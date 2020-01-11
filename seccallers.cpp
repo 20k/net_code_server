@@ -1047,5 +1047,5 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     //#endif // TESTING
 
     if(polyfill)
-        dukx_inject_modules(ctx);
+        dukx_inject_modules(vctx);
 }

@@ -4,7 +4,12 @@
 #include "scripting_api_fwrd.hpp"
 #include <map>
 
-void dukx_inject_modules(duk_context* ctx);
+namespace js
+{
+    struct value_context;
+}
+
+void dukx_inject_modules(js::value_context& vctx);
 void init_module_cache();
 
 std::map<std::string, std::string>& module_binary_cache();

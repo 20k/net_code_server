@@ -9,6 +9,7 @@
 #include "memory_sandbox.hpp"
 #include <tinydir/tinydir.h>
 #include "directory_helpers.hpp"
+#include "argument_object.hpp"
 
 template<typename T>
 void for_every_file(const std::string& directory, const T& t)
@@ -88,35 +89,21 @@ std::map<std::string, std::string>& module_binary_cache()
     {
         auto cache = module_cache();
 
-        duk_context* ctx = create_sandbox_heap();
+        js::value_context vctx;
 
         for(auto& data : cache)
         {
-            duk_push_string(ctx, data.second.c_str());
-            duk_push_string(ctx, data.first.c_str());
+            auto [success, result] = js::compile(vctx, data.second, data.first);
 
-            duk_pcompile(ctx, DUK_COMPILE_EVAL);
+            auto [success_2, final_func] = js::call(result);
 
-            duk_int_t ret = duk_pcall(ctx, 0);
-
-            if(ret != DUK_EXEC_SUCCESS)
-            {
+            if(!success || !success_2)
                 throw std::runtime_error("Bad module binary cache");
-            }
 
-            duk_dump_function(ctx);
+            std::string dumped = js::dump_function(final_func);
 
-            duk_size_t out;
-            char* ptr = (char*)duk_get_buffer(ctx, -1, &out);
-
-            std::string buf(ptr, out);
-
-            saved_map[data.first] = buf;
-
-            duk_pop(ctx);
+            saved_map[data.first] = dumped;
         }
-
-        duk_destroy_heap(ctx);
 
         init = true;
     }
@@ -124,9 +111,9 @@ std::map<std::string, std::string>& module_binary_cache()
     return saved_map;
 }
 
-void dukx_inject_modules(duk_context* ctx)
+void dukx_inject_modules(js::value_context& vctx)
 {
-    duk_module_duktape_init(ctx);
+    duk_module_duktape_init(vctx.ctx);
 }
 
 void init_module_cache()

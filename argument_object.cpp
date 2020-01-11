@@ -897,12 +897,34 @@ js::value js::add_getter(js::value& base, const std::string& key, js_funcptr_t f
 
 std::pair<bool, js::value> js::compile(js::value_context& vctx, const std::string& data)
 {
+    return compile(vctx, data, "test-name");
+}
+
+std::pair<bool, js::value> js::compile(js::value_context& vctx, const std::string& data, const std::string& name)
+{
     duk_push_string(vctx.ctx, data.c_str());
-    duk_push_string(vctx.ctx, "test-name");
+    duk_push_string(vctx.ctx, name.c_str());
 
     bool success = duk_pcompile(vctx.ctx, DUK_COMPILE_EVAL) == 0;
 
     return {success, js::value(vctx, -1)};
+}
+
+std::string js::dump_function(js::value& val)
+{
+    if(!val.is_function())
+        throw std::runtime_error("Tried to dump not a function");
+
+    duk_dup(val.ctx, val.idx);
+    duk_dump_function(val.ctx);
+
+    duk_size_t out;
+    char* ptr = (char*)duk_get_buffer(val.ctx, -1, &out);
+
+    std::string buf(ptr, out);
+
+    duk_pop(val.ctx);
+    return buf;
 }
 
 js::value js::eval(js::value_context& vctx, const std::string& data)

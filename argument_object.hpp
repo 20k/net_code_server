@@ -708,6 +708,8 @@ namespace js
     js::value add_setter(js::value& base, const std::string& key, js_funcptr_t func);
 
     std::pair<bool, js::value> compile(js::value_context& vctx, const std::string& data);
+    std::pair<bool, js::value> compile(js::value_context& vctx, const std::string& name, const std::string& data);
+    std::string dump_function(js::value& val);
     js::value eval(js::value_context& vctx, const std::string& data);
     js::value xfer_between_contexts(js::value_context& destination, const js::value& val);
 
