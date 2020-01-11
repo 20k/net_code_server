@@ -72,7 +72,7 @@ js::value async_print(js::value_context* vctx, std::string what)
 
     command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(vctx->ctx, "command_handler_state_pointer");
 
-    if(found_ptr && get_caller_stack(vctx->ctx).size() > 0 && get_caller_stack(vctx->ctx)[0] == found_ptr->get_user_name())
+    if(found_ptr && get_caller_stack(vctx).size() > 0 && get_caller_stack(vctx)[0] == found_ptr->get_user_name())
     {
         nlohmann::json data;
         data["type"] = "server_msg";
@@ -92,7 +92,7 @@ js::value async_print_raw(js::value_context* vctx, std::string what)
 
     command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(vctx->ctx, "command_handler_state_pointer");
 
-    if(found_ptr && get_caller_stack(vctx->ctx).size() > 0 && get_caller_stack(vctx->ctx)[0] == found_ptr->get_user_name())
+    if(found_ptr && get_caller_stack(vctx).size() > 0 && get_caller_stack(vctx)[0] == found_ptr->get_user_name())
     {
         nlohmann::json data;
         data["type"] = "server_msg";
@@ -119,7 +119,7 @@ std::string db_insert(js::value_context* vctx, js::value arg)
 
     std::string secret_script_host = this_bound.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx->ctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx));
     mongo_ctx.change_collection(secret_script_host);
 
     std::string json = arg.to_json();
@@ -134,7 +134,7 @@ js::value db_update(js::value_context* vctx, js::value json_1_arg, js::value jso
     js::value current_func = js::get_current_function(*vctx);
     std::string secret_script_host = current_func.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx->ctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx));
     mongo_ctx.change_collection(secret_script_host);
 
     std::string json_1 = json_1_arg.to_json();
@@ -160,7 +160,7 @@ js::value db_find_all(js::value_context* vctx)
     js::value current_func = js::get_current_function(*vctx);
     std::string secret_script_host = current_func.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx->ctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx));
     mongo_ctx.change_collection(secret_script_host);
 
     js::value current_this = js::get_this(*vctx);
@@ -169,7 +169,7 @@ js::value db_find_all(js::value_context* vctx)
     std::string proj = current_this.get("PROJ");
     std::string caller = current_this.get("DB_CALLER");
 
-    if(caller != get_caller(vctx->ctx))
+    if(caller != get_caller(vctx))
         return js::make_error(*vctx, "caller != get_caller() in db_find.array, you probably know what you did");
 
     std::vector<nlohmann::json> db_data = mongo_ctx->find_json_new(nlohmann::json::parse(json), nlohmann::json::parse(proj));
@@ -184,7 +184,7 @@ js::value db_find_one(js::value_context* vctx)
     js::value current_func = js::get_current_function(*vctx);
     std::string secret_script_host = current_func.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx->ctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx));
     mongo_ctx.change_collection(secret_script_host);
 
     js::value current_this = js::get_this(*vctx);
@@ -233,7 +233,7 @@ js::value db_find(js::value_context* vctx, js::value json_obj, js::value proj_ob
 
     ret.add("JSON", json);
     ret.add("PROJ", proj);
-    ret.add("DB_CALLER", get_caller(vctx->ctx));
+    ret.add("DB_CALLER", get_caller(vctx));
 
     ret.add("array", js::function<db_find_all>).add_hidden("script_host", script_host);
     ret.add("first", js::function<db_find_one>).add_hidden("script_host", script_host);
@@ -248,7 +248,7 @@ std::string db_remove(js::value_context* vctx, js::value arg)
     js::value current_func = js::get_current_function(*vctx);
     std::string secret_script_host = current_func.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx->ctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx));
     mongo_ctx.change_collection(secret_script_host);
 
     std::string json = arg.to_json();
@@ -266,8 +266,8 @@ void set_is_realtime_script(js::value_context* vctx)
 
     shared_state->set_realtime();
 
-    std::string s1 = get_script_host(vctx->ctx);
-    std::string s2 = get_script_ending(vctx->ctx);
+    std::string s1 = get_script_host(vctx);
+    std::string s2 = get_script_ending(vctx);
 
     js::value stash = js::get_heap_stash(*vctx);
 
@@ -340,7 +340,7 @@ js::value set_realtime_framerate_limit(js::value_context* vctx, js::value arg)
 
     val = clamp(val, 1, 60);
 
-    set_global_number(vctx->ctx, "framerate_limit", val);
+    js::get_heap_stash(*vctx).get("framerate_limit") = val;
 
     return js::make_success(*vctx);
 }
@@ -431,7 +431,7 @@ void hash_d(js::value_context* vctx, js::value val)
 {
     COOPERATE_KILL_VCTX();
 
-    if(get_caller(vctx->ctx) != get_script_host(vctx->ctx))
+    if(get_caller(vctx) != get_script_host(vctx))
         return;
 
     std::string as_json = val.to_json();
@@ -808,7 +808,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
         //result = (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name](sd.ctx, sl);
     }
 
-    qm.process(get_thread_id(vctx->ctx), get_caller(vctx->ctx), qdata);
+    qm.process(get_thread_id(vctx), get_caller(vctx), qdata);
 
     return ret;
 }
@@ -897,11 +897,11 @@ js::value err(js::value_context* vctx)
 template<int N>
 js::value jxs_call(js::value_context* vctx, js::value val)
 {
-    int current_seclevel = get_global_int(vctx->ctx, "last_seclevel");
+    int current_seclevel = js::get_heap_stash(*vctx).get("last_seclevel");
 
     js::value ret = js_call(vctx, N, val);
 
-    set_global_int(vctx->ctx, "last_seclevel", current_seclevel);
+    js::get_heap_stash(*vctx).get("last_seclevel") = current_seclevel;
 
     return ret;
 }
@@ -909,7 +909,7 @@ js::value jxs_call(js::value_context* vctx, js::value val)
 template<int N>
 js::value jxos_call(js::value_context* vctx, js::value val)
 {
-    int current_seclevel = get_global_int(vctx->ctx, "last_seclevel");
+    int current_seclevel = js::get_heap_stash(*vctx).get("last_seclevel");
 
     std::vector<std::string> old_caller_stack = get_caller_stack(vctx);
     std::string old_caller = get_caller(vctx);
@@ -924,7 +924,7 @@ js::value jxos_call(js::value_context* vctx, js::value val)
 
     js::value ret = js_call(vctx, N, val);
 
-    set_global_int(vctx->ctx, "last_seclevel", current_seclevel);
+    js::get_heap_stash(*vctx).get("last_seclevel") = current_seclevel;
 
     {
         js::value heap = js::get_heap_stash(*vctx);
