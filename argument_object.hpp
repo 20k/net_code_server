@@ -273,7 +273,7 @@ namespace arg
         {
             duk_get_prop_index(ctx, sdup.tidx, i);
 
-            out[i] = dukx_get<T>(ctx, -1);
+            dukx_get(ctx, -1, out[i]);
 
             duk_pop(ctx);
         }

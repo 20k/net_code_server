@@ -2,15 +2,16 @@
 #include <iostream>
 #include "mongo.hpp"
 #include <libncclient/nc_util.hpp>
+#include "argument_object.hpp"
 
-int32_t get_thread_id(js::value_context& vctx)
+int32_t get_thread_id(js::value_context* vctx)
 {
-    return js::get_heap_stash(vctx).get("thread_id");
+    return js::get_heap_stash(*vctx).get("thread_id");
 }
 
-std::string get_caller(js::value_context& vctx)
+std::string get_caller(js::value_context* vctx)
 {
-    std::vector<std::string> ret = js::get_heap_stash(vctx).get("caller_stack");
+    std::vector<std::string> ret = js::get_heap_stash(*vctx).get("caller_stack");
 
     if(ret.size() == 0)
         return "";
@@ -18,24 +19,24 @@ std::string get_caller(js::value_context& vctx)
     return ret.back();
 }
 
-std::vector<std::string> get_caller_stack(js::value_context& vctx)
+std::vector<std::string> get_caller_stack(js::value_context* vctx)
 {
-    return js::get_heap_stash(vctx).get("caller_stack");
+    return js::get_heap_stash(*vctx).get("caller_stack");
 }
 
-std::string get_script_host(js::value_context& vctx)
+std::string get_script_host(js::value_context* vctx)
 {
-    return js::get_heap_stash(vctx).get("script_host");
+    return js::get_heap_stash(*vctx).get("script_host");
 }
 
-std::string get_script_ending(js::value_context& vctx)
+std::string get_script_ending(js::value_context* vctx)
 {
-    return js::get_heap_stash(vctx).get("script_ending");
+    return js::get_heap_stash(*vctx).get("script_ending");
 }
 
-std::string get_base_caller(js::value_context& vctx)
+std::string get_base_caller(js::value_context* vctx)
 {
-    return js::get_heap_stash(vctx).get("base_caller");
+    return js::get_heap_stash(*vctx).get("base_caller");
 }
 
 inline

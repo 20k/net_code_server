@@ -359,7 +359,7 @@ int32_t get_thread_id(duk_context* ctx)
     return get_global_int(ctx, "thread_id");
 }
 
-int32_t get_thread_id(js::value_context& vctx);
+int32_t get_thread_id(js::value_context* vctx);
 
 inline
 std::string get_caller(duk_context* ctx)
@@ -382,7 +382,7 @@ std::string get_caller(duk_context* ctx)
     return ret.back();
 }
 
-std::string get_caller(js::value_context& vctx);
+std::string get_caller(js::value_context* vctx);
 
 inline
 std::vector<std::string> get_caller_stack(duk_context* ctx)
@@ -397,7 +397,7 @@ std::vector<std::string> get_caller_stack(duk_context* ctx)
     return ret;
 }
 
-std::vector<std::string> get_caller_stack(js::value_context& vctx);
+std::vector<std::string> get_caller_stack(js::value_context* vctx);
 
 inline
 std::string get_script_host(duk_context* ctx)
@@ -405,7 +405,7 @@ std::string get_script_host(duk_context* ctx)
     return get_global_string(ctx, "script_host");
 }
 
-std::string get_script_host(js::value_context& vctx);
+std::string get_script_host(js::value_context* vctx);
 
 inline
 std::string get_script_ending(duk_context* ctx)
@@ -413,7 +413,7 @@ std::string get_script_ending(duk_context* ctx)
     return get_global_string(ctx, "script_ending");
 }
 
-std::string get_script_ending(js::value_context& vctx);
+std::string get_script_ending(js::value_context* vctx);
 
 inline
 std::string get_base_caller(duk_context* ctx)
@@ -421,7 +421,7 @@ std::string get_base_caller(duk_context* ctx)
     return get_global_string(ctx, "base_caller");
 }
 
-std::string get_base_caller(js::value_context& vctx);
+std::string get_base_caller(js::value_context* vctx);
 
 template<typename T>
 inline
