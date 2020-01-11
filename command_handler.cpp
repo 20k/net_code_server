@@ -60,12 +60,13 @@ void managed_duktape_thread(unsafe_info* info, size_t tid)
     catch(std::runtime_error& err)
     {
         std::cout << "GOT ERR " << err.what() << std::endl;
+        info->ret = err.what();
     }
     catch(...)
     {
         std::cout << "Misc error" << std::endl;
+        info->ret = "Server threw an exception of unknown type";
     }
-
 
     info->finished = 1;
 }
