@@ -28,7 +28,7 @@
 #include "steam_auth.hpp"
 #include <networking/serialisable.hpp>
 #include "serialisables.hpp"
-#include "argument_object.hpp"
+#include "argument_object.hpp"-
 
 struct unsafe_info
 {
@@ -45,8 +45,6 @@ void unsafe_wrapper(unsafe_info& info)
     std::string ret = js_unified_force_call_data(info.heap, info.command, info.usr->get_call_stack().back());
 
     info.ret = ret;
-
-    //return 1;
 }
 
 void managed_duktape_thread(unsafe_info* info, size_t tid)
@@ -54,8 +52,6 @@ void managed_duktape_thread(unsafe_info* info, size_t tid)
     ///set thread storage hack
     ///convert from int to size_t
     *tls_get_thread_id_storage_hack() = (size_t)tid;
-
-    //info->ectx->safe_exec(unsafe_wrapper, *info);
 
     try
     {
