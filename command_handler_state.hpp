@@ -2,6 +2,7 @@
 #define COMMAND_HANDLER_STATE_HPP_INCLUDED
 
 #include <mutex>
+#include <shared_mutex>
 #include <map>
 #include <string>
 #include <atomic>
@@ -18,7 +19,7 @@ struct command_handler_state
 {
     std::mutex command_lock;
     std::mutex lock;
-    std::mutex key_lock;
+    std::shared_mutex key_lock;
 
     std::map<int, std::vector<unprocessed_key_info>> unprocessed_keystrokes;
     std::map<int, std::map<std::string, bool>> key_states;
@@ -73,7 +74,7 @@ private:
     std::map<int, std::pair<int, int>> received_sizes;
     std::mutex size_lock;
 
-    std::mutex mouse_lock;
+    std::shared_mutex mouse_lock;
 
     std::map<int, vec2f> mouse_pos;
     std::map<int, vec2f> mousewheel_state;
