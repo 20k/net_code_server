@@ -817,11 +817,13 @@ std::string js_unified_force_call_data(exec_context& ectx, const std::string& da
 {
     duk_context* ctx = (duk_context*)ectx.get_ctx();
 
-    set_script_info(ctx, host + ".invoke");
+    js::value_context vctx(ctx);
+
+    set_script_info(vctx, host + ".invoke");
 
     std::string unified_invoke_err;
 
-    unified_script_info unified_invoke = unified_script_loading(get_thread_id(ctx), host + ".invoke", unified_invoke_err);
+    unified_script_info unified_invoke = unified_script_loading(get_thread_id(&vctx), host + ".invoke", unified_invoke_err);
 
     bool first_invoke_valid = unified_invoke.valid;
 
@@ -830,7 +832,7 @@ std::string js_unified_force_call_data(exec_context& ectx, const std::string& da
     if(!unified_invoke.valid || unified_invoke.type == unified_script_info::script_type::BUNDLE)
     {
         script_info dummy;
-        dummy.load_from_unparsed_source(ctx, attach_cli_wrapper(data), host + ".invoke", false, true);
+        dummy.load_from_unparsed_source(vctx, attach_cli_wrapper(data), host + ".invoke", false, true);
         is_cli = true;
 
         unified_invoke.make_from(dummy);
@@ -842,9 +844,8 @@ std::string js_unified_force_call_data(exec_context& ectx, const std::string& da
     if(!unified_invoke.valid)
         return "Invalid Command Line Syntax";
 
-    set_global_int(ctx, "last_seclevel", unified_invoke.seclevel);
+    js::get_heap_stash(vctx).add("last_seclevel", unified_invoke.seclevel);
 
-    js::value_context vctx(ctx);
     js::value arg(vctx);
 
     if(!first_invoke_valid)

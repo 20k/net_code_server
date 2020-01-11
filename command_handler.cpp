@@ -1517,15 +1517,18 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
                     was_public = true;
             }
 
-            duk_context* ctx;
-            ctx = create_sandbox_heap();
-            //register_funcs(ctx, 0, "core");
+            {
 
+            }
 
             script_info script_inf;
-            std::string compile_error = script_inf.load_from_unparsed_source(ctx, data_source, fullname, is_es6, false);
+            std::string compile_error;
 
-            duk_destroy_heap(ctx);
+            {
+                js::value_context vctx;
+
+                compile_error = script_inf.load_from_unparsed_source(vctx, data_source, fullname, is_es6, false);
+            }
 
             if(compile_error != "")
                 return make_response(compile_error);

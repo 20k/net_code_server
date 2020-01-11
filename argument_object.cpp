@@ -1,6 +1,7 @@
 #include "argument_object.hpp"
 #include "duktape.h"
 #include <iostream>
+#include "memory_sandbox.hpp"
 
 #if 0
 #include <assert.h>
@@ -215,12 +216,23 @@ js::value_context::value_context(js::value_context& octx) : parent_context(&octx
     parent_idx = fidx;
 }
 
+js::value_context::value_context()
+{
+    ctx = create_sandbox_heap();
+    owner = true;
+}
+
 js::value_context::~value_context()
 {
-    if(parent_context == nullptr)
-        return;
+    if(parent_context != nullptr)
+    {
+        parent_context->free(parent_idx);
+    }
 
-    parent_context->free(parent_idx);
+    if(owner)
+    {
+        duk_destroy_heap(ctx);
+    }
 }
 
 void js::value_context::free(int idx)

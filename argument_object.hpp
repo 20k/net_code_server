@@ -314,9 +314,11 @@ namespace js
         context_t* ctx = nullptr;
         value_context* parent_context = nullptr;
         int parent_idx = -1;
+        bool owner = false;
 
         value_context(context_t* ctx);
         value_context(value_context& in);
+        value_context();
         ~value_context();
 
         void free(int idx);

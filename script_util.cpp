@@ -38,42 +38,33 @@ std::string attach_unparsed_wrapper(std::string str)
     return "(function mainfunc(context, args){var func = (" + str + "); return func(context, args);})";
 }
 
-bool script_compiles(duk_context* ctx, script_info& script, std::string& err_out)
+bool script_compiles(js::value_context& vctx, script_info& script, std::string& err_out)
 {
     std::string wrapper = script.parsed_source;
 
-    duk_push_string(ctx, wrapper.c_str());
-    duk_push_string(ctx, "test-name");
+    auto [success, result] = js::compile(vctx, wrapper);
 
     //#define DEBUG_REAL
     #ifdef DEBUG_REAL
     std::cout << wrapper << std::endl;
     #endif // DEBUG_REAL
 
-    if(duk_pcompile(ctx, DUK_COMPILE_EVAL) != 0)
+    if(!success)
     {
-        std::string ret = duk_safe_to_string(ctx, -1);
+        err_out = (std::string)result;
 
-        err_out = ret;
-
-        printf("scompile failed: %s\n", ret.c_str());
+        printf("scompile failed: %s\n", err_out.c_str());
 
         #ifdef DEBUG_SOURCE
         std::cout << script.parsed_source << std::endl;
         #endif // DEBUG_SOURCE
-
-        duk_pop(ctx);
-
-        return false;
     }
     else
     {
         err_out = "";
-
-        duk_pop(ctx);
-
-        return true;
     }
+
+    return success;
 }
 
 bool string_is_in(const std::string& str, const std::vector<std::string>& in)
@@ -559,7 +550,7 @@ script_data parse_script(const std::string& file_name, std::string in, bool enab
 }
 
 ///WARNING NEED TO VALIDATE
-std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::string& source, const std::string& name_, bool enable_typescript, bool is_cli)
+std::string script_info::load_from_unparsed_source(js::value_context& vctx, const std::string& source, const std::string& name_, bool enable_typescript, bool is_cli)
 {
     name = name_;
 
@@ -615,7 +606,7 @@ std::string script_info::load_from_unparsed_source(duk_context* ctx, const std::
 
     std::string err;
 
-    if(!script_compiles(ctx, *this, err))
+    if(!script_compiles(vctx, *this, err))
     {
         valid = false;
 

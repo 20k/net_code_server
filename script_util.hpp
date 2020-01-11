@@ -44,7 +44,7 @@ struct script_info
     script_metadata metadata;
 
     ///typescript support is heavy, so disable for cli invocation
-    std::string load_from_unparsed_source(duk_context* ctx, const std::string& unparsed, const std::string& name, bool enable_typescript, bool is_cli);
+    std::string load_from_unparsed_source(js::value_context& vctx, const std::string& unparsed, const std::string& name, bool enable_typescript, bool is_cli);
 
     bool load_from_db(mongo_lock_proxy& ctx);
     void overwrite_in_db(mongo_lock_proxy& ctx);
