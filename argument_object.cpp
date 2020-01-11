@@ -1152,7 +1152,9 @@ struct js_val_tester
             js::add_getter(glob, "test", js::function<test_get>);
 
             js::eval(vctx, "test = 1;");
-            js::eval(vctx, "var hello = test;");
+            js::value result = js::eval(vctx, "var hello = test; hello;");
+
+            assert((std::string)result == "got");
         }
 
         printf("Done js val testers\n");
