@@ -13,6 +13,8 @@
 #include <dirent.h>
 #include "source_maps.hpp"
 
+#include "argument_object.hpp"
+
 ///new api
 ///we need a function to upload it to the server
 ///since we're the server, we need a function to accept a string which is the script
@@ -794,4 +796,14 @@ void set_script_info(duk_context* ctx, const std::string& full_script_name)
 
     set_global_string(ctx, "script_host", strings[0]);
     set_global_string(ctx, "script_ending", strings[1]);
+}
+
+void set_script_info(js::value_context& vctx, const std::string& full_script_name)
+{
+    std::vector<std::string> strings = no_ss_split(full_script_name, ".");
+
+    js::value heap = js::get_heap_stash(vctx);
+
+    js::add_key_value(heap, "script_host", strings[0]);
+    js::add_key_value(heap, "script_ending", strings[1]);
 }

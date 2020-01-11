@@ -771,7 +771,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
             if(shared_state == nullptr)
                 return js::make_error(*vctx, "Cannot launch async scripts in this context (bot brain, on_breach, or other throwaway script?)");
 
-            set_script_info(vctx->ctx, to_call_fullname);
+            set_script_info(*vctx, to_call_fullname);
 
             std::cout << "launched async\n";
 
@@ -781,7 +781,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
         }
         else
         {
-            set_script_info(vctx->ctx, to_call_fullname);
+            set_script_info(*vctx, to_call_fullname);
 
             auto [msg, res] = compile_and_call(*vctx, arg, load, get_caller(vctx), false, script.seclevel, false, full_script, false);
 
@@ -790,7 +790,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
             ret = res;
         }
 
-        set_script_info(vctx->ctx, full_script);
+        set_script_info(*vctx, full_script);
     }
     else
     {

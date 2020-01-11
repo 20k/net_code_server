@@ -12,6 +12,11 @@
 //#include <libncclient/nc_util.hpp>
 //#include "duk_object_functions.hpp"
 
+namespace js
+{
+    struct value_context;
+}
+
 inline
 std::string base_scripts_string = "./scripts/";
 
@@ -69,5 +74,6 @@ script_data parse_script(const std::string& file_name, std::string in, bool enab
 ///$where and $query both need to be disabled, $inspect as well
 
 void set_script_info(duk_context* ctx, const std::string& full_script_name);
+void set_script_info(js::value_context& vctx, const std::string& full_script_name);
 
 #endif // SCRIPT_UTIL_HPP_INCLUDED
