@@ -28,7 +28,7 @@
 #include "steam_auth.hpp"
 #include <networking/serialisable.hpp>
 #include "serialisables.hpp"
-#include "argument_object.hpp"-
+#include "argument_object.hpp"
 
 struct unsafe_info
 {
