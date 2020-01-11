@@ -331,7 +331,7 @@ void set_is_square_font(js::value_context* vctx, js::value arg)
 
     bool is_square = arg.is_truthy();
 
-    set_global_number(vctx->ctx, "square_font", is_square);
+    js::get_heap_stash(*vctx).get("square_font") = (int)is_square;
 }
 
 bool is_key_down(js::value_context* vctx, js::value arg)
