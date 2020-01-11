@@ -793,12 +793,8 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
     return ret;
 }
 
-std::string js_unified_force_call_data(exec_context& ectx, const std::string& data, const std::string& host)
+std::string js_unified_force_call_data(js::value_context& vctx, const std::string& data, const std::string& host)
 {
-    duk_context* ctx = (duk_context*)ectx.get_ctx();
-
-    js::value_context vctx(ctx);
-
     set_script_info(vctx, host + ".invoke");
 
     std::string unified_invoke_err;

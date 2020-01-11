@@ -36,18 +36,18 @@ struct unsafe_info
     user* usr;
     std::string command;
     int finished = 0;
-    exec_context* ectx;
+    js::value_context heap;
 
     std::string ret;
 };
 
-duk_ret_t unsafe_wrapper(exec_context& ectx, unsafe_info& info)
+void unsafe_wrapper(unsafe_info& info)
 {
-    std::string ret = js_unified_force_call_data(*info.ectx, info.command, info.usr->get_call_stack().back());
+    std::string ret = js_unified_force_call_data(info.heap, info.command, info.usr->get_call_stack().back());
 
     info.ret = ret;
 
-    return 1;
+    //return 1;
 }
 
 void managed_duktape_thread(unsafe_info* info, size_t tid)
@@ -56,7 +56,21 @@ void managed_duktape_thread(unsafe_info* info, size_t tid)
     ///convert from int to size_t
     *tls_get_thread_id_storage_hack() = (size_t)tid;
 
-    info->ectx->safe_exec(unsafe_wrapper, *info->ectx, *info);
+    //info->ectx->safe_exec(unsafe_wrapper, *info);
+
+    try
+    {
+        unsafe_wrapper(*info);
+    }
+    catch(std::runtime_error& err)
+    {
+        std::cout << "GOT ERR " << err.what() << std::endl;
+    }
+    catch(...)
+    {
+        std::cout << "Misc error" << std::endl;
+    }
+
 
     info->finished = 1;
 }
@@ -367,10 +381,9 @@ std::string run_in_user_context(std::string username, std::string command, std::
             exec_guard.unblock();
         }
 
-        exec_context ectx;
-        ectx.create_as_sandbox();
+        unsafe_info inf;
 
-        duk_context* ctx = (duk_context*)ectx.get_ctx();
+        duk_context* ctx = inf.heap.ctx;
 
         duk_memory_functions funcs;
         duk_get_memory_functions(ctx, &funcs);
@@ -406,10 +419,8 @@ std::string run_in_user_context(std::string username, std::string command, std::
             dukx_put_pointer(ctx, nullptr, "all_shared_data");
         }
 
-        unsafe_info inf;
         inf.usr = &usr;
         inf.command = command;
-        inf.ectx = &ectx;
 
         sand_data->is_static = true;
         sand_data->max_elapsed_time_ms = 5000;
@@ -604,8 +615,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         dukx_free_in_heap<std::shared_ptr<shared_command_handler_state>>(ctx, "all_shared_data");
         teardown_state(ctx);
-
-        ectx.destroy();
 
         printf("cleaned up resources\n");
 
