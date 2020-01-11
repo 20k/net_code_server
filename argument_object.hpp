@@ -647,6 +647,7 @@ namespace js
     js::value get_current_function(value_context& vctx);
     js::value get_this(value_context& vctx);
     js::value get_heap_stash(value_context& vctx);
+    js::value get_global_stash(value_context& vctx);
     void* get_sandbox_data_impl(value_context& vctx);
 
     template<typename T>
@@ -698,6 +699,7 @@ namespace js
     }
 
     std::pair<bool, js::value> compile(js::value_context& vctx, const std::string& data);
+    js::value eval(js::value_context& vctx, const std::string& data);
     js::value xfer_between_contexts(js::value_context& destination, const js::value& val);
 
     void dump_stack(js::value_context& vctx);

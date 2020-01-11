@@ -46,6 +46,5 @@ std::string js_unified_force_call_data(exec_context& ctx, const std::string& dat
 void register_funcs(duk_context* ctx, int seclevel, const std::string& script_host, bool polyfill);
 
 void remove_func(duk_context* ctx, const std::string& name);
-duk_ret_t dummy(duk_context* ctx);
 
 #endif // SECCALLERS_HPP_INCLUDED

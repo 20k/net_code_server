@@ -22,6 +22,11 @@ int my_timeout_check(void* udata)
     return 0;
 }
 
+void dummy(js::value_context* vctx)
+{
+
+}
+
 /*duk_ret_t native_print(duk_context *ctx)
 {
 	COOPERATE_KILL();
@@ -588,14 +593,15 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
         ///THING I DONT REALLY UNDERSTAND BUT IS NECESSARY FOR STUFF TO WORK
         {
-            duk_push_global_stash(new_ctx);
-            duk_get_global_string(temporary_ctx, "Duktape");
-            duk_xmove_top(new_ctx, temporary_ctx, 1);
-            duk_put_prop_string(new_ctx, -2, DUK_HIDDEN_SYMBOL("module:Duktape"));
-            duk_pop(new_ctx);
-        }
+            js::value temp_global = js::get_global(temporary_vctx);
+            js::value duktape_sym = temp_global.get("Duktape");
 
-        int nargs = 2;
+            js::value xferred = js::xfer_between_contexts(new_vctx, duktape_sym);
+
+            js::value new_global_stash = js::get_global_stash(new_vctx);
+
+            js::add_key_value(new_global_stash, "\xFFmodule:Duktape", xferred);
+        }
 
         js::value temp_ret(temporary_vctx);
 
@@ -613,11 +619,12 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         }
         else
         {
-            duk_eval_string(temporary_ctx, "require(\"@babel/polyfill\");");
-            duk_push_global_object(temporary_ctx);
-            duk_push_c_function(temporary_ctx, dummy, 1);
-            duk_put_prop_string(temporary_ctx, -2, "require");
-            duk_pop(temporary_ctx);
+            js::eval(temporary_vctx, "require(\"@babel/polyfill\");");
+
+            {
+                js::value glob = js::get_global(temporary_vctx);
+                js::add_key_value(glob, "require", js::function<dummy>);
+            }
 
             temp_ret = compiled_func;
         }
@@ -1129,11 +1136,6 @@ void remove_func(duk_context* ctx, const std::string& name)
     duk_put_prop_string(ctx, -2, name.c_str());
 
     duk_pop(ctx);
-}
-
-duk_ret_t dummy(duk_context* ctx)
-{
-    return 0;
 }
 
 template<int N>
