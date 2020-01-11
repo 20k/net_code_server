@@ -312,8 +312,12 @@ namespace js
     {
         std::vector<int> free_stack;
         context_t* ctx = nullptr;
+        value_context* parent_context = nullptr;
+        int parent_idx = -1;
 
         value_context(context_t* ctx);
+        value_context(value_context& in);
+        ~value_context();
 
         void free(int idx);
     };

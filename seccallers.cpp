@@ -528,19 +528,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
     std::string script_host = get_script_host(vctx.ctx);
     std::string base_caller = get_base_caller(vctx.ctx);
 
-    ///bear in mind that under this new system
-    ///new_ctx being equal to ctx is very likely
-    ///now need to be a bit more careful with object stacks and the like
-    //duk_context* new_ctx = (duk_context*)ectx.get_new_context_for(get_script_host(ctx), seclevel);
-
-    duk_idx_t thr_idx = duk_push_thread_new_globalenv(vctx.ctx);
-    //duk_idx_t thr_idx = duk_push_thread(ctx);
-    duk_context* new_ctx = duk_get_context(vctx.ctx, thr_idx);
-    //register_funcs(new_ctx, seclevel, get_script_host(ctx), true);
-
-    js::value new_ctx_popper(vctx, -1);
-
-    js::value_context new_vctx(new_ctx);
+    js::value_context new_vctx(vctx);
 
     {
         js::value new_global(new_vctx);
@@ -549,13 +537,9 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
     std::string wrapper = data;
 
-    duk_idx_t fidx = duk_push_thread_new_globalenv(new_ctx);
-    duk_context* temporary_ctx = duk_get_context(new_ctx, fidx);
-    register_funcs(temporary_ctx, seclevel, get_script_host(vctx.ctx), true);
 
-    js::value ctx_popper(new_vctx, -1);
-
-    js::value_context temporary_vctx(temporary_ctx);
+    js::value_context temporary_vctx(new_vctx);
+    register_funcs(temporary_vctx.ctx, seclevel, get_script_host(vctx.ctx), true);
 
     auto [compile_success, compiled_func] = js::compile(temporary_vctx, wrapper);
 

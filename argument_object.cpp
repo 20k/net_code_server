@@ -208,6 +208,21 @@ js::value_context::value_context(context_t* _ctx) : ctx(_ctx)
 
 }
 
+js::value_context::value_context(js::value_context& octx) : parent_context(&octx)
+{
+    duk_idx_t fidx = duk_push_thread_new_globalenv(octx.ctx);
+    ctx = duk_get_context(octx.ctx, fidx);
+    parent_idx = fidx;
+}
+
+js::value_context::~value_context()
+{
+    if(parent_context == nullptr)
+        return;
+
+    parent_context->free(parent_idx);
+}
+
 void js::value_context::free(int idx)
 {
     assert(idx >= 0);
