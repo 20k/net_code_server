@@ -1042,7 +1042,7 @@ void register_funcs(duk_context* ctx, int seclevel, const std::string& script_ho
     //#ifdef TESTING
     if(seclevel <= 3)
     {
-        dukx_setup_db_proxy(ctx);
+        dukx_setup_db_proxy(vctx);
     }
     //#endif // TESTING
 

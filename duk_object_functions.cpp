@@ -1276,27 +1276,14 @@ duk_int_t db_getter_get(duk_context* ctx)
     return 1;
 }
 
-void dukx_setup_db_proxy(duk_context* ctx)
+void dukx_setup_db_proxy(js::value_context& vctx)
 {
-    std::string host = get_script_host(ctx);
+    std::string host = get_script_host(&vctx);
 
-    duk_push_global_object(ctx);
+    js::value global = js::get_global(vctx);
 
-    duk_push_string(ctx, "$db");
-
-    duk_push_c_function(ctx, db_getter_get, 0);
-    duk_push_string(ctx, host.c_str());
-    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
-
-    duk_push_c_function(ctx, db_set<false>, 1);
-    duk_push_string(ctx, host.c_str());
-    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
-
-    duk_def_prop(ctx,
-                 -1 - 3,
-                 DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_HAVE_SETTER | DUK_DEFPROP_FORCE);
-
-    duk_pop(ctx);
+    js::add_setter(global, "$db", db_set<false>).add_hidden("OHOST", host);
+    js::add_getter(global, "$db", db_getter_get).add_hidden("OHOST", host);
 }
 
 #if 0

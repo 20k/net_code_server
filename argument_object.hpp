@@ -269,7 +269,7 @@ namespace arg
 
         out.resize(arrsizet);
 
-        for(int i=0; i < arrsizet; i++)
+        for(int i=0; i < (int)arrsizet; i++)
         {
             duk_get_prop_index(ctx, sdup.tidx, i);
 

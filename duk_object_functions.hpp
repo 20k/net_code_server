@@ -761,7 +761,7 @@ void dukx_sanitise_in_place(duk_context* dst_ctx, duk_idx_t idx);
 
 void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t idx);
 
-void dukx_setup_db_proxy(duk_context* ctx);
+void dukx_setup_db_proxy(js::value_context& vctx);
 
 void dukx_set_getter(duk_context* ctx, duk_idx_t idx, const std::string& property, duk_c_function func);
 void dukx_set_setter(duk_context* ctx, duk_idx_t idx, const std::string& property, duk_c_function func);
