@@ -480,7 +480,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
 
     js::value_context temporary_vctx(new_vctx);
-    register_funcs(temporary_vctx.ctx, seclevel, get_script_host(&vctx), true);
+    register_funcs(temporary_vctx, seclevel, get_script_host(&vctx), true);
 
     auto [compile_success, compiled_func] = js::compile(temporary_vctx, wrapper);
 
@@ -960,10 +960,8 @@ js::value os_call(js::value_context* vctx, std::string script_name, js::value as
     return val;
 }
 
-void register_funcs(duk_context* ctx, int seclevel, const std::string& script_host, bool polyfill)
+void register_funcs(js::value_context& vctx, int seclevel, const std::string& script_host, bool polyfill)
 {
-    js::value_context vctx(ctx);
-
     js::value global = js::get_global(vctx);
 
     global.del("fs_call");

@@ -39,7 +39,7 @@ void send_async_message(duk_context* ctx, const std::string& message);
 
 std::string js_unified_force_call_data(exec_context& ctx, const std::string& data, const std::string& host);
 
-void register_funcs(duk_context* ctx, int seclevel, const std::string& script_host, bool polyfill);
+void register_funcs(js::value_context& vctx, int seclevel, const std::string& script_host, bool polyfill);
 
 void remove_func(duk_context* ctx, const std::string& name);
 
