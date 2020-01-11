@@ -25,7 +25,6 @@
 #include "mongo.hpp"
 #include "quest_manager.hpp"
 #include <secret/tutorial.hpp>
-#include "exec_context.hpp"
 #include "steam_auth.hpp"
 #include <networking/serialisable.hpp>
 #include "serialisables.hpp"

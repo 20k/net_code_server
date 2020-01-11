@@ -13,8 +13,6 @@ namespace js
 
 struct shared_duk_worker_state;
 
-struct exec_context;
-
 int my_timeout_check(void* udata);
 
 /*

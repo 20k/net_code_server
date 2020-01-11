@@ -12,7 +12,6 @@
 #include "safe_thread.hpp"
 #include "quest_manager.hpp"
 #include "duk_modules.hpp"
-#include "exec_context.hpp"
 #include "argument_object.hpp"
 
 int my_timeout_check(void* udata)
