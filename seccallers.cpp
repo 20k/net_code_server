@@ -624,7 +624,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
     return {extra, ret};
 }
 
-void async_launch_script_name(duk_context* ctx, int sl, const std::string& sname, std::shared_ptr<shared_command_handler_state>& ptr)
+void async_launch_script_name(js::value_context& vctx, int sl, const std::string& sname, std::shared_ptr<shared_command_handler_state>& ptr)
 {
     std::string call_end = "s_call(\"" + sname + "\")({});";
 
@@ -643,7 +643,7 @@ void async_launch_script_name(duk_context* ctx, int sl, const std::string& sname
 
     //std::cout <<" running " << seclevel + call_end << std::endl;
 
-    sthread sthr(run_in_user_context, get_caller(ctx), seclevel + call_end, ptr, std::nullopt, true);
+    sthread sthr(run_in_user_context, get_caller(&vctx), seclevel + call_end, ptr, std::nullopt, true);
 
     sthr.detach();
 }
@@ -755,7 +755,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
 
             std::cout << "launched async\n";
 
-            async_launch_script_name(vctx->ctx, sl, to_call_fullname, *shared_state);
+            async_launch_script_name(*vctx, sl, to_call_fullname, *shared_state);
 
             ret = js::make_success(*vctx);
         }
