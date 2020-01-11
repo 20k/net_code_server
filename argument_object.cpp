@@ -869,6 +869,32 @@ void js::dump_stack(js::value_context& vctx)
     std::cout << "GOT " << (std::string)val << std::endl;
 }
 
+js::value js::add_setter(js::value& base, const std::string& key, js_funcptr_t func)
+{
+    js::value val(*base.vctx);
+    val = func;
+
+    duk_push_lstring(base.ctx, key.c_str(), key.size());
+    duk_dup(base.ctx, val.idx);
+
+    duk_def_prop(base.ctx, base.idx, DUK_DEFPROP_HAVE_SETTER | DUK_DEFPROP_FORCE);
+
+    return val;
+}
+
+js::value js::add_getter(js::value& base, const std::string& key, js_funcptr_t func)
+{
+    js::value val(*base.vctx);
+    val = func;
+
+    duk_push_lstring(base.ctx, key.c_str(), key.size());
+    duk_dup(base.ctx, val.idx);
+
+    duk_def_prop(base.ctx, base.idx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_FORCE);
+
+    return val;
+}
+
 std::pair<bool, js::value> js::compile(js::value_context& vctx, const std::string& data)
 {
     duk_push_string(vctx.ctx, data.c_str());
@@ -939,6 +965,18 @@ void test_func()
 void test_func_with_args(int one, std::string two)
 {
 
+}
+
+void test_set(js::value_context* vctx, js::value val)
+{
+    std::cout << "GOT " << (std::string)val << std::endl;
+}
+
+js::value test_get(js::value_context* vctx)
+{
+    js::value test_ret(*vctx);
+    test_ret = "got";
+    return test_ret;
 }
 
 std::string test_func_with_return(double one, std::string two)
@@ -1105,6 +1143,16 @@ struct js_val_tester
             auto [res, va] = js::call_prop(glob, "test_error", a1);
 
             assert(res);
+        }
+
+        {
+            js::value glob = js::get_global(vctx);
+
+            js::add_setter(glob, "test", js::function<test_set>);
+            js::add_getter(glob, "test", js::function<test_get>);
+
+            js::eval(vctx, "test = 1;");
+            js::eval(vctx, "var hello = test;");
         }
 
         printf("Done js val testers\n");

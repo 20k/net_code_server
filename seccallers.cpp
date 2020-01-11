@@ -17,6 +17,9 @@
 
 int my_timeout_check(void* udata)
 {
+    if(udata == nullptr)
+        return 0;
+
     COOPERATE_KILL_UDATA(udata);
 
     return 0;
@@ -26,29 +29,6 @@ void dummy(js::value_context* vctx)
 {
 
 }
-
-/*duk_ret_t native_print(duk_context *ctx)
-{
-	COOPERATE_KILL();
-
-    std::string str = duk_safe_to_std_string(ctx, -1);
-
-    duk_push_heap_stash(ctx);
-    duk_get_prop_string(ctx, -1, "print_str");
-
-    std::string fstr = duk_safe_to_std_string(ctx, -1);
-
-    fstr += str;
-
-    duk_pop_n(ctx, 1);
-
-    duk_push_string(ctx, fstr.c_str());
-    duk_put_prop_string(ctx, -2, "print_str");
-
-    duk_pop_n(ctx, 2);
-
-	return 0;
-}*/
 
 void native_print(js::value_context* vctx, std::string str)
 {

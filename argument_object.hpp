@@ -704,6 +704,9 @@ namespace js
         return nval;
     }
 
+    js::value add_getter(js::value& base, const std::string& key, js_funcptr_t func);
+    js::value add_setter(js::value& base, const std::string& key, js_funcptr_t func);
+
     std::pair<bool, js::value> compile(js::value_context& vctx, const std::string& data);
     js::value eval(js::value_context& vctx, const std::string& data);
     js::value xfer_between_contexts(js::value_context& destination, const js::value& val);
