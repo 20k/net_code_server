@@ -89,14 +89,10 @@ bool shared_duk_worker_state::is_key_down(const std::string& str)
 
 void shared_duk_worker_state::set_mouse_pos(vec2f pos)
 {
-    safe_lock_guard guard(mouse_lock);
-
     mouse_pos = pos;
 }
 
 vec2f shared_duk_worker_state::get_mouse_pos()
 {
-    safe_lock_guard guard(mouse_lock);
-
     return mouse_pos;
 }

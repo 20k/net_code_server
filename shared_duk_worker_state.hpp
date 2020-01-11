@@ -45,8 +45,7 @@ private:
     std::map<std::string, bool> ikey_state;
     std::mutex key_lock;
 
-    vec2f mouse_pos;
-    std::mutex mouse_lock;
+    std::atomic<vec2f> mouse_pos{{0,0}};
 };
 
 #endif // SHARED_DUK_WORKER_STATE_HPP_INCLUDED
