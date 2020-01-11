@@ -486,8 +486,8 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
     js::value ret(vctx);
 
-    std::string script_host = get_script_host(vctx);
-    std::string base_caller = get_base_caller(vctx);
+    std::string script_host = get_script_host(&vctx);
+    std::string base_caller = get_base_caller(&vctx);
 
     js::value_context new_vctx(vctx);
 
@@ -500,7 +500,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
 
     js::value_context temporary_vctx(new_vctx);
-    register_funcs(temporary_vctx.ctx, seclevel, get_script_host(vctx), true);
+    register_funcs(temporary_vctx.ctx, seclevel, get_script_host(&vctx), true);
 
     auto [compile_success, compiled_func] = js::compile(temporary_vctx, wrapper);
 
@@ -852,7 +852,7 @@ std::string js_unified_force_call_data(exec_context& ectx, const std::string& da
     else
         js::add_key_value(arg, "command", data);
 
-    auto [extra, js_val] = compile_and_call(vctx, arg, unified_invoke.parsed_source, get_caller(vctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke", is_cli);
+    auto [extra, js_val] = compile_and_call(vctx, arg, unified_invoke.parsed_source, get_caller(&vctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke", is_cli);
 
     js_val.release();
 
