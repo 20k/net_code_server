@@ -80,33 +80,34 @@ std::map<std::string, std::string>& module_cache()
     return dat;
 }
 
+std::map<std::string, std::string> build_module_binary_cache()
+{
+    std::map<std::string, std::string> saved_map;
+
+    auto cache = module_cache();
+
+    js::value_context vctx;
+
+    for(auto& data : cache)
+    {
+        auto [success, result] = js::compile(vctx, data.second, data.first);
+
+        auto [success_2, final_func] = js::call(result);
+
+        if(!success || !success_2)
+            throw std::runtime_error("Bad module binary cache");
+
+        std::string dumped = js::dump_function(final_func);
+
+        saved_map[data.first] = dumped;
+    }
+
+    return saved_map;
+}
+
 std::map<std::string, std::string>& module_binary_cache()
 {
-    static bool init = false;
-    static std::map<std::string, std::string> saved_map;
-
-    if(!init)
-    {
-        auto cache = module_cache();
-
-        js::value_context vctx;
-
-        for(auto& data : cache)
-        {
-            auto [success, result] = js::compile(vctx, data.second, data.first);
-
-            auto [success_2, final_func] = js::call(result);
-
-            if(!success || !success_2)
-                throw std::runtime_error("Bad module binary cache");
-
-            std::string dumped = js::dump_function(final_func);
-
-            saved_map[data.first] = dumped;
-        }
-
-        init = true;
-    }
+    static std::map<std::string, std::string> saved_map = build_module_binary_cache();
 
     return saved_map;
 }
