@@ -447,42 +447,24 @@ void hash_d(js::value_context* vctx, js::value val)
     hash_d_prop = fstr;
 }
 
-std::string get_hash_d(duk_context* ctx)
+std::string get_hash_d(js::value_context* vctx)
 {
-    duk_push_heap_stash(ctx);
+    js::value heap = js::get_heap_stash(*vctx);
 
-    if(!duk_has_prop_string(ctx, -1, "HASH_D"))
-    {
-        duk_pop(ctx);
+    if(!heap.has("HASH_D"))
         return "";
-    }
 
-    duk_get_prop_string(ctx, -1, "HASH_D");
-
-    std::string str = duk_safe_to_string(ctx, -1);
-
-    duk_pop_n(ctx, 2);
-
-    return str;
+    return (std::string)heap.get("HASH_D");
 }
 
-std::string get_print_str(duk_context* ctx)
+std::string get_print_str(js::value_context* vctx)
 {
-    duk_push_heap_stash(ctx);
+    js::value heap = js::get_heap_stash(*vctx);
 
-    if(!duk_has_prop_string(ctx, -1, "print_str"))
-    {
-        duk_pop(ctx);
+    if(!heap.has("print_str"))
         return "";
-    }
 
-    duk_get_prop_string(ctx, -1, "print_str");
-
-    std::string str = duk_safe_to_string(ctx, -1);
-
-    duk_pop_n(ctx, 2);
-
-    return str;
+    return (std::string)heap.get("print_str");
 }
 
 void send_async_message(duk_context* ctx, const std::string& message)
@@ -495,27 +477,6 @@ void send_async_message(duk_context* ctx, const std::string& message)
     shared->add_back_write(message);
 }
 
-///returns true on success, false on failure
-bool compile_and_push(duk_context* ctx, const std::string& data)
-{
-    duk_push_string(ctx, data.c_str());
-    duk_push_string(ctx, "test-name");
-
-    return duk_pcompile(ctx, DUK_COMPILE_EVAL) == 0;
-}
-
-duk_int_t dukx_pcall_copy(duk_context* ctx, duk_idx_t nargs)
-{
-    duk_dup(ctx, -1 - nargs);
-
-    for(int i=0; i < nargs; i++)
-    {
-        duk_dup(ctx, -1 - nargs);
-    }
-
-    return duk_pcall(ctx, nargs);
-}
-
 std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::value& arg, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script, bool is_cli)
 {
     if(data.size() == 0)
@@ -525,8 +486,8 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
     js::value ret(vctx);
 
-    std::string script_host = get_script_host(vctx.ctx);
-    std::string base_caller = get_base_caller(vctx.ctx);
+    std::string script_host = get_script_host(vctx);
+    std::string base_caller = get_base_caller(vctx);
 
     js::value_context new_vctx(vctx);
 
@@ -539,7 +500,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
 
     js::value_context temporary_vctx(new_vctx);
-    register_funcs(temporary_vctx.ctx, seclevel, get_script_host(vctx.ctx), true);
+    register_funcs(temporary_vctx.ctx, seclevel, get_script_host(vctx), true);
 
     auto [compile_success, compiled_func] = js::compile(temporary_vctx, wrapper);
 
@@ -670,7 +631,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         }
     }
 
-    std::string str = get_hash_d(vctx.ctx);
+    std::string str = get_hash_d(&vctx);
 
     ///only should do this if the caller is owner of script
     if(str != "" && is_top_level)
@@ -678,7 +639,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         ret = js::make_value(vctx, str);
     }
 
-    std::string extra = get_print_str(vctx.ctx);
+    std::string extra = get_print_str(&vctx);
 
     return {extra, ret};
 }
@@ -730,7 +691,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
     ///current script
     //std::string full_script = get_script_host(ctx) + "." + get_script_ending(ctx);
 
-    std::string full_script = secret_script_host + "." + get_script_ending(vctx->ctx);
+    std::string full_script = secret_script_host + "." + get_script_ending(vctx);
 
     quest_script_data qdata;
     qdata.target = to_call_fullname;
@@ -743,7 +704,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
         SL_GUARD(privileged_functions[to_call_fullname].sec_level);
 
         ///use ORIGINAL script host
-        priv_context priv_ctx(get_script_host(vctx->ctx), to_call_fullname);
+        priv_context priv_ctx(get_script_host(vctx), to_call_fullname);
 
         //set_script_info(ctx, to_call_fullname);
 
@@ -763,7 +724,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
             ret = js::undefined;
         }
 
-        qm.process(get_thread_id(vctx->ctx), get_caller(vctx->ctx), qdata);
+        qm.process(get_thread_id(vctx), get_caller(vctx), qdata);
 
         //set_script_info(ctx, full_script);
 
@@ -775,7 +736,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
 
     std::string script_err;
 
-    unified_script_info script = unified_script_loading(get_thread_id(vctx->ctx), to_call_fullname, script_err);
+    unified_script_info script = unified_script_loading(get_thread_id(vctx), to_call_fullname, script_err);
 
     //std::cout << "script source findy " << script.parsed_source << " name " << script.name << std::endl;
 
@@ -822,7 +783,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
         {
             set_script_info(vctx->ctx, to_call_fullname);
 
-            auto [msg, res] = compile_and_call(*vctx, arg, load, get_caller(vctx->ctx), false, script.seclevel, false, full_script, false);
+            auto [msg, res] = compile_and_call(*vctx, arg, load, get_caller(vctx), false, script.seclevel, false, full_script, false);
 
             res.pack();
 
@@ -891,7 +852,7 @@ std::string js_unified_force_call_data(exec_context& ectx, const std::string& da
     else
         js::add_key_value(arg, "command", data);
 
-    auto [extra, js_val] = compile_and_call(vctx, arg, unified_invoke.parsed_source, get_caller(ctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke", is_cli);
+    auto [extra, js_val] = compile_and_call(vctx, arg, unified_invoke.parsed_source, get_caller(vctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke", is_cli);
 
     js_val.release();
 
@@ -935,7 +896,7 @@ js::value err(js::value_context* vctx)
 template<int N>
 js::value jxs_call(js::value_context* vctx, js::value val)
 {
-    int current_seclevel = get_global_int(vctx->ctx, "last_secleve");
+    int current_seclevel = get_global_int(vctx->ctx, "last_seclevel");
 
     js::value ret = js_call(vctx, N, val);
 
@@ -949,10 +910,10 @@ js::value jxos_call(js::value_context* vctx, js::value val)
 {
     int current_seclevel = get_global_int(vctx->ctx, "last_seclevel");
 
-    std::vector<std::string> old_caller_stack = get_caller_stack(vctx->ctx);
-    std::string old_caller = get_caller(vctx->ctx);
+    std::vector<std::string> old_caller_stack = get_caller_stack(vctx);
+    std::string old_caller = get_caller(vctx);
 
-    std::string new_caller = get_script_host(vctx->ctx);
+    std::string new_caller = get_script_host(vctx);
 
     {
         js::value heap = js::get_heap_stash(*vctx);

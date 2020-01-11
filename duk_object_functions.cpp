@@ -3,6 +3,40 @@
 #include "mongo.hpp"
 #include <libncclient/nc_util.hpp>
 
+int32_t get_thread_id(js::value_context& vctx)
+{
+    return js::get_heap_stash(vctx).get("thread_id");
+}
+
+std::string get_caller(js::value_context& vctx)
+{
+    std::vector<std::string> ret = js::get_heap_stash(vctx).get("caller_stack");
+
+    if(ret.size() == 0)
+        return "";
+
+    return ret.back();
+}
+
+std::vector<std::string> get_caller_stack(js::value_context& vctx)
+{
+    return js::get_heap_stash(vctx).get("caller_stack");
+}
+
+std::string get_script_host(js::value_context& vctx)
+{
+    return js::get_heap_stash(vctx).get("script_host");
+}
+
+std::string get_script_ending(js::value_context& vctx)
+{
+    return js::get_heap_stash(vctx).get("script_ending");
+}
+
+std::string get_base_caller(js::value_context& vctx)
+{
+    return js::get_heap_stash(vctx).get("base_caller");
+}
 
 inline
 duk_ret_t dukx_proxy_get_prototype_of(duk_context* ctx)
