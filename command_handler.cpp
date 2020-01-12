@@ -381,7 +381,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         shared_duk_worker_state* shared_duk_state = new shared_duk_worker_state;
 
-        startup_state(ctx, executing_under, executing_under, "invoke", usr.get_call_stack(), shared_duk_state);
+        startup_state(inf.heap, executing_under, executing_under, "invoke", usr.get_call_stack(), shared_duk_state);
 
         js::get_heap_stash(inf.heap).get("thread_id") = local_thread_id;
 

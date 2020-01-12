@@ -679,32 +679,32 @@ bool js::value::has_hidden(const std::string& key) const
 
 js::value js::value::get(const std::string& key)
 {
-    if(!has(key))
-        return js::make_value(*vctx, std::nullopt);
+    //if(!has(key))
+    //    return js::make_value(*vctx, std::nullopt);
 
     return js::value(*vctx, *this, key);
 }
 
 js::value js::value::get(int key)
 {
-    if(!has(key))
-        return js::make_value(*vctx, std::nullopt);
+    //if(!has(key))
+    //    return js::make_value(*vctx, std::nullopt);
 
     return js::value(*vctx, *this, key);
 }
 
 js::value js::value::get(const char* key)
 {
-    if(!has(key))
-        return js::make_value(*vctx, std::nullopt);
+    //if(!has(key))
+    //    return js::make_value(*vctx, std::nullopt);
 
     return js::value(*vctx, *this, key);
 }
 
 js::value js::value::get_hidden(const std::string& key)
 {
-    if(!has_hidden(key))
-        return js::make_value(*vctx, std::nullopt);
+    //if(!has_hidden(key))
+    //    return js::make_value(*vctx, std::nullopt);
 
     std::string rkey = "\xFF" + key;
 

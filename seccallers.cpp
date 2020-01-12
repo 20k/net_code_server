@@ -360,9 +360,9 @@ std::map<std::string, double> mouse_get_position(js::value_context* vctx)
     return {{"x", pos.x()}, {"y", pos.y()}};
 }
 
-void startup_state(duk_context* ctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack, shared_duk_worker_state* shared_state)
+void startup_state(js::value_context& vctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack, shared_duk_worker_state* shared_state)
 {
-    duk_push_heap_stash(ctx);
+    /*duk_push_heap_stash(ctx);
 
     quick_register(ctx, "HASH_D", "");
     quick_register(ctx, "print_str", "");
@@ -379,7 +379,20 @@ void startup_state(duk_context* ctx, const std::string& caller, const std::strin
 
     dukx_put_pointer(ctx, shared_state, "shared_caller_state");
 
-    duk_pop_n(ctx, 1);
+    duk_pop_n(ctx, 1);*/
+
+    js::value heap = js::get_heap_stash(vctx);
+    heap["HASH_D"] = "";
+    heap["print_str"] = "";
+    heap["base_caller"] = caller;
+    heap["caller"] = caller;
+    heap["caller_stack"] = caller_stack;
+    heap["script_host"] = script_host;
+    heap["script_ending"] = script_ending;
+    heap["framerate_limit"] = 60;
+    heap["square_font"] = 0;
+    heap["DB_ID"] = 0;
+    heap["shared_caller_state"].set_ptr(shared_state);
 }
 
 void teardown_state(duk_context* ctx)
