@@ -362,25 +362,6 @@ std::map<std::string, double> mouse_get_position(js::value_context* vctx)
 
 void startup_state(js::value_context& vctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack, shared_duk_worker_state* shared_state)
 {
-    /*duk_push_heap_stash(ctx);
-
-    quick_register(ctx, "HASH_D", "");
-    quick_register(ctx, "print_str", "");
-    quick_register(ctx, "base_caller", caller.c_str());
-    quick_register(ctx, "caller", caller.c_str());
-    quick_register_generic(ctx, "caller_stack", caller_stack);
-    quick_register(ctx, "script_host", script_host.c_str());
-    quick_register(ctx, "script_ending", script_ending.c_str());
-    set_global_number(ctx, "framerate_limit", 60);
-    set_global_number(ctx, "square_font", 0);
-
-    duk_push_int(ctx, 0);
-    duk_put_prop_string(ctx, -2, "DB_ID");
-
-    dukx_put_pointer(ctx, shared_state, "shared_caller_state");
-
-    duk_pop_n(ctx, 1);*/
-
     js::value heap = js::get_heap_stash(vctx);
     heap["HASH_D"] = "";
     heap["print_str"] = "";
