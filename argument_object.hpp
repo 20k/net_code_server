@@ -316,7 +316,7 @@ namespace arg
     void dukx_get(duk_context* ctx, int idx, T*& out)
     {
         stack_dupper sdup(ctx, idx);
-        out = duk_get_pointer(ctx, idx);
+        out = duk_require_pointer(ctx, idx);
     }
 }
 
