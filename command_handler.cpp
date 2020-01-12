@@ -118,29 +118,19 @@ template<typename T>
 void async_realtime_script_handler(js::value_context& nvctx, command_handler_state& state, std::string& ret,
                                    int current_id, T& callback)
 {
-    /*double current_framerate = get_global_number(nctx, "framerate_limit");
-    current_framerate = clamp(current_framerate, 1., 30.);*/
-
     double current_framerate = js::get_heap_stash(nvctx).get("framerate_limit");
     current_framerate = clamp(current_framerate, 1., 30.);
 
     sf::Clock clk;
 
-    /*duk_push_thread_new_globalenv(nctx);
-    duk_context* ctx = duk_get_context(nctx, -1);*/
+    js::value function_on_stack(nvctx, -1);
 
     js::value_context vctx(nvctx);
-
-    ///-1 is the above context, -2 is args
-    duk_dup(nvctx.ctx, -2);
-
-    duk_xmove_top(vctx.ctx, nvctx.ctx, 1);
-    //duk_context* ctx = nctx;
 
     /*MAKE_PERF_COUNTER();
     mongo_diagnostics diagnostic_scope;*/
 
-    js::value args(vctx, -1);
+    js::value args = js::xfer_between_contexts(vctx, function_on_stack);
 
     bool force_terminate = false;
 
