@@ -115,26 +115,30 @@ void sleep_thread_for(sandbox_data* sand_data, sthread& t, int sleep_ms)
 }
 
 template<typename T>
-void async_realtime_script_handler(duk_context* nctx, command_handler_state& state, std::string& ret,
+void async_realtime_script_handler(js::value_context& nvctx, command_handler_state& state, std::string& ret,
                                    int current_id, T& callback)
 {
-    double current_framerate = get_global_number(nctx, "framerate_limit");
+    /*double current_framerate = get_global_number(nctx, "framerate_limit");
+    current_framerate = clamp(current_framerate, 1., 30.);*/
+
+    double current_framerate = js::get_heap_stash(nvctx).get("framerate_limit");
     current_framerate = clamp(current_framerate, 1., 30.);
 
     sf::Clock clk;
 
-    duk_push_thread_new_globalenv(nctx);
-    duk_context* ctx = duk_get_context(nctx, -1);
+    /*duk_push_thread_new_globalenv(nctx);
+    duk_context* ctx = duk_get_context(nctx, -1);*/
 
-    duk_dup(nctx, -2);
+    js::value_context vctx(nvctx);
 
-    duk_xmove_top(ctx, nctx, 1);
+    ///-1 is the above context, -2 is args
+    duk_dup(nvctx.ctx, -2);
+
+    duk_xmove_top(vctx.ctx, nvctx.ctx, 1);
     //duk_context* ctx = nctx;
 
     /*MAKE_PERF_COUNTER();
     mongo_diagnostics diagnostic_scope;*/
-
-    js::value_context vctx(ctx);
 
     js::value args(vctx, -1);
 
@@ -277,8 +281,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                 break;
             }
 
-            duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk);
-            sandbox_data* sand_data = (sandbox_data*)mem_funcs_duk.udata;
+            sandbox_data* sand_data = js::get_sandbox_data<sandbox_data>(vctx);
 
             double max_frame_time_ms = (1./current_framerate) * 1000.;
 
@@ -289,7 +292,7 @@ void async_realtime_script_handler(duk_context* nctx, command_handler_state& sta
                 sf::sleep(sf::milliseconds(1));
             }
 
-            if(callback(ctx))
+            if(callback(vctx.ctx))
                 break;
 
             sand_data->clk.restart();
@@ -381,10 +384,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         duk_context* ctx = inf.heap.ctx;
 
-        duk_memory_functions funcs;
-        duk_get_memory_functions(ctx, &funcs);
-
-        sandbox_data* sand_data = (sandbox_data*)funcs.udata;
+        sandbox_data* sand_data = js::get_sandbox_data<sandbox_data>(inf.heap);
 
         usr.cleanup_call_stack(local_thread_id);
         std::string executing_under = usr.get_call_stack().back();
@@ -393,7 +393,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         startup_state(ctx, executing_under, executing_under, "invoke", usr.get_call_stack(), shared_duk_state);
 
-        set_global_int(ctx, "thread_id", local_thread_id);
+        js::get_heap_stash(inf.heap).get("thread_id") = local_thread_id;
 
         if(all_shared.has_value())
         {
@@ -592,7 +592,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                     sand_data->realtime_script_id = current_id;
 
                     ///remember, need to also set work units and do other things!
-                    async_realtime_script_handler(ctx, cstate, inf.ret, current_id, update_check);
+                    async_realtime_script_handler(inf.heap, cstate, inf.ret, current_id, update_check);
 
                     if(shared_duk_state->close_window_on_exit())
                     {
