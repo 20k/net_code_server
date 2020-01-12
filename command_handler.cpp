@@ -282,7 +282,7 @@ void async_realtime_script_handler(js::value_context& nvctx, command_handler_sta
                 sf::sleep(sf::milliseconds(1));
             }
 
-            if(callback(vctx.ctx))
+            if(callback(vctx))
                 break;
 
             sand_data->clk.restart();
@@ -526,7 +526,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                     sand_data->is_realtime = true;
                     sand_data->is_static = false;
 
-                    auto update_check = [&](duk_context* ctx)
+                    auto update_check = [&](js::value_context& vctx)
                     {
                         while(shared_duk_state->has_output_data_available())
                         {
@@ -562,7 +562,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                         shared_duk_state->set_key_state(all_shared.value()->state.get_key_state(current_id));
                         shared_duk_state->set_mouse_pos(all_shared.value()->state.get_mouse_pos(current_id));
 
-                        bool is_square = get_global_number(ctx, "square_font") > 0;
+                        bool is_square = (int)js::get_heap_stash(vctx).get("square_font") > 0;
 
                         if(is_square != last_use_square_font)
                         {

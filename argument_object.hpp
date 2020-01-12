@@ -122,6 +122,8 @@ namespace arg
     void dukx_push(duk_context* ctx, js_funcptr_t fptr);
     void dukx_push(duk_context* ctx, const js::undefined_t&);
     void dukx_push(duk_context* ctx, const nlohmann::json& in);
+    template<typename T>
+    void dukx_push(duk_context* ctx, T* in);
 
     inline
     void dukx_push(duk_context* ctx, const char* v)
@@ -209,6 +211,13 @@ namespace arg
 
         duk_push_lstring(ctx, str.c_str(), str.size());
         duk_json_decode(ctx, -1);
+    }
+
+    template<typename T>
+    inline
+    void dukx_push(duk_context* ctx, T* in)
+    {
+        duk_push_pointer(ctx, (void*)in);
     }
 
     inline
@@ -300,6 +309,14 @@ namespace arg
         }
 
         duk_pop(ctx);
+    }
+
+    template<typename T>
+    inline
+    void dukx_get(duk_context* ctx, int idx, T*& out)
+    {
+        stack_dupper sdup(ctx, idx);
+        out = duk_get_pointer(ctx, idx);
     }
 }
 
@@ -421,6 +438,17 @@ namespace js
 
         value& operator=(js_funcptr_t fptr);
 
+        ///seems dangerous to let this be arbitrary, because its extremely rarely what you want
+        template<typename T>
+        value& set_ptr(T* in)
+        {
+            stack_manage m(*this);
+
+            arg::dukx_push(ctx, in);
+
+            return *this;
+        }
+
         operator std::string()
         {
             std::string ret;
@@ -468,6 +496,14 @@ namespace js
         operator std::map<T, U>()
         {
             std::map<T, U> ret;
+            arg::dukx_get(ctx, idx, ret);
+            return ret;
+        }
+
+        template<typename T>
+        operator T*()
+        {
+            T* ret;
             arg::dukx_get(ctx, idx, ret);
             return ret;
         }
