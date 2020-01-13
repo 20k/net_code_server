@@ -675,16 +675,15 @@ void update_chain(duk_context* ctx, const std::string& key, duk_idx_t idx)
     duk_put_prop_string(ctx, idx - 1, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
 }
 
-void set_chain(duk_context* ctx, const std::string& full, duk_idx_t idx)
+void set_chain(js::value& val, const std::string& full)
 {
-    duk_push_string(ctx, full.c_str());
-    duk_put_prop_string(ctx, idx - 1, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
+    val.add_hidden("CHAIN", full);
 }
 
 //void dukx_push_db_proxy(duk_context* ctx);
 
-void dukx_db_push_proxy_handlers(duk_context* ctx);
-void dukx_db_finish_proxy(duk_context* ctx);
+std::pair<js::value, js::value> dukx_db_push_proxy_handlers(js::value_context& vctx);
+void dukx_db_finish_proxy(js::value& func, js::value& object);
 
 ///todo: multilevel, store current lookup chain as a hidden property
 ///ok. so db_get basically checks if the result is a primitive
@@ -1219,14 +1218,16 @@ duk_int_t db_get(duk_context* ctx)
     {
         //dukx_push_db_proxy(ctx);
 
-        dukx_db_push_proxy_handlers(ctx);
+        js::value_context vctx(ctx);
 
-        set_chain(ctx, proxy_chain + "." + key, -1);
+        auto [func, obj] = dukx_db_push_proxy_handlers(vctx);
+
+        set_chain(obj, proxy_chain + "." + key);
 
         duk_push_string(ctx, secret_host.c_str());
         duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
 
-        dukx_db_finish_proxy(ctx);
+        dukx_db_finish_proxy(func, obj);
     }
 
     return 1;
@@ -1263,15 +1264,17 @@ duk_int_t db_getter_get(duk_context* ctx)
 
     duk_pop(ctx);
 
-    //dukx_push_db_proxy(ctx);
-    dukx_db_push_proxy_handlers(ctx);
+    js::value_context vctx(ctx);
 
-    set_chain(ctx, "", -1);
+    //dukx_push_db_proxy(ctx);
+    auto [func, obj] = dukx_db_push_proxy_handlers(vctx);
+
+    set_chain(obj, "");
 
     duk_push_string(ctx, secret_host.c_str());
     duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
 
-    dukx_db_finish_proxy(ctx);
+    dukx_db_finish_proxy(func, obj);
 
     return 1;
 }
@@ -1286,51 +1289,15 @@ void dukx_setup_db_proxy(js::value_context& vctx)
     js::add_getter(global, "$db", db_getter_get).add_hidden("OHOST", host);
 }
 
-#if 0
-void dukx_push_db_proxy(duk_context* ctx)
+std::pair<js::value, js::value> dukx_db_push_proxy_handlers(js::value_context& vctx)
 {
-    //duk_push_object(ctx);
-    duk_push_c_function(ctx, dukx_dummy, 0);
-    duk_push_object(ctx);
-
-    ///https://github.com/svaarala/duktape-wiki/blob/master/PostEs5Features.md#proxy-handlers-traps
-
-    duk_require_stack(ctx, 16);
-
-    dukx_push_proxy_functions_nhide(ctx, -1,
-                                        //dukx_proxy_get_prototype_of, 1, "getPrototypeOf",
-                                        //dukx_proxy_set_prototype_of, 2, "setPrototypeOf",
-                                        //dukx_proxy_is_extensible, 1, "isExtensible",
-                                        //dukx_proxy_prevent_extension, 1, "preventExtension",
-                                        //dukx_proxy_get_own_property, 2, "getOwnPropertyDescriptor",
-                                        //dukx_proxy_define_property, 3, "defineProperty",
-                                        //dukx_proxy_has, 2, "has",
-                                        db_get, 3, "get",
-                                        db_set<true>, 4, "set",
-                                        //dukx_proxy_delete_property, 2, "deleteProperty",
-                                        //dukx_proxy_own_keys, 1, "ownKeys",
-                                        db_apply, 3, "apply"
-                                        //dukx_proxy_construct, 2, "construct");
-                                        );
-
-    duk_push_proxy(ctx, 0);
-
-    duk_push_string(ctx, get_script_host(ctx).c_str());
-    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
-}
-#endif // 0
-
-void dukx_db_push_proxy_handlers(duk_context* ctx)
-{
-    js::value_context vctx(ctx);
-
-    js::make_value(vctx, dukx_dummy).release();
-
+    js::value dummy_func = js::make_value(vctx, dukx_dummy);
     js::value dummy_obj(vctx);
-    dummy_obj.release();
+
+    return {dummy_func, dummy_obj};
 }
 
-void dukx_db_finish_proxy(duk_context* ctx)
+void dukx_db_finish_proxy(js::value& func, js::value& object)
 {
     #if 0
     duk_require_stack(ctx, 16);
@@ -1354,19 +1321,11 @@ void dukx_db_finish_proxy(duk_context* ctx)
     duk_push_proxy(ctx, 0);
     #endif // 0
 
-    js::value_context vctx(ctx);
+    object.get("get") = db_get;
+    object.get("set") = db_set<true>;
+    object.get("apply") = db_apply;
 
-    js::value target(vctx, -2);
-    js::value handle(vctx, -1);
-
-    handle.get("get") = db_get;
-    handle.get("set") = db_set<true>;
-    handle.get("apply") = db_apply;
-
-    js::make_proxy(target, handle).release();
-
-    //duk_push_string(ctx, get_script_host(ctx).c_str());
-    //duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
+    js::make_proxy(func, object).release();
 }
 
 #if 0
