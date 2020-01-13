@@ -632,6 +632,11 @@ std::string get_original_host(duk_context* ctx, duk_idx_t idx)
     return ocaller;
 }
 
+std::string get_original_host(js::value& val)
+{
+    return val.get_hidden("OHOST");
+}
+
 std::string get_full_chain(duk_context* ctx)
 {
     duk_push_current_function(ctx);
@@ -1258,27 +1263,21 @@ duk_int_t db_apply(duk_context* ctx)
     return 1;
 }
 
-duk_int_t db_getter_get(duk_context* ctx)
+js::value dukx_db_finish_proxy_r(js::value& func, js::value& object);
+
+js::value db_getter_get(js::value_context* vctx)
 {
-    duk_push_current_function(ctx);
+    js::value current_function = js::get_current_function(*vctx);
 
-    std::string secret_host = get_original_host(ctx, -1);
+    std::string secret_host = get_original_host(current_function);
 
-    duk_pop(ctx);
-
-    js::value_context vctx(ctx);
-
-    //dukx_push_db_proxy(ctx);
-    auto [func, obj] = dukx_db_push_proxy_handlers(vctx);
+    auto [func, obj] = dukx_db_push_proxy_handlers(*vctx);
 
     set_chain(obj, "");
 
-    duk_push_string(ctx, secret_host.c_str());
-    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
+    obj.add_hidden("OHOST", secret_host);
 
-    dukx_db_finish_proxy(func, obj);
-
-    return 1;
+    return dukx_db_finish_proxy_r(func, obj);
 }
 
 void dukx_setup_db_proxy(js::value_context& vctx)
@@ -1288,7 +1287,7 @@ void dukx_setup_db_proxy(js::value_context& vctx)
     js::value global = js::get_global(vctx);
 
     js::add_setter(global, "$db", db_set<false>).add_hidden("OHOST", host);
-    js::add_getter(global, "$db", db_getter_get).add_hidden("OHOST", host);
+    js::add_getter(global, "$db", js::function<db_getter_get>).add_hidden("OHOST", host);
 }
 
 std::pair<js::value, js::value> dukx_db_push_proxy_handlers(js::value_context& vctx)
@@ -1328,6 +1327,15 @@ void dukx_db_finish_proxy(js::value& func, js::value& object)
     object.get("apply") = db_apply;
 
     js::make_proxy(func, object).release();
+}
+
+js::value dukx_db_finish_proxy_r(js::value& func, js::value& object)
+{
+    object.get("get") = db_get;
+    object.get("set") = db_set<true>;
+    object.get("apply") = db_apply;
+
+    return js::make_proxy(func, object);
 }
 
 #if 0
