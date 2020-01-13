@@ -316,7 +316,7 @@ namespace arg
     void dukx_get(duk_context* ctx, int idx, T*& out)
     {
         stack_dupper sdup(ctx, idx);
-        out = duk_require_pointer(ctx, idx);
+        out = (T*)duk_require_pointer(ctx, idx);
     }
 }
 
@@ -447,6 +447,14 @@ namespace js
             arg::dukx_push(ctx, in);
 
             return *this;
+        }
+
+        template<typename T>
+        T* get_ptr()
+        {
+            T* ret;
+            arg::dukx_get(ctx, idx, ret);
+            return ret;
         }
 
         operator std::string()

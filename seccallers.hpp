@@ -31,7 +31,7 @@ void async_pipe(js::value_context* vctx, std::string str);
 
 void startup_state(js::value_context& vctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack, shared_duk_worker_state* shared_state);
 
-void teardown_state(duk_context* ctx);
+void teardown_state(js::value_context& vctx);
 
 void send_async_message(duk_context* ctx, const std::string& message);
 

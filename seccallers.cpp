@@ -376,9 +376,9 @@ void startup_state(js::value_context& vctx, const std::string& caller, const std
     heap["shared_caller_state"].set_ptr(shared_state);
 }
 
-void teardown_state(duk_context* ctx)
+void teardown_state(js::value_context& vctx)
 {
-    shared_duk_worker_state* shared_state = dukx_get_pointer<shared_duk_worker_state>(ctx, "shared_caller_state");
+    shared_duk_worker_state* shared_state = js::get_heap_stash(vctx).get("shared_caller_state").get_ptr<shared_duk_worker_state>();
 
     delete shared_state;
 }

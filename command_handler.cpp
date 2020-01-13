@@ -600,7 +600,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
         }
 
         dukx_free_in_heap<std::shared_ptr<shared_command_handler_state>>(ctx, "all_shared_data");
-        teardown_state(ctx);
+        teardown_state(inf.heap);
 
         printf("cleaned up resources\n");
 
