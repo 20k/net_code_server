@@ -1322,12 +1322,17 @@ void dukx_push_db_proxy(duk_context* ctx)
 
 void dukx_db_push_proxy_handlers(duk_context* ctx)
 {
-    duk_push_c_function(ctx, dukx_dummy, 0);
-    duk_push_object(ctx);
+    js::value_context vctx(ctx);
+
+    js::make_value(vctx, dukx_dummy).release();
+
+    js::value dummy_obj(vctx);
+    dummy_obj.release();
 }
 
 void dukx_db_finish_proxy(duk_context* ctx)
 {
+    #if 0
     duk_require_stack(ctx, 16);
 
     dukx_push_proxy_functions_nhide(ctx, -1,
@@ -1347,6 +1352,18 @@ void dukx_db_finish_proxy(duk_context* ctx)
                                         );
 
     duk_push_proxy(ctx, 0);
+    #endif // 0
+
+    js::value_context vctx(ctx);
+
+    js::value target(vctx, -2);
+    js::value handle(vctx, -1);
+
+    handle.get("get") = db_get;
+    handle.get("set") = db_set<true>;
+    handle.get("apply") = db_apply;
+
+    js::make_proxy(target, handle).release();
 
     //duk_push_string(ctx, get_script_host(ctx).c_str());
     //duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
