@@ -757,6 +757,8 @@ namespace js
     js::value eval(js::value_context& vctx, const std::string& data);
     js::value xfer_between_contexts(js::value_context& destination, const js::value& val);
 
+    js::value make_proxy(js::value& target, js::value& handle);
+
     void dump_stack(js::value_context& vctx);
 }
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED

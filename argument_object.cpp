@@ -979,6 +979,16 @@ void js::value::pack()
     idx = cidx;
 }
 
+js::value js::make_proxy(js::value& target, js::value& handle)
+{
+    duk_dup(target.ctx, target.idx);
+    duk_dup(handle.ctx, handle.idx);
+
+    duk_push_proxy(target.ctx, 0);
+
+    return js::value(*target.vctx, -1);
+}
+
 void test_func()
 {
 

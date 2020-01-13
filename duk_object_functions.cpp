@@ -1352,6 +1352,7 @@ void dukx_db_finish_proxy(duk_context* ctx)
     //duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
 }
 
+#if 0
 void dukx_set_setter(duk_context* ctx, duk_idx_t idx, const std::string& prop, duk_c_function func)
 {
     duk_push_string(ctx, prop.c_str());
@@ -1379,3 +1380,4 @@ void dukx_set_getter_setter(duk_context* ctx, duk_idx_t idx, const std::string& 
                  idx - 3,
                  DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_HAVE_SETTER);
 }
+#endif // 0
