@@ -51,7 +51,7 @@ js::value async_print(js::value_context* vctx, std::string what)
 
     command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(vctx->ctx, "command_handler_state_pointer");
 
-    if(found_ptr && get_caller_stack(vctx).size() > 0 && get_caller_stack(vctx)[0] == found_ptr->get_user_name())
+    if(found_ptr && get_caller_stack(*vctx).size() > 0 && get_caller_stack(*vctx)[0] == found_ptr->get_user_name())
     {
         nlohmann::json data;
         data["type"] = "server_msg";
@@ -71,7 +71,7 @@ js::value async_print_raw(js::value_context* vctx, std::string what)
 
     command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(vctx->ctx, "command_handler_state_pointer");
 
-    if(found_ptr && get_caller_stack(vctx).size() > 0 && get_caller_stack(vctx)[0] == found_ptr->get_user_name())
+    if(found_ptr && get_caller_stack(*vctx).size() > 0 && get_caller_stack(*vctx)[0] == found_ptr->get_user_name())
     {
         nlohmann::json data;
         data["type"] = "server_msg";
@@ -98,7 +98,7 @@ std::string db_insert(js::value_context* vctx, js::value arg)
 
     std::string secret_script_host = this_bound.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
     mongo_ctx.change_collection(secret_script_host);
 
     std::string json = arg.to_json();
@@ -113,7 +113,7 @@ js::value db_update(js::value_context* vctx, js::value json_1_arg, js::value jso
     js::value current_func = js::get_current_function(*vctx);
     std::string secret_script_host = current_func.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
     mongo_ctx.change_collection(secret_script_host);
 
     std::string json_1 = json_1_arg.to_json();
@@ -139,7 +139,7 @@ js::value db_find_all(js::value_context* vctx)
     js::value current_func = js::get_current_function(*vctx);
     std::string secret_script_host = current_func.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
     mongo_ctx.change_collection(secret_script_host);
 
     js::value current_this = js::get_this(*vctx);
@@ -148,7 +148,7 @@ js::value db_find_all(js::value_context* vctx)
     std::string proj = current_this.get("PROJ");
     std::string caller = current_this.get("DB_CALLER");
 
-    if(caller != get_caller(vctx))
+    if(caller != get_caller(*vctx))
         return js::make_error(*vctx, "caller != get_caller() in db_find.array, you probably know what you did");
 
     std::vector<nlohmann::json> db_data = mongo_ctx->find_json_new(nlohmann::json::parse(json), nlohmann::json::parse(proj));
@@ -163,7 +163,7 @@ js::value db_find_one(js::value_context* vctx)
     js::value current_func = js::get_current_function(*vctx);
     std::string secret_script_host = current_func.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
     mongo_ctx.change_collection(secret_script_host);
 
     js::value current_this = js::get_this(*vctx);
@@ -212,7 +212,7 @@ js::value db_find(js::value_context* vctx, js::value json_obj, js::value proj_ob
 
     ret.add("JSON", json);
     ret.add("PROJ", proj);
-    ret.add("DB_CALLER", get_caller(vctx));
+    ret.add("DB_CALLER", get_caller(*vctx));
 
     ret.add("array", js::function<db_find_all>).add_hidden("script_host", script_host);
     ret.add("first", js::function<db_find_one>).add_hidden("script_host", script_host);
@@ -227,7 +227,7 @@ std::string db_remove(js::value_context* vctx, js::value arg)
     js::value current_func = js::get_current_function(*vctx);
     std::string secret_script_host = current_func.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(vctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
     mongo_ctx.change_collection(secret_script_host);
 
     std::string json = arg.to_json();
@@ -245,8 +245,8 @@ void set_is_realtime_script(js::value_context* vctx)
 
     shared_state->set_realtime();
 
-    std::string s1 = get_script_host(vctx);
-    std::string s2 = get_script_ending(vctx);
+    std::string s1 = get_script_host(*vctx);
+    std::string s2 = get_script_ending(*vctx);
 
     js::value stash = js::get_heap_stash(*vctx);
 
@@ -404,7 +404,7 @@ void hash_d(js::value_context* vctx, js::value val)
 {
     COOPERATE_KILL_VCTX();
 
-    if(get_caller(vctx) != get_script_host(vctx))
+    if(get_caller(*vctx) != get_script_host(*vctx))
         return;
 
     std::string as_json = val.to_json();
@@ -459,8 +459,8 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
     js::value ret(vctx);
 
-    std::string script_host = get_script_host(&vctx);
-    std::string base_caller = get_base_caller(&vctx);
+    std::string script_host = get_script_host(vctx);
+    std::string base_caller = get_base_caller(vctx);
 
     js::value_context new_vctx(vctx);
 
@@ -473,7 +473,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
 
     js::value_context temporary_vctx(new_vctx);
-    register_funcs(temporary_vctx, seclevel, get_script_host(&vctx), true);
+    register_funcs(temporary_vctx, seclevel, get_script_host(vctx), true);
 
     auto [compile_success, compiled_func] = js::compile(temporary_vctx, wrapper);
 
@@ -636,7 +636,7 @@ void async_launch_script_name(js::value_context& vctx, int sl, const std::string
 
     //std::cout <<" running " << seclevel + call_end << std::endl;
 
-    sthread sthr(run_in_user_context, get_caller(&vctx), seclevel + call_end, ptr, std::nullopt, true);
+    sthread sthr(run_in_user_context, get_caller(vctx), seclevel + call_end, ptr, std::nullopt, true);
 
     sthr.detach();
 }
@@ -664,7 +664,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
     ///current script
     //std::string full_script = get_script_host(ctx) + "." + get_script_ending(ctx);
 
-    std::string full_script = secret_script_host + "." + get_script_ending(vctx);
+    std::string full_script = secret_script_host + "." + get_script_ending(*vctx);
 
     quest_script_data qdata;
     qdata.target = to_call_fullname;
@@ -677,7 +677,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
         SL_GUARD(privileged_functions[to_call_fullname].sec_level);
 
         ///use ORIGINAL script host
-        priv_context priv_ctx(get_script_host(vctx), to_call_fullname);
+        priv_context priv_ctx(get_script_host(*vctx), to_call_fullname);
 
         //set_script_info(ctx, to_call_fullname);
 
@@ -697,7 +697,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
             ret = js::undefined;
         }
 
-        qm.process(get_thread_id(vctx), get_caller(vctx), qdata);
+        qm.process(get_thread_id(*vctx), get_caller(*vctx), qdata);
 
         //set_script_info(ctx, full_script);
 
@@ -709,7 +709,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
 
     std::string script_err;
 
-    unified_script_info script = unified_script_loading(get_thread_id(vctx), to_call_fullname, script_err);
+    unified_script_info script = unified_script_loading(get_thread_id(*vctx), to_call_fullname, script_err);
 
     //std::cout << "script source findy " << script.parsed_source << " name " << script.name << std::endl;
 
@@ -756,7 +756,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
         {
             set_script_info(*vctx, to_call_fullname);
 
-            auto [msg, res] = compile_and_call(*vctx, arg, load, get_caller(vctx), false, script.seclevel, false, full_script, false);
+            auto [msg, res] = compile_and_call(*vctx, arg, load, get_caller(*vctx), false, script.seclevel, false, full_script, false);
 
             res.pack();
 
@@ -781,7 +781,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
         //result = (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name](sd.ctx, sl);
     }
 
-    qm.process(get_thread_id(vctx), get_caller(vctx), qdata);
+    qm.process(get_thread_id(*vctx), get_caller(*vctx), qdata);
 
     return ret;
 }
@@ -792,7 +792,7 @@ std::string js_unified_force_call_data(js::value_context& vctx, const std::strin
 
     std::string unified_invoke_err;
 
-    unified_script_info unified_invoke = unified_script_loading(get_thread_id(&vctx), host + ".invoke", unified_invoke_err);
+    unified_script_info unified_invoke = unified_script_loading(get_thread_id(vctx), host + ".invoke", unified_invoke_err);
 
     bool first_invoke_valid = unified_invoke.valid;
 
@@ -822,7 +822,7 @@ std::string js_unified_force_call_data(js::value_context& vctx, const std::strin
     else
         js::add_key_value(arg, "command", data);
 
-    auto [extra, js_val] = compile_and_call(vctx, arg, unified_invoke.parsed_source, get_caller(&vctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke", is_cli);
+    auto [extra, js_val] = compile_and_call(vctx, arg, unified_invoke.parsed_source, get_caller(vctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke", is_cli);
 
     js_val.release();
 
@@ -880,10 +880,10 @@ js::value jxos_call(js::value_context* vctx, js::value val)
 {
     int current_seclevel = js::get_heap_stash(*vctx).get("last_seclevel");
 
-    std::vector<std::string> old_caller_stack = get_caller_stack(vctx);
-    std::string old_caller = get_caller(vctx);
+    std::vector<std::string> old_caller_stack = get_caller_stack(*vctx);
+    std::string old_caller = get_caller(*vctx);
 
-    std::string new_caller = get_script_host(vctx);
+    std::string new_caller = get_script_host(*vctx);
 
     {
         js::value heap = js::get_heap_stash(*vctx);
