@@ -748,6 +748,12 @@ namespace js
         return nval;
     }
 
+    inline
+    void empty_function(js::value_context*)
+    {
+
+    }
+
     js::value add_getter(js::value& base, const std::string& key, js_funcptr_t func);
     js::value add_setter(js::value& base, const std::string& key, js_funcptr_t func);
 

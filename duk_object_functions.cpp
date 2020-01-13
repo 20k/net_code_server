@@ -39,6 +39,7 @@ std::string get_base_caller(js::value_context& vctx)
     return js::get_heap_stash(vctx).get("base_caller");
 }
 
+#if 0
 inline
 duk_ret_t dukx_proxy_get_prototype_of(duk_context* ctx)
 {
@@ -618,6 +619,7 @@ void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t 
 
     dukx_sanitise_in_place(dst_ctx, -1);
 }
+#endif
 
 std::string get_original_host(duk_context* ctx, duk_idx_t idx)
 {
@@ -1291,7 +1293,7 @@ void dukx_setup_db_proxy(js::value_context& vctx)
 
 std::pair<js::value, js::value> dukx_db_push_proxy_handlers(js::value_context& vctx)
 {
-    js::value dummy_func = js::make_value(vctx, dukx_dummy);
+    js::value dummy_func = js::make_value(vctx, js::function<js::empty_function>);
     js::value dummy_obj(vctx);
 
     return {dummy_func, dummy_obj};
