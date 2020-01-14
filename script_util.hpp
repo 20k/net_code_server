@@ -73,7 +73,6 @@ script_data parse_script(const std::string& file_name, std::string in, bool enab
 ///#db.f({[col_key]: {$exists : true}});
 ///$where and $query both need to be disabled, $inspect as well
 
-void set_script_info(duk_context* ctx, const std::string& full_script_name);
 void set_script_info(js::value_context& vctx, const std::string& full_script_name);
 
 #endif // SCRIPT_UTIL_HPP_INCLUDED
