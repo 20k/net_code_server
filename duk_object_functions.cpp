@@ -1280,7 +1280,271 @@ js::value db_getter_get(js::value_context* vctx)
     return dukx_db_finish_proxy_r(func, obj);
 }
 
+#if 0
+js::value db_new_get(js::value_context* vctx, js::value target, js::value prop, js::value receiver)
+{
+    std::string host = js::get_this(*vctx).get_hidden("OHOST");
+
+    if(host != get_script_host(*vctx))
+        return js::make_error(*vctx, "This almost certainly isn't what you want to happen, host != script host");
+
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
+    mongo_ctx.change_collection(host);
+
+    std::vector<nlohmann::json> dat = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
+
+    int val_prop = (int)prop;
+
+    if(val_prop < 0 || val_prop >= (int)dat.size())
+        return js::make_error(*vctx, "Value out of range of db indices, max " + std::to_string(dat.size()));
+
+    nlohmann::json& js = dat[val_prop];
+
+    std::vector<uint8_t> cbor = nlohmann::json::to_cbor(js);
+
+    return js::from_cbor(*vctx, cbor);
+}
+
+js::value db_new_set(js::value_context* vctx, js::value target, js::value prop, js::value val, js::value receiver)
+{
+    std::string host = js::get_this(*vctx).get_hidden("OHOST");
+
+    if(host != get_script_host(*vctx))
+        return js::make_error(*vctx, "This almost certainly isn't what you want to happen, host != script host");
+
+    printf("Setter\n");
+
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
+    mongo_ctx.change_collection(host);
+
+    int val_prop = (int)prop;
+
+    std::vector<nlohmann::json> dat = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
+
+    if(val_prop < 0)
+        return js::make_error(*vctx, "Value cannot be < 0");
+
+    if(val_prop >= (int)dat.size())
+    {
+        nlohmann::json next = nlohmann::json::from_cbor(val.to_cbor());
+        mongo_ctx->insert_json_one_new(next);
+    }
+    else
+    {
+        nlohmann::json& found = dat[val_prop];
+        size_t cid = found.at(CID_STRING);
+
+        nlohmann::json next = nlohmann::json::from_cbor(val.to_cbor());
+
+        nlohmann::json select;
+        select[CID_STRING] = cid;
+
+        nlohmann::json setter;
+        setter["$set"] = next;
+
+        mongo_ctx->update_json_one_new(select, next);
+    }
+
+    return js::make_success(*vctx);
+}
+#endif // 0
+
+void db_new_set(js::value_context* vctx, js::value target, js::value prop, js::value val, js::value receiver);
+
+js::value db_new_fetch(js::value_context* vctx)
+{
+    std::string host = js::get_this(*vctx).get_hidden("OHOST");
+    std::string proxy_chain = js::get_this(*vctx).get_hidden("CHAIN");
+
+    if(host != get_script_host(*vctx))
+        return js::make_error(*vctx, "This almost certainly isn't what you want to happen, host != script host");
+
+    return js::value(*vctx);
+}
+
+js::value db_new_get(js::value_context* vctx, js::value target, js::value prop, js::value receiver)
+{
+    std::string host = js::get_this(*vctx).get_hidden("OHOST");
+    std::string proxy_chain = js::get_this(*vctx).get_hidden("CHAIN");
+
+    if(host != get_script_host(*vctx))
+        return js::make_error(*vctx, "This almost certainly isn't what you want to happen, host != script host");
+
+    /*if(key == "$fetch" || key == "$" || key == "$set" || key == "$delete")
+    {
+        if(key == "$fetch" || key == "$")
+            duk_push_c_function(ctx, db_fetch, 0);
+
+        if(key == "$set")
+            duk_push_c_function(ctx, db_set<false>, 1);
+
+        if(key == "$delete")
+            duk_push_c_function(ctx, db_delete<false>, 0);
+
+        duk_push_string(ctx, proxy_chain.c_str());
+        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
+
+        duk_push_string(ctx, secret_host.c_str());
+        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
+
+        //duk_push_string(ctx, key.c_str());
+        //duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("LKEY").c_str());
+    }
+    else
+    {
+        //dukx_push_db_proxy(ctx);
+
+        js::value_context vctx(ctx);
+
+        auto [func, obj] = dukx_db_push_proxy_handlers(vctx);
+
+        set_chain(obj, proxy_chain + "." + key);
+
+        duk_push_string(ctx, secret_host.c_str());
+        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
+
+        dukx_db_finish_proxy(func, obj);
+    }*/
+
+    std::string key = prop;
+
+    if(key == "$fetch" || key == "$" || key == "$delete")
+    {
+        js::value val(*vctx);
+
+        /*if(key == "$set")
+        {
+            val = js::make_value(*vctx, js::function<db_new_set>);
+        }*/
+
+        if(key == "$fetch" || key == "$")
+        {
+            val = js::make_value(*vctx, js::function<db_new_fetch>);
+        }
+
+        val.add_hidden("CHAIN", proxy_chain);
+        val.add_hidden("OHOST", host);
+
+        return val;
+    }
+    else
+    {
+        auto [func, obj] = dukx_db_push_proxy_handlers(*vctx);
+
+        obj.add_hidden("CHAIN", proxy_chain + "." + key);
+        obj.add_hidden("OHOST", host);
+
+        return dukx_db_finish_proxy_r(func, obj);
+    }
+}
+
+void db_new_set(js::value_context* vctx, js::value target, js::value prop, js::value val, js::value receiver)
+{
+    std::string host = js::get_this(*vctx).get_hidden("OHOST");
+
+    if(host != get_script_host(*vctx))
+        throw std::runtime_error("This almost certainly isn't what you want to happen, host != script host");
+
+    std::string chain = js::get_this(*vctx).get_hidden("CHAIN") + "." + (std::string)prop;
+    nlohmann::json what_to_set = nlohmann::json::from_cbor(val.to_cbor());
+
+    std::vector<std::string> value_stack = normalise_object_stack(chain);
+
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
+    mongo_ctx.change_collection(host);
+
+    std::vector<nlohmann::json> dat = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
+
+    nlohmann::json dummy;
+    bool insert_new = false;
+
+    nlohmann::json* last = nullptr;
+    nlohmann::json root;
+    size_t old_cid = -1;
+
+    for(int i=0; i < (int)value_stack.size(); i++)
+    {
+        if(i == 0)
+        {
+            int idx = std::stoi(value_stack[0]);
+
+            if(idx < 0)
+                throw std::runtime_error("First element cannot be < 0");
+
+            if(idx >= (int)dat.size())
+            {
+                last = &root;
+                insert_new = true;
+                old_cid = root[CID_STRING];
+            }
+            else
+            {
+                root = std::move(dat[idx]);
+                last = &root;
+                old_cid = root[CID_STRING];
+            }
+        }
+        else
+        {
+            last = &((*last)[value_stack[i]]);
+        }
+    }
+
+    if(last == nullptr)
+        throw std::runtime_error("Error in db_set");
+
+    *last = what_to_set;
+
+    root[CID_STRING] = old_cid;
+
+    if(insert_new)
+    {
+        mongo_ctx->insert_json_one_new(root);
+    }
+    else
+    {
+        nlohmann::json selector;
+        selector[CID_STRING] = old_cid;
+
+        nlohmann::json setter;
+        setter["$set"] = root;
+
+        mongo_ctx->update_json_one_new(selector, setter);
+    }
+}
+
+js::value db_new_setter(js::value_context* vctx, js::value val)
+{
+    return js::make_value(*vctx, "Cannot directly assign to $db");
+}
+
+js::value db_new_getter(js::value_context* vctx)
+{
+    js::value current_function = js::get_current_function(*vctx);
+
+    std::string secret_host = get_original_host(current_function);
+
+    js::value dummy_func = js::make_value(*vctx, js::function<js::empty_function>);
+    js::value handler = js::value(*vctx);
+    handler.add_hidden("OHOST", secret_host);
+    handler.add_hidden("CHAIN", "");
+
+    handler["get"] = js::function<db_new_get>;
+    handler["set"] = js::function<db_new_set>;
+
+    return js::make_proxy(dummy_func, handler);
+}
+
 void dukx_setup_db_proxy(js::value_context& vctx)
+{
+    std::string secret_host = get_script_host(vctx);
+    js::value global = js::get_global(vctx);
+
+    js::add_setter(global, "$db", js::function<db_new_setter>).add_hidden("OHOST", secret_host);
+    js::add_getter(global, "$db", js::function<db_new_getter>).add_hidden("OHOST", secret_host);
+}
+
+/*void dukx_setup_db_proxy(js::value_context& vctx)
 {
     std::string host = get_script_host(vctx);
 
@@ -1288,7 +1552,7 @@ void dukx_setup_db_proxy(js::value_context& vctx)
 
     js::add_setter(global, "$db", db_set<false>).add_hidden("OHOST", host);
     js::add_getter(global, "$db", js::function<db_getter_get>).add_hidden("OHOST", host);
-}
+}*/
 
 std::pair<js::value, js::value> dukx_db_push_proxy_handlers(js::value_context& vctx)
 {

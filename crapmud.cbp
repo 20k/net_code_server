@@ -1162,40 +1162,6 @@
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
 		</Unit>
-		<Unit filename="exec_context.cpp">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Deploy" />
-			<Option target="ReleaseAndTest" />
-			<Option target="DebugBacktrace" />
-			<Option target="DebugTest" />
-			<Option target="DMimic" />
-			<Option target="ReleaseAndTestWithDebugInfo" />
-			<Option target="RDClang" />
-			<Option target="RT_prof" />
-			<Option target="ReleaseAndTestLTO" />
-			<Option target="LinuxRelease" />
-			<Option target="LinuxDeploy" />
-			<Option target="Profile" />
-			<Option target="ReleaseNoSymbols" />
-		</Unit>
-		<Unit filename="exec_context.hpp">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Deploy" />
-			<Option target="ReleaseAndTest" />
-			<Option target="DebugBacktrace" />
-			<Option target="DebugTest" />
-			<Option target="DMimic" />
-			<Option target="ReleaseAndTestWithDebugInfo" />
-			<Option target="RDClang" />
-			<Option target="RT_prof" />
-			<Option target="ReleaseAndTestLTO" />
-			<Option target="LinuxRelease" />
-			<Option target="LinuxDeploy" />
-			<Option target="Profile" />
-			<Option target="ReleaseNoSymbols" />
-		</Unit>
 		<Unit filename="http_beast_server.cpp">
 			<Option target="Debug" />
 			<Option target="Release" />

@@ -623,9 +623,35 @@ std::string js::value::to_json()
         return "";
     }
 
+    std::string ret(str);
+
     duk_pop(ctx);
 
-    return std::string(str);
+    return ret;
+}
+
+std::vector<uint8_t> js::value::to_cbor()
+{
+    if(idx == -1)
+        throw std::runtime_error("Empty value for cbor");
+
+    duk_dup(ctx, idx);
+
+    duk_cbor_encode(ctx, -1, 0);
+    size_t len = 0;
+    const char* ptr = (const char*)duk_require_buffer_data(ctx, -1, &len);
+
+    if(ptr == nullptr || len == 0)
+    {
+        duk_pop(ctx);
+        throw std::runtime_error("Empty return value for cbor");
+    }
+
+    std::vector<uint8_t> ret(ptr, ptr + len);
+
+    duk_pop(ctx);
+
+    return ret;
 }
 
 js::value js::value::operator[](int64_t val)
@@ -987,6 +1013,25 @@ js::value js::make_proxy(js::value& target, js::value& handle)
     duk_push_proxy(target.ctx, 0);
 
     return js::value(*target.vctx, -1);
+}
+
+js::value js::from_cbor(js::value_context& vctx, const std::vector<uint8_t>& cb)
+{
+    if(cb.size() == 0)
+        throw std::runtime_error("0 byte long cbor array");
+
+    char* ptr = (char*)duk_push_buffer(vctx.ctx, cb.size(), false);
+
+    for(int i=0; i < (int)cb.size(); i++)
+    {
+        ptr[i] = cb[i];
+    }
+
+    //memcpy(&ptr, &cb[0], cb.size());
+
+    duk_cbor_decode(vctx.ctx, -1, 0);
+
+    return js::value(vctx, -1);
 }
 
 void test_func()

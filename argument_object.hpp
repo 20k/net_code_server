@@ -517,6 +517,7 @@ namespace js
         }
 
         std::string to_json();
+        std::vector<uint8_t> to_cbor();
 
         value operator[](int64_t val);
         value operator[](const std::string& str);
@@ -764,6 +765,7 @@ namespace js
     js::value xfer_between_contexts(js::value_context& destination, const js::value& val);
 
     js::value make_proxy(js::value& target, js::value& handle);
+    js::value from_cbor(js::value_context& vctx, const std::vector<uint8_t>& cb);
 
     void dump_stack(js::value_context& vctx);
 }
