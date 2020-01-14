@@ -124,6 +124,7 @@ namespace arg
     void dukx_push(duk_context* ctx, const nlohmann::json& in);
     template<typename T>
     void dukx_push(duk_context* ctx, T* in);
+    void dukx_push(duk_context* ctx, std::nullptr_t in);
 
     inline
     void dukx_push(duk_context* ctx, const char* v)
@@ -218,6 +219,12 @@ namespace arg
     void dukx_push(duk_context* ctx, T* in)
     {
         duk_push_pointer(ctx, (void*)in);
+    }
+
+    inline
+    void dukx_push(duk_context* ctx, std::nullptr_t)
+    {
+        duk_push_pointer(ctx, nullptr);
     }
 
     inline
@@ -438,6 +445,15 @@ namespace js
 
         value& operator=(js_funcptr_t fptr);
 
+        value& set_ptr(std::nullptr_t)
+        {
+            stack_manage m(*this);
+
+            arg::dukx_push(ctx, nullptr);
+
+            return *this;
+        }
+
         ///seems dangerous to let this be arbitrary, because its extremely rarely what you want
         template<typename T>
         value& set_ptr(T* in)
@@ -450,11 +466,35 @@ namespace js
         }
 
         template<typename T>
+        value& allocate_in_heap(T& in)
+        {
+            T* val = new T(in);
+            return set_ptr(val);
+        }
+
+        template<typename T>
         T* get_ptr()
         {
             T* ret;
             arg::dukx_get(ctx, idx, ret);
             return ret;
+        }
+
+        template<typename T>
+        void free_in_heap()
+        {
+            if(idx == -1)
+                return;
+
+            T* ptr = (T*)(*this);
+
+            if(ptr == nullptr)
+                return;
+
+            delete ptr;
+
+            T* null = nullptr;
+            set_ptr(null);
         }
 
         operator std::string()

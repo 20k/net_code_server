@@ -389,20 +389,21 @@ std::string run_in_user_context(std::string username, std::string command, std::
         {
             shared_data& shared = all_shared.value()->shared;
 
-            dukx_put_pointer(ctx, &shared, "shared_data_ptr");
-            ///taking a pointer to a shared pointer passed in by value is a great idea
-            ///right?
-            dukx_put_pointer(ctx, &all_shared.value()->state, "command_handler_state_pointer");
+            js::value heap_stash = js::get_heap_stash(inf.heap);
 
-            dukx_allocate_in_heap(ctx, all_shared.value(), "all_shared_data");
+            heap_stash["shared_data_ptr"].set_ptr(&shared);
+            heap_stash["command_handler_state_pointer"].set_ptr(&all_shared.value()->state);
+            heap_stash["all_shared_data"].allocate_in_heap(all_shared.value());
 
             sand_data->all_shared = all_shared.value();
         }
         else
         {
-            dukx_put_pointer(ctx, nullptr, "shared_data_ptr");
-            dukx_put_pointer(ctx, nullptr, "command_handler_state_pointer");
-            dukx_put_pointer(ctx, nullptr, "all_shared_data");
+            js::value heap_stash = js::get_heap_stash(inf.heap);
+
+            heap_stash["shared_data_ptr"].set_ptr(nullptr);
+            heap_stash["command_handler_state_pointer"].set_ptr(nullptr);
+            heap_stash["all_shared_data"].set_ptr(nullptr);
         }
 
         inf.usr = &usr;
@@ -599,7 +600,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
             }
         }
 
-        dukx_free_in_heap<std::shared_ptr<shared_command_handler_state>>(ctx, "all_shared_data");
+        js::get_heap_stash(inf.heap)["all_shared_data"].free_in_heap<std::shared_ptr<shared_command_handler_state>>();
         teardown_state(inf.heap);
 
         printf("cleaned up resources\n");

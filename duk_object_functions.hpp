@@ -463,27 +463,6 @@ T* dukx_get_pointer(duk_context* ctx, const std::string& key)
 }
 
 template<typename T>
-inline
-void dukx_allocate_in_heap(duk_context* ctx, const T& t, const std::string& key)
-{
-    T* nptr = new T(t);
-
-    dukx_put_pointer(ctx, nptr, key);
-}
-
-template<typename T>
-inline
-void dukx_free_in_heap(duk_context* ctx, const std::string& key)
-{
-    T* ptr = (T*)dukx_get_pointer<T>(ctx, key);
-
-    if(ptr != nullptr)
-        delete ptr;
-
-    dukx_put_pointer(ctx, nullptr, key);
-}
-
-template<typename T>
 T* get_shared_worker_state_ptr(duk_context* ctx)
 {
     return dukx_get_pointer<T>(ctx, "shared_caller_state");
