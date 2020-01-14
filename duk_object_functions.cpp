@@ -1359,7 +1359,43 @@ js::value db_new_fetch(js::value_context* vctx)
     if(host != get_script_host(*vctx))
         return js::make_error(*vctx, "This almost certainly isn't what you want to happen, host != script host");
 
-    return js::value(*vctx);
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
+    mongo_ctx.change_collection(host);
+
+    std::vector<nlohmann::json> dat = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
+
+    nlohmann::json* last = nullptr;
+
+    std::vector<std::string> value_stack = normalise_object_stack(proxy_chain);
+
+    for(int i=0; i < (int)value_stack.size(); i++)
+    {
+        if(i == 0)
+        {
+            int idx = std::stoi(value_stack[0]);
+
+            if(idx < 0)
+                return js::make_error(*vctx, "Idx < 0");
+
+            if(idx >= (int)dat.size())
+            {
+                return js::make_error(*vctx, "Idx out of range, " + std::to_string(idx) + " / " + std::to_string(dat.size()));
+            }
+            else
+            {
+                last = &dat[idx];
+            }
+        }
+        else
+        {
+            last = &((*last)[value_stack[i]]);
+        }
+    }
+
+    if(last == nullptr)
+        throw std::runtime_error("Error in db_set");
+
+    return js::from_cbor(*vctx, nlohmann::json::to_cbor(*last));
 }
 
 js::value db_new_get(js::value_context* vctx, js::value target, js::value prop, js::value receiver)
