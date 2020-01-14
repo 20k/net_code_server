@@ -372,8 +372,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         unsafe_info inf;
 
-        duk_context* ctx = inf.heap.ctx;
-
         sandbox_data* sand_data = js::get_sandbox_data<sandbox_data>(inf.heap);
 
         usr.cleanup_call_stack(local_thread_id);
@@ -463,41 +461,16 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                 launched_realtime = true;
 
-                int current_id = 0;
-
-                {
-                    mongo_requester req;
-
-                    mongo_lock_proxy mctx = get_global_mongo_global_properties_context(-2);
-
-                    req.set_prop("worker_id_is_gid", 1);
-
-                    auto found = req.fetch_from_db(mctx);
-
-                    if(found.size() == 0)
-                    {
-                        req.set_prop("worker_id_gid", 1);
-
-                        req.insert_in_db(mctx);
-                    }
-                    else
-                    {
-                        current_id = found[0].get_prop_as_integer("worker_id_gid");
-
-                        mongo_requester to_set;
-                        to_set.set_prop("worker_id_gid", current_id+1);
-
-                        req.update_in_db_if_exact(mctx, to_set);
-                    }
-
-                    printf("%i cid\n", current_id);
-                }
+                int current_id = db_storage_backend::get_unique_id();
 
                 launched_realtime_id = current_id;
 
                 all_shared.value()->state.add_realtime_script(current_id);
 
-                bool is_valid = !duk_is_undefined(ctx, -1);
+                js::value left_on_stack(inf.heap, -1);
+                left_on_stack.release();
+
+                bool is_valid = !left_on_stack.is_undefined();
 
                 if(is_valid)
                 {
@@ -509,13 +482,15 @@ std::string run_in_user_context(std::string username, std::string command, std::
                     {
                         auto [width, height] = shared_duk_state->get_width_height();
 
-                        bool is_square = get_global_number(ctx, "square_font") > 0;
+                        js::value stash = js::get_heap_stash(inf.heap);
+
+                        bool is_square = (int)stash["square_font"] > 0;
 
                         nlohmann::json j;
                         j["id"] = current_id;
                         j["width"] = width;
                         j["height"] = height;
-                        j["script_name"] = get_global_string(ctx, "realtime_script_name");
+                        j["script_name"] = (std::string)stash["realtime_script_name"];
                         j["type"] = "command_realtime";
                         j["square_font"] = is_square;
 
