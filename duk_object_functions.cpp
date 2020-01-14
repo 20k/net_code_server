@@ -1349,6 +1349,7 @@ js::value db_new_set(js::value_context* vctx, js::value target, js::value prop, 
 }
 #endif // 0
 
+#if 0
 void db_new_set(js::value_context* vctx, js::value target, js::value prop, js::value val, js::value receiver);
 
 js::value db_new_fetch(js::value_context* vctx)
@@ -1396,6 +1397,71 @@ js::value db_new_fetch(js::value_context* vctx)
         throw std::runtime_error("Error in db_set");
 
     return js::from_cbor(*vctx, nlohmann::json::to_cbor(*last));
+}
+
+js::value db_new_delete(js::value_context* vctx)
+{
+    std::string host = js::get_this(*vctx).get_hidden("OHOST");
+    std::string proxy_chain = js::get_this(*vctx).get_hidden("CHAIN");
+
+    if(host != get_script_host(*vctx))
+        return js::make_error(*vctx, "This almost certainly isn't what you want to happen, host != script host");
+
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
+    mongo_ctx.change_collection(host);
+
+    std::vector<std::string> value_stack = normalise_object_stack(proxy_chain);
+
+    if(value_stack.size() == 0)
+        return js::make_error(*vctx, "Cannot delete $db yet");
+
+    std::vector<nlohmann::json> dat = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
+
+    size_t cid = -1;
+    size_t fidx = -1;
+
+    nlohmann::json* last = nullptr;
+
+    for(int i=0; i < (int)value_stack.size() - 1; i++)
+    {
+        if(i == 0)
+        {
+            int idx = std::stoi(value_stack[0]);
+
+            if(idx < 0)
+                return js::make_error(*vctx, "Idx < 0");
+
+            if(idx >= (int)dat.size())
+            {
+                return js::make_error(*vctx, "Idx out of range, " + std::to_string(idx) + " / " + std::to_string(dat.size()));
+            }
+            else
+            {
+                cid = dat[idx][CID_STRING];
+                last = &dat[idx];
+                fidx = idx;
+            }
+        }
+        else
+        {
+            last = &((*last)[value_stack[i]]);
+        }
+    }
+
+    if(last == nullptr)
+        return js::make_error(*vctx, "Tried to delete $db[idx]");
+
+    last->erase(value_stack.back());
+
+    nlohmann::json select;
+    select[CID_STRING] = cid;
+
+    nlohmann::json setter;
+    setter["$set"] = dat[fidx];
+
+    mongo_ctx->update_json_one_new(select, setter);
+
+    return js::from_cbor(*vctx, nlohmann::json::to_cbor(dat[fidx]));
 }
 
 js::value db_new_get(js::value_context* vctx, js::value target, js::value prop, js::value receiver)
@@ -1457,6 +1523,8 @@ js::value db_new_get(js::value_context* vctx, js::value target, js::value prop, 
         {
             val = js::make_value(*vctx, js::function<db_new_fetch>);
         }
+
+        printf("New get?\n");
 
         val.add_hidden("CHAIN", proxy_chain);
         val.add_hidden("OHOST", host);
@@ -1570,14 +1638,15 @@ js::value db_new_getter(js::value_context* vctx)
 
     return js::make_proxy(dummy_func, handler);
 }
+#endif // 0
 
 void dukx_setup_db_proxy(js::value_context& vctx)
 {
     std::string secret_host = get_script_host(vctx);
     js::value global = js::get_global(vctx);
 
-    js::add_setter(global, "$db", js::function<db_new_setter>).add_hidden("OHOST", secret_host);
-    js::add_getter(global, "$db", js::function<db_new_getter>).add_hidden("OHOST", secret_host);
+    js::add_setter(global, "$db", db_set<false>).add_hidden("OHOST", secret_host);
+    js::add_getter(global, "$db", js::function<db_getter_get>).add_hidden("OHOST", secret_host);
 }
 
 /*void dukx_setup_db_proxy(js::value_context& vctx)
