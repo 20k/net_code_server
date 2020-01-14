@@ -53,7 +53,7 @@ struct sandbox_data
     sf::Clock clk;
 };
 
-static void *sandbox_alloc(void *udata, duk_size_t size)
+inline void *sandbox_alloc(void *udata, duk_size_t size)
 {
     alloc_hdr *hdr;
 
@@ -86,7 +86,7 @@ static void *sandbox_alloc(void *udata, duk_size_t size)
     return (void *) (hdr + 1);
 }
 
-static void *sandbox_realloc(void *udata, void *ptr, duk_size_t size)
+inline void *sandbox_realloc(void *udata, void *ptr, duk_size_t size)
 {
     alloc_hdr *hdr;
     size_t old_size;
@@ -163,7 +163,7 @@ static void *sandbox_realloc(void *udata, void *ptr, duk_size_t size)
     }
 }
 
-static void sandbox_free(void *udata, void *ptr)
+inline void sandbox_free(void *udata, void *ptr)
 {
     alloc_hdr *hdr;
 
@@ -180,7 +180,7 @@ static void sandbox_free(void *udata, void *ptr)
 }
 
 ///so. What we really want to do is terminate the thread we're running in here
-static void sandbox_fatal(void *udata, const char *msg)
+inline void sandbox_fatal(void *udata, const char *msg)
 {
     (void) udata;  /* Suppress warning. */
     fprintf(stderr, "FATAL: %s\n", (msg ? msg : "no message"));
@@ -189,17 +189,9 @@ static void sandbox_fatal(void *udata, const char *msg)
     ///yeah um. So sleep in a spinlock until we get terminated by the watchdog
     ///great idea james
     ///this seems the best thing i can think to do as this function cannot return
-    while(1){sthread::this_sleep(10);}
+    while(1){throw std::runtime_error("Sandbox fatal");}
 
     //exit(1);  /* must not return */
-}
-
-inline duk_context* create_sandbox_heap()
-{
-    ///its easier to simply leak this
-    sandbox_data* leaked_data = new sandbox_data;
-
-    return duk_create_heap(sandbox_alloc, sandbox_realloc, sandbox_free, leaked_data, sandbox_fatal);
 }
 
 #endif // MEMORY_SANDBOX_HPP_INCLUDED

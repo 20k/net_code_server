@@ -204,6 +204,14 @@ namespace
     duk_xmove_top(ctx, _ctx, 1);
 }*/
 
+duk_context* create_sandbox_heap()
+{
+    ///its easier to simply leak this
+    sandbox_data* leaked_data = new sandbox_data;
+
+    return duk_create_heap(sandbox_alloc, sandbox_realloc, sandbox_free, leaked_data, sandbox_fatal);
+}
+
 js::value_context::value_context(context_t* _ctx) : ctx(_ctx)
 {
 
