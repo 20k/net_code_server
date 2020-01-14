@@ -186,9 +186,6 @@ inline void sandbox_fatal(void *udata, const char *msg)
     fprintf(stderr, "FATAL: %s\n", (msg ? msg : "no message"));
     fflush(stderr);
 
-    ///yeah um. So sleep in a spinlock until we get terminated by the watchdog
-    ///great idea james
-    ///this seems the best thing i can think to do as this function cannot return
     while(1){throw std::runtime_error("Sandbox fatal");}
 
     //exit(1);  /* must not return */
