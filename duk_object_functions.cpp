@@ -1285,8 +1285,8 @@ void dukx_setup_db_proxy(js::value_context& vctx)
     std::string secret_host = get_script_host(vctx);
     js::value global = js::get_global(vctx);
 
-    js::add_setter(global, "$db", db_set<false>).add_hidden("OHOST", host);
-    js::add_getter(global, "$db", js::function<db_getter_get>).add_hidden("OHOST", host);
+    js::add_setter(global, "$db", db_set<false>).add_hidden("OHOST", secret_host);
+    js::add_getter(global, "$db", js::function<db_getter_get>).add_hidden("OHOST", secret_host);
 }
 
 /*void dukx_setup_db_proxy(js::value_context& vctx)

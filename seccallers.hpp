@@ -15,18 +15,6 @@ struct shared_duk_worker_state;
 
 int my_timeout_check(void* udata);
 
-/*
-///#db.i, r, f, u, u1, us,
-duk_ret_t db_insert(duk_context* ctx);
-duk_ret_t db_update(duk_context* ctx);
-duk_ret_t db_find_all(duk_context* ctx);
-duk_ret_t db_find_one(duk_context* ctx);
-
-///count, first, array
-
-duk_ret_t db_find(duk_context* ctx);
-duk_ret_t db_remove(duk_context* ctx);*/
-
 void async_pipe(js::value_context* vctx, std::string str);
 
 void startup_state(js::value_context& vctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack, shared_duk_worker_state* shared_state);
