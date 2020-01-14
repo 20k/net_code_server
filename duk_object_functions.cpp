@@ -1349,13 +1349,13 @@ js::value db_new_set(js::value_context* vctx, js::value target, js::value prop, 
 }
 #endif // 0
 
-#if 0
+#if 1
 void db_new_set(js::value_context* vctx, js::value target, js::value prop, js::value val, js::value receiver);
 
 js::value db_new_fetch(js::value_context* vctx)
 {
-    std::string host = js::get_this(*vctx).get_hidden("OHOST");
-    std::string proxy_chain = js::get_this(*vctx).get_hidden("CHAIN");
+    std::string host = js::get_current_function(*vctx).get_hidden("OHOST");
+    std::string proxy_chain = js::get_current_function(*vctx).get_hidden("CHAIN");
 
     if(host != get_script_host(*vctx))
         return js::make_error(*vctx, "This almost certainly isn't what you want to happen, host != script host");
@@ -1395,6 +1395,8 @@ js::value db_new_fetch(js::value_context* vctx)
 
     if(last == nullptr)
         throw std::runtime_error("Error in db_set");
+
+    std::cout << "last " << *last << std::endl;
 
     return js::from_cbor(*vctx, nlohmann::json::to_cbor(*last));
 }
@@ -1533,12 +1535,23 @@ js::value db_new_get(js::value_context* vctx, js::value target, js::value prop, 
     }
     else
     {
-        auto [func, obj] = dukx_db_push_proxy_handlers(*vctx);
+        /*auto [func, obj] = dukx_db_push_proxy_handlers(*vctx);
 
         obj.add_hidden("CHAIN", proxy_chain + "." + key);
         obj.add_hidden("OHOST", host);
 
-        return dukx_db_finish_proxy_r(func, obj);
+        return dukx_db_finish_proxy_r(func, obj);*/
+
+        js::value func_dummy = js::make_value(*vctx, js::function<js::empty_function>);
+        js::value obj_dummy(*vctx);
+
+        obj_dummy.add_hidden("CHAIN", proxy_chain + "." + key);
+        obj_dummy.add_hidden("OHOST", host);
+
+        obj_dummy["get"] = js::function<db_new_get>;
+        obj_dummy["set"] = js::function<db_new_set>;
+
+        return js::make_proxy(func_dummy, obj_dummy);
     }
 }
 
@@ -1549,7 +1562,7 @@ void db_new_set(js::value_context* vctx, js::value target, js::value prop, js::v
     if(host != get_script_host(*vctx))
         throw std::runtime_error("This almost certainly isn't what you want to happen, host != script host");
 
-    std::string chain = js::get_this(*vctx).get_hidden("CHAIN") + "." + (std::string)prop;
+    std::string chain = (std::string)js::get_this(*vctx).get_hidden("CHAIN") + "." + (std::string)prop;
     nlohmann::json what_to_set = nlohmann::json::from_cbor(val.to_cbor());
 
     std::vector<std::string> value_stack = normalise_object_stack(chain);
@@ -1645,8 +1658,11 @@ void dukx_setup_db_proxy(js::value_context& vctx)
     std::string secret_host = get_script_host(vctx);
     js::value global = js::get_global(vctx);
 
-    js::add_setter(global, "$db", db_set<false>).add_hidden("OHOST", secret_host);
-    js::add_getter(global, "$db", js::function<db_getter_get>).add_hidden("OHOST", secret_host);
+    //js::add_setter(global, "$db", js::function<db_new_setter>).add_hidden("OHOST", secret_host);
+    //js::add_getter(global, "$db", js::function<db_new_getter>).add_hidden("OHOST", secret_host);
+
+    js::add_setter(global, "$db", db_set<false>).add_hidden("OHOST", host);
+    js::add_getter(global, "$db", js::function<db_getter_get>).add_hidden("OHOST", host);
 }
 
 /*void dukx_setup_db_proxy(js::value_context& vctx)
