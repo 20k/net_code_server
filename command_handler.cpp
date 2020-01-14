@@ -463,6 +463,8 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                 int current_id = db_storage_backend::get_unique_id();
 
+                printf("cid %i\n", current_id);
+
                 launched_realtime_id = current_id;
 
                 all_shared.value()->state.add_realtime_script(current_id);
