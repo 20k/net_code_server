@@ -17,6 +17,7 @@
 #include "time.hpp"
 #include "quest_manager.hpp"
 #include "rng.hpp"
+#include "argument_object.hpp"
 
 #define SECLEVEL_FUNCTIONS
 
@@ -846,12 +847,14 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
         next.add("to", to, string_to_colour(to));
         next.add("amount", std::to_string(amount), "");
 
-        int err = make_logs_on(ctx, from, user_node_info::CASH_SEG, {next});
+        js::value_context vctx(ctx);
+
+        int err = make_logs_on(vctx, from, user_node_info::CASH_SEG, {next});
 
         if(err)
             return err;
 
-        err = make_logs_on(ctx, to, user_node_info::CASH_SEG, {next});
+        err = make_logs_on(vctx, to, user_node_info::CASH_SEG, {next});
 
         if(err)
             return err;
@@ -2575,8 +2578,10 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, use
         next.add("to", to_user.name, string_to_colour(to_user.name));
         next.add("name", found_item_description, "");
 
-        make_logs_on(ctx, from_user.name, user_node_info::ITEM_SEG, {next});
-        make_logs_on(ctx, to_user.name, user_node_info::ITEM_SEG, {next});
+        js::value_context vctx(ctx);
+
+        make_logs_on(vctx, from_user.name, user_node_info::ITEM_SEG, {next});
+        make_logs_on(vctx, to_user.name, user_node_info::ITEM_SEG, {next});
 
         //duk_push_int(ctx, placeholder.get_prop_as_integer("item_id"));
 
@@ -3097,7 +3102,9 @@ duk_ret_t handle_confirmed(duk_context* ctx, bool confirm, const std::string& us
         next.add("to", "core", string_to_colour("core"));
         next.add("amount", std::to_string(price), "");
 
-        make_logs_on(ctx, username, user_node_info::CASH_SEG, {next});
+        js::value_context vctx(ctx);
+
+        make_logs_on(vctx, username, user_node_info::CASH_SEG, {next});
 
         create_xfer_notif(ctx, username, "", price);
 
