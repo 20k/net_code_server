@@ -21,7 +21,7 @@ void startup_state(js::value_context& vctx, const std::string& caller, const std
 
 void teardown_state(js::value_context& vctx);
 
-void send_async_message(duk_context* ctx, const std::string& message);
+void send_async_message(js::value_context& vctx, const std::string& message);
 
 std::string js_unified_force_call_data(js::value_context& vctx, const std::string& data, const std::string& host);
 

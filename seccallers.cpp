@@ -57,7 +57,7 @@ js::value async_print(js::value_context* vctx, std::string what)
         data["type"] = "server_msg";
         data["data"] = what;
 
-        send_async_message(vctx->ctx, data.dump());
+        send_async_message(*vctx, data.dump());
         return js::make_success(*vctx);
     }
 
@@ -78,7 +78,7 @@ js::value async_print_raw(js::value_context* vctx, std::string what)
         data["data"] = what;
         data["no_pad"] = 1;
 
-        send_async_message(vctx->ctx, data.dump());
+        send_async_message(*vctx, data.dump());
         return js::make_success(*vctx);
     }
 
@@ -440,9 +440,11 @@ std::string get_print_str(js::value_context* vctx)
     return (std::string)heap.get("print_str");
 }
 
-void send_async_message(duk_context* ctx, const std::string& message)
+void send_async_message(js::value_context& vctx, const std::string& message)
 {
-    shared_data* shared = dukx_get_pointer<shared_data>(ctx, "shared_data_ptr");
+    js::value heap = js::get_heap_stash(vctx);
+
+    shared_data* shared = heap["shared_data_ptr"].get_ptr<shared_data>();
 
     if(shared == nullptr)
         return;
