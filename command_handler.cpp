@@ -273,6 +273,7 @@ void async_realtime_script_handler(js::value_context& nvctx, command_handler_sta
 
             sandbox_data* sand_data = js::get_sandbox_data<sandbox_data>(vctx);
 
+            ///need to set work units based on how much of elapsed frametime is used
             double max_frame_time_ms = (1./current_framerate) * 1000.;
 
             ///remember to set work units here
