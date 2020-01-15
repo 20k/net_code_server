@@ -704,7 +704,9 @@ duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const st
     #ifdef XFER_PATHS
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, to, from, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, amount / cash_to_destroy_link);
+    js::value_context vctx(ctx);
+
+    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(vctx, to, from, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, amount / cash_to_destroy_link);
 
     if(path.size() == 0)
         return push_error(ctx, "No path to user through the network");
@@ -2499,8 +2501,10 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, use
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
+    js::value_context vctx(ctx);
+
     #ifdef XFER_PATHS
-    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, to_user.name, from_user.name, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, 1.f / items_to_destroy_link);
+    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(vctx, to_user.name, from_user.name, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, 1.f / items_to_destroy_link);
 
     if(path.size() == 0)
         return push_error(ctx, "No path to user through the network");
@@ -3851,7 +3855,9 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         float hack_cost = 0.25f;
 
-        auto path = playspace_network_manage.get_accessible_path_to(ctx, name_of_person_being_attacked, get_caller(ctx), (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, hack_cost);
+        js::value_context vctx(ctx);
+
+        auto path = playspace_network_manage.get_accessible_path_to(vctx, name_of_person_being_attacked, get_caller(ctx), (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, hack_cost);
 
         if(path.size() == 0)
             return push_error(ctx, "No Path");
@@ -3911,7 +3917,9 @@ duk_ret_t net__hack_new(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         float hack_cost = 0.25f;
 
-        auto path = playspace_network_manage.get_accessible_path_to(ctx, name_of_person_being_attacked, get_caller(ctx), (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, hack_cost);
+        js::value_context vctx(ctx);
+
+        auto path = playspace_network_manage.get_accessible_path_to(vctx, name_of_person_being_attacked, get_caller(ctx), (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, hack_cost);
 
         if(path.size() == 0)
             return push_error(ctx, "No Path");
@@ -4440,7 +4448,9 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    if(!playspace_network_manage.has_accessible_path_to(ctx, from, get_caller(ctx), (path_info::path_info)(path_info::VIEW_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
+    js::value_context vctx(ctx);
+
+    if(!playspace_network_manage.has_accessible_path_to(vctx, from, get_caller(vctx), (path_info::path_info)(path_info::VIEW_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
         return push_error(ctx, "Target Inaccessible");
 
     user& usr = opt_user_and_nodes->first;
@@ -4450,7 +4460,7 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!usr.is_allowed_user(get_caller(ctx)) && usr.name != get_caller(ctx) && !((hostile_actions & user_node_info::VIEW_LINKS) > 0))
         return push_error(ctx, "Node is Locked");
 
-    network_accessibility_info info = playspace_network_manage.generate_network_accessibility_from(ctx, from, num);
+    network_accessibility_info info = playspace_network_manage.generate_network_accessibility_from(vctx, from, num);
 
 
     ///so
@@ -4750,11 +4760,13 @@ duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     float link_stability_cost = 50;
 
-    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(ctx, target, host, path_info::USE_LINKS, -1, link_stability_cost);
+    js::value_context vctx(ctx);
+
+    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(vctx, target, host, path_info::USE_LINKS, -1, link_stability_cost);
 
     if(path.size() == 0)
     {
-        auto pseudo_path = playspace_network_manage.get_accessible_path_to(ctx, target, host, path_info::USE_LINKS, -1);
+        auto pseudo_path = playspace_network_manage.get_accessible_path_to(vctx, target, host, path_info::USE_LINKS, -1);
 
         if(pseudo_path.size() != 0)
             return push_error(ctx, "Path insufficiently stable, each link must have at least 50 stability");
@@ -4846,18 +4858,20 @@ duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    if(!playspace_network_manage.has_accessible_path_to(ctx, start, get_caller(ctx), path_info::VIEW_LINKS))
+    js::value_context vctx(ctx);
+
+    if(!playspace_network_manage.has_accessible_path_to(vctx, start, get_caller(vctx), path_info::VIEW_LINKS))
         return push_error(ctx, "No path to start user");
 
     std::vector<std::string> viewable_distance;
 
     if(path_type == "view")
-        viewable_distance = playspace_network_manage.get_accessible_path_to(ctx, target, start, path_info::VIEW_LINKS, -1, minimum_stability);
+        viewable_distance = playspace_network_manage.get_accessible_path_to(vctx, target, start, path_info::VIEW_LINKS, -1, minimum_stability);
     else
-        viewable_distance = playspace_network_manage.get_accessible_path_to(ctx, target, start, path_info::USE_LINKS, -1, minimum_stability);
+        viewable_distance = playspace_network_manage.get_accessible_path_to(vctx, target, start, path_info::USE_LINKS, -1, minimum_stability);
 
     ///STRANGER DANGER
-    std::vector<std::string> link_path = playspace_network_manage.get_accessible_path_to(ctx, target, start, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, minimum_stability);
+    std::vector<std::string> link_path = playspace_network_manage.get_accessible_path_to(vctx, target, start, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, minimum_stability);
 
     //float total_path_strength = playspace_network_manage.get_total_path_link_strength(link_path);
 
@@ -4999,9 +5013,11 @@ duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, cons
     if(!opt_user_and_nodes_2.has_value())
         return push_error(ctx, "No such user (target)");
 
+    js::value_context vctx(ctx);
+
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    if(!create && !playspace_network_manage.has_accessible_path_to(ctx, user_1, from, (path_info::path_info)(path_info::VIEW_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
+    if(!create && !playspace_network_manage.has_accessible_path_to(vctx, user_1, from, (path_info::path_info)(path_info::VIEW_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
         return push_error(ctx, "No currently visible path to user");
 
     //double stab = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "delta", 0);
@@ -5020,7 +5036,7 @@ duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, cons
 
     if(enforce_connectivity)
     {
-        if(!playspace_network_manage.has_accessible_path_to(ctx, target, user_1, (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
+        if(!playspace_network_manage.has_accessible_path_to(vctx, target, user_1, (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
             return push_error(ctx, "No path from user to target");
     }
 
@@ -5052,9 +5068,9 @@ duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, cons
             //if(path_type == "direct")
             //    path = playspace_network_manage.get_accessible_path_to(ctx, target, usr, path_info::NONE);
             if(path_type == "view")
-                path = playspace_network_manage.get_accessible_path_to(ctx, target, user_1, path_info::VIEW_LINKS);
+                path = playspace_network_manage.get_accessible_path_to(vctx, target, user_1, path_info::VIEW_LINKS);
             if(path_type == "use")
-                path = playspace_network_manage.get_accessible_path_to(ctx, target, user_1, path_info::USE_LINKS);
+                path = playspace_network_manage.get_accessible_path_to(vctx, target, user_1, path_info::USE_LINKS);
 
             if(path.size() == 0)
                 return push_error(ctx, "No path");
@@ -5776,9 +5792,11 @@ duk_ret_t sys__debug_view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<std::vector<std::string>> buffer = ascii_make_buffer({found_w, found_h}, false);
 
+    js::value_context vctx(ctx);
+
     network_accessibility_info info;
 
-    network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, target_user.name, n_count, (path_info::path_info)(path_info::NONE | path_info::SKIP_SYSTEM_CHECKS));
+    network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(vctx, target_user.name, n_count, (path_info::path_info)(path_info::NONE | path_info::SKIP_SYSTEM_CHECKS));
 
     info = network_accessibility_info::merge_together(info, cur);
 
@@ -5926,6 +5944,8 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<std::vector<std::string>> buffer = ascii_make_buffer({found_w, found_h}, false);
 
+    js::value_context vctx(ctx);
+
     network_accessibility_info info;
 
     bool visited_host_user = false;
@@ -5934,7 +5954,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         for(user& usr : special_users)
         {
-            network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, n_count);
+            network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(vctx, usr.name, n_count);
 
             info = network_accessibility_info::merge_together(info, cur);
 
@@ -5948,7 +5968,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
             if(playspace_network_manage.current_network_links(usr.name) > 0)
                 continue;
 
-            network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, n_count);
+            network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(vctx, usr.name, n_count);
 
             info = network_accessibility_info::merge_together(info, cur);
 
@@ -5959,7 +5979,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(!visited_host_user)
     {
-        network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, target_user.name, n_count);
+        network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(vctx, target_user.name, n_count);
 
         info = network_accessibility_info::merge_together(info, cur);
     }
@@ -6460,12 +6480,14 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(!target_sys_opt.has_value() || !my_sys_opt.has_value())
         return push_error(ctx, "Well then you are lost (high ground!)");
 
+    js::value_context vctx(ctx);
+
     if(!(target.is_npc() && target.is_allowed_user(get_caller(ctx))))
     {
         if(target_sys_opt.value() != my_sys_opt.value())
             return push_error(ctx, "Not in the same system");
 
-        if(!playspace_network_manage.has_accessible_path_to(ctx, target.name, my_user.name, (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
+        if(!playspace_network_manage.has_accessible_path_to(vctx, target.name, my_user.name, (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
             return push_error(ctx, "No path");
     }
 
@@ -6602,7 +6624,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::string links_string = "";
 
     {
-        network_accessibility_info info = playspace_network_manage.generate_network_accessibility_from(ctx, target.name, n_count);
+        network_accessibility_info info = playspace_network_manage.generate_network_accessibility_from(vctx, target.name, n_count);
 
         std::vector<nlohmann::json> all_npc_data = get_net_view_data_arr(info);
 
@@ -6959,6 +6981,8 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
 
+    js::value_context vctx(ctx);
+
     std::string sys_name = duk_safe_get_prop_string(ctx, -1, "sys");
     bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
     std::string user_name = duk_safe_get_prop_string(ctx, -1, "user");
@@ -6978,7 +7002,7 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-        if(!playspace_network_manage.has_accessible_path_to(ctx, user_name, get_caller(ctx), (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
+        if(!playspace_network_manage.has_accessible_path_to(vctx, user_name, get_caller(vctx), (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
             return push_error(ctx, "No path");
 
         sys_opt = low_level_structure_manage.get_system_of(user_name);
@@ -7148,11 +7172,13 @@ duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     std::vector<std::vector<std::string>> buffer = ascii_make_buffer({80, 40}, false);
 
+    js::value_context vctx(ctx);
+
     network_accessibility_info info;
 
     for(user& usr : special_users)
     {
-        network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(ctx, usr.name, 15);
+        network_accessibility_info cur = playspace_network_manage.generate_network_accessibility_from(vctx, usr.name, 15);
 
         info = network_accessibility_info::merge_together(info, cur);
     }
