@@ -558,6 +558,7 @@ namespace js
 
         std::string to_json();
         std::vector<uint8_t> to_cbor();
+        void stringify_parse();
 
         value operator[](int64_t val);
         value operator[](const std::string& str);

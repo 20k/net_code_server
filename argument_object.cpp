@@ -662,6 +662,12 @@ std::vector<uint8_t> js::value::to_cbor()
     return ret;
 }
 
+void js::value::stringify_parse()
+{
+    duk_json_encode(ctx, idx);
+    duk_json_decode(ctx, idx);
+}
+
 js::value js::value::operator[](int64_t val)
 {
     return js::value(*vctx, *this, val);
