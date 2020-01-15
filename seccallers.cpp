@@ -762,7 +762,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
 
             res.pack();
 
-            ret = res;
+            ret = std::move(res);
         }
 
         set_script_info(*vctx, full_script);
