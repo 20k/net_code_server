@@ -1054,41 +1054,34 @@ js::value db_fetch(js::value_context* vctx)
 }
 
 template<bool is_proxy>
-duk_int_t db_set(duk_context* ctx)
+js::value db_set(js::value_context* vctx, js::value val, std::string prop)
 {
+    js::value root(*vctx);
+
     if(!is_proxy)
-        duk_push_current_function(ctx);
+        root = js::get_current_function(*vctx);
     else
-        duk_push_this(ctx);
+        root = js::get_this(*vctx);
 
     std::vector<nlohmann::json> found;
 
-    std::string proxy_chain = get_chain_of(ctx, -1);
-    std::string secret_host = get_original_host(ctx, -1);
+    std::string proxy_chain = get_chain_of(root);
+    std::string secret_host = get_original_host(root);
 
-    duk_pop(ctx);
-
-    nlohmann::json to_set_value = dukx_get_as_json(ctx, is_proxy ? 2 : -1);
+    nlohmann::json to_set_value = nlohmann::json::parse(val.to_json());
 
     if(is_proxy)
     {
-        duk_dup(ctx, 1);
-
-        std::string key = duk_safe_to_std_string(ctx, -1);
-
-        duk_pop(ctx);
-
-        proxy_chain += "." + key;
+        proxy_chain += "." + prop;
     }
 
-    if(secret_host != get_script_host(ctx))
+    if(secret_host != get_script_host(*vctx))
     {
-        push_error(ctx, "This almost certainly isn't what you want to happen");
-        return 1;
+        return js::make_error(*vctx, "This almost certainly isn't what you want to happen");
     }
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
         mongo_ctx.change_collection(secret_host);
 
         {
@@ -1101,7 +1094,17 @@ duk_int_t db_set(duk_context* ctx)
         }
     }
 
-    return 0;
+    return js::make_success(*vctx);
+}
+
+js::value db_proxy_set(js::value_context* vctx, js::value target, js::value prop, js::value val, js::value receiver)
+{
+    return db_set<true>(vctx, val, prop);
+}
+
+js::value db_getter_set(js::value_context* vctx, js::value val)
+{
+    return db_set<false>(vctx, val, "");
 }
 
 js::value db_delete(js::value_context* vctx)
@@ -1134,7 +1137,7 @@ js::value db_delete(js::value_context* vctx)
 
 js::value dukx_db_finish_proxy_r(js::value& func, js::value& object);
 
-js::value db_get(js::value_context* vctx, js::value target, js::value prop, js::value val, js::value receiver)
+js::value db_get(js::value_context* vctx, js::value target, js::value prop, js::value receiver)
 {
     std::string key = prop;
 
@@ -1153,7 +1156,7 @@ js::value db_get(js::value_context* vctx, js::value target, js::value prop, js::
             ret = js::function<db_fetch>;
 
         if(key == "$set")
-            ret = db_set<false>;
+            ret = js::function<db_getter_set>;
 
         if(key == "$delete")
             ret = js::function<db_delete>;
@@ -1214,7 +1217,7 @@ void dukx_setup_db_proxy(js::value_context& vctx)
     std::string secret_host = get_script_host(vctx);
     js::value global = js::get_global(vctx);
 
-    js::add_setter(global, "$db", db_set<false>).add_hidden("OHOST", secret_host);
+    js::add_setter(global, "$db", js::function<db_proxy_set>).add_hidden("OHOST", secret_host);
     js::add_getter(global, "$db", js::function<db_getter_get>).add_hidden("OHOST", secret_host);
 }
 
@@ -1239,7 +1242,7 @@ std::pair<js::value, js::value> dukx_db_push_proxy_handlers(js::value_context& v
 js::value dukx_db_finish_proxy_r(js::value& func, js::value& object)
 {
     object.get("get") = js::function<db_get>;
-    object.get("set") = db_set<true>;
+    object.get("set") = js::function<db_proxy_set>;
     object.get("apply") = js::function<db_apply>;
 
     return js::make_proxy(func, object);
