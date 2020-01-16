@@ -769,16 +769,14 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
     }
     else
     {
-        duk_push_c_function(vctx->ctx, special_scripts::get_special_user_function(script.c_shim_name), 1);
+        ///might as well be void*
+        js_funcptr_t erased_funcptr = special_scripts::get_special_user_function(script.c_shim_name);
 
-        int nargs = 1;
+        js::value func = js::make_value(*vctx, erased_funcptr);
 
-        js::value arg_dup(*vctx, arg);
-        arg_dup.release();
+        auto [success, rval] = js::call(func, arg);
 
-        duk_pcall(vctx->ctx, nargs);
-
-        ret = js::value(*vctx, -1);
+        ret = std::move(rval);
 
         //result = (*get_shim_pointer<shim_map_t>(ctx))[script.c_shim_name](sd.ctx, sl);
     }
