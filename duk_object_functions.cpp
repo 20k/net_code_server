@@ -1047,36 +1047,30 @@ void delete_from_request(db_storage_backend& ctx, std::vector<nlohmann::json>& j
     }
 }
 
-duk_int_t db_fetch(duk_context* ctx)
+js::value db_fetch(js::value_context* vctx)
 {
-    duk_push_current_function(ctx);
+    js::value current_func = js::get_current_function(*vctx);
 
-    std::string proxy_chain = get_chain_of(ctx, -1);
-    std::string secret_host = get_original_host(ctx, -1);
+    std::string proxy_chain = get_chain_of(current_func);
+    std::string secret_host = get_original_host(current_func);
 
-    if(secret_host != get_script_host(ctx))
+    if(secret_host != get_script_host(*vctx))
     {
-        push_error(ctx, "This almost certainly isn't what you want to happen");
-        return 1;
+        return js::make_error(*vctx, "This almost certainly isn't what you want to happen");
     }
 
     std::vector<nlohmann::json> found;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
         mongo_ctx.change_collection(secret_host);
 
         found = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
     }
 
-    /*for(auto& i : found)
-    {
-        std::cout << i << std::endl;
-    }*/
-
     if(found.size() == 0)
     {
-        duk_push_undefined(ctx);
+        return js::make_value(*vctx, js::undefined);
     }
     /*else if(found.size() == 1)
     {
@@ -1084,11 +1078,8 @@ duk_int_t db_fetch(duk_context* ctx)
     }*/
     else
     {
-        //push_duk_val(ctx, found);
-        push_duk_val(ctx, get_from_request(found, proxy_chain));
+        return js::make_value(*vctx, get_from_request(found, proxy_chain));
     }
-
-    return 1;
 }
 
 template<bool is_proxy>
@@ -1192,7 +1183,7 @@ duk_int_t db_get(duk_context* ctx)
     if(key == "$fetch" || key == "$" || key == "$set" || key == "$delete")
     {
         if(key == "$fetch" || key == "$")
-            duk_push_c_function(ctx, db_fetch, 0);
+            duk_push_c_function(ctx, js::function<db_fetch>, 0);
 
         if(key == "$set")
             duk_push_c_function(ctx, db_set<false>, 1);
@@ -1228,27 +1219,21 @@ duk_int_t db_get(duk_context* ctx)
     return 1;
 }
 
-duk_int_t db_apply(duk_context* ctx)
+js::value db_apply(js::value_context* vctx)
 {
-    duk_push_this(ctx);
+    js::value jthis = js::get_this(*vctx);
 
-    std::string proxy_chain = get_chain_of(ctx, -1);
-    std::string secret_host = get_original_host(ctx, -1);
+    std::string proxy_chain = get_chain_of(jthis);
+    std::string secret_host = get_original_host(jthis);
 
-    duk_pop(ctx);
+    js::value func = js::make_value(*vctx, js::function<db_fetch>);
 
-    duk_push_c_function(ctx, db_fetch, 0);
+    func.add_hidden("CHAIN", proxy_chain);
+    func.add_hidden("OHOST", secret_host);
 
-    duk_push_string(ctx, proxy_chain.c_str());
-    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
+    auto [success, val] = js::call(func);
 
-    duk_push_string(ctx, secret_host.c_str());
-    duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
-
-    //std::cout << "doing fetch on chain " << proxy_chain << std::endl;
-
-    duk_pcall(ctx, 0);
-    return 1;
+    return val;
 }
 
 js::value dukx_db_finish_proxy_r(js::value& func, js::value& object);
@@ -1321,7 +1306,7 @@ void dukx_db_finish_proxy(js::value& func, js::value& object)
 
     object.get("get") = db_get;
     object.get("set") = db_set<true>;
-    object.get("apply") = db_apply;
+    object.get("apply") = js::function<db_apply>;
 
     js::make_proxy(func, object).release();
 }
@@ -1330,7 +1315,7 @@ js::value dukx_db_finish_proxy_r(js::value& func, js::value& object)
 {
     object.get("get") = db_get;
     object.get("set") = db_set<true>;
-    object.get("apply") = db_apply;
+    object.get("apply") = js::function<db_apply>;
 
     return js::make_proxy(func, object);
 }
