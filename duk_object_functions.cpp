@@ -670,6 +670,14 @@ std::string get_chain_of(duk_context* ctx, duk_idx_t idx)
     return res;
 }
 
+std::string get_chain_of( js::value& arg)
+{
+    if(arg.is_undefined())
+        return "";
+
+    return arg.get_hidden("CHAIN");
+}
+
 void update_chain(duk_context* ctx, const std::string& key, duk_idx_t idx)
 {
     std::string current = get_full_chain(ctx);
@@ -1134,40 +1142,20 @@ duk_int_t db_set(duk_context* ctx)
     return 0;
 }
 
-template<bool is_proxy>
-duk_int_t db_delete(duk_context* ctx)
+js::value db_delete(js::value_context* vctx)
 {
-    if(!is_proxy)
-        duk_push_current_function(ctx);
-    else
-        duk_push_this(ctx);
+    js::value current_function = js::get_current_function(*vctx);
 
-    std::vector<nlohmann::json> found;
+    std::string proxy_chain = get_chain_of(current_function);
+    std::string secret_host = get_original_host(current_function);
 
-    std::string proxy_chain = get_chain_of(ctx, -1);
-    std::string secret_host = get_original_host(ctx, -1);
-
-    duk_pop(ctx);
-
-    if(is_proxy)
+    if(secret_host != get_script_host(*vctx))
     {
-        duk_dup(ctx, 1);
-
-        std::string key = duk_safe_to_std_string(ctx, -1);
-
-        duk_pop(ctx);
-
-        proxy_chain += "." + key;
-    }
-
-    if(secret_host != get_script_host(ctx))
-    {
-        push_error(ctx, "This almost certainly isn't what you want to happen");
-        return 1;
+        return js::make_error(*vctx, "This almost certainly isn't what you want to happen");
     }
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(ctx));
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
         mongo_ctx.change_collection(secret_host);
 
         {
@@ -1179,7 +1167,7 @@ duk_int_t db_delete(duk_context* ctx)
         }
     }
 
-    return 0;
+    return js::make_success(*vctx);
 }
 
 duk_int_t db_get(duk_context* ctx)
@@ -1210,7 +1198,7 @@ duk_int_t db_get(duk_context* ctx)
             duk_push_c_function(ctx, db_set<false>, 1);
 
         if(key == "$delete")
-            duk_push_c_function(ctx, db_delete<false>, 0);
+            duk_push_c_function(ctx, js::function<db_delete>, 0);
 
         duk_push_string(ctx, proxy_chain.c_str());
         duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
