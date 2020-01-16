@@ -126,6 +126,21 @@ namespace arg
     void dukx_push(duk_context* ctx, T* in);
     void dukx_push(duk_context* ctx, std::nullptr_t in);
 
+    void dukx_get(duk_context* ctx, int idx, std::string& out);
+    void dukx_get(duk_context* ctx, int idx, int64_t& out);
+    void dukx_get(duk_context* ctx, int idx, int& out);
+    void dukx_get(duk_context* ctx, int idx, double& out);
+    void dukx_get(duk_context* ctx, int idx, bool& out);
+
+    template<typename T, typename U>
+    void dukx_get(duk_context* ctx, int idx, std::map<T, U>& out);
+
+    template<typename T>
+    void dukx_get(duk_context* ctx, int idx, std::vector<T>& out);
+
+    template<typename T>
+    void dukx_get(duk_context* ctx, int idx, T*& out);
+
     inline
     void dukx_push(duk_context* ctx, const char* v)
     {
