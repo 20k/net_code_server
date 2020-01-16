@@ -566,6 +566,8 @@ namespace js
         template<typename T>
         operator T*()
         {
+            static_assert(!std::is_same_v<T, char const>, "Trying to get a const char* pointer out is almost certainly not what you want");
+
             T* ret;
             arg::dukx_get(ctx, idx, ret);
             return ret;
