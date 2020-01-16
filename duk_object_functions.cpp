@@ -1149,62 +1149,49 @@ js::value db_delete(js::value_context* vctx)
     return js::make_success(*vctx);
 }
 
-duk_int_t db_get(duk_context* ctx)
+js::value dukx_db_finish_proxy_r(js::value& func, js::value& object);
+
+js::value db_get(js::value_context* vctx, js::value target, js::value prop, js::value val, js::value receiver)
 {
-    duk_dup(ctx, 1);
+    std::string key = prop;
 
-    std::string key = duk_safe_to_std_string(ctx, -1);
+    js::value current_this = js::get_this(*vctx);
 
-    ///pass chain into dukx_push_db
-
-    duk_pop(ctx);
-
-    duk_push_this(ctx);
-
-    std::string proxy_chain = get_chain_of(ctx, -1);
-    std::string secret_host = get_original_host(ctx, -1);
-
-    duk_pop(ctx);
+    std::string proxy_chain = get_chain_of(current_this);
+    std::string secret_host = get_original_host(current_this);
 
     ///make it so that fetch also returns the proxy, but if we call that result itll do the fetch function?
     ///need to implement $delete
     if(key == "$fetch" || key == "$" || key == "$set" || key == "$delete")
     {
+        js::value ret(*vctx);
+
         if(key == "$fetch" || key == "$")
-            duk_push_c_function(ctx, js::function<db_fetch>, 0);
+            ret = js::function<db_fetch>;
 
         if(key == "$set")
-            duk_push_c_function(ctx, db_set<false>, 1);
+            ret = db_set<false>;
 
         if(key == "$delete")
-            duk_push_c_function(ctx, js::function<db_delete>, 0);
+            ret = js::function<db_delete>;
 
-        duk_push_string(ctx, proxy_chain.c_str());
-        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
+        ret.add_hidden("CHAIN", proxy_chain);
+        ret.add_hidden("OHOST", secret_host);
 
-        duk_push_string(ctx, secret_host.c_str());
-        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
-
-        //duk_push_string(ctx, key.c_str());
-        //duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("LKEY").c_str());
+        return ret;
     }
     else
     {
         //dukx_push_db_proxy(ctx);
 
-        js::value_context vctx(ctx);
-
-        auto [func, obj] = dukx_db_push_proxy_handlers(vctx);
+        auto [func, obj] = dukx_db_push_proxy_handlers(*vctx);
 
         set_chain(obj, proxy_chain + "." + key);
 
-        duk_push_string(ctx, secret_host.c_str());
-        duk_put_prop_string(ctx, -2, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
+        obj.add_hidden("OHOST", secret_host);
 
-        dukx_db_finish_proxy(func, obj);
+        return dukx_db_finish_proxy_r(func, obj);
     }
-
-    return 1;
 }
 
 js::value db_apply(js::value_context* vctx)
@@ -1223,8 +1210,6 @@ js::value db_apply(js::value_context* vctx)
 
     return val;
 }
-
-js::value dukx_db_finish_proxy_r(js::value& func, js::value& object);
 
 js::value db_getter_get(js::value_context* vctx)
 {
@@ -1268,40 +1253,9 @@ std::pair<js::value, js::value> dukx_db_push_proxy_handlers(js::value_context& v
     return {dummy_func, dummy_obj};
 }
 
-void dukx_db_finish_proxy(js::value& func, js::value& object)
-{
-    #if 0
-    duk_require_stack(ctx, 16);
-
-    dukx_push_proxy_functions_nhide(ctx, -1,
-                                        //dukx_proxy_get_prototype_of, 1, "getPrototypeOf",
-                                        //dukx_proxy_set_prototype_of, 2, "setPrototypeOf",
-                                        //dukx_proxy_is_extensible, 1, "isExtensible",
-                                        //dukx_proxy_prevent_extension, 1, "preventExtension",
-                                        //dukx_proxy_get_own_property, 2, "getOwnPropertyDescriptor",
-                                        //dukx_proxy_define_property, 3, "defineProperty",
-                                        //dukx_proxy_has, 2, "has",
-                                        db_get, 3, "get",
-                                        db_set<true>, 4, "set",
-                                        //dukx_proxy_delete_property, 2, "deleteProperty",
-                                        //dukx_proxy_own_keys, 1, "ownKeys",
-                                        db_apply, 3, "apply"
-                                        //dukx_proxy_construct, 2, "construct");
-                                        );
-
-    duk_push_proxy(ctx, 0);
-    #endif // 0
-
-    object.get("get") = db_get;
-    object.get("set") = db_set<true>;
-    object.get("apply") = js::function<db_apply>;
-
-    js::make_proxy(func, object).release();
-}
-
 js::value dukx_db_finish_proxy_r(js::value& func, js::value& object)
 {
-    object.get("get") = db_get;
+    object.get("get") = js::function<db_get>;
     object.get("set") = db_set<true>;
     object.get("apply") = js::function<db_apply>;
 
