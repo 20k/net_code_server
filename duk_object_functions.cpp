@@ -637,23 +637,6 @@ std::string get_original_host(js::value& val)
     return val.get_hidden("OHOST");
 }
 
-std::string get_full_chain(duk_context* ctx)
-{
-    duk_push_current_function(ctx);
-    duk_get_prop_string(ctx, -1, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
-
-    bool undef = duk_is_undefined(ctx, -1);
-
-    std::string res = duk_safe_to_std_string(ctx, -1);
-
-    if(undef)
-        res.clear();
-
-    duk_pop_n(ctx, 2);
-
-    return res;
-}
-
 std::string get_chain_of(duk_context* ctx, duk_idx_t idx)
 {
     duk_get_prop_string(ctx, idx, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
@@ -670,7 +653,7 @@ std::string get_chain_of(duk_context* ctx, duk_idx_t idx)
     return res;
 }
 
-std::string get_chain_of( js::value& arg)
+std::string get_chain_of(js::value& arg)
 {
     if(arg.is_undefined())
         return "";
