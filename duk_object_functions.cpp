@@ -621,36 +621,9 @@ void dukx_sanitise_move_value(duk_context* ctx, duk_context* dst_ctx, duk_idx_t 
 }
 #endif
 
-std::string get_original_host(duk_context* ctx, duk_idx_t idx)
-{
-    duk_get_prop_string(ctx, idx, DUKX_HIDDEN_SYMBOL("OHOST").c_str());
-
-    std::string ocaller = duk_safe_to_std_string(ctx, -1);
-
-    duk_pop_n(ctx, 1);
-
-    return ocaller;
-}
-
 std::string get_original_host(js::value& val)
 {
     return val.get_hidden("OHOST");
-}
-
-std::string get_chain_of(duk_context* ctx, duk_idx_t idx)
-{
-    duk_get_prop_string(ctx, idx, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
-
-    bool undef = duk_is_undefined(ctx, -1);
-
-    std::string res = duk_safe_to_std_string(ctx, -1);
-
-    if(undef)
-        res.clear();
-
-    duk_pop_n(ctx, 1);
-
-    return res;
 }
 
 std::string get_chain_of(js::value& arg)
@@ -665,8 +638,6 @@ void set_chain(js::value& val, const std::string& full)
 {
     val.add_hidden("CHAIN", full);
 }
-
-//void dukx_push_db_proxy(duk_context* ctx);
 
 std::pair<js::value, js::value> dukx_db_push_proxy_handlers(js::value_context& vctx);
 void dukx_db_finish_proxy(js::value& func, js::value& object);
@@ -1220,16 +1191,6 @@ void dukx_setup_db_proxy(js::value_context& vctx)
     js::add_setter(global, "$db", js::function<db_proxy_set>).add_hidden("OHOST", secret_host);
     js::add_getter(global, "$db", js::function<db_getter_get>).add_hidden("OHOST", secret_host);
 }
-
-/*void dukx_setup_db_proxy(js::value_context& vctx)
-{
-    std::string host = get_script_host(vctx);
-
-    js::value global = js::get_global(vctx);
-
-    js::add_setter(global, "$db", db_set<false>).add_hidden("OHOST", host);
-    js::add_getter(global, "$db", js::function<db_getter_get>).add_hidden("OHOST", host);
-}*/
 
 std::pair<js::value, js::value> dukx_db_push_proxy_handlers(js::value_context& vctx)
 {
