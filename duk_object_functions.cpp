@@ -678,18 +678,6 @@ std::string get_chain_of( js::value& arg)
     return arg.get_hidden("CHAIN");
 }
 
-void update_chain(duk_context* ctx, const std::string& key, duk_idx_t idx)
-{
-    std::string current = get_full_chain(ctx);
-
-    ///current may be ""
-    std::string next = current + "." + key;
-
-    //duk_push_current_function(ctx);
-    duk_push_string(ctx, key.c_str());
-    duk_put_prop_string(ctx, idx - 1, DUKX_HIDDEN_SYMBOL("CHAIN").c_str());
-}
-
 void set_chain(js::value& val, const std::string& full)
 {
     val.add_hidden("CHAIN", full);
