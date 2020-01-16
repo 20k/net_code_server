@@ -688,6 +688,9 @@ bool js::value::has(const std::string& key) const
     if(idx == -1)
         return false;
 
+    if(is_undefined())
+        return false;
+
     return duk_has_prop_lstring(ctx, idx, key.c_str(), key.size());
 }
 
@@ -696,12 +699,18 @@ bool js::value::has(int key) const
     if(idx == -1)
         return false;
 
+    if(is_undefined())
+        return false;
+
     return duk_has_prop_index(ctx, idx, key);
 }
 
 bool js::value::has(const char* key) const
 {
     if(idx == -1)
+        return false;
+
+    if(is_undefined())
         return false;
 
     return duk_has_prop_string(ctx, idx, key);
@@ -814,7 +823,7 @@ bool js::value::is_boolean()
     return duk_is_boolean(ctx, idx);
 }
 
-bool js::value::is_undefined()
+bool js::value::is_undefined() const
 {
     if(idx == -1)
         return false;

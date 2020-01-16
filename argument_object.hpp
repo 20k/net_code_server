@@ -245,6 +245,12 @@ namespace arg
     inline
     void dukx_get(duk_context* ctx, int idx, std::string& out)
     {
+        if(duk_is_undefined(ctx, idx))
+        {
+            out = std::remove_reference_t<decltype(out)>();
+            return;
+        }
+
         stack_dupper sdup(ctx, idx);
 
         duk_dup(ctx, sdup.tidx);
@@ -265,6 +271,12 @@ namespace arg
     inline
     void dukx_get(duk_context* ctx, int idx, int64_t& out)
     {
+        if(duk_is_undefined(ctx, idx))
+        {
+            out = std::remove_reference_t<decltype(out)>();
+            return;
+        }
+
         stack_dupper sdup(ctx, idx);
         out = duk_get_number(ctx, sdup.tidx);
     }
@@ -272,6 +284,12 @@ namespace arg
     inline
     void dukx_get(duk_context* ctx, int idx, int& out)
     {
+        if(duk_is_undefined(ctx, idx))
+        {
+            out = std::remove_reference_t<decltype(out)>();
+            return;
+        }
+
         stack_dupper sdup(ctx, idx);
         out = duk_get_int(ctx, sdup.tidx);
     }
@@ -279,6 +297,12 @@ namespace arg
     inline
     void dukx_get(duk_context* ctx, int idx, double& out)
     {
+        if(duk_is_undefined(ctx, idx))
+        {
+            out = std::remove_reference_t<decltype(out)>();
+            return;
+        }
+
         stack_dupper sdup(ctx, idx);
         out = duk_get_number(ctx, sdup.tidx);
     }
@@ -286,6 +310,12 @@ namespace arg
     inline
     void dukx_get(duk_context* ctx, int idx, bool& out)
     {
+        if(duk_is_undefined(ctx, idx))
+        {
+            out = std::remove_reference_t<decltype(out)>();
+            return;
+        }
+
         stack_dupper sdup(ctx, idx);
         out = duk_get_boolean(ctx, sdup.tidx);
     }
@@ -294,6 +324,12 @@ namespace arg
     inline
     void dukx_get(duk_context* ctx, int idx, std::vector<T>& out)
     {
+        if(duk_is_undefined(ctx, idx))
+        {
+            out = std::remove_reference_t<decltype(out)>();
+            return;
+        }
+
         stack_dupper sdup(ctx, idx);
 
         duk_size_t arrsizet = duk_get_length(ctx, sdup.tidx);
@@ -314,6 +350,12 @@ namespace arg
     inline
     void dukx_get(duk_context* ctx, int idx, std::map<T, U>& out)
     {
+        if(duk_is_undefined(ctx, idx))
+        {
+            out = std::remove_reference_t<decltype(out)>();
+            return;
+        }
+
         stack_dupper sdup(ctx, idx);
 
         duk_enum(ctx, sdup.tidx, 0);
@@ -337,6 +379,12 @@ namespace arg
     inline
     void dukx_get(duk_context* ctx, int idx, T*& out)
     {
+        if(duk_is_undefined(ctx, idx))
+        {
+            out = std::remove_reference_t<decltype(out)>();
+            return;
+        }
+
         stack_dupper sdup(ctx, idx);
         out = (T*)duk_require_pointer(ctx, idx);
     }
@@ -419,7 +467,7 @@ namespace js
         bool is_empty();
         bool is_function();
         bool is_boolean();
-        bool is_undefined();
+        bool is_undefined() const;
         bool is_truthy();
         bool is_object_coercible();
 
