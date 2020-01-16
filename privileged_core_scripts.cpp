@@ -3621,6 +3621,8 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
         }
     }
 
+    js::value_context vctx(ctx);
+
     ///if(current_node.breached)
     ///do display adjacents, node type, what we can do here
 
@@ -3657,7 +3659,10 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
             {
                 array_data["lock_type"] = func;
 
-                if(!it->second.ptr(priv_ctx, ctx, msg, i, name_of_person_being_attacked))
+                js::value arg(vctx, -1);
+                arg.release();
+
+                if(!it->second.ptr(priv_ctx, vctx, arg, msg, i, name_of_person_being_attacked))
                 {
                     all_success = false;
 
