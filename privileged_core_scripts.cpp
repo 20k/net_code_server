@@ -430,12 +430,6 @@ duk_ret_t scripts__get_level(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     duk_pop(ctx);
 
-    if(privileged_functions.find(str) != privileged_functions.end())
-    {
-        duk_push_int(ctx, privileged_functions[str].sec_level);
-        return 1;
-    }
-
     std::string script_err;
 
     unified_script_info script = unified_script_loading(get_thread_id(ctx), str, script_err);

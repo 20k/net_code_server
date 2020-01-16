@@ -676,34 +676,49 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
     ///IF IS PRIVILEGED SCRIPT, RETURN THAT CFUNC
     if(privileged_functions.find(to_call_fullname) != privileged_functions.end())
     {
-        SL_GUARD(privileged_functions[to_call_fullname].sec_level);
+        auto it = privileged_functions.find(to_call_fullname);
+
+        SL_GUARD(it->second.sec_level);
 
         ///use ORIGINAL script host
         priv_context priv_ctx(get_script_host(*vctx), to_call_fullname);
 
         //set_script_info(ctx, to_call_fullname);
 
-        js::value arg_dup(*vctx, arg);
-        arg_dup.release();
-
-        duk_ret_t result = privileged_functions[to_call_fullname].func(priv_ctx, vctx->ctx, sl);
-
-        js::value ret(*vctx);
-
-        if(result > 0)
+        if(it->second.func_duk)
         {
-            ret = js::value(*vctx, -1);
+            js::value arg_dup(*vctx, arg);
+            arg_dup.release();
+
+            duk_ret_t result = it->second.func_duk(priv_ctx, vctx->ctx, sl);
+
+            js::value ret(*vctx);
+
+            if(result > 0)
+            {
+                ret = js::value(*vctx, -1);
+            }
+            else
+            {
+                ret = js::undefined;
+            }
+
+            qm.process(get_thread_id(*vctx), get_caller(*vctx), qdata);
+
+            return ret;
         }
         else
         {
-            ret = js::undefined;
+            assert(it->second.func_new);
+
+            js::value ret = it->second.func_new(priv_ctx, *vctx, arg, sl);
+
+            qm.process(get_thread_id(*vctx), get_caller(*vctx), qdata);
+
+            return ret;
         }
 
-        qm.process(get_thread_id(*vctx), get_caller(*vctx), qdata);
-
         //set_script_info(ctx, full_script);
-
-        return ret;
     }
 
     ///so, this indent and everything under if(!script.valid)

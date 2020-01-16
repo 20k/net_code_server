@@ -24,6 +24,7 @@ struct priv_context
 };
 
 using function_priv_t = duk_ret_t (*)(priv_context&, duk_context*, int);
+using function_priv_new_t = js::value (*)(priv_context&, js::value_context& vctx, js::value& arg, int);
 
 inline
 bool can_run(int csec_level, int maximum_sec)
@@ -37,9 +38,24 @@ bool can_run(int csec_level, int maximum_sec)
 
 struct priv_func_info
 {
-    function_priv_t func;
+    function_priv_t func_duk = nullptr;
+    function_priv_new_t func_new = nullptr;
     int sec_level = 0;
     bool is_privileged = false; ///can only be called by something privileged
+
+    priv_func_info(function_priv_t _func, int _sec_level, bool _is_privileged = false)
+    {
+        func_duk = _func;
+        sec_level = _sec_level;
+        is_privileged = _is_privileged;
+    }
+
+    priv_func_info(function_priv_new_t _func, int _sec_level, bool _is_privileged = false)
+    {
+        func_new = _func;
+        sec_level = _sec_level;
+        is_privileged = _is_privileged;
+    }
 };
 
 extern

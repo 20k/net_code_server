@@ -36,10 +36,10 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
         }
     }*/
 
-    if(privileged_functions.find(full_scriptname) != privileged_functions.end())
+    if(auto priv_it = privileged_functions.find(full_scriptname); priv_it != privileged_functions.end())
     {
         ret.c_shim_name = full_scriptname;
-        ret.seclevel = privileged_functions[full_scriptname].sec_level;
+        ret.seclevel = priv_it->second.sec_level;
         ret.owner = get_host_from_fullname(full_scriptname);
         ret.is_c_shim = false;
         ret.valid = true;
