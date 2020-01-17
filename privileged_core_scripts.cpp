@@ -1106,20 +1106,18 @@ js::value channel__leave(priv_context& priv_ctx, js::value_context& vctx, js::va
     return js::make_success(vctx);
 }
 
-duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value msg__manage(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
-    std::string to_join = duk_safe_get_prop_string(ctx, -1, "join");
-    std::string to_leave = duk_safe_get_prop_string(ctx, -1, "leave");
-    std::string to_create = duk_safe_get_prop_string(ctx, -1, "create");
+    std::string to_join = arg["join"];
+    std::string to_leave = arg["leave"];
+    std::string to_create = arg["create"];
 
     int num_set = 0;
 
     if(to_join.size() > 0)
     {
         if(!is_valid_channel_name(to_join))
-            return push_error(ctx, "Invalid Name");
+            return js::make_error(vctx, "Invalid Name");
 
         num_set++;
     }
@@ -1127,7 +1125,7 @@ duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(to_leave.size() > 0)
     {
         if(!is_valid_channel_name(to_leave))
-            return push_error(ctx, "Invalid Name");
+            return js::make_error(vctx, "Invalid Name");
 
         num_set++;
     }
@@ -1135,26 +1133,26 @@ duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(to_create.size() > 0)
     {
         if(!is_valid_channel_name(to_create))
-            return push_error(ctx, "Invalid Name");
+            return js::make_error(vctx, "Invalid Name");
 
-        RATELIMIT_DUK(CREATE_CHANNEL);
+        RATELIMIT_VDUK(CREATE_CHANNEL);
 
         num_set++;
     }
 
     if(num_set != 1)
-        return push_error(ctx, "Only one leave/join/create parameter may be specified");
+        return js::make_error(vctx, "Only one leave/join/create parameter may be specified");
 
     if(to_join.size() >= 10 || to_leave.size() >= 10 || to_create.size() >= 10)
-        return push_error(ctx, "Invalid Leave/Join/Create arguments");
+        return js::make_error(vctx, "Invalid Leave/Join/Create arguments");
 
-    std::string username = get_caller(ctx);
+    std::string username = get_caller(vctx);
 
     bool joining = to_join != "";
 
     if(to_join.size() > 0 || to_leave.size() > 0)
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
 
         mongo_requester request;
 
@@ -1166,20 +1164,20 @@ duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
 
         if(found.size() == 0)
-            return push_error(ctx, "Channel does not exist");
+            return js::make_error(vctx, "Channel does not exist");
 
         if(found.size() > 1)
-            return push_error(ctx, "Some kind of catastrophic error: Yellow Sparrow");
+            return js::make_error(vctx, "Some kind of catastrophic error: Yellow Sparrow");
 
         mongo_requester& chan = found[0];
 
         std::vector<std::string> users = (std::vector<std::string>)chan.get_prop("user_list");
 
         if(joining && array_contains(users, username))
-            return push_error(ctx, "In channel");
+            return js::make_error(vctx, "In channel");
 
         if(!joining && !array_contains(users, username))
-            return push_error(ctx, "Not in Channel");
+            return js::make_error(vctx, "Not in Channel");
 
         if(joining)
         {
@@ -1202,13 +1200,13 @@ duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(to_create.size() > 0)
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
 
         mongo_requester request;
         request.set_prop("channel_name", to_create);
 
         if(request.fetch_from_db(mongo_ctx).size() > 0)
-            return push_error(ctx, "Channel already exists");
+            return js::make_error(vctx, "Channel already exists");
 
         mongo_requester to_insert;
         to_insert.set_prop("channel_name", to_create);
@@ -1216,7 +1214,7 @@ duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         to_insert.insert_in_db(mongo_ctx);
     }
 
-    return push_success(ctx);
+    return js::make_success(vctx);
 }
 
 std::vector<std::string> get_users_in_channel(mongo_lock_proxy& mongo_ctx, const std::string& channel)
@@ -1238,30 +1236,28 @@ std::vector<std::string> get_users_in_channel(mongo_lock_proxy& mongo_ctx, const
     return users;
 }
 
-duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value msg__send(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-    RATELIMIT_DUK(CHAT);
+    RATELIMIT_VDUK(CHAT);
 
-    std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
-    std::string msg = duk_safe_get_prop_string(ctx, -1, "msg");
+    std::string channel = arg["channel"];
+    std::string msg = arg["msg"];
 
     if(channel == "")
         channel = "global";
 
     if(channel == "" || msg == "" || channel.size() >= 10 || msg.size() >= 10000)
     {
-        push_error(ctx, "Usage: #hs.msg.send({channel:\"<name>\", msg:\"msg\"})");
-        return 1;
+        js::make_error(vctx, "Usage: #hs.msg.send({channel:\"<name>\", msg:\"msg\"})");
     }
 
     user my_user;
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
-        if(!my_user.load_from_db(mongo_ctx, get_caller(ctx)))
-            return push_error(ctx, "No such user");
+        if(!my_user.load_from_db(mongo_ctx, get_caller(vctx)))
+            return js::make_error(vctx, "No such user");
     }
 
     channel = strip_whitespace(channel);
@@ -1272,29 +1268,29 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     {
         {
-            mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+            mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
 
-            if(!user_in_channel(mongo_ctx, get_caller(ctx), channel))
-                return push_error(ctx, "User not in channel or doesn't exist");
+            if(!user_in_channel(mongo_ctx, get_caller(vctx), channel))
+                return js::make_error(vctx, "User not in channel or doesn't exist");
         }
 
         if(channel != "local")
         {
-            mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+            mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
             users = get_users_in_channel(mongo_ctx, channel);
         }
         else
         {
-            std::optional<low_level_structure*> system_opt = low_level_structure_manage.get_system_of(get_caller(ctx));
+            std::optional<low_level_structure*> system_opt = low_level_structure_manage.get_system_of(get_caller(vctx));
 
             if(!system_opt.has_value())
-                return push_error(ctx, "Dust is coarse and irritating and gets everywhere (no system)");
+                return js::make_error(vctx, "Dust is coarse and irritating and gets everywhere (no system)");
 
             low_level_structure& structure = *system_opt.value();
 
             users = structure.get_all_users();
 
-            mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+            mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
 
             for(int i=0; i < (int)users.size(); i++)
             {
@@ -1312,7 +1308,7 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     for(auto& i : users)
     {
-        if(i == get_caller(ctx))
+        if(i == get_caller(vctx))
         {
             found = true;
             break;
@@ -1320,19 +1316,19 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     if(!found)
-        return push_error(ctx, "Not in channel");
+        return js::make_error(vctx, "Not in channel");
 
     {
         ///TODO: LIMIT
         for(auto& current_user : users)
         {
-            mongo_nolock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
+            mongo_nolock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(vctx));
             mongo_ctx.change_collection(current_user);
 
             size_t real_time = get_wall_time();
 
             nlohmann::json to_insert;
-            to_insert["user"] = get_caller(ctx);
+            to_insert["user"] = get_caller(vctx);
             to_insert["is_chat"] = 1;
             to_insert["msg"] = msg;
             to_insert["channel"] = channel;
@@ -1343,41 +1339,38 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
-    command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(ctx, "command_handler_state_pointer");
+    command_handler_state* found_ptr = js::get_heap_stash(vctx)["command_handler_state_pointer"].get_ptr<command_handler_state>();
 
-    js::value_context vctx(ctx);
-
-    if(found_ptr && get_caller_stack(ctx).size() > 0 && get_caller_stack(ctx)[0] == found_ptr->get_user_name())
+    if(found_ptr && get_caller_stack(vctx).size() > 0 && get_caller_stack(vctx)[0] == found_ptr->get_user_name())
         send_async_message(vctx, handle_client_poll_json(my_user).dump());
 
-    return push_success(ctx);
+    return js::make_success(vctx);
 }
 
 
-duk_ret_t msg__tell(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value msg__tell(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-    RATELIMIT_DUK(CHAT);
+    RATELIMIT_VDUK(CHAT);
 
-    std::string to = duk_safe_get_prop_string(ctx, -1, "user");
-    std::string msg = duk_safe_get_prop_string(ctx, -1, "msg");
+    std::string to = arg["user"];
+    std::string msg = arg["msg"];
 
     if(to == "")
-        return push_error(ctx, "Invalid user argument");
+        return js::make_error(vctx, "Invalid user argument");
 
     if(msg.size() > 10000)
-        return push_error(ctx, "Too long msg, 10k is max");
+        return js::make_error(vctx, "Too long msg, 10k is max");
 
-    if(!get_user(to, get_thread_id(ctx)))
-        return push_error(ctx, "Invalid User");
+    if(!get_user(to, get_thread_id(vctx)))
+        return js::make_error(vctx, "Invalid User");
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
+    mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(vctx));
     mongo_ctx.change_collection(to);
 
     size_t real_time = get_wall_time();
 
     nlohmann::json to_insert;
-    to_insert["user"] = get_caller(ctx);
+    to_insert["user"] = get_caller(vctx);
     to_insert["is_tell"] = 1;
     to_insert["msg"] = msg;
     to_insert["time_ms"] = real_time;
@@ -1385,7 +1378,7 @@ duk_ret_t msg__tell(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     insert_in_db(mongo_ctx, to_insert);
 
-    return push_success(ctx);
+    return js::make_success(vctx);
 }
 
 void create_notification(int lock_id, const std::string& to, const std::string& notif_msg)
@@ -1458,14 +1451,12 @@ std::string format_time(const std::string& in)
     return in;
 }
 
-duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value msg__recent(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
-    std::string channel = duk_safe_get_prop_string(ctx, -1, "channel");
-    int num = duk_get_prop_string_as_int(ctx, -1, "count");
-    bool pretty = !dukx_is_prop_truthy(ctx, -1, "array");
-    bool is_tell = dukx_is_prop_truthy(ctx, -1, "tell");
+    std::string channel = arg["channel"];
+    int num = arg.has("count") ? arg["count"] : -1;
+    bool pretty = !requested_scripting_api(arg);
+    bool is_tell = arg["tell"].is_truthy();
 
     if(num <= 0)
         num = 10;
@@ -1474,34 +1465,29 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
         channel = "global";
 
     if(num >= 100)
-    {
-        return push_error(ctx, "Count cannot be >= than 100");
-    }
+        return js::make_error(vctx, "Count cannot be >= than 100");
 
     if(!is_tell)
     {
         if(!is_valid_channel_name(channel))
-            return push_error(ctx, "Invalid channel name");
+            return js::make_error(vctx, "Invalid channel name");
 
         if(channel == "" || channel.size() >= 10)
-        {
-            push_error(ctx, "Usage: #ms.msg.recent({channel:\"<name>\", count:num, pretty:1})");
-            return 1;
-        }
+            return js::make_error(vctx, "Usage: #ms.msg.recent({channel:\"<name>\", count:num, pretty:1})");
     }
 
     if(channel.size() > 50)
         channel.resize(50);
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
 
-        if(!user_in_channel(mongo_ctx, get_caller(ctx), channel))
-            return push_error(ctx, "User not in channel or doesn't exist");
+        if(!user_in_channel(mongo_ctx, get_caller(vctx), channel))
+            return js::make_error(vctx, "User not in channel or doesn't exist");
     }
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(ctx));
-    mongo_ctx.change_collection(get_caller(ctx));
+    mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(vctx));
+    mongo_ctx.change_collection(get_caller(vctx));
 
     ///ALARM: ALARM: RATE LIMIT
     nlohmann::json request;
@@ -1535,16 +1521,14 @@ duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(!pretty)
     {
-        push_duk_val(ctx, found);
+        return js::make_value(vctx, found);
     }
     else
     {
         std::string str = prettify_chat_strings(found, !is_tell);
 
-        push_duk_val(ctx, str);
+        return js::make_value(vctx, str);
     }
-
-    return 1;
 }
 
 

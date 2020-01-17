@@ -107,11 +107,9 @@ js::value channel__join(priv_context& priv_ctx, js::value_context& vctx, js::val
 js::value channel__list(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 js::value channel__leave(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
-duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl);
-
-duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl);
-
-duk_ret_t msg__tell(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value msg__manage(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
+js::value msg__send(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
+js::value msg__tell(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 void create_notification(int lock_id, const std::string& to, const std::string& notif_msg);
 void create_xfer_notif(js::value_context& vctx, const std::string& xfer_from, const std::string& xfer_to, double amount);
@@ -122,7 +120,7 @@ void create_destroy_item_notif(js::value_context& vctx, const std::string& to, c
 std::string format_time(const std::string& in);
 std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_channels = true);
 
-duk_ret_t msg__recent(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value msg__recent(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t users__accessible(priv_context& priv_ctx, duk_context* ctx, int sl);
 
