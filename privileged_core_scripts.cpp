@@ -3219,33 +3219,31 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 #endif // 0
 
 
-duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value nodes__view_log(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
+    std::string name_of_person_being_attacked = arg["user"];
 
-    std::string name_of_person_being_attacked = duk_safe_get_prop_string(ctx, -1, "user");
-
-    int make_array = dukx_is_prop_truthy(ctx, -1, "array");
+    int make_array = requested_scripting_api(arg);
 
     user usr;
 
     {
-        mongo_lock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         if(!usr.load_from_db(user_info, name_of_person_being_attacked))
-            return push_error(ctx, "No such user");
+            return js::make_error(vctx, "No such user");
     }
 
     user_nodes nodes;
 
     {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
 
         nodes.ensure_exists(node_ctx, name_of_person_being_attacked);
         nodes.load_from_db(node_ctx, name_of_person_being_attacked);
     }
 
-    std::string node_fullname = duk_safe_get_prop_string(ctx, -1, "NID");
+    std::string node_fullname = arg["NID"];
 
     std::vector<item> attackables;
 
@@ -3260,22 +3258,21 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
 
         {
-            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
 
             attackables = current_node->get_locks(item_ctx);
         }
     }
 
     if(current_node == nullptr)
-        return push_error(ctx, "Misc error: Blue Melon");
+        return js::make_error(vctx, "Misc error: Blue Melon");
 
-    if(name_of_person_being_attacked != get_caller(ctx))
+    if(name_of_person_being_attacked != get_caller(vctx))
     {
         ///there must be both an accessible path, and the node itself must be breached
         if(!nodes.node_accessible(*current_node) || !current_node->is_breached())
         {
-            duk_push_string(ctx, nodes.get_lockdown_message().c_str());
-            return 1;
+            return js::make_value(vctx, nodes.get_lockdown_message());
         }
     }
 
@@ -3290,36 +3287,32 @@ duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(make_array)
     {
-        push_duk_val(ctx, all_logs);
-        return 1;
+       return js::make_value(vctx, all_logs);
     }
     else
     {
         std::string str = format_pretty_names(logs, false);
 
-        push_duk_val(ctx, str);
-        return 1;
+        return js::make_value(vctx, str);
     }
-
-    return 1;
 }
 
-duk_ret_t log__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value log__expose(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    return nodes__view_log(priv_ctx, ctx, sl);
+    return nodes__view_log(priv_ctx, vctx, arg, sl);
 }
 
-duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::string& name_of_person_being_attacked, bool is_arr)
+js::value hack_internal(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, const std::string& name_of_person_being_attacked, bool is_arr)
 {
-    auto user_and_nodes = get_user_and_nodes(name_of_person_being_attacked, get_thread_id(ctx));
+    auto user_and_nodes = get_user_and_nodes(name_of_person_being_attacked, get_thread_id(vctx));
 
     if(!user_and_nodes.has_value())
-        return push_error(ctx, "No such user");
+        return js::make_error(vctx, "No such user");
 
     user& usr = user_and_nodes->first;
     user_nodes& nodes = user_and_nodes->second;
 
-    std::string node_fullname = duk_safe_get_prop_string(ctx, -1, "NID");
+    std::string node_fullname = arg["NID"];
 
     std::vector<item> attackables;
 
@@ -3332,14 +3325,14 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
         current_node = nodes.name_to_node(name_of_person_being_attacked + "_" + node_fullname);
 
         {
-            mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+            mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
 
             attackables = current_node->get_locks(item_ctx);
         }
     }
 
     if(current_node == nullptr)
-        return push_error(ctx, "Misc error: Black Tiger");
+        return js::make_error(vctx, "Misc error: Black Tiger");
 
     nlohmann::json targeted;
     targeted["NID_string"] = current_node->get_NID();
@@ -3363,14 +3356,12 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
         if(!is_arr)
         {
-            duk_push_string(ctx, msg.c_str());
+            return js::make_value(vctx, msg);
         }
         else
         {
-            push_duk_val(ctx, array_data);
+           return js::make_value(vctx, array_data);
         }
-
-        return 1;
     }
 
     ///leave trace in logs
@@ -3378,22 +3369,20 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
         user attacker;
 
         {
-            mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+            mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
-            attacker.load_from_db(mongo_ctx, get_caller(ctx));
+            attacker.load_from_db(mongo_ctx, get_caller(vctx));
         }
 
-        nodes.leave_trace(*current_node, attacker.name, usr, get_thread_id(ctx));
+        nodes.leave_trace(*current_node, attacker.name, usr, get_thread_id(vctx));
 
         ///hmm, we are actually double overwriting here
         {
-            mongo_nolock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+            mongo_nolock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
 
             nodes.overwrite_in_db(node_ctx);
         }
     }
-
-    js::value_context vctx(ctx);
 
     ///if(current_node.breached)
     ///do display adjacents, node type, what we can do here
@@ -3413,7 +3402,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
                 i.handle_rotate();
 
                 ///synchronous so that multiple things don't rotate
-                mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+                mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
                 db_disk_overwrite(item_ctx, i);
 
                 ///todo: send a chats.tell to victim here
@@ -3431,9 +3420,6 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
             {
                 array_data["lock_type"] = func;
 
-                js::value arg(vctx, -1);
-                arg.release();
-
                 if(!it->second.ptr(priv_ctx, vctx, arg, msg, i, name_of_person_being_attacked))
                 {
                     all_success = false;
@@ -3449,10 +3435,10 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
                     array_data["lock_breached"] = true;
 
-                    create_notification(get_thread_id(ctx), name_of_person_being_attacked, make_notif_col("-" + i.get_prop("short_name") + " breached-"));
+                    create_notification(get_thread_id(vctx), name_of_person_being_attacked, make_notif_col("-" + i.get_prop("short_name") + " breached-"));
 
                     ///wants to be synchronous so that we don't overlap writes
-                    mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+                    mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
                     db_disk_overwrite(item_ctx, i);
                 }
             }
@@ -3466,7 +3452,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
     user_node* front_node = nodes.type_to_node(user_node_info::FRONT);
 
     if(breach_node == nullptr)
-        return push_error(ctx, "Error Code: Yellow Panther in hack_internal (net.hack?)");
+        return js::make_error(vctx, "Error Code: Yellow Panther in hack_internal (net.hack?)");
 
     bool breach_is_breached = breach_node->is_breached();
 
@@ -3486,14 +3472,14 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
 
         msg += dat;
 
-        create_notification(get_thread_id(ctx), name_of_person_being_attacked, make_error_col("-" + user_node_info::long_names[current_node->type] + " Node Compromised-"));
+        create_notification(get_thread_id(vctx), name_of_person_being_attacked, make_error_col("-" + user_node_info::long_names[current_node->type] + " Node Compromised-"));
     }
 
     if(all_success)
     {
         current_node->breach();
 
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
 
         nodes.overwrite_in_db(node_ctx);
     }
@@ -3517,7 +3503,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
         quest_hack_data br;
         br.target = name_of_person_being_attacked;
 
-        qm.process(get_thread_id(ctx), get_caller(ctx), br);
+        qm.process(get_thread_id(vctx), get_caller(vctx), br);
     }
 
     if(breach_node->is_breached())
@@ -3527,7 +3513,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
         quest_breach_data br;
         br.target = name_of_person_being_attacked;
 
-        qm.process(get_thread_id(ctx), get_caller(ctx), br);
+        qm.process(get_thread_id(vctx), get_caller(vctx), br);
     }
 
     if(breach_node->is_breached() && !breach_is_breached)
@@ -3535,7 +3521,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
         std::vector<item> all_items;
 
         {
-            mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+            mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
 
             all_items = usr.get_all_items(item_ctx);
         }
@@ -3551,7 +3537,7 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
                 if(script_name == "")
                     continue;
 
-                script_name = "#" + script_name + "({attacker:\"" + get_caller(ctx) + "\"})";
+                script_name = "#" + script_name + "({attacker:\"" + get_caller(vctx) + "\"})";
 
                 ///remember that this includes user.call_stack weirdness
                 ///500ms exec time
@@ -3572,11 +3558,9 @@ duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::str
     array_data["ok"] = true;
 
     if(!is_arr)
-        duk_push_string(ctx, msg.c_str());
+        return js::make_value(vctx, msg);
     else
-        push_duk_val(ctx, array_data);
-
-    return 1;
+        return js::make_value(vctx, array_data);
 }
 
 #ifdef USE_LOCS
@@ -3592,31 +3576,28 @@ duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl)
 #endif // USE_LOCS
 
 
-duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value net__hack(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
     #ifdef TESTING
     /*MAKE_PERF_COUNTER();
     mongo_diagnostics diagnostic_scope;*/
     #endif // TESTING
 
-    std::string name_of_person_being_attacked = duk_safe_get_prop_string(ctx, -1, "user");
-    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
+    std::string name_of_person_being_attacked = arg["user"];
+    bool is_arr = arg["array"].is_truthy();
 
     if(name_of_person_being_attacked == "")
-        return push_error(ctx, "Usage: net.hack({user:<name>})");
+        return js::make_error(vctx, "Usage: net.hack({user:<name>})");
 
-    if(!get_user(name_of_person_being_attacked, get_thread_id(ctx)))
-        return push_error(ctx, "No such user");
+    if(!get_user(name_of_person_being_attacked, get_thread_id(vctx)))
+        return js::make_error(vctx, "No such user");
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(ctx));
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(vctx));
 
         if(npc_info::has_type(mongo_ctx, npc_info::WARPY, name_of_person_being_attacked))
         {
-            push_duk_val(ctx, make_error_col("-Access Denied-"));
-            return 1;
+            return js::make_value(vctx, make_error_col("-Access Denied-"));
         }
     }
 
@@ -3632,20 +3613,18 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         float hack_cost = 0.25f;
 
-        js::value_context vctx(ctx);
-
-        auto path = playspace_network_manage.get_accessible_path_to(vctx, name_of_person_being_attacked, get_caller(ctx), (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, hack_cost);
+        auto path = playspace_network_manage.get_accessible_path_to(vctx, name_of_person_being_attacked, get_caller(vctx), (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, hack_cost);
 
         if(path.size() == 0)
-            return push_error(ctx, "No Path");
+            return js::make_error(vctx, "No Path");
 
         user_log next;
         next.add("type", "hostile_path_access", "");
 
-        playspace_network_manage.modify_path_per_link_strength_with_logs(path, -hack_cost, {next}, get_thread_id(ctx));
+        playspace_network_manage.modify_path_per_link_strength_with_logs(path, -hack_cost, {next}, get_thread_id(vctx));
     }
 
-    return hack_internal(priv_ctx, ctx, name_of_person_being_attacked, is_arr);
+    return hack_internal(priv_ctx, vctx, arg, name_of_person_being_attacked, is_arr);
 }
 
 ///ok so new hacking
@@ -3654,6 +3633,7 @@ duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl)
 ///but we also want people to be able to run commands during it
 ///maybe i can create a server realtime script that executes, would use relatively low cpu,
 ///although might require the advanced one thread <-> many thread watcher vs exec model for the server's sanity
+#if 0
 duk_ret_t net__hack_new(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -3709,6 +3689,7 @@ duk_ret_t net__hack_new(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return push_error(ctx, "unimplemented");
 }
+#endif
 
 duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
 {

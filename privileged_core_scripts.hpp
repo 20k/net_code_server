@@ -183,17 +183,19 @@ js::value item__steal(priv_context& priv_ctx, js::value_context& vctx, js::value
 
 js::value cash__steal(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
-duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t log__expose(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t hack_internal(priv_context& priv_ctx, duk_context* ctx, const std::string& name_of_person_being_attacked, bool is_arr);
+js::value nodes__view_log(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
+js::value log__expose(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
+js::value hack_internal(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, const std::string& name_of_person_being_attacked, bool is_arr);
 
 #ifdef USE_LOCS
 duk_ret_t user__port(priv_context& priv_ctx, duk_context* ctx, int sl);
 #endif // USE_LOCS
 
 
-duk_ret_t net__hack(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value net__hack(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
+#if 0
 duk_ret_t net__hack_new(priv_context& priv_ctx, duk_context* ctx, int sl);
+#endif // 0
 duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 #ifdef USE_LOCS
@@ -387,7 +389,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(cheats__disconnect, 4),
     REGISTER_FUNCTION_PRIV(cheats__unlink, 4),
     REGISTER_FUNCTION_PRIV(cheats__testloot, 4),
-    REGISTER_FUNCTION_PRIV(net__hack_new, 0),
+    //REGISTER_FUNCTION_PRIV(net__hack_new, 0),
     #endif // TESTING
     REGISTER_FUNCTION_PRIV(sys__map, 1),
     #ifdef SYSTEM_TESTING
