@@ -3584,7 +3584,7 @@ js::value net__hack(priv_context& priv_ctx, js::value_context& vctx, js::value& 
     #endif // TESTING
 
     std::string name_of_person_being_attacked = arg["user"];
-    bool is_arr = arg["array"].is_truthy();
+    bool is_arr = requested_scripting_api(arg);
 
     if(name_of_person_being_attacked == "")
         return js::make_error(vctx, "Usage: net.hack({user:<name>})");
@@ -3691,75 +3691,54 @@ duk_ret_t net__hack_new(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 #endif
 
-duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value nodes__manage(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
-    bool get_array = dukx_is_prop_truthy(ctx, -1, "array");
+    bool get_array = requested_scripting_api(arg);
 
     std::string usage = "Usage: " + make_key_val("swap", "[idx1, idx2]");
 
     ///reorder
-    bool has_swap = dukx_is_prop_truthy(ctx, -1, "swap");
+    bool has_swap = arg["swap"].is_truthy();
 
     user usr;
 
     {
-        mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
-        if(!usr.load_from_db(user_ctx, get_caller(ctx)))
-            return push_error(ctx, "No such user, really bad error");
+        if(!usr.load_from_db(user_ctx, get_caller(vctx)))
+            return js::make_error(vctx, "No such user, really bad error");
     }
 
     user_nodes nodes;
 
     {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
 
         ///yeah this isn't good enough, need to do what we did for locs?
         ///or just do it in loc handler i guess
-        nodes.ensure_exists(node_ctx, get_caller(ctx));
+        nodes.ensure_exists(node_ctx, get_caller(vctx));
 
-        nodes.load_from_db(node_ctx, get_caller(ctx));
+        nodes.load_from_db(node_ctx, get_caller(vctx));
     }
 
     if(has_swap)
     {
         if(sl > 1)
-            return push_error(ctx, "Must be called with a sec level of 1 to swap");
+            return js::make_error(vctx, "Must be called with a sec level of 1 to swap");
 
-        duk_get_prop_string(ctx, -1, "swap");
-        int len = duk_get_length(ctx, -1);
+        std::vector<int> vals = arg["swap"];
 
-        if(len != 2)
-            return push_error(ctx, "array len != 2");
-
-        std::vector<int> values;
-
-        ///iterate array, being extremely generous with what you can pass in
-        for(int i = 0; i < len; i++)
-        {
-            duk_get_prop_index(ctx, -1, i);
-
-            if(duk_is_number(ctx, -1))
-                values.push_back(duk_get_int(ctx, -1));
-
-            duk_pop(ctx);
-        }
-
-        duk_pop(ctx);
-
-        if(values.size() != 2)
-            return push_error(ctx, "array len != 2");
+        if(vals.size() != 2)
+            return js::make_error(vctx, "array len != 2");
 
         std::vector<std::string> items;
 
-        for(auto& i : values)
+        for(auto& i : vals)
         {
             std::string item = usr.index_to_item(i);
 
             if(item == "")
-                return push_error(ctx, "Item does not exist");
+                return js::make_error(vctx, "Item does not exist");
 
             items.push_back(item);
         }
@@ -3768,13 +3747,13 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         auto u2 = nodes.lock_to_node(items[1]);
 
         if(!u1.has_value() || !u2.has_value())
-            return push_error(ctx, "Item not found on node");
+            return js::make_error(vctx, "Item not found on node");
 
         auto p1 = u1.value()->lock_to_pointer(items[0]);
         auto p2 = u2.value()->lock_to_pointer(items[1]);
 
         if(!p1.has_value() || !p2.has_value())
-            return push_error(ctx, "Item not found on node");
+            return js::make_error(vctx, "Item not found on node");
 
         ///can cause multiples to be loaded on one stack
         std::swap(*p1.value(), *p2.value());
@@ -3789,12 +3768,12 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         }*/
 
         {
-            mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+            mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
             nodes.overwrite_in_db(node_ctx);
         }
 
         {
-            mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+            mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
 
             item i1, i2;
             db_disk_load(items_ctx, i1, items[0]);
@@ -3807,7 +3786,7 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
             db_disk_overwrite(items_ctx, i2);
         }
 
-        return push_success(ctx);
+        return js::make_success(vctx);
     }
 
 
@@ -3833,7 +3812,7 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         accum += "\n";
 
         {
-            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+            mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
 
             ///this needs to take a user as well
             ///so that we can display the indices of the items for easy load/unload
@@ -3846,16 +3825,14 @@ duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(accum.size() > 0 && accum.back() == '\n')
             accum.pop_back();
 
-        duk_push_string(ctx, accum.c_str());
+        return js::make_value(vctx, accum.c_str());
     }
     else
     {
-        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
 
-        push_duk_val(ctx, nodes.get_as_json(item_ctx, usr));
+        return js::make_value(vctx, nodes.get_as_json(item_ctx, usr));
     }
-
-    return 1;
 }
 
 #ifdef USE_LOCS

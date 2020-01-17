@@ -196,7 +196,7 @@ js::value net__hack(priv_context& priv_ctx, js::value_context& vctx, js::value& 
 #if 0
 duk_ret_t net__hack_new(priv_context& priv_ctx, duk_context* ctx, int sl);
 #endif // 0
-duk_ret_t nodes__manage(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value nodes__manage(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 #ifdef USE_LOCS
 
