@@ -171,7 +171,7 @@ duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl);
 #endif // TESTING
 
 
-duk_ret_t cash__expose(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value cash__expose(priv_context& priv_ctx, js::value_context& vctx, js::value& val, int sl);
 js::value item__expose(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 ///handles confirm:true for cash

@@ -2764,23 +2764,23 @@ duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl)
 
 ///modify to return a string unfortunately
 ///breaking api change
-duk_ret_t cash__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value cash__expose(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    std::string from = duk_safe_get_prop_string(ctx, -1, "user");
-    bool arr = dukx_is_prop_truthy(ctx, -1, "array");
+    std::string from = arg["user"];
+    bool arr = requested_scripting_api(arg);
 
     if(from == "")
-        return push_error(ctx, "Args: user:<username>");
+        return js::make_error(vctx, "Args: user:<username>");
 
-    auto opt_user_and_nodes = get_user_and_nodes(from, get_thread_id(ctx));
+    auto opt_user_and_nodes = get_user_and_nodes(from, get_thread_id(vctx));
 
     if(!opt_user_and_nodes.has_value())
-        return push_error(ctx, "No such user");
+        return js::make_error(vctx, "No such user");
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 
-    if(!low_level_structure_manage.in_same_system(get_caller(ctx), from))
-        return push_error(ctx, "Must be in same system to expose cash");
+    if(!low_level_structure_manage.in_same_system(get_caller(vctx), from))
+        return js::make_error(vctx, "Must be in same system to expose cash");
 
     auto hostile = opt_user_and_nodes->second.valid_hostile_actions();
 
@@ -2788,14 +2788,12 @@ duk_ret_t cash__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if((hostile & user_node_info::XFER_CASH_FROM) > 0)
     {
-        push_duk_val(ctx, opt_user_and_nodes->first.cash);
-
         user& usr = opt_user_and_nodes->first;
 
         auto sys_opt = low_level_structure_manage.get_system_of(usr);
 
         if(!sys_opt.has_value())
-            return push_error(ctx, "Error in cash expose (system)");
+            return js::make_error(vctx, "Error in cash expose (system)");
 
         low_level_structure& sys = *sys_opt.value();
 
@@ -2805,7 +2803,7 @@ duk_ret_t cash__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
             "exposed: " + to_string_with_enforced_variable_dp(usr.cash, 2) + "\n" +
             "available: " + to_string_with_enforced_variable_dp(usr.get_max_stealable_cash(current_time, sys), 2);
 
-            push_duk_val(ctx, str);
+            return js::make_value(vctx, str);
         }
         else
         {
@@ -2813,17 +2811,13 @@ duk_ret_t cash__expose(priv_context& priv_ctx, duk_context* ctx, int sl)
             ret["exposed"] = usr.cash;
             ret["available"] = usr.get_max_stealable_cash(current_time, sys);
 
-            push_duk_val(ctx, ret);
+            return js::make_value(vctx, ret);
         }
-
-        return 1;
     }
     else
     {
-        return push_error(ctx, "System Cash Node Secured");
+        return js::make_error(vctx, "System Cash Node Secured");
     }
-
-    return 1;
 }
 
 
