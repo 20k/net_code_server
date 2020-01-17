@@ -5241,34 +5241,32 @@ duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl)
 #endif // 0
 
 ///need to centre sys.map on player by default
-duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value sys__map(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
     #ifdef TESTING
     /*MAKE_PERF_COUNTER();
     mongo_diagnostics diagnostic_scope;*/
     #endif // TESTING
 
-    bool centre = dukx_is_prop_truthy(ctx, -1, "centre");
+    bool centre = arg["centre"];
 
     user my_user;
 
     {
         mongo_nolock_proxy lock = get_global_mongo_user_info_context(-2);
 
-        if(!my_user.load_from_db(lock, get_caller(ctx)))
-            return push_error(ctx, "Error: Does not exist");
+        if(!my_user.load_from_db(lock, get_caller(vctx)))
+            return js::make_error(vctx, "Error: Does not exist");
     }
 
-    int n_val = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", -1);
-    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
+    int n_val = arg.has("n") ? arg["n"] : -1;
+    bool is_arr = requested_scripting_api(arg);
     //int found_width = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", -1);
 
-    int found_w = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "w", 160);
-    int found_h = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "h", 80);
+    int found_w = arg.has("w") ? arg["w"] : 160;
+    int found_h = arg.has("h") ? arg["h"] : 80;
 
-    bool by_seclevel = dukx_is_prop_truthy(ctx, -1, "seclevels") || dukx_is_prop_truthy(ctx, -1, "seclevel") || dukx_is_prop_truthy(ctx, -1, "s");
+    bool by_seclevel = arg["seclevels"].is_truthy() || arg["seclevel"].is_truthy() || arg["s"].is_truthy();
 
     std::string extra_args = "Pass " + make_key_val("seclevel", "true") + " to display seclevels\n";
 
@@ -5280,7 +5278,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
     auto opt_sys = low_level_structure_manage.get_system_of(my_user);
 
     if(!opt_sys.has_value())
-        return push_error(ctx, "Well then, you are lost!");
+        return js::make_error(vctx, "Well then, you are lost!");
 
     low_level_structure& structure = *opt_sys.value();
 
@@ -5381,7 +5379,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         result = "Current Sys: " + colour_string(structure.name) + "\n" + result;
 
-        push_duk_val(ctx, extra_args + result);
+        return js::make_value(vctx, extra_args + result);
     }
     else
     {
@@ -5435,10 +5433,8 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         all_data = data;
 
-        push_duk_val(ctx, all_data);
+        return js::make_value(vctx, all_data);
     }
-
-    return 1;
 }
 
 #ifdef SYSTEM_TESTING
@@ -5569,6 +5565,8 @@ js::value sys__view(priv_context& priv_ctx, js::value_context& vctx, js::value& 
     //std::string str = duk_safe_get_prop_string(ctx, -1, "sys");
     bool is_arr = requested_scripting_api(arg);
     std::string found_target = arg["user"];
+
+    std::cout << "FTARGET " << found_target << std::endl;
 
     bool has_fit = arg["fit"].is_truthy();
 

@@ -685,7 +685,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
 
         //set_script_info(ctx, to_call_fullname);
 
-        if(it->second.func_duk)
+        /*if(it->second.func_duk)
         {
             js::value arg_dup(*vctx, arg);
             arg_dup.release();
@@ -707,7 +707,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
 
             return ret;
         }
-        else
+        else*/
         {
             assert(it->second.func_new);
 

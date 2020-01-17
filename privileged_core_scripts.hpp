@@ -38,17 +38,17 @@ bool can_run(int csec_level, int maximum_sec)
 
 struct priv_func_info
 {
-    function_priv_t func_duk = nullptr;
+    //function_priv_t func_duk = nullptr;
     function_priv_new_t func_new = nullptr;
     int sec_level = 0;
     bool is_privileged = false; ///can only be called by something privileged
 
-    priv_func_info(function_priv_t _func, int _sec_level, bool _is_privileged = false)
+    /*priv_func_info(function_priv_t _func, int _sec_level, bool _is_privileged = false)
     {
         func_duk = _func;
         sec_level = _sec_level;
         is_privileged = _is_privileged;
-    }
+    }*/
 
     priv_func_info(function_priv_new_t _func, int _sec_level, bool _is_privileged = false)
     {
@@ -253,7 +253,7 @@ duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl);
 #endif // 0
 #endif // OLD_DEPRECATED
 
-duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value sys__map(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 #ifdef SYSTEM_TESTING
 #if 0
 duk_ret_t sys__debug_view(priv_context& priv_ctx, duk_context* ctx, int sl);
@@ -326,8 +326,8 @@ std::string parse_function_hack(std::string in)
     return in;
 }
 
-#define REGISTER_FUNCTION_PRIV(x, y) {parse_function_hack(#x), {&x, y}}
-#define REGISTER_FUNCTION_PRIV_3(x, y, z) {parse_function_hack(#x), {&x, y, z}}
+#define REGISTER_FUNCTION_PRIV(x, y) {parse_function_hack(#x), priv_func_info(&x, y)}
+#define REGISTER_FUNCTION_PRIV_3(x, y, z) {parse_function_hack(#x), priv_func_info(&x, y, z)}
 
 inline
 std::map<std::string, priv_func_info> privileged_functions
