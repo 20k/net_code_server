@@ -1532,29 +1532,24 @@ js::value msg__recent(priv_context& priv_ctx, js::value_context& vctx, js::value
 }
 
 
-duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value users__me(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
+    int pretty = !requested_scripting_api(arg);
 
-    int pretty = !dukx_is_prop_truthy(ctx, -1, "array");
-
-    std::string caller = get_caller(ctx);
+    std::string caller = get_caller(vctx);
 
     user current_user;
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         if(!current_user.exists(mongo_ctx, caller))
-        {
-            push_error(ctx, "Yeah you really broke something here");
-            return 1;
-        }
+            return js::make_error(vctx, "Should be impossible (users.me no user)");
 
         current_user.load_from_db(mongo_ctx, caller);
     }
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(get_thread_id(ctx));
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_global_properties_context(get_thread_id(vctx));
 
     std::string auth_token = current_user.get_auth_token_binary();
 
@@ -1570,34 +1565,27 @@ duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         std::string str = format_pretty_names(names, true, true);
 
-        push_duk_val(ctx, str);
+        return js::make_value(vctx, str);
     }
     else
     {
-        push_duk_val(ctx, names);
+        return js::make_value(vctx, names);
     }
-
-    return 1;
 }
 
-duk_ret_t users__accessible(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value users__accessible(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
+    int pretty = !requested_scripting_api(arg);
 
-    int pretty = !dukx_is_prop_truthy(ctx, -1, "array");
-
-    std::string caller = get_caller(ctx);
+    std::string caller = get_caller(vctx);
 
     user current_user;
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         if(!current_user.exists(mongo_ctx, caller))
-        {
-            push_error(ctx, "Yeah you really broke something here");
-            return 1;
-        }
+            return js::make_error(vctx, "Should be impossible (users.accessible no user)");
 
         current_user.load_from_db(mongo_ctx, caller);
     }
@@ -1611,14 +1599,12 @@ duk_ret_t users__accessible(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         std::string str = format_pretty_names(names, true);
 
-        push_duk_val(ctx, str);
+        return js::make_value(vctx, str);
     }
     else
     {
-        push_duk_val(ctx, names);
+        return js::make_value(vctx, names);
     }
-
-    return 1;
 }
 
 #if 0

@@ -121,8 +121,8 @@ std::string format_time(const std::string& in);
 std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_channels = true);
 
 js::value msg__recent(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
-duk_ret_t users__me(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t users__accessible(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value users__me(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
+js::value users__accessible(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 #if 0
 ///pretty tired when i wrote this check it for mistakes
