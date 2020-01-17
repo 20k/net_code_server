@@ -6667,22 +6667,18 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
     return js::make_value(vctx, total_msg);
 }
 
-duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value sys__limits(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
-    js::value_context vctx(ctx);
-
-    std::string sys_name = duk_safe_get_prop_string(ctx, -1, "sys");
-    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
-    std::string user_name = duk_safe_get_prop_string(ctx, -1, "user");
+    std::string sys_name = arg["sys"];
+    bool is_arr = requested_scripting_api(arg);
+    std::string user_name = arg["user"];
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 
     std::optional<low_level_structure*> sys_opt;
     std::optional<low_level_structure*> sys_current_opt;
 
-    sys_current_opt = low_level_structure_manage.get_system_of(get_caller(ctx));
+    sys_current_opt = low_level_structure_manage.get_system_of(get_caller(vctx));
 
     if(sys_name != "")
     {
@@ -6693,7 +6689,7 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
         playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
         if(!playspace_network_manage.has_accessible_path_to(vctx, user_name, get_caller(vctx), (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
-            return push_error(ctx, "No path");
+            return js::make_error(vctx, "No path");
 
         sys_opt = low_level_structure_manage.get_system_of(user_name);
     }
@@ -6701,12 +6697,12 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
         sys_opt = sys_current_opt;
 
     if(!sys_opt.has_value())
-        return push_error(ctx, "No such system");
+        return js::make_error(vctx, "No such system");
 
-    auto user_opt = get_user(get_caller(ctx), get_thread_id(ctx));
+    auto user_opt = get_user(get_caller(vctx), get_thread_id(vctx));
 
     if(!user_opt.has_value())
-        return push_error(ctx, "Error no such user");
+        return js::make_error(vctx, "Error no such user");
 
     user& usr = user_opt.value();
 
@@ -6774,7 +6770,7 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
         rstr += "    " + make_success_col("Sendable") + ":\n";
         rstr += "        Max:" + to_string_with_enforced_variable_dp(cash_send, 2) + "\n";
         rstr += "        Cur:" + to_string_with_enforced_variable_dp(current_cash_send, 2) + "\n";
-        rstr += "    " + make_error_col("Stealable") + ": (from " + colour_string(get_caller(ctx)) + ")\n";
+        rstr += "    " + make_error_col("Stealable") + ": (from " + colour_string(get_caller(vctx)) + ")\n";
         rstr += "        Max:" + to_string_with_enforced_variable_dp(cash_steal_percent*100, 2) + "%" + "\n";
         rstr += "        Cur:" + to_string_with_enforced_variable_dp(current_cash_stealable, 2) + "\n";
 
@@ -6782,13 +6778,13 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
         rstr += "    " + make_success_col("Sendable") + ":\n";
         rstr += "        Max:" + std::to_string((int)item_send) + "\n";
         rstr += "        Cur:" + std::to_string((int)current_item_send) + "\n";
-        rstr += "    " + make_error_col("Stealable") + ": (from " + colour_string(get_caller(ctx)) + ")\n";
+        rstr += "    " + make_error_col("Stealable") + ": (from " + colour_string(get_caller(vctx)) + ")\n";
         rstr += "        Max:" + std::to_string((int)item_steal) + "\n";
         rstr += "        Cur:" + std::to_string((int)current_items_stealable) + "\n";
 
         rstr += "\nLimits take " + std::to_string((int)charge_time_h) + "h to refill fully";
 
-        push_duk_val(ctx, rstr);
+        return js::make_value(vctx, rstr);
     }
     else
     {
@@ -6820,12 +6816,11 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         ret["refill_time_ms"] = charge_time_ms;
 
-        push_duk_val(ctx, ret);
+        return js::make_value(vctx, ret);
     }
-
-    return 1;
 }
 
+#if 0
 duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -6895,21 +6890,20 @@ duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return 1;
 }
+#endif // 0
 
-duk_ret_t mission__list(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value mission__list(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
+    std::string caller = get_caller(vctx);
 
-    std::string caller = get_caller(ctx);
-
-    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
+    bool is_arr = requested_scripting_api(arg);
 
     quest_manager& quest_manage = get_global_quest_manager();
 
     std::vector<quest> all_quests;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_quest_manager_context(get_thread_id(ctx));
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_quest_manager_context(get_thread_id(vctx));
         all_quests = quest_manage.fetch_quests_of(mongo_ctx, caller);
     }
 
@@ -6927,8 +6921,7 @@ duk_ret_t mission__list(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         ret["quests"] = jsonified;
 
-        push_duk_val(ctx, ret);
-        return 1;
+        return js::make_value(vctx, ret);
     }
     else
     {
@@ -6947,11 +6940,11 @@ duk_ret_t mission__list(priv_context& priv_ctx, duk_context* ctx, int sl)
             str = "No Missions";
         }
 
-        push_duk_val(ctx, str);
-        return 1;
+        return js::make_value(vctx, str);
     }
 }
 
+#if 0
 duk_ret_t mission__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -7046,9 +7039,11 @@ duk_ret_t mission__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
         return 1;
     }*/
 }
+#endif // 0
 
 #ifdef TESTING
 
+#if 0
 duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -7140,10 +7135,12 @@ duk_ret_t cheats__salvage(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return 0;
 }
+#endif // 0
 #endif
 
 #ifdef LIVE_DEBUGGING
 
+#if 0
 duk_ret_t cheats__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     if(get_caller(ctx) != "i20k")
@@ -7160,27 +7157,5 @@ duk_ret_t cheats__debug(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     }
 }
+#endif // 0
 #endif // LIVE_DEBUGGING
-
-std::string sec_level_of(function_priv_t func)
-{
-    for(auto& i : privileged_functions)
-    {
-        priv_func_info inf = i.second;
-
-        int sl = inf.sec_level;
-
-        if(sl == 4)
-            return "Fullsec";
-        if(sl == 3)
-            return "Highsec";
-        if(sl == 2)
-            return "Midsec";
-        if(sl == 1)
-            return "Lowsec";
-        if(sl == 0)
-            return "Nullsec";
-    }
-
-    return "Nullsec";
-}

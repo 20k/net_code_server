@@ -262,9 +262,9 @@ duk_ret_t sys__debug_view(priv_context& priv_ctx, duk_context* ctx, int sl);
 js::value sys__view(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 js::value sys__move(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value& val, int sl);
-duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value sys__limits(priv_context& priv_ctx, js::value_context& vctx, js::value& val, int sl);
 
-duk_ret_t mission__list(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value mission__list(priv_context& priv_ctx, js::value_context& vctx, js::value& val, int sl);
 
 #ifdef TESTING
 #if 0
@@ -448,8 +448,6 @@ std::map<std::string, std::vector<script_arg>> privileged_args;
 
 extern
 std::map<std::string, script_metadata> privileged_metadata;
-
-std::string sec_level_of(function_priv_t func);
 
 #ifdef USE_LOCS
 inline
