@@ -1,7 +1,7 @@
 #ifndef DUK_MODULES_HPP_INCLUDED
 #define DUK_MODULES_HPP_INCLUDED
 
-#include "scripting_api_fwrd.hpp"
+#include <string>
 #include <map>
 
 namespace js

@@ -1,7 +1,7 @@
 #if !defined(DUK_MODULE_DUKTAPE_H_INCLUDED)
 #define DUK_MODULE_DUKTAPE_H_INCLUDED
 
-#include "scripting_api_fwrd.hpp"
+#include "duktape.h"
 /* Maximum length of CommonJS module identifier to resolve.  Length includes
  * both current module ID, requested (possibly relative) module ID, and a
  * slash in between.
