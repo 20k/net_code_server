@@ -74,14 +74,14 @@ struct script_arg
 ///hmm. Maybe we want to keep sls somewhere which is dynamically editable like global properties in the db
 ///cache the calls, and like, refresh the cache every 100 calls or something
 
-duk_ret_t cash__balance(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value cash__balance(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
-duk_ret_t scripts__get_level(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value scripts__get_level(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 std::string format_pretty_names(const std::vector<std::string>& names);
 
-duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value scripts__me(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
+js::value scripts__public(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 duk_ret_t scripts__info(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const std::string& to, double amount, bool pvp_action);

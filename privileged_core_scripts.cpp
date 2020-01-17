@@ -331,6 +331,11 @@ std::map<std::string, script_metadata> construct_core_metadata()
     return ret;
 }
 
+bool requested_scripting_api(js::value& arg)
+{
+    return arg["array"].is_truthy();
+}
+
 std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_channels)
 {
     std::string str;
@@ -392,56 +397,32 @@ std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_c
     return str;
 }
 
-duk_ret_t cash__balance(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value cash__balance(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
-    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(ctx));
+    mongo_nolock_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(vctx));
 
     user usr;
-    usr.load_from_db(mongo_user_info, get_caller(ctx));
+    usr.load_from_db(mongo_user_info, get_caller(vctx));
 
-    //std::string cash_string = std::to_string((int64_t)usr.cash);
-
-    double cash_val = usr.cash;
-    push_duk_val(ctx, cash_val);
-
-    return 1;
+    return js::make_value(vctx, usr.cash);
 }
 
-
-duk_ret_t scripts__get_level(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value scripts__get_level(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
+    if(!arg.has("name"))
+        return js::make_error(vctx, "Call with name:\"scriptname\"");
 
-    ///so we have an object
-    ///of the form name:whatever
-    ///really need a way to parse these out from duktape
-
-    duk_get_prop_string(ctx, -1, "name");
-
-    if(!duk_is_string(ctx, -1))
-    {
-        push_error(ctx, "Call with name:\"scriptname\"");
-        return 1;
-    }
-
-    std::string str = duk_safe_to_std_string(ctx, -1);
-
-    duk_pop(ctx);
+    std::string str = arg["name"];
 
     std::string script_err;
 
-    unified_script_info script = unified_script_loading(get_thread_id(ctx), str, script_err);
+    unified_script_info script = unified_script_loading(get_thread_id(vctx), str, script_err);
 
     if(!script.valid)
-        return push_error(ctx, script_err);
+        return js::make_error(vctx, script_err);
 
-    duk_push_int(ctx, script.seclevel);
-
-    return 1;
+    return js::make_value(vctx, script.seclevel);
 }
-
 
 std::string format_pretty_names(const std::vector<std::string>& names, bool colour, bool all_characters = false)
 {
@@ -502,24 +483,22 @@ std::string format_pretty_names(const std::vector<user_log>& names, bool colour,
     return format_pretty_names(text,colour, all_characters);
 }
 
-duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value scripts__me(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
+    bool make_array = requested_scripting_api(arg);
 
-    bool make_array = dukx_is_prop_truthy(ctx, -1, "array");
-
-    std::string usr = get_caller(ctx);
+    std::string usr = get_caller(vctx);
 
     user loaded_user;
 
     {
-        mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         loaded_user.load_from_db(user_ctx, usr);
     }
 
     std::vector<std::string> names;
-    mongo_lock_proxy item_context = get_global_mongo_user_items_context(get_thread_id(ctx));
+    mongo_lock_proxy item_context = get_global_mongo_user_items_context(get_thread_id(vctx));
 
     ///regular scripts
     {
@@ -564,24 +543,22 @@ duk_ret_t scripts__me(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(make_array)
     {
-        push_duk_val(ctx, names);
+        return js::make_value(vctx, names);
     }
     else
     {
         std::string str = format_pretty_names(names, true);
 
-        duk_push_string(ctx, str.c_str());
+        return js::make_value(vctx, str);
     }
-
-    return 1;
 }
 
 ///should take a pretty:1 argument
 
-duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value scripts__public(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    int pretty = !dukx_is_prop_truthy(ctx, -1, "array");
-    int seclevel = duk_get_prop_string_as_int(ctx, -1, "sec", -1);
+    int pretty = !requested_scripting_api(arg);
+    int seclevel = arg.has("sec") ? arg["sec"] : -1;
 
     mongo_requester request;
     request.set_prop("is_script", 1);
@@ -596,7 +573,7 @@ duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl)
     //request.set_prop("seclevel", num);
     //request.set_prop("in_public", 1"; ///TODO: FOR WHEN YOU CAN UP PUBLIC
 
-    mongo_lock_proxy item_context = get_global_mongo_user_items_context(get_thread_id(ctx));
+    mongo_nolock_proxy item_context = get_global_mongo_user_items_context(get_thread_id(vctx));
 
     std::vector<mongo_requester> results = request.fetch_from_db(item_context);
 
@@ -611,14 +588,12 @@ duk_ret_t scripts__public(priv_context& priv_ctx, duk_context* ctx, int sl)
     {
         std::string str = format_pretty_names(names, true);
 
-        duk_push_string(ctx, str.c_str());
+        return js::make_value(vctx, str);
     }
     else
     {
-        push_duk_val(ctx, names);
+        return js::make_value(vctx, names);
     }
-
-    return 1;
 }
 
 duk_ret_t scripts__info(priv_context& priv_ctx, duk_context* ctx, int sl)
