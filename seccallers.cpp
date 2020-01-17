@@ -803,7 +803,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
     return ret;
 }
 
-std::string js_unified_force_call_data(js::value_context& vctx, const std::string& data, const std::string& host)
+std::pair<js::value, std::string> js_unified_force_call_data(js::value_context& vctx, const std::string& data, const std::string& host)
 {
     set_script_info(vctx, host + ".invoke");
 
@@ -825,10 +825,10 @@ std::string js_unified_force_call_data(js::value_context& vctx, const std::strin
     }
 
     if(!unified_invoke.valid && !first_invoke_valid)
-        return unified_invoke_err;
+        return {js::make_value(vctx, js::undefined), unified_invoke_err};
 
     if(!unified_invoke.valid)
-        return "Invalid Command Line Syntax";
+        return {js::make_value(vctx, js::undefined), "Invalid Command Line Syntax"};
 
     js::get_heap_stash(vctx).add("last_seclevel", unified_invoke.seclevel);
 
@@ -841,14 +841,12 @@ std::string js_unified_force_call_data(js::value_context& vctx, const std::strin
 
     auto [extra, js_val] = compile_and_call(vctx, arg, unified_invoke.parsed_source, get_caller(vctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke", is_cli);
 
-    js_val.release();
-
     if(!js_val.is_object_coercible())
     {
         if(extra == "")
-            return "No return";
+            return {js_val, "No return"};
         else
-            return extra;
+            return {js_val, extra};
     }
 
     std::string ret;
@@ -872,7 +870,7 @@ std::string js_unified_force_call_data(js::value_context& vctx, const std::strin
 
     ret = extra + ret;
 
-    return ret;
+    return {js_val, ret};
 }
 
 js::value err(js::value_context* vctx)

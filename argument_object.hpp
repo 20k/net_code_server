@@ -428,8 +428,8 @@ namespace js
         value(const value& other);
         value(value&& other);
         value(value_context& ctx);
-        value(value_context& ctx, const value& other);
         value(value_context& ctx, int idx);
+        value(value_context& ctx, const value& other);
         value(value_context& ctx, const value& base, const std::string& key);
         value(value_context& ctx, const value& base, int key);
         value(value_context& ctx, const value& base, const char* key);

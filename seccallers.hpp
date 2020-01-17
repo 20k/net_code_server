@@ -5,10 +5,12 @@
 #include "scripting_api_fwrd.hpp"
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace js
 {
     struct value_context;
+    struct value;
 }
 
 struct shared_duk_worker_state;
@@ -23,7 +25,8 @@ void teardown_state(js::value_context& vctx);
 
 void send_async_message(js::value_context& vctx, const std::string& message);
 
-std::string js_unified_force_call_data(js::value_context& vctx, const std::string& data, const std::string& host);
+///value, message
+std::pair<js::value, std::string> js_unified_force_call_data(js::value_context& vctx, const std::string& data, const std::string& host);
 
 void register_funcs(js::value_context& vctx, int seclevel, const std::string& script_host, bool polyfill);
 

@@ -36,15 +36,22 @@ struct unsafe_info
     std::string command;
     int finished = 0;
     js::value_context heap;
+    js::value returned_val;
 
     std::string ret;
+
+    unsafe_info() : returned_val(heap)
+    {
+
+    }
 };
 
 void unsafe_wrapper(unsafe_info& info)
 {
-    std::string ret = js_unified_force_call_data(info.heap, info.command, info.usr->get_call_stack().back());
+    auto [val, msg] = js_unified_force_call_data(info.heap, info.command, info.usr->get_call_stack().back());
 
-    info.ret = ret;
+    info.ret = msg;
+    info.returned_val = std::move(val);
 }
 
 void managed_duktape_thread(unsafe_info* info, size_t tid)
@@ -115,7 +122,7 @@ void sleep_thread_for(sandbox_data* sand_data, sthread& t, int sleep_ms)
 }
 
 template<typename T>
-void async_realtime_script_handler(js::value_context& nvctx, command_handler_state& state, std::string& ret,
+void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, command_handler_state& state, std::string& ret,
                                    int current_id, T& callback)
 {
     double current_framerate = js::get_heap_stash(nvctx).get("framerate_limit");
@@ -123,14 +130,12 @@ void async_realtime_script_handler(js::value_context& nvctx, command_handler_sta
 
     sf::Clock clk;
 
-    js::value function_on_stack(nvctx, -1);
-
     js::value_context vctx(nvctx);
 
     /*MAKE_PERF_COUNTER();
     mongo_diagnostics diagnostic_scope;*/
 
-    js::value args = js::xfer_between_contexts(vctx, function_on_stack);
+    js::value args = js::xfer_between_contexts(vctx, in_arg);
 
     bool force_terminate = false;
 
@@ -470,10 +475,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                 all_shared.value()->state.add_realtime_script(current_id);
 
-                js::value left_on_stack(inf.heap, -1);
-                left_on_stack.release();
-
-                bool is_valid = !left_on_stack.is_undefined();
+                bool is_valid = !inf.returned_val.is_undefined();
 
                 if(is_valid)
                 {
@@ -561,7 +563,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                     sand_data->realtime_script_id = current_id;
 
                     ///remember, need to also set work units and do other things!
-                    async_realtime_script_handler(inf.heap, cstate, inf.ret, current_id, update_check);
+                    async_realtime_script_handler(inf.heap, inf.returned_val, cstate, inf.ret, current_id, update_check);
 
                     if(shared_duk_state->close_window_on_exit())
                     {
