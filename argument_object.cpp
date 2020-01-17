@@ -206,7 +206,14 @@ namespace
 
 void arg::dukx_push(duk_context* ctx, const js::value& val)
 {
-    duk_dup(ctx, val.idx);
+    if(val.idx == -1)
+    {
+        duk_push_undefined(ctx);
+    }
+    else
+    {
+        duk_dup(ctx, val.idx);
+    }
 }
 
 duk_context* create_sandbox_heap()
