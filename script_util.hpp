@@ -6,7 +6,6 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
-#include "scripting_api_fwrd.hpp"
 #include "script_metadata.hpp"
 
 //#include <libncclient/nc_util.hpp>

@@ -1,5 +1,4 @@
 #include "duk_modules.hpp"
-#include "scripting_api.hpp"
 #include "duk_module_duktape.h"
 #include <map>
 #include <string>

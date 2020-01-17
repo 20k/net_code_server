@@ -1,5 +1,4 @@
 #include <iostream>
-#include "scripting_api.hpp"
 #include "stacktrace.hpp"
 
 #include <iostream>

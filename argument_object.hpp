@@ -10,8 +10,6 @@
 #include <assert.h>
 #include <nlohmann/json.hpp>
 
-#include "scripting_api_fwrd.hpp"
-
 using context_t = duk_context;
 
 #if 0

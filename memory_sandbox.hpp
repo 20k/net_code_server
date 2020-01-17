@@ -1,7 +1,6 @@
 #ifndef MEMORY_SANDBOX_HPP_INCLUDED
 #define MEMORY_SANDBOX_HPP_INCLUDED
 
-#include "scripting_api.hpp"
 #include "safe_thread.hpp"
 #include <atomic>
 #include <SFML/System.hpp>
@@ -53,7 +52,7 @@ struct sandbox_data
     sf::Clock clk;
 };
 
-inline void *sandbox_alloc(void *udata, duk_size_t size)
+inline void *sandbox_alloc(void *udata, size_t size)
 {
     alloc_hdr *hdr;
 
@@ -86,7 +85,7 @@ inline void *sandbox_alloc(void *udata, duk_size_t size)
     return (void *) (hdr + 1);
 }
 
-inline void *sandbox_realloc(void *udata, void *ptr, duk_size_t size)
+inline void *sandbox_realloc(void *udata, void *ptr, size_t size)
 {
     alloc_hdr *hdr;
     size_t old_size;

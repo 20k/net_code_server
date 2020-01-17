@@ -1740,40 +1740,6 @@
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
 		</Unit>
-		<Unit filename="scripting_api.hpp">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Deploy" />
-			<Option target="ReleaseAndTest" />
-			<Option target="DebugBacktrace" />
-			<Option target="DebugTest" />
-			<Option target="DMimic" />
-			<Option target="ReleaseAndTestWithDebugInfo" />
-			<Option target="RDClang" />
-			<Option target="RT_prof" />
-			<Option target="ReleaseAndTestLTO" />
-			<Option target="LinuxRelease" />
-			<Option target="LinuxDeploy" />
-			<Option target="Profile" />
-			<Option target="ReleaseNoSymbols" />
-		</Unit>
-		<Unit filename="scripting_api_fwrd.hpp">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Deploy" />
-			<Option target="ReleaseAndTest" />
-			<Option target="DebugBacktrace" />
-			<Option target="DebugTest" />
-			<Option target="DMimic" />
-			<Option target="ReleaseAndTestWithDebugInfo" />
-			<Option target="RDClang" />
-			<Option target="RT_prof" />
-			<Option target="ReleaseAndTestLTO" />
-			<Option target="LinuxRelease" />
-			<Option target="LinuxDeploy" />
-			<Option target="Profile" />
-			<Option target="ReleaseNoSymbols" />
-		</Unit>
 		<Unit filename="seccallers.cpp">
 			<Option target="Debug" />
 			<Option target="Release" />
