@@ -4338,37 +4338,35 @@ duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 #endif // 0
 
-duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value net__switch(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
-    std::string target = duk_safe_get_prop_string(ctx, -1, "user");
-    bool has_local = dukx_is_prop_truthy(ctx, -1, "local");
+    std::string target = arg["user"];
+    bool has_local = arg["local"];
 
     if(target == "")
-        return push_error(ctx, "Usage: net.switch({user:<username>})");
+        return js::make_error(vctx, "Usage: net.switch({user:<username>})");
 
-    std::vector<std::string> full_caller_stack = get_caller_stack(ctx);
+    std::vector<std::string> full_caller_stack = get_caller_stack(vctx);
 
-    std::optional opt_user = get_user(full_caller_stack.front(), get_thread_id(ctx));
+    std::optional opt_user = get_user(full_caller_stack.front(), get_thread_id(vctx));
 
     if(!opt_user.has_value())
-        return push_error(ctx, "Invalid username (host)");
+        return js::make_error(vctx, "Invalid username (host)");
 
     /*for(auto& i : full_caller_stack)
     {
         std::cout << "stk " << i << std::endl;
     }*/
 
-    std::optional switch_to = get_user(target, get_thread_id(ctx));
+    std::optional switch_to = get_user(target, get_thread_id(vctx));
 
     if(!switch_to.has_value())
-        return push_error(ctx, "Invalid username (target)");
+        return js::make_error(vctx, "Invalid username (target)");
 
     if(!switch_to->is_npc() && switch_to->name != opt_user->name)
-        return push_error(ctx, "Cannot switch to a user");
+        return js::make_error(vctx, "Cannot switch to a user");
 
-    opt_user->cleanup_call_stack(get_thread_id(ctx));
+    opt_user->cleanup_call_stack(get_thread_id(vctx));
 
     ///so say we switched from i20k -> f_sdfdf
     ///call stack would be [i20k, f_sddfdf]
@@ -4395,7 +4393,7 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
     if(call_stack.size() == 0)
     {
         printf("weird call stack error 0\n");
-        return 0;
+        return js::make_error(vctx, "Weird call stack error");
     }
 
     //#ifndef TESTING
@@ -4404,7 +4402,7 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
         if(switch_to->name == opt_user->name)
             call_stack = std::vector<std::string>{opt_user->name};
         else
-            return push_error(ctx, "Insufficient permissions");
+            return js::make_error(vctx, "Insufficient permissions");
     }
     //#else // TESTING
     //call_stack.push_back(switch_to->name);
@@ -4420,22 +4418,17 @@ duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///local:true means only for script call
     if(!has_local)
     {
-        mongo_lock_proxy user_db = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_lock_proxy user_db = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         usr.overwrite_user_in_db(user_db);
     }
 
-    duk_push_heap_stash(ctx);
+    js::value heap = js::get_heap_stash(vctx);
 
-    ///new caller
-    quick_register(ctx, "caller", switch_to->name.c_str());
-    quick_register_generic(ctx, "caller_stack", usr.get_call_stack());
+    heap["caller"] = switch_to->name;
+    heap["caller_stack"] = usr.get_call_stack();
 
-    duk_pop_n(ctx, 1);
-
-    ///need to update caller and caller_stack
-
-    return push_success(ctx, "Success");
+    return js::make_success(vctx);
 }
 
 /*namespace task_type
