@@ -240,20 +240,24 @@ js::value net__view(priv_context& priv_ctx, js::value_context& vctx, js::value& 
 js::value net__map(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 //duk_ret_t net__links(priv_context& priv_ctx, duk_context* ctx, int sl);
 js::value net__switch(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
-duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value net__path(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 #ifdef OLD_DEPRECATED
+#if 0
 duk_ret_t net__modify(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__access(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 duk_ret_t gal__map(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl);
+#endif // 0
 #endif // OLD_DEPRECATED
 
 duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl);
 #ifdef SYSTEM_TESTING
+#if 0
 duk_ret_t sys__debug_view(priv_context& priv_ctx, duk_context* ctx, int sl);
+#endif
 #endif // SYSTEM_TESTING
 js::value sys__view(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl);
@@ -263,12 +267,15 @@ duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t mission__list(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 #ifdef TESTING
+#if 0
 duk_ret_t sys__debug(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t mission__debug(priv_context& priv_ctx, duk_context* ctx, int sl);
+#endif // 0
 #endif // TESTING
 
 #ifdef TESTING
 
+#if 0
 duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t cheats__give(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t cheats__salvage(priv_context& priv_ctx, duk_context* ctx, int sl);
@@ -276,6 +283,7 @@ duk_ret_t cheats__task(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t cheats__disconnect(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t cheats__unlink(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t cheats__testloot(priv_context& priv_ctx, duk_context* ctx, int sl);
+#endif // 0
 
 #endif
 
@@ -345,7 +353,9 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(users__me, 0),
     REGISTER_FUNCTION_PRIV(users__accessible, 0),
     #if defined(TESTING) || defined(EXTRAS)
+    #if 0
     REGISTER_FUNCTION_PRIV(item__create, 0),
+    #endif // 0
     #endif // TESTING
     REGISTER_FUNCTION_PRIV(item__steal, 1),
     REGISTER_FUNCTION_PRIV(item__expose, 3),
@@ -382,6 +392,7 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(gal__list, 4),
     #endif // OLD_DEPRECATED
     #ifdef TESTING
+    #if 0
     REGISTER_FUNCTION_PRIV(cheats__arm, 4),
     REGISTER_FUNCTION_PRIV(cheats__salvage, 4),
     REGISTER_FUNCTION_PRIV(cheats__give, 4),
@@ -390,10 +401,13 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(cheats__unlink, 4),
     REGISTER_FUNCTION_PRIV(cheats__testloot, 4),
     //REGISTER_FUNCTION_PRIV(net__hack_new, 0),
+    #endif // 0
     #endif // TESTING
     REGISTER_FUNCTION_PRIV(sys__map, 1),
     #ifdef SYSTEM_TESTING
+    #if 0
     REGISTER_FUNCTION_PRIV(sys__debug_view, 1),
+    #endif // 0
     #endif // SYSTEM_TESTING
     REGISTER_FUNCTION_PRIV(sys__view, 1),
     REGISTER_FUNCTION_PRIV(sys__move, 0),
@@ -403,8 +417,10 @@ std::map<std::string, priv_func_info> privileged_functions
     REGISTER_FUNCTION_PRIV(able__help, 4),
     REGISTER_FUNCTION_PRIV(mission__list, 1),
     #ifdef TESTING
+    #if 0
     REGISTER_FUNCTION_PRIV(sys__debug, 1),
     REGISTER_FUNCTION_PRIV(mission__debug, 1),
+    #endif // 0
     #endif // TESTING
     #ifdef LIVE_DEBUGGING
     REGISTER_FUNCTION_PRIV(cheats__debug, 4),

@@ -4444,6 +4444,7 @@ void schedule_task(const std::string& user, const std::string& type, float durat
 
 }*/
 
+#if 0
 duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -4546,6 +4547,7 @@ duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return 1;
 }
+#endif // 0
 
 ///from a gameplay perspective it'd be nice to see the stability between two points
 ///with cash causing stability loss along a path, itll be possible to use that to trace people (which is very much suboptimal)
@@ -4554,36 +4556,32 @@ duk_ret_t net__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 ///what gameplay ramifications does this have?
 ///Ok so. If we have view perms this will give path, otherwise itll just give link stability
 ///with optional minimum stability
-duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value net__path(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
+    float minimum_stability = (double)arg["min_stability"];
 
-    float minimum_stability = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "min_stability", 0.f);
+    std::string start = arg["user"];
+    std::string target = arg["target"];
+    int arr = requested_scripting_api(arg);
 
-    std::string start = duk_safe_get_prop_string(ctx, -1, "user");
-    std::string target = duk_safe_get_prop_string(ctx, -1, "target");
-    int arr = dukx_is_prop_truthy(ctx, -1, "array");
+    std::string path_type = arg["type"];
 
-    std::string path_type = duk_safe_get_prop_string(ctx, -1, "type");
-
-    if(!duk_has_prop_string(ctx, -1, "type"))
+    if(!arg.has("type"))
         path_type = "view";
 
     if(path_type != "view" && path_type != "use")
-        return push_error(ctx, "type must be view or use");
+        return js::make_error(vctx, "type must be view or use");
 
     if(start == "")
-        start = get_caller(ctx);
+        start = get_caller(vctx);
 
     if(target == "")
-        return push_error(ctx, "Requires target:<username> argument");
+        return js::make_error(vctx, "Requires target:<username> argument");
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    js::value_context vctx(ctx);
-
     if(!playspace_network_manage.has_accessible_path_to(vctx, start, get_caller(vctx), path_info::VIEW_LINKS))
-        return push_error(ctx, "No path to start user");
+        return js::make_error(vctx, "No path to start user");
 
     std::vector<std::string> viewable_distance;
 
@@ -4637,7 +4635,7 @@ duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(!arr)
     {
-        push_duk_val(ctx, visible_path + "\n" + path_stab);
+        return js::make_value(vctx, visible_path + "\n" + path_stab);
     }
     else
     {
@@ -4651,10 +4649,8 @@ duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         j["min_stability"] = minimum_path_strength;
 
-        push_duk_val(ctx, j);
+        return js::make_value(vctx, j);
     }
-
-    return 1;
 }
 
 #if 0
@@ -5015,6 +5011,7 @@ duk_ret_t net__modify(priv_context& priv_ctx, duk_context* ctx, int sl)
 }
 #endif // OLD_DEPRECATED
 
+#if 0
 duk_ret_t cheats__task(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -5151,6 +5148,7 @@ duk_ret_t gal__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return 1;
 }
+#endif // 0
 
 std::string format_string(const std::string& str, const std::vector<std::string>& all)
 {
@@ -5174,6 +5172,7 @@ std::string format_string(const std::string& str, const std::vector<std::string>
     return ret;
 }
 
+#if 0
 duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
@@ -5239,6 +5238,7 @@ duk_ret_t gal__list(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return 1;
 }
+#endif // 0
 
 ///need to centre sys.map on player by default
 duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl)
