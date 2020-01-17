@@ -236,8 +236,8 @@ duk_ret_t nodes__port(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 ///this function needs to respect locks and breaching etc
 
-duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value net__view(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
+js::value net__map(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 //duk_ret_t net__links(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__switch(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t net__path(priv_context& priv_ctx, duk_context* ctx, int sl);
@@ -255,7 +255,7 @@ duk_ret_t sys__map(priv_context& priv_ctx, duk_context* ctx, int sl);
 #ifdef SYSTEM_TESTING
 duk_ret_t sys__debug_view(priv_context& priv_ctx, duk_context* ctx, int sl);
 #endif // SYSTEM_TESTING
-duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value sys__view(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl);
 js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value& val, int sl);
 duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl);

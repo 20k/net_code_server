@@ -3977,7 +3977,7 @@ double npc_name_to_angle(const std::string& str)
 ///instead npcs will be situated in a system
 ///you'll get shown the door to it, but managing the complexity of the internal cloud is up to you
 ///make sys.map
-duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value net__map(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
     #ifdef OLD_DEPRECATED
     COOPERATE_KILL();
@@ -4022,7 +4022,7 @@ duk_ret_t net__map(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return 1;
     #else
-    return sys__view(priv_ctx, ctx, sl);
+    return sys__view(priv_ctx, vctx, arg, sl);
     #endif
 }
 
@@ -4155,45 +4155,41 @@ std::string get_net_view_data_str(std::vector<nlohmann::json>& all_npc_data, boo
     return str;
 }
 
-duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value net__view(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
+    std::string from = arg["user"];
+    int num = arg.has("n") ? arg["n"] : -1;
 
-    std::string from = duk_safe_get_prop_string(ctx, -1, "user");
-    int num = duk_get_prop_string_as_int(ctx, -1, "n", -1);
-
-    bool arr = dukx_is_prop_truthy(ctx, -1, "array");
+    bool arr = requested_scripting_api(arg);
 
     if(from == "")
-        from = get_caller(ctx);
+        from = get_caller(vctx);
 
     if(from == "")
-        return push_error(ctx, "usage: net.view({user:<username>, n:-1})");
+        return js::make_error(vctx, "usage: net.view({user:<username>, n:-1})");
 
     if(num < 0)
         num = 15;
 
     if(num < 0 || num > 15)
-        return push_error(ctx, "n out of range [1,15]");
+        return js::make_error(vctx, "n out of range [1,15]");
 
-    auto opt_user_and_nodes = get_user_and_nodes(from, get_thread_id(ctx));
+    auto opt_user_and_nodes = get_user_and_nodes(from, get_thread_id(vctx));
 
     if(!opt_user_and_nodes.has_value())
-        return push_error(ctx, "User does not exist");
+        return js::make_error(vctx, "User does not exist");
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    js::value_context vctx(ctx);
-
     if(!playspace_network_manage.has_accessible_path_to(vctx, from, get_caller(vctx), (path_info::path_info)(path_info::VIEW_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
-        return push_error(ctx, "Target Inaccessible");
+        return js::make_error(vctx, "Target Inaccessible");
 
     user& usr = opt_user_and_nodes->first;
 
     auto hostile_actions = opt_user_and_nodes->second.valid_hostile_actions();
 
-    if(!usr.is_allowed_user(get_caller(ctx)) && usr.name != get_caller(ctx) && !((hostile_actions & user_node_info::VIEW_LINKS) > 0))
-        return push_error(ctx, "Node is Locked");
+    if(!usr.is_allowed_user(get_caller(vctx)) && usr.name != get_caller(vctx) && !((hostile_actions & user_node_info::VIEW_LINKS) > 0))
+        return js::make_error(vctx, "Node is Locked");
 
     network_accessibility_info info = playspace_network_manage.generate_network_accessibility_from(vctx, from, num);
 
@@ -4211,15 +4207,13 @@ duk_ret_t net__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     json final_data = all_npc_data;
 
     if(arr)
-        push_duk_val(ctx, final_data);
+        return js::make_value(vctx, final_data);
     else
     {
         std::string str = get_net_view_data_str(all_npc_data);
 
-        push_duk_val(ctx, str);
+        return js::make_value(vctx, str);
     }
-
-    return 1;
 }
 
 #ifdef OLD_DEPRECATED
@@ -5572,25 +5566,23 @@ duk_ret_t sys__debug_view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
 #endif // SYSTEM_TESTING
 
-duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value sys__view(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
     #ifdef TESTING
     /*MAKE_PERF_COUNTER();
     mongo_diagnostics diagnostic_scope;*/
     #endif // TESTING
 
     //std::string str = duk_safe_get_prop_string(ctx, -1, "sys");
-    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
-    std::string found_target = duk_safe_get_prop_string(ctx, -1, "user");
+    bool is_arr = requested_scripting_api(arg);
+    std::string found_target = arg["user"];
 
-    bool has_fit = dukx_is_prop_truthy(ctx, -1, "fit");
+    bool has_fit = arg["fit"].is_truthy();
 
-    int found_w = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "w", 80);
-    int found_h = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "h", 40);
+    int found_w = arg.has("w") ? arg["w"] : 80;
+    int found_h = arg.has("h") ? arg["h"] : 40;
 
-    float found_scale = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "scale", 1.f);
+    float found_scale = arg.has("scale") ? arg["scale"] : 1;
 
     found_w = clamp(found_w, 5, 300);
     found_h = clamp(found_h, 5, 200);
@@ -5598,9 +5590,9 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool has_target = found_target.size() > 0;
 
     if(found_target == "")
-        found_target = get_caller(ctx);
+        found_target = get_caller(vctx);
 
-    if(!dukx_is_prop_truthy(ctx, -1, "scale"))
+    if(!arg["scale"].is_truthy())
     {
         if(has_target)
             found_scale = 0.5f;
@@ -5613,10 +5605,10 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     user target_user;
 
     {
-        mongo_nolock_proxy lock = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy lock = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         if(!target_user.load_from_db(lock, found_target))
-            return push_error(ctx, "Error: Target does not exist");
+            return js::make_error(vctx, "Error: Target does not exist");
     }
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
@@ -5625,17 +5617,17 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     user my_user;
 
     {
-        mongo_nolock_proxy lock = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy lock = get_global_mongo_user_info_context(get_thread_id(vctx));
 
-        if(!my_user.load_from_db(lock, get_caller(ctx)))
-            return push_error(ctx, "Error: Does not exist");
+        if(!my_user.load_from_db(lock, get_caller(vctx)))
+            return js::make_error(vctx, "Error: Does not exist");
     }
 
     ///disables cross system stuff
     if(!target_user.is_allowed_user(my_user.name) && !low_level_structure_manage.in_same_system(target_user.name, my_user.name))
-        return push_error(ctx, "Cannot sys.view cross systems on non owned users");
+        return js::make_error(vctx, "Cannot sys.view cross systems on non owned users");
 
-    int n_count = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", -1);
+    int n_count = arg.has("n") ? arg["n"] : -1;
 
     if(n_count < -1)
         n_count = -1;
@@ -5651,7 +5643,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
         opt_structure = low_level_structure_manage.get_system_from_name(str);*/
 
     if(!opt_structure.has_value())
-        return push_error(ctx, "You are lost, there is no help for you now");
+        return js::make_error(vctx, "You are lost, there is no help for you now");
 
     /*std::cout <<" tlkinks " << playspace_network_manage.current_network_links(my_user.name) << std::endl;
 
@@ -5668,13 +5660,11 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::vector<user> all_users;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
         all_users = structure.get_all_users(mongo_ctx);
     }
 
     std::vector<std::vector<std::string>> buffer = ascii_make_buffer({found_w, found_h}, false);
-
-    js::value_context vctx(ctx);
 
     network_accessibility_info info;
 
@@ -5747,7 +5737,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(!is_arr)
     {
-        std::string from = get_caller(ctx);
+        std::string from = get_caller(vctx);
 
         vec3f pos = {0,0,0};
         ///info.global_pos[from]
@@ -5775,7 +5765,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         result = "Current Sys: " + colour_string(structure.name) + "\n" + seclevel_string + "\n" + result;
 
-        push_duk_val(ctx, result);
+        return js::make_value(vctx, result);
     }
     else
     {
@@ -5831,7 +5821,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         nlohmann::json final_data = all_npc_data;
 
-        push_duk_val(ctx, final_data);
+        return js::make_value(vctx, final_data);
     }
 
     ///to go any further we need 2 things
@@ -5845,7 +5835,7 @@ duk_ret_t sys__view(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///and that's the entrance
     ///hooray!
 
-    return 1;
+    return js::make_value(vctx, "Unreachable");
 }
 
 duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
