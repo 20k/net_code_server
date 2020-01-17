@@ -1908,21 +1908,18 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
 }
 
 
-void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes& nodes, user& found_user, std::string preamble, bool pvp)
+js::value push_internal_items_view(js::value_context& vctx, int pretty, int full, user_nodes& nodes, user& found_user, std::string preamble, bool pvp)
 {
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 
     auto sys_opt = low_level_structure_manage.get_system_of(found_user);
 
     if(!sys_opt.has_value())
-    {
-        push_error(ctx, "Lost in push items internal");
-        return;
-    }
+        return js::make_error(vctx, "Lost in push items internal");
 
     low_level_structure& sys = *sys_opt.value();
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
 
     std::vector<std::string> to_ret = found_user.upgr_idx;
 
@@ -1987,7 +1984,7 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
         while(res.size() > 0 && res.back() == '\n')
             res.pop_back();
 
-        push_duk_val(ctx, res);
+        return js::make_value(vctx, res);
     }
     else
     {
@@ -2014,106 +2011,80 @@ void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes
             ret["available"] = currently_stealable;
             ret["exposed"] = objs;
 
-            push_duk_val(ctx, ret);
+            return js::make_value(vctx, ret);
         }
         else
         {
-            push_duk_val(ctx, objs);
+            return js::make_value(vctx, objs);
         }
     }
 }
 
-std::pair<bool, std::vector<int>> check_get_index_property(duk_context* ctx)
+std::pair<bool, std::vector<int>> check_get_index_property(js::value& arg)
 {
-    if(!duk_has_prop_string(ctx, -1, "idx") && !dukx_is_prop_truthy(ctx, -1, "idx"))
+    if(!arg.has("idx"))
         return {false, std::vector<int>()};
 
-    bool is_arr = false;
+    bool is_arr = arg.is_array();
 
-    std::vector<int> ret;
-
-    duk_get_prop_string(ctx, -1, "idx");
-
-    if(duk_is_number(ctx, -1))
+    if(is_arr)
     {
-        ret.push_back(duk_get_int(ctx, -1));
-
-        is_arr = false;
+        return {is_arr, (std::vector<int>)arg["idx"]};
     }
-
-    if(duk_is_array(ctx, -1))
+    else
     {
-        duk_size_t n = duk_get_length(ctx, -1);
+        int val = arg[idx];
 
-        for(int i=0; i < (int)n && i < 1000; i++)
-        {
-            duk_get_prop_index(ctx, -1, i);
-
-            if(duk_is_number(ctx, -1))
-            {
-                ret.push_back(duk_get_number(ctx, -1));
-            }
-
-            duk_pop(ctx);
-        }
-
-        is_arr = true;
+        return {is_arr, {val}};
     }
-
-    duk_pop(ctx);
-
-    return {is_arr, ret};
 }
 
-duk_ret_t item__cull(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value item__cull(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    auto [is_arr, indices] = check_get_index_property(ctx);
+    auto [is_arr, indices] = check_get_index_property(arg);
 
     if(indices.size() == 0)
-        return push_error(ctx, "Index must be number or array of numbers, eg idx:0 or idx:[1, 2, 3]");
+        return js::make_error(vctx, "Index must be number or array of numbers, eg idx:0 or idx:[1, 2, 3]");
 
-    auto opt_user_and_nodes = get_user_and_nodes(get_caller(ctx), get_thread_id(ctx));
+    auto opt_user_and_nodes = get_user_and_nodes(get_caller(vctx), get_thread_id(vctx));
 
     if(!opt_user_and_nodes.has_value())
-        return push_error(ctx, "Catastrophic error Blue Walrus in item.cull");
+        return js::make_error(vctx, "Catastrophic error Blue Walrus in item.cull");
 
     user& usr = opt_user_and_nodes->first;
 
     int offset = 0;
 
-    if(is_arr)
-        duk_push_array(ctx);
+    std::vector<js::value> returns;
 
     std::sort(indices.begin(), indices.end(), [](const auto& i1, const auto& i2){return i1 > i2;});
-
-    js::value_context vctx(ctx);
 
     for(int idx : indices)
     {
         std::string id = usr.index_to_item(idx);
 
         if(id == "")
-            return push_error(ctx, "No such item");
+        {
+            returns.push_back(js::make_error(vctx, "No such item"));
+            continue;
+        }
 
         std::string accum;
 
-        auto ret = load_item_raw(-1, -1, idx, opt_user_and_nodes->first, opt_user_and_nodes->second, accum, get_thread_id(ctx));
+        auto ret = load_item_raw(-1, -1, idx, opt_user_and_nodes->first, opt_user_and_nodes->second, accum, get_thread_id(vctx));
 
         if(ret != "")
-            push_error(ctx, ret);
+            returns.push_back(js::make_error(vctx, ret));
         else
-            push_success(ctx, ret);
-
-        if(is_arr)
-            duk_put_prop_index(ctx, -2, offset);
+            returns.push_back(js::make_success(vctx));
 
         {
-            mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
+            mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
 
             item found;
             db_disk_load(items_ctx, found, id);
 
-            create_destroy_item_notif(vctx, get_caller(ctx), found.get_prop("short_name"));
+            create_destroy_item_notif(vctx, get_caller(vctx), found.get_prop("short_name"));
 
             db_disk_remove(items_ctx, found);
         }
@@ -2123,30 +2094,33 @@ duk_ret_t item__cull(priv_context& priv_ctx, duk_context* ctx, int sl)
     }
 
     {
-        mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         usr.overwrite_user_in_db(user_ctx);
     }
 
-    return 1;
+    if(is_arr)
+        return js::make_value(vctx, returns);
+
+    if(!is_arr && returns.size() == 1)
+        return returns[0];
+
+    return js::make_error(vctx, "Implementation error in item.cull");
 }
 
-
-duk_ret_t item__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value item__manage(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
+    int pretty = !requested_scripting_api(arg);
+    int full = arg["full"].is_truthy();
 
-    int pretty = !dukx_is_prop_truthy(ctx, -1, "array");
-    int full = dukx_is_prop_truthy(ctx, -1, "full");
+    int load_idx = arg.has("load") ? arg["load"] : -1;
+    int unload_idx = arg.has("unload") ? arg["unload"] : -1;
+    int node_idx = arg.has("node") ? arg["node"] : -1;
 
-    int load_idx = duk_get_prop_string_as_int(ctx, -1, "load", -1);
-    int unload_idx = duk_get_prop_string_as_int(ctx, -1, "unload", -1);
-    int node_idx = duk_get_prop_string_as_int(ctx, -1, "node", -1);
-
-    std::string node_name = duk_safe_get_prop_string(ctx, -1, "node");
+    std::string node_name = arg["node"];
 
     if(load_idx >= 0 && unload_idx >= 0)
-        return push_error(ctx, "Only one load/unload at a time");
+        return js::make_error(vctx, "Only one load/unload at a time");
 
     std::string usage = "Usage: " + make_key_val("load", "idx") + " or " + make_key_val("unload", "idx") + ", and optionally " + make_key_val("node", "short_name");
 
@@ -2165,82 +2139,64 @@ duk_ret_t item__manage(priv_context& priv_ctx, duk_context* ctx, int sl)
     user found_user;
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
-        if(!found_user.load_from_db(mongo_ctx, get_caller(ctx)))
-            return push_error(ctx, "No such user/really catastrophic error");
+        if(!found_user.load_from_db(mongo_ctx, get_caller(vctx)))
+            return js::make_error(vctx, "No such user/really catastrophic error");
     }
 
     user_nodes nodes;
 
     {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(ctx));
+        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
 
-        nodes.ensure_exists(node_ctx, get_caller(ctx));
-        nodes.load_from_db(node_ctx, get_caller(ctx));
+        nodes.ensure_exists(node_ctx, get_caller(vctx));
+        nodes.load_from_db(node_ctx, get_caller(vctx));
     }
 
     if(load_idx >= 0 || unload_idx >= 0)
     {
         std::string accum;
 
-        auto ret = load_item_raw(node_idx, load_idx, unload_idx, found_user, nodes, accum, get_thread_id(ctx));
+        auto ret = load_item_raw(node_idx, load_idx, unload_idx, found_user, nodes, accum, get_thread_id(vctx));
 
         if(ret != "")
-            return push_error(ctx, ret);
+            return js::make_error(vctx, ret);
 
-        if(accum.size() > 0 && accum.back() == '\n')
-            accum.pop_back();
-
-        push_duk_val(ctx, accum);
-        return 1;
+        return js::make_success(vctx, accum);
     }
 
-    push_internal_items_view(ctx, pretty, full, nodes, found_user, usage + "\n", false);
-
-    return 1;
+    return push_internal_items_view(vctx, pretty, full, nodes, found_user, usage + "\n", false);
 }
 
-
-duk_ret_t item__list(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value item__list(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
+    bool is_arr = requested_scripting_api(arg);
+    bool full = arg["full"].is_truthy();
 
-    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
-    bool full = dukx_is_prop_truthy(ctx, -1, "full");
-
-    std::optional<std::pair<user, user_nodes>> user_and_node_opt = get_user_and_nodes(get_caller(ctx), get_thread_id(ctx));
+    std::optional<std::pair<user, user_nodes>> user_and_node_opt = get_user_and_nodes(get_caller(vctx), get_thread_id(vctx));
 
     if(!user_and_node_opt.has_value())
-    {
-        return push_error(ctx, "User does not exist");
-    }
+        return js::make_error(vctx, "User does not exist");
 
-    push_internal_items_view(ctx, !is_arr, full, user_and_node_opt->second, user_and_node_opt->first, "", false);
-
-    return 1;
+    return push_internal_items_view(vctx, !is_arr, full, user_and_node_opt->second, user_and_node_opt->first, "", false);
 }
 
-duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value item__load(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
+    int node_idx = arg.has("node") ? arg["node"] : -1;
 
-    //int load_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
-    int node_idx = duk_get_prop_string_as_int(ctx, -1, "node", -1);
-
-    auto [is_arr, indices] = check_get_index_property(ctx);
+    auto [is_arr, indices] = check_get_index_property(vctx);
 
     if(indices.size() == 0)
-        return push_error(ctx, "Index must be number or array of numbers, eg idx:0 or idx:[1, 2, 3]");
+        return js::make_error(vctx, "Index must be number or array of numbers, eg idx:0 or idx:[1, 2, 3]");
 
-    std::optional<std::pair<user, user_nodes>> user_and_node_opt = get_user_and_nodes(get_caller(ctx), get_thread_id(ctx));
+    std::optional<std::pair<user, user_nodes>> user_and_node_opt = get_user_and_nodes(get_caller(vctx), get_thread_id(vctx));
 
-    std::string node_name = duk_safe_get_prop_string(ctx, -1, "node");
+    std::string node_name = arg["node"];
 
     if(!user_and_node_opt.has_value())
-    {
-        return push_error(ctx, "User does not exist");
-    }
+        return js::make_error(vctx, "User does not exist");
 
     if(node_name != "")
     {
@@ -2254,12 +2210,7 @@ duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
-    //std::string usage = "Usage: " + make_key_val("load", "idx") + ", and optionally " + make_key_val("node", "short_name");
-
-    int offset = 0;
-
-    if(is_arr)
-        duk_push_array(ctx);
+    std::vector<js::value> rvector;
 
     for(int& idx : indices)
     {
@@ -2267,52 +2218,46 @@ duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl)
         {
             std::string accum;
 
-            auto ret = load_item_raw(node_idx, idx, -1, user_and_node_opt->first, user_and_node_opt->second, accum, get_thread_id(ctx));
-
-            if(accum.size() > 0 && accum.back() == '\n')
-                accum.pop_back();
+            auto ret = load_item_raw(node_idx, idx, -1, user_and_node_opt->first, user_and_node_opt->second, accum, get_thread_id(vctx));
 
             if(ret != "")
-                push_error(ctx, ret + " for index " + std::to_string(idx));
+                rvector.push_back(js::make_error(vctx, ret + " for index " + std::to_string(idx)));
             else
-                push_duk_val(ctx, accum);
-
-            if(is_arr)
-                duk_put_prop_index(ctx, -2, offset);
+                rvector.push_back(js::make_success(vctx));
         }
         else
         {
-            push_error(ctx, "Index " + std::to_string(idx) + " was < 0");
-
-            if(is_arr)
-                duk_put_prop_index(ctx, -2, offset);
+            rvector.push_back(js::make_error(vctx, "Index " + std::to_string(idx) + " was < 0"));
         }
 
-        offset++;
     }
 
-    return 1;
+    if(is_arr)
+        return js::make_value(vctx, rvector);
+
+    if(!is_arr && rvector.size() == 0)
+        return rvector[0];
+
+    return js::make_error(vctx, "Implementation error in item.load");
 }
 
-duk_ret_t item__unload(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value item__unload(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
     COOPERATE_KILL();
 
-    auto [is_arr, indices] = check_get_index_property(ctx);
+    auto [is_arr, indices] = check_get_index_property(vctx);
 
     if(indices.size() == 0)
-        return push_error(ctx, "Index must be number or array of numbers, eg idx:0 or idx:[1, 2, 3]");
+        return js::make_error(vctx, "Index must be number or array of numbers, eg idx:0 or idx:[1, 2, 3]");
 
-    int node_idx = duk_get_prop_string_as_int(ctx, -1, "node", -1);
+    int node_idx = arg.has("node") ? arg["node"] : -1;
 
-    std::optional<std::pair<user, user_nodes>> user_and_node_opt = get_user_and_nodes(get_caller(ctx), get_thread_id(ctx));
+    std::optional<std::pair<user, user_nodes>> user_and_node_opt = get_user_and_nodes(get_caller(vctx), get_thread_id(vctx));
 
-    std::string node_name = duk_safe_get_prop_string(ctx, -1, "node");
+    std::string node_name = arg["node"];
 
     if(!user_and_node_opt.has_value())
-    {
-        return push_error(ctx, "User does not exist");
-    }
+        return js::make_error(vctx, "User does not exist, catastrophic error");
 
     if(node_name != "")
     {
@@ -2326,10 +2271,7 @@ duk_ret_t item__unload(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
     }
 
-    int offset = 0;
-
-    if(is_arr)
-        duk_push_array(ctx);
+    std::vector<js::value> rvector;
 
     for(int& idx : indices)
     {
@@ -2339,47 +2281,40 @@ duk_ret_t item__unload(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             auto ret = load_item_raw(node_idx, -1, idx, user_and_node_opt->first, user_and_node_opt->second, accum, get_thread_id(ctx));
 
-            if(accum.size() > 0 && accum.back() == '\n')
-                accum.pop_back();
-
             if(ret != "")
-                push_error(ctx, ret + " for index " + std::to_string(idx));
+                rvector.push_back(js::make_error(vctx, ret + " for index " + std::to_string(idx)));
             else
-                push_duk_val(ctx, accum);
-
-            if(is_arr)
-                duk_put_prop_index(ctx, -2, offset);
+                rvector.push_back(js::make_success(vctx));
         }
         else
         {
-            push_error(ctx, "Index " + std::to_string(idx) + " was < 0");
-
-            if(is_arr)
-                duk_put_prop_index(ctx, -2, offset);
+            rvector.push_back(js::make_error(vctx, "Index " + std::to_string(idx) + " was < 0"));
         }
-
-        offset++;
     }
 
-    return 1;
+    if(is_arr)
+        return js::make_value(vctx, rvector);
+
+    if(!is_arr && rvector.size() == 0)
+        return rvector[0];
+
+    return js::make_error(vctx, "Implementation error in item.unload");
 }
 
-duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, user& from_user, user& to_user, bool is_pvp)
+js::value push_xfer_item_id_with_logs(js::value_context& vctx, std::string item_id, user& from_user, user& to_user, bool is_pvp)
 {
     if(from_user.name == to_user.name)
-        return push_success(ctx, "Item definitely transferred to a different user");
+        return js::make_success(vctx);
 
     float items_to_destroy_link = 100;
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    js::value_context vctx(ctx);
-
     #ifdef XFER_PATHS
     std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(vctx, to_user.name, from_user.name, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, 1.f / items_to_destroy_link);
 
     if(path.size() == 0)
-        return push_error(ctx, "No path to user through the network");
+        return js::make_error(vctx, "No path to user through the network");
     #endif // XFER_PATHS
 
     std::string found_item_description;
@@ -2390,7 +2325,7 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, use
         mongo_nolock_proxy mongo_context = get_global_mongo_user_items_context(-2);
 
         if(!db_disk_load(mongo_context, it, item_id))
-            return push_error(ctx, "No such item");
+            return js::make_error(vctx, "No such item");
 
         found_item_description = it.get_prop("short_name") + "/" + item_id;
     }
@@ -2401,7 +2336,7 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, use
     auto sys_to_opt = low_level_structure_manage.get_system_of(to_user);
 
     if(!sys_from_opt.has_value() || !sys_to_opt.has_value())
-        return push_error(ctx, "Really bad error: not in a system in push_xfer_item_id_with_logs");
+        return js::make_error(vctx, "Really bad error: not in a system in push_xfer_item_id_with_logs");
 
     low_level_structure& sys_from = *sys_from_opt.value();
     low_level_structure& sys_to = *sys_to_opt.value();
@@ -2418,7 +2353,7 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, use
 
         if(from_user.get_max_stealable_items(current_time, sys_from) < 1)
         {
-            return push_error(ctx, "Cannot steal item currently due to seclevel limits. Please wait");
+            return js::make_error(vctx, "Cannot steal item currently due to seclevel limits. Please wait");
         }
         else
         {
@@ -2429,7 +2364,7 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, use
     {
         if(from_user.get_max_sendable_items(current_time, sys_from, sys_to) < 1)
         {
-            return push_error(ctx, "Cannot send item currently due to seclevel limits. Please wait");
+            return js::make_error(vctx, "Cannot send item currently due to seclevel limits. Please wait");
         }
         else
         {
@@ -2441,13 +2376,13 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, use
 
     item placeholder;
 
-    if(placeholder.transfer_from_to_by_index(from_user.item_to_index(item_id), from_user, to_user, get_thread_id(ctx)))
+    if(placeholder.transfer_from_to_by_index(from_user.item_to_index(item_id), from_user, to_user, get_thread_id(vctx)))
     {
         user_log next;
         next.add("type", "item_xfer", "N");
 
         #ifdef XFER_PATHS
-        playspace_network_manage.modify_path_per_link_strength_with_logs(path, -1.f / items_to_destroy_link, {next}, get_thread_id(ctx));
+        playspace_network_manage.modify_path_per_link_strength_with_logs(path, -1.f / items_to_destroy_link, {next}, get_thread_id(vctx));
         #endif // XFER_PATHS
 
         //std::string xfer = "`NItem xfer` | from: " + from  + ", to: " + to + ", name: " + found_item_description;
@@ -2456,8 +2391,6 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, use
         next.add("to", to_user.name, string_to_colour(to_user.name));
         next.add("name", found_item_description, "");
 
-        js::value_context vctx(ctx);
-
         make_logs_on(vctx, from_user.name, user_node_info::ITEM_SEG, {next});
         make_logs_on(vctx, to_user.name, user_node_info::ITEM_SEG, {next});
 
@@ -2465,48 +2398,41 @@ duk_ret_t push_xfer_item_id_with_logs(duk_context* ctx, std::string item_id, use
 
         create_xfer_item_notif(vctx, from_user.name, to_user.name, placeholder.get_prop("short_name"));
 
-        push_success(ctx);
+        return js::make_success(vctx);
     }
     else
-        push_error(ctx, "Could not xfer");
-
-    return 1;
+        return js::make_error(vctx);
 }
 
-duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, user& from, user& to, bool is_pvp)
+js::value push_xfer_item_with_logs(js::value_context& vctx, int item_idx, user& from, user& to, bool is_pvp)
 {
-    return push_xfer_item_id_with_logs(ctx, from.index_to_item(item_idx), from, to, is_pvp);
+    return push_xfer_item_id_with_logs(vctx, from.index_to_item(item_idx), from, to, is_pvp);
 }
 
-duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value item__xfer_to(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
-    auto [is_arr, indices] = check_get_index_property(ctx);
+    auto [is_arr, indices] = check_get_index_property(vctx);
 
     if(indices.size() == 0)
-        return push_error(ctx, "Index must be number or array of numbers, eg idx:0 or idx:[1, 2, 3]");
+        return js::make_error(vctx, "Index must be number or array of numbers, eg idx:0 or idx:[1, 2, 3]");
 
-    std::string from = get_caller(ctx);
-    std::string to = duk_safe_get_prop_string(ctx, -1, "user");
+    std::string from = get_caller(vctx);
+    std::string to = arg["user"];
 
-    std::optional user_and_nodes = get_user_and_nodes(get_caller(ctx), get_thread_id(ctx));
+    std::optional user_and_nodes = get_user_and_nodes(get_caller(vctx), get_thread_id(vctx));
 
     if(!user_and_nodes.has_value())
-        return push_error(ctx, "No such user/really catastrophic error");
+        return js::make_error(vctx, "No such user/really catastrophic error");
 
     std::optional user_and_nodes_to = get_user_and_nodes(to, get_thread_id(ctx));
 
     if(!user_and_nodes_to)
-        return push_error(ctx, "Destination user does not exist");
+        return js::make_error(vctx, "Destination user does not exist");
 
     user& usr_from = user_and_nodes->first;
     user& usr_to = user_and_nodes_to->first;
 
-    int offset = 0;
-
-    if(is_arr)
-        duk_push_array(ctx);
+    std::vector<js::value> rvector;
 
     std::sort(indices.begin(), indices.end(), [](const auto& i1, const auto& i2){return i1 > i2;});
 
@@ -2517,14 +2443,9 @@ duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
         auto ret = load_item_raw(-1, -1, item_idx, user_and_nodes->first, user_and_nodes->second, accum, get_thread_id(ctx));
 
         if(ret != "")
-            push_error(ctx, ret + " for index " + std::to_string(item_idx));
+            rvector.push_back(js::make_error(vctx, ret + " for index " + std::to_string(item_idx)));
         else
-            push_xfer_item_with_logs(ctx, item_idx, usr_from, usr_to, false);
-
-        if(is_arr)
-            duk_put_prop_index(ctx, -2, offset);
-
-        offset++;
+            rvector.push_back(push_xfer_item_with_logs(ctx, item_idx, usr_from, usr_to, false));
     }
 
     {
@@ -2534,60 +2455,64 @@ duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl)
         usr_to.overwrite_user_in_db(mctx);
     }
 
-    return 1;
+    if(is_arr)
+        return js::make_value(vctx, rvector);
+
+    if(!is_arr && rvector.size() == 0)
+        return rvector[0];
+
+    return js::make_error(vctx, "Implementation error in item.xfer_to");
 }
 
-duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value item__bundle_script(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
-    int item_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
-    std::string scriptname = duk_safe_get_prop_string(ctx, -1, "name");
-    std::string tag = duk_safe_get_prop_string(ctx, -1, "tag");
+    int item_idx = arg.has("idx") ? arg["idx"] : -1;
+    std::string scriptname = arg["name"];
+    std::string tag = arg["tag"];
 
     if(tag.size() > 8)
-        return push_error(ctx, "Tag must be <= 8 characters");
+        return js::make_error(vctx, "Tag must be <= 8 characters");
 
     if(scriptname == "")
-        return push_error(ctx, "Invalid name");
+        return js::make_error(vctx, "Invalid name");
 
-    std::string full_script_name = get_caller(ctx) + "." + scriptname;
+    std::string full_script_name = get_caller(vctx) + "." + scriptname;
 
     if(!is_valid_full_name_string(full_script_name))
-        return push_error(ctx, "Invalid name");
+        return js::make_error(vctx, "Invalid name");
 
     if(item_idx < 0)
-        return push_error(ctx, "Invalid index");
+        return js::make_error(vctx, "Invalid index");
 
     user current_user;
 
     {
-        mongo_lock_proxy user_lock = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy user_lock = get_global_mongo_user_info_context(get_thread_id(vctx));
 
-        current_user.load_from_db(user_lock, get_caller(ctx));
+        current_user.load_from_db(user_lock, get_caller(vctx));
     }
 
     std::string item_id = current_user.index_to_item(item_idx);
 
     if(item_id == "")
-        return push_error(ctx, "Invalid index");
+        return js::make_error(vctx, "Invalid index");
 
     {
-        mongo_lock_proxy item_lock = get_global_mongo_user_items_context(get_thread_id(ctx));
+        mongo_lock_proxy item_lock = get_global_mongo_user_items_context(get_thread_id(vctx));
 
         item found_bundle;
         found_bundle.item_id = item_id;
 
         if(!db_disk_exists(item_lock, found_bundle))
-            return push_error(ctx, "No such item");
+            return js::make_error(vctx, "No such item");
 
         db_disk_load(item_lock, found_bundle, item_id);
 
         if((int)found_bundle.get("item_type") != item_types::EMPTY_SCRIPT_BUNDLE)
-            return push_error(ctx, "Not a script bundle");
+            return js::make_error(vctx, "Not a script bundle");
 
         if((int)found_bundle.get("full") != 0)
-            return push_error(ctx, "Not an empty script bundle");
+            return js::make_error(vctx, "Not an empty script bundle");
 
         /*item found_script;
 
@@ -2600,15 +2525,15 @@ duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
         found_script.name = full_script_name;
 
         if(!found_script.load_from_db(item_lock))
-            return push_error(ctx, "No such script or invalid script");
+            return js::make_error(vctx, "No such script or invalid script");
 
         if(!found_script.valid)
-            return push_error(ctx, "Script invalid");
+            return js::make_error(vctx, "Script invalid");
 
         int max_storage = found_bundle.get("max_script_size");
 
         if((int)found_script.unparsed_source.size() > max_storage)
-            return push_error(ctx, "Empty bundle does not contain enough space");
+            return js::make_error(vctx, "Empty bundle does not contain enough space");
 
 
         std::string name = found_bundle.get_prop("short_name");
@@ -2626,67 +2551,65 @@ duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl)
         db_disk_overwrite(item_lock, found_bundle);
     }
 
-    return push_success(ctx);
+    return js::make_success(vctx);
 }
 
 
-duk_ret_t item__register_bundle(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value item__register_bundle(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
-    int item_idx = duk_get_prop_string_as_int(ctx, -1, "idx", -1);
-    std::string scriptname = duk_safe_get_prop_string(ctx, -1, "name");
+    int item_idx = arg.has("idx") ? arg["idx"] : -1;
+    std::string scriptname = arg["name"];
 
     if(scriptname == "")
-        return push_error(ctx, "Invalid name");
+        return js::make_error(vctx, "Invalid name");
 
-    std::string full_script_name = get_caller(ctx) + "." + scriptname;
+    std::string full_script_name = get_caller(vctx) + "." + scriptname;
 
     if(!is_valid_full_name_string(full_script_name))
-        return push_error(ctx, "Invalid name");
+        return js::make_error(vctx, "Invalid name");
 
     if(item_idx < 0)
-        return push_error(ctx, "Invalid index");
+        return js::make_error(vctx, "Invalid index");
 
     user current_user;
 
     {
-        mongo_lock_proxy user_lock = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy user_lock = get_global_mongo_user_info_context(get_thread_id(vctx));
 
-        current_user.load_from_db(user_lock, get_caller(ctx));
+        current_user.load_from_db(user_lock, get_caller(vctx));
     }
 
     std::string item_id = current_user.index_to_item(item_idx);
 
     if(item_id == "")
-        return push_error(ctx, "Invalid index");
+        return js::make_error(vctx, "Invalid index");
 
     if(!current_user.has_loaded_item(item_id))
-        return push_error(ctx, "Item not loaded");
+        return js::make_error(vctx, "Item not loaded");
 
     {
-        mongo_lock_proxy item_lock = get_global_mongo_user_items_context(get_thread_id(ctx));
+        mongo_lock_proxy item_lock = get_global_mongo_user_items_context(get_thread_id(vctx));
 
         item found_bundle;
         found_bundle.item_id = item_id;
 
         if(!db_disk_exists(item_lock, found_bundle))
-            return push_error(ctx, "No such item");
+            return js::make_error(vctx, "No such item");
 
         db_disk_load(item_lock, found_bundle, item_id);
 
         if((int)found_bundle.get("item_type") != item_types::EMPTY_SCRIPT_BUNDLE)
-            return push_error(ctx, "Not a script bundle");
+            return js::make_error(vctx, "Not a script bundle");
 
         if((int)found_bundle.get("full") != 1)
-            return push_error(ctx, "Not a full script bundle");
+            return js::make_error(vctx, "Not a full script bundle");
 
         found_bundle.set_as("registered_as", scriptname);
 
         db_disk_overwrite(item_lock, found_bundle);
     }
 
-    return push_success(ctx);
+    return js::make_success(vctx);
 }
 
 std::string on_breach_name_to_real_script_name(std::string script_name, const std::string& host)

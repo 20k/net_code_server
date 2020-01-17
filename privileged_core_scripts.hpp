@@ -144,25 +144,25 @@ void change_item_raw(mongo_lock_proxy& mongo_ctx, int load_idx, int unload_idx, 
 
 std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr, user_nodes& nodes, std::string& accum, int thread_id);
 
-void push_internal_items_view(duk_context* ctx, int pretty, int full, user_nodes& nodes, user& found_user, std::string preamble, bool pvp);
+js::value push_internal_items_view(js::value_context& vctx, int pretty, int full, user_nodes& nodes, user& found_user, std::string preamble, bool pvp);
 
-duk_ret_t item__cull(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value item__cull(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
-duk_ret_t item__manage(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value item__manage(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
-duk_ret_t item__list(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value item__list(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
-duk_ret_t item__load(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value item__load(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
-duk_ret_t item__unload(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value item__unload(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
-duk_ret_t push_xfer_item_with_logs(duk_context* ctx, int item_idx, user& from, user& to, bool is_pvp);
+js::value push_xfer_item_with_logs(js::value_contxt& vctx, int item_idx, user& from, user& to, bool is_pvp);
 
-duk_ret_t item__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value item__xfer_to(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
-duk_ret_t item__bundle_script(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value item__bundle_script(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
-duk_ret_t item__register_bundle(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value item__register_bundle(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 duk_ret_t item__configure_on_breach(priv_context& priv_ctx, duk_context* ctx, int sl);
 
