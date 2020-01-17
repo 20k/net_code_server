@@ -82,13 +82,13 @@ std::string format_pretty_names(const std::vector<std::string>& names);
 
 js::value scripts__me(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 js::value scripts__public(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
-duk_ret_t scripts__info(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value scripts__info(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
-duk_ret_t cash_internal_xfer(duk_context* ctx, const std::string& from, const std::string& to, double amount, bool pvp_action);
+js::value cash_internal_xfer(js::value_context& vctx, const std::string& from, const std::string& to, double amount, bool pvp_action);
 ///TODO: TRANSACTION HISTORY
 
-duk_ret_t cash__xfer_to(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t cash__xfer_to_caller(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value cash__xfer_to(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
+js::value cash__xfer_to_caller(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 ///this is only valid currently, will need to expand to hardcode in certain folders
 
@@ -114,9 +114,9 @@ duk_ret_t msg__send(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t msg__tell(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 void create_notification(int lock_id, const std::string& to, const std::string& notif_msg);
-void create_xfer_notif(duk_context* ctx, const std::string& xfer_from, const std::string& xfer_to, double amount);
-void create_xfer_item_notif(duk_context* ctx, const std::string& xfer_from, const std::string& xfer_to, const std::string& item_name);
-void create_destroy_item_notif(duk_context* ctx, const std::string& to, const std::string& item_name);
+void create_xfer_notif(js::value_context& vctx, const std::string& xfer_from, const std::string& xfer_to, double amount);
+void create_xfer_item_notif(js::value_context& vctx, const std::string& xfer_from, const std::string& xfer_to, const std::string& item_name);
+void create_destroy_item_notif(js::value_context& vctx, const std::string& to, const std::string& item_name);
 
 ///formats time
 std::string format_time(const std::string& in);
@@ -183,7 +183,7 @@ duk_ret_t handle_confirmed(duk_context* ctx, bool confirm, const std::string& us
 
 duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl);
 
-duk_ret_t cash__steal(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value cash__steal(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 duk_ret_t nodes__view_log(priv_context& priv_ctx, duk_context* ctx, int sl);
 duk_ret_t log__expose(priv_context& priv_ctx, duk_context* ctx, int sl);

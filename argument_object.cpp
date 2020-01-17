@@ -857,6 +857,14 @@ bool js::value::is_object_coercible()
     return duk_is_object_coercible(ctx, idx);
 }
 
+bool js::value::is_object()
+{
+    if(idx == -1)
+        return false;
+
+    return duk_is_object(ctx, idx);
+}
+
 void js::value::release()
 {
     released = true;

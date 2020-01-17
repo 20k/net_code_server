@@ -470,6 +470,7 @@ namespace js
         bool is_undefined() const;
         bool is_truthy();
         bool is_object_coercible();
+        bool is_object();
 
         ///stop managing element
         void release();
