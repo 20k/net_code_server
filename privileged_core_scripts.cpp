@@ -861,11 +861,9 @@ js::value cash__xfer_to_caller(priv_context& priv_ctx, js::value_context& vctx, 
 
 ///this is only valid currently, will need to expand to hardcode in certain folders
 
-duk_ret_t scripts__core(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value scripts__core(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
-    int make_array = dukx_is_prop_truthy(ctx, -1, "array");
+    int make_array = requested_scripting_api(arg);
 
     std::vector<std::string> names;
 
@@ -879,16 +877,14 @@ duk_ret_t scripts__core(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(make_array)
     {
-        push_duk_val(ctx, names);
+        return js::make_value(vctx, names);
     }
     else
     {
         std::string str = format_pretty_names(names, false);
 
-        duk_push_string(ctx, str.c_str());
+        return js::make_value(vctx, str);
     }
-
-    return 1;
 }
 
 size_t get_wall_time();
@@ -933,29 +929,28 @@ bool is_valid_channel_name(const std::string& in)
     return true;
 }
 
-duk_ret_t channel__create(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value channel__create(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-    RATELIMIT_DUK(CREATE_CHANNEL);
+    RATELIMIT_VDUK(CREATE_CHANNEL);
 
-    std::string chan = duk_safe_get_prop_string(ctx, -1, "name");
-    std::string password = duk_safe_get_prop_string(ctx, -1, "password");
+    std::string chan = arg["name"];
+    std::string password = arg["password"];
 
     if(password.size() > 16)
         password.resize(16);
 
     if(!is_valid_channel_name(chan))
-        return push_error(ctx, "Invalid Name");
+        return js::make_error(vctx, "Invalid Name");
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+    mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
 
     mongo_requester request;
     request.set_prop("channel_name", chan);
 
     if(request.fetch_from_db(mongo_ctx).size() > 0)
-        return push_error(ctx, "Channel already exists");
+        return js::make_error(vctx, "Channel already exists");
 
-    std::vector<std::string> user_list{get_caller(ctx)};
+    std::vector<std::string> user_list{get_caller(vctx)};
 
     mongo_requester to_insert;
     to_insert.set_prop("channel_name", chan);
@@ -964,23 +959,21 @@ duk_ret_t channel__create(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     to_insert.insert_in_db(mongo_ctx);
 
-    return push_success(ctx);
+    return js::make_success(vctx);
 }
 
-duk_ret_t channel__join(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value channel__join(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
-    std::string chan = duk_safe_get_prop_string(ctx, -1, "name");
-    std::string password = duk_safe_get_prop_string(ctx, -1, "password");
+    std::string chan = arg["name"];
+    std::string password = arg["password"];
 
     if(password.size() > 16)
         password.resize(16);
 
     if(!is_valid_channel_name(chan))
-        return push_error(ctx, "Invalid Name");
+        return js::make_error(vctx, "Invalid Name");
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+    mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
 
     mongo_requester request;
     request.set_prop("channel_name", chan);
@@ -988,22 +981,22 @@ duk_ret_t channel__join(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
 
     if(found.size() == 0)
-        return push_error(ctx, "Channel does not exist");
+        return js::make_error(vctx, "Channel does not exist");
 
     if(found.size() > 1)
-        return push_error(ctx, "Some kind of catastrophic error: Yellow Sparrow");
+        return js::make_error(vctx, "Some kind of catastrophic error: Yellow Sparrow");
 
     mongo_requester& found_channel = found[0];
 
     if(found_channel.has_prop("password") && found_channel.get_prop("password") != password)
-        return push_error(ctx, "Wrong Password");
+        return js::make_error(vctx, "Wrong Password");
 
     std::vector<std::string> users = (std::vector<std::string>)found_channel.get_prop("user_list");
 
-    std::string username = get_caller(ctx);
+    std::string username = get_caller(vctx);
 
     if(array_contains(users, username))
-        return push_success(ctx, "In channel");
+        return js::make_success(vctx);
 
     users.push_back(username);
 
@@ -1014,16 +1007,14 @@ duk_ret_t channel__join(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     to_find.update_in_db_if_exact(mongo_ctx, to_set);
 
-    return push_success(ctx);
+    return js::make_success(vctx);
 }
 
-duk_ret_t channel__list(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value channel__list(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
+    bool is_arr = requested_scripting_api(arg);
 
-    bool is_arr = dukx_is_prop_truthy(ctx, -1, "array");
-
-    std::string username = get_caller(ctx);
+    std::string username = get_caller(vctx);
 
     std::vector<std::string> ret;
 
@@ -1053,8 +1044,7 @@ duk_ret_t channel__list(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(is_arr)
     {
-        push_duk_val(ctx, ret);
-        return 1;
+        return js::make_value(vctx, ret);
     }
     else
     {
@@ -1065,21 +1055,18 @@ duk_ret_t channel__list(priv_context& priv_ctx, duk_context* ctx, int sl)
             str += i + "\n";
         }
 
-        push_duk_val(ctx, strip_trailing_newlines(str));
-        return 1;
+        return js::make_value(vctx, strip_trailing_newlines(str));
     }
 }
 
-duk_ret_t channel__leave(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value channel__leave(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
-    std::string chan = duk_safe_get_prop_string(ctx, -1, "name");
+    std::string chan = arg["name"];
 
     if(!is_valid_channel_name(chan))
-        return push_error(ctx, "Invalid Name");
+        return js::make_error(vctx, "Invalid Name");
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(ctx));
+    mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
 
     mongo_requester request;
     request.set_prop("channel_name", chan);
@@ -1087,19 +1074,19 @@ duk_ret_t channel__leave(priv_context& priv_ctx, duk_context* ctx, int sl)
     std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
 
     if(found.size() == 0)
-        return push_error(ctx, "Channel does not exist");
+        return js::make_error(vctx, "Channel does not exist");
 
     if(found.size() > 1)
-        return push_error(ctx, "Some kind of catastrophic error: Yellow Sparrow");
+        return js::make_error(vctx, "Some kind of catastrophic error: Yellow Sparrow");
 
     mongo_requester& found_channel = found[0];
 
     std::vector<std::string> users = (std::vector<std::string>)found_channel.get_prop("user_list");
 
-    std::string username = get_caller(ctx);
+    std::string username = get_caller(vctx);
 
     if(!array_contains(users, username))
-        return push_error(ctx, "Not in Channel");
+        return js::make_error(vctx, "Not in Channel");
 
     auto it = std::find(users.begin(), users.end(), username);
 
@@ -1107,7 +1094,7 @@ duk_ret_t channel__leave(priv_context& priv_ctx, duk_context* ctx, int sl)
         users.erase(it);
 
     if(array_contains(users, username))
-        return push_success(ctx, "In channel");
+        return js::make_success(vctx);
 
     mongo_requester to_find = request;
 
@@ -1116,7 +1103,7 @@ duk_ret_t channel__leave(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     to_find.update_in_db_if_exact(mongo_ctx, to_set);
 
-    return push_success(ctx);
+    return js::make_success(vctx);
 }
 
 duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl)

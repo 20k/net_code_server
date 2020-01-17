@@ -92,7 +92,7 @@ js::value cash__xfer_to_caller(priv_context& priv_ctx, js::value_context& vctx, 
 
 ///this is only valid currently, will need to expand to hardcode in certain folders
 
-duk_ret_t scripts__core(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value scripts__core(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 size_t get_wall_time();
 double get_wall_time_s();
@@ -102,10 +102,10 @@ std::vector<std::string> get_users_in_channel(mongo_lock_proxy& mongo_ctx, const
 
 bool is_valid_channel_name(const std::string& in);
 
-duk_ret_t channel__create(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t channel__join(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t channel__leave(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t channel__list(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value channel__create(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
+js::value channel__join(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
+js::value channel__list(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
+js::value channel__leave(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 duk_ret_t msg__manage(priv_context& priv_ctx, duk_context* ctx, int sl);
 
