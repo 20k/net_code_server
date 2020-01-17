@@ -566,6 +566,9 @@ namespace js
 
         operator std::string()
         {
+            if(idx == -1)
+                return std::string();
+
             std::string ret;
             arg::dukx_get(ctx, idx, ret);
             return ret;
@@ -573,6 +576,9 @@ namespace js
 
         operator int64_t()
         {
+            if(idx == -1)
+                return int64_t();
+
             int64_t ret;
             arg::dukx_get(ctx, idx, ret);
             return ret;
@@ -580,6 +586,9 @@ namespace js
 
         operator int()
         {
+            if(idx == -1)
+                return int();
+
             int ret;
             arg::dukx_get(ctx, idx, ret);
             return ret;
@@ -587,6 +596,9 @@ namespace js
 
         operator double()
         {
+            if(idx == -1)
+                return double();
+
             double ret;
             arg::dukx_get(ctx, idx, ret);
             return ret;
@@ -594,6 +606,9 @@ namespace js
 
         operator bool()
         {
+            if(idx == -1)
+                return bool();
+
             bool ret;
             arg::dukx_get(ctx, idx, ret);
             return ret;
@@ -602,6 +617,9 @@ namespace js
         template<typename T>
         operator std::vector<T>()
         {
+            if(idx == -1)
+                return std::vector<T>();
+
             std::vector<T> ret;
             arg::dukx_get(ctx, idx, ret);
             return ret;
@@ -610,6 +628,9 @@ namespace js
         template<typename T, typename U>
         operator std::map<T, U>()
         {
+            if(idx == -1)
+                return std::map<T, U>();
+
             std::map<T, U> ret;
             arg::dukx_get(ctx, idx, ret);
             return ret;
@@ -618,6 +639,9 @@ namespace js
         template<typename T>
         operator T*()
         {
+            if(idx == -1)
+                return nullptr;
+
             static_assert(!std::is_same_v<T, char const>, "Trying to get a const char* pointer out is almost certainly not what you want");
 
             T* ret;

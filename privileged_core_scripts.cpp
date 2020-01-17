@@ -5566,8 +5566,6 @@ js::value sys__view(priv_context& priv_ctx, js::value_context& vctx, js::value& 
     bool is_arr = requested_scripting_api(arg);
     std::string found_target = arg["user"];
 
-    std::cout << "FTARGET " << found_target << std::endl;
-
     bool has_fit = arg["fit"].is_truthy();
 
     int found_w = arg.has("w") ? arg["w"] : 80;
