@@ -4785,23 +4785,21 @@ duk_ret_t try_create_new_link(duk_context* ctx, const std::string& user_1, const
 }
 #endif // 0
 
-duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, const std::string& user_1, const std::string& target, bool create, double stab, bool confirm, bool enforce_connectivity, std::string path_type = "use")
+js::value create_and_modify_link(js::value_context& vctx, const std::string& from, const std::string& user_1, const std::string& target, bool create, double stab, bool confirm, bool enforce_connectivity, std::string path_type = "use")
 {
-    std::optional opt_user_and_nodes_1 = get_user_and_nodes(user_1, get_thread_id(ctx));
-    std::optional opt_user_and_nodes_2 = get_user_and_nodes(target, get_thread_id(ctx));
+    std::optional opt_user_and_nodes_1 = get_user_and_nodes(user_1, get_thread_id(vctx));
+    std::optional opt_user_and_nodes_2 = get_user_and_nodes(target, get_thread_id(vctx));
 
     if(!opt_user_and_nodes_1.has_value())
-        return push_error(ctx, "No such user (user)");
+        return js::make_error(vctx, "No such user (user)");
 
     if(!opt_user_and_nodes_2.has_value())
-        return push_error(ctx, "No such user (target)");
-
-    js::value_context vctx(ctx);
+        return js::make_error(vctx, "No such user (target)");
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
     if(!create && !playspace_network_manage.has_accessible_path_to(vctx, user_1, from, (path_info::path_info)(path_info::VIEW_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
-        return push_error(ctx, "No currently visible path to user");
+        return js::make_error(vctx, "No currently visible path to user");
 
     //double stab = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "delta", 0);
     //std::string path_type = duk_safe_get_prop_string(ctx, -1, "type");
@@ -4820,7 +4818,7 @@ duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, cons
     if(enforce_connectivity)
     {
         if(!playspace_network_manage.has_accessible_path_to(vctx, target, user_1, (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
-            return push_error(ctx, "No path from user to target");
+            return js::make_error(vctx, "No path from user to target");
     }
 
     float link_stability_for_one_cash = 1.f;
@@ -4843,8 +4841,8 @@ duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, cons
 
         if(price != 0)
         {
-            if(handle_confirmed(ctx, confirm, get_caller(ctx), price))
-                return 1;
+            if(auto res = handle_confirmed(vctx, confirm, get_caller(vctx), price); res.has_value())
+                return res.value();
 
             std::vector<std::string> path;
 
@@ -4856,17 +4854,18 @@ duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, cons
                 path = playspace_network_manage.get_accessible_path_to(vctx, target, user_1, path_info::USE_LINKS);
 
             if(path.size() == 0)
-                return push_error(ctx, "No path");
+                return js::make_error(vctx, "No path");
 
             user_log next;
             next.add("type", "path_fortify", "");
 
-            playspace_network_manage.modify_path_per_link_strength_with_logs(path, stab / ((float)path.size() - 1.f) , {next}, get_thread_id(ctx));
+            playspace_network_manage.modify_path_per_link_strength_with_logs(path, stab / ((float)path.size() - 1.f) , {next}, get_thread_id(vctx));
 
-            return push_success(ctx, "Distributed " + std::to_string(stab) + " across " + std::to_string((int)path.size() - 1) + " links");
+            return js::make_success(vctx);
+            //return push_success(ctx, "Distributed " + std::to_string(stab) + " across " + std::to_string((int)path.size() - 1) + " links");
         }
 
-        push_duk_val(ctx, rstr);
+        return js::make_value(vctx, rstr);
     }
     else
     {
@@ -4876,14 +4875,14 @@ duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, cons
         user& u1 = opt_user_and_nodes_1->first;
         user& u2 = opt_user_and_nodes_2->first;
 
-        bool invalid_1 = !n1.is_valid_hostile_action(user_node_info::hostile_actions::USE_LINKS) && !u1.is_allowed_user(get_caller(ctx)) && u1.name != get_caller(ctx);
-        bool invalid_2 = !n2.is_valid_hostile_action(user_node_info::hostile_actions::USE_LINKS) && !u2.is_allowed_user(get_caller(ctx)) && u2.name != get_caller(ctx);
+        bool invalid_1 = !n1.is_valid_hostile_action(user_node_info::hostile_actions::USE_LINKS) && !u1.is_allowed_user(get_caller(vctx)) && u1.name != get_caller(vctx);
+        bool invalid_2 = !n2.is_valid_hostile_action(user_node_info::hostile_actions::USE_LINKS) && !u2.is_allowed_user(get_caller(vctx)) && u2.name != get_caller(vctx);
 
         if(invalid_1 || invalid_2)
-            return push_error(ctx, "Breach Node Secured");
+            return js::make_error(vctx, "Breach Node Secured");
 
         if(stab <= 0)
-            return push_error(ctx, "Cannot create a new link with stability <= 0");
+            return js::make_error(vctx, "Cannot create a new link with stability <= 0");
 
         std::string rstr;
 
@@ -4892,8 +4891,7 @@ duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, cons
             rstr += stab_str;
             rstr += no_stab_str;
 
-            push_duk_val(ctx, rstr);
-            return 1;
+            return js::make_value(vctx, rstr);
         }
         else
         {
@@ -4907,25 +4905,22 @@ duk_ret_t create_and_modify_link(duk_context* ctx, const std::string& from, cons
 
         if(price != 0)
         {
-            if(handle_confirmed(ctx, confirm, get_caller(ctx), price))
-                return 1;
+            if(auto res = handle_confirmed(vctx, confirm, get_caller(vctx), price); res.has_value())
+                return res.value();
 
             if(playspace_network_manage.current_network_links(user_1) >= playspace_network_manage.max_network_links(user_1) ||
                playspace_network_manage.current_network_links(target) >= playspace_network_manage.max_network_links(target))
-                return push_error(ctx, "No spare links");
+                return js::make_error(vctx, "No spare links");
 
             scheduled_tasks& task_sched = get_global_scheduled_tasks();
 
-            task_sched.task_register(task_type::ON_HEAL_NETWORK, 10.f, {user_1, target, std::to_string(stab)}, get_thread_id(ctx));
+            task_sched.task_register(task_type::ON_HEAL_NETWORK, 10.f, {user_1, target, std::to_string(stab)}, get_thread_id(vctx));
 
-            return push_success(ctx, "Link creation scheduled in 10s");
+            return js::make_success(vctx);
         }
 
-        push_duk_val(ctx, "Schedule new connection?");
-        return 1;
+        return js::make_value(vctx, "Schedule new connection?");
     }
-
-    return 0;
 }
 
 
@@ -6210,31 +6205,29 @@ std::string price_to_string(int price)
 ///aka a bunch of conditional logic which is really just display logic
 ///what should do instead is build the logic for everything separately then merge together stuff
 ///that actually is to be displayed at the end
-duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
     #ifdef TESTING
     /*MAKE_PERF_COUNTER();
     mongo_diagnostics diagnostic_scope;*/
     #endif // TESTING
 
-    if(!dukx_is_prop_truthy(ctx, -1, "user"))
-        return push_error(ctx, "Takes a user parameter");
+    if(!arg["user"].is_truthy())
+        return js::make_error(vctx, "Takes a user parameter");
 
-    std::string target_name = duk_safe_get_prop_string(ctx, -1, "user");
-    bool has_activate = dukx_is_prop_truthy(ctx, -1, "activate");
-    bool has_queue = dukx_is_prop_truthy(ctx, -1, "queue");
-    bool has_connect = dukx_is_prop_truthy(ctx, -1, "connect");
-    bool has_disconnect = dukx_is_prop_truthy(ctx, -1, "disconnect");
-    bool has_modify = duk_has_prop_string(ctx, -1, "modify");
-    bool has_confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
-    bool has_arr = dukx_is_prop_truthy(ctx, -1, "array");
-    bool has_users = dukx_is_prop_truthy(ctx, -1, "users");
+    std::string target_name = arg["user"];
+    bool has_activate = arg["activate"].is_truthy();
+    bool has_queue = arg["queue"].is_truthy();
+    bool has_connect = arg["connect"].is_truthy();
+    bool has_disconnect = arg["disconnect"].is_truthy();
+    bool has_modify = arg["modify"].is_truthy();
+    bool has_confirm = arg["confirm"].is_truthy();
+    bool has_arr = requested_scripting_api(arg);
+    bool has_users = arg["users"].is_truthy();
 
-    std::string add_user = duk_safe_get_prop_string(ctx, -1, "add");
-    std::string remove_user = duk_safe_get_prop_string(ctx, -1, "remove");
-    bool view_users = dukx_is_prop_truthy(ctx, -1, "view");
+    std::string add_user = arg["add"];
+    std::string remove_user = arg["remove"];
+    bool view_users = arg["view"].is_truthy();
 
     /*int n_count = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "n", 1);
     n_count = clamp(n_count, 1, 100);*/
@@ -6245,13 +6238,13 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     user my_user;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         if(!target.load_from_db(mongo_ctx, target_name))
-            return push_error(ctx, "Invalid user");
+            return js::make_error(vctx, "Invalid user");
 
-        if(!my_user.load_from_db(mongo_ctx, get_caller(ctx)))
-            return push_error(ctx, "Invalid host, really bad");
+        if(!my_user.load_from_db(mongo_ctx, get_caller(vctx)))
+            return js::make_error(vctx, "Invalid host, really bad");
     }
 
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
@@ -6261,17 +6254,15 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     auto my_sys_opt = low_level_structure_manage.get_system_of(my_user.name);
 
     if(!target_sys_opt.has_value() || !my_sys_opt.has_value())
-        return push_error(ctx, "Well then you are lost (high ground!)");
+        return js::make_error(vctx, "Well then you are lost (high ground!)");
 
-    js::value_context vctx(ctx);
-
-    if(!(target.is_npc() && target.is_allowed_user(get_caller(ctx))))
+    if(!(target.is_npc() && target.is_allowed_user(get_caller(vctx))))
     {
         if(target_sys_opt.value() != my_sys_opt.value())
-            return push_error(ctx, "Not in the same system");
+            return js::make_error(vctx, "Not in the same system");
 
         if(!playspace_network_manage.has_accessible_path_to(vctx, target.name, my_user.name, (path_info::path_info)(path_info::USE_LINKS | path_info::TEST_ACTION_THROUGH_WARP_NPCS)))
-            return push_error(ctx, "No path");
+            return js::make_error(vctx, "No path");
     }
 
     bool in_same_system = target_sys_opt.value() == my_sys_opt.value();
@@ -6282,15 +6273,15 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
     bool is_warpy = false;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(ctx));
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(vctx));
 
         is_warpy = npc_info::has_type(mongo_ctx, npc_info::WARPY, target.name);
     }
 
-    user_nodes target_nodes = get_nodes(target.name, get_thread_id(ctx));
+    user_nodes target_nodes = get_nodes(target.name, get_thread_id(vctx));
 
     auto valid_actions = target_nodes.valid_hostile_actions();
-    bool can_modify_users = (target.is_allowed_user(get_caller(ctx)) || ((valid_actions & user_node_info::CLAIM_NPC) > 0)) && target.is_npc() && !is_warpy;
+    bool can_modify_users = (target.is_allowed_user(get_caller(vctx)) || ((valid_actions & user_node_info::CLAIM_NPC) > 0)) && target.is_npc() && !is_warpy;
 
     std::string total_msg;
 
@@ -6333,7 +6324,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             bool of_type = false;
 
             {
-                mongo_nolock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(ctx));
+                mongo_nolock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(vctx));
 
                 of_type = npc_info::has_type(mongo_ctx, npc_info::WARPY, usr.name);
             }
@@ -6391,14 +6382,14 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
                     array_data["engaged"] = true;
 
-                    create_notification(get_thread_id(ctx), my_user.name, make_notif_col("-Arrived at " + connected_system + "-"));
+                    create_notification(get_thread_id(vctx), my_user.name, make_notif_col("-Arrived at " + connected_system + "-"));
                 }
             }
         }
 
         ///should also print sys.view map
         {
-            mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+            mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
             my_user.overwrite_user_in_db(mongo_ctx);
         }
@@ -6472,7 +6463,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             std::cout << i << std::endl;
         }*/
 
-        if(!has_users && get_caller(ctx) != target.name && in_same_system)
+        if(!has_users && get_caller(vctx) != target.name && in_same_system)
         {
             if(!playspace_network_manage.is_linked(my_user.name, target.name))
             {
@@ -6539,17 +6530,12 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                         my_user.set_local_pos(my_user.get_local_pos());
 
                         {
-                            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+                            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
                             my_user.overwrite_user_in_db(mongo_ctx);
                         }
 
-                        duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, true, 15.f, has_confirm, true);
-
-                        if(found == 1)
-                            return 1;
-                        else
-                            return push_error(ctx, "Could not Link");
+                        return create_and_modify_link(vctx, my_user.name, my_user.name, target.name, true, 15.f, has_confirm, true);
                     }
                 }
             }
@@ -6592,7 +6578,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
         else
         {
-            double amount = duk_safe_get_generic_with_guard(duk_get_int, duk_is_number, ctx, -1, "modify", 0);
+            double amount = arg["modify"];
 
             if(amount == 0)
             {
@@ -6600,12 +6586,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             }
             else
             {
-                duk_ret_t found = create_and_modify_link(ctx, my_user.name, my_user.name, target.name, false, amount, has_confirm, true);
-
-                if(found == 1)
-                    return 1;
-                else
-                    return push_error(ctx, "Could not modify link");
+                return create_and_modify_link(vctx, my_user.name, my_user.name, target.name, false, amount, has_confirm, true);
             }
         }
     }
@@ -6626,7 +6607,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
             int remove_price = base_npc_purchase_cost / 4;
             int view_price = base_npc_purchase_cost / 40;
 
-            if(target.is_allowed_user(get_caller(ctx)))
+            if(target.is_allowed_user(get_caller(vctx)))
             {
                 add_price = 0;
                 remove_price = 0;
@@ -6646,12 +6627,15 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
             if(view_users)
             {
-                if(!target.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, has_confirm, get_caller(ctx), view_price))
-                    return 1;
+                if(!target.is_allowed_user(get_caller(vctx)))
+                {
+                    if(auto res = handle_confirmed(vctx, has_confirm, get_caller(vctx), view_price); res.has_value())
+                        return res.value();
+                }
 
                 std::string ret;
 
-                if(target.is_allowed_user(get_caller(ctx)))
+                if(target.is_allowed_user(get_caller(vctx)))
                     ret += make_success_col("Authed Users");
                 else
                     ret += make_error_col("Authed Users");
@@ -6678,22 +6662,25 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 bool user_is_valid = false;
 
                 {
-                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
                     user_is_valid = user().load_from_db(mongo_ctx, add_user);
                 }
 
                 if(!target.is_npc())
-                    return push_error(ctx, "Cannot take over a user");
+                    return js::make_error(vctx, "Cannot take over a user");
 
                 if(user_is_valid)
                 {
-                    if(!target.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, has_confirm, get_caller(ctx), add_price))
-                        return 1;
+                    if(!target.is_allowed_user(get_caller(vctx)))
+                    {
+                        if(auto res = handle_confirmed(vctx, has_confirm, get_caller(vctx), add_price); res.has_value())
+                            return res.value();
+                    }
 
                     total_msg += make_success_col("Added User") + ": " + colour_string(add_user) + "\n";
 
-                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
                     target.add_allowed_user(add_user, mongo_ctx);
                     target.overwrite_user_in_db(mongo_ctx);
@@ -6702,7 +6689,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 }
                 else
                 {
-                    return push_error(ctx, "Add User is not valid (" + add_user + ")");
+                    return js::make_error(vctx, "Add User is not valid (" + add_user + ")");
                 }
             }
 
@@ -6711,19 +6698,22 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 bool user_is_valid = false;
 
                 {
-                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
                     user_is_valid = user().load_from_db(mongo_ctx, remove_user);
                 }
 
                 if(user_is_valid)
                 {
-                    if(!target.is_allowed_user(get_caller(ctx)) && handle_confirmed(ctx, has_confirm, get_caller(ctx), remove_price))
-                        return 1;
+                    if(!target.is_allowed_user(get_caller(vctx)))
+                    {
+                        if(auto res = handle_confirmed(vctx, has_confirm, get_caller(vctx), remove_price); res.has_value())
+                            return res.value();
+                    }
 
                     total_msg += make_success_col("Removed User") + ": " + colour_string(remove_user) + "\n";
 
-                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+                    mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
                     target.remove_allowed_user(remove_user, mongo_ctx);
                     target.overwrite_user_in_db(mongo_ctx);
@@ -6732,7 +6722,7 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
                 }
                 else
                 {
-                    return push_error(ctx, "Remove User is not valid (" + remove_user + ")");
+                    return js::make_error(vctx, "Remove User is not valid (" + remove_user + ")");
                 }
             }
         }
@@ -6744,20 +6734,18 @@ duk_ret_t sys__access(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     if(has_arr)
     {
-        push_duk_val(ctx, array_data);
-        return 1;
+        return js::make_value(vctx, array_data);
     }
 
     //total_msg += links_string;
 
     if(total_msg == "")
-        return 0;
+        return js::make_value(vctx, "");
 
     if(total_msg.size() > 0 && total_msg.back() == '\n')
         total_msg.pop_back();
 
-    push_duk_val(ctx, total_msg);
-    return 1;
+    return js::make_value(vctx, total_msg);
 }
 
 duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl)

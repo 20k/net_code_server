@@ -125,6 +125,7 @@ namespace arg
     template<typename T>
     void dukx_push(duk_context* ctx, T* in);
     void dukx_push(duk_context* ctx, std::nullptr_t in);
+    void dukx_push(duk_context* ctx, const js::value& in);
 
     void dukx_get(duk_context* ctx, int idx, std::string& out);
     void dukx_get(duk_context* ctx, int idx, int64_t& out);
@@ -241,6 +242,8 @@ namespace arg
     {
         duk_push_pointer(ctx, nullptr);
     }
+
+    void dukx_push(duk_context* ctx, const js::value& val);
 
     inline
     void dukx_get(duk_context* ctx, int idx, std::string& out)

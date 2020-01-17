@@ -204,6 +204,11 @@ namespace
     duk_xmove_top(ctx, _ctx, 1);
 }*/
 
+void arg::dukx_push(duk_context* ctx, const js::value& val)
+{
+    duk_dup(ctx, val.idx);
+}
+
 duk_context* create_sandbox_heap()
 {
     ///its easier to simply leak this
