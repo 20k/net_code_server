@@ -156,7 +156,7 @@ js::value item__load(priv_context& priv_ctx, js::value_context& vctx, js::value&
 
 js::value item__unload(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
-js::value push_xfer_item_with_logs(js::value_contxt& vctx, int item_idx, user& from, user& to, bool is_pvp);
+js::value push_xfer_item_with_logs(js::value_context& vctx, int item_idx, user& from, user& to, bool is_pvp);
 
 js::value item__xfer_to(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
@@ -164,7 +164,7 @@ js::value item__bundle_script(priv_context& priv_ctx, js::value_context& vctx, j
 
 js::value item__register_bundle(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
-duk_ret_t item__configure_on_breach(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value item__configure_on_breach(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 #if defined(TESTING) || defined(EXTRAS)
 duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl);
@@ -172,14 +172,14 @@ duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl);
 
 
 duk_ret_t cash__expose(priv_context& priv_ctx, duk_context* ctx, int sl);
-duk_ret_t item__expose(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value item__expose(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 ///handles confirm:true for cash
-duk_ret_t handle_confirmed(duk_context* ctx, bool confirm, const std::string& username, double price);
+std::optional<js::value> handle_confirmed(js::value_context& vctx, bool confirm, const std::string& username, double price);
 
 ///have item__steal reset internal node structure
 
-duk_ret_t item__steal(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value item__steal(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 js::value cash__steal(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
