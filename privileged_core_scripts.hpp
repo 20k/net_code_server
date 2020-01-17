@@ -23,7 +23,7 @@ struct priv_context
     }
 };
 
-using function_priv_t = duk_ret_t (*)(priv_context&, duk_context*, int);
+//using function_priv_t = duk_ret_t (*)(priv_context&, duk_context*, int);
 using function_priv_new_t = js::value (*)(priv_context&, js::value_context& vctx, js::value& arg, int);
 
 inline
@@ -167,7 +167,9 @@ js::value item__register_bundle(priv_context& priv_ctx, js::value_context& vctx,
 js::value item__configure_on_breach(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 #if defined(TESTING) || defined(EXTRAS)
+#if 0
 duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl);
+#endif // 0
 #endif // TESTING
 
 

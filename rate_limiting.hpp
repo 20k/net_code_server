@@ -124,6 +124,7 @@ struct sandbox_data;
 
 void handle_sleep(sandbox_data* dat);
 
+#define RATELIMIT_VPDUK(type) if(!get_global_rate_limit()->try_call(get_caller(*vctx), rate::type)) {return js::make_error(*vctx, "Rate Limit");}
 #define RATELIMIT_VDUK(type) if(!get_global_rate_limit()->try_call(get_caller(vctx), rate::type)) {return js::make_error(vctx, "Rate Limit");}
 #define RATELIMIT_DUK(type) if(!get_global_rate_limit()->try_call(get_caller(ctx), rate::type)) {push_error(ctx, "Rate Limit"); return 1;}
 #define RATELIMIT_JS(type) if(!get_global_rate_limit()->try_call(get_caller(vctx->ctx), rate::type)) {return js::make_error(*vctx, "Rate Limit");}

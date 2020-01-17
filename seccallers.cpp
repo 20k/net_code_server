@@ -47,9 +47,9 @@ void native_print(js::value_context* vctx, std::string str)
 js::value async_print(js::value_context* vctx, std::string what)
 {
     COOPERATE_KILL_VCTX();
-    RATELIMIT_JS(ASYNC_PRINT);
+    RATELIMIT_VPDUK(ASYNC_PRINT);
 
-    command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(vctx->ctx, "command_handler_state_pointer");
+    command_handler_state* found_ptr = js::get_heap_stash(*vctx)["command_handler_state_pointer"].get_ptr<command_handler_state>();
 
     if(found_ptr && get_caller_stack(*vctx).size() > 0 && get_caller_stack(*vctx)[0] == found_ptr->get_user_name())
     {
@@ -67,9 +67,9 @@ js::value async_print(js::value_context* vctx, std::string what)
 js::value async_print_raw(js::value_context* vctx, std::string what)
 {
     COOPERATE_KILL_VCTX();
-    RATELIMIT_JS(ASYNC_PRINT);
+    RATELIMIT_VPDUK(ASYNC_PRINT);
 
-    command_handler_state* found_ptr = dukx_get_pointer<command_handler_state>(vctx->ctx, "command_handler_state_pointer");
+    command_handler_state* found_ptr = js::get_heap_stash(*vctx)["command_handler_state_pointer"].get_ptr<command_handler_state>();
 
     if(found_ptr && get_caller_stack(*vctx).size() > 0 && get_caller_stack(*vctx)[0] == found_ptr->get_user_name())
     {
@@ -172,7 +172,7 @@ js::value db_find_one(js::value_context* vctx)
     std::string proj = current_this.get("PROJ");
     std::string caller = current_this.get("DB_CALLER");
 
-    if(caller != get_caller(vctx->ctx))
+    if(caller != get_caller(*vctx))
         return js::make_error(*vctx, "caller != get_caller() in db_find.array, you probably know what you did");
 
     std::vector<nlohmann::json> db_data = mongo_ctx->find_json_new(nlohmann::json::parse(json), nlohmann::json::parse(proj));
@@ -241,7 +241,7 @@ void set_is_realtime_script(js::value_context* vctx)
 {
     COOPERATE_KILL_VCTX();
 
-    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(vctx->ctx);
+    shared_duk_worker_state* shared_state = js::get_heap_stash(*vctx)["shared_caller_state"].get_ptr<shared_duk_worker_state>();
 
     shared_state->set_realtime();
 
@@ -257,7 +257,7 @@ void async_pipe(js::value_context* vctx, std::string str)
 {
     COOPERATE_KILL_VCTX();
 
-    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(vctx->ctx);
+    shared_duk_worker_state* shared_state = js::get_heap_stash(*vctx)["shared_caller_state"].get_ptr<shared_duk_worker_state>();
 
     if(str.size() > MAX_MESSAGE_SIZE)
     {
@@ -273,7 +273,7 @@ bool is_realtime_script(js::value_context* vctx)
 {
     COOPERATE_KILL_VCTX();
 
-    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(vctx->ctx);
+    shared_duk_worker_state* shared_state = js::get_heap_stash(*vctx)["shared_caller_state"].get_ptr<shared_duk_worker_state>();
 
     return shared_state->is_realtime();
 }
@@ -282,7 +282,7 @@ void set_close_window_on_exit(js::value_context* vctx)
 {
     COOPERATE_KILL_VCTX();
 
-    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(vctx->ctx);
+    shared_duk_worker_state* shared_state = js::get_heap_stash(*vctx)["shared_caller_state"].get_ptr<shared_duk_worker_state>();
 
     shared_state->set_close_window_on_exit();
 }
@@ -298,7 +298,7 @@ js::value set_start_window_size(js::value_context* vctx, js::value val)
     int width = val.get("width");
     int height = val.get("height");
 
-    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(vctx->ctx);
+    shared_duk_worker_state* shared_state = js::get_heap_stash(*vctx)["shared_caller_state"].get_ptr<shared_duk_worker_state>();
 
     shared_state->set_width_height(width, height);
 
@@ -342,7 +342,7 @@ bool is_key_down(js::value_context* vctx, js::value arg)
 
     std::string str = arg;
 
-    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(vctx->ctx);
+    shared_duk_worker_state* shared_state = js::get_heap_stash(*vctx)["shared_caller_state"].get_ptr<shared_duk_worker_state>();
 
     return shared_state->is_key_down(str);
 }
@@ -351,7 +351,7 @@ std::map<std::string, double> mouse_get_position(js::value_context* vctx)
 {
     COOPERATE_KILL_VCTX();
 
-    shared_duk_worker_state* shared_state = get_shared_worker_state_ptr<shared_duk_worker_state>(vctx->ctx);
+    shared_duk_worker_state* shared_state = js::get_heap_stash(*vctx)["shared_caller_state"].get_ptr<shared_duk_worker_state>();
 
     vec2f pos = shared_state->get_mouse_pos();
 
@@ -395,7 +395,7 @@ std::string get_string_col(js::value val)
 
 void terminate_realtime(js::value_context* vctx)
 {
-    shared_duk_worker_state* shared_state = dukx_get_pointer<shared_duk_worker_state>(vctx->ctx, "shared_caller_state");
+    shared_duk_worker_state* shared_state = js::get_heap_stash(*vctx)["shared_caller_state"].get_ptr<shared_duk_worker_state>();
 
     shared_state->disable_realtime();
 }
@@ -756,7 +756,9 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
     {
         if(is_async)
         {
-            std::shared_ptr<shared_command_handler_state>* shared_state = dukx_get_pointer<std::shared_ptr<shared_command_handler_state>>(vctx->ctx, "all_shared_data");
+            js::value heap_stash = js::get_heap_stash(*vctx);
+
+            std::shared_ptr<shared_command_handler_state>* shared_state = heap_stash["all_shared_data"].get_ptr<std::shared_ptr<shared_command_handler_state>>();
 
             if(shared_state == nullptr)
                 return js::make_error(*vctx, "Cannot launch async scripts in this context (bot brain, on_breach, or other throwaway script?)");

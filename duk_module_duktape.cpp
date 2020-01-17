@@ -325,7 +325,14 @@ static duk_ret_t duk__require(duk_context *ctx) {
 
     duk_dup(ctx, DUK__IDX_RESOLVED_ID);
 
-	std::string name = duk_safe_to_std_string(ctx, -1);
+    const char* name_ptr = duk_safe_to_string(ctx, -1);
+
+    std::string name;
+
+    if(name_ptr)
+    {
+        name = std::string(name_ptr);
+    }
 
 	duk_pop(ctx);
 
@@ -351,7 +358,12 @@ static duk_ret_t duk__require(duk_context *ctx) {
         throw std::runtime_error("Bad require " + name);
     }
 
-	dukx_push_fixed_buffer(ctx, binary_cache[name]);
+    auto binary_it = binary_cache.find(name);
+
+	char* buffer_ptr = (char*)duk_push_fixed_buffer(ctx, binary_it->second.size());
+
+	memcpy(buffer_ptr, binary_it->second.c_str(), binary_it->second.size());
+
 	duk_load_function(ctx);
 
 	/* Module has now evaluated to a wrapped module function.  Force its

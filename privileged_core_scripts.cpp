@@ -2696,6 +2696,7 @@ js::value item__configure_on_breach(priv_context& priv_ctx, js::value_context& v
 }
 
 #if defined(TESTING) || defined(EXTRAS)
+#if 0
 duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
     COOPERATE_KILL();
@@ -2760,6 +2761,7 @@ duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return 1;
 }
+#endif // 0
 #endif // TESTING
 
 ///modify to return a string unfortunately
@@ -2897,6 +2899,7 @@ std::optional<js::value> handle_confirmed(js::value_context& vctx, bool confirm,
     return std::nullopt;
 }
 
+#if 0
 duk_ret_t take_cash(duk_context* ctx, const std::string& username, double price)
 {
     std::optional opt_user = get_user(username, get_thread_id(ctx));
@@ -2916,6 +2919,7 @@ duk_ret_t take_cash(duk_context* ctx, const std::string& username, double price)
 
     return 0;
 }
+#endif // 0
 
 ///have item__steal reset internal node structure
 
@@ -5438,6 +5442,7 @@ js::value sys__map(priv_context& priv_ctx, js::value_context& vctx, js::value& a
 }
 
 #ifdef SYSTEM_TESTING
+#if 0
 duk_ret_t sys__debug_view(priv_context& priv_ctx, duk_context* ctx, int sl)
 {
 
@@ -5552,6 +5557,7 @@ duk_ret_t sys__debug_view(priv_context& priv_ctx, duk_context* ctx, int sl)
 
     return 1;
 }
+#endif // 0
 
 #endif // SYSTEM_TESTING
 
