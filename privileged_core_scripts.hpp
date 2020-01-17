@@ -260,7 +260,7 @@ duk_ret_t sys__debug_view(priv_context& priv_ctx, duk_context* ctx, int sl);
 #endif
 #endif // SYSTEM_TESTING
 js::value sys__view(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
-duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl);
+js::value sys__move(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value& val, int sl);
 duk_ret_t sys__limits(priv_context& priv_ctx, duk_context* ctx, int sl);
 

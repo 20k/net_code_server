@@ -5828,43 +5828,41 @@ js::value sys__view(priv_context& priv_ctx, js::value_context& vctx, js::value& 
     ///and that's the entrance
     ///hooray!
 
-    return js::make_value(vctx, "Unreachable");
+    return js::make_error(vctx, "Unreachable");
 }
 
-duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
+js::value sys__move(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    COOPERATE_KILL();
-
-    bool has_to = dukx_is_prop_truthy(ctx, -1, "to");
-    bool has_confirm = dukx_is_prop_truthy(ctx, -1, "confirm");
-    bool has_stop = dukx_is_prop_truthy(ctx, -1, "stop");
-    bool has_queue = dukx_is_prop_truthy(ctx, -1, "queue");
-    bool has_array = dukx_is_prop_truthy(ctx, -1, "array");
-    std::optional<user> my_user_opt = get_user(get_caller(ctx), get_thread_id(ctx));
+    bool has_to = arg["to"].is_truthy();
+    bool has_confirm = arg["confirm"].is_truthy();
+    bool has_stop = arg["stop"].is_truthy();
+    bool has_queue = arg["queue"].is_truthy();
+    bool has_array = requested_scripting_api(arg);
+    std::optional<user> my_user_opt = get_user(get_caller(vctx), get_thread_id(vctx));
 
     double fraction = 1.f;
 
-    if(dukx_has_prop_string(ctx, -1, "fraction"))
-        fraction = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "fraction", 1);
-    if(dukx_has_prop_string(ctx, -1, "frac"))
-        fraction = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "frac", 1);
-    if(dukx_has_prop_string(ctx, -1, "f"))
-        fraction = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "f", 1);
+    if(arg.has("fraction"))
+        fraction = arg["fraction"];
+    if(arg.has("frac"))
+        fraction = arg["frac"];
+    if(arg.has("f"))
+        fraction = arg["f"];
 
     double move_offset = 0.f;
 
-    if(dukx_has_prop_string(ctx, -1, "offset"))
-        move_offset = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "offset", 1);
-    if(dukx_has_prop_string(ctx, -1, "o"))
-        move_offset = duk_safe_get_generic_with_guard(duk_get_number, duk_is_number, ctx, -1, "o", 1);
+    if(arg.has("offset"))
+        move_offset = arg["offset"];
+    if(arg.has("o"))
+        move_offset = arg["o"];
 
     if(!my_user_opt.has_value())
-        return push_error(ctx, "No User, really bad error");
+        return js::make_error(vctx, "No User, really bad error");
 
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
 
-    bool is_anchored = playspace_network_manage.current_network_links(get_caller(ctx)) > 0;
+    bool is_anchored = playspace_network_manage.current_network_links(get_caller(vctx)) > 0;
 
     user& my_user = *my_user_opt;
 
@@ -5873,13 +5871,12 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
         my_user.set_local_pos(my_user.get_local_pos());
 
         {
-            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
             my_user.overwrite_user_in_db(mongo_ctx);
         }
 
-        push_duk_val(ctx, "Stopped");
-        return 1;
+        return js::make_value(vctx, "Stopped");
     }
 
     ///needs to return if we're anchored or not
@@ -5970,14 +5967,12 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         if(!has_array)
         {
-            push_duk_val(ctx, str + "\n" + msg + remaining_string);
+            return js::make_value(vctx, str + "\n" + msg + remaining_string);
         }
         else
         {
-            push_duk_val(ctx, all_json);
+            return js::make_value(vctx, all_json);
         }
-
-        return 1;
     }
     else
     {
@@ -5985,8 +5980,7 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
         {
             std::string str = "Please " + make_key_val("confirm", "true") + " to disconnect from the network";
 
-            push_duk_val(ctx, str);
-            return 1;
+            return js::make_value(vctx, str);
         }
 
         std::string total_msg = "";
@@ -6008,52 +6002,44 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
 
         vec3f end_pos;
 
-        ///should really cancel the last move that was made and then make queue optional
-        duk_get_prop_string(ctx, -1, "to");
-
-        if(duk_is_array(ctx, -1))
+        if(arg["to"].is_array())
         {
-            duk_pop(ctx);
-
             ///perform move
-            std::vector<double> values = dukx_get_prop_as<std::vector<double>>(ctx, -1, "to");
+            std::vector<double> values = arg["to"];
 
             if(values.size() == 2)
                 values.push_back(0);
 
             if(values.size() != 3)
             {
-                push_duk_val(ctx, total_msg + "Requires [x, y] or [x, y, z]");
-                return 1;
+                return js::make_value(vctx, total_msg + "Requires [x, y] or [x, y, z]");
             }
 
             for(auto& i : values)
             {
                 if(!isfinite(i))
                 {
-                    return push_error(ctx, "Values must be finite");
+                    return js::make_error(vctx, "Values must be finite");
                 }
             }
 
             end_pos = {values[0], values[1], values[2]};
         }
-        else if(duk_is_string(ctx, -1))
+        else if(arg["to"].is_string())
         {
-            duk_pop(ctx);
-
-            std::string str = dukx_get_prop_as<std::string>(ctx, -1, "to");
+            std::string str = arg["to"];
 
             user targeting_user;
 
             {
-                mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+                mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
                 if(!targeting_user.load_from_db(mongo_ctx, str))
-                    return push_error(ctx, "Invalid user");
+                    return js::make_error(vctx, "Invalid user");
             }
 
             if(!low_level_structure_manage.in_same_system(targeting_user, my_user))
-                return push_error(ctx, "Not in the current system");
+                return js::make_error(vctx, "Not in the current system");
 
             end_pos = targeting_user.get_local_pos();
 
@@ -6066,15 +6052,13 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
         }
         else
         {
-            duk_pop(ctx);
-
-            return push_error(ctx, "Requires string or array");
+            return js::make_error(vctx, "Requires string or array");
         }
 
         for(int i=0; i < 3; i++)
         {
             if(!isfinite(end_pos.v[i]))
-                return push_error(ctx, "Not a finite value");
+                return js::make_error(vctx, "Not a finite value");
         }
 
         end_pos = clamp(end_pos, -1000.f, 1000.f);
@@ -6117,15 +6101,15 @@ duk_ret_t sys__move(priv_context& priv_ctx, duk_context* ctx, int sl)
         my_user.add_position_target(move_to.position, move_to.timestamp, make_success_col("-Move Completed-"));
 
         {
-            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(ctx));
+            mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
             my_user.overwrite_user_in_db(mongo_ctx);
         }
 
-        return push_success(ctx, "Travel time of " + to_string_with_enforced_variable_dp(time_to_travel_distance_s, 2) + "s");
+        return js::make_success(vctx, "Travel time of " + to_string_with_enforced_variable_dp(time_to_travel_distance_s, 2) + "s");
     }
 
-    return push_error(ctx, "Impossible");
+    return js::make_error(vctx, "Impossible");
 }
 
 std::string price_to_string(int price)

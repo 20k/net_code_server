@@ -848,6 +848,17 @@ namespace js
         return v;
     }
 
+    template<typename T>
+    inline
+    js::value make_success(js::value_context& vctx, const T& msg)
+    {
+        js::value v(vctx);
+        v["ok"] = true;
+        v["msg"] = msg;
+
+        return v;
+    }
+
     template<typename T, typename U>
     inline
     js::value add_key_value(js::value& base, const T& key, const U& val)
