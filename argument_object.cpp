@@ -1242,8 +1242,8 @@ bool js_quickjs::value::has(const char* key) const
     if(has_value)
         return false;
 
-    //if(is_undefined())
-    //    return false;
+    if(is_undefined())
+        return false;
 
     JSAtom atom = JS_NewAtom(ctx, key);
 
@@ -1257,6 +1257,9 @@ bool js_quickjs::value::has(const char* key) const
 bool js_quickjs::value::has(const std::string& key) const
 {
     if(has_value)
+        return false;
+
+    if(is_undefined())
         return false;
 
     JSAtom atom = JS_NewAtomLen(ctx, key.c_str(), key.size());
@@ -1276,6 +1279,9 @@ bool js_quickjs::value::has(int key) const
     if(has_value)
         return false;
 
+    if(is_undefined())
+        return false;
+
     JSAtom atom = JS_NewAtomUInt32(ctx, (uint32_t)key);
 
     bool has_prop = JS_HasProperty(ctx, val, atom);
@@ -1283,6 +1289,116 @@ bool js_quickjs::value::has(int key) const
     JS_FreeAtom(ctx, atom);
 
     return has_prop;
+}
+
+js_quickjs::value js_quickjs::value::get(const std::string& key)
+{
+    return js_quickjs::value(*vctx, *this, key);
+}
+
+js_quickjs::value js_quickjs::value::get(int key)
+{
+    return js_quickjs::value(*vctx, *this, key);
+}
+
+js_quickjs::value js_quickjs::value::get(const char* key)
+{
+    return js_quickjs::value(*vctx, *this, key);
+}
+
+bool js_quickjs::value::is_string()
+{
+    if(!has_value)
+        return false;
+
+    return JS_IsString(val);
+}
+
+bool js_quickjs::value::is_number()
+{
+    if(!has_value)
+        return false;
+
+    return JS_IsNumber(val);
+}
+
+bool js_quickjs::value::is_array()
+{
+    if(!has_value)
+        return false;
+
+    return JS_IsArray(ctx, val);
+}
+
+bool js_quickjs::value::is_map()
+{
+    if(!has_value)
+        return false;
+
+    return JS_IsObject(val);
+}
+
+bool js_quickjs::value::is_empty()
+{
+    return !has_value;
+}
+
+bool js_quickjs::value::is_function()
+{
+    if(!has_value)
+        return false;
+
+    return JS_IsFunction(ctx, val);
+}
+
+bool js_quickjs::value::is_boolean()
+{
+    if(!has_value)
+        return false;
+
+    return JS_IsBool(val);
+}
+
+bool js_quickjs::value::is_undefined() const
+{
+    if(!has_value)
+        return false;
+
+    return JS_IsUndefined(val);
+}
+
+bool js_quickjs::value::is_truthy()
+{
+    if(!has_value)
+        return false;
+
+    return JS_ToBool(ctx, val) > 0;
+}
+
+bool js_quickjs::value::is_object_coercible()
+{
+    if(!has_value)
+        return false;
+
+    /*DUK_TYPE_MASK_BOOLEAN | \
+      DUK_TYPE_MASK_NUMBER | \
+      DUK_TYPE_MASK_STRING | \
+      DUK_TYPE_MASK_OBJECT | \
+      DUK_TYPE_MASK_BUFFER | \
+      DUK_TYPE_MASK_POINTER | \
+      DUK_TYPE_MASK_LIGHTFUNC + SYMBOL*/
+
+    bool is_sym = JS_IsSymbol(val);
+
+    return is_object() || is_boolean() || is_number() || is_function() || is_sym;
+}
+
+bool js_quickjs::value::is_object()
+{
+    if(!has_value)
+        return false;
+
+    return JS_IsObject(val);
 }
 
 struct quickjs_tester

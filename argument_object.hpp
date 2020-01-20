@@ -890,6 +890,25 @@ namespace js_quickjs
         bool has(int key) const;
         bool has(const char* key) const;
         bool has_hidden(const std::string& key) const;
+
+        value get(const std::string& key);
+        value get(int key);
+        value get(const char* key);
+        value get_hidden(const std::string& key);
+
+        bool del(const std::string& key);
+
+        bool is_string();
+        bool is_number();
+        bool is_array();
+        bool is_map();
+        bool is_empty();
+        bool is_function();
+        bool is_boolean();
+        bool is_undefined() const;
+        bool is_truthy();
+        bool is_object_coercible();
+        bool is_object();
     };
 }
 
