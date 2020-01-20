@@ -25,3 +25,6 @@
 [submodule "deps/ndb"]
 	path = deps/ndb
 	url = https://github.com/20k/ndb
+[submodule "deps/quickjs"]
+	path = deps/quickjs
+	url = https://github.com/20k/quickjs

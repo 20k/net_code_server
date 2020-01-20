@@ -9,6 +9,7 @@
 #include "duktape.h"
 #include <assert.h>
 #include <nlohmann/json.hpp>
+#include <quickjs/quickjs.h>
 
 using context_t = duk_context;
 
@@ -850,6 +851,14 @@ namespace js
     js::value from_cbor(js::value_context& vctx, const std::vector<uint8_t>& cb);
 
     void dump_stack(js::value_context& vctx);
+}
+
+namespace js_quickjs
+{
+    struct value_context
+    {
+
+    };
 }
 
 ///this stuff is features, not implementation dependent

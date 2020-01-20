@@ -305,6 +305,7 @@
 			<Add option="-Werror=return-type" />
 			<Add option="-DBOOST_STACKTRACE_USE_BACKTRACE" />
 			<Add option="-DSERVER" />
+			<Add option='-DCONFIG_VERSION=&quot;&quot;' />
 			<Add directory="deps" />
 		</Compiler>
 		<Linker>
@@ -598,6 +599,24 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+		</Unit>
+		<Unit filename="deps/quickjs/cutils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="deps/quickjs/libbf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="deps/quickjs/libregexp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="deps/quickjs/libunicode.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="deps/quickjs/quickjs-libc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="deps/quickjs/quickjs.c">
+			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="deps/secret/common.cpp">
 			<Option target="Debug" />
