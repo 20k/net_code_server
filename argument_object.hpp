@@ -967,6 +967,7 @@ namespace qarg
     }
 
     template<typename T>
+    inline
     JSValue push(JSContext* ctx, T* in)
     {
         return JS_MKPTR(0, in);
