@@ -393,9 +393,6 @@ namespace arg
 
 namespace js
 {
-    struct undefined_t{};
-    const static inline undefined_t undefined;
-
     struct value_context
     {
         std::vector<int> free_stack;
@@ -840,6 +837,27 @@ namespace js
         return (T*)get_sandbox_data_impl(vctx);
     }
 
+    js::value add_getter(js::value& base, const std::string& key, js_funcptr_t func);
+    js::value add_setter(js::value& base, const std::string& key, js_funcptr_t func);
+
+    std::pair<bool, js::value> compile(js::value_context& vctx, const std::string& data);
+    std::pair<bool, js::value> compile(js::value_context& vctx, const std::string& name, const std::string& data);
+    std::string dump_function(js::value& val);
+    js::value eval(js::value_context& vctx, const std::string& data);
+    js::value xfer_between_contexts(js::value_context& destination, const js::value& val);
+
+    js::value make_proxy(js::value& target, js::value& handle);
+    js::value from_cbor(js::value_context& vctx, const std::vector<uint8_t>& cb);
+
+    void dump_stack(js::value_context& vctx);
+}
+
+///this stuff is features, not implementation dependent
+namespace js
+{
+    struct undefined_t{};
+    const static inline undefined_t undefined;
+
     template<typename T>
     inline
     js::value make_value(js::value_context& vctx, const T& t)
@@ -897,20 +915,6 @@ namespace js
     {
 
     }
-
-    js::value add_getter(js::value& base, const std::string& key, js_funcptr_t func);
-    js::value add_setter(js::value& base, const std::string& key, js_funcptr_t func);
-
-    std::pair<bool, js::value> compile(js::value_context& vctx, const std::string& data);
-    std::pair<bool, js::value> compile(js::value_context& vctx, const std::string& name, const std::string& data);
-    std::string dump_function(js::value& val);
-    js::value eval(js::value_context& vctx, const std::string& data);
-    js::value xfer_between_contexts(js::value_context& destination, const js::value& val);
-
-    js::value make_proxy(js::value& target, js::value& handle);
-    js::value from_cbor(js::value_context& vctx, const std::vector<uint8_t>& cb);
-
-    void dump_stack(js::value_context& vctx);
 }
 
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED
