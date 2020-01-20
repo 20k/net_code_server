@@ -1401,12 +1401,205 @@ bool js_quickjs::value::is_object()
     return JS_IsObject(val);
 }
 
+/*
+stack_manage::stack_manage(js::value& in) : sh(in)
+{
+    if(sh.indices.index() == 0)
+    {
+        ///nothing
+    }
+    else
+    {
+        if(sh.indices.index() == 1)
+            duk_push_int(sh.ctx, std::get<1>(sh.indices));
+        else
+            duk_push_string(sh.ctx, std::get<2>(sh.indices).c_str());
+    }
+}
+
+stack_manage::~stack_manage()
+{
+    if(sh.indices.index() == 0)
+    {
+        if(sh.idx != -1)
+            duk_replace(sh.ctx, sh.idx);
+        else
+            sh.idx = duk_get_top_index(sh.ctx);
+    }
+    else
+    {
+        ///replace property on parent
+        duk_put_prop(sh.ctx, sh.parent_idx);
+
+        ///update stack object as well
+        if(sh.indices.index() == 1)
+            duk_push_int(sh.ctx, std::get<1>(sh.indices));
+        else
+            duk_push_string(sh.ctx, std::get<2>(sh.indices).c_str());
+
+        duk_get_prop(sh.ctx, sh.parent_idx);
+
+        if(sh.idx != -1)
+            duk_replace(sh.ctx, sh.idx);
+        else
+            sh.idx = duk_get_top_index(sh.ctx);
+    }
+}*/
+
+js_quickjs::qstack_manager::qstack_manager(js_quickjs::value& _val) : val(_val)
+{
+    if(val.has_value)
+    {
+        JS_FreeValue(val.ctx, val.val);
+    }
+}
+
+///not exactly the same behaviour of duktape
+///if i replace a parent object in duktape, children will relocate to that parent index
+///here its actually object-y, so they'll refer to the old object
+js_quickjs::qstack_manager::~qstack_manager()
+{
+    val.has_value = true;
+
+    if(val.has_parent)
+    {
+        if(val.indices.index() == 0)
+            assert(false);
+
+        if(val.indices.index() == 1)
+        {
+            int idx = std::get<1>(val.indices);
+
+            assert(idx >= 0);
+
+            JS_SetPropertyUint32(val.ctx, val.parent_value, idx, val.val);
+        }
+        else
+        {
+            std::string idx = std::get<2>(val.indices);
+
+            JS_SetPropertyStr(val.ctx, val.parent_value, idx.c_str(), val.val);
+        }
+    }
+}
+
 JSValue qarg::push(JSContext* ctx, const js_quickjs::value& in)
 {
     if(!in.has_value)
         return JS_UNDEFINED;
 
     return JS_DupValue(ctx, in.val);
+}
+
+js_quickjs::value& js_quickjs::value::operator=(const char* v)
+{
+    qstack_manager m(*this);
+
+    val = qarg::push(ctx, v);
+
+    return *this;
+}
+
+js_quickjs::value& js_quickjs::value::operator=(const std::string& v)
+{
+    qstack_manager m(*this);
+
+    val = qarg::push(ctx, v);
+
+    return *this;
+}
+
+js_quickjs::value& js_quickjs::value::operator=(int64_t v)
+{
+    qstack_manager m(*this);
+
+    val = qarg::push(ctx, v);
+
+    return *this;
+}
+
+js_quickjs::value& js_quickjs::value::operator=(int v)
+{
+    qstack_manager m(*this);
+
+    val = qarg::push(ctx, v);
+
+    return *this;
+}
+
+js_quickjs::value& js_quickjs::value::operator=(double v)
+{
+    qstack_manager m(*this);
+
+    val = qarg::push(ctx, v);
+
+    return *this;
+}
+
+js_quickjs::value& js_quickjs::value::operator=(bool v)
+{
+    qstack_manager m(*this);
+
+    val = qarg::push(ctx, v);
+
+    return *this;
+}
+
+js_quickjs::value& js_quickjs::value::operator=(std::nullopt_t v)
+{
+    if(!has_value)
+        return *this;
+
+    JS_FreeValue(ctx, val);
+    has_value = false;
+
+    if(has_parent)
+    {
+        JSAtom atom;
+
+        if(indices.index() == 1)
+            atom = JS_NewAtomUInt32(ctx, std::get<1>(indices));
+        else if(indices.index() == 2)
+            atom = JS_NewAtom(ctx, std::get<2>(indices).c_str());
+        else
+            throw std::runtime_error("Bad indices");
+
+        JS_DeleteProperty(ctx, parent_value, atom, 0);
+
+        JS_FreeAtom(ctx, atom);
+    }
+
+    return *this;
+}
+
+js_quickjs::value& js_quickjs::value::operator=(const value& right)
+{
+    if(!has_value && !right.has_value)
+        return *this;
+
+    qstack_manager m(*this);
+
+    val = JS_DupValue(ctx, right.val);
+
+    return *this;
+}
+
+js_quickjs::value& js_quickjs::value::operator=(js::undefined_t)
+{
+    qstack_manager m(*this);
+
+    val = qarg::push(ctx, js::undefined);
+
+    return *this;
+}
+
+js_quickjs::value& js_quickjs::value::operator=(const nlohmann::json& in)
+{
+    qstack_manager m(*this);
+
+    val = qarg::push(ctx, in);
+
+    return *this;
 }
 
 struct quickjs_tester

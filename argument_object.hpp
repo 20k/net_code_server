@@ -1109,6 +1109,16 @@ namespace qarg
 
 namespace js_quickjs
 {
+    struct value;
+
+    struct qstack_manager
+    {
+        value& val;
+
+        qstack_manager(value& _val);
+        ~qstack_manager();
+    };
+
     struct value_context
     {
         JSRuntime* heap = nullptr;
@@ -1131,7 +1141,7 @@ namespace js_quickjs
         std::variant<std::monostate, int, std::string> indices;
 
         value(const value& other);
-        value(value&& other);
+        //value(value&& other);
         ///pushes a fresh object
         value(value_context& ctx);
         value(value_context& ctx, const value& other);
@@ -1163,6 +1173,40 @@ namespace js_quickjs
         bool is_truthy();
         bool is_object_coercible();
         bool is_object();
+
+        value& operator=(const char* v);
+        value& operator=(const std::string& v);
+        value& operator=(int64_t v);
+        value& operator=(int v);
+        value& operator=(double v);
+        value& operator=(bool v);
+        value& operator=(std::nullopt_t v);
+        value& operator=(const value& right);
+        //value& operator=(value&& right);
+        value& operator=(js::undefined_t);
+        value& operator=(const nlohmann::json&);
+
+        template<typename T>
+        value& operator=(const std::vector<T>& in)
+        {
+            qstack_manager m(*this);
+
+            val = qarg::push(ctx, in);
+
+            return *this;
+        }
+
+        template<typename T, typename U>
+        value& operator=(const std::map<T, U>& in)
+        {
+            qstack_manager m(*this);
+
+            val = qarg::push(ctx, in);
+
+            return *this;
+        }
+
+        value& operator=(js_funcptr_t fptr);
     };
 }
 
