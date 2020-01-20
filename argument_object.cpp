@@ -1125,6 +1125,129 @@ std::string test_error(js::value_context* vctx, js::value val)
     return "hi";
 }
 
+js_quickjs::value_context::value_context(value_context& other)
+{
+    heap = other.heap;
+    void* sandbox = JS_GetContextOpaque(other.ctx);
+    ctx = JS_NewContext(heap);
+    JS_SetContextOpaque(ctx, sandbox);
+}
+
+js_quickjs::value_context::value_context()
+{
+    sandbox_data* leaked_data = new sandbox_data;
+
+    //heap = JS_NewRuntime2();
+    heap = JS_NewRuntime();
+    ctx = JS_NewContext(heap);
+    JS_SetContextOpaque(ctx, (void*)leaked_data);
+    owner = true;
+}
+
+js_quickjs::value_context::~value_context()
+{
+    JS_FreeContext(ctx);
+
+    if(owner)
+    {
+        JS_FreeRuntime(heap);
+    }
+}
+
+js_quickjs::value::value(const js_quickjs::value& other)
+{
+    vctx = other.vctx;
+    ctx = other.ctx;
+
+    val = JS_DupValue(other.ctx, other.val);
+    has_value = true;
+}
+
+js_quickjs::value::value(js_quickjs::value_context& _vctx)
+{
+    vctx = &_vctx;
+    ctx = vctx->ctx;
+
+    val = JS_NewObject(ctx);
+    has_value = true;
+}
+
+js_quickjs::value::value(js_quickjs::value_context& vctx, const js_quickjs::value& other) : js_quickjs::value(other)
+{
+
+}
+
+js_quickjs::value::value(js_quickjs::value_context& _vctx, const js_quickjs::value& other, const std::string& key) : value(_vctx, other, key.c_str())
+{
+
+}
+
+js_quickjs::value::value(js_quickjs::value_context& _vctx, const js_quickjs::value& other, const char* key)
+{
+    ctx = _vctx.ctx;
+    vctx = &_vctx;
+
+    if(!other.has_value)
+        throw std::runtime_error("Parent is not a value");
+
+    has_parent = true;
+
+    ///if(!parent.has(key)) return;
+
+    has_value = true;
+
+    parent_value = JS_DupValue(other.ctx, other.val);
+    val = JS_GetPropertyStr(ctx, parent_value, key);
+}
+
+js_quickjs::value::value(js_quickjs::value_context& _vctx, const js_quickjs::value& other, int key)
+{
+    if(key < 0)
+        throw std::runtime_error("Key < 0");
+
+    ctx = _vctx.ctx;
+    vctx = &_vctx;
+
+    if(!other.has_value)
+        throw std::runtime_error("Parent is not a value");
+
+    has_parent = true;
+
+    ///if(!parent.has(key)) return;
+
+    has_value = true;
+
+    parent_value = JS_DupValue(other.ctx, other.val);
+    val = JS_GetPropertyUint32(ctx, parent_value, key);
+}
+
+js_quickjs::value::~value()
+{
+    if(has_value)
+    {
+        JS_FreeValue(ctx, val);
+    }
+
+    if(has_parent)
+    {
+        JS_FreeValue(ctx, parent_value);
+    }
+}
+
+struct quickjs_tester
+{
+    quickjs_tester()
+    {
+        js_quickjs::value_context vctx;
+
+        js_quickjs::value val(vctx);
+
+        js_quickjs::value dependent(vctx, val, "hello");
+
+        printf("Tested quickjs\n");
+    }
+};
+
 struct js_val_tester
 {
     js_val_tester()
@@ -1284,4 +1407,5 @@ struct js_val_tester
 namespace
 {
     js_val_tester tester;
+    quickjs_tester qjstester;
 }

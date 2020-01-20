@@ -857,7 +857,34 @@ namespace js_quickjs
 {
     struct value_context
     {
+        JSRuntime* heap = nullptr;
+        JSContext* ctx = nullptr;
+        bool owner = false;
 
+        value_context(value_context&);
+        value_context();
+        ~value_context();
+    };
+
+    struct value
+    {
+        value_context* vctx = nullptr;
+        JSContext* ctx = nullptr;
+        JSValue val = {};
+        JSValue parent_value = {};
+        bool has_value = false;
+        bool has_parent = false;
+        std::variant<std::monostate, int, std::string> indices;
+
+        value(const value& other);
+        value(value&& other);
+        ///pushes a fresh object
+        value(value_context& ctx);
+        value(value_context& ctx, const value& other);
+        value(value_context& ctx, const value& base, const std::string& key);
+        value(value_context& ctx, const value& base, int key);
+        value(value_context& ctx, const value& base, const char* key);
+        ~value();
     };
 }
 
