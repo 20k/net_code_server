@@ -862,22 +862,6 @@ namespace js_quickjs
 
 namespace qarg
 {
-    /*
-    void dukx_get(duk_context* ctx, int idx, std::string& out);
-    void dukx_get(duk_context* ctx, int idx, int64_t& out);
-    void dukx_get(duk_context* ctx, int idx, int& out);
-    void dukx_get(duk_context* ctx, int idx, double& out);
-    void dukx_get(duk_context* ctx, int idx, bool& out);
-
-    template<typename T, typename U>
-    void dukx_get(duk_context* ctx, int idx, std::map<T, U>& out);
-
-    template<typename T>
-    void dukx_get(duk_context* ctx, int idx, std::vector<T>& out);
-
-    template<typename T>
-    void dukx_get(duk_context* ctx, int idx, T*& out);*/
-
     inline
     JSValue push(JSContext* ctx, const char* v)
     {
@@ -980,6 +964,151 @@ namespace qarg
     }
 
     JSValue push(JSContext* ctx, const js_quickjs::value& in);
+
+        /*
+    void dukx_get(duk_context* ctx, int idx, std::string& out);
+    void dukx_get(duk_context* ctx, int idx, int64_t& out);
+    void dukx_get(duk_context* ctx, int idx, int& out);
+    void dukx_get(duk_context* ctx, int idx, double& out);
+    void dukx_get(duk_context* ctx, int idx, bool& out);
+
+    template<typename T, typename U>
+    void dukx_get(duk_context* ctx, int idx, std::map<T, U>& out);
+
+    template<typename T>
+    void dukx_get(duk_context* ctx, int idx, std::vector<T>& out);
+
+    template<typename T>
+    void dukx_get(duk_context* ctx, int idx, T*& out);*/
+
+    #define UNDEF() if(JS_IsUndefined(val)){out = std::remove_reference_t<decltype(out)>(); return;}
+
+    inline
+    void get(JSContext* ctx, const JSValue& val, std::string& out)
+    {
+        UNDEF();
+
+        size_t len = 0;
+        const char* str = JS_ToCStringLen(ctx, &len, val);
+
+        if(str == nullptr)
+        {
+            out = "";
+            return;
+        }
+
+        out = std::string(str, str + len);
+
+        JS_FreeCString(ctx, str);
+    }
+
+    inline
+    void get(JSContext* ctx, const JSValue& val, int64_t& out)
+    {
+        UNDEF();
+
+        JS_ToInt64(ctx, &out, val);
+    }
+
+    inline
+    void get(JSContext* ctx, const JSValue& val, int& out)
+    {
+        UNDEF();
+
+        int32_t ival = 0;
+
+        JS_ToInt32(ctx, &ival, val);
+        out = ival;
+    }
+
+    inline
+    void get(JSContext* ctx, const JSValue& val, double& out)
+    {
+        UNDEF();
+
+        JS_ToFloat64(ctx, &out, val);
+    }
+
+    inline
+    void get(JSContext* ctx, const JSValue& val, bool& out)
+    {
+        UNDEF();
+
+        out = JS_ToBool(ctx, val) > 0;
+    }
+
+    template<typename T, typename U>
+    inline
+    void get(JSContext* ctx, const JSValue& val, std::map<T, U>& out)
+    {
+        UNDEF();
+
+        JSPropertyEnum* names = nullptr;
+        uint32_t len = 0;
+
+        JS_GetOwnPropertyNames(ctx, &names, &len, val, 0);
+
+        if(names == nullptr)
+        {
+            out.clear();
+            return;
+        }
+
+        for(int i=0; i < len; i++)
+        {
+            JSAtom atom = names[0].atom;
+
+            JSValue found = JS_GetProperty(ctx, val, atom);
+            JSValue key = JS_AtomToValue(ctx, atom);
+
+            T out_key;
+            get(ctx, key, out_key);
+            U out_value;
+            get(ctx, found, out_value);
+
+            out[out_key] = out_value;
+        }
+
+        for(int i=0; i < len; i++)
+        {
+            JS_FreeAtom(ctx, names[i].atom);
+        }
+
+        js_free(ctx, names);
+    }
+
+    template<typename T>
+    inline
+    void get(JSContext* ctx, const JSValue& val, std::vector<T>& out)
+    {
+        UNDEF();
+
+        out.clear();
+
+        int len = 0;
+        JS_GetPropertyStr(ctx, val, "length");
+
+        out.reserve(len);
+
+        for(int i=0; i < len; i++)
+        {
+            JSValue found = JS_GetPropertyUint32(ctx, val, i);
+
+            T next;
+            get(ctx, found, next);
+
+            out.push_back(next);
+        }
+    }
+
+    template<typename T>
+    inline
+    void get(JSContext* ctx, const JSValue& val, T*& out)
+    {
+        UNDEF();
+
+        out = JS_VALUE_GET_PTR(val);
+    }
 }
 
 namespace js_quickjs
