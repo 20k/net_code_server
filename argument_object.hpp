@@ -965,23 +965,19 @@ namespace qarg
 
     JSValue push(JSContext* ctx, const js_quickjs::value& in);
 
-        /*
-    void dukx_get(duk_context* ctx, int idx, std::string& out);
-    void dukx_get(duk_context* ctx, int idx, int64_t& out);
-    void dukx_get(duk_context* ctx, int idx, int& out);
-    void dukx_get(duk_context* ctx, int idx, double& out);
-    void dukx_get(duk_context* ctx, int idx, bool& out);
-
-    template<typename T, typename U>
-    void dukx_get(duk_context* ctx, int idx, std::map<T, U>& out);
-
-    template<typename T>
-    void dukx_get(duk_context* ctx, int idx, std::vector<T>& out);
-
-    template<typename T>
-    void dukx_get(duk_context* ctx, int idx, T*& out);*/
-
     #define UNDEF() if(JS_IsUndefined(val)){out = std::remove_reference_t<decltype(out)>(); return;}
+
+    void get(JSContext* ctx, const JSValue& val, std::string& out);
+    void get(JSContext* ctx, const JSValue& val, int64_t& out);
+    void get(JSContext* ctx, const JSValue& val, int& out);
+    void get(JSContext* ctx, const JSValue& val, double& out);
+    void get(JSContext* ctx, const JSValue& val, bool& out);
+    template<typename T, typename U>
+    void get(JSContext* ctx, const JSValue& val, std::map<T, U>& out);
+    template<typename T>
+    void get(JSContext* ctx, const JSValue& val, std::vector<T>& out);
+    template<typename T>
+    void get(JSContext* ctx, const JSValue& val, T*& out);
 
     inline
     void get(JSContext* ctx, const JSValue& val, std::string& out)
