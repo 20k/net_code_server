@@ -1401,6 +1401,14 @@ bool js_quickjs::value::is_object()
     return JS_IsObject(val);
 }
 
+JSValue qarg::push(JSContext* ctx, const js_quickjs::value& in)
+{
+    if(!in.has_value)
+        return JS_UNDEFINED;
+
+    return JS_DupValue(ctx, in.val);
+}
+
 struct quickjs_tester
 {
     quickjs_tester()

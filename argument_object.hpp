@@ -853,6 +853,134 @@ namespace js
     void dump_stack(js::value_context& vctx);
 }
 
+using quick_funcptr_t = js_funcptr_t;
+
+namespace js_quickjs
+{
+    struct value;
+}
+
+namespace qarg
+{
+    /*
+    void dukx_get(duk_context* ctx, int idx, std::string& out);
+    void dukx_get(duk_context* ctx, int idx, int64_t& out);
+    void dukx_get(duk_context* ctx, int idx, int& out);
+    void dukx_get(duk_context* ctx, int idx, double& out);
+    void dukx_get(duk_context* ctx, int idx, bool& out);
+
+    template<typename T, typename U>
+    void dukx_get(duk_context* ctx, int idx, std::map<T, U>& out);
+
+    template<typename T>
+    void dukx_get(duk_context* ctx, int idx, std::vector<T>& out);
+
+    template<typename T>
+    void dukx_get(duk_context* ctx, int idx, T*& out);*/
+
+    inline
+    JSValue push(JSContext* ctx, const char* v)
+    {
+        return JS_NewString(ctx, v);
+    }
+
+    inline
+    JSValue push(JSContext* ctx, const std::string& v)
+    {
+        return JS_NewStringLen(ctx, v.c_str(), v.size());
+    }
+
+    inline
+    JSValue push(JSContext* ctx, int64_t v)
+    {
+        return JS_NewInt64(ctx, v);
+    }
+
+    inline
+    JSValue push(JSContext* ctx, int v)
+    {
+        return JS_NewInt32(ctx, v);
+    }
+
+    inline
+    JSValue push(JSContext* ctx, double v)
+    {
+        return JS_NewFloat64(ctx, v);
+    }
+
+    inline
+    JSValue push(JSContext* ctx, bool v)
+    {
+        return JS_NewBool(ctx,v);
+    }
+
+    template<typename T>
+    inline
+    JSValue push(JSContext* ctx, const std::vector<T>& v)
+    {
+        JSValue val = JS_NewArray(ctx);
+
+        for(int i=0; i < v.size(); i++)
+        {
+            JSValue found = push(ctx, v[i]);
+            JS_SetPropertyUint32(ctx, val, i, found);
+        }
+
+        return val;
+    }
+
+    template<typename T, typename U>
+    inline
+    JSValue push(JSContext* ctx, const std::map<T, U>& v)
+    {
+        JSValue obj = JS_NewObject(ctx);
+
+        for(auto& i : v)
+        {
+            JSValue key = push(ctx, i.first);
+            JSValue val = push(ctx, i.second);
+
+            JSAtom key_atom = JS_ValueToAtom(ctx, key);
+
+            JS_SetProperty(ctx, obj, key_atom, val);
+
+            JS_FreeAtom(ctx, key_atom);
+        }
+
+        return obj;
+    }
+
+    JSValue push(JSContext* ctx, quick_funcptr_t fptr);
+
+    inline
+    JSValue push(JSContext* ctx, const js::undefined_t&)
+    {
+        return JS_UNDEFINED;
+    }
+
+    inline
+    JSValue push(JSContext* ctx, const nlohmann::json& in)
+    {
+        std::string str = in.dump();
+
+        return JS_ParseJSON(ctx, str.c_str(), str.size(), nullptr);
+    }
+
+    template<typename T>
+    JSValue push(JSContext* ctx, T* in)
+    {
+        return JS_MKPTR(0, in);
+    }
+
+    inline
+    JSValue push(JSContext* ctx, std::nullptr_t in)
+    {
+        return JS_MKPTR(0, 0);
+    }
+
+    JSValue push(JSContext* ctx, const js_quickjs::value& in);
+}
+
 namespace js_quickjs
 {
     struct value_context
