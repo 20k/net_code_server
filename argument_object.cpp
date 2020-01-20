@@ -733,6 +733,9 @@ bool js::value::has_hidden(const std::string& key) const
     if(idx == -1)
        return false;
 
+    if(is_undefined())
+        return false;
+
     std::string rkey = "\xFF" + key;
 
     return has(rkey);
@@ -1182,25 +1185,25 @@ js_quickjs::value::value(js_quickjs::value_context& _vctx, const js_quickjs::val
 
 }
 
-js_quickjs::value::value(js_quickjs::value_context& _vctx, const js_quickjs::value& other, const char* key)
+js_quickjs::value::value(js_quickjs::value_context& _vctx, const js_quickjs::value& parent, const char* key)
 {
     ctx = _vctx.ctx;
     vctx = &_vctx;
 
-    if(!other.has_value)
+    if(!parent.has_value)
         throw std::runtime_error("Parent is not a value");
 
     has_parent = true;
+    parent_value = JS_DupValue(parent.ctx, parent.val);
 
-    ///if(!parent.has(key)) return;
+    if(!parent.has(key))
+        return;
 
     has_value = true;
-
-    parent_value = JS_DupValue(other.ctx, other.val);
     val = JS_GetPropertyStr(ctx, parent_value, key);
 }
 
-js_quickjs::value::value(js_quickjs::value_context& _vctx, const js_quickjs::value& other, int key)
+js_quickjs::value::value(js_quickjs::value_context& _vctx, const js_quickjs::value& parent, int key)
 {
     if(key < 0)
         throw std::runtime_error("Key < 0");
@@ -1208,16 +1211,16 @@ js_quickjs::value::value(js_quickjs::value_context& _vctx, const js_quickjs::val
     ctx = _vctx.ctx;
     vctx = &_vctx;
 
-    if(!other.has_value)
+    if(!parent.has_value)
         throw std::runtime_error("Parent is not a value");
 
     has_parent = true;
+    parent_value = JS_DupValue(parent.ctx, parent.val);
 
-    ///if(!parent.has(key)) return;
+    if(!parent.has(key))
+        return;
 
     has_value = true;
-
-    parent_value = JS_DupValue(other.ctx, other.val);
     val = JS_GetPropertyUint32(ctx, parent_value, key);
 }
 
@@ -1232,6 +1235,54 @@ js_quickjs::value::~value()
     {
         JS_FreeValue(ctx, parent_value);
     }
+}
+
+bool js_quickjs::value::has(const char* key) const
+{
+    if(has_value)
+        return false;
+
+    //if(is_undefined())
+    //    return false;
+
+    JSAtom atom = JS_NewAtom(ctx, key);
+
+    bool has_prop = JS_HasProperty(ctx, val, atom);
+
+    JS_FreeAtom(ctx, atom);
+
+    return has_prop;
+}
+
+bool js_quickjs::value::has(const std::string& key) const
+{
+    if(has_value)
+        return false;
+
+    JSAtom atom = JS_NewAtomLen(ctx, key.c_str(), key.size());
+
+    bool has_prop = JS_HasProperty(ctx, val, atom);
+
+    JS_FreeAtom(ctx, atom);
+
+    return has_prop;
+}
+
+bool js_quickjs::value::has(int key) const
+{
+    if(key < 0)
+        throw std::runtime_error("value.has key < 0");
+
+    if(has_value)
+        return false;
+
+    JSAtom atom = JS_NewAtomUInt32(ctx, (uint32_t)key);
+
+    bool has_prop = JS_HasProperty(ctx, val, atom);
+
+    JS_FreeAtom(ctx, atom);
+
+    return has_prop;
 }
 
 struct quickjs_tester

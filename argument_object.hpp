@@ -885,6 +885,11 @@ namespace js_quickjs
         value(value_context& ctx, const value& base, int key);
         value(value_context& ctx, const value& base, const char* key);
         ~value();
+
+        bool has(const std::string& key) const;
+        bool has(int key) const;
+        bool has(const char* key) const;
+        bool has_hidden(const std::string& key) const;
     };
 }
 
