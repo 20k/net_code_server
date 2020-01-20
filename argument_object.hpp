@@ -446,7 +446,7 @@ namespace js
         bool del(const std::string& key);
 
         template<typename T>
-        js::value add(const std::string& key, const T& val)
+        value add(const std::string& key, const T& val)
         {
             auto jval = js::value(*vctx, *this, key);
             jval = val;
@@ -454,7 +454,7 @@ namespace js
         }
 
         template<typename T>
-        js::value add_hidden(const std::string& key, const T& val)
+        value add_hidden(const std::string& key, const T& val)
         {
             auto jval = js::value(*vctx, *this, "\xFF" + key);
             jval = val;
@@ -912,4 +912,5 @@ namespace js
 
     void dump_stack(js::value_context& vctx);
 }
+
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED
