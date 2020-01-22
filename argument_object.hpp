@@ -655,10 +655,10 @@ namespace js
 
         void pack();
 
-        friend bool operator==(const value& v1, const value& v2)
+        /*friend bool operator==(const value& v1, const value& v2)
         {
             return duk_equals(v1.ctx, v1.idx, v2.idx);
-        }
+        }*/
     };
 
     template<typename... T>
@@ -1308,6 +1308,11 @@ namespace js_quickjs
         value operator[](int64_t val);
         value operator[](const std::string& str);
         value operator[](const char* str);
+
+        void pack(){}
+        void stringify_parse();
+        std::string to_json(); ///hard to implement
+
     };
 }
 
