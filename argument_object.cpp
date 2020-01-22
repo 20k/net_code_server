@@ -1195,6 +1195,7 @@ js_quickjs::value::value(js_quickjs::value_context& _vctx, const js_quickjs::val
 
     has_parent = true;
     parent_value = JS_DupValue(parent.ctx, parent.val);
+    indices = key;
 
     if(!parent.has(key))
         return;
@@ -1210,6 +1211,7 @@ js_quickjs::value::value(js_quickjs::value_context& _vctx, const js_quickjs::val
 
     ctx = _vctx.ctx;
     vctx = &_vctx;
+    indices = key;
 
     if(!parent.has_value)
         throw std::runtime_error("Parent is not a value");
@@ -1678,9 +1680,29 @@ struct quickjs_tester
     {
         js_quickjs::value_context vctx;
 
-        js_quickjs::value val(vctx);
+        {
+            js_quickjs::value val(vctx);
 
-        js_quickjs::value dependent(vctx, val, "hello");
+            js_quickjs::value dependent(vctx, val, "hello");
+        }
+
+        {
+            js_quickjs::value val(vctx);
+            val = 1234;
+
+            assert((int)val == 1234);
+        }
+
+        {
+            js_quickjs::value root(vctx);
+            root["dep"] = "hello";
+
+            std::string found = root["dep"];
+
+            std::cout << "Quickjs found " << found << std::endl;
+
+            assert(found == "hello");
+        }
 
         printf("Tested quickjs\n");
     }
