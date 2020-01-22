@@ -1241,7 +1241,7 @@ js_quickjs::value::~value()
 
 bool js_quickjs::value::has(const char* key) const
 {
-    if(has_value)
+    if(!has_value)
         return false;
 
     if(is_undefined())
@@ -1258,7 +1258,7 @@ bool js_quickjs::value::has(const char* key) const
 
 bool js_quickjs::value::has(const std::string& key) const
 {
-    if(has_value)
+    if(!has_value)
         return false;
 
     if(is_undefined())
@@ -1278,7 +1278,7 @@ bool js_quickjs::value::has(int key) const
     if(key < 0)
         throw std::runtime_error("value.has key < 0");
 
-    if(has_value)
+    if(!has_value)
         return false;
 
     if(is_undefined())
@@ -1474,13 +1474,17 @@ js_quickjs::qstack_manager::~qstack_manager()
 
             assert(idx >= 0);
 
-            JS_SetPropertyUint32(val.ctx, val.parent_value, idx, val.val);
+            JSValue dp = JS_DupValue(val.ctx, val.val);
+
+            JS_SetPropertyUint32(val.ctx, val.parent_value, idx, dp);
         }
         else
         {
             std::string idx = std::get<2>(val.indices);
 
-            JS_SetPropertyStr(val.ctx, val.parent_value, idx.c_str(), val.val);
+            JSValue dp = JS_DupValue(val.ctx, val.val);
+
+            JS_SetPropertyStr(val.ctx, val.parent_value, idx.c_str(), dp);
         }
     }
 }
@@ -1698,8 +1702,6 @@ struct quickjs_tester
             root["dep"] = "hello";
 
             std::string found = root["dep"];
-
-            std::cout << "Quickjs found " << found << std::endl;
 
             assert(found == "hello");
         }
