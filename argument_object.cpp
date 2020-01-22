@@ -1602,6 +1602,76 @@ js_quickjs::value& js_quickjs::value::operator=(const nlohmann::json& in)
     return *this;
 }
 
+js_quickjs::value::operator std::string()
+{
+    if(!has_value)
+        return std::string();
+
+    std::string ret;
+    qarg::get(ctx, val, ret);
+
+    return ret;
+}
+
+js_quickjs::value::operator int64_t()
+{
+    if(!has_value)
+        return int64_t();
+
+    int64_t ret;
+    qarg::get(ctx, val, ret);
+
+    return ret;
+}
+
+js_quickjs::value::operator int()
+{
+    if(!has_value)
+        return int();
+
+    int ret;
+    qarg::get(ctx, val, ret);
+
+    return ret;
+}
+
+js_quickjs::value::operator double()
+{
+    if(!has_value)
+        return double();
+
+    double ret;
+    qarg::get(ctx, val, ret);
+
+    return ret;
+}
+
+js_quickjs::value::operator bool()
+{
+    if(!has_value)
+        return bool();
+
+    bool ret;
+    qarg::get(ctx, val, ret);
+
+    return ret;
+}
+
+js_quickjs::value js_quickjs::value::operator[](int64_t arg)
+{
+    return js_quickjs::value(*vctx, *this, arg);
+}
+
+js_quickjs::value js_quickjs::value::operator[](const std::string& arg)
+{
+    return js_quickjs::value(*vctx, *this, arg);
+}
+
+js_quickjs::value js_quickjs::value::operator[](const char* arg)
+{
+    return js_quickjs::value(*vctx, *this, arg);
+}
+
 struct quickjs_tester
 {
     quickjs_tester()

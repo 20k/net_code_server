@@ -1207,6 +1207,107 @@ namespace js_quickjs
         }
 
         value& operator=(js_funcptr_t fptr);
+
+        value& set_ptr(std::nullptr_t)
+        {
+            qstack_manager m(*this);
+
+            qarg::push(ctx, nullptr);
+
+            return *this;
+        }
+
+        ///seems dangerous to let this be arbitrary, because its extremely rarely what you want
+        template<typename T>
+        value& set_ptr(T* in)
+        {
+            qstack_manager m(*this);
+
+            qarg::push(ctx, in);
+
+            return *this;
+        }
+
+
+        template<typename T>
+        value& allocate_in_heap(T& in)
+        {
+            T* val = new T(in);
+            return set_ptr(val);
+        }
+
+        template<typename T>
+        T* get_ptr()
+        {
+            if(!has_value)
+                throw std::runtime_error("No value in trying to get a pointer. This is dangerous");
+
+            T* ret;
+            qarg::get(ctx, val, ret);
+            return ret;
+        }
+
+        template<typename T>
+        void free_in_heap()
+        {
+            if(!has_value)
+                return;
+
+            T* ptr = get_ptr<T>();
+
+            if(ptr == nullptr)
+                return;
+
+            delete ptr;
+
+            T* null = nullptr;
+            set_ptr(null);
+        }
+
+        operator std::string();
+        operator int64_t();
+        operator int();
+        operator double();
+        operator bool();
+
+        template<typename T>
+        operator std::vector<T>()
+        {
+            if(!has_value)
+                return std::vector<T>();
+
+            std::vector<T> ret;
+            qarg::get(ctx, val, ret);
+            return ret;
+        }
+
+        template<typename T, typename U>
+        operator std::map<T, U>()
+        {
+            if(!has_value)
+                return std::map<T, U>();
+
+            std::map<T, U> ret;
+            qarg::get(ctx, val, ret);
+            return ret;
+        }
+
+        template<typename T>
+        operator T*()
+        {
+            if(!has_value)
+                return nullptr;
+
+            static_assert(!std::is_same_v<T, char const>, "Trying to get a const char* pointer out is almost certainly not what you want");
+
+            T* ret;
+            qarg::get(ctx, val, ret);
+            return ret;
+        }
+
+        value operator[](int64_t val);
+        value operator[](const std::string& str);
+        value operator[](const char* str);
     };
 }
 
