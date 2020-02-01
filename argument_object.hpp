@@ -978,6 +978,9 @@ namespace qarg
     void get(JSContext* ctx, const JSValue& val, std::vector<T>& out);
     template<typename T>
     void get(JSContext* ctx, const JSValue& val, T*& out);
+    void get(JSContext* ctx, const JSValue& val, js_quickjs::value& out);
+    template<typename T, typename U>
+    void get(JSContext* ctx, const JSValue& val, std::vector<std::pair<T, U>>& out); ///equivalent to std::map
 
     inline
     void get(JSContext* ctx, const JSValue& val, std::string& out)
@@ -1105,6 +1108,46 @@ namespace qarg
 
         out = JS_VALUE_GET_PTR(val);
     }
+
+    template<typename T, typename U>
+    inline
+    void get(JSContext* ctx, const JSValue& val, std::vector<std::pair<T, U>>& out)
+    {
+        UNDEF();
+
+        JSPropertyEnum* names = nullptr;
+        uint32_t len = 0;
+
+        JS_GetOwnPropertyNames(ctx, &names, &len, val, 0);
+
+        if(names == nullptr)
+        {
+            out.clear();
+            return;
+        }
+
+        for(int i=0; i < len; i++)
+        {
+            JSAtom atom = names[0].atom;
+
+            JSValue found = JS_GetProperty(ctx, val, atom);
+            JSValue key = JS_AtomToValue(ctx, atom);
+
+            T out_key;
+            get(ctx, key, out_key);
+            U out_value;
+            get(ctx, found, out_value);
+
+            out.push_back({out_key, out_value});
+        }
+
+        for(int i=0; i < len; i++)
+        {
+            JS_FreeAtom(ctx, names[i].atom);
+        }
+
+        js_free(ctx, names);
+    }
 }
 
 namespace js_quickjs
@@ -1207,6 +1250,7 @@ namespace js_quickjs
         }
 
         value& operator=(js_funcptr_t fptr);
+        value& operator=(const JSValue& val);
 
         value& set_ptr(std::nullptr_t)
         {

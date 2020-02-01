@@ -1497,6 +1497,14 @@ JSValue qarg::push(JSContext* ctx, const js_quickjs::value& in)
     return JS_DupValue(ctx, in.val);
 }
 
+void qarg::get(JSContext* ctx, const JSValue& val, js_quickjs::value& out)
+{
+    if(JS_IsUndefined(val))
+        return;
+
+    out = val;
+}
+
 js_quickjs::value& js_quickjs::value::operator=(const char* v)
 {
     qstack_manager m(*this);
@@ -1608,6 +1616,15 @@ js_quickjs::value& js_quickjs::value::operator=(const nlohmann::json& in)
     return *this;
 }
 
+js_quickjs::value& js_quickjs::value::operator=(const JSValue& _val)
+{
+    qstack_manager m(*this);
+
+    val = JS_DupValue(ctx, _val);
+
+    return *this;
+}
+
 js_quickjs::value::operator std::string()
 {
     if(!has_value)
@@ -1676,6 +1693,11 @@ js_quickjs::value js_quickjs::value::operator[](const std::string& arg)
 js_quickjs::value js_quickjs::value::operator[](const char* arg)
 {
     return js_quickjs::value(*vctx, *this, arg);
+}
+
+std::string js_quickjs::value::to_json()
+{
+    return "";
 }
 
 struct quickjs_tester
