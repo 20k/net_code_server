@@ -1522,7 +1522,7 @@ void qarg::get(js_quickjs::value_context& vctx, const JSValue& val, std::vector<
 
     for(uint32_t i=0; i < len; i++)
     {
-        JSAtom atom = names[0].atom;
+        JSAtom atom = names[i].atom;
 
         JSValue found = JS_GetProperty(vctx.ctx, val, atom);
         JSValue key = JS_AtomToValue(vctx.ctx, atom);
@@ -1534,6 +1534,9 @@ void qarg::get(js_quickjs::value_context& vctx, const JSValue& val, std::vector<
         out_value = found;
 
         out.push_back({out_key, out_value});
+
+        JS_FreeValue(vctx.ctx, found);
+        JS_FreeValue(vctx.ctx, key);
     }
 
     for(uint32_t i=0; i < len; i++)
@@ -1561,6 +1564,8 @@ void qarg::get(js_quickjs::value_context& vctx, const JSValue& val, std::vector<
 
         js_quickjs::value next(vctx);
         next = found;
+
+        JS_FreeValue(vctx.ctx, found);
 
         out.push_back(next);
     }
@@ -1860,6 +1865,27 @@ struct quickjs_tester
             assert(found == "hello");
 
             std::cout << "Root dump " << root.to_json() << std::endl;
+        }
+
+        {
+            js_quickjs::value root(vctx);
+            root["hi"] = "hellothere";
+            root["yep"] = "test";
+            root["cat"] = 1234;
+
+            js_quickjs::value subobj(vctx);
+            subobj["further_sub"] = "nope";
+
+            root["super_sub"] = subobj;
+
+            std::string found_1 = root["hi"];
+            std::string found_2 = root["yep"];
+            std::string found_3 = root["testsub"];
+
+            assert(found_1 == "hellothere");
+            assert(found_2 == "test");
+
+            std::cout << "Dumped " << root.to_json() << std::endl;
         }
 
         printf("Tested quickjs\n");

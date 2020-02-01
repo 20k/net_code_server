@@ -941,6 +941,7 @@ namespace qarg
             JS_SetProperty(ctx, obj, key_atom, val);
 
             JS_FreeAtom(ctx, key_atom);
+            JS_FreeValue(ctx, key);
         }
 
         return obj;
@@ -1067,7 +1068,7 @@ namespace qarg
 
         for(int i=0; i < len; i++)
         {
-            JSAtom atom = names[0].atom;
+            JSAtom atom = names[i].atom;
 
             JSValue found = JS_GetProperty(vctx.ctx, val, atom);
             JSValue key = JS_AtomToValue(vctx.ctx, atom);
@@ -1078,6 +1079,9 @@ namespace qarg
             get(vctx, found, out_value);
 
             out[out_key] = out_value;
+
+            JS_FreeValue(vctx.ctx, found);
+            JS_FreeValue(vctx.ctx, key);
         }
 
         for(int i=0; i < len; i++)
@@ -1109,6 +1113,8 @@ namespace qarg
             get(vctx, found, next);
 
             out.push_back(next);
+
+            JS_FreeValue(vctx.ctx, found);
         }
     }
 
