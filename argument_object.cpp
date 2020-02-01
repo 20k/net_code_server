@@ -1756,31 +1756,26 @@ js_quickjs::value js_quickjs::value::operator[](const char* arg)
     return js_quickjs::value(*vctx, *this, arg);
 }
 
-nlohmann::json js_quickjs::value::to_nlohmann()
+nlohmann::json js_quickjs::value::to_nlohmann(int stack_depth)
 {
+    if(stack_depth > 100)
+        throw std::runtime_error("Exceeded to_nlohmann stack");
+
     nlohmann::json built;
 
     if(is_object())
     {
         built = nlohmann::json::parse("{}");
 
-        printf("Is object\n");
-
         std::vector<std::pair<js_quickjs::value, js_quickjs::value>> val = *this;
-
-        std::cout << "Val size " << val.size() << std::endl;
 
         for(auto& i : val)
         {
             nlohmann::json keyn = (std::string)i.first;
-            nlohmann::json valn = i.second.to_nlohmann();
-
-            std::cout << "Fkey " << (std::string)keyn << std::endl;
+            nlohmann::json valn = i.second.to_nlohmann(stack_depth+1);
 
             built[(std::string)keyn] = valn;
         }
-
-        std::cout << "Got " << built.dump() << std::endl;
 
         return built;
     }
@@ -1793,7 +1788,7 @@ nlohmann::json js_quickjs::value::to_nlohmann()
 
         for(int i=0; i < (int)val.size(); i++)
         {
-            arr[i] = val[i].to_nlohmann();
+            arr[i] = val[i].to_nlohmann(stack_depth+1);
         }
 
         return arr;

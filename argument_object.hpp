@@ -1320,7 +1320,7 @@ namespace js_quickjs
         void pack(){}
         void stringify_parse();
         std::string to_json();
-        nlohmann::json to_nlohmann();
+        nlohmann::json to_nlohmann(int stack_depth = 0);
     };
 }
 
