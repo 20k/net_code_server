@@ -858,6 +858,18 @@ using quick_funcptr_t = js_funcptr_t;
 namespace js_quickjs
 {
     struct value;
+
+    struct value_context
+    {
+        JSRuntime* heap = nullptr;
+        JSContext* ctx = nullptr;
+        bool owner = false;
+
+        value_context(value_context&);
+        value_context();
+        ~value_context();
+    };
+
 }
 
 namespace qarg
@@ -967,28 +979,28 @@ namespace qarg
 
     #define UNDEF() if(JS_IsUndefined(val)){out = std::remove_reference_t<decltype(out)>(); return;}
 
-    void get(JSContext* ctx, const JSValue& val, std::string& out);
-    void get(JSContext* ctx, const JSValue& val, int64_t& out);
-    void get(JSContext* ctx, const JSValue& val, int& out);
-    void get(JSContext* ctx, const JSValue& val, double& out);
-    void get(JSContext* ctx, const JSValue& val, bool& out);
+    void get(js_quickjs::value_context& vctx, const JSValue& val, std::string& out);
+    void get(js_quickjs::value_context& vctx, const JSValue& val, int64_t& out);
+    void get(js_quickjs::value_context& vctx, const JSValue& val, int& out);
+    void get(js_quickjs::value_context& vctx, const JSValue& val, double& out);
+    void get(js_quickjs::value_context& vctx, const JSValue& val, bool& out);
     template<typename T, typename U>
-    void get(JSContext* ctx, const JSValue& val, std::map<T, U>& out);
+    void get(js_quickjs::value_context& vctx, const JSValue& val, std::map<T, U>& out);
     template<typename T>
-    void get(JSContext* ctx, const JSValue& val, std::vector<T>& out);
+    void get(js_quickjs::value_context& vctx, const JSValue& val, std::vector<T>& out);
     template<typename T>
-    void get(JSContext* ctx, const JSValue& val, T*& out);
-    void get(JSContext* ctx, const JSValue& val, js_quickjs::value& out);
-    template<typename T, typename U>
-    void get(JSContext* ctx, const JSValue& val, std::vector<std::pair<T, U>>& out); ///equivalent to std::map
+    void get(js_quickjs::value_context& vctx, const JSValue& val, T*& out);
+    void get(js_quickjs::value_context& vctx, const JSValue& val, js_quickjs::value& out);
+    void get(js_quickjs::value_context& vctx, const JSValue& val, std::vector<std::pair<js_quickjs::value, js_quickjs::value>>& out); ///equivalent to std::map
+    void get(js_quickjs::value_context& vctx, const JSValue& val, std::vector<js_quickjs::value>& out); ///equivalent to std::map
 
     inline
-    void get(JSContext* ctx, const JSValue& val, std::string& out)
+    void get(js_quickjs::value_context& vctx, const JSValue& val, std::string& out)
     {
         UNDEF();
 
         size_t len = 0;
-        const char* str = JS_ToCStringLen(ctx, &len, val);
+        const char* str = JS_ToCStringLen(vctx.ctx, &len, val);
 
         if(str == nullptr)
         {
@@ -998,54 +1010,54 @@ namespace qarg
 
         out = std::string(str, str + len);
 
-        JS_FreeCString(ctx, str);
+        JS_FreeCString(vctx.ctx, str);
     }
 
     inline
-    void get(JSContext* ctx, const JSValue& val, int64_t& out)
+    void get(js_quickjs::value_context& vctx, const JSValue& val, int64_t& out)
     {
         UNDEF();
 
-        JS_ToInt64(ctx, &out, val);
+        JS_ToInt64(vctx.ctx, &out, val);
     }
 
     inline
-    void get(JSContext* ctx, const JSValue& val, int& out)
+    void get(js_quickjs::value_context& vctx, const JSValue& val, int& out)
     {
         UNDEF();
 
         int32_t ival = 0;
 
-        JS_ToInt32(ctx, &ival, val);
+        JS_ToInt32(vctx.ctx, &ival, val);
         out = ival;
     }
 
     inline
-    void get(JSContext* ctx, const JSValue& val, double& out)
+    void get(js_quickjs::value_context& vctx, const JSValue& val, double& out)
     {
         UNDEF();
 
-        JS_ToFloat64(ctx, &out, val);
+        JS_ToFloat64(vctx.ctx, &out, val);
     }
 
     inline
-    void get(JSContext* ctx, const JSValue& val, bool& out)
+    void get(js_quickjs::value_context& vctx, const JSValue& val, bool& out)
     {
         UNDEF();
 
-        out = JS_ToBool(ctx, val) > 0;
+        out = JS_ToBool(vctx.ctx, val) > 0;
     }
 
     template<typename T, typename U>
     inline
-    void get(JSContext* ctx, const JSValue& val, std::map<T, U>& out)
+    void get(js_quickjs::value_context& vctx, const JSValue& val, std::map<T, U>& out)
     {
         UNDEF();
 
         JSPropertyEnum* names = nullptr;
         uint32_t len = 0;
 
-        JS_GetOwnPropertyNames(ctx, &names, &len, val, 0);
+        JS_GetOwnPropertyNames(vctx.ctx, &names, &len, val, JS_GPN_STRING_MASK|JS_GPN_SYMBOL_MASK);
 
         if(names == nullptr)
         {
@@ -1057,44 +1069,44 @@ namespace qarg
         {
             JSAtom atom = names[0].atom;
 
-            JSValue found = JS_GetProperty(ctx, val, atom);
-            JSValue key = JS_AtomToValue(ctx, atom);
+            JSValue found = JS_GetProperty(vctx.ctx, val, atom);
+            JSValue key = JS_AtomToValue(vctx.ctx, atom);
 
             T out_key;
-            get(ctx, key, out_key);
+            get(vctx, key, out_key);
             U out_value;
-            get(ctx, found, out_value);
+            get(vctx, found, out_value);
 
             out[out_key] = out_value;
         }
 
         for(int i=0; i < len; i++)
         {
-            JS_FreeAtom(ctx, names[i].atom);
+            JS_FreeAtom(vctx.ctx, names[i].atom);
         }
 
-        js_free(ctx, names);
+        js_free(vctx.ctx, names);
     }
 
     template<typename T>
     inline
-    void get(JSContext* ctx, const JSValue& val, std::vector<T>& out)
+    void get(js_quickjs::value_context& vctx, const JSValue& val, std::vector<T>& out)
     {
         UNDEF();
 
         out.clear();
 
         int len = 0;
-        JS_GetPropertyStr(ctx, val, "length");
+        JS_GetPropertyStr(vctx.ctx, val, "length");
 
         out.reserve(len);
 
         for(int i=0; i < len; i++)
         {
-            JSValue found = JS_GetPropertyUint32(ctx, val, i);
+            JSValue found = JS_GetPropertyUint32(vctx.ctx, val, i);
 
             T next;
-            get(ctx, found, next);
+            get(vctx, found, next);
 
             out.push_back(next);
         }
@@ -1102,52 +1114,15 @@ namespace qarg
 
     template<typename T>
     inline
-    void get(JSContext* ctx, const JSValue& val, T*& out)
+    void get(js_quickjs::value_context& vctx, const JSValue& val, T*& out)
     {
         UNDEF();
 
         out = JS_VALUE_GET_PTR(val);
     }
 
-    template<typename T, typename U>
     inline
-    void get(JSContext* ctx, const JSValue& val, std::vector<std::pair<T, U>>& out)
-    {
-        UNDEF();
-
-        JSPropertyEnum* names = nullptr;
-        uint32_t len = 0;
-
-        JS_GetOwnPropertyNames(ctx, &names, &len, val, 0);
-
-        if(names == nullptr)
-        {
-            out.clear();
-            return;
-        }
-
-        for(int i=0; i < len; i++)
-        {
-            JSAtom atom = names[0].atom;
-
-            JSValue found = JS_GetProperty(ctx, val, atom);
-            JSValue key = JS_AtomToValue(ctx, atom);
-
-            T out_key;
-            get(ctx, key, out_key);
-            U out_value;
-            get(ctx, found, out_value);
-
-            out.push_back({out_key, out_value});
-        }
-
-        for(int i=0; i < len; i++)
-        {
-            JS_FreeAtom(ctx, names[i].atom);
-        }
-
-        js_free(ctx, names);
-    }
+    void get(js_quickjs::value_context& vctx, const JSValue& val, std::vector<std::pair<js_quickjs::value, js_quickjs::value>>& out);
 }
 
 namespace js_quickjs
@@ -1160,17 +1135,6 @@ namespace js_quickjs
 
         qstack_manager(value& _val);
         ~qstack_manager();
-    };
-
-    struct value_context
-    {
-        JSRuntime* heap = nullptr;
-        JSContext* ctx = nullptr;
-        bool owner = false;
-
-        value_context(value_context&);
-        value_context();
-        ~value_context();
     };
 
     struct value
@@ -1287,7 +1251,7 @@ namespace js_quickjs
                 throw std::runtime_error("No value in trying to get a pointer. This is dangerous");
 
             T* ret;
-            qarg::get(ctx, val, ret);
+            qarg::get(*vctx, val, ret);
             return ret;
         }
 
@@ -1321,7 +1285,7 @@ namespace js_quickjs
                 return std::vector<T>();
 
             std::vector<T> ret;
-            qarg::get(ctx, val, ret);
+            qarg::get(*vctx, val, ret);
             return ret;
         }
 
@@ -1332,7 +1296,7 @@ namespace js_quickjs
                 return std::map<T, U>();
 
             std::map<T, U> ret;
-            qarg::get(ctx, val, ret);
+            qarg::get(*vctx, val, ret);
             return ret;
         }
 
@@ -1345,7 +1309,7 @@ namespace js_quickjs
             static_assert(!std::is_same_v<T, char const>, "Trying to get a const char* pointer out is almost certainly not what you want");
 
             T* ret;
-            qarg::get(ctx, val, ret);
+            qarg::get(*vctx, val, ret);
             return ret;
         }
 
@@ -1355,8 +1319,8 @@ namespace js_quickjs
 
         void pack(){}
         void stringify_parse();
-        std::string to_json(); ///hard to implement
-
+        std::string to_json();
+        nlohmann::json to_nlohmann();
     };
 }
 

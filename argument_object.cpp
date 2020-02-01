@@ -1497,12 +1497,73 @@ JSValue qarg::push(JSContext* ctx, const js_quickjs::value& in)
     return JS_DupValue(ctx, in.val);
 }
 
-void qarg::get(JSContext* ctx, const JSValue& val, js_quickjs::value& out)
+void qarg::get(js_quickjs::value_context& vctx, const JSValue& val, js_quickjs::value& out)
 {
     if(JS_IsUndefined(val))
         return;
 
     out = val;
+}
+
+void qarg::get(js_quickjs::value_context& vctx, const JSValue& val, std::vector<std::pair<js_quickjs::value, js_quickjs::value>>& out)
+{
+    UNDEF();
+
+    JSPropertyEnum* names = nullptr;
+    uint32_t len = 0;
+
+    JS_GetOwnPropertyNames(vctx.ctx, &names, &len, val, JS_GPN_STRING_MASK|JS_GPN_SYMBOL_MASK);
+
+    if(names == nullptr)
+    {
+        out.clear();
+        return;
+    }
+
+    for(uint32_t i=0; i < len; i++)
+    {
+        JSAtom atom = names[0].atom;
+
+        JSValue found = JS_GetProperty(vctx.ctx, val, atom);
+        JSValue key = JS_AtomToValue(vctx.ctx, atom);
+
+        js_quickjs::value out_key(vctx);
+        js_quickjs::value out_value(vctx);
+
+        out_key = key;
+        out_value = found;
+
+        out.push_back({out_key, out_value});
+    }
+
+    for(uint32_t i=0; i < len; i++)
+    {
+        JS_FreeAtom(vctx.ctx, names[i].atom);
+    }
+
+    js_free(vctx.ctx, names);
+}
+
+void qarg::get(js_quickjs::value_context& vctx, const JSValue& val, std::vector<js_quickjs::value>& out)
+{
+    UNDEF();
+
+    out.clear();
+
+    int len = 0;
+    JS_GetPropertyStr(vctx.ctx, val, "length");
+
+    out.reserve(len);
+
+    for(int i=0; i < len; i++)
+    {
+        JSValue found = JS_GetPropertyUint32(vctx.ctx, val, i);
+
+        js_quickjs::value next(vctx);
+        next = found;
+
+        out.push_back(next);
+    }
 }
 
 js_quickjs::value& js_quickjs::value::operator=(const char* v)
@@ -1631,7 +1692,7 @@ js_quickjs::value::operator std::string()
         return std::string();
 
     std::string ret;
-    qarg::get(ctx, val, ret);
+    qarg::get(*vctx, val, ret);
 
     return ret;
 }
@@ -1642,7 +1703,7 @@ js_quickjs::value::operator int64_t()
         return int64_t();
 
     int64_t ret;
-    qarg::get(ctx, val, ret);
+    qarg::get(*vctx, val, ret);
 
     return ret;
 }
@@ -1653,7 +1714,7 @@ js_quickjs::value::operator int()
         return int();
 
     int ret;
-    qarg::get(ctx, val, ret);
+    qarg::get(*vctx, val, ret);
 
     return ret;
 }
@@ -1664,7 +1725,7 @@ js_quickjs::value::operator double()
         return double();
 
     double ret;
-    qarg::get(ctx, val, ret);
+    qarg::get(*vctx, val, ret);
 
     return ret;
 }
@@ -1675,7 +1736,7 @@ js_quickjs::value::operator bool()
         return bool();
 
     bool ret;
-    qarg::get(ctx, val, ret);
+    qarg::get(*vctx, val, ret);
 
     return ret;
 }
@@ -1695,9 +1756,85 @@ js_quickjs::value js_quickjs::value::operator[](const char* arg)
     return js_quickjs::value(*vctx, *this, arg);
 }
 
+nlohmann::json js_quickjs::value::to_nlohmann()
+{
+    nlohmann::json built;
+
+    if(is_object())
+    {
+        built = nlohmann::json::parse("{}");
+
+        printf("Is object\n");
+
+        std::vector<std::pair<js_quickjs::value, js_quickjs::value>> val = *this;
+
+        std::cout << "Val size " << val.size() << std::endl;
+
+        for(auto& i : val)
+        {
+            nlohmann::json keyn = (std::string)i.first;
+            nlohmann::json valn = i.second.to_nlohmann();
+
+            std::cout << "Fkey " << (std::string)keyn << std::endl;
+
+            built[(std::string)keyn] = valn;
+        }
+
+        std::cout << "Got " << built.dump() << std::endl;
+
+        return built;
+    }
+
+    if(is_array())
+    {
+        std::vector<js_quickjs::value> val = *this;
+
+        nlohmann::json arr;
+
+        for(int i=0; i < (int)val.size(); i++)
+        {
+            arr[i] = val[i].to_nlohmann();
+        }
+
+        return arr;
+    }
+
+    if(is_string())
+    {
+        return (std::string)*this;
+    }
+
+    if(is_number())
+    {
+        return (double)*this;
+    }
+
+    if(is_empty())
+    {
+        return nlohmann::json();
+    }
+
+    if(is_function())
+    {
+        return nlohmann::json();
+    }
+
+    if(is_boolean())
+    {
+        return (bool)*this;
+    }
+
+    if(is_undefined())
+    {
+        return nullptr;
+    }
+
+    throw std::runtime_error("No such json type");
+}
+
 std::string js_quickjs::value::to_json()
 {
-    return "";
+    return to_nlohmann().dump();
 }
 
 struct quickjs_tester
@@ -1726,6 +1863,8 @@ struct quickjs_tester
             std::string found = root["dep"];
 
             assert(found == "hello");
+
+            std::cout << "Root dump " << root.to_json() << std::endl;
         }
 
         printf("Tested quickjs\n");
