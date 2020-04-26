@@ -6,6 +6,7 @@
 namespace tls_detail
 {
     template<typename T, typename U>
+    inline
     T* tls_fetch(pthread_key_t key, const U& u)
     {
         T* ptr = nullptr;
@@ -23,6 +24,7 @@ namespace tls_detail
     }
 
     template<typename T>
+    inline
     void tls_freer(void* in)
     {
         if(in == nullptr)
