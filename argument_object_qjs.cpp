@@ -951,7 +951,10 @@ value make_proxy(value& target, value& handle)
 
 value from_cbor(value_context& vctx, const std::vector<uint8_t>& cb);
 
-void dump_stack(value_context& vctx);
+void dump_stack(value_context& vctx)
+{
+    printf("Stack tracing unimplemented\n");
+}
 }
 
 

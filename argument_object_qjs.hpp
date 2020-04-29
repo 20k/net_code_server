@@ -644,6 +644,7 @@ namespace js_quickjs
     value xfer_between_contexts(value_context& destination, const value& val);
 
     value make_proxy(value& target, value& handle);
+    //unimplemented
     value from_cbor(value_context& vctx, const std::vector<uint8_t>& cb);
 
     void dump_stack(value_context& vctx);
