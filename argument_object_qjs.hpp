@@ -508,6 +508,39 @@ namespace js_quickjs
         nlohmann::json to_nlohmann(int stack_depth = 0);
     };
 
+    template<typename... T>
+    inline
+    std::pair<bool, value> call(value& func, T&&... vals)
+    {
+        bool all_same = ((vals.ctx == func.ctx) && ...);
+
+        if(!all_same)
+            throw std::runtime_error("Not all same contexts");
+
+        constexpr size_t nargs = sizeof...(T);
+
+        value arr[nargs] = {vals...};
+
+        ///not sure this will work for compiled scripts
+        JSValue ret = JS_call(func.ctx, func.val, JS_GetGlobalObject(func.ctx), nargs, arr);
+
+        bool err = JS_IsError(func.ctx, ret) || JS_IsException(ret);
+
+        value rval(*func.vctx);
+        rval = ret;
+
+        return {!err, rval};
+    }
+
+    template<typename I, typename... T>
+    inline
+    std::pair<bool, value> call_prop(value& obj, I& key, T&&... vals)
+    {
+        value func = obj[key];
+
+        return call(func, std::forward<T>(vals)...);
+    }
+
     template<typename T, typename... U>
     constexpr bool is_first_context()
     {
