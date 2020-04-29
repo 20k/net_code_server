@@ -616,6 +616,8 @@ namespace js_quickjs
         return js_safe_function_decomposed(ctx, this_val, argc, argv, func);
     }
 
+    //still need call
+
     js_quickjs::value get_global(value_context& vctx);
     void set_global(value_context& vctx, const js_quickjs::value& val);
     js_quickjs::value get_current_function(value_context& vctx);

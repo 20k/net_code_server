@@ -937,7 +937,18 @@ value xfer_between_contexts(value_context& destination, const value& val)
     return next;
 }
 
-value make_proxy(value& target, value& handle);
+value make_proxy(value& target, value& handle)
+{
+    JSValue arr[2] = {target.val, handle.val};
+
+    JSValue val = js_proxy_constructor(target.ctx, JS_UNDEFINED, 2, arr);
+
+    value ret(*target.vctx);
+    ret = val;
+    return ret;
+}
+
+
 value from_cbor(value_context& vctx, const std::vector<uint8_t>& cb);
 
 void dump_stack(value_context& vctx);
