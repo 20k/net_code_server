@@ -14,7 +14,7 @@
 #include "duktape.h"
 #include "argument_object_common.hpp"
 
-using quick_funcptr_t = duk_ret_t(*)(duk_context*);
+using quick_funcptr_t = JSCFunction;
 
 namespace js_quickjs
 {
@@ -22,6 +22,8 @@ namespace js_quickjs
 
     struct value_context
     {
+        std::vector<value> this_stack;
+
         JSRuntime* heap = nullptr;
         JSContext* ctx = nullptr;
         bool runtime_owner = false;
@@ -31,6 +33,10 @@ namespace js_quickjs
         value_context(value_context&);
         value_context();
         ~value_context();
+
+        void push_this(const value& val);
+        void pop_this();
+        value get_current_this();
     };
 }
 
@@ -139,6 +145,12 @@ namespace qarg
     }
 
     JSValue push(JSContext* ctx, const js_quickjs::value& in);
+
+    inline
+    JSValue push(JSContext* ctx, quick_funcptr_t in)
+    {
+        return JS_NewCFunction(ctx, in, "", 0);
+    }
 
     #define UNDEF() if(JS_IsUndefined(val)){out = std::remove_reference_t<decltype(out)>(); return;}
 
@@ -386,7 +398,7 @@ namespace js_quickjs
             return *this;
         }
 
-        value& operator=(js_funcptr_t fptr);
+        value& operator=(quick_funcptr_t fptr);
         value& operator=(const JSValue& val);
 
         value& set_ptr(std::nullptr_t)
@@ -550,6 +562,11 @@ namespace js_quickjs
 
         js_quickjs::value_context vctx(ctx);
 
+        js_quickjs::value func_this(vctx);
+        func_this = this_val;
+
+        vctx.push_this(func_this);
+
         std::index_sequence_for<U...> iseq;
 
         auto tup = get_args<U...>(vctx, iseq, argv);
@@ -563,6 +580,8 @@ namespace js_quickjs
 
             val.release();
 
+            vctx.pop_this();
+
             return val.val;
         }
         else
@@ -573,6 +592,8 @@ namespace js_quickjs
             {
                 rval.release();
 
+                vctx.pop_this();
+
                 return rval.val;
             }
             else
@@ -580,6 +601,8 @@ namespace js_quickjs
                 js_quickjs::value val(vctx);
                 val = rval;
                 val.release();
+
+                vctx.pop_this();
 
                 return val.val;
             }
@@ -592,6 +615,14 @@ namespace js_quickjs
     {
         return js_safe_function_decomposed(ctx, this_val, argc, argv, func);
     }
+
+    js_quickjs::value get_global(value_context& vctx);
+    void set_global(value_context& vctx, const js_quickjs::value& val);
+    js_quickjs::value get_current_function(value_context& vctx);
+    js_quickjs::value get_this(value_context& vctx);
+    js_quickjs::value get_heap_stash(value_context& vctx);
+    js_quickjs::value get_global_stash(value_context& vctx);
+    void* get_sandbox_data_impl(value_context& vctx);
 }
 
 #endif // ARGUMENT_OBJECT_QJS_HPP_INCLUDED

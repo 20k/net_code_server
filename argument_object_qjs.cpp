@@ -44,6 +44,29 @@ js_quickjs::value_context::~value_context()
     }
 }
 
+void js_quickjs::value_context::push_this(const value& val)
+{
+    this_stack.push_back(val);
+}
+
+void js_quickjs::value_context::pop_this()
+{
+    assert(this_stack.size() > 0);
+
+    this_stack.pop_back();
+}
+
+js_quickjs::value js_quickjs::value_context::get_current_this()
+{
+    if(this_stack.size() > 0)
+        return this_stack.back();
+
+    js_quickjs::value val(*this);
+    val = js::undefined;
+
+    return val;
+}
+
 js_quickjs::value::value(const js_quickjs::value& other)
 {
     vctx = other.vctx;
@@ -574,6 +597,15 @@ js_quickjs::value& js_quickjs::value::operator=(const nlohmann::json& in)
     return *this;
 }
 
+js_quickjs::value& js_quickjs::value::operator=(quick_funcptr_t in)
+{
+    qstack_manager m(*this);
+
+    val = qarg::push(ctx, in);
+
+    return *this;
+}
+
 js_quickjs::value& js_quickjs::value::operator=(const JSValue& _val)
 {
     qstack_manager m(*this);
@@ -727,6 +759,36 @@ nlohmann::json js_quickjs::value::to_nlohmann(int stack_depth)
 std::string js_quickjs::value::to_json()
 {
     return to_nlohmann().dump();
+}
+
+js_quickjs::value js_quickjs::get_global(js_quickjs::value_context& vctx)
+{
+    js_quickjs::value val(vctx);
+    val = JS_GetGlobalObject(vctx.ctx);
+
+    return val;
+}
+
+void js_quickjs::set_global(js_quickjs::value_context& vctx, const js_quickjs::value& val)
+{
+    ///UNIMPLEMENTED BUT NOT THE END OF THE WORLD
+    //JS_SetGlobal
+}
+
+js_quickjs::value js_quickjs::get_current_function(js_quickjs::value_context& vctx)
+{
+    JSValue rval = JS_GetActiveFunction(vctx.ctx);
+
+    js_quickjs::value ret(vctx);
+
+    ret = rval;
+
+    return ret;
+}
+
+js_quickjs::value js_quickjs::get_this(js_quickjs::value_context& vctx)
+{
+    return vctx.get_current_this();
 }
 
 struct quickjs_tester
