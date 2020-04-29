@@ -832,6 +832,26 @@ js_quickjs::value js_quickjs::get_this(js_quickjs::value_context& vctx)
     return vctx.get_current_this();
 }
 
+js_quickjs::value js_quickjs::get_heap_stash(js_quickjs::value_context& vctx)
+{
+    global_stash* stash = (global_stash*)JS_GetContextOpaque(vctx.ctx);
+
+    js_quickjs::value ret(vctx);
+    ret = stash->heap->heap_stash_value;
+
+    return ret;
+}
+
+js_quickjs::value js_quickjs::get_global_stash(js_quickjs::value_context& vctx)
+{
+    global_stash* stash = (global_stash*)JS_GetContextOpaque(vctx.ctx);
+
+    js_quickjs::value ret(vctx);
+    ret = stash->global_stash_value;
+
+    return ret;
+}
+
 struct quickjs_tester
 {
     quickjs_tester()
