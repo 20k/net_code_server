@@ -633,6 +633,18 @@ namespace js_quickjs
 
     value add_getter(value& base, const std::string& key, quick_funcptr_t func);
     value add_setter(value& base, const std::string& key, quick_funcptr_t func);
+
+    std::pair<bool, value> compile(value_context& vctx, const std::string& data);
+    std::pair<bool, value> compile(value_context& vctx, const std::string& name, const std::string& data);
+
+    std::string dump_function(value& val);
+    value eval(value_context& vctx, const std::string& data);
+    value xfer_between_contexts(value_context& destination, const value& val);
+
+    value make_proxy(value& target, value& handle);
+    value from_cbor(value_context& vctx, const std::vector<uint8_t>& cb);
+
+    void dump_stack(value_context& vctx);
 }
 
 #endif // ARGUMENT_OBJECT_QJS_HPP_INCLUDED

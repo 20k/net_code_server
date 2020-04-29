@@ -887,6 +887,63 @@ js_quickjs::value js_quickjs::add_setter(js_quickjs::value& base, const std::str
     return val;
 }
 
+std::pair<bool, js_quickjs::value> js_quickjs::compile(value_context& vctx, const std::string& data)
+{
+    return compile(vctx, "test-name", data);
+}
+
+std::pair<bool, js_quickjs::value> js_quickjs::compile(value_context& vctx, const std::string& name, const std::string& data)
+{
+    JSValue ret = JS_Eval(vctx.ctx, data.c_str(), data.size(), name.c_str(), JS_EVAL_FLAG_COMPILE_ONLY);
+
+    js_quickjs::value val(vctx);
+    val = ret;
+
+    JS_FreeValue(vctx.ctx, ret);
+
+    bool err = JS_IsException(val.val) || JS_IsError(vctx.ctx, val.val);
+
+    return {!err, val};
+}
+
+namespace js_quickjs
+{
+
+std::string dump_function(value& val)
+{
+    size_t size = 0;
+    uint8_t* out = JS_WriteObject(val.ctx, &size, val.val, JS_WRITE_OBJ_BYTECODE);
+
+    return std::string(out, out + size);
+}
+
+value eval(value_context& vctx, const std::string& data)
+{
+    JSValue ret = JS_Eval(vctx.ctx, data.c_str(), data.size(), "test-eval", 0);
+
+    value rval(vctx);
+    rval = ret;
+
+    JS_FreeValue(vctx.ctx, ret);
+
+    return rval;
+}
+
+value xfer_between_contexts(value_context& destination, const value& val)
+{
+    value next(destination);
+    next = JS_DupValue(destination.ctx, val.val);
+
+    return next;
+}
+
+value make_proxy(value& target, value& handle);
+value from_cbor(value_context& vctx, const std::vector<uint8_t>& cb);
+
+void dump_stack(value_context& vctx);
+}
+
+
 struct quickjs_tester
 {
     quickjs_tester()
