@@ -623,6 +623,16 @@ namespace js_quickjs
     js_quickjs::value get_heap_stash(value_context& vctx);
     js_quickjs::value get_global_stash(value_context& vctx);
     void* get_sandbox_data_impl(value_context& vctx);
+
+    template<typename T>
+    inline
+    T* get_sandbox_data(value_context& vctx)
+    {
+        return (T*)get_sandbox_data_impl(vctx);
+    }
+
+    value add_getter(value& base, const std::string& key, quick_funcptr_t func);
+    value add_setter(value& base, const std::string& key, quick_funcptr_t func);
 }
 
 #endif // ARGUMENT_OBJECT_QJS_HPP_INCLUDED

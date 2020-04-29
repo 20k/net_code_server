@@ -852,6 +852,41 @@ js_quickjs::value js_quickjs::get_global_stash(js_quickjs::value_context& vctx)
     return ret;
 }
 
+void* js_quickjs::get_sandbox_data_impl(js_quickjs::value_context& vctx)
+{
+    global_stash* stash = (global_stash*)JS_GetContextOpaque(vctx.ctx);
+
+    return (void*)stash->heap->sandbox;
+}
+
+js_quickjs::value js_quickjs::add_getter(js_quickjs::value& base, const std::string& key, quick_funcptr_t func)
+{
+    js_quickjs::value val(*base.vctx);
+    val = func;
+
+    JSAtom str = JS_NewAtomLen(base.ctx, key.c_str(), key.size());
+
+    JS_DefineProperty(base.ctx, base.val, str, JS_UNDEFINED, val.val, JS_UNDEFINED, JS_PROP_HAS_GET | JS_PROP_HAS_CONFIGURABLE | JS_PROP_HAS_ENUMERABLE);
+
+    JS_FreeAtom(base.ctx, str);
+
+    return val;
+}
+
+js_quickjs::value js_quickjs::add_setter(js_quickjs::value& base, const std::string& key, quick_funcptr_t func)
+{
+    js_quickjs::value val(*base.vctx);
+    val = func;
+
+    JSAtom str = JS_NewAtomLen(base.ctx, key.c_str(), key.size());
+
+    JS_DefineProperty(base.ctx, base.val, str, JS_UNDEFINED, JS_UNDEFINED, val.val, JS_PROP_HAS_SET | JS_PROP_HAS_CONFIGURABLE | JS_PROP_HAS_ENUMERABLE);
+
+    JS_FreeAtom(base.ctx, str);
+
+    return val;
+}
+
 struct quickjs_tester
 {
     quickjs_tester()
