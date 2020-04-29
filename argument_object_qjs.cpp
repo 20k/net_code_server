@@ -2,6 +2,49 @@
 #include "memory_sandbox.hpp"
 #include "argument_object.hpp"
 
+struct heap_stash
+{
+    sandbox_data* sandbox = nullptr;
+    JSValue heap_stash_value;
+
+    heap_stash(JSContext* global)
+    {
+        sandbox = new sandbox_data;
+        heap_stash_value = JS_NewObject(global);
+    }
+};
+
+struct global_stash
+{
+    JSValue global_stash_value;
+    heap_stash* heap = nullptr;
+
+    global_stash(JSContext* ctx)
+    {
+        global_stash_value = JS_NewObject(ctx);
+    }
+};
+
+void init_heap(JSContext* root)
+{
+    heap_stash* heap = new heap_stash(root);
+    global_stash* stash = new global_stash(root);
+
+    stash->heap = heap;
+
+    JS_SetContextOpaque(root, (void*)stash);
+}
+
+void init_context(JSContext* me, JSContext* them)
+{
+    global_stash* them_stash = (global_stash*)JS_GetContextOpaque(them);
+
+    global_stash* stash = new global_stash(me);
+    stash->heap = them_stash->heap;
+
+    JS_SetContextOpaque(me, (void*)stash);
+}
+
 js_quickjs::value_context::value_context(JSContext* _ctx)
 {
     ctx = _ctx;
@@ -11,21 +54,19 @@ js_quickjs::value_context::value_context(JSContext* _ctx)
 js_quickjs::value_context::value_context(value_context& other)
 {
     heap = other.heap;
-    void* sandbox = JS_GetContextOpaque(other.ctx);
     ctx = JS_NewContext(heap);
-    JS_SetContextOpaque(ctx, sandbox);
+
+    init_context(ctx, other.ctx);
 
     context_owner = true;
 }
 
 js_quickjs::value_context::value_context()
 {
-    sandbox_data* leaked_data = new sandbox_data;
-
-    //heap = JS_NewRuntime2();
     heap = JS_NewRuntime();
     ctx = JS_NewContext(heap);
-    JS_SetContextOpaque(ctx, (void*)leaked_data);
+
+    init_heap(ctx);
 
     runtime_owner = true;
     context_owner = true;
