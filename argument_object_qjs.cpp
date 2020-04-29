@@ -6,11 +6,18 @@ struct heap_stash
 {
     sandbox_data* sandbox = nullptr;
     JSValue heap_stash_value;
+    JSContext* ctx = nullptr;
 
     heap_stash(JSContext* global)
     {
         sandbox = new sandbox_data;
         heap_stash_value = JS_NewObject(global);
+        ctx = global;
+    }
+
+    ~heap_stash()
+    {
+        JS_FreeValue(ctx, heap_stash_value);
     }
 };
 
@@ -18,10 +25,17 @@ struct global_stash
 {
     JSValue global_stash_value;
     heap_stash* heap = nullptr;
+    JSContext* ctx = nullptr;
 
-    global_stash(JSContext* ctx)
+    global_stash(JSContext* _ctx)
     {
+        ctx = _ctx;
         global_stash_value = JS_NewObject(ctx);
+    }
+
+    ~global_stash()
+    {
+        JS_FreeValue(ctx, global_stash_value);
     }
 };
 
@@ -76,7 +90,16 @@ js_quickjs::value_context::~value_context()
 {
     if(context_owner)
     {
+        global_stash* stash = (global_stash*)JS_GetContextOpaque(ctx);
+
+        if(runtime_owner)
+        {
+            delete stash->heap;
+        }
+
         JS_FreeContext(ctx);
+
+        delete stash;
     }
 
     if(runtime_owner)
@@ -1016,6 +1039,6 @@ struct quickjs_tester
 
 namespace
 {
-    //quickjs_tester qjstester;
+    quickjs_tester qjstester;
 }
 
