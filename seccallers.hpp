@@ -6,11 +6,7 @@
 #include <vector>
 #include <utility>
 
-namespace js
-{
-    struct value_context;
-    struct value;
-}
+#include "argument_object.hpp"
 
 struct shared_duk_worker_state;
 

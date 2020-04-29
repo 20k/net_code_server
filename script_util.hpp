@@ -8,13 +8,7 @@
 #include <iostream>
 #include "script_metadata.hpp"
 
-//#include <libncclient/nc_util.hpp>
-//#include "duk_object_functions.hpp"
-
-namespace js
-{
-    struct value_context;
-}
+#include "argument_object.hpp"
 
 inline
 std::string base_scripts_string = "./scripts/";

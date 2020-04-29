@@ -103,7 +103,7 @@ js_quickjs::value js_quickjs::value_context::get_current_this()
         return this_stack.back();
 
     js_quickjs::value val(*this);
-    val = js::undefined;
+    val = js_quickjs::undefined;
 
     return val;
 }
@@ -620,11 +620,11 @@ js_quickjs::value& js_quickjs::value::operator=(const value& right)
     return *this;
 }
 
-js_quickjs::value& js_quickjs::value::operator=(js::undefined_t)
+js_quickjs::value& js_quickjs::value::operator=(js_quickjs::undefined_t)
 {
     qstack_manager m(*this);
 
-    val = qarg::push(ctx, js::undefined);
+    val = qarg::push(ctx, js_quickjs::undefined);
 
     return *this;
 }
@@ -638,7 +638,7 @@ js_quickjs::value& js_quickjs::value::operator=(const nlohmann::json& in)
     return *this;
 }
 
-js_quickjs::value& js_quickjs::value::operator=(quick_funcptr_t in)
+js_quickjs::value& js_quickjs::value::operator=(js_quickjs::funcptr_t in)
 {
     qstack_manager m(*this);
 
@@ -859,7 +859,7 @@ void* js_quickjs::get_sandbox_data_impl(js_quickjs::value_context& vctx)
     return (void*)stash->heap->sandbox;
 }
 
-js_quickjs::value js_quickjs::add_getter(js_quickjs::value& base, const std::string& key, quick_funcptr_t func)
+js_quickjs::value js_quickjs::add_getter(js_quickjs::value& base, const std::string& key, js_quickjs::funcptr_t func)
 {
     js_quickjs::value val(*base.vctx);
     val = func;
@@ -873,7 +873,7 @@ js_quickjs::value js_quickjs::add_getter(js_quickjs::value& base, const std::str
     return val;
 }
 
-js_quickjs::value js_quickjs::add_setter(js_quickjs::value& base, const std::string& key, quick_funcptr_t func)
+js_quickjs::value js_quickjs::add_setter(js_quickjs::value& base, const std::string& key, js_quickjs::funcptr_t func)
 {
     js_quickjs::value val(*base.vctx);
     val = func;
@@ -1016,6 +1016,6 @@ struct quickjs_tester
 
 namespace
 {
-    quickjs_tester qjstester;
+    //quickjs_tester qjstester;
 }
 

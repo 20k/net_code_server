@@ -14,8 +14,6 @@
 #include "duktape.h"
 #include "argument_object_common.hpp"
 
-using quick_funcptr_t = JSCFunction;
-
 namespace js_quickjs
 {
     struct value;
@@ -38,6 +36,11 @@ namespace js_quickjs
         void pop_this();
         value get_current_this();
     };
+
+    using funcptr_t = JSCFunction;
+
+    struct undefined_t{};
+    const static inline undefined_t undefined;
 }
 
 namespace qarg
@@ -115,10 +118,10 @@ namespace qarg
         return obj;
     }
 
-    JSValue push(JSContext* ctx, quick_funcptr_t fptr);
+    JSValue push(JSContext* ctx, js_quickjs::funcptr_t fptr);
 
     inline
-    JSValue push(JSContext* ctx, const js::undefined_t&)
+    JSValue push(JSContext* ctx, const js_quickjs::undefined_t&)
     {
         return JS_UNDEFINED;
     }
@@ -147,7 +150,7 @@ namespace qarg
     JSValue push(JSContext* ctx, const js_quickjs::value& in);
 
     inline
-    JSValue push(JSContext* ctx, quick_funcptr_t in)
+    JSValue push(JSContext* ctx, js_quickjs::funcptr_t in)
     {
         return JS_NewCFunction(ctx, in, "", 0);
     }
@@ -375,7 +378,7 @@ namespace js_quickjs
         value& operator=(std::nullopt_t v);
         value& operator=(const value& right);
         //value& operator=(value&& right);
-        value& operator=(js::undefined_t);
+        value& operator=(js_quickjs::undefined_t);
         value& operator=(const nlohmann::json&);
 
         template<typename T>
@@ -398,7 +401,7 @@ namespace js_quickjs
             return *this;
         }
 
-        value& operator=(quick_funcptr_t fptr);
+        value& operator=(js_quickjs::funcptr_t fptr);
         value& operator=(const JSValue& val);
 
         value& set_ptr(std::nullptr_t)
@@ -609,7 +612,7 @@ namespace js_quickjs
             std::apply(func, tup);
 
             js_quickjs::value val(vctx);
-            val = js::undefined;
+            val = js_quickjs::undefined;
 
             val.release();
 
@@ -666,8 +669,8 @@ namespace js_quickjs
         return (T*)get_sandbox_data_impl(vctx);
     }
 
-    value add_getter(value& base, const std::string& key, quick_funcptr_t func);
-    value add_setter(value& base, const std::string& key, quick_funcptr_t func);
+    value add_getter(value& base, const std::string& key, js_quickjs::funcptr_t func);
+    value add_setter(value& base, const std::string& key, js_quickjs::funcptr_t func);
 
     std::pair<bool, value> compile(value_context& vctx, const std::string& data);
     std::pair<bool, value> compile(value_context& vctx, const std::string& name, const std::string& data);
@@ -681,6 +684,64 @@ namespace js_quickjs
     value from_cbor(value_context& vctx, const std::vector<uint8_t>& cb);
 
     void dump_stack(value_context& vctx);
+
+    template<typename T>
+    inline
+    value make_value(value_context& vctx, const T& t)
+    {
+        value v(vctx);
+        v = t;
+        return v;
+    }
+
+    ///this is a convention, not a formal type
+    template<typename T>
+    inline
+    value make_error(value_context& vctx, const T& msg)
+    {
+        value v(vctx);
+        v["ok"] = false;
+        v["msg"] = msg;
+
+        return v;
+    }
+
+    inline
+    value make_success(value_context& vctx)
+    {
+        value v(vctx);
+        v["ok"] = true;
+
+        return v;
+    }
+
+    template<typename T>
+    inline
+    value make_success(value_context& vctx, const T& msg)
+    {
+        value v(vctx);
+        v["ok"] = true;
+        v["msg"] = msg;
+
+        return v;
+    }
+
+    template<typename T, typename U>
+    inline
+    value add_key_value(value& base, const T& key, const U& val)
+    {
+        assert(base.vctx);
+
+        value nval(*base.vctx, base, key);
+        nval = val;
+        return nval;
+    }
+
+    inline
+    void empty_function(value_context*)
+    {
+
+    }
 }
 
 #endif // ARGUMENT_OBJECT_QJS_HPP_INCLUDED

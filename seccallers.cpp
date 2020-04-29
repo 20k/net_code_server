@@ -787,7 +787,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
     else
     {
         ///might as well be void*
-        js_funcptr_t erased_funcptr = special_scripts::get_special_user_function(script.c_shim_name);
+        js::funcptr_t erased_funcptr = special_scripts::get_special_user_function(script.c_shim_name);
 
         js::value func = js::make_value(*vctx, erased_funcptr);
 

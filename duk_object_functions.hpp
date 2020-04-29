@@ -8,11 +8,7 @@
 #include <vector>
 #include <string_view>
 #include <nlohmann/json.hpp>
-
-namespace js
-{
-    struct value_context;
-}
+#include "argument_object.hpp"
 
 int32_t get_thread_id(js::value_context& vctx);
 

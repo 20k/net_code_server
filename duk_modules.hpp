@@ -3,11 +3,7 @@
 
 #include <string>
 #include <map>
-
-namespace js
-{
-    struct value_context;
-}
+#include "argument_object.hpp"
 
 void dukx_inject_modules(js::value_context& vctx);
 void init_module_cache();

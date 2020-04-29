@@ -13,15 +13,20 @@
 
 using context_t = duk_context;
 
-namespace js
+namespace js_duk
 {
     struct value;
+
+    using funcptr_t = duk_ret_t(*)(duk_context*);
+
+    struct undefined_t{};
+    const static inline undefined_t undefined;
 }
 
 struct stack_manage
 {
-    js::value& sh;
-    stack_manage(js::value& in);
+    js_duk::value& sh;
+    stack_manage(js_duk::value& in);
     ~stack_manage();
 };
 
@@ -58,13 +63,13 @@ namespace arg
     void dukx_push(duk_context* ctx, const std::vector<T>& v);
     template<typename T, typename U>
     void dukx_push(duk_context* ctx, const std::map<T, U>& v);
-    void dukx_push(duk_context* ctx, js_funcptr_t fptr);
-    void dukx_push(duk_context* ctx, const js::undefined_t&);
+    void dukx_push(duk_context* ctx, js_duk::funcptr_t fptr);
+    void dukx_push(duk_context* ctx, const js_duk::undefined_t&);
     void dukx_push(duk_context* ctx, const nlohmann::json& in);
     template<typename T>
     void dukx_push(duk_context* ctx, T* in);
     void dukx_push(duk_context* ctx, std::nullptr_t in);
-    void dukx_push(duk_context* ctx, const js::value& in);
+    void dukx_push(duk_context* ctx, const js_duk::value& in);
 
     void dukx_get(duk_context* ctx, int idx, std::string& out);
     void dukx_get(duk_context* ctx, int idx, int64_t& out);
@@ -149,13 +154,13 @@ namespace arg
     }
 
     inline
-    void dukx_push(duk_context* ctx, js_funcptr_t fptr)
+    void dukx_push(duk_context* ctx, js_duk::funcptr_t fptr)
     {
         duk_push_c_function(ctx, fptr, DUK_VARARGS);
     }
 
     inline
-    void dukx_push(duk_context* ctx, const js::undefined_t&)
+    void dukx_push(duk_context* ctx, const js_duk::undefined_t&)
     {
         duk_push_undefined(ctx);
     }
@@ -182,7 +187,7 @@ namespace arg
         duk_push_pointer(ctx, nullptr);
     }
 
-    void dukx_push(duk_context* ctx, const js::value& val);
+    void dukx_push(duk_context* ctx, const js_duk::value& val);
 
     inline
     void dukx_get(duk_context* ctx, int idx, std::string& out)
@@ -332,7 +337,7 @@ namespace arg
     }
 }
 
-namespace js
+namespace js_duk
 {
     struct value_context
     {
@@ -386,7 +391,7 @@ namespace js
         template<typename T>
         value add(const std::string& key, const T& val)
         {
-            auto jval = js::value(*vctx, *this, key);
+            auto jval = js_duk::value(*vctx, *this, key);
             jval = val;
             return jval;
         }
@@ -394,7 +399,7 @@ namespace js
         template<typename T>
         value add_hidden(const std::string& key, const T& val)
         {
-            auto jval = js::value(*vctx, *this, "\xFF" + key);
+            auto jval = js_duk::value(*vctx, *this, "\xFF" + key);
             jval = val;
             return jval;
         }
@@ -423,7 +428,7 @@ namespace js
         value& operator=(std::nullopt_t v);
         value& operator=(const value& right);
         value& operator=(value&& right);
-        value& operator=(undefined_t);
+        value& operator=(js_duk::undefined_t);
         value& operator=(const nlohmann::json&);
 
         template<typename T>
@@ -446,7 +451,7 @@ namespace js
             return *this;
         }
 
-        value& operator=(js_funcptr_t fptr);
+        value& operator=(js_duk::funcptr_t fptr);
 
         value& set_ptr(std::nullptr_t)
         {
@@ -618,14 +623,14 @@ namespace js
 
         bool success = duk_pcall(func.ctx, num) == 0;
 
-        return {success, js::value(*func.vctx, -1)};
+        return {success, js_duk::value(*func.vctx, -1)};
     }
 
     template<typename I, typename... T>
     inline
     std::pair<bool, value> call_prop(value& obj, const I& key, T&&... vals)
     {
-        js::value func = obj[key];
+        js_duk::value func = obj[key];
 
         return call(func, std::forward<T>(vals)...);
     }
@@ -633,7 +638,7 @@ namespace js
     template<typename T, typename... U>
     constexpr bool is_first_context()
     {
-        return std::is_same_v<T, js::value_context*>;
+        return std::is_same_v<T, js_duk::value_context*>;
     }
 
     template<typename T, typename... U>
@@ -653,9 +658,9 @@ namespace js
 
     template<typename T, int N>
     inline
-    T get_element(js::value_context& vctx, int stack_base)
+    T get_element(js_duk::value_context& vctx, int stack_base)
     {
-        constexpr bool is_first_value = std::is_same_v<T, js::value_context*> && N == 0;
+        constexpr bool is_first_value = std::is_same_v<T, js_duk::value_context*> && N == 0;
 
         if constexpr(is_first_value)
         {
@@ -664,9 +669,9 @@ namespace js
 
         if constexpr(!is_first_value)
         {
-            js::value val(vctx, stack_base + N);
+            js_duk::value val(vctx, stack_base + N);
 
-            if constexpr(!std::is_same_v<T, js::value>)
+            if constexpr(!std::is_same_v<T, js_duk::value>)
                 val.release();
 
             return val;
@@ -675,7 +680,7 @@ namespace js
 
     template<typename... U, std::size_t... Is>
     inline
-    std::tuple<U...> get_args(js::value_context& vctx, std::index_sequence<Is...>, int stack_base)
+    std::tuple<U...> get_args(js_duk::value_context& vctx, std::index_sequence<Is...>, int stack_base)
     {
         return std::make_tuple(get_element<U, Is>(vctx, stack_base)...);
     }
@@ -684,7 +689,7 @@ namespace js
     inline
     duk_ret_t js_safe_function_decomposed(duk_context* ctx, void* udata, T(*func)(U...))
     {
-        js::value_context vctx(ctx);
+        js_duk::value_context vctx(ctx);
 
         int stack_offset = sizeof...(U);
 
@@ -703,14 +708,14 @@ namespace js
         {
             auto rval = std::apply(func, tup);
 
-            if constexpr(std::is_same_v<T, js::value>)
+            if constexpr(std::is_same_v<T, js_duk::value>)
             {
                 rval.release();
                 return 1;
             }
             else
             {
-                js::value v(vctx);
+                js_duk::value v(vctx);
                 v = rval;
 
                 v.release(); ///intentionally leave on duktape stack
@@ -743,8 +748,8 @@ namespace js
 
         if(duk_safe_call(ctx, &js_safe_function<func>, nullptr, nargs, nrets) != DUK_EXEC_SUCCESS)
         {
-            js::value_context vctx(ctx);
-            js::value vc(vctx, -1);
+            js_duk::value_context vctx(ctx);
+            js_duk::value vc(vctx, -1);
             vc.release();
 
             throw std::runtime_error("Bad function call for duktape " + (std::string)vc);
@@ -760,12 +765,12 @@ namespace js
         return js_decompose<func>(ctx);
     }
 
-    js::value get_global(value_context& vctx);
-    void set_global(value_context& vctx, const js::value& val);
-    js::value get_current_function(value_context& vctx);
-    js::value get_this(value_context& vctx);
-    js::value get_heap_stash(value_context& vctx);
-    js::value get_global_stash(value_context& vctx);
+    js_duk::value get_global(value_context& vctx);
+    void set_global(value_context& vctx, const js_duk::value& val);
+    js_duk::value get_current_function(value_context& vctx);
+    js_duk::value get_this(value_context& vctx);
+    js_duk::value get_heap_stash(value_context& vctx);
+    js_duk::value get_global_stash(value_context& vctx);
     void* get_sandbox_data_impl(value_context& vctx);
 
     template<typename T>
@@ -775,19 +780,77 @@ namespace js
         return (T*)get_sandbox_data_impl(vctx);
     }
 
-    js::value add_getter(js::value& base, const std::string& key, js_funcptr_t func);
-    js::value add_setter(js::value& base, const std::string& key, js_funcptr_t func);
+    js_duk::value add_getter(js_duk::value& base, const std::string& key, js_duk::funcptr_t func);
+    js_duk::value add_setter(js_duk::value& base, const std::string& key, js_duk::funcptr_t func);
 
-    std::pair<bool, js::value> compile(js::value_context& vctx, const std::string& data);
-    std::pair<bool, js::value> compile(js::value_context& vctx, const std::string& name, const std::string& data);
-    std::string dump_function(js::value& val);
-    js::value eval(js::value_context& vctx, const std::string& data);
-    js::value xfer_between_contexts(js::value_context& destination, const js::value& val);
+    std::pair<bool, js_duk::value> compile(js_duk::value_context& vctx, const std::string& data);
+    std::pair<bool, js_duk::value> compile(js_duk::value_context& vctx, const std::string& name, const std::string& data);
+    std::string dump_function(js_duk::value& val);
+    js_duk::value eval(js_duk::value_context& vctx, const std::string& data);
+    js_duk::value xfer_between_contexts(js_duk::value_context& destination, const js_duk::value& val);
 
-    js::value make_proxy(js::value& target, js::value& handle);
-    js::value from_cbor(js::value_context& vctx, const std::vector<uint8_t>& cb);
+    js_duk::value make_proxy(js_duk::value& target, js_duk::value& handle);
+    js_duk::value from_cbor(js_duk::value_context& vctx, const std::vector<uint8_t>& cb);
 
-    void dump_stack(js::value_context& vctx);
+    void dump_stack(js_duk::value_context& vctx);
+
+    template<typename T>
+    inline
+    value make_value(value_context& vctx, const T& t)
+    {
+        value v(vctx);
+        v = t;
+        return v;
+    }
+
+    ///this is a convention, not a formal type
+    template<typename T>
+    inline
+    value make_error(value_context& vctx, const T& msg)
+    {
+        value v(vctx);
+        v["ok"] = false;
+        v["msg"] = msg;
+
+        return v;
+    }
+
+    inline
+    value make_success(value_context& vctx)
+    {
+        value v(vctx);
+        v["ok"] = true;
+
+        return v;
+    }
+
+    template<typename T>
+    inline
+    value make_success(value_context& vctx, const T& msg)
+    {
+        value v(vctx);
+        v["ok"] = true;
+        v["msg"] = msg;
+
+        return v;
+    }
+
+    template<typename T, typename U>
+    inline
+    value add_key_value(value& base, const T& key, const U& val)
+    {
+        assert(base.vctx);
+
+        value nval(*base.vctx, base, key);
+        nval = val;
+        return nval;
+    }
+
+    inline
+    void empty_function(value_context*)
+    {
+
+    }
 }
 
 

@@ -5,208 +5,7 @@
 #include "memory_sandbox.hpp"
 #include "argument_object.hpp"
 
-#if 0
-#include <assert.h>
-
-value_object& value_object::operator=(const std::string& v)
-{
-    var = v;
-    return *this;
-}
-
-value_object& value_object::operator=(const char* v)
-{
-    if(v != nullptr)
-        var = std::string(v);
-    else
-        var = "";
-
-    return *this;
-}
-
-value_object& value_object::operator=(int64_t v)
-{
-    var = v;
-    return *this;
-}
-
-value_object& value_object::operator=(double v)
-{
-    var = v;
-    return *this;
-}
-
-value_object& value_object::operator=(const std::vector<value_object>& v)
-{
-    var = v;
-    return *this;
-}
-
-value_object& value_object::operator=(const std::map<value_object, value_object>& v)
-{
-    var = v;
-    return *this;
-}
-
-value_object& value_object::operator=(std::function<value_object(value_object&)> v)
-{
-    var = v;
-    return *this;
-}
-
-value_object& value_object::operator[](int64_t val)
-{
-    if(std::vector<value_object>* pval = std::get_if<std::vector<value_object>>(&var))
-    {
-        assert(pval);
-
-        if(val >= (int64_t)pval->size() || val < 0)
-            throw std::runtime_error("Out of bounds");
-
-        return (*pval)[val];
-    }
-
-    if(std::map<value_object, value_object>* pval = std::get_if<std::map<value_object, value_object>>(&var))
-    {
-        assert(pval);
-
-        value_object vobj;
-        vobj.var = val;
-
-        return pval->at(vobj);
-    }
-
-    throw std::runtime_error("Not map or vector");
-}
-
-value_object& value_object::operator[](const std::string& str)
-{
-    if(std::map<value_object, value_object>* pval = std::get_if<std::map<value_object, value_object>>(&var))
-    {
-        value_object vobj;
-        vobj.var = str;
-
-        return pval->at(vobj);
-    }
-
-    throw std::runtime_error("Not map");
-}
-
-value_object::operator std::string()
-{
-    return std::get<0>(var);
-}
-
-value_object::operator int64_t()
-{
-    return std::get<1>(var);
-}
-
-value_object::operator double()
-{
-    return std::get<2>(var);
-}
-
-value_object::operator std::vector<value_object>()
-{
-    return std::get<3>(var);
-}
-
-value_object::operator std::map<value_object, value_object>()
-{
-    return std::get<4>(var);
-}
-
-template<typename T, typename U>
-size_t get_address(std::function<U(T&)> f)
-{
-    typedef U(function_type)(T&);
-    function_type** fptr = f.template target<function_type*>();
-    return (size_t)*fptr;
-}
-
-#define CHECK_INDEX(i) if(l.var.index() == i) {return (std::get<i>(l.var) < std::get<i>(r.var));}
-
-bool operator<(const value_object& l, const value_object& r)
-{
-    if(l.var.index() < r.var.index())
-        return true;
-
-    if(l.var.index() > r.var.index())
-        return false;
-
-    if(l.var.index() != 6)
-    {
-        CHECK_INDEX(0);
-        CHECK_INDEX(1);
-        CHECK_INDEX(2);
-        CHECK_INDEX(3);
-        CHECK_INDEX(4);
-        CHECK_INDEX(5);
-
-        throw std::runtime_error("Error in < for value object");
-    }
-    else
-    {
-        return get_address(std::get<6>(l.var)) < get_address(std::get<6>(r.var));
-    }
-
-    //return l.var < r.var;
-}
-
-argument_object::argument_object(context_t* in) : ctx(in)
-{
-
-}
-
-struct tester
-{
-    tester()
-    {
-        printf("Value object tests\n");
-
-        value_object vobj = (int64_t)5;
-        value_object v2 = (int64_t)6;
-
-        assert(vobj < v2);
-
-        int64_t val = vobj;
-
-        assert(val == 5);
-        assert(val != 6);
-
-        int64_t val2 = v2;
-
-        assert(val2 == 6);
-
-        value_object sobj = "hello";
-
-        std::string found = sobj;
-
-        assert(found == "hello");
-
-        printf("Finished value object tests\n");
-    }
-};
-
-namespace
-{
-    tester t;
-}
-#endif // 0
-
-/*js::value::value(duk_context* _ctx, int _idx)
-{
-    duk_idx_t thr_idx = duk_push_thread(_ctx);
-    ctx = duk_get_context(_ctx, thr_idx);
-
-    idx = 0;
-
-    duk_dup(ctx, -1 + _idx);
-    duk_xmove_top(ctx, _ctx, 1);
-}*/
-
-void arg::dukx_push(duk_context* ctx, const js::value& val)
+void arg::dukx_push(duk_context* ctx, const js_duk::value& val)
 {
     if(val.idx == -1)
     {
@@ -226,25 +25,25 @@ duk_context* create_sandbox_heap()
     return duk_create_heap(sandbox_alloc, sandbox_realloc, sandbox_free, leaked_data, sandbox_fatal);
 }
 
-js::value_context::value_context(context_t* _ctx) : ctx(_ctx)
+js_duk::value_context::value_context(context_t* _ctx) : ctx(_ctx)
 {
 
 }
 
-js::value_context::value_context(js::value_context& octx) : parent_context(&octx)
+js_duk::value_context::value_context(js_duk::value_context& octx) : parent_context(&octx)
 {
     duk_idx_t fidx = duk_push_thread_new_globalenv(octx.ctx);
     ctx = duk_get_context(octx.ctx, fidx);
     parent_idx = fidx;
 }
 
-js::value_context::value_context()
+js_duk::value_context::value_context()
 {
     ctx = create_sandbox_heap();
     owner = true;
 }
 
-js::value_context::~value_context()
+js_duk::value_context::~value_context()
 {
     if(parent_context != nullptr)
     {
@@ -257,7 +56,7 @@ js::value_context::~value_context()
     }
 }
 
-void js::value_context::free(int idx)
+void js_duk::value_context::free(int idx)
 {
     assert(idx >= 0);
 
@@ -293,7 +92,7 @@ void js::value_context::free(int idx)
     free_stack.resize(duk_get_top(ctx));
 }
 
-stack_manage::stack_manage(js::value& in) : sh(in)
+stack_manage::stack_manage(js_duk::value& in) : sh(in)
 {
     if(sh.indices.index() == 0)
     {
@@ -337,7 +136,7 @@ stack_manage::~stack_manage()
     }
 }
 
-/*void dukx_push(duk_context* ctx, const js::value& v)
+/*void dukx_push(duk_context* ctx, const js_duk::value& v)
 {
     if(v.indices.index() == 0)
         duk_dup(ctx, v.idx);
@@ -352,7 +151,7 @@ stack_manage::~stack_manage()
     }
 }*/
 
-js::value& js::value::operator=(const char* v)
+js_duk::value& js_duk::value::operator=(const char* v)
 {
     stack_manage m(*this);
 
@@ -361,7 +160,7 @@ js::value& js::value::operator=(const char* v)
     return *this;
 }
 
-js::value& js::value::operator=(const std::string& v)
+js_duk::value& js_duk::value::operator=(const std::string& v)
 {
     stack_manage m(*this);
 
@@ -370,7 +169,7 @@ js::value& js::value::operator=(const std::string& v)
     return *this;
 }
 
-js::value& js::value::operator=(int64_t v)
+js_duk::value& js_duk::value::operator=(int64_t v)
 {
     stack_manage m(*this);
 
@@ -379,7 +178,7 @@ js::value& js::value::operator=(int64_t v)
     return *this;
 }
 
-js::value& js::value::operator=(int v)
+js_duk::value& js_duk::value::operator=(int v)
 {
     stack_manage m(*this);
 
@@ -388,7 +187,7 @@ js::value& js::value::operator=(int v)
     return *this;
 }
 
-js::value& js::value::operator=(double v)
+js_duk::value& js_duk::value::operator=(double v)
 {
     stack_manage m(*this);
 
@@ -397,7 +196,7 @@ js::value& js::value::operator=(double v)
     return *this;
 }
 
-js::value& js::value::operator=(bool v)
+js_duk::value& js_duk::value::operator=(bool v)
 {
     stack_manage m(*this);
 
@@ -406,7 +205,7 @@ js::value& js::value::operator=(bool v)
     return *this;
 }
 
-js::value& js::value::operator=(std::nullopt_t t)
+js_duk::value& js_duk::value::operator=(std::nullopt_t t)
 {
     if(idx == -1)
         return *this;
@@ -436,7 +235,7 @@ js::value& js::value::operator=(std::nullopt_t t)
     return *this;
 }
 
-js::value& js::value::operator=(const value& right)
+js_duk::value& js_duk::value::operator=(const value& right)
 {
     if(idx == -1 && right.idx == -1)
         return *this;
@@ -471,7 +270,7 @@ js::value& js::value::operator=(const value& right)
     return *this;
 }
 
-js::value& js::value::operator=(js_funcptr_t fptr)
+js_duk::value& js_duk::value::operator=(js_duk::funcptr_t fptr)
 {
     stack_manage m(*this);
 
@@ -480,16 +279,16 @@ js::value& js::value::operator=(js_funcptr_t fptr)
     return *this;
 }
 
-js::value& js::value::operator=(js::undefined_t)
+js_duk::value& js_duk::value::operator=(js_duk::undefined_t)
 {
     stack_manage m(*this);
 
-    arg::dukx_push(ctx, js::undefined);
+    arg::dukx_push(ctx, js_duk::undefined);
 
     return *this;
 }
 
-js::value& js::value::operator=(const nlohmann::json& in)
+js_duk::value& js_duk::value::operator=(const nlohmann::json& in)
 {
     stack_manage m(*this);
 
@@ -498,7 +297,7 @@ js::value& js::value::operator=(const nlohmann::json& in)
     return *this;
 }
 
-js::value::value(const js::value& value)
+js_duk::value::value(const js_duk::value& value)
 {
     vctx = value.vctx;
     ctx = value.ctx;
@@ -509,12 +308,12 @@ js::value::value(const js::value& value)
     idx = duk_get_top_index(ctx);
 }
 
-js::value::value(js::value_context& vctx, const value& other) : js::value::value(other)
+js_duk::value::value(js_duk::value_context& vctx, const value& other) : js_duk::value::value(other)
 {
 
 }
 
-js::value::value(js::value&& other)
+js_duk::value::value(js_duk::value&& other)
 {
     if(other.released)
         throw std::runtime_error("Attempted to move from a released value");
@@ -528,7 +327,7 @@ js::value::value(js::value&& other)
     other.released = true;
 }
 
-js::value& js::value::operator=(js::value&& other)
+js_duk::value& js_duk::value::operator=(js_duk::value&& other)
 {
     if(other.released)
         throw std::runtime_error("Attempted to move from a released value");
@@ -549,12 +348,12 @@ js::value& js::value::operator=(js::value&& other)
     return *this;
 }
 
-js::value::value(js::value_context& _vctx) : vctx(&_vctx), ctx(_vctx.ctx)
+js_duk::value::value(js_duk::value_context& _vctx) : vctx(&_vctx), ctx(_vctx.ctx)
 {
     idx = duk_push_object(ctx);
 }
 
-js::value::value(js::value_context& _vctx, int _idx) : vctx(&_vctx), ctx(_vctx.ctx), idx(_idx)
+js_duk::value::value(js_duk::value_context& _vctx, int _idx) : vctx(&_vctx), ctx(_vctx.ctx), idx(_idx)
 {
     if(idx < 0)
     {
@@ -565,7 +364,7 @@ js::value::value(js::value_context& _vctx, int _idx) : vctx(&_vctx), ctx(_vctx.c
     }
 }
 
-js::value::value(js::value_context& _vctx, const js::value& base, const std::string& key) : vctx(&_vctx), ctx(_vctx.ctx)
+js_duk::value::value(js_duk::value_context& _vctx, const js_duk::value& base, const std::string& key) : vctx(&_vctx), ctx(_vctx.ctx)
 {
     parent_idx = base.idx;
     indices = key;
@@ -584,7 +383,7 @@ js::value::value(js::value_context& _vctx, const js::value& base, const std::str
         throw std::runtime_error("bad idx < 0");
 }
 
-js::value::value(js::value_context& _vctx, const js::value& base, int key) : vctx(&_vctx), ctx(_vctx.ctx)
+js_duk::value::value(js_duk::value_context& _vctx, const js_duk::value& base, int key) : vctx(&_vctx), ctx(_vctx.ctx)
 {
     parent_idx = base.idx;
     indices = key;
@@ -603,7 +402,7 @@ js::value::value(js::value_context& _vctx, const js::value& base, int key) : vct
         throw std::runtime_error("bad idx < 0");
 }
 
-js::value::value(js::value_context& _vctx, const js::value& base, const char* key) : vctx(&_vctx), ctx(_vctx.ctx)
+js_duk::value::value(js_duk::value_context& _vctx, const js_duk::value& base, const char* key) : vctx(&_vctx), ctx(_vctx.ctx)
 {
     parent_idx = base.idx;
     indices = std::string(key);
@@ -622,7 +421,7 @@ js::value::value(js::value_context& _vctx, const js::value& base, const char* ke
         throw std::runtime_error("bad idx < 0");
 }
 
-js::value::~value()
+js_duk::value::~value()
 {
     if(idx != -1 && !released)
     {
@@ -630,7 +429,7 @@ js::value::~value()
     }
 }
 
-std::string js::value::to_json()
+std::string js_duk::value::to_json()
 {
     if(idx == -1)
         return "{}";
@@ -652,7 +451,7 @@ std::string js::value::to_json()
     return ret;
 }
 
-std::vector<uint8_t> js::value::to_cbor()
+std::vector<uint8_t> js_duk::value::to_cbor()
 {
     if(idx == -1)
         throw std::runtime_error("Empty value for cbor");
@@ -676,28 +475,28 @@ std::vector<uint8_t> js::value::to_cbor()
     return ret;
 }
 
-void js::value::stringify_parse()
+void js_duk::value::stringify_parse()
 {
     duk_json_encode(ctx, idx);
     duk_json_decode(ctx, idx);
 }
 
-js::value js::value::operator[](int64_t val)
+js_duk::value js_duk::value::operator[](int64_t val)
 {
-    return js::value(*vctx, *this, val);
+    return js_duk::value(*vctx, *this, val);
 }
 
-js::value js::value::operator[](const std::string& val)
+js_duk::value js_duk::value::operator[](const std::string& val)
 {
-    return js::value(*vctx, *this, val);
+    return js_duk::value(*vctx, *this, val);
 }
 
-js::value js::value::operator[](const char* val)
+js_duk::value js_duk::value::operator[](const char* val)
 {
-    return js::value(*vctx, *this, val);
+    return js_duk::value(*vctx, *this, val);
 }
 
-bool js::value::has(const std::string& key) const
+bool js_duk::value::has(const std::string& key) const
 {
     if(idx == -1)
         return false;
@@ -708,7 +507,7 @@ bool js::value::has(const std::string& key) const
     return duk_has_prop_lstring(ctx, idx, key.c_str(), key.size());
 }
 
-bool js::value::has(int key) const
+bool js_duk::value::has(int key) const
 {
     if(idx == -1)
         return false;
@@ -719,7 +518,7 @@ bool js::value::has(int key) const
     return duk_has_prop_index(ctx, idx, key);
 }
 
-bool js::value::has(const char* key) const
+bool js_duk::value::has(const char* key) const
 {
     if(idx == -1)
         return false;
@@ -730,7 +529,7 @@ bool js::value::has(const char* key) const
     return duk_has_prop_string(ctx, idx, key);
 }
 
-bool js::value::has_hidden(const std::string& key) const
+bool js_duk::value::has_hidden(const std::string& key) const
 {
     if(idx == -1)
        return false;
@@ -743,51 +542,51 @@ bool js::value::has_hidden(const std::string& key) const
     return has(rkey);
 }
 
-js::value js::value::get(const std::string& key)
+js_duk::value js_duk::value::get(const std::string& key)
 {
     //if(!has(key))
-    //    return js::make_value(*vctx, std::nullopt);
+    //    return js_duk::make_value(*vctx, std::nullopt);
 
-    return js::value(*vctx, *this, key);
+    return js_duk::value(*vctx, *this, key);
 }
 
-js::value js::value::get(int key)
+js_duk::value js_duk::value::get(int key)
 {
     //if(!has(key))
-    //    return js::make_value(*vctx, std::nullopt);
+    //    return js_duk::make_value(*vctx, std::nullopt);
 
-    return js::value(*vctx, *this, key);
+    return js_duk::value(*vctx, *this, key);
 }
 
-js::value js::value::get(const char* key)
+js_duk::value js_duk::value::get(const char* key)
 {
     //if(!has(key))
-    //    return js::make_value(*vctx, std::nullopt);
+    //    return js_duk::make_value(*vctx, std::nullopt);
 
-    return js::value(*vctx, *this, key);
+    return js_duk::value(*vctx, *this, key);
 }
 
-js::value js::value::get_hidden(const std::string& key)
+js_duk::value js_duk::value::get_hidden(const std::string& key)
 {
     //if(!has_hidden(key))
-    //    return js::make_value(*vctx, std::nullopt);
+    //    return js_duk::make_value(*vctx, std::nullopt);
 
     std::string rkey = "\xFF" + key;
 
-    return js::value(*vctx, *this, rkey);
+    return js_duk::value(*vctx, *this, rkey);
 }
 
-bool js::value::del(const std::string& key)
+bool js_duk::value::del(const std::string& key)
 {
     if(!has(key))
         return false;
 
-    js::value val(*vctx, *this, key);
+    js_duk::value val(*vctx, *this, key);
     val = std::nullopt;
     return true;
 }
 
-bool js::value::is_string()
+bool js_duk::value::is_string()
 {
     if(idx == -1)
         return false;
@@ -795,7 +594,7 @@ bool js::value::is_string()
     return duk_is_string(ctx, idx);
 }
 
-bool js::value::is_number()
+bool js_duk::value::is_number()
 {
     if(idx == -1)
         return false;
@@ -803,7 +602,7 @@ bool js::value::is_number()
     return duk_is_number(ctx, idx);
 }
 
-bool js::value::is_array()
+bool js_duk::value::is_array()
 {
     if(idx == -1)
         return false;
@@ -811,7 +610,7 @@ bool js::value::is_array()
     return duk_is_array(ctx, idx);
 }
 
-bool js::value::is_map()
+bool js_duk::value::is_map()
 {
     if(idx == -1)
         return false;
@@ -819,12 +618,12 @@ bool js::value::is_map()
     return duk_is_object(ctx, idx);
 }
 
-bool js::value::is_empty()
+bool js_duk::value::is_empty()
 {
     return idx == -1;
 }
 
-bool js::value::is_function()
+bool js_duk::value::is_function()
 {
     if(idx == -1)
         return false;
@@ -832,7 +631,7 @@ bool js::value::is_function()
     return duk_is_function(ctx, idx);
 }
 
-bool js::value::is_boolean()
+bool js_duk::value::is_boolean()
 {
     if(idx == -1)
         return false;
@@ -840,7 +639,7 @@ bool js::value::is_boolean()
     return duk_is_boolean(ctx, idx);
 }
 
-bool js::value::is_undefined() const
+bool js_duk::value::is_undefined() const
 {
     if(idx == -1)
         return false;
@@ -858,7 +657,7 @@ bool is_truthy(duk_context* ctx, duk_idx_t idx)
     return success;
 }
 
-bool js::value::is_truthy()
+bool js_duk::value::is_truthy()
 {
     if(idx == -1)
         return false;
@@ -866,7 +665,7 @@ bool js::value::is_truthy()
     return ::is_truthy(ctx, idx);
 }
 
-bool js::value::is_object_coercible()
+bool js_duk::value::is_object_coercible()
 {
     if(idx == -1)
         return false;
@@ -874,7 +673,7 @@ bool js::value::is_object_coercible()
     return duk_is_object_coercible(ctx, idx);
 }
 
-bool js::value::is_object()
+bool js_duk::value::is_object()
 {
     if(idx == -1)
         return false;
@@ -882,70 +681,70 @@ bool js::value::is_object()
     return duk_is_object(ctx, idx);
 }
 
-void js::value::release()
+void js_duk::value::release()
 {
     released = true;
 }
 
-js::value js::get_global(js::value_context& vctx)
+js_duk::value js_duk::get_global(js_duk::value_context& vctx)
 {
     duk_push_global_object(vctx.ctx);
 
-    return js::value(vctx, -1);
+    return js_duk::value(vctx, -1);
 }
 
-void js::set_global(js::value_context& vctx, const js::value& val)
+void js_duk::set_global(js_duk::value_context& vctx, const js_duk::value& val)
 {
     duk_dup(vctx.ctx, val.idx);
     duk_set_global_object(vctx.ctx);
 }
 
-js::value js::get_current_function(js::value_context& vctx)
+js_duk::value js_duk::get_current_function(js_duk::value_context& vctx)
 {
     duk_push_current_function(vctx.ctx);
 
-    return js::value(vctx, -1);
+    return js_duk::value(vctx, -1);
 }
 
-js::value js::get_this(js::value_context& vctx)
+js_duk::value js_duk::get_this(js_duk::value_context& vctx)
 {
     duk_push_this(vctx.ctx);
 
-    return js::value(vctx, -1);
+    return js_duk::value(vctx, -1);
 }
 
-js::value js::get_heap_stash(js::value_context& vctx)
+js_duk::value js_duk::get_heap_stash(js_duk::value_context& vctx)
 {
     duk_push_heap_stash(vctx.ctx);
 
-    return js::value(vctx, -1);
+    return js_duk::value(vctx, -1);
 }
 
-js::value js::get_global_stash(js::value_context& vctx)
+js_duk::value js_duk::get_global_stash(js_duk::value_context& vctx)
 {
     duk_push_global_stash(vctx.ctx);
 
-    return js::value(vctx, -1);
+    return js_duk::value(vctx, -1);
 }
 
-void* js::get_sandbox_data_impl(value_context& vctx)
+void* js_duk::get_sandbox_data_impl(value_context& vctx)
 {
     duk_memory_functions mem_funcs_duk; duk_get_memory_functions(vctx.ctx, &mem_funcs_duk);
     return mem_funcs_duk.udata;
 }
 
-void js::dump_stack(js::value_context& vctx)
+void js_duk::dump_stack(js_duk::value_context& vctx)
 {
     duk_push_context_dump(vctx.ctx);
 
-    js::value val(vctx, -1);
+    js_duk::value val(vctx, -1);
 
     std::cout << "GOT " << (std::string)val << std::endl;
 }
 
-js::value js::add_setter(js::value& base, const std::string& key, js_funcptr_t func)
+js_duk::value js_duk::add_setter(js_duk::value& base, const std::string& key, js_duk::funcptr_t func)
 {
-    js::value val(*base.vctx);
+    js_duk::value val(*base.vctx);
     val = func;
 
     duk_push_lstring(base.ctx, key.c_str(), key.size());
@@ -956,9 +755,9 @@ js::value js::add_setter(js::value& base, const std::string& key, js_funcptr_t f
     return val;
 }
 
-js::value js::add_getter(js::value& base, const std::string& key, js_funcptr_t func)
+js_duk::value js_duk::add_getter(js_duk::value& base, const std::string& key, js_duk::funcptr_t func)
 {
-    js::value val(*base.vctx);
+    js_duk::value val(*base.vctx);
     val = func;
 
     duk_push_lstring(base.ctx, key.c_str(), key.size());
@@ -969,22 +768,22 @@ js::value js::add_getter(js::value& base, const std::string& key, js_funcptr_t f
     return val;
 }
 
-std::pair<bool, js::value> js::compile(js::value_context& vctx, const std::string& data)
+std::pair<bool, js_duk::value> js_duk::compile(js_duk::value_context& vctx, const std::string& data)
 {
     return compile(vctx, data, "test-name");
 }
 
-std::pair<bool, js::value> js::compile(js::value_context& vctx, const std::string& data, const std::string& name)
+std::pair<bool, js_duk::value> js_duk::compile(js_duk::value_context& vctx, const std::string& data, const std::string& name)
 {
     duk_push_string(vctx.ctx, data.c_str());
     duk_push_string(vctx.ctx, name.c_str());
 
     bool success = duk_pcompile(vctx.ctx, DUK_COMPILE_EVAL) == 0;
 
-    return {success, js::value(vctx, -1)};
+    return {success, js_duk::value(vctx, -1)};
 }
 
-std::string js::dump_function(js::value& val)
+std::string js_duk::dump_function(js_duk::value& val)
 {
     if(!val.is_function())
         throw std::runtime_error("Tried to dump not a function");
@@ -1001,14 +800,14 @@ std::string js::dump_function(js::value& val)
     return buf;
 }
 
-js::value js::eval(js::value_context& vctx, const std::string& data)
+js_duk::value js_duk::eval(js_duk::value_context& vctx, const std::string& data)
 {
     duk_eval_string(vctx.ctx, data.c_str());
 
-    return js::value(vctx, -1);
+    return js_duk::value(vctx, -1);
 }
 
-js::value js::xfer_between_contexts(js::value_context& destination, const js::value& val)
+js_duk::value js_duk::xfer_between_contexts(js_duk::value_context& destination, const js_duk::value& val)
 {
     if(destination.ctx == val.ctx)
         throw std::runtime_error("Bad same contexts");
@@ -1017,10 +816,10 @@ js::value js::xfer_between_contexts(js::value_context& destination, const js::va
 
     duk_xmove_top(destination.ctx, val.ctx, 1);
 
-    return js::value(destination, -1);
+    return js_duk::value(destination, -1);
 }
 
-void js::value::pack()
+void js_duk::value::pack()
 {
     if(idx <= 0)
         return;
@@ -1053,17 +852,17 @@ void js::value::pack()
     idx = cidx;
 }
 
-js::value js::make_proxy(js::value& target, js::value& handle)
+js_duk::value js_duk::make_proxy(js_duk::value& target, js_duk::value& handle)
 {
     duk_dup(target.ctx, target.idx);
     duk_dup(handle.ctx, handle.idx);
 
     duk_push_proxy(target.ctx, 0);
 
-    return js::value(*target.vctx, -1);
+    return js_duk::value(*target.vctx, -1);
 }
 
-js::value js::from_cbor(js::value_context& vctx, const std::vector<uint8_t>& cb)
+js_duk::value js_duk::from_cbor(js_duk::value_context& vctx, const std::vector<uint8_t>& cb)
 {
     if(cb.size() == 0)
         throw std::runtime_error("0 byte long cbor array");
@@ -1079,7 +878,7 @@ js::value js::from_cbor(js::value_context& vctx, const std::vector<uint8_t>& cb)
 
     duk_cbor_decode(vctx.ctx, -1, 0);
 
-    return js::value(vctx, -1);
+    return js_duk::value(vctx, -1);
 }
 
 void test_func()
@@ -1092,14 +891,14 @@ void test_func_with_args(int one, std::string two)
 
 }
 
-void test_set(js::value_context* vctx, js::value val)
+void test_set(js_duk::value_context* vctx, js_duk::value val)
 {
     std::cout << "GOT " << (std::string)val << std::endl;
 }
 
-js::value test_get(js::value_context* vctx)
+js_duk::value test_get(js_duk::value_context* vctx)
 {
-    js::value test_ret(*vctx);
+    js_duk::value test_ret(*vctx);
     test_ret = "got";
     return test_ret;
 }
@@ -1111,7 +910,7 @@ std::string test_func_with_return(double one, std::string two)
     return "poopy";
 }
 
-double test_func_with_context(js::value_context* ctx, std::string one, double two)
+double test_func_with_context(js_duk::value_context* ctx, std::string one, double two)
 {
     assert(ctx);
 
@@ -1120,12 +919,12 @@ double test_func_with_context(js::value_context* ctx, std::string one, double tw
     return 256;
 }
 
-js::value test_js_val(js::value_context* ctx, js::value val)
+js_duk::value test_js_val(js_duk::value_context* ctx, js_duk::value val)
 {
-    return js::value(*ctx);
+    return js_duk::value(*ctx);
 }
 
-std::string test_error(js::value_context* vctx, js::value val)
+std::string test_error(js_duk::value_context* vctx, js_duk::value val)
 {
     return "hi";
 }
@@ -1137,17 +936,17 @@ struct js_val_tester
     {
         duk_context* ctx = duk_create_heap_default();
 
-        js::value_context vctx(ctx);
+        js_duk::value_context vctx(ctx);
 
-        js::value val(vctx);
+        js_duk::value val(vctx);
         val = (int64_t)53;
 
         assert((int64_t)val == 53);
 
         assert(duk_get_top(ctx) == 1);
 
-        js::value root(vctx);
-        js::value base(vctx, root, "hello");
+        js_duk::value root(vctx);
+        js_duk::value base(vctx, root, "hello");
         base = (int64_t)53;
 
         assert((int64_t)root["hello"] == 53);
@@ -1161,7 +960,7 @@ struct js_val_tester
 
         duk_put_prop(ctx, -3);
 
-        js::value tobj(vctx, -1);
+        js_duk::value tobj(vctx, -1);
 
         printf("PRETOP %i\n", duk_get_top(ctx));
 
@@ -1187,7 +986,7 @@ struct js_val_tester
         test_object["hithere"] = 12;
         test_object["pooper"] = 55;
 
-        js::value fmap(vctx);
+        js_duk::value fmap(vctx);
         fmap = test_object;
 
         assert((int64_t)fmap["hithere"] == 12);
@@ -1202,18 +1001,18 @@ struct js_val_tester
         assert(duk_get_top(ctx) == 4);
 
         {
-            js::value func(vctx);
-            func = js::function<test_func_with_return>;
+            js_duk::value func(vctx);
+            func = js_duk::function<test_func_with_return>;
 
-            js::value a1(vctx);
+            js_duk::value a1(vctx);
             a1 = 12;
 
-            js::value some_string(vctx);
+            js_duk::value some_string(vctx);
             some_string = "poopersdf";
 
             assert(duk_get_top(ctx) == 7);
 
-            auto [res, retval] = js::call(func, a1, some_string);
+            auto [res, retval] = js_duk::call(func, a1, some_string);
 
             assert(res);
 
@@ -1229,13 +1028,13 @@ struct js_val_tester
         }
 
         {
-            js::value func(vctx);
-            func = js::function<test_func_with_context>;
+            js_duk::value func(vctx);
+            func = js_duk::function<test_func_with_context>;
 
-            js::value a2 = js::make_value(vctx, std::string("hello"));
-            js::value a3 = js::make_value(vctx, 2345.);
+            js_duk::value a2 = js_duk::make_value(vctx, std::string("hello"));
+            js_duk::value a3 = js_duk::make_value(vctx, 2345.);
 
-            auto [res, retvalue] = js::call(func, a2, a3);
+            auto [res, retvalue] = js_duk::call(func, a2, a3);
 
             std::cout << "FOUND " << (std::string)retvalue << std::endl;
 
@@ -1247,12 +1046,12 @@ struct js_val_tester
         }
 
         {
-            js::value func(vctx);
-            func = js::function<test_js_val>;
+            js_duk::value func(vctx);
+            func = js_duk::function<test_js_val>;
 
-            js::value a3 = js::make_value(vctx, "hello");
+            js_duk::value a3 = js_duk::make_value(vctx, "hello");
 
-            auto [res, va] = js::call(func, a3);
+            auto [res, va] = js_duk::call(func, a3);
 
             std::cout << "FOUND2 " << (std::string)va << std::endl;
 
@@ -1260,25 +1059,25 @@ struct js_val_tester
         }
 
         {
-            js::value glob = js::get_global(vctx);
-            js::value func = js::add_key_value(glob, "test_error", js::function<test_error>);
+            js_duk::value glob = js_duk::get_global(vctx);
+            js_duk::value func = js_duk::add_key_value(glob, "test_error", js_duk::function<test_error>);
 
-            js::value a1(vctx);
+            js_duk::value a1(vctx);
             a1 = "asdf";
 
-            auto [res, va] = js::call_prop(glob, "test_error", a1);
+            auto [res, va] = js_duk::call_prop(glob, "test_error", a1);
 
             assert(res);
         }
 
         {
-            js::value glob = js::get_global(vctx);
+            js_duk::value glob = js_duk::get_global(vctx);
 
-            js::add_setter(glob, "test", js::function<test_set>);
-            js::add_getter(glob, "test", js::function<test_get>);
+            js_duk::add_setter(glob, "test", js_duk::function<test_set>);
+            js_duk::add_getter(glob, "test", js_duk::function<test_get>);
 
-            js::eval(vctx, "test = 1;");
-            js::value result = js::eval(vctx, "var hello = test; hello;");
+            js_duk::eval(vctx, "test = 1;");
+            js_duk::value result = js_duk::eval(vctx, "var hello = test; hello;");
 
             assert((std::string)result == "got");
         }
