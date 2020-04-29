@@ -631,14 +631,12 @@ namespace js
     }
 
     template<typename T, typename... U>
-    inline
     constexpr bool is_first_context()
     {
         return std::is_same_v<T, js::value_context*>;
     }
 
     template<typename T, typename... U>
-    inline
     constexpr int num_args(T(*fptr)(U...))
     {
         if constexpr(is_first_context<U...>())
@@ -648,7 +646,6 @@ namespace js
     }
 
     template<typename T, typename... U>
-    inline
     constexpr int num_rets(T(*fptr)(U...))
     {
         return !std::is_same_v<void, T>;

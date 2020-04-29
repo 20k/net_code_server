@@ -7,9 +7,6 @@
 ///this stuff is features, not implementation dependent
 namespace js
 {
-    struct undefined_t{};
-    const static inline undefined_t undefined;
-
     template<typename T>
     inline
     js::value make_value(js::value_context& vctx, const T& t)

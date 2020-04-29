@@ -7,7 +7,8 @@ using js_funcptr_t = duk_ret_t(*)(duk_context*);
 
 namespace js
 {
-    struct undefined_t;
+    struct undefined_t{};
+    const static inline undefined_t undefined;
 }
 
 

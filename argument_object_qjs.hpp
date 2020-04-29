@@ -12,6 +12,7 @@
 #include <nlohmann/json.hpp>
 #include <quickjs/quickjs.h>
 #include "duktape.h"
+#include "argument_object_common.hpp"
 
 using quick_funcptr_t = duk_ret_t(*)(duk_context*);
 
@@ -23,8 +24,10 @@ namespace js_quickjs
     {
         JSRuntime* heap = nullptr;
         JSContext* ctx = nullptr;
-        bool owner = false;
+        bool runtime_owner = false;
+        bool context_owner = false;
 
+        value_context(JSContext* ctx);
         value_context(value_context&);
         value_context();
         ~value_context();
@@ -310,6 +313,8 @@ namespace js_quickjs
         JSValue parent_value = {};
         bool has_value = false;
         bool has_parent = false;
+        bool released = false;
+
         std::variant<std::monostate, int, std::string> indices;
 
         value(const value& other);
@@ -345,6 +350,9 @@ namespace js_quickjs
         bool is_truthy();
         bool is_object_coercible();
         bool is_object();
+
+        ///stop managing element
+        void release();
 
         value& operator=(const char* v);
         value& operator=(const std::string& v);
@@ -487,6 +495,103 @@ namespace js_quickjs
         std::string to_json();
         nlohmann::json to_nlohmann(int stack_depth = 0);
     };
+
+    template<typename T, typename... U>
+    constexpr bool is_first_context()
+    {
+        return std::is_same_v<T, js_quickjs::value_context*>;
+    }
+
+    template<typename T, typename... U>
+    constexpr int num_args(T(*fptr)(U...))
+    {
+        if constexpr(is_first_context<U...>())
+            return sizeof...(U) - 1;
+        else
+            return sizeof...(U);
+    }
+
+    template<typename T, typename... U>
+    constexpr int num_rets(T(*fptr)(U...))
+    {
+        return !std::is_same_v<void, T>;
+    }
+
+    template<typename T, int N>
+    inline
+    T get_element(js_quickjs::value_context& vctx, JSValueConst* argv)
+    {
+        constexpr bool is_first_value = std::is_same_v<T, js_quickjs::value_context*> && N == 0;
+
+        if constexpr(is_first_value)
+        {
+            return &vctx;
+        }
+
+        if constexpr(!is_first_value)
+        {
+            return argv[N];
+        }
+    }
+
+    template<typename... U, std::size_t... Is>
+    inline
+    std::tuple<U...> get_args(js_quickjs::value_context& vctx, std::index_sequence<Is...>, JSValueConst* argv)
+    {
+        return std::make_tuple(get_element<U, Is>(vctx, argv)...);
+    }
+
+    template<typename T, typename... U>
+    inline
+    JSValue js_safe_function_decomposed(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst *argv, T(*func)(U...))
+    {
+        if(argc != num_args(func))
+            throw std::runtime_error("Bad quickjs function");
+
+        js_quickjs::value_context vctx(ctx);
+
+        std::index_sequence_for<U...> iseq;
+
+        auto tup = get_args<U...>(vctx, iseq, argv);
+
+        if constexpr(std::is_same_v<void, T>)
+        {
+            std::apply(func, tup);
+
+            js_quickjs::value val(vctx);
+            val = js::undefined;
+
+            val.release();
+
+            return val.val;
+        }
+        else
+        {
+            auto rval = std::apply(func, tup);
+
+            if constexpr(std::is_same_v<rval, js_quickjs::value>)
+            {
+                rval.release();
+
+                return rval.val;
+            }
+            else
+            {
+                js_quickjs::value val(vctx);
+                val = rval;
+                val.release();
+
+                return val.val;
+            }
+        }
+    }
+
+    template<auto func>
+    inline
+    JSValue function(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
+    {
+        return js_safe_function_decomposed(ctx, this_val, argc, argv, func);
+    }
 }
 
 #endif // ARGUMENT_OBJECT_QJS_HPP_INCLUDED

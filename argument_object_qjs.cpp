@@ -2,12 +2,20 @@
 #include "memory_sandbox.hpp"
 #include "argument_object.hpp"
 
+js_quickjs::value_context::value_context(JSContext* _ctx)
+{
+    ctx = _ctx;
+    heap = JS_GetRuntime(ctx);
+}
+
 js_quickjs::value_context::value_context(value_context& other)
 {
     heap = other.heap;
     void* sandbox = JS_GetContextOpaque(other.ctx);
     ctx = JS_NewContext(heap);
     JS_SetContextOpaque(ctx, sandbox);
+
+    context_owner = true;
 }
 
 js_quickjs::value_context::value_context()
@@ -18,14 +26,19 @@ js_quickjs::value_context::value_context()
     heap = JS_NewRuntime();
     ctx = JS_NewContext(heap);
     JS_SetContextOpaque(ctx, (void*)leaked_data);
-    owner = true;
+
+    runtime_owner = true;
+    context_owner = true;
 }
 
 js_quickjs::value_context::~value_context()
 {
-    JS_FreeContext(ctx);
+    if(context_owner)
+    {
+        JS_FreeContext(ctx);
+    }
 
-    if(owner)
+    if(runtime_owner)
     {
         JS_FreeRuntime(heap);
     }
@@ -102,7 +115,7 @@ js_quickjs::value::value(js_quickjs::value_context& _vctx, const js_quickjs::val
 
 js_quickjs::value::~value()
 {
-    if(has_value)
+    if(!released && has_value)
     {
         JS_FreeValue(ctx, val);
     }
@@ -275,6 +288,11 @@ bool js_quickjs::value::is_object()
         return false;
 
     return JS_IsObject(val);
+}
+
+void js_quickjs::value::release()
+{
+    released = true;
 }
 
 /*
