@@ -599,7 +599,7 @@ bool js_quickjs::value::is_object_coercible()
 
     bool is_sym = JS_IsSymbol(val);
 
-    return is_object() || is_boolean() || is_number() || is_function() || is_sym;
+    return is_object() || is_boolean() || is_number() || is_function() || is_sym || is_string();
 }
 
 bool js_quickjs::value::is_object() const

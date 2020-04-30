@@ -553,15 +553,6 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         }
         #endif // 0
 
-        #ifdef USE_DUKTAPE
-        js::eval(temporary_vctx, "require(\"@babel/polyfill\");");
-
-        {
-            js::value glob = js::get_global(temporary_vctx);
-            js::add_key_value(glob, "require", js::function<dummy>);
-        }
-        #endif // USE_DUKTAPE
-
         /*{
             auto [success, retval] = js::call_compiled(compiled_func);
 
@@ -588,6 +579,12 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         js::value new_func = js::xfer_between_contexts(new_vctx, temp_ret);
         js::value new_context = js::xfer_between_contexts(new_vctx, context);
         js::value new_args = js::xfer_between_contexts(new_vctx, next_arg);
+
+        {
+            js::value glob = js::get_global(new_vctx);
+            js::add_key_value(glob, "context", new_context);
+            js::add_key_value(glob, "args", new_args);
+        }
 
         bool success = false;
         js::value found_val(new_vctx);
