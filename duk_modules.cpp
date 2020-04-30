@@ -113,11 +113,15 @@ std::map<std::string, std::string>& module_binary_cache()
 
 void dukx_inject_modules(js::value_context& vctx)
 {
+    #ifdef USE_DUKTAPE
     duk_module_duktape_init(vctx.ctx);
+    #endif // USE_DUKTAPE
 }
 
 void init_module_cache()
 {
+    #ifdef USE_DUKTAPE
     module_cache();
     module_binary_cache();
+    #endif // USE_DUKTAPE
 }
