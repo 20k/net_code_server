@@ -37,7 +37,7 @@ namespace js_quickjs
         value get_current_this();
     };
 
-    using funcptr_t = JSCFunction;
+    using funcptr_t = JSValue (*)(JSContext*, JSValueConst, int, JSValueConst*);
 
     struct undefined_t{};
     const static inline undefined_t undefined;
@@ -301,7 +301,7 @@ namespace qarg
     {
         UNDEF();
 
-        out = JS_VALUE_GET_PTR(val);
+        out = (T*)JS_VALUE_GET_PTR(val);
     }
 
     inline
@@ -511,6 +511,11 @@ namespace js_quickjs
         nlohmann::json to_nlohmann(int stack_depth = 0);
     };
 
+    JSValue val2value(const value& in)
+    {
+        return in.val;
+    }
+
     template<typename... T>
     inline
     std::pair<bool, value> call(value& func, T&&... vals)
@@ -522,10 +527,10 @@ namespace js_quickjs
 
         constexpr size_t nargs = sizeof...(T);
 
-        value arr[nargs] = {vals...};
+        JSValue arr[nargs] = {val2value(vals)...};
 
         ///not sure this will work for compiled scripts
-        JSValue ret = JS_call(func.ctx, func.val, JS_GetGlobalObject(func.ctx), nargs, arr);
+        JSValue ret = JS_Call(func.ctx, func.val, JS_GetGlobalObject(func.ctx), nargs, arr);
 
         bool err = JS_IsError(func.ctx, ret) || JS_IsException(ret);
 
@@ -578,7 +583,10 @@ namespace js_quickjs
 
         if constexpr(!is_first_value)
         {
-            return argv[N];
+            value val(vctx);
+            val = argv[N];
+
+            return val;
         }
     }
 
@@ -624,7 +632,7 @@ namespace js_quickjs
         {
             auto rval = std::apply(func, tup);
 
-            if constexpr(std::is_same_v<rval, js_quickjs::value>)
+            if constexpr(std::is_same_v<T, js_quickjs::value>)
             {
                 rval.release();
 
