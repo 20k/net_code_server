@@ -508,14 +508,14 @@ namespace js_quickjs
             set_ptr(null);
         }
 
-        operator std::string();
-        operator int64_t();
-        operator int();
-        operator double();
-        operator bool();
+        operator std::string() const;
+        operator int64_t() const;
+        operator int() const;
+        operator double() const;
+        operator bool() const;
 
         template<typename T>
-        operator std::vector<T>()
+        operator std::vector<T>() const
         {
             if(!has_value)
                 return std::vector<T>();
@@ -526,7 +526,7 @@ namespace js_quickjs
         }
 
         template<typename T, typename U>
-        operator std::map<T, U>()
+        operator std::map<T, U>() const
         {
             if(!has_value)
                 return std::map<T, U>();
@@ -537,7 +537,7 @@ namespace js_quickjs
         }
 
         template<typename T>
-        operator T*()
+        operator T*() const
         {
             if(!has_value)
                 return nullptr;

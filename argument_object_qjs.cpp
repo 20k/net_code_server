@@ -29,6 +29,8 @@ struct heap_stash
     ~heap_stash()
     {
         JS_FreeValue(ctx, heap_stash_value);
+
+        assert(hidden_map.size() == 0);
     }
 
     void add_hidden(const js_quickjs::value& root, const std::string& key, const js_quickjs::value& val)
@@ -75,7 +77,7 @@ struct heap_stash
             throw std::runtime_error("No key in get_hidden");
 
         js_quickjs::value val(*root.vctx);
-        val = it->second;
+        val = it2->second;
         return val;
     }
 
@@ -190,6 +192,8 @@ js_quickjs::value_context::~value_context()
 {
     if(context_owner)
     {
+        std::cout << "FREE " << ctx << std::endl;
+
         global_stash* stash = (global_stash*)JS_GetContextOpaque(ctx);
 
         if(runtime_owner)
@@ -197,13 +201,14 @@ js_quickjs::value_context::~value_context()
             delete stash->heap;
         }
 
-        JS_FreeContext(ctx);
-
         delete stash;
+        JS_FreeContext(ctx);
     }
 
     if(runtime_owner)
     {
+        std::cout << "FREEHEAP " << heap << std::endl;
+
         JS_FreeRuntime(heap);
     }
 }
@@ -855,7 +860,7 @@ void js_quickjs::value::stringify_parse()
     val = JS_ParseJSON(ctx, json.c_str(), json.size(), nullptr);
 }
 
-js_quickjs::value::operator std::string()
+js_quickjs::value::operator std::string() const
 {
     if(!has_value)
         return std::string();
@@ -866,7 +871,7 @@ js_quickjs::value::operator std::string()
     return ret;
 }
 
-js_quickjs::value::operator int64_t()
+js_quickjs::value::operator int64_t() const
 {
     if(!has_value)
         return int64_t();
@@ -877,7 +882,7 @@ js_quickjs::value::operator int64_t()
     return ret;
 }
 
-js_quickjs::value::operator int()
+js_quickjs::value::operator int() const
 {
     if(!has_value)
         return int();
@@ -888,7 +893,7 @@ js_quickjs::value::operator int()
     return ret;
 }
 
-js_quickjs::value::operator double()
+js_quickjs::value::operator double() const
 {
     if(!has_value)
         return double();
@@ -899,7 +904,7 @@ js_quickjs::value::operator double()
     return ret;
 }
 
-js_quickjs::value::operator bool()
+js_quickjs::value::operator bool() const
 {
     if(!has_value)
         return bool();
@@ -1156,7 +1161,6 @@ void dump_stack(value_context& vctx)
 }
 }
 
-
 struct quickjs_tester
 {
     quickjs_tester()
@@ -1208,7 +1212,22 @@ struct quickjs_tester
             std::cout << "Dumped " << root.to_json() << std::endl;
         }
 
+        {
+            js_quickjs::value root(vctx);
+
+            root.add_hidden("hello", 1234);
+
+            assert(root.has_hidden("hello"));
+            assert(!root.has_hidden("hello2"));
+
+            int val = root.get_hidden("hello");
+
+            assert(val == 1234);
+        }
+
         printf("Tested quickjs\n");
+
+        //exit(0);
     }
 };
 
