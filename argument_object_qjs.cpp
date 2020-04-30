@@ -1065,7 +1065,11 @@ std::string js_quickjs::value::to_json()
 js_quickjs::value js_quickjs::get_global(js_quickjs::value_context& vctx)
 {
     js_quickjs::value val(vctx);
-    val = JS_GetGlobalObject(vctx.ctx);
+    JSValue found = JS_GetGlobalObject(vctx.ctx);
+
+    val = found;
+
+    JS_FreeValue(vctx.ctx, found);
 
     return val;
 }
