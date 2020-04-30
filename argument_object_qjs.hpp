@@ -354,6 +354,27 @@ namespace js_quickjs
 
         bool del(const std::string& key);
 
+        void add_hidden_value(const std::string& key, const value& val);
+
+        template<typename T>
+        value add(const std::string& key, const T& val)
+        {
+            auto jval = js_quickjs::value(*vctx, *this, key);
+            jval = val;
+            return jval;
+        }
+
+        template<typename T>
+        value add_hidden(const std::string& key, const T& val)
+        {
+            value fval(*vctx);
+            fval = val;
+
+            add_hidden_value(key, val);
+
+            return fval;
+        }
+
         bool is_string();
         bool is_number();
         bool is_array();

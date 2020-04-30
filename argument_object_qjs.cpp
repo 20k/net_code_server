@@ -7,7 +7,7 @@ uint64_t value_to_key(const js_quickjs::value& root)
     void* ptr = root.val.u.ptr;
 
     uint64_t as_val = 0;
-    memcpy(&as_val, &ptr, sizeof(&ptr));
+    memcpy(&as_val, &ptr, sizeof(ptr));
 
     return as_val;
 }
@@ -39,7 +39,6 @@ struct heap_stash
         uint64_t rkey = value_to_key(root);
 
         hidden_map[rkey].emplace(key, val);
-        //hidden_map[rkey][key] = val;
     }
 
     bool has_hidden(const js_quickjs::value& root, const std::string& key)
@@ -294,6 +293,20 @@ js_quickjs::value::~value()
 {
     if(!released && has_value)
     {
+        if((is_function() || is_object()))
+        {
+            assert(JS_VALUE_HAS_REF_COUNT(val));
+
+            JSRefCountHeader *p = (JSRefCountHeader *)JS_VALUE_GET_PTR(val);
+
+            if(p->ref_count <= 1)
+            {
+                heap_stash* stash = get_heap_stash(ctx);
+
+                stash->remove_all_hidden(*this);
+            }
+        }
+
         JS_FreeValue(ctx, val);
     }
 
@@ -318,6 +331,19 @@ bool js_quickjs::value::has(const char* key) const
     JS_FreeAtom(ctx, atom);
 
     return has_prop;
+}
+
+bool js_quickjs::value::has_hidden(const std::string& key) const
+{
+    if(!has_value)
+        return false;
+
+    if(is_undefined())
+        return false;
+
+    heap_stash* stash = get_heap_stash(ctx);
+
+    return stash->has_hidden(*this, key);
 }
 
 bool js_quickjs::value::has(const std::string& key) const
@@ -370,6 +396,27 @@ js_quickjs::value js_quickjs::value::get(int key)
 js_quickjs::value js_quickjs::value::get(const char* key)
 {
     return js_quickjs::value(*vctx, *this, key);
+}
+
+js_quickjs::value js_quickjs::value::get_hidden(const std::string& key)
+{
+    if(!has_hidden(key))
+    {
+        js_quickjs::value val(*vctx);
+        val = js_quickjs::undefined;
+        return val;
+    }
+
+    heap_stash* heap = get_heap_stash(ctx);
+
+    return heap->get_hidden(*this, key);
+}
+
+void js_quickjs::value::add_hidden_value(const std::string& key, const value& val)
+{
+    heap_stash* heap = get_heap_stash(ctx);
+
+    heap->add_hidden(*this, key, val);
 }
 
 bool js_quickjs::value::is_string()
@@ -521,6 +568,10 @@ js_quickjs::qstack_manager::qstack_manager(js_quickjs::value& _val) : val(_val)
 {
     if(val.has_value)
     {
+        heap_stash* stash = get_heap_stash(_val.ctx);
+
+        stash->remove_all_hidden(_val);
+
         JS_FreeValue(val.ctx, val.val);
     }
 }
