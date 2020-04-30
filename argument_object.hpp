@@ -17,10 +17,10 @@
     using namespace js_duk;
 }*/
 
-//namespace js = js_quickjs;
-namespace js = js_duk;
+/*namespace js = js_duk;
+#define USE_DUKTAPE*/
 
-#define USE_DUKTAPE
-//#define USE_QUICKJS
+namespace js = js_quickjs;
+#define USE_QUICKJS
 
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED

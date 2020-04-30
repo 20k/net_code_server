@@ -412,6 +412,20 @@ js_quickjs::value js_quickjs::value::get_hidden(const std::string& key)
     return heap->get_hidden(*this, key);
 }
 
+bool js_quickjs::value::del(const std::string& key)
+{
+    if(!has(key))
+        return false;
+
+    JSAtom atom = JS_NewAtomLen(ctx, key.c_str(), key.size());
+
+    JS_DeleteProperty(ctx, val, atom, 0);
+
+    JS_FreeAtom(ctx, atom);
+
+    return true;
+}
+
 void js_quickjs::value::add_hidden_value(const std::string& key, const value& val)
 {
     heap_stash* heap = get_heap_stash(ctx);
@@ -818,6 +832,16 @@ js_quickjs::value& js_quickjs::value::operator=(const JSValue& _val)
     val = JS_DupValue(ctx, _val);
 
     return *this;
+}
+
+
+void js_quickjs::value::stringify_parse()
+{
+    std::string json = to_json();
+
+    JS_FreeValue(ctx, val);
+
+    val = JS_ParseJSON(ctx, json.c_str(), json.size(), nullptr);
 }
 
 js_quickjs::value::operator std::string()

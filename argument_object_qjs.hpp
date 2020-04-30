@@ -45,6 +45,24 @@ namespace js_quickjs
 
 namespace qarg
 {
+    JSValue push(JSContext* ctx, const char* v);
+    JSValue push(JSContext* ctx, const std::string& v);
+    JSValue push(JSContext* ctx, int64_t v);
+    JSValue push(JSContext* ctx, int v);
+    JSValue push(JSContext* ctx, double v);
+    JSValue push(JSContext* ctx, bool v);
+    template<typename T>
+    JSValue push(JSContext* ctx, const std::vector<T>& v);
+    template<typename T, typename U>
+    JSValue push(JSContext* ctx, const std::map<T, U>& v);
+    JSValue push(JSContext* ctx, js_quickjs::funcptr_t fptr);
+    JSValue push(JSContext* ctx, const nlohmann::json& in);
+    template<typename T>
+    JSValue push(JSContext* ctx, T* in);
+    JSValue push(JSContext* ctx, std::nullptr_t in);
+    JSValue push(JSContext* ctx, const js_quickjs::value& in);
+    JSValue push(JSContext* ctx, js_quickjs::funcptr_t in);
+
     inline
     JSValue push(JSContext* ctx, const char* v)
     {
@@ -370,7 +388,7 @@ namespace js_quickjs
             value fval(*vctx);
             fval = val;
 
-            add_hidden_value(key, val);
+            add_hidden_value(key, fval);
 
             return fval;
         }
