@@ -511,6 +511,7 @@ namespace js_quickjs
         nlohmann::json to_nlohmann(int stack_depth = 0);
     };
 
+    inline
     JSValue val2value(const value& in)
     {
         return in.val;
