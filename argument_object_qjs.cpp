@@ -2,11 +2,22 @@
 #include "memory_sandbox.hpp"
 #include "argument_object.hpp"
 
+uint64_t value_to_key(const js_quickjs::value& root)
+{
+    void* ptr = root.val.u.ptr;
+
+    uint64_t as_val = 0;
+    memcpy(&as_val, &ptr, sizeof(&ptr));
+
+    return as_val;
+}
+
 struct heap_stash
 {
     sandbox_data* sandbox = nullptr;
     JSValue heap_stash_value;
     JSContext* ctx = nullptr;
+    std::map<uint64_t, std::map<std::string, js_quickjs::value>> hidden_map;
 
     heap_stash(JSContext* global)
     {
@@ -18,6 +29,80 @@ struct heap_stash
     ~heap_stash()
     {
         JS_FreeValue(ctx, heap_stash_value);
+    }
+
+    void add_hidden(const js_quickjs::value& root, const std::string& key, const js_quickjs::value& val)
+    {
+        if(!root.is_function() && !root.is_object())
+            throw std::runtime_error("Must be function or array");
+
+        uint64_t rkey = value_to_key(root);
+
+        hidden_map[rkey].emplace(key, val);
+        //hidden_map[rkey][key] = val;
+    }
+
+    bool has_hidden(const js_quickjs::value& root, const std::string& key)
+    {
+        uint64_t rkey = value_to_key(root);
+
+        auto it = hidden_map.find(rkey);
+
+        if(it == hidden_map.end())
+            return false;
+
+        auto it2 = it->second.find(key);
+
+        if(it2 == it->second.end())
+            return false;
+
+        return true;
+    }
+
+    js_quickjs::value get_hidden(const js_quickjs::value& root, const std::string& key)
+    {
+        uint64_t rkey = value_to_key(root);
+
+        auto it = hidden_map.find(rkey);
+
+        if(it == hidden_map.end())
+            throw std::runtime_error("No root in get_hidden");
+
+        auto it2 = it->second.find(key);
+
+        if(it2 == it->second.end())
+            throw std::runtime_error("No key in get_hidden");
+
+        return it2->second;
+    }
+
+    void remove_hidden(const js_quickjs::value& root, const std::string& key)
+    {
+        uint64_t rkey = value_to_key(root);
+
+        auto it = hidden_map.find(rkey);
+
+        if(it == hidden_map.end())
+            return;
+
+        auto it2 = it->second.find(key);
+
+        if(it2 == it->second.end())
+            return;
+
+        it->second.erase(it2);
+    }
+
+    void remove_all_hidden(const js_quickjs::value& root)
+    {
+        uint64_t rkey = value_to_key(root);
+
+        auto it = hidden_map.find(rkey);
+
+        if(it == hidden_map.end())
+            return;
+
+        hidden_map.erase(it);
     }
 };
 
@@ -57,6 +142,11 @@ void init_context(JSContext* me, JSContext* them)
     stash->heap = them_stash->heap;
 
     JS_SetContextOpaque(me, (void*)stash);
+}
+
+heap_stash* get_heap_stash(JSContext* ctx)
+{
+    return ((global_stash*)JS_GetContextOpaque(ctx))->heap;
 }
 
 js_quickjs::value_context::value_context(JSContext* _ctx)
@@ -319,7 +409,7 @@ bool js_quickjs::value::is_empty()
     return !has_value;
 }
 
-bool js_quickjs::value::is_function()
+bool js_quickjs::value::is_function() const
 {
     if(!has_value)
         return false;
@@ -369,7 +459,7 @@ bool js_quickjs::value::is_object_coercible()
     return is_object() || is_boolean() || is_number() || is_function() || is_sym;
 }
 
-bool js_quickjs::value::is_object()
+bool js_quickjs::value::is_object() const
 {
     if(!has_value)
         return false;

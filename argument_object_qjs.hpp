@@ -359,12 +359,12 @@ namespace js_quickjs
         bool is_array();
         bool is_map();
         bool is_empty();
-        bool is_function();
+        bool is_function() const;
         bool is_boolean();
         bool is_undefined() const;
         bool is_truthy();
         bool is_object_coercible();
-        bool is_object();
+        bool is_object() const;
 
         ///stop managing element
         void release();
