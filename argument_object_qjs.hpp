@@ -62,6 +62,7 @@ namespace qarg
     JSValue push(JSContext* ctx, std::nullptr_t in);
     JSValue push(JSContext* ctx, const js_quickjs::value& in);
     JSValue push(JSContext* ctx, js_quickjs::funcptr_t in);
+    JSValue push(JSContext* ctx, const JSValue& in);
 
     inline
     JSValue push(JSContext* ctx, const char* v)
@@ -156,13 +157,15 @@ namespace qarg
     inline
     JSValue push(JSContext* ctx, T* in)
     {
-        return JS_MKPTR(0, in);
+        return JS_NewBigUint64(ctx, (uint64_t)in);
+        //return JS_MKPTR(0, in);
     }
 
     inline
     JSValue push(JSContext* ctx, std::nullptr_t in)
     {
-        return JS_MKPTR(0, 0);
+        return JS_NewBigUint64(ctx, 0);
+        //return JS_MKPTR(0, 0);
     }
 
     JSValue push(JSContext* ctx, const js_quickjs::value& in);
@@ -171,6 +174,12 @@ namespace qarg
     JSValue push(JSContext* ctx, js_quickjs::funcptr_t in)
     {
         return JS_NewCFunction(ctx, in, "", 0);
+    }
+
+    inline
+    JSValue push(JSContext* ctx, const JSValue& val)
+    {
+        return JS_DupValue(ctx, val);
     }
 
     #define UNDEF() if(JS_IsUndefined(val)){out = std::remove_reference_t<decltype(out)>(); return;}

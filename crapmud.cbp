@@ -307,6 +307,7 @@
 			<Add option="-DBOOST_STACKTRACE_USE_BACKTRACE" />
 			<Add option="-DSERVER" />
 			<Add option='-DCONFIG_VERSION=&quot;&quot;' />
+			<Add option="-DCONFIG_BIGNUM" />
 			<Add directory="deps" />
 		</Compiler>
 		<Linker>

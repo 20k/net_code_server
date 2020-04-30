@@ -17,7 +17,7 @@ struct heap_stash
     sandbox_data* sandbox = nullptr;
     JSValue heap_stash_value;
     JSContext* ctx = nullptr;
-    std::map<uint64_t, std::map<std::string, js_quickjs::value>> hidden_map;
+    std::map<uint64_t, std::map<std::string, JSValue>> hidden_map;
 
     heap_stash(JSContext* global)
     {
@@ -38,7 +38,9 @@ struct heap_stash
 
         uint64_t rkey = value_to_key(root);
 
-        hidden_map[rkey].emplace(key, val);
+        JSValue dup = JS_DupValue(root.ctx, val.val);
+
+        hidden_map[rkey].emplace(key, dup);
     }
 
     bool has_hidden(const js_quickjs::value& root, const std::string& key)
@@ -72,7 +74,9 @@ struct heap_stash
         if(it2 == it->second.end())
             throw std::runtime_error("No key in get_hidden");
 
-        return it2->second;
+        js_quickjs::value val(*root.vctx);
+        val = it->second;
+        return val;
     }
 
     void remove_hidden(const js_quickjs::value& root, const std::string& key)
@@ -89,6 +93,8 @@ struct heap_stash
         if(it2 == it->second.end())
             return;
 
+        JS_FreeValue(root.ctx, it2->second);
+
         it->second.erase(it2);
     }
 
@@ -100,6 +106,11 @@ struct heap_stash
 
         if(it == hidden_map.end())
             return;
+
+        for(auto& i : it->second)
+        {
+            JS_FreeValue(root.ctx, i.second);
+        }
 
         hidden_map.erase(it);
     }
@@ -825,11 +836,11 @@ js_quickjs::value& js_quickjs::value::operator=(js_quickjs::funcptr_t in)
     return *this;
 }
 
-js_quickjs::value& js_quickjs::value::operator=(const JSValue& _val)
+js_quickjs::value& js_quickjs::value::operator=(const JSValue& in)
 {
     qstack_manager m(*this);
 
-    val = JS_DupValue(ctx, _val);
+    val = qarg::push(ctx, in);
 
     return *this;
 }
