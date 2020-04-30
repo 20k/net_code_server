@@ -597,6 +597,8 @@ namespace js_quickjs
         return {!err, rval};
     }
 
+    std::pair<bool, value> call_compiled(value& bitcode);
+
     template<typename I, typename... T>
     inline
     std::pair<bool, value> call_prop(value& obj, I& key, T&&... vals)

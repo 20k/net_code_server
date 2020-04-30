@@ -1165,6 +1165,20 @@ js_quickjs::value js_quickjs::add_setter(js_quickjs::value& base, const std::str
     return val;
 }
 
+std::pair<bool, js_quickjs::value> js_quickjs::call_compiled(value& bitcode)
+{
+    JSValue ret = JS_EvalFunction(bitcode.ctx, bitcode.val);
+
+    value rval(*bitcode.vctx);
+    rval = ret;
+
+    bool is_err = JS_IsError(bitcode.ctx, ret) || JS_IsException(ret);
+
+    JS_FreeValue(bitcode.ctx, ret);
+
+    return {!is_err, rval};
+}
+
 std::pair<bool, js_quickjs::value> js_quickjs::compile(value_context& vctx, const std::string& data)
 {
     return compile(vctx, "test-name", data);
@@ -1334,6 +1348,30 @@ struct quickjs_tester
 
             auto val = root.add("hello", js::function<empty_func>);
             val.add_hidden("testy", "hellothere");
+        }
+
+        {
+            js_quickjs::value func(vctx);
+            func = js_quickjs::function<empty_func>;
+
+            auto [success, res] = js_quickjs::call(func);
+
+            assert(success);
+        }
+
+        {
+            auto [success, res] = js_quickjs::compile(vctx, "none", "1+1");
+
+            assert(success);
+
+            ///not sure this will work for compiled scripts
+            JSValue ret = JS_EvalFunction(vctx.ctx, JS_DupValue(vctx.ctx, res.val));
+
+            bool err = JS_IsError(vctx.ctx, ret) || JS_IsException(ret);
+
+            JS_FreeValue(vctx.ctx, ret);
+
+            assert(!err);
         }
 
         printf("Tested quickjs\n");

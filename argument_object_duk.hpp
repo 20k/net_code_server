@@ -626,6 +626,12 @@ namespace js_duk
         return {success, js_duk::value(*func.vctx, -1)};
     }
 
+    inline
+    std::pair<bool, value> call_compiled(value& func)
+    {
+        return call(func);
+    }
+
     template<typename I, typename... T>
     inline
     std::pair<bool, value> call_prop(value& obj, const I& key, T&&... vals)

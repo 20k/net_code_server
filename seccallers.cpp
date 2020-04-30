@@ -539,14 +539,17 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         }
         else
         {
+            #ifdef USE_DUKTAPE
             js::eval(temporary_vctx, "require(\"@babel/polyfill\");");
 
             {
                 js::value glob = js::get_global(temporary_vctx);
                 js::add_key_value(glob, "require", js::function<dummy>);
             }
+            #endif // USE_DUKTAPE
 
             temp_ret = compiled_func;
+
         }
 
         {
