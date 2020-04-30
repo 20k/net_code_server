@@ -1209,6 +1209,9 @@ value make_proxy(value& target, value& handle)
 
     value ret(*target.vctx);
     ret = val;
+
+    JS_FreeValue(target.ctx, val);
+
     return ret;
 }
 
