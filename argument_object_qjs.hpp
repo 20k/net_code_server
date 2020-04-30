@@ -32,6 +32,8 @@ namespace js_quickjs
         value_context();
         ~value_context();
 
+        value_context& operator=(const value_context& other);
+
         void push_this(const value& val);
         void pop_this();
         value get_current_this();
@@ -585,6 +587,8 @@ namespace js_quickjs
 
         value rval(*func.vctx);
         rval = ret;
+
+        JS_FreeValue(func.ctx, ret);
 
         return {!err, rval};
     }

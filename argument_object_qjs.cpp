@@ -220,6 +220,10 @@ js_quickjs::value_context::value_context(value_context& other)
     heap = other.heap;
     ctx = JS_NewContext(heap);
 
+    /*JSValue glob = JS_GetGlobalObject(ctx);
+    JS_DefinePropertyValueStr(ctx, glob, "hello", JS_NewInt32(ctx, 1234), 0);
+    JS_FreeValue(ctx, glob);*/
+
     init_context(ctx, other.ctx);
 
     context_owner = true;
@@ -255,6 +259,12 @@ js_quickjs::value_context::~value_context()
     {
         JS_FreeRuntime(heap);
     }
+}
+
+js_quickjs::value_context& js_quickjs::value_context::operator=(const value_context& other)
+{
+    assert(false);
+    return *this;
 }
 
 void js_quickjs::value_context::push_this(const value& val)
