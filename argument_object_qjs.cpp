@@ -1196,7 +1196,7 @@ value eval(value_context& vctx, const std::string& data)
 value xfer_between_contexts(value_context& destination, const value& val)
 {
     value next(destination);
-    next = JS_DupValue(destination.ctx, val.val);
+    next = val.val;
 
     return next;
 }
