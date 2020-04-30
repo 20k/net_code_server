@@ -475,7 +475,10 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
 
     js::value_context temporary_vctx(new_vctx);
+
+    #ifdef USE_DUKTAPE
     register_funcs(temporary_vctx, seclevel, get_script_host(vctx), true);
+    #endif // USE_DUKTAPE
 
     auto [compile_success, compiled_func] = js::compile(temporary_vctx, wrapper);
 
@@ -586,6 +589,10 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
             js::add_key_value(glob, "args", new_args);
         }
 
+        #ifdef USE_QUICKJS
+        register_funcs(new_vctx, seclevel, get_script_host(vctx), true);
+        #endif // USE_QUICKJS
+
         bool success = false;
         js::value found_val(new_vctx);
 
@@ -595,7 +602,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         }
         else
         {
-            std::tie(success, found_val) = js::call(new_func, new_context, new_args);
+            std::tie(success, found_val) = js::call(new_func);
         }
 
         //auto [success, found_val] = js::call(new_func, new_context, new_args);
@@ -1013,6 +1020,8 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     global.del("oms_call");
     global.del("ols_call");
     global.del("ons_call");
+
+    printf("hi\n");
 
     js::add_key_value(global, "is_realtime_script", js::function<is_realtime_script>);
     js::add_key_value(global, "timeout_yield", js::function<timeout_yield>);
