@@ -31,6 +31,7 @@
 std::string attach_cli_wrapper(const std::string& str)
 {
     return str;
+    //return "(function clifunc(){return (" + str + ");})";
 }
 
 std::string attach_unparsed_wrapper(std::string str)

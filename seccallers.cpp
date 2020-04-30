@@ -525,9 +525,10 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
         js::value temp_ret(temporary_vctx);
 
+        #if 1
         if(!is_cli)
         {
-            auto [success, retval] = js::call(compiled_func, context, next_arg);
+            auto [success, retval] = js::call_compiled(compiled_func);
 
             if(!success)
             {
@@ -549,8 +550,29 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
             #endif // USE_DUKTAPE
 
             temp_ret = compiled_func;
-
         }
+        #endif // 0
+
+        #ifdef USE_DUKTAPE
+        js::eval(temporary_vctx, "require(\"@babel/polyfill\");");
+
+        {
+            js::value glob = js::get_global(temporary_vctx);
+            js::add_key_value(glob, "require", js::function<dummy>);
+        }
+        #endif // USE_DUKTAPE
+
+        /*{
+            auto [success, retval] = js::call_compiled(compiled_func);
+
+            if(!success)
+            {
+                std::cout << "Failed to execute require block " << (std::string)retval << std::endl;
+                throw std::runtime_error("Failed to execute require block " + (std::string)retval);
+            }
+
+            temp_ret = retval;
+        }*/
 
         {
             js::value temp_global = js::get_global(temporary_vctx);
@@ -567,7 +589,19 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         js::value new_context = js::xfer_between_contexts(new_vctx, context);
         js::value new_args = js::xfer_between_contexts(new_vctx, next_arg);
 
-        auto [success, found_val] = js::call(new_func, new_context, new_args);
+        bool success = false;
+        js::value found_val(new_vctx);
+
+        if(is_cli)
+        {
+            std::tie(success, found_val) = js::call_compiled(new_func);
+        }
+        else
+        {
+            std::tie(success, found_val) = js::call(new_func, new_context, new_args);
+        }
+
+        //auto [success, found_val] = js::call(new_func, new_context, new_args);
 
         /*#ifndef USE_PROXY
         duk_xmove_top(ctx, new_ctx, 1);

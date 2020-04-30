@@ -1167,7 +1167,7 @@ js_quickjs::value js_quickjs::add_setter(js_quickjs::value& base, const std::str
 
 std::pair<bool, js_quickjs::value> js_quickjs::call_compiled(value& bitcode)
 {
-    JSValue ret = JS_EvalFunction(bitcode.ctx, bitcode.val);
+    JSValue ret = JS_EvalFunction(bitcode.ctx, JS_DupValue(bitcode.ctx, bitcode.val));
 
     value rval(*bitcode.vctx);
     rval = ret;
