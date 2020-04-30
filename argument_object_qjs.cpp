@@ -12,6 +12,16 @@ uint64_t value_to_key(const js_quickjs::value& root)
     return as_val;
 }
 
+uint64_t value_to_key(const JSValue& root)
+{
+    void* ptr = root.u.ptr;
+
+    uint64_t as_val = 0;
+    memcpy(&as_val, &ptr, sizeof(ptr));
+
+    return as_val;
+}
+
 struct heap_stash
 {
     sandbox_data* sandbox = nullptr;
@@ -30,7 +40,28 @@ struct heap_stash
     {
         JS_FreeValue(ctx, heap_stash_value);
 
-        assert(hidden_map.size() == 0);
+        /*if(hidden_map.size() != 0)
+        {
+            printf("Hidden map failure\n");
+
+            for(auto& i : hidden_map)
+            {
+                for(auto& j : i.second)
+                {
+                    std::cout << "Key " << j.first << std::endl;
+                }
+            }
+        }
+
+        assert(hidden_map.size() == 0);*/
+
+        for(auto& i : hidden_map)
+        {
+            for(auto& j : i.second)
+            {
+                JS_FreeValue(ctx, j.second);
+            }
+        }
     }
 
     void add_hidden(const js_quickjs::value& root, const std::string& key, const js_quickjs::value& val)
@@ -116,6 +147,23 @@ struct heap_stash
 
         hidden_map.erase(it);
     }
+
+    void remove_all_hidden(JSContext* ctx, const JSValue& root)
+    {
+        uint64_t rkey = value_to_key(root);
+
+        auto it = hidden_map.find(rkey);
+
+        if(it == hidden_map.end())
+            return;
+
+        for(auto& i : it->second)
+        {
+            JS_FreeValue(ctx, i.second);
+        }
+
+        hidden_map.erase(it);
+    }
 };
 
 struct global_stash
@@ -192,8 +240,6 @@ js_quickjs::value_context::~value_context()
 {
     if(context_owner)
     {
-        std::cout << "FREE " << ctx << std::endl;
-
         global_stash* stash = (global_stash*)JS_GetContextOpaque(ctx);
 
         if(runtime_owner)
@@ -207,8 +253,6 @@ js_quickjs::value_context::~value_context()
 
     if(runtime_owner)
     {
-        std::cout << "FREEHEAP " << heap << std::endl;
-
         JS_FreeRuntime(heap);
     }
 }
@@ -328,6 +372,18 @@ js_quickjs::value::~value()
 
     if(has_parent)
     {
+        if(JS_VALUE_HAS_REF_COUNT(parent_value))
+        {
+            JSRefCountHeader *p = (JSRefCountHeader *)JS_VALUE_GET_PTR(parent_value);
+
+            if(p->ref_count <= 1)
+            {
+                heap_stash* stash = get_heap_stash(ctx);
+
+                stash->remove_all_hidden(ctx, parent_value);
+            }
+        }
+
         JS_FreeValue(ctx, parent_value);
     }
 }
@@ -1161,6 +1217,11 @@ void dump_stack(value_context& vctx)
 }
 }
 
+void empty_func(js_quickjs::value_context* vctx)
+{
+
+}
+
 struct quickjs_tester
 {
     quickjs_tester()
@@ -1223,6 +1284,35 @@ struct quickjs_tester
             int val = root.get_hidden("hello");
 
             assert(val == 1234);
+        }
+
+        {
+            js_quickjs::value root(vctx);
+
+            root.add_hidden("hello", "yep");
+            root.add_hidden("hello2", "hurro");
+
+            std::string str = root.get_hidden("hello");
+
+            assert(str == "yep");
+        }
+
+        {
+            js_quickjs::value root(vctx);
+            root = js_quickjs::function<empty_func>;
+
+            root.add_hidden("checky", "yes.hello");
+
+            std::string val = root.get_hidden("checky");
+
+            assert(val == "yes.hello");
+        }
+
+        {
+            js_quickjs::value root(vctx);
+
+            auto val = root.add("hello", js::function<empty_func>);
+            val.add_hidden("testy", "hellothere");
         }
 
         printf("Tested quickjs\n");
