@@ -308,6 +308,7 @@
 			<Add option="-DSERVER" />
 			<Add option='-DCONFIG_VERSION=&quot;&quot;' />
 			<Add option="-DCONFIG_BIGNUM" />
+			<Add option="-DDUMP_LEAKS" />
 			<Add directory="deps" />
 		</Compiler>
 		<Linker>

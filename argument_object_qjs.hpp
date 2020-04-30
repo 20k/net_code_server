@@ -580,8 +580,12 @@ namespace js_quickjs
 
         JSValue arr[nargs] = {val2value(vals)...};
 
+        JSValue glob = JS_GetGlobalObject(func.ctx);
+
         ///not sure this will work for compiled scripts
-        JSValue ret = JS_Call(func.ctx, func.val, JS_GetGlobalObject(func.ctx), nargs, arr);
+        JSValue ret = JS_Call(func.ctx, func.val, glob, nargs, arr);
+
+        JS_FreeValue(func.ctx, glob);
 
         bool err = JS_IsError(func.ctx, ret) || JS_IsException(ret);
 
