@@ -306,8 +306,12 @@ namespace qarg
 
         out.clear();
 
-        int len = 0;
-        JS_GetPropertyStr(vctx.ctx, val, "length");
+        JSValue jslen = JS_GetPropertyStr(vctx.ctx, val, "length");
+
+        int32_t len = 0;
+        JS_ToInt32(vctx.ctx, &len, jslen);
+
+        JS_FreeValue(vctx.ctx, jslen);
 
         out.reserve(len);
 
