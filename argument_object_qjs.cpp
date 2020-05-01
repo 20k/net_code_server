@@ -1366,6 +1366,16 @@ struct quickjs_tester
             assert(*fptr == some_ptr);
         }
 
+        {
+            js_quickjs::value root(vctx);
+
+            root["hi"] = "hello";
+
+            std::string json = root.to_json();
+
+            assert(json.size() > 0);
+        }
+
         printf("Tested quickjs\n");
 
         //exit(0);
