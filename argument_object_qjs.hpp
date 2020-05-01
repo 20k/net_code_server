@@ -334,7 +334,10 @@ namespace qarg
     {
         UNDEF();
 
-        out = (T*)JS_VALUE_GET_PTR(val);
+        int64_t vptr = 0;
+        JS_ToBigInt64(vctx.ctx, &vptr, val);
+
+        memcpy((void*)&out, (void*)&vptr, sizeof(out));
     }
 
     inline
