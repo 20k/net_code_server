@@ -1037,10 +1037,29 @@ std::string js_quickjs::value::to_json()
 
 std::string js_quickjs::value::to_error_message()
 {
-    std::string msg_1 = get("stack");
-    std::string msg_2 = get("message");
+    std::string err = "Error:\n";
 
-    return "Stack: " + msg_1 + "String: " + msg_2;
+    if(has("stack"))
+    {
+        err += "Stack: " + (std::string)get("stack");
+    }
+
+    if(has("message"))
+    {
+        err += "Message: " + (std::string)get("message");
+    }
+
+    if(has("lineNumber"))
+    {
+        err += "lineNumber: " + (std::string)get("lineNumber");
+    }
+
+    if(has("columnNumber"))
+    {
+        err += "columnNumber: " + (std::string)get("columnNumber");
+    }
+
+    return err;
 }
 
 js_quickjs::value js_quickjs::get_global(js_quickjs::value_context& vctx)
