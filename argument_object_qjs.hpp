@@ -604,6 +604,15 @@ namespace js_quickjs
 
         JS_FreeValue(func.ctx, ret);
 
+        if(err)
+        {
+            JSValue err_val = JS_GetException(func.ctx);
+
+            rval = err_val;
+
+            JS_FreeValue(func.ctx, err_val);
+        }
+
         return {!err, rval};
     }
 

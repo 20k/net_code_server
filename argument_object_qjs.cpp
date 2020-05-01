@@ -1143,6 +1143,15 @@ std::pair<bool, js_quickjs::value> js_quickjs::call_compiled(value& bitcode)
 
     JS_FreeValue(bitcode.ctx, ret);
 
+    if(err)
+    {
+        JSValue err_val = JS_GetException(bitcode.ctx);
+
+        val = err_val;
+
+        JS_FreeValue(bitcode.ctx, err_val);
+    }
+
     return {!err, val};
 }
 
@@ -1161,6 +1170,15 @@ std::pair<bool, js_quickjs::value> js_quickjs::compile(value_context& vctx, cons
     JS_FreeValue(vctx.ctx, ret);
 
     bool err = JS_IsException(val.val) || JS_IsError(vctx.ctx, val.val);
+
+    if(err)
+    {
+        JSValue err_val = JS_GetException(vctx.ctx);
+
+        val = err_val;
+
+        JS_FreeValue(vctx.ctx, err_val);
+    }
 
     return {!err, val};
 }
@@ -1184,6 +1202,15 @@ value eval(value_context& vctx, const std::string& data)
     rval = ret;
 
     JS_FreeValue(vctx.ctx, ret);
+
+    if(rval.is_error() || rval.is_exception())
+    {
+        JSValue err_val = JS_GetException(vctx.ctx);
+
+        rval = err_val;
+
+        JS_FreeValue(vctx.ctx, err_val);
+    }
 
     return rval;
 }
