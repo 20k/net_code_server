@@ -679,7 +679,7 @@ namespace js_quickjs
     {
         ///semantics here are wrong
         ///need to pad arguments up to this size with undefined
-        if(argc > num_args(func))
+        if(argc > js_quickjs::num_args(func))
             throw std::runtime_error("Bad quickjs function");
 
         js_quickjs::value_context vctx(ctx);

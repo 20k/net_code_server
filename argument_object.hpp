@@ -4,23 +4,10 @@
 #include "argument_object_qjs.hpp"
 #include "argument_object_duk.hpp"
 
-///this stuff is features, not implementation dependent
-/*namespace js
-{
-    using namespace js_duk;
+namespace js = js_duk;
+#define USE_DUKTAPE
 
-
-}*/
-
-/*namespace js
-{
-    using namespace js_duk;
-}*/
-
-/*namespace js = js_duk;
-#define USE_DUKTAPE*/
-
-namespace js = js_quickjs;
-#define USE_QUICKJS
+/*namespace js = js_quickjs;
+#define USE_QUICKJS*/
 
 #endif // ARGUMENT_OBJECT_HPP_INCLUDED

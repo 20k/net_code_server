@@ -742,8 +742,8 @@ namespace js_duk
     inline
     duk_ret_t js_decompose(duk_context* ctx)
     {
-        int nargs = num_args(func);
-        int nrets = num_rets(func);
+        int nargs = js_duk::num_args(func);
+        int nrets = js_duk::num_rets(func);
 
         int top = duk_get_top(ctx);
 
