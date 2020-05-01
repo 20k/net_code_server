@@ -465,7 +465,7 @@ namespace js_quickjs
         {
             qstack_manager m(*this);
 
-            qarg::push(ctx, nullptr);
+            val = qarg::push(ctx, nullptr);
 
             return *this;
         }
@@ -476,7 +476,7 @@ namespace js_quickjs
         {
             qstack_manager m(*this);
 
-            qarg::push(ctx, in);
+            val = qarg::push(ctx, in);
 
             return *this;
         }

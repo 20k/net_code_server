@@ -1401,6 +1401,21 @@ struct quickjs_tester
             assert(rval[1] == "hello");
         }
 
+        {
+            int some_ptr = 0;
+
+            js_quickjs::value root(vctx);
+            root.set_ptr(&some_ptr);
+
+            int* fptr = root.get_ptr<int>();
+
+            assert(&some_ptr == fptr);
+
+            assert(fptr);
+
+            assert(*fptr == some_ptr);
+        }
+
         printf("Tested quickjs\n");
 
         //exit(0);
