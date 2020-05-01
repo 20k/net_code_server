@@ -1374,6 +1374,18 @@ struct quickjs_tester
             assert(!err);
         }
 
+        {
+            js_quickjs::value root(vctx);
+
+            root.add("Hello", "1234");
+
+            assert(root.has("Hello"));
+
+            std::string val = root.get("Hello");
+
+            assert(val == "1234");
+        }
+
         printf("Tested quickjs\n");
 
         //exit(0);

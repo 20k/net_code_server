@@ -631,7 +631,7 @@ namespace js_quickjs
 
     template<typename T, int N>
     inline
-    T get_element(js_quickjs::value_context& vctx, JSValueConst* argv)
+    T get_element(js_quickjs::value_context& vctx, int argc, JSValueConst* argv)
     {
         constexpr bool is_first_value = std::is_same_v<T, js_quickjs::value_context*> && N == 0;
 
@@ -642,25 +642,37 @@ namespace js_quickjs
 
         if constexpr(!is_first_value)
         {
-            value val(vctx);
-            val = argv[N];
+            if((N - 1) >= argc)
+            {
+                value val(vctx);
+                val = js_quickjs::undefined;
 
-            return val;
+                return val;
+            }
+            else
+            {
+                value val(vctx);
+                val = argv[N - 1];
+
+                return val;
+            }
         }
     }
 
     template<typename... U, std::size_t... Is>
     inline
-    std::tuple<U...> get_args(js_quickjs::value_context& vctx, std::index_sequence<Is...>, JSValueConst* argv)
+    std::tuple<U...> get_args(js_quickjs::value_context& vctx, std::index_sequence<Is...>, int argc, JSValueConst* argv)
     {
-        return std::make_tuple(get_element<U, Is>(vctx, argv)...);
+        return std::make_tuple(get_element<U, Is>(vctx, argc, argv)...);
     }
 
     template<typename T, typename... U>
     inline
     JSValue js_safe_function_decomposed(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst *argv, T(*func)(U...))
     {
-        if(argc != num_args(func))
+        ///semantics here are wrong
+        ///need to pad arguments up to this size with undefined
+        if(argc > num_args(func))
             throw std::runtime_error("Bad quickjs function");
 
         js_quickjs::value_context vctx(ctx);
@@ -672,7 +684,7 @@ namespace js_quickjs
 
         std::index_sequence_for<U...> iseq;
 
-        auto tup = get_args<U...>(vctx, iseq, argv);
+        auto tup = get_args<U...>(vctx, iseq, argc, argv);
 
         if constexpr(std::is_same_v<void, T>)
         {
