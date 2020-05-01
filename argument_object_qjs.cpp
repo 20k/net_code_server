@@ -169,7 +169,6 @@ struct heap_stash
 struct global_stash
 {
     JSValue global_stash_value;
-    heap_stash* heap = nullptr;
     JSContext* ctx = nullptr;
 
     global_stash(JSContext* _ctx)
@@ -189,24 +188,20 @@ void init_heap(JSContext* root)
     heap_stash* heap = new heap_stash(root);
     global_stash* stash = new global_stash(root);
 
-    stash->heap = heap;
-
     JS_SetContextOpaque(root, (void*)stash);
+    JS_SetRuntimeOpaque(JS_GetRuntime(root), (void*)heap);
 }
 
-void init_context(JSContext* me, JSContext* them)
+void init_context(JSContext* me)
 {
-    global_stash* them_stash = (global_stash*)JS_GetContextOpaque(them);
-
     global_stash* stash = new global_stash(me);
-    stash->heap = them_stash->heap;
 
     JS_SetContextOpaque(me, (void*)stash);
 }
 
 heap_stash* get_heap_stash(JSContext* ctx)
 {
-    return ((global_stash*)JS_GetContextOpaque(ctx))->heap;
+    return (heap_stash*)JS_GetRuntimeOpaque(JS_GetRuntime(ctx));
 }
 
 js_quickjs::value_context::value_context(JSContext* _ctx)
@@ -220,11 +215,7 @@ js_quickjs::value_context::value_context(value_context& other)
     heap = other.heap;
     ctx = JS_NewContext(heap);
 
-    /*JSValue glob = JS_GetGlobalObject(ctx);
-    JS_DefinePropertyValueStr(ctx, glob, "hello", JS_NewInt32(ctx, 1234), 0);
-    JS_FreeValue(ctx, glob);*/
-
-    init_context(ctx, other.ctx);
+    init_context(ctx);
 
     context_owner = true;
 }
@@ -248,7 +239,9 @@ js_quickjs::value_context::~value_context()
 
         if(runtime_owner)
         {
-            delete stash->heap;
+            heap_stash* heaps = (heap_stash*)JS_GetRuntimeOpaque(heap);
+
+            delete heaps;
         }
 
         delete stash;
@@ -1062,10 +1055,10 @@ js_quickjs::value js_quickjs::get_this(js_quickjs::value_context& vctx)
 
 js_quickjs::value js_quickjs::get_heap_stash(js_quickjs::value_context& vctx)
 {
-    global_stash* stash = (global_stash*)JS_GetContextOpaque(vctx.ctx);
+    heap_stash* stash = (heap_stash*)JS_GetRuntimeOpaque(JS_GetRuntime(vctx.ctx));
 
     js_quickjs::value ret(vctx);
-    ret = stash->heap->heap_stash_value;
+    ret = stash->heap_stash_value;
 
     return ret;
 }
@@ -1082,9 +1075,9 @@ js_quickjs::value js_quickjs::get_global_stash(js_quickjs::value_context& vctx)
 
 void* js_quickjs::get_sandbox_data_impl(js_quickjs::value_context& vctx)
 {
-    global_stash* stash = (global_stash*)JS_GetContextOpaque(vctx.ctx);
+    heap_stash* stash = (heap_stash*)JS_GetRuntimeOpaque(JS_GetRuntime(vctx.ctx));
 
-    return (void*)stash->heap->sandbox;
+    return (void*)stash->sandbox;
 }
 
 js_quickjs::value js_quickjs::add_getter(js_quickjs::value& base, const std::string& key, js_quickjs::funcptr_t func)
