@@ -422,6 +422,8 @@ namespace js_quickjs
         bool is_truthy();
         bool is_object_coercible();
         bool is_object() const;
+        bool is_error() const;
+        bool is_exception() const;
 
         ///stop managing element
         void release();
@@ -565,6 +567,7 @@ namespace js_quickjs
         void pack(){}
         void stringify_parse();
         std::string to_json();
+        std::string to_error_message();
         nlohmann::json to_nlohmann(int stack_depth = 0);
     };
 

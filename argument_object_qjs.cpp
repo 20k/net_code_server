@@ -603,6 +603,22 @@ bool js_quickjs::value::is_object() const
     return JS_IsObject(val);
 }
 
+bool js_quickjs::value::is_error() const
+{
+    if(!has_value)
+        return false;
+
+    return JS_IsError(ctx, val);
+}
+
+bool js_quickjs::value::is_exception() const
+{
+    if(!has_value)
+        return false;
+
+    return JS_IsException(val);
+}
+
 void js_quickjs::value::release()
 {
     released = true;
@@ -1019,6 +1035,14 @@ std::string js_quickjs::value::to_json()
     return (std::string)sval;
 }
 
+std::string js_quickjs::value::to_error_message()
+{
+    std::string msg_1 = get("stack");
+    std::string msg_2 = get("message");
+
+    return "Stack: " + msg_1 + "String: " + msg_2;
+}
+
 js_quickjs::value js_quickjs::get_global(js_quickjs::value_context& vctx)
 {
     js_quickjs::value val(vctx);
@@ -1112,14 +1136,14 @@ std::pair<bool, js_quickjs::value> js_quickjs::call_compiled(value& bitcode)
 {
     JSValue ret = JS_EvalFunction(bitcode.ctx, JS_DupValue(bitcode.ctx, bitcode.val));
 
-    value rval(*bitcode.vctx);
-    rval = ret;
+    value val(*bitcode.vctx);
+    val = ret;
 
-    bool is_err = JS_IsError(bitcode.ctx, ret) || JS_IsException(ret);
+    bool err = JS_IsError(bitcode.ctx, ret) || JS_IsException(ret);
 
     JS_FreeValue(bitcode.ctx, ret);
 
-    return {!is_err, rval};
+    return {!err, val};
 }
 
 std::pair<bool, js_quickjs::value> js_quickjs::compile(value_context& vctx, const std::string& data)

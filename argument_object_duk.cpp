@@ -481,6 +481,23 @@ void js_duk::value::stringify_parse()
     duk_json_decode(ctx, idx);
 }
 
+std::string js_duk::value::to_error_message()
+{
+    if(is_string())
+        return *this;
+
+    std::string err;
+
+    if(has("lineNumber"))
+    {
+        return ((std::string)*this) + "Line Number: " + (std::string)get("lineNumber");
+    }
+    else
+    {
+        return (std::string)*this;
+    }
+}
+
 js_duk::value js_duk::value::operator[](int64_t val)
 {
     return js_duk::value(*vctx, *this, val);
@@ -679,6 +696,19 @@ bool js_duk::value::is_object()
         return false;
 
     return duk_is_object(ctx, idx);
+}
+
+bool js_duk::value::is_error() const
+{
+    if(idx == -1)
+        return false;
+
+    return duk_is_error(ctx, idx);
+}
+
+bool js_duk::value::is_exception() const
+{
+    return false;
 }
 
 void js_duk::value::release()

@@ -415,6 +415,8 @@ namespace js_duk
         bool is_truthy();
         bool is_object_coercible();
         bool is_object();
+        bool is_error() const;
+        bool is_exception() const;
 
         ///stop managing element
         void release();
@@ -593,6 +595,7 @@ namespace js_duk
         std::string to_json();
         std::vector<uint8_t> to_cbor();
         void stringify_parse();
+        std::string to_error_message();
 
         value operator[](int64_t val);
         value operator[](const std::string& str);

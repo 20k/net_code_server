@@ -480,11 +480,54 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
     register_funcs(temporary_vctx, seclevel, get_script_host(vctx), true);
     //#endif // USE_DUKTAPE
 
+    /*#ifdef USE_QUICKJS
+    js::value next_heap(temporary_vctx);
+    next_heap.add("last_seclevel", seclevel);
+
+    js::value context(temporary_vctx);
+
+    context.add("caller", caller);
+    context.add("script_host", script_host);
+    context.add("calling_script", calling_script);
+    context.add("base_caller", base_caller);
+
+    js::value glob = js::get_global(temporary_vctx);
+    js::add_key_value(glob, "context", context);
+
+    js::value next_arg(temporary_vctx);
+
+    if(!arg.is_object_coercible())
+        next_arg = js::undefined;
+    else
+        next_arg = js::xfer_between_contexts(temporary_vctx, arg);
+
+    js::add_key_value(glob, "args", next_arg);
+
+    js::value temp_ret(temporary_vctx);
+    temp_ret = js::eval(temporary_vctx, wrapper);
+
+    bool err = JS_IsError(temporary_vctx.ctx, temp_ret.val) || JS_IsException(temp_ret.val);
+
+    if(err)
+    {
+        JSValue oex = JS_GetException(vctx.ctx);
+
+        js_quickjs::value fex(vctx);
+        fex = oex;
+
+        JS_FreeValue(vctx.ctx, oex);
+
+        temp_ret = (std::string)fex["stack"] + " a " + (std::string)fex["message"] + " b " + (std::string)fex["lineNumber"];
+    }
+
+    ret = js::xfer_between_contexts(vctx, temp_ret);
+
+    #else*/
     auto [compile_success, compiled_func] = js::compile(temporary_vctx, wrapper);
 
     if(!compile_success)
     {
-        std::string err = compiled_func;
+        std::string err = compiled_func.to_error_message();
 
         printf("compile failed: %s\n", err.c_str());
 
@@ -528,7 +571,6 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
         js::value temp_ret(temporary_vctx);
 
-        #if 1
         if(!is_cli)
         {
             auto [success, retval] = js::call_compiled(compiled_func);
@@ -554,30 +596,12 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
             temp_ret = compiled_func;
         }
-        #endif // 0
-
-        /*{
-            auto [success, retval] = js::call_compiled(compiled_func);
-
-            if(!success)
-            {
-                std::cout << "Failed to execute require block " << (std::string)retval << std::endl;
-                throw std::runtime_error("Failed to execute require block " + (std::string)retval);
-            }
-
-            temp_ret = retval;
-        }*/
 
         {
             js::value temp_global = js::get_global(temporary_vctx);
             js::value js_object = temp_global.get("Object");
             js_object.del("getPrototypeOf");
         }
-
-        /*int moved = 3;
-
-        duk_xmove_top(new_ctx, temporary_ctx, moved);
-        duk_remove(new_ctx, -1 - moved); ///removes temporary ctx*/
 
         js::value new_func = js::xfer_between_contexts(new_vctx, temp_ret);
         js::value new_context = js::xfer_between_contexts(new_vctx, context);
@@ -588,10 +612,6 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
             js::add_key_value(glob, "context", new_context);
             js::add_key_value(glob, "args", new_args);
         }
-
-        /*#ifdef USE_QUICKJS
-        register_funcs(new_vctx, seclevel, get_script_host(vctx), true);
-        #endif // USE_QUICKJS*/
 
         bool success = false;
         js::value found_val(new_vctx);
@@ -619,19 +639,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
         if(!success && !timeout)
         {
-            std::string error_prop;
-
-            if(ret.has("lineNumber"))
-            {
-                error_prop = std::to_string((int)ret.get("lineNumber"));
-            }
-
-            std::string err = (std::string)ret;
-
-            if(error_prop == "")
-                ret = js::make_error(vctx, err);
-            else
-                ret = js::make_error(vctx, err + ". Line Number: " + error_prop);
+            ret = js::make_error(vctx, ret.to_error_message());
         }
 
         if(!is_top_level)
@@ -646,6 +654,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
             ret = js::make_error(vctx, "Ran for longer than 5000ms and timed out");
         }
     }
+    //#endif
 
     std::string str = get_hash_d(&vctx);
 
