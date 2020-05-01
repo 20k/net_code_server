@@ -934,6 +934,8 @@ struct js_val_tester
 {
     js_val_tester()
     {
+        printf("Duk\n");
+
         duk_context* ctx = duk_create_heap_default();
 
         js_duk::value_context vctx(ctx);
