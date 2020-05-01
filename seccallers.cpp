@@ -476,9 +476,9 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
     js::value_context temporary_vctx(new_vctx);
 
-    #ifdef USE_DUKTAPE
+    //#ifdef USE_DUKTAPE
     register_funcs(temporary_vctx, seclevel, get_script_host(vctx), true);
-    #endif // USE_DUKTAPE
+    //#endif // USE_DUKTAPE
 
     auto [compile_success, compiled_func] = js::compile(temporary_vctx, wrapper);
 
@@ -589,9 +589,9 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
             js::add_key_value(glob, "args", new_args);
         }
 
-        #ifdef USE_QUICKJS
+        /*#ifdef USE_QUICKJS
         register_funcs(new_vctx, seclevel, get_script_host(vctx), true);
-        #endif // USE_QUICKJS
+        #endif // USE_QUICKJS*/
 
         bool success = false;
         js::value found_val(new_vctx);
@@ -1034,6 +1034,8 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     js::add_key_value(global, "mouse_get_position", js::function<mouse_get_position>);
     js::add_key_value(global, "get_string_col", js::function<get_string_col>);
     js::add_key_value(global, "hash_d", js::function<hash_d>);
+
+    assert(global.has("hash_d"));
 
     if(seclevel <= 4)
         js::add_key_value(global, "db_find", js::function<db_find>).add_hidden("script_host", script_host);

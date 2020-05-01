@@ -1376,6 +1376,20 @@ struct quickjs_tester
             assert(json.size() > 0);
         }
 
+        {
+            js_quickjs::value glob = js_quickjs::get_global(vctx);
+
+            std::cout << "my global " << glob.to_json() << std::endl;
+
+            glob["hi"] = "hello";
+
+            assert(glob.has("hi") && ((std::string)glob["hi"]) == "hello");
+
+            std::cout << "New global " << glob.to_json() << std::endl;
+
+            assert(glob.has("globalThis"));
+        }
+
         printf("Tested quickjs\n");
 
         //exit(0);
