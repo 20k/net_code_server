@@ -336,6 +336,7 @@ bool expand(std::string_view& view, std::string& in, int& offset, int& found_sec
     return false;
 }
 
+#ifdef USE_DUKTAPE
 //https://stackoverflow.com/questions/478898/how-to-execute-a-command-and-get-output-of-command-within-c-using-posix
 std::string capture_exec(const std::string& cmd)
 {
@@ -509,6 +510,7 @@ std::pair<std::string, std::string> make_fill_es6(const std::string& file_name, 
 
     return {process_resulting_code(data["code_postbabel"]["code"]), ""};
 }
+#endif // USE_DUKTAPE
 
 script_data parse_script(const std::string& file_name, std::string in, bool enable_typescript)
 {
@@ -530,6 +532,7 @@ script_data parse_script(const std::string& file_name, std::string in, bool enab
 
     script.valid = true;
 
+    #ifdef USE_DUKTAPE
     if(enable_typescript)
     {
         std::pair<std::string, std::string> result = make_fill_es6(file_name, in);
@@ -542,6 +545,7 @@ script_data parse_script(const std::string& file_name, std::string in, bool enab
             script.valid = false;
         }
     }
+    #endif // USE_DUKTAPE
 
     script.autocompletes = autocompletes;
     script.parsed_source = in;
