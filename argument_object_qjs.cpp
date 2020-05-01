@@ -1002,78 +1002,28 @@ js_quickjs::value js_quickjs::value::operator[](const char* arg)
 
 nlohmann::json js_quickjs::value::to_nlohmann(int stack_depth)
 {
-    if(stack_depth > 100)
-        throw std::runtime_error("Exceeded to_nlohmann stack");
+    JSValue jval = JS_JSONStringify(ctx, val, JS_UNDEFINED, JS_UNDEFINED);
 
-    nlohmann::json built;
+    value sval(*vctx);
+    sval = jval;
 
-    if(is_object())
-    {
-        built = nlohmann::json::parse("{}");
+    nlohmann::json ret = nlohmann::json::parse((std::string)sval);
 
-        std::vector<std::pair<js_quickjs::value, js_quickjs::value>> val = *this;
+    JS_FreeValue(ctx, jval);
 
-        for(auto& i : val)
-        {
-            nlohmann::json keyn = (std::string)i.first;
-            nlohmann::json valn = i.second.to_nlohmann(stack_depth+1);
-
-            built[(std::string)keyn] = valn;
-        }
-
-        return built;
-    }
-
-    if(is_array())
-    {
-        std::vector<js_quickjs::value> val = *this;
-
-        nlohmann::json arr;
-
-        for(int i=0; i < (int)val.size(); i++)
-        {
-            arr[i] = val[i].to_nlohmann(stack_depth+1);
-        }
-
-        return arr;
-    }
-
-    if(is_string())
-    {
-        return (std::string)*this;
-    }
-
-    if(is_number())
-    {
-        return (double)*this;
-    }
-
-    if(is_empty())
-    {
-        return nlohmann::json();
-    }
-
-    if(is_function())
-    {
-        return nlohmann::json();
-    }
-
-    if(is_boolean())
-    {
-        return (bool)*this;
-    }
-
-    if(is_undefined())
-    {
-        return nullptr;
-    }
-
-    throw std::runtime_error("No such json type");
+    return ret;
 }
 
 std::string js_quickjs::value::to_json()
 {
-    return to_nlohmann().dump();
+    JSValue jval = JS_JSONStringify(ctx, val, JS_UNDEFINED, JS_UNDEFINED);
+
+    value sval(*vctx);
+    sval = jval;
+
+    JS_FreeValue(ctx, jval);
+
+    return (std::string)sval;
 }
 
 js_quickjs::value js_quickjs::get_global(js_quickjs::value_context& vctx)
