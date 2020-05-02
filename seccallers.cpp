@@ -518,7 +518,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
     ret = js::xfer_between_contexts(vctx, temp_ret);
 
     #else*/
-    auto [compile_success, compiled_func] = js::compile(temporary_vctx, wrapper, name);
+    auto [compile_success, compiled_func] = js::compile(temporary_vctx, wrapper, script_name);
 
     if(!compile_success)
     {
