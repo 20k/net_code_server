@@ -8,6 +8,7 @@
 #include <atomic>
 #include <vector>
 #include "user.hpp"
+#include "safe_thread.hpp"
 
 struct unprocessed_key_info
 {

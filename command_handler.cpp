@@ -30,6 +30,10 @@
 #include "serialisables.hpp"
 #include "argument_object.hpp"
 
+#ifndef __WIN32__
+#include <unistd.h>
+#endif // __WIN32__
+
 struct unsafe_info
 {
     user* usr;
@@ -336,8 +340,31 @@ struct execution_blocker_guard
     }
 };
 
+struct thread_priority_handler
+{
+    void enable()
+    {
+        #ifdef __WIN32__
+        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+        #else
+        nice(-20);
+        #endif
+    }
+
+    ~thread_priority_handler()
+    {
+        #ifdef __WIN32__
+        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+        #else
+        nice(0);
+        #endif
+    }
+};
+
 std::string run_in_user_context(std::string username, std::string command, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared, std::optional<float> custom_exec_time_s, bool force_exec)
 {
+    //
+
     try
     {
         execution_blocker_guard exec_guard(all_shared);

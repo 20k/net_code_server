@@ -620,9 +620,6 @@
 		<Unit filename="deps/quickjs/libunicode.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="deps/quickjs/quickjs-libc.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="deps/quickjs/quickjs.c">
 			<Option compilerVar="CC" />
 		</Unit>
