@@ -506,19 +506,14 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
     js::value temp_ret(temporary_vctx);
     temp_ret = js::eval(temporary_vctx, wrapper);
 
-    bool err = JS_IsError(temporary_vctx.ctx, temp_ret.val) || JS_IsException(temp_ret.val);
+    bool err = temp_ret.is_error() || temp_ret.is_exception();
 
     if(err)
     {
-        JSValue oex = JS_GetException(vctx.ctx);
-
-        js_quickjs::value fex(vctx);
-        fex = oex;
-
-        JS_FreeValue(vctx.ctx, oex);
-
-        temp_ret = (std::string)fex["stack"] + " a " + (std::string)fex["message"] + " b " + (std::string)fex["lineNumber"];
+        temp_ret = temp_ret.to_error_message();
     }
+
+    std::cout << temp_ret.to_json() << std::endl;
 
     ret = js::xfer_between_contexts(vctx, temp_ret);
 

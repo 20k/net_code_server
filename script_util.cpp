@@ -36,6 +36,9 @@ std::string attach_cli_wrapper(const std::string& str)
 
 std::string attach_unparsed_wrapper(std::string str)
 {
+    while(str.size() > 0 && str.back() != '}')
+        str.pop_back();
+
     return "(function mainfunc(){var func = (" + str + "); return func(context, args);})";
 }
 
@@ -52,9 +55,10 @@ bool script_compiles(js::value_context& vctx, script_info& script, std::string& 
 
     if(!success)
     {
-        err_out = (std::string)result;
+        err_out = result.to_error_message();
 
         printf("scompile failed: %s\n", err_out.c_str());
+        std::cout << "SCRIPT " << wrapper << std::endl;
 
         #ifdef DEBUG_SOURCE
         std::cout << script.parsed_source << std::endl;

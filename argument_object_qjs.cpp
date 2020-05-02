@@ -1046,7 +1046,7 @@ std::string js_quickjs::value::to_error_message()
 
     if(has("message"))
     {
-        err += "Message: " + (std::string)get("message");
+        err += "Message: " + (std::string)get("message") + "\n";
     }
 
     if(has("lineNumber"))
