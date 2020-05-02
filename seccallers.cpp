@@ -452,7 +452,7 @@ void send_async_message(js::value_context& vctx, const std::string& message)
     shared->add_back_write(message);
 }
 
-std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::value& arg, const std::string& data, std::string caller, bool stringify, int seclevel, bool is_top_level, const std::string& calling_script, bool is_cli)
+std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::value& arg, const std::string& data, std::string caller, int seclevel, bool is_top_level, const std::string& calling_script, bool is_cli)
 {
     if(data.size() == 0)
     {
@@ -553,6 +553,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         js::add_key_value(glob, "args", next_arg);
 
         ///THING I DONT REALLY UNDERSTAND BUT IS NECESSARY FOR STUFF TO WORK
+        #ifdef USE_DUKTAPE
         {
             js::value temp_global = js::get_global(temporary_vctx);
             js::value duktape_sym = temp_global.get("Duktape");
@@ -563,6 +564,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
 
             js::add_key_value(new_global_stash, "\xFFmodule:Duktape", xferred);
         }
+        #endif // USE_DUKTAPE
 
         js::value temp_ret(temporary_vctx);
 
@@ -820,7 +822,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
         {
             set_script_info(*vctx, to_call_fullname);
 
-            auto [msg, res] = compile_and_call(*vctx, arg, load, get_caller(*vctx), false, script.seclevel, false, full_script, false);
+            auto [msg, res] = compile_and_call(*vctx, arg, load, get_caller(*vctx), script.seclevel, false, full_script, false);
 
             res.pack();
 
@@ -884,7 +886,7 @@ std::pair<js::value, std::string> js_unified_force_call_data(js::value_context& 
     else
         js::add_key_value(arg, "command", data);
 
-    auto [extra, js_val] = compile_and_call(vctx, arg, unified_invoke.parsed_source, get_caller(vctx), false, unified_invoke.seclevel, !first_invoke_valid, "core.invoke", is_cli);
+    auto [extra, js_val] = compile_and_call(vctx, arg, unified_invoke.parsed_source, get_caller(vctx), unified_invoke.seclevel, !first_invoke_valid, "core.invoke", is_cli);
 
     if(!js_val.is_object_coercible())
     {

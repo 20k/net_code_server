@@ -108,7 +108,7 @@ namespace qarg
     {
         JSValue val = JS_NewArray(ctx);
 
-        for(int i=0; i < v.size(); i++)
+        for(int i=0; i < (int)v.size(); i++)
         {
             JSValue found = push(ctx, v[i]);
             JS_SetPropertyUint32(ctx, val, i, found);

@@ -58,7 +58,6 @@ bool script_compiles(js::value_context& vctx, script_info& script, std::string& 
         err_out = result.to_error_message();
 
         printf("scompile failed: %s\n", err_out.c_str());
-        std::cout << "SCRIPT " << wrapper << std::endl;
 
         #ifdef DEBUG_SOURCE
         std::cout << script.parsed_source << std::endl;
