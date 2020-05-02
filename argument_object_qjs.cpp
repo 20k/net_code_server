@@ -1242,8 +1242,96 @@ value xfer_between_contexts(value_context& destination, const value& val)
     return next;
 }
 
+static JSValue js_bjson_read(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
+{
+    uint8_t *buf;
+    uint64_t pos, len;
+    JSValue obj;
+    size_t size;
+
+    if (JS_ToIndex(ctx, &pos, argv[1]))
+        return JS_EXCEPTION;
+    if (JS_ToIndex(ctx, &len, argv[2]))
+        return JS_EXCEPTION;
+    buf = JS_GetArrayBuffer(ctx, &size, argv[0]);
+    if (!buf)
+        return JS_EXCEPTION;
+    if (pos + len > size)
+        return JS_ThrowRangeError(ctx, "array buffer overflow");
+    obj = JS_ReadObject(ctx, buf + pos, len, JS_READ_OBJ_BYTECODE);
+    return obj;
+}
+
+static JSValue js_bjson_write(JSContext *ctx, JSValueConst this_val,
+                              int argc, JSValueConst *argv)
+{
+    size_t len;
+    uint8_t *buf;
+    JSValue array;
+
+    buf = JS_WriteObject(ctx, &len, argv[0], JS_WRITE_OBJ_BYTECODE);
+    if (!buf)
+        return JS_EXCEPTION;
+    array = JS_NewArrayBufferCopy(ctx, buf, len);
+    js_free(ctx, buf);
+    return array;
+}
+
+
 value sanitise_xfer_between_contexts(value_context& destination, const value& val)
 {
+    /*size_t size = 0;
+    uint8_t* ptr = JS_WriteObject(val.ctx, &size, val.val, JS_WRITE_OBJ_BYTECODE);
+
+    JSValue found = JS_ReadObject(destination.ctx, ptr, size, JS_READ_OBJ_BYTECODE);
+
+    js_quickjs::value rval(destination);
+    rval = found;
+
+    JS_FreeValue(destination.ctx, found);
+
+    return rval;*/
+
+    /*size_t size = 0;
+    uint8_t* ptr = JS_WriteObject(val.ctx, &size, JS_DupValue(val.ctx, val.val), JS_WRITE_OBJ_BYTECODE);
+
+    JSValue found = JS_ReadObject(destination.ctx, ptr, size, JS_READ_OBJ_BYTECODE);
+
+    js_quickjs::value xferred(destination);
+    xferred = found;
+
+    JS_FreeValue(destination.ctx, found);
+
+    assert(!(xferred.is_error() || xferred.is_exception()));*/
+
+    JSValueConst argv1[1] = {val.val};
+
+    JSValue bval = js_bjson_write(destination.ctx, JS_UNDEFINED, 1, argv1);
+
+    assert(!JS_IsException(bval));
+
+    int olen = 0;
+
+    {
+        js_quickjs::value temp(destination);
+        temp = bval;
+
+        olen = temp["byteLength"];
+    }
+
+    js_quickjs::value len(destination);
+    len = olen;
+
+    std::cout << "OLEN" << olen << std::endl;
+
+    JSValueConst argv2[3] = {bval, 0, len};
+
+    JSValue fin_val = js_bjson_read(destination.ctx, JS_UNDEFINED, 3, argv2);
+
+    JS_FreeValue(destination.ctx, bval);
+    JS_FreeValue(destination.ctx, fin_val);
+
     return xfer_between_contexts(destination, val);
 }
 
