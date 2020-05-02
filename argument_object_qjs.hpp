@@ -272,7 +272,7 @@ namespace qarg
             return;
         }
 
-        for(int i=0; i < len; i++)
+        for(int i=0; i < (int)len; i++)
         {
             JSAtom atom = names[i].atom;
 
@@ -290,7 +290,7 @@ namespace qarg
             JS_FreeValue(vctx.ctx, key);
         }
 
-        for(int i=0; i < len; i++)
+        for(int i=0; i < (int)len; i++)
         {
             JS_FreeAtom(vctx.ctx, names[i].atom);
         }
@@ -771,7 +771,7 @@ namespace js_quickjs
     value add_setter(value& base, const std::string& key, js_quickjs::funcptr_t func);
 
     std::pair<bool, value> compile(value_context& vctx, const std::string& data);
-    std::pair<bool, value> compile(value_context& vctx, const std::string& name, const std::string& data);
+    std::pair<bool, value> compile(value_context& vctx, const std::string& data, const std::string& name);
 
     std::string dump_function(value& val);
     value eval(value_context& vctx, const std::string& data);

@@ -1176,10 +1176,10 @@ std::pair<bool, js_quickjs::value> js_quickjs::call_compiled(value& bitcode)
 
 std::pair<bool, js_quickjs::value> js_quickjs::compile(value_context& vctx, const std::string& data)
 {
-    return compile(vctx, "test-name", data);
+    return compile(vctx, data, "unnamed");
 }
 
-std::pair<bool, js_quickjs::value> js_quickjs::compile(value_context& vctx, const std::string& name, const std::string& data)
+std::pair<bool, js_quickjs::value> js_quickjs::compile(value_context& vctx, const std::string& data, const std::string& name)
 {
     JSValue ret = JS_Eval(vctx.ctx, data.c_str(), data.size(), name.c_str(), JS_EVAL_FLAG_COMPILE_ONLY);
 

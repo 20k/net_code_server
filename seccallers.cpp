@@ -452,7 +452,7 @@ void send_async_message(js::value_context& vctx, const std::string& message)
     shared->add_back_write(message);
 }
 
-std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::value& arg, const std::string& data, std::string caller, int seclevel, bool is_top_level, const std::string& calling_script, bool is_cli)
+std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::value& arg, const std::string& data, std::string caller, int seclevel, bool is_top_level, const std::string& calling_script, const std::string& script_name, bool is_cli)
 {
     if(data.size() == 0)
     {
@@ -518,7 +518,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
     ret = js::xfer_between_contexts(vctx, temp_ret);
 
     #else*/
-    auto [compile_success, compiled_func] = js::compile(temporary_vctx, wrapper);
+    auto [compile_success, compiled_func] = js::compile(temporary_vctx, wrapper, name);
 
     if(!compile_success)
     {
@@ -822,7 +822,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
         {
             set_script_info(*vctx, to_call_fullname);
 
-            auto [msg, res] = compile_and_call(*vctx, arg, load, get_caller(*vctx), script.seclevel, false, full_script, false);
+            auto [msg, res] = compile_and_call(*vctx, arg, load, get_caller(*vctx), script.seclevel, false, full_script, script.name, false);
 
             res.pack();
 
@@ -886,7 +886,7 @@ std::pair<js::value, std::string> js_unified_force_call_data(js::value_context& 
     else
         js::add_key_value(arg, "command", data);
 
-    auto [extra, js_val] = compile_and_call(vctx, arg, unified_invoke.parsed_source, get_caller(vctx), unified_invoke.seclevel, !first_invoke_valid, "core.invoke", is_cli);
+    auto [extra, js_val] = compile_and_call(vctx, arg, unified_invoke.parsed_source, get_caller(vctx), unified_invoke.seclevel, !first_invoke_valid, "core.invoke", unified_invoke.name, is_cli);
 
     if(!js_val.is_object_coercible())
     {

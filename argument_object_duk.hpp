@@ -793,7 +793,7 @@ namespace js_duk
     js_duk::value add_setter(js_duk::value& base, const std::string& key, js_duk::funcptr_t func);
 
     std::pair<bool, js_duk::value> compile(js_duk::value_context& vctx, const std::string& data);
-    std::pair<bool, js_duk::value> compile(js_duk::value_context& vctx, const std::string& name, const std::string& data);
+    std::pair<bool, js_duk::value> compile(js_duk::value_context& vctx, const std::string& data, const std::string& name);
     std::string dump_function(js_duk::value& val);
     js_duk::value eval(js_duk::value_context& vctx, const std::string& data);
     js_duk::value xfer_between_contexts(js_duk::value_context& destination, const js_duk::value& val);
