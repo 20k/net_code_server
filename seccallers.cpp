@@ -630,11 +630,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         dukx_sanitise_move_value(new_ctx, ctx, -1);
         #endif // USE_PROXY*/
 
-        #ifdef USE_QUICKJS
-        ret = js::sanitise_xfer_between_contexts(vctx, found_val);
-        #else
         ret = js::xfer_between_contexts(vctx, found_val);
-        #endif // USE_QUICKJS
 
         bool timeout = is_script_timeout(vctx);
 

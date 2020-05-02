@@ -1242,11 +1242,6 @@ value xfer_between_contexts(value_context& destination, const value& val)
     return next;
 }
 
-value sanitise_xfer_between_contexts(value_context& destination, const value& val)
-{
-    return xfer_between_contexts(destination, val);
-}
-
 value make_proxy(value& target, value& handle)
 {
     JSValue arr[2] = {target.val, handle.val};
