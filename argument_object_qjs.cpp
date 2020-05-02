@@ -220,30 +220,6 @@ js_quickjs::value_context::value_context(value_context& other)
     context_owner = true;
 }
 
-JSMallocFunctions get_malloc_functions()
-{
-    JSMallocFunctions ret;
-
-    ret.js_malloc = [](JSMallocState* s, size_t size)
-    {
-        return (void*)nullptr;
-    };
-
-    ret.js_free = [](JSMallocState* s, void* ptr)
-    {
-
-    };
-
-    ret.js_realloc =[](JSMallocState* s, void* ptr, size_t size)
-    {
-        return (void*)nullptr;
-    };
-
-    ret.js_malloc_usable_size = nullptr;
-
-    return ret;
-}
-
 js_quickjs::value_context::value_context()
 {
     heap = JS_NewRuntime();
