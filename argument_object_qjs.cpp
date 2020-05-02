@@ -1387,7 +1387,7 @@ struct quickjs_tester
         printf("compile\n");
 
         {
-            auto [success, res] = js_quickjs::compile(vctx, "none", "1+1");
+            auto [success, res] = js_quickjs::compile(vctx, "1+1", "none");
 
             assert(success);
 
