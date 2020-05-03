@@ -230,6 +230,8 @@ js_quickjs::value_context::value_context(JSInterruptHandler interrupt)
     heap = JS_NewRuntime();
     ctx = JS_NewContext(heap);
 
+    JS_SetMemoryLimit(heap, 1024*1024*4);
+
     init_heap(ctx, interrupt);
 
     runtime_owner = true;
