@@ -1231,14 +1231,14 @@ value eval(value_context& vctx, const std::string& data)
 
     JS_FreeValue(vctx.ctx, ret);
 
-    if(rval.is_error() || rval.is_exception())
+    /*if(rval.is_error() || rval.is_exception())
     {
         JSValue err_val = JS_GetException(vctx.ctx);
 
         rval = err_val;
 
         JS_FreeValue(vctx.ctx, err_val);
-    }
+    }*/
 
     return rval;
 }

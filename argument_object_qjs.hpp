@@ -577,6 +577,7 @@ namespace js_quickjs
         return in.val;
     }
 
+    ///This eats C++ exceptions and converts them into JS exceptions
     template<typename... T>
     inline
     std::pair<bool, value> call(value& func, T&&... vals)
@@ -604,14 +605,14 @@ namespace js_quickjs
 
         JS_FreeValue(func.ctx, ret);
 
-        if(err)
+        /*if(err)
         {
             JSValue err_val = JS_GetException(func.ctx);
 
             rval = err_val;
 
             JS_FreeValue(func.ctx, err_val);
-        }
+        }*/
 
         return {!err, rval};
     }
@@ -685,6 +686,18 @@ namespace js_quickjs
         return std::make_tuple(get_element<U, Is>(vctx, argc, argv)...);
     }
 
+    struct this_cleaner
+    {
+        js_quickjs::value_context& vctx;
+
+        this_cleaner(js_quickjs::value_context& _vctx) : vctx(_vctx) {}
+
+        ~this_cleaner()
+        {
+            vctx.pop_this();
+        }
+    };
+
     template<typename T, typename... U>
     inline
     JSValue js_safe_function_decomposed(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst *argv, T(*func)(U...))
@@ -692,7 +705,9 @@ namespace js_quickjs
         ///semantics here are wrong
         ///need to pad arguments up to this size with undefined
         if(argc > js_quickjs::num_args(func))
-            throw std::runtime_error("Bad quickjs function");
+        {
+            return JS_ThrowInternalError(ctx, "Bad quickjs function");
+        }
 
         js_quickjs::value_context vctx(ctx);
 
@@ -700,46 +715,54 @@ namespace js_quickjs
         func_this = this_val;
 
         vctx.push_this(func_this);
+        this_cleaner clean(vctx);
 
         std::index_sequence_for<U...> iseq;
 
         auto tup = get_args<U...>(vctx, iseq, argc, argv);
 
-        if constexpr(std::is_same_v<void, T>)
+        try
         {
-            std::apply(func, tup);
-
-            js_quickjs::value val(vctx);
-            val = js_quickjs::undefined;
-
-            val.release();
-
-            vctx.pop_this();
-
-            return val.val;
-        }
-        else
-        {
-            auto rval = std::apply(func, tup);
-
-            if constexpr(std::is_same_v<T, js_quickjs::value>)
+            if constexpr(std::is_same_v<void, T>)
             {
-                rval.release();
+                std::apply(func, tup);
 
-                vctx.pop_this();
-
-                return rval.val;
-            }
-            else
-            {
                 js_quickjs::value val(vctx);
-                val = rval;
-                val.release();
+                val = js_quickjs::undefined;
 
-                vctx.pop_this();
+                val.release();
 
                 return val.val;
             }
+            else
+            {
+                auto rval = std::apply(func, tup);
+
+                if constexpr(std::is_same_v<T, js_quickjs::value>)
+                {
+                    rval.release();
+
+                    return rval.val;
+                }
+                else
+                {
+                    js_quickjs::value val(vctx);
+                    val = rval;
+                    val.release();
+
+                    return val.val;
+                }
+            }
+        }
+        catch(std::runtime_error& err)
+        {
+            const char* str = err.what();
+
+            return JS_ThrowInternalError(ctx, "%s", str);
+        }
+        catch(...)
+        {
+            return JS_ThrowInternalError(ctx, "Unknown C++ exception");
         }
     }
 
