@@ -85,6 +85,12 @@ struct sthread
     }*/
 };
 
+struct thread_priority_handler
+{
+    void enable();
+    ~thread_priority_handler();
+};
+
 struct lock_counter
 {
     lock_counter();

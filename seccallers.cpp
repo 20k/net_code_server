@@ -14,6 +14,7 @@
 #include "duk_modules.hpp"
 #include "argument_object.hpp"
 
+///still needs to be defined while we're compiling duktape
 int my_timeout_check(void* udata)
 {
     if(udata == nullptr)
@@ -23,6 +24,35 @@ int my_timeout_check(void* udata)
 
     return 0;
 }
+
+#ifdef USE_QUICKJS
+int interrupt_handler(JSRuntime* rt, void* udata)
+{
+    if(udata == nullptr)
+        return 0;
+
+    sandbox_data* sand_data = (sandbox_data*)udata;
+    if(sand_data->terminate_semi_gracefully)
+    { printf("Cooperating with kill udata\n");
+        return 1;
+    }
+    if(sand_data->terminate_realtime_gracefully)
+    { printf("Cooperating with kill realtime\n");
+        return 1;
+    }
+    try
+    {
+        handle_sleep(sand_data);
+    }
+    catch(...)
+    {
+        return 1;
+    }
+
+    return 0;
+}
+#endif // USE_QUICKJS
+
 
 void dummy(js::value_context* vctx)
 {
@@ -643,7 +673,7 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
         {
             ///this essentially rethrows an exception
             ///if we're not top level, and we've timedout
-            COOPERATE_KILL_UDATA(js::get_sandbox_data<sandbox_data>(vctx));
+            //COOPERATE_KILL_UDATA(js::get_sandbox_data<sandbox_data>(vctx));
         }
 
         if(!success && is_top_level && timeout)

@@ -10,7 +10,13 @@
 
 struct shared_duk_worker_state;
 
+#ifdef USE_DUKTAPE
 int my_timeout_check(void* udata);
+#endif // USE_DUKTAPE
+
+#ifdef USE_QUICKJS
+int interrupt_handler(JSRuntime* rt, void* udata);
+#endif // USE_QUICKJS
 
 void async_pipe(js::value_context* vctx, std::string str);
 

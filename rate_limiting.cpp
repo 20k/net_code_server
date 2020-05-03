@@ -130,6 +130,9 @@ void handle_sleep(sandbox_data* dat)
 
         dat->sleep_for -= floor(diff);*/
 
+        thread_priority_handler tp;
+        tp.enable();
+
         sf::sleep(sf::milliseconds(val));
     }
 

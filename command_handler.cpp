@@ -44,7 +44,11 @@ struct unsafe_info
 
     std::string ret;
 
+    #ifndef USE_QUICKJS
     unsafe_info() : returned_val(heap)
+    #else
+    unsafe_info() : heap(interrupt_handler), returned_val(heap)
+    #endif
     {
 
     }
@@ -117,12 +121,6 @@ namespace script_management_mode
         DEFAULT,
         REALTIME,
     };
-}
-
-void sleep_thread_for(sandbox_data* sand_data, sthread& t, int sleep_ms)
-{
-    sand_data->sleep_for += sleep_ms;
-    sthread::this_sleep(sleep_ms);
 }
 
 template<typename T>
@@ -287,6 +285,9 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
 
             ///remember to set work units here
 
+            thread_priority_handler tp;
+            tp.enable();
+
             while(elapsed.getElapsedTime().asMicroseconds() / 1000. < max_frame_time_ms)
             {
                 sf::sleep(sf::milliseconds(1));
@@ -337,27 +338,6 @@ struct execution_blocker_guard
             shared.value()->execution_is_blocked = false;
             shared.value()->execution_requested = false;
         }
-    }
-};
-
-struct thread_priority_handler
-{
-    void enable()
-    {
-        #ifdef __WIN32__
-        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
-        #else
-        nice(-20);
-        #endif
-    }
-
-    ~thread_priority_handler()
-    {
-        #ifdef __WIN32__
-        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
-        #else
-        nice(0);
-        #endif
     }
 };
 
@@ -457,7 +437,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         if(all_shared.has_value())
         {
-            tp.enable();
+            //tp.enable();
         }
 
         script_management_mode::mode current_mode = script_management_mode::DEFAULT;
@@ -1525,10 +1505,6 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
 
                 if(script_inf.valid && script_inf.in_public)
                     was_public = true;
-            }
-
-            {
-
             }
 
             script_info script_inf;

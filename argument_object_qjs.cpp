@@ -183,13 +183,18 @@ struct global_stash
     }
 };
 
-void init_heap(JSContext* root)
+void init_heap(JSContext* root, JSInterruptHandler interrupt)
 {
     heap_stash* heap = new heap_stash(root);
     global_stash* stash = new global_stash(root);
 
     JS_SetContextOpaque(root, (void*)stash);
     JS_SetRuntimeOpaque(JS_GetRuntime(root), (void*)heap);
+
+    if(interrupt)
+        JS_SetInterruptHandler(JS_GetRuntime(root), interrupt, heap->sandbox);
+
+    JS_SetCanBlock(JS_GetRuntime(root), false);
 }
 
 void init_context(JSContext* me)
@@ -220,12 +225,12 @@ js_quickjs::value_context::value_context(value_context& other)
     context_owner = true;
 }
 
-js_quickjs::value_context::value_context()
+js_quickjs::value_context::value_context(JSInterruptHandler interrupt)
 {
     heap = JS_NewRuntime();
     ctx = JS_NewContext(heap);
 
-    init_heap(ctx);
+    init_heap(ctx, interrupt);
 
     runtime_owner = true;
     context_owner = true;
@@ -1162,6 +1167,10 @@ std::pair<bool, js_quickjs::value> js_quickjs::call_compiled(value& bitcode)
 
     JS_FreeValue(bitcode.ctx, ret);
 
+    //assert(val.has("stack"));
+
+    /*std::cout << "MSG " << val.to_error_message() << std::endl;
+
     if(err)
     {
         JSValue err_val = JS_GetException(bitcode.ctx);
@@ -1169,7 +1178,7 @@ std::pair<bool, js_quickjs::value> js_quickjs::call_compiled(value& bitcode)
         val = err_val;
 
         JS_FreeValue(bitcode.ctx, err_val);
-    }
+    }*/
 
     return {!err, val};
 }
@@ -1190,14 +1199,14 @@ std::pair<bool, js_quickjs::value> js_quickjs::compile(value_context& vctx, cons
 
     bool err = JS_IsException(val.val) || JS_IsError(vctx.ctx, val.val);
 
-    if(err)
+    /*if(err)
     {
         JSValue err_val = JS_GetException(vctx.ctx);
 
         val = err_val;
 
         JS_FreeValue(vctx.ctx, err_val);
-    }
+    }*/
 
     return {!err, val};
 }
