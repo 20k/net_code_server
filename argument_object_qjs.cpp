@@ -1169,16 +1169,16 @@ std::pair<bool, js_quickjs::value> js_quickjs::call_compiled(value& bitcode)
 
     //assert(val.has("stack"));
 
-    /*std::cout << "MSG " << val.to_error_message() << std::endl;
+    //std::cout << "MSG " << val.to_error_message() << std::endl;
 
-    if(err)
+    if(JS_IsException(ret))
     {
         JSValue err_val = JS_GetException(bitcode.ctx);
 
         val = err_val;
 
         JS_FreeValue(bitcode.ctx, err_val);
-    }*/
+    }
 
     return {!err, val};
 }
@@ -1197,16 +1197,16 @@ std::pair<bool, js_quickjs::value> js_quickjs::compile(value_context& vctx, cons
 
     JS_FreeValue(vctx.ctx, ret);
 
-    bool err = JS_IsException(val.val) || JS_IsError(vctx.ctx, val.val);
+    bool err = JS_IsException(val.val) || JS_IsError(vctx.ctx, ret);
 
-    /*if(err)
+    if(JS_IsException(val.val))
     {
         JSValue err_val = JS_GetException(vctx.ctx);
 
         val = err_val;
 
         JS_FreeValue(vctx.ctx, err_val);
-    }*/
+    }
 
     return {!err, val};
 }
@@ -1231,14 +1231,14 @@ value eval(value_context& vctx, const std::string& data)
 
     JS_FreeValue(vctx.ctx, ret);
 
-    /*if(rval.is_error() || rval.is_exception())
+    if(rval.is_exception())
     {
         JSValue err_val = JS_GetException(vctx.ctx);
 
         rval = err_val;
 
         JS_FreeValue(vctx.ctx, err_val);
-    }*/
+    }
 
     return rval;
 }
