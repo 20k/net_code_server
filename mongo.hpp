@@ -257,8 +257,6 @@ void insert_in_db(mongo_lock_proxy& ctx, const nlohmann::json& to_insert)
 
 extern std::array<mongo_context*, (int)mongo_database_type::MONGO_COUNT> mongo_databases;
 
-///if a script were terminated while fetching the global mongo context, everything would break
-///ALARM: ALARM:
 inline
 mongo_shim get_global_mongo_context(mongo_database_type type, int lock_id, bool destroy = false)
 {
