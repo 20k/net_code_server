@@ -1188,8 +1188,15 @@ void dukx_setup_db_proxy(js::value_context& vctx)
     std::string secret_host = get_script_host(vctx);
     js::value global = js::get_global(vctx);
 
+    #ifdef USE_DUKTAPE
     js::add_setter(global, "$db", js::function<db_proxy_set>).add_hidden("OHOST", secret_host);
     js::add_getter(global, "$db", js::function<db_getter_get>).add_hidden("OHOST", secret_host);
+    #else
+    auto [v1, v2] = js::add_getter_setter(global, "$db", js::function<db_getter_get>, js::function<db_proxy_set>);
+
+    v1.add_hidden("OHOST", secret_host);
+    v2.add_hidden("OHOST", secret_host);
+    #endif // USE_DUKTAPE
 }
 
 std::pair<js::value, js::value> dukx_db_push_proxy_handlers(js::value_context& vctx)

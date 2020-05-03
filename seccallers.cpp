@@ -1121,7 +1121,7 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     }
 
     //#ifdef TESTING
-    if(seclevel <= 3)
+    //if(seclevel <= 3)
     {
         dukx_setup_db_proxy(vctx);
     }

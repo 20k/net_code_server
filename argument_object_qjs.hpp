@@ -790,8 +790,12 @@ namespace js_quickjs
         return (T*)get_sandbox_data_impl(vctx);
     }
 
+    #if 0
     value add_getter(value& base, const std::string& key, js_quickjs::funcptr_t func);
     value add_setter(value& base, const std::string& key, js_quickjs::funcptr_t func);
+    #endif // 0
+
+    std::pair<value, value> add_getter_setter(value& base, const std::string& key, js_quickjs::funcptr_t get, js_quickjs::funcptr_t set);
 
     std::pair<bool, value> compile(value_context& vctx, const std::string& data);
     std::pair<bool, value> compile(value_context& vctx, const std::string& data, const std::string& name);

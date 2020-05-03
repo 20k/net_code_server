@@ -1130,6 +1130,7 @@ void* js_quickjs::get_sandbox_data_impl(js_quickjs::value_context& vctx)
     return (void*)stash->sandbox;
 }
 
+#if 0
 js_quickjs::value js_quickjs::add_getter(js_quickjs::value& base, const std::string& key, js_quickjs::funcptr_t func)
 {
     js_quickjs::value val(*base.vctx);
@@ -1137,7 +1138,7 @@ js_quickjs::value js_quickjs::add_getter(js_quickjs::value& base, const std::str
 
     JSAtom str = JS_NewAtomLen(base.ctx, key.c_str(), key.size());
 
-    JS_DefineProperty(base.ctx, base.val, str, JS_UNDEFINED, val.val, JS_UNDEFINED, JS_PROP_HAS_GET | JS_PROP_HAS_CONFIGURABLE | JS_PROP_HAS_ENUMERABLE);
+    JS_DefineProperty(base.ctx, base.val, str, JS_UNDEFINED, val.val, JS_UNDEFINED, JS_PROP_HAS_GET);
 
     JS_FreeAtom(base.ctx, str);
 
@@ -1151,11 +1152,29 @@ js_quickjs::value js_quickjs::add_setter(js_quickjs::value& base, const std::str
 
     JSAtom str = JS_NewAtomLen(base.ctx, key.c_str(), key.size());
 
-    JS_DefineProperty(base.ctx, base.val, str, JS_UNDEFINED, JS_UNDEFINED, val.val, JS_PROP_HAS_SET | JS_PROP_HAS_CONFIGURABLE | JS_PROP_HAS_ENUMERABLE);
+    JS_DefineProperty(base.ctx, base.val, str, JS_UNDEFINED, JS_UNDEFINED, val.val, JS_PROP_HAS_SET);
 
     JS_FreeAtom(base.ctx, str);
 
     return val;
+}
+#endif // 0
+
+std::pair<js_quickjs::value, js_quickjs::value> js_quickjs::add_getter_setter(js_quickjs::value& base, const std::string& key, js_quickjs::funcptr_t get, js_quickjs::funcptr_t set)
+{
+    js_quickjs::value vget(*base.vctx);
+    vget = get;
+
+    js_quickjs::value vset(*base.vctx);
+    vset = set;
+
+    JSAtom str = JS_NewAtomLen(base.ctx, key.c_str(), key.size());
+
+    JS_DefinePropertyGetSet(base.ctx, base.val, str, JS_DupValue(base.ctx, vget.val), JS_DupValue(base.ctx, vset.val), 0);
+
+    JS_FreeAtom(base.ctx, str);
+
+    return {vget, vset};
 }
 
 std::pair<bool, js_quickjs::value> js_quickjs::call_compiled(value& bitcode)
