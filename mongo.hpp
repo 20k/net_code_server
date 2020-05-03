@@ -151,21 +151,6 @@ struct mongo_nolock_proxy : mongo_lock_proxy
     mongo_nolock_proxy(const mongo_shim& shim);
 };
 
-//https://stackoverflow.com/questions/30166706/c-convert-simple-values-to-string
-template<typename T>
-inline
-typename std::enable_if<std::is_fundamental<T>::value, std::string>::type stringify_hack(const T& t)
-{
-    return std::to_string(t);
-}
-
-template<typename T>
-inline
-typename std::enable_if<!std::is_fundamental<T>::value, std::string>::type  stringify_hack(const T& t)
-{
-    return std::string(t);
-}
-
 ///ok, support for arrays is now non negotiable
 struct mongo_requester
 {
