@@ -506,6 +506,7 @@
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
 		</Unit>
+		<Unit filename="deps/libncclient/nc_util.hpp" />
 		<Unit filename="deps/networking/beast_compilation_unit.cpp">
 			<Option target="Debug" />
 			<Option target="Release" />
