@@ -94,13 +94,22 @@ js::value async_print(js::value_context* vctx, std::string what)
 	return js::make_error(*vctx, "No pointer or wrong user");
 }
 
-/*js::value make_console_log(js::value_context* vctx)
+void make_console_log(js::value_context& vctx)
 {
     std::string program =
 R"(
+   console = {
+      log : function(...xs)
+       {
+           var args = xs.join(" ");
 
+           async_print(args);
+       }
+   };
 )";
-}*/
+
+    js::eval(vctx, program);
+}
 
 js::value async_print_raw(js::value_context* vctx, std::string what)
 {
@@ -1122,11 +1131,13 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     #endif // TESTING*/
 
     ///console.log
-    {
+    /*{
         js::value console(vctx);
         js::add_key_value(console, "log", js::function<async_print>);
         js::add_key_value(global, "console", console);
-    }
+    }*/
+
+    make_console_log(vctx);
 
     //#ifdef TESTING
     //if(seclevel <= 3)
