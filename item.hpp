@@ -85,10 +85,42 @@ struct item : serialisable, free_function
             data[key] = t;
     }
 
-    nlohmann::json get(const std::string& key)
+    nlohmann::json get_untyped(const std::string& key)
     {
         if(!has(key))
             return nlohmann::json();
+
+        return data[key];
+    }
+
+    int get_int(const std::string& key)
+    {
+        if(!has(key))
+            return 0;
+
+        return data[key];
+    }
+
+    std::string get_string(const std::string& key)
+    {
+        if(!has(key))
+            return "";
+
+        return data[key];
+    }
+
+    double get_double(const std::string& key)
+    {
+        if(!has(key))
+            return 0;
+
+        return data[key];
+    }
+
+    size_t get_size_t(const std::string& key)
+    {
+        if(!has(key))
+            return 0;
 
         return data[key];
     }
@@ -132,6 +164,8 @@ struct item : serialisable, free_function
     void force_rotate();
     void breach();
     bool is_breached();
+
+    void fix();
 };
 
 extern

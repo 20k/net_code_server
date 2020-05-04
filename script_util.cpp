@@ -641,26 +641,26 @@ bool script_info::load_from_db(mongo_lock_proxy& ctx)
     db_disk_load(ctx, my_script, name);
 
     //name = my_script.get("item_id");
-    in_public = my_script.get("in_public");
+    in_public = my_script.get_int("in_public");
     //name = my_script.get_prop("item_id");
-    owner = my_script.get("owner");
+    owner = my_script.get_string("owner");
     //is_script = my_script.get_prop("is_script");
 
-    unparsed_source = my_script.get("unparsed_source");
+    unparsed_source = my_script.get_string("unparsed_source");
 
     args = decltype(args)();
     params = decltype(params)();
 
-    args = (std::vector<std::string>)my_script.get("args");
-    params = (std::vector<std::string>)my_script.get("params");
+    args = (std::vector<std::string>)my_script.get_untyped("args");
+    params = (std::vector<std::string>)my_script.get_untyped("params");
 
-    parsed_source = my_script.get("parsed_source");
-    seclevel = my_script.get("seclevel");
-    valid = my_script.get("valid");
+    parsed_source = my_script.get_string("parsed_source");
+    seclevel = my_script.get_int("seclevel");
+    valid = my_script.get_int("valid");
 
     //std::cout << "valid? " << valid << std::endl;
 
-    metadata.load_from_string(my_script.get("metadata"));
+    metadata.load_from_string(my_script.get_string("metadata"));
 
     if(!valid || parsed_source.size() == 0)
     {

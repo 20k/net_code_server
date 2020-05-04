@@ -1695,7 +1695,7 @@ std::string format_item(item& i, bool is_short, user& usr, user_nodes& nodes)
 
     std::string ret = "{\n";
 
-    bool is_open_source = (int)i.get("open_source");
+    bool is_open_source = (int)i.get_int("open_source");
 
     //for(auto& p : i.data)
     for(auto it = i.data.begin(); it != i.data.end(); it++)
@@ -1751,7 +1751,7 @@ nlohmann::json get_item_raw(item& i, bool is_short, user& usr, user_nodes& nodes
         return obj;
     }
 
-    bool is_open_source = (int)i.get("open_source");
+    bool is_open_source = (int)i.get_int("open_source");
 
     //for(auto& p : i.props.properties)
     for(auto it = i.data.begin(); it != i.data.end(); it++)
@@ -1815,7 +1815,7 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
         db_disk_load(item_ctx, next, which);
     }
 
-    if((int)next.get("item_type") != (int)item_types::LOCK)
+    if((int)next.get_int("item_type") != (int)item_types::LOCK)
     {
         std::string tl = usr.index_to_item(load_idx);
         std::string tul = usr.index_to_item(unload_idx);
@@ -2506,10 +2506,10 @@ js::value item__bundle_script(priv_context& priv_ctx, js::value_context& vctx, j
 
         db_disk_load(item_lock, found_bundle, item_id);
 
-        if((int)found_bundle.get("item_type") != item_types::EMPTY_SCRIPT_BUNDLE)
+        if((int)found_bundle.get_int("item_type") != item_types::EMPTY_SCRIPT_BUNDLE)
             return js::make_error(vctx, "Not a script bundle");
 
-        if((int)found_bundle.get("full") != 0)
+        if((int)found_bundle.get_int("full") != 0)
             return js::make_error(vctx, "Not an empty script bundle");
 
         /*item found_script;
@@ -2528,7 +2528,7 @@ js::value item__bundle_script(priv_context& priv_ctx, js::value_context& vctx, j
         if(!found_script.valid)
             return js::make_error(vctx, "Script invalid");
 
-        int max_storage = found_bundle.get("max_script_size");
+        int max_storage = found_bundle.get_int("max_script_size");
 
         if((int)found_script.unparsed_source.size() > max_storage)
             return js::make_error(vctx, "Empty bundle does not contain enough space");
@@ -2596,10 +2596,10 @@ js::value item__register_bundle(priv_context& priv_ctx, js::value_context& vctx,
 
         db_disk_load(item_lock, found_bundle, item_id);
 
-        if((int)found_bundle.get("item_type") != item_types::EMPTY_SCRIPT_BUNDLE)
+        if((int)found_bundle.get_int("item_type") != item_types::EMPTY_SCRIPT_BUNDLE)
             return js::make_error(vctx, "Not a script bundle");
 
-        if((int)found_bundle.get("full") != 1)
+        if((int)found_bundle.get_int("full") != 1)
             return js::make_error(vctx, "Not a full script bundle");
 
         found_bundle.set_as("registered_as", scriptname);
@@ -2661,7 +2661,7 @@ js::value item__configure_on_breach(priv_context& priv_ctx, js::value_context& v
             return js::make_error(vctx, "No such item");
     }
 
-    if((int)it.get("item_type") != item_types::ON_BREACH)
+    if((int)it.get_int("item_type") != item_types::ON_BREACH)
         return js::make_error(vctx, "Wrong item type, must be on_breach");
 
     std::string new_name = on_breach_name_to_real_script_name(scriptname, priv_ctx.original_host);
@@ -2998,7 +2998,7 @@ js::value item__steal(priv_context& priv_ctx, js::value_context& vctx, js::value
         if(!db_disk_load(mongo_ctx, it, item_id))
             continue;
 
-        if((int)it.get("item_type") == item_types::LOCK && nodes.any_contains_lock(item_id))
+        if((int)it.get_int("item_type") == item_types::LOCK && nodes.any_contains_lock(item_id))
         {
             if(loaded_lock)
                 return js::make_error(vctx, "Cannot steal more than one loaded lock");
@@ -3532,7 +3532,7 @@ js::value hack_internal(priv_context& priv_ctx, js::value_context& vctx, js::val
 
         for(item& it : all_items)
         {
-            if((int)it.get("item_type") == item_types::ON_BREACH && usr.has_loaded_item(it.item_id))
+            if((int)it.get_int("item_type") == item_types::ON_BREACH && usr.has_loaded_item(it.item_id))
             {
                 std::string script_name = it.get_prop("script_name");
 
@@ -6193,11 +6193,15 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
 
     bool is_warpy = false;
 
+    printf("One\n");
+
     {
         mongo_nolock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(vctx));
 
         is_warpy = npc_info::has_type(mongo_ctx, npc_info::WARPY, target.name);
     }
+
+    printf("Two\n");
 
     user_nodes target_nodes = get_nodes(target.name, get_thread_id(vctx));
 
@@ -6213,6 +6217,8 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
                                         to_string_with_enforced_variable_dp(my_local_pos.y(), 2) + ", " +
                                         to_string_with_enforced_variable_dp(my_local_pos.z(), 2) + "]\n";
 
+    printf("Three\n");
+
     total_msg += situation_string;
 
     //std::string sector_string = "Sector: " + usr.fetch_sector();
@@ -6220,6 +6226,8 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
 
     std::string system_string = "System: " + colour_string(current_sys.name);
     total_msg += system_string + "\n";
+
+    printf("Four\n");
 
     double maximum_warp_distance = MAXIMUM_WARP_DISTANCE;
 
@@ -6230,6 +6238,8 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
     array_data["distance"] = distance;
 
     array_data["is_long_distance_traveller"] = is_warpy;
+
+    printf("Five\n");
 
     if(is_warpy && in_same_system)
     {
@@ -6318,6 +6328,8 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
 
     std::string links_string = "";
 
+    printf("Six\n");
+
     {
         network_accessibility_info info = playspace_network_manage.generate_network_accessibility_from(vctx, target.name, n_count);
 
@@ -6327,6 +6339,8 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
 
         const std::string& name = target_name;
         vec3f pos = info.global_pos[name];
+
+        printf("Seven\n");
 
         array_data["name"] = name;
         array_data["x"] = pos.x();
@@ -6343,6 +6357,8 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
                 it++;
         }
 
+        printf("Eight\n");
+
         std::vector<float> stabs;
 
         for(int i=0; i < (int)connections.size(); i++)
@@ -6355,6 +6371,7 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
                 stabs.push_back(-1.f);
         }
 
+        printf("Nine\n");
 
         array_data["links"] = connections;
         array_data["stabilities"] = stabs;
@@ -6362,17 +6379,29 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
         links_string = get_net_view_data_str(all_npc_data, false);
     }
 
+    printf("Ten\n");
+
     ///handle connection
     ///should be able to connect to a visible npc
     ///we need a more general way to define this visibility rule as its not uncommon now
     ///maybe should handle this in playspace_network_manager?
     if(!is_warpy)
     {
+        printf("Ten0.01\n");
+        playspace_network_manage.current_network_links(target.name);
+        printf("Ten0.02\n");
+        playspace_network_manage.max_network_links(target.name);
+        printf("Ten0.03\n");
+
         std::string connections = "Target Links: " + std::to_string(playspace_network_manage.current_network_links(target.name)) + "/" + std::to_string(playspace_network_manage.max_network_links(target.name))
                                 //+ "\n";
                                 + " " + links_string + "\n";
 
+        printf("Ten.1\n");
+
         total_msg += connections;
+
+        printf("Ten.2\n");
 
         array_data["max_links"] = playspace_network_manage.max_network_links(target.name);
 
@@ -6383,6 +6412,8 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
         {
             std::cout << i << std::endl;
         }*/
+
+        printf("Eleven\n");
 
         if(!has_users && get_caller(vctx) != target.name && in_same_system)
         {

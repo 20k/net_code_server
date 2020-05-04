@@ -201,6 +201,11 @@ bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, co
 
     deserialise(found[0], val, serialise_mode::DISK);
 
+    if constexpr(std::is_same_v<T, item>)
+    {
+        val.fix();
+    }
+
     return true;
 }
 
@@ -289,6 +294,11 @@ std::vector<T> db_load_all_impl(mongo_lock_proxy& ctx, const std::string& key_na
         T& next = ret.emplace_back();
 
         deserialise(i, next, serialise_mode::DISK);
+
+        if constexpr(std::is_same_v<T, item>)
+        {
+            next.fix();
+        }
     }
 
     return ret;

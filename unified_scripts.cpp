@@ -119,7 +119,7 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
 
             item fnd = current_user.get_loaded_callable_scriptname_item(item_ctx, full_scriptname);
 
-            if(!fnd.has("valid") || (int)fnd.get("valid") != 1)
+            if(!fnd.has("valid") || (int)fnd.get_int("valid") != 1)
             {
                 err = "Invalid Script";
                 return unified_script_info();

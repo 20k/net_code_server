@@ -99,18 +99,28 @@ std::map<std::string, double> user::get_properties_from_loaded_items(mongo_lock_
 {
     std::map<std::string, double> ret;
 
+    printf("All\n");
+
     std::vector<std::string> all_items = all_loaded_items();
+
+    printf("Pall\n");
 
     for(std::string& id : all_items)
     {
+        printf("Prelod\n");
+
         item item_id;
         db_disk_load(ctx, item_id, id);
 
-        ret["char_count"] += (int)item_id.get("char_count");
-        ret["script_slots"] += (int)item_id.get("script_slots");
-        ret["public_script_slots"] += (int)item_id.get("public_script_slots");
-        ret["network_links"] += (int)item_id.get("network_links");
+        printf("Lod\n");
+
+        ret["char_count"] += (int)item_id.get_int("char_count");
+        ret["script_slots"] += (int)item_id.get_int("script_slots");
+        ret["public_script_slots"] += (int)item_id.get_int("public_script_slots");
+        ret["network_links"] += (int)item_id.get_int("network_links");
     }
+
+    printf("Don\n");
 
     return ret;
 }
@@ -119,20 +129,30 @@ std::map<std::string, double> user::get_total_user_properties(int thread_id)
 {
     std::map<std::string, double> found;
 
+    printf("Preuserprops\n");
+
 
     {
         mongo_nolock_proxy ctx = get_global_mongo_user_items_context(thread_id);
 
+        printf("Postdb\n");
+
         found = get_properties_from_loaded_items(ctx);
+
+        printf("Postfound\n");
     }
 
     found["char_count"] += 500;
     found["script_slots"] += 2;
     found["public_script_slots"] += 1;
 
+    printf("Post1\n");
+
     {
         found["network_links"] = get_default_network_links(-2);
     }
+
+    printf("Post2\n");
 
     found["max_items"] = MAX_ITEMS;
 
@@ -161,6 +181,8 @@ std::map<std::string, double> user::get_total_user_properties(int thread_id)
             }
         }
     }
+
+    printf("Postnpc\n");
 
     return found;
 }

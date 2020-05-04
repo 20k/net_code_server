@@ -135,15 +135,15 @@ void bot_thread()
                     db_disk_load(mongo_ctx, next_item, item_id);
                 }
 
-                int type = next_item.get("item_type");
+                int type = next_item.get_int("item_type");
 
                 if(type != item_types::AUTO_SCRIPT_RUNNER)
                     continue;
 
                 //std::cout << "of type bot brain" << std::endl;
 
-                size_t found_time_ms = next_item.get("last_run");
-                double run_s = next_item.get("run_every_s");
+                size_t found_time_ms = next_item.get_size_t("last_run");
+                double run_s = next_item.get_double("run_every_s");
 
                 size_t next_time = found_time_ms + run_s * 1000;
 

@@ -142,7 +142,7 @@ bool item::transfer_from_to_by_index(int index, user& u1, user& u2, int thread_i
         set_as("item_id", item_id);
 
         ///unregister script bundle
-        if((int)get("item_type") == item_types::EMPTY_SCRIPT_BUNDLE)
+        if((int)get_int("item_type") == item_types::EMPTY_SCRIPT_BUNDLE)
             set_as("registered_as", "");
 
         db_disk_overwrite(item_ctx, *this);
@@ -159,11 +159,11 @@ bool item::transfer_from_to_by_index(int index, user& u1, user& u2, int thread_i
 
 bool item::should_rotate()
 {
-    if((int)get("item_type") != (int)item_types::LOCK)
+    if((int)get_int("item_type") != (int)item_types::LOCK)
         return false;
 
     double time_s = get_wall_time_s();
-    double internal_time_s = get("lock_last_rotate_s");
+    double internal_time_s = get_double("lock_last_rotate_s");
 
     if(time_s >= internal_time_s + item_types::rotation_time_s)
         return true;
@@ -193,7 +193,35 @@ void item::breach()
 
 bool item::is_breached()
 {
-    return get("lock_is_breached") == 1;
+    return get_int("lock_is_breached") == 1;
+}
+
+void fix_int(nlohmann::json& val, const std::string& str)
+{
+    if(val.count(str) == 0)
+        return;
+
+    try
+    {
+        (int)val[str];
+    }
+    catch(...)
+    {
+        val[str] = 0;
+    }
+}
+
+void item::fix()
+{
+    fix_int(data, "char_count");
+    fix_int(data, "script_slots");
+    fix_int(data, "public_script_slots");
+    fix_int(data, "max_script_size");
+    fix_int(data, "open_source");
+    fix_int(data, "full");
+    fix_int(data, "misc");
+    fix_int(data, "lock_is_breached");
+    fix_int(data, "network_links");
 }
 
 std::vector<item> load_items(mongo_lock_proxy& items_ctx, const std::vector<std::string>& ids)
@@ -255,7 +283,7 @@ item item_types::get_default_of(item_types::item_type type, const std::string& l
         new_item.set_as("desc", "Container for a tradeable script");
         new_item.set_as("full", 0);
         new_item.set_as("registered_as", "");
-        new_item.set_as("in_public", "0");
+        new_item.set_as("in_public", 0);
     }
 
     if(type == MISC)

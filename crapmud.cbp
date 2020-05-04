@@ -40,6 +40,7 @@
 					<Add option="-march=nehalem" />
 					<Add option="-DLOCAL_IP" />
 					<Add option="-DSYSTEM_TESTING" />
+					<Add option="-DEXTRAS" />
 				</Compiler>
 			</Target>
 			<Target title="Profile">
