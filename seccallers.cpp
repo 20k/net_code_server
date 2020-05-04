@@ -94,6 +94,14 @@ js::value async_print(js::value_context* vctx, std::string what)
 	return js::make_error(*vctx, "No pointer or wrong user");
 }
 
+/*js::value make_console_log(js::value_context* vctx)
+{
+    std::string program =
+R"(
+
+)";
+}*/
+
 js::value async_print_raw(js::value_context* vctx, std::string what)
 {
     COOPERATE_KILL_VCTX();

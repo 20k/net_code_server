@@ -6193,15 +6193,11 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
 
     bool is_warpy = false;
 
-    printf("One\n");
-
     {
         mongo_nolock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(vctx));
 
         is_warpy = npc_info::has_type(mongo_ctx, npc_info::WARPY, target.name);
     }
-
-    printf("Two\n");
 
     user_nodes target_nodes = get_nodes(target.name, get_thread_id(vctx));
 
@@ -6217,8 +6213,6 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
                                         to_string_with_enforced_variable_dp(my_local_pos.y(), 2) + ", " +
                                         to_string_with_enforced_variable_dp(my_local_pos.z(), 2) + "]\n";
 
-    printf("Three\n");
-
     total_msg += situation_string;
 
     //std::string sector_string = "Sector: " + usr.fetch_sector();
@@ -6226,8 +6220,6 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
 
     std::string system_string = "System: " + colour_string(current_sys.name);
     total_msg += system_string + "\n";
-
-    printf("Four\n");
 
     double maximum_warp_distance = MAXIMUM_WARP_DISTANCE;
 
@@ -6238,8 +6230,6 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
     array_data["distance"] = distance;
 
     array_data["is_long_distance_traveller"] = is_warpy;
-
-    printf("Five\n");
 
     if(is_warpy && in_same_system)
     {
@@ -6328,8 +6318,6 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
 
     std::string links_string = "";
 
-    printf("Six\n");
-
     {
         network_accessibility_info info = playspace_network_manage.generate_network_accessibility_from(vctx, target.name, n_count);
 
@@ -6339,8 +6327,6 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
 
         const std::string& name = target_name;
         vec3f pos = info.global_pos[name];
-
-        printf("Seven\n");
 
         array_data["name"] = name;
         array_data["x"] = pos.x();
@@ -6357,8 +6343,6 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
                 it++;
         }
 
-        printf("Eight\n");
-
         std::vector<float> stabs;
 
         for(int i=0; i < (int)connections.size(); i++)
@@ -6371,15 +6355,11 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
                 stabs.push_back(-1.f);
         }
 
-        printf("Nine\n");
-
         array_data["links"] = connections;
         array_data["stabilities"] = stabs;
 
         links_string = get_net_view_data_str(all_npc_data, false);
     }
-
-    printf("Ten\n");
 
     ///handle connection
     ///should be able to connect to a visible npc
@@ -6387,21 +6367,11 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
     ///maybe should handle this in playspace_network_manager?
     if(!is_warpy)
     {
-        printf("Ten0.01\n");
-        playspace_network_manage.current_network_links(target.name);
-        printf("Ten0.02\n");
-        playspace_network_manage.max_network_links(target.name);
-        printf("Ten0.03\n");
-
         std::string connections = "Target Links: " + std::to_string(playspace_network_manage.current_network_links(target.name)) + "/" + std::to_string(playspace_network_manage.max_network_links(target.name))
                                 //+ "\n";
                                 + " " + links_string + "\n";
 
-        printf("Ten.1\n");
-
         total_msg += connections;
-
-        printf("Ten.2\n");
 
         array_data["max_links"] = playspace_network_manage.max_network_links(target.name);
 
@@ -6412,8 +6382,6 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
         {
             std::cout << i << std::endl;
         }*/
-
-        printf("Eleven\n");
 
         if(!has_users && get_caller(vctx) != target.name && in_same_system)
         {
