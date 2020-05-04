@@ -159,6 +159,45 @@ bool matches(const nlohmann::json& data, const nlohmann::json& match)
 
                 continue;
             }
+
+            if(val.count("$ne") > 0)
+            {
+                const nlohmann::json& eq_val = val.at("$ne");
+
+                if(data.count(key) == 0)
+                    return false;
+
+                if(data.at(key) == eq_val)
+                    return false;
+
+                continue;
+            }
+
+            if(val.count("$lte") > 0)
+            {
+                const nlohmann::json& eq_val = val.at("$lte");
+
+                if(data.count(key) == 0)
+                    return false;
+
+                if(data.at(key) > eq_val)
+                    return false;
+
+                continue;
+            }
+
+            if(val.count("$gte") > 0)
+            {
+                const nlohmann::json& eq_val = val.at("$gte");
+
+                if(data.count(key) == 0)
+                    return false;
+
+                if(data.at(key) < eq_val)
+                    return false;
+
+                continue;
+            }
         }
 
         if(data.count(key) == 0)
