@@ -1068,7 +1068,7 @@ std::string js_quickjs::value::to_error_message()
 
     if(!is_object())
     {
-        return (std::string)*this;
+        return "Exception: " + (std::string)*this;
     }
 
     return err;

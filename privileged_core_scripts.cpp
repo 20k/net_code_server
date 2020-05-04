@@ -2235,7 +2235,7 @@ js::value item__load(priv_context& priv_ctx, js::value_context& vctx, js::value&
     if(is_arr)
         return js::make_value(vctx, rvector);
 
-    if(!is_arr && rvector.size() == 0)
+    if(!is_arr && rvector.size() > 0)
         return rvector[0];
 
     return js::make_error(vctx, "Implementation error in item.load");
@@ -2293,7 +2293,7 @@ js::value item__unload(priv_context& priv_ctx, js::value_context& vctx, js::valu
     if(is_arr)
         return js::make_value(vctx, rvector);
 
-    if(!is_arr && rvector.size() == 0)
+    if(!is_arr && rvector.size() > 0)
         return rvector[0];
 
     return js::make_error(vctx, "Implementation error in item.unload");
@@ -2456,7 +2456,7 @@ js::value item__xfer_to(priv_context& priv_ctx, js::value_context& vctx, js::val
     if(is_arr)
         return js::make_value(vctx, rvector);
 
-    if(!is_arr && rvector.size() == 0)
+    if(!is_arr && rvector.size() > 0)
         return rvector[0];
 
     return js::make_error(vctx, "Implementation error in item.xfer_to");
@@ -3067,7 +3067,7 @@ js::value item__steal(priv_context& priv_ctx, js::value_context& vctx, js::value
     if(is_arr)
         return js::make_value(vctx, rvector);
 
-    if(!is_arr && rvector.size() == 0)
+    if(!is_arr && rvector.size() > 0)
         return rvector[0];
 
     return js::make_error(vctx, "Implementation error in item.steal");
