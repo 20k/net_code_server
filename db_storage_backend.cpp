@@ -146,6 +146,19 @@ bool matches(const nlohmann::json& data, const nlohmann::json& match)
 
                 continue;
             }
+
+            if(val.count("$eq") > 0)
+            {
+                const nlohmann::json& eq_val = val.at("$eq");
+
+                if(data.count(key) == 0)
+                    return false;
+
+                if(data.at(key) != eq_val)
+                    return false;
+
+                continue;
+            }
         }
 
         if(data.count(key) == 0)
