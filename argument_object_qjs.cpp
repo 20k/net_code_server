@@ -1066,6 +1066,11 @@ std::string js_quickjs::value::to_error_message()
         err += "columnNumber: " + (std::string)get("columnNumber");
     }
 
+    if(!is_object())
+    {
+        return (std::string)*this;
+    }
+
     return err;
 }
 

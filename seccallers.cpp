@@ -413,7 +413,7 @@ void teardown_state(js::value_context& vctx)
     delete shared_state;
 }
 
-std::string get_string_col(js::value val)
+std::string get_string_col(js::value_context* ctx, js::value val)
 {
     if(!val.is_string())
         return "A";

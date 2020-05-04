@@ -285,8 +285,8 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
 
             ///remember to set work units here
 
-            thread_priority_handler tp;
-            tp.enable();
+            //thread_priority_handler tp;
+            //tp.enable();
 
             while(elapsed.getElapsedTime().asMicroseconds() / 1000. < max_frame_time_ms)
             {
@@ -437,7 +437,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
         if(all_shared.has_value())
         {
-            //tp.enable();
+            tp.enable();
         }
 
         script_management_mode::mode current_mode = script_management_mode::DEFAULT;

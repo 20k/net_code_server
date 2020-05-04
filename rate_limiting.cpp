@@ -78,6 +78,9 @@ void handle_sleep(sandbox_data* dat)
         if(dat->realtime_ms_awake_elapsed > 100)
             dat->realtime_ms_awake_elapsed = 100;
 
+        thread_priority_handler tp;
+        //tp.enable();
+
         while(dat->realtime_ms_awake_elapsed >= max_allowed_frame_time_ms)
         {
             sf::sleep(sf::milliseconds(sleep_time));
@@ -96,6 +99,9 @@ void handle_sleep(sandbox_data* dat)
 
         if(dat->ms_awake_elapsed_static > 100)
             dat->ms_awake_elapsed_static = 100;
+
+        thread_priority_handler tp;
+        //tp.enable();
 
         while(dat->ms_awake_elapsed_static >= awake_time)
         {
@@ -131,7 +137,7 @@ void handle_sleep(sandbox_data* dat)
         dat->sleep_for -= floor(diff);*/
 
         thread_priority_handler tp;
-        tp.enable();
+        //tp.enable();
 
         sf::sleep(sf::milliseconds(val));
     }

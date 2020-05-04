@@ -709,6 +709,8 @@ namespace js_quickjs
             return JS_ThrowInternalError(ctx, "Bad quickjs function");
         }
 
+        static_assert(is_first_context<U...>());
+
         js_quickjs::value_context vctx(ctx);
 
         js_quickjs::value func_this(vctx);

@@ -1052,6 +1052,8 @@
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
 		</Unit>
+		<Unit filename="deps/toolkit/clock.cpp" />
+		<Unit filename="deps/toolkit/clock.hpp" />
 		<Unit filename="duk_module_duktape.cpp">
 			<Option target="Debug" />
 			<Option target="Release" />
