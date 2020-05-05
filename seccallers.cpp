@@ -953,7 +953,7 @@ std::pair<js::value, std::string> js_unified_force_call_data(js::value_context& 
                     //   - undefined: promise not finished
                     //   - false: error ocurred, __promiseError is set.
                     //   - true: finished, __promiseSuccess is set.
-                    var __promiseResult = 0;
+                    var __promiseResult = false;
                     var __promiseValue = undefined;
 
                     var __resolvePromise = function(p) {
@@ -977,10 +977,11 @@ std::pair<js::value, std::string> js_unified_force_call_data(js::value_context& 
         vctx.execute_jobs();
 
         js_val = js::get_global(vctx).get("__promiseValue");
+        bool is_err = (bool)js::get_global(vctx).get("__promiseResult") == false;
 
-        if(js_val.is_exception() || js_val.is_error())
+        if(js_val.is_exception() || js_val.is_error() || is_err)
         {
-            js_val = js_val.to_error_message();
+            js_val = js::make_error(vctx, js_val.to_error_message());
         }
     }
     else
