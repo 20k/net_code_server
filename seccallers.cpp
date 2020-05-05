@@ -954,18 +954,17 @@ std::pair<js::value, std::string> js_unified_force_call_data(js::value_context& 
                     //   - false: error ocurred, __promiseError is set.
                     //   - true: finished, __promiseSuccess is set.
                     var __promiseResult = 0;
-                    var __promiseValue = 0;
+                    var __promiseValue = undefined;
 
                     var __resolvePromise = function(p) {
                         p
                             .then(value => {
                                 __promiseResult = true;
                                 __promiseValue = value;
-                            })
-                            .catch(e => {
+                            }, e => {
                                 __promiseResult = false;
                                 __promiseValue = e;
-                            });
+                            })
                     }
 
                     __resolvePromise;
