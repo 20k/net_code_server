@@ -1053,11 +1053,6 @@ void init_db_storage_backend()
 
     database& user_db = store.get_db((int)mongo_database_type::USER_ACCESSIBLE);
 
-    /*std::sort(store.all_data[user_db.begin(), user_db.end(), [](const auto& i1, const auto& i2)
-    {
-
-    });*/
-
     std::map<std::string, std::vector<nlohmann::json>>& all_user_dbs = user_db.all_data;
 
     for(auto& i : all_user_dbs)
