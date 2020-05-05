@@ -849,7 +849,7 @@ js::value cash__xfer_to(priv_context& priv_ctx, js::value_context& vctx, js::val
     if(!arg["amount"].is_number())
         return js::make_error(vctx, "Only numbers supported atm");
 
-    amount = arg;
+    amount = arg["amount"];
 
     return cash_internal_xfer(vctx, get_caller(vctx), destination_name, amount, false);
 }
