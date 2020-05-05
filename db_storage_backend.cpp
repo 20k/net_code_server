@@ -998,7 +998,7 @@ void init_db_storage_backend()
 {
     db_storage_backend::run_tests();
 
-    auto& store = get_db_storage();
+    db_storage& store = get_db_storage();
 
     #ifdef __WIN32__
     mkdir(ROOT_STORE);
@@ -1050,6 +1050,25 @@ void init_db_storage_backend()
     store.indices[(int)mongo_database_type::NETWORK_PROPERTIES] = "name";
 
     import_from_disk(false);
+
+    database& user_db = store.get_db((int)mongo_database_type::USER_ACCESSIBLE);
+
+    /*std::sort(store.all_data[user_db.begin(), user_db.end(), [](const auto& i1, const auto& i2)
+    {
+
+    });*/
+
+    std::map<std::string, std::vector<nlohmann::json>>& all_user_dbs = user_db.all_data;
+
+    for(auto& i : all_user_dbs)
+    {
+        std::vector<nlohmann::json>& data = i.second;
+
+        std::sort(data.begin(), data.end(), [](const nlohmann::json& i1, const nlohmann::json& i2)
+        {
+            return i1.at(CID_STRING).get<size_t>() < i2.at(CID_STRING).get<size_t>();
+        });
+    }
 
     //#define BACKUP
     #ifdef BACKUP
