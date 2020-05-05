@@ -37,6 +37,8 @@ namespace js_quickjs
         void push_this(const value& val);
         void pop_this();
         value get_current_this();
+
+        void execute_jobs();
     };
 
     using funcptr_t = JSValue (*)(JSContext*, JSValueConst, int, JSValueConst*);
@@ -577,6 +579,8 @@ namespace js_quickjs
         return in.val;
     }
 
+    JSValue process_return_value(JSContext* ctx, JSValue in);
+
     ///This eats C++ exceptions and converts them into JS exceptions
     template<typename... T>
     inline
@@ -600,19 +604,13 @@ namespace js_quickjs
 
         bool err = JS_IsError(func.ctx, ret) || JS_IsException(ret);
 
-        value rval(*func.vctx);
-        rval = ret;
-
+        JSValue processed = js_quickjs::process_return_value(func.ctx, ret);
         JS_FreeValue(func.ctx, ret);
 
-        if(JS_IsException(ret))
-        {
-            JSValue err_val = JS_GetException(func.ctx);
+        value rval(*func.vctx);
+        rval = processed;
 
-            rval = err_val;
-
-            JS_FreeValue(func.ctx, err_val);
-        }
+        JS_FreeValue(func.ctx, processed);
 
         return {!err, rval};
     }

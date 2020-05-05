@@ -41,12 +41,12 @@ DEP_RELEASE =
 OUT_RELEASE = bin/Release/crapmud
 
 INC_RELEASENOSYMBOLS = $(INC)
-CFLAGS_RELEASENOSYMBOLS = $(CFLAGS) -O2 -march=nehalem -DLOCAL_IP -DSYSTEM_TESTING
+CFLAGS_RELEASENOSYMBOLS = $(CFLAGS) -O2 -march=nehalem -DLOCAL_IP -DSYSTEM_TESTING -DEXTRAS
 RESINC_RELEASENOSYMBOLS = $(RESINC)
 RCFLAGS_RELEASENOSYMBOLS = $(RCFLAGS)
 LIBDIR_RELEASENOSYMBOLS = $(LIBDIR)
 LIB_RELEASENOSYMBOLS = $(LIB)
-LDFLAGS_RELEASENOSYMBOLS = $(LDFLAGS)
+LDFLAGS_RELEASENOSYMBOLS = $(LDFLAGS) -O2
 OBJDIR_RELEASENOSYMBOLS = obj/ReleaseNoSymbols
 DEP_RELEASENOSYMBOLS = 
 OUT_RELEASENOSYMBOLS = bin/ReleaseNoSymbols/crapmud
@@ -151,23 +151,23 @@ DEP_RELEASEANDTESTLTO =
 OUT_RELEASEANDTESTLTO = bin/ReleaseTestLTO/crapmud
 
 INC_LINUXRELEASE = $(INC)
-CFLAGS_LINUXRELEASE = $(CFLAGS) -O3 -std=c++1z -g -march=nehalem -no-pie -DLOCAL_IP
+CFLAGS_LINUXRELEASE = $(CFLAGS) -O2 -g -std=c++1z -march=nehalem -no-pie -DLOCAL_IP
 RESINC_LINUXRELEASE = $(RESINC)
 RCFLAGS_LINUXRELEASE = $(RCFLAGS)
 LIBDIR_LINUXRELEASE = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/linux64
 LIB_LINUXRELEASE = $(LIB)
-LDFLAGS_LINUXRELEASE =  -O3 -lsfml-system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket
+LDFLAGS_LINUXRELEASE =  -O2 -lsfml-system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket
 OBJDIR_LINUXRELEASE = obj/LRelease
 DEP_LINUXRELEASE = 
 OUT_LINUXRELEASE = bin/LRelease/crapmud
 
 INC_LINUXDEPLOY = $(INC)
-CFLAGS_LINUXDEPLOY = $(CFLAGS) -O3 -std=c++1z -g -march=nehalem -no-pie -DEXTERN_IP
+CFLAGS_LINUXDEPLOY = $(CFLAGS) -fexpensive-optimizations -O2 -g -std=c++1z -march=nehalem -no-pie -DEXTERN_IP
 RESINC_LINUXDEPLOY = $(RESINC)
 RCFLAGS_LINUXDEPLOY = $(RCFLAGS)
 LIBDIR_LINUXDEPLOY = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/linux64
 LIB_LINUXDEPLOY = $(LIB)
-LDFLAGS_LINUXDEPLOY =  -O3 -lsfml-system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket
+LDFLAGS_LINUXDEPLOY =  -O2 -lsfml-system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket
 OBJDIR_LINUXDEPLOY = obj/LDeploy
 DEP_LINUXDEPLOY = 
 OUT_LINUXDEPLOY = bin/LDeploy/crapmud
@@ -193,6 +193,17 @@ LDFLAGS_MAKELINUXDEPLOYWSL =
 OBJDIR_MAKELINUXDEPLOYWSL = obj/LDeploy
 DEP_MAKELINUXDEPLOYWSL = 
 OUT_MAKELINUXDEPLOYWSL = bin/LDeploy/crapmud
+
+INC_PROFILENOOPT = $(INC)
+CFLAGS_PROFILENOOPT = $(CFLAGS) -pg -g -march=nehalem -fno-pie -shared -DLOCAL_IP -DNO_STACKTRACE
+RESINC_PROFILENOOPT = $(RESINC)
+RCFLAGS_PROFILENOOPT = $(RCFLAGS)
+LIBDIR_PROFILENOOPT = $(LIBDIR)
+LIB_PROFILENOOPT = $(LIB)
+LDFLAGS_PROFILENOOPT = $(LDFLAGS) -pg -lgmon -pg -no-pie -fno-pie
+OBJDIR_PROFILENOOPT = obj/ProfileNoOpt
+DEP_PROFILENOOPT = 
+OUT_PROFILENOOPT = bin/ProfileNoOpt/crapmud
 
 OBJ_DEBUG = $(OBJDIR_DEBUG)/reoccurring_task_handler.o $(OBJDIR_DEBUG)/rate_limiting.o $(OBJDIR_DEBUG)/quest_manager.o $(OBJDIR_DEBUG)/privileged_core_scripts.o $(OBJDIR_DEBUG)/perfmon.o $(OBJDIR_DEBUG)/non_user_task_thread.o $(OBJDIR_DEBUG)/mongo.o $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/logging.o $(OBJDIR_DEBUG)/item.o $(OBJDIR_DEBUG)/http_beast_server.o $(OBJDIR_DEBUG)/event_manager.o $(OBJDIR_DEBUG)/duktape.o $(OBJDIR_DEBUG)/duk_object_functions.o $(OBJDIR_DEBUG)/user.o $(OBJDIR_DEBUG)/unified_scripts.o $(OBJDIR_DEBUG)/time.o $(OBJDIR_DEBUG)/steam_auth.o $(OBJDIR_DEBUG)/stacktrace.o $(OBJDIR_DEBUG)/source_maps.o $(OBJDIR_DEBUG)/shared_duk_worker_state.o $(OBJDIR_DEBUG)/serialisables.o $(OBJDIR_DEBUG)/seccallers.o $(OBJDIR_DEBUG)/script_util.o $(OBJDIR_DEBUG)/script_metadata.o $(OBJDIR_DEBUG)/scheduled_tasks.o $(OBJDIR_DEBUG)/safe_thread.o $(OBJDIR_DEBUG)/rng.o $(OBJDIR_DEBUG)/deps/quickjs/quickjs.o $(OBJDIR_DEBUG)/deps/quickjs/libunicode.o $(OBJDIR_DEBUG)/deps/quickjs/libregexp.o $(OBJDIR_DEBUG)/deps/quickjs/libbf.o $(OBJDIR_DEBUG)/deps/quickjs/cutils.o $(OBJDIR_DEBUG)/deps/networking/serialisable.o $(OBJDIR_DEBUG)/deps/networking/networking.o $(OBJDIR_DEBUG)/deps/networking/beast_compilation_unit.o $(OBJDIR_DEBUG)/db_storage_backend.o $(OBJDIR_DEBUG)/command_handler_state.o $(OBJDIR_DEBUG)/command_handler.o $(OBJDIR_DEBUG)/auth.o $(OBJDIR_DEBUG)/ascii_helpers.o $(OBJDIR_DEBUG)/argument_object_qjs.o $(OBJDIR_DEBUG)/argument_object_duk.o $(OBJDIR_DEBUG)/argument_object.o $(OBJDIR_DEBUG)/duk_modules.o $(OBJDIR_DEBUG)/duk_module_duktape.o $(OBJDIR_DEBUG)/deps/toolkit/clock.o $(OBJDIR_DEBUG)/deps/secret/tutorial.o $(OBJDIR_DEBUG)/deps/secret/structure_generation_2.o $(OBJDIR_DEBUG)/deps/secret/structure.o $(OBJDIR_DEBUG)/deps/secret/special_user_scripts.o $(OBJDIR_DEBUG)/deps/secret/secret.o $(OBJDIR_DEBUG)/deps/secret/one_shots.o $(OBJDIR_DEBUG)/deps/secret/one_shot_core.o $(OBJDIR_DEBUG)/deps/secret/npc_manager.o $(OBJDIR_DEBUG)/deps/secret/node.o $(OBJDIR_DEBUG)/deps/secret/low_level_structure.o $(OBJDIR_DEBUG)/deps/secret/loot_gen.o $(OBJDIR_DEBUG)/deps/secret/initial_link_setup.o $(OBJDIR_DEBUG)/deps/secret/common.o
 
@@ -226,9 +237,11 @@ OBJ_MAKELINUXRELEASEWSL = $(OBJDIR_MAKELINUXRELEASEWSL)/deps/quickjs/quickjs.o $
 
 OBJ_MAKELINUXDEPLOYWSL = $(OBJDIR_MAKELINUXDEPLOYWSL)/deps/quickjs/quickjs.o $(OBJDIR_MAKELINUXDEPLOYWSL)/deps/quickjs/libunicode.o $(OBJDIR_MAKELINUXDEPLOYWSL)/deps/quickjs/libregexp.o $(OBJDIR_MAKELINUXDEPLOYWSL)/deps/quickjs/libbf.o $(OBJDIR_MAKELINUXDEPLOYWSL)/deps/quickjs/cutils.o $(OBJDIR_MAKELINUXDEPLOYWSL)/argument_object_qjs.o $(OBJDIR_MAKELINUXDEPLOYWSL)/argument_object_duk.o $(OBJDIR_MAKELINUXDEPLOYWSL)/argument_object.o $(OBJDIR_MAKELINUXDEPLOYWSL)/deps/toolkit/clock.o $(OBJDIR_MAKELINUXDEPLOYWSL)/deps/secret/structure_generation_2.o
 
-all: debug release releasenosymbols profile deploy releaseandtest debugbacktrace debugtest dmimic releaseandtestwithdebuginfo rdclang rt_prof releaseandtestlto linuxrelease linuxdeploy makelinuxreleasewsl makelinuxdeploywsl
+OBJ_PROFILENOOPT = $(OBJDIR_PROFILENOOPT)/reoccurring_task_handler.o $(OBJDIR_PROFILENOOPT)/rate_limiting.o $(OBJDIR_PROFILENOOPT)/quest_manager.o $(OBJDIR_PROFILENOOPT)/privileged_core_scripts.o $(OBJDIR_PROFILENOOPT)/perfmon.o $(OBJDIR_PROFILENOOPT)/non_user_task_thread.o $(OBJDIR_PROFILENOOPT)/mongo.o $(OBJDIR_PROFILENOOPT)/main.o $(OBJDIR_PROFILENOOPT)/logging.o $(OBJDIR_PROFILENOOPT)/item.o $(OBJDIR_PROFILENOOPT)/http_beast_server.o $(OBJDIR_PROFILENOOPT)/event_manager.o $(OBJDIR_PROFILENOOPT)/duktape.o $(OBJDIR_PROFILENOOPT)/duk_object_functions.o $(OBJDIR_PROFILENOOPT)/user.o $(OBJDIR_PROFILENOOPT)/unified_scripts.o $(OBJDIR_PROFILENOOPT)/time.o $(OBJDIR_PROFILENOOPT)/steam_auth.o $(OBJDIR_PROFILENOOPT)/stacktrace.o $(OBJDIR_PROFILENOOPT)/source_maps.o $(OBJDIR_PROFILENOOPT)/shared_duk_worker_state.o $(OBJDIR_PROFILENOOPT)/serialisables.o $(OBJDIR_PROFILENOOPT)/seccallers.o $(OBJDIR_PROFILENOOPT)/script_util.o $(OBJDIR_PROFILENOOPT)/script_metadata.o $(OBJDIR_PROFILENOOPT)/scheduled_tasks.o $(OBJDIR_PROFILENOOPT)/safe_thread.o $(OBJDIR_PROFILENOOPT)/rng.o $(OBJDIR_PROFILENOOPT)/deps/quickjs/quickjs.o $(OBJDIR_PROFILENOOPT)/deps/quickjs/libunicode.o $(OBJDIR_PROFILENOOPT)/deps/quickjs/libregexp.o $(OBJDIR_PROFILENOOPT)/deps/quickjs/libbf.o $(OBJDIR_PROFILENOOPT)/deps/quickjs/cutils.o $(OBJDIR_PROFILENOOPT)/deps/networking/serialisable.o $(OBJDIR_PROFILENOOPT)/deps/networking/networking.o $(OBJDIR_PROFILENOOPT)/deps/networking/beast_compilation_unit.o $(OBJDIR_PROFILENOOPT)/db_storage_backend.o $(OBJDIR_PROFILENOOPT)/command_handler_state.o $(OBJDIR_PROFILENOOPT)/command_handler.o $(OBJDIR_PROFILENOOPT)/auth.o $(OBJDIR_PROFILENOOPT)/ascii_helpers.o $(OBJDIR_PROFILENOOPT)/argument_object_qjs.o $(OBJDIR_PROFILENOOPT)/argument_object_duk.o $(OBJDIR_PROFILENOOPT)/argument_object.o $(OBJDIR_PROFILENOOPT)/duk_modules.o $(OBJDIR_PROFILENOOPT)/duk_module_duktape.o $(OBJDIR_PROFILENOOPT)/deps/toolkit/clock.o $(OBJDIR_PROFILENOOPT)/deps/secret/tutorial.o $(OBJDIR_PROFILENOOPT)/deps/secret/structure_generation_2.o $(OBJDIR_PROFILENOOPT)/deps/secret/structure.o $(OBJDIR_PROFILENOOPT)/deps/secret/special_user_scripts.o $(OBJDIR_PROFILENOOPT)/deps/secret/secret.o $(OBJDIR_PROFILENOOPT)/deps/secret/one_shots.o $(OBJDIR_PROFILENOOPT)/deps/secret/one_shot_core.o $(OBJDIR_PROFILENOOPT)/deps/secret/npc_manager.o $(OBJDIR_PROFILENOOPT)/deps/secret/node.o $(OBJDIR_PROFILENOOPT)/deps/secret/low_level_structure.o $(OBJDIR_PROFILENOOPT)/deps/secret/loot_gen.o $(OBJDIR_PROFILENOOPT)/deps/secret/initial_link_setup.o $(OBJDIR_PROFILENOOPT)/deps/secret/common.o
 
-clean: clean_debug clean_release clean_releasenosymbols clean_profile clean_deploy clean_releaseandtest clean_debugbacktrace clean_debugtest clean_dmimic clean_releaseandtestwithdebuginfo clean_rdclang clean_rt_prof clean_releaseandtestlto clean_linuxrelease clean_linuxdeploy clean_makelinuxreleasewsl clean_makelinuxdeploywsl
+all: debug release releasenosymbols profile deploy releaseandtest debugbacktrace debugtest dmimic releaseandtestwithdebuginfo rdclang rt_prof releaseandtestlto linuxrelease linuxdeploy makelinuxreleasewsl makelinuxdeploywsl profilenoopt
+
+clean: clean_debug clean_release clean_releasenosymbols clean_profile clean_deploy clean_releaseandtest clean_debugbacktrace clean_debugtest clean_dmimic clean_releaseandtestwithdebuginfo clean_rdclang clean_rt_prof clean_releaseandtestlto clean_linuxrelease clean_linuxdeploy clean_makelinuxreleasewsl clean_makelinuxdeploywsl clean_profilenoopt
 
 before_debug: 
 	test -d bin/Debug || mkdir -p bin/Debug
@@ -3197,5 +3210,209 @@ clean_makelinuxdeploywsl:
 	rm -rf $(OBJDIR_MAKELINUXDEPLOYWSL)/deps/toolkit
 	rm -rf $(OBJDIR_MAKELINUXDEPLOYWSL)/deps/secret
 
-.PHONY: before_debug after_debug clean_debug before_release after_release clean_release before_releasenosymbols after_releasenosymbols clean_releasenosymbols before_profile after_profile clean_profile before_deploy after_deploy clean_deploy before_releaseandtest after_releaseandtest clean_releaseandtest before_debugbacktrace after_debugbacktrace clean_debugbacktrace before_debugtest after_debugtest clean_debugtest before_dmimic after_dmimic clean_dmimic before_releaseandtestwithdebuginfo after_releaseandtestwithdebuginfo clean_releaseandtestwithdebuginfo before_rt_prof after_rt_prof clean_rt_prof before_releaseandtestlto after_releaseandtestlto clean_releaseandtestlto before_linuxrelease after_linuxrelease clean_linuxrelease before_linuxdeploy after_linuxdeploy clean_linuxdeploy before_makelinuxreleasewsl after_makelinuxreleasewsl clean_makelinuxreleasewsl before_makelinuxdeploywsl after_makelinuxdeploywsl clean_makelinuxdeploywsl
+before_profilenoopt: 
+	test -d bin/ProfileNoOpt || mkdir -p bin/ProfileNoOpt
+	test -d $(OBJDIR_PROFILENOOPT) || mkdir -p $(OBJDIR_PROFILENOOPT)
+	test -d $(OBJDIR_PROFILENOOPT)/deps/quickjs || mkdir -p $(OBJDIR_PROFILENOOPT)/deps/quickjs
+	test -d $(OBJDIR_PROFILENOOPT)/deps/networking || mkdir -p $(OBJDIR_PROFILENOOPT)/deps/networking
+	test -d $(OBJDIR_PROFILENOOPT)/deps/toolkit || mkdir -p $(OBJDIR_PROFILENOOPT)/deps/toolkit
+	test -d $(OBJDIR_PROFILENOOPT)/deps/secret || mkdir -p $(OBJDIR_PROFILENOOPT)/deps/secret
+
+after_profilenoopt: 
+
+profilenoopt: before_profilenoopt out_profilenoopt after_profilenoopt
+
+out_profilenoopt: before_profilenoopt $(OBJ_PROFILENOOPT) $(DEP_PROFILENOOPT)
+	$(LD) $(LIBDIR_PROFILENOOPT) -o $(OUT_PROFILENOOPT) $(OBJ_PROFILENOOPT)  $(LDFLAGS_PROFILENOOPT) $(LIB_PROFILENOOPT)
+
+$(OBJDIR_PROFILENOOPT)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c reoccurring_task_handler.cpp -o $(OBJDIR_PROFILENOOPT)/reoccurring_task_handler.o
+
+$(OBJDIR_PROFILENOOPT)/rate_limiting.o: rate_limiting.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c rate_limiting.cpp -o $(OBJDIR_PROFILENOOPT)/rate_limiting.o
+
+$(OBJDIR_PROFILENOOPT)/quest_manager.o: quest_manager.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c quest_manager.cpp -o $(OBJDIR_PROFILENOOPT)/quest_manager.o
+
+$(OBJDIR_PROFILENOOPT)/privileged_core_scripts.o: privileged_core_scripts.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c privileged_core_scripts.cpp -o $(OBJDIR_PROFILENOOPT)/privileged_core_scripts.o
+
+$(OBJDIR_PROFILENOOPT)/perfmon.o: perfmon.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c perfmon.cpp -o $(OBJDIR_PROFILENOOPT)/perfmon.o
+
+$(OBJDIR_PROFILENOOPT)/non_user_task_thread.o: non_user_task_thread.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c non_user_task_thread.cpp -o $(OBJDIR_PROFILENOOPT)/non_user_task_thread.o
+
+$(OBJDIR_PROFILENOOPT)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c mongo.cpp -o $(OBJDIR_PROFILENOOPT)/mongo.o
+
+$(OBJDIR_PROFILENOOPT)/main.o: main.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c main.cpp -o $(OBJDIR_PROFILENOOPT)/main.o
+
+$(OBJDIR_PROFILENOOPT)/logging.o: logging.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c logging.cpp -o $(OBJDIR_PROFILENOOPT)/logging.o
+
+$(OBJDIR_PROFILENOOPT)/item.o: item.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c item.cpp -o $(OBJDIR_PROFILENOOPT)/item.o
+
+$(OBJDIR_PROFILENOOPT)/http_beast_server.o: http_beast_server.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c http_beast_server.cpp -o $(OBJDIR_PROFILENOOPT)/http_beast_server.o
+
+$(OBJDIR_PROFILENOOPT)/event_manager.o: event_manager.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c event_manager.cpp -o $(OBJDIR_PROFILENOOPT)/event_manager.o
+
+$(OBJDIR_PROFILENOOPT)/duktape.o: duktape.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c duktape.cpp -o $(OBJDIR_PROFILENOOPT)/duktape.o
+
+$(OBJDIR_PROFILENOOPT)/duk_object_functions.o: duk_object_functions.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c duk_object_functions.cpp -o $(OBJDIR_PROFILENOOPT)/duk_object_functions.o
+
+$(OBJDIR_PROFILENOOPT)/user.o: user.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c user.cpp -o $(OBJDIR_PROFILENOOPT)/user.o
+
+$(OBJDIR_PROFILENOOPT)/unified_scripts.o: unified_scripts.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c unified_scripts.cpp -o $(OBJDIR_PROFILENOOPT)/unified_scripts.o
+
+$(OBJDIR_PROFILENOOPT)/time.o: time.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c time.cpp -o $(OBJDIR_PROFILENOOPT)/time.o
+
+$(OBJDIR_PROFILENOOPT)/steam_auth.o: steam_auth.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c steam_auth.cpp -o $(OBJDIR_PROFILENOOPT)/steam_auth.o
+
+$(OBJDIR_PROFILENOOPT)/stacktrace.o: stacktrace.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c stacktrace.cpp -o $(OBJDIR_PROFILENOOPT)/stacktrace.o
+
+$(OBJDIR_PROFILENOOPT)/source_maps.o: source_maps.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c source_maps.cpp -o $(OBJDIR_PROFILENOOPT)/source_maps.o
+
+$(OBJDIR_PROFILENOOPT)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c shared_duk_worker_state.cpp -o $(OBJDIR_PROFILENOOPT)/shared_duk_worker_state.o
+
+$(OBJDIR_PROFILENOOPT)/serialisables.o: serialisables.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c serialisables.cpp -o $(OBJDIR_PROFILENOOPT)/serialisables.o
+
+$(OBJDIR_PROFILENOOPT)/seccallers.o: seccallers.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c seccallers.cpp -o $(OBJDIR_PROFILENOOPT)/seccallers.o
+
+$(OBJDIR_PROFILENOOPT)/script_util.o: script_util.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c script_util.cpp -o $(OBJDIR_PROFILENOOPT)/script_util.o
+
+$(OBJDIR_PROFILENOOPT)/script_metadata.o: script_metadata.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c script_metadata.cpp -o $(OBJDIR_PROFILENOOPT)/script_metadata.o
+
+$(OBJDIR_PROFILENOOPT)/scheduled_tasks.o: scheduled_tasks.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c scheduled_tasks.cpp -o $(OBJDIR_PROFILENOOPT)/scheduled_tasks.o
+
+$(OBJDIR_PROFILENOOPT)/safe_thread.o: safe_thread.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c safe_thread.cpp -o $(OBJDIR_PROFILENOOPT)/safe_thread.o
+
+$(OBJDIR_PROFILENOOPT)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c rng.cpp -o $(OBJDIR_PROFILENOOPT)/rng.o
+
+$(OBJDIR_PROFILENOOPT)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
+	$(CC) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/quickjs/quickjs.c -o $(OBJDIR_PROFILENOOPT)/deps/quickjs/quickjs.o
+
+$(OBJDIR_PROFILENOOPT)/deps/quickjs/libunicode.o: deps/quickjs/libunicode.c
+	$(CC) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/quickjs/libunicode.c -o $(OBJDIR_PROFILENOOPT)/deps/quickjs/libunicode.o
+
+$(OBJDIR_PROFILENOOPT)/deps/quickjs/libregexp.o: deps/quickjs/libregexp.c
+	$(CC) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/quickjs/libregexp.c -o $(OBJDIR_PROFILENOOPT)/deps/quickjs/libregexp.o
+
+$(OBJDIR_PROFILENOOPT)/deps/quickjs/libbf.o: deps/quickjs/libbf.c
+	$(CC) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/quickjs/libbf.c -o $(OBJDIR_PROFILENOOPT)/deps/quickjs/libbf.o
+
+$(OBJDIR_PROFILENOOPT)/deps/quickjs/cutils.o: deps/quickjs/cutils.c
+	$(CC) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/quickjs/cutils.c -o $(OBJDIR_PROFILENOOPT)/deps/quickjs/cutils.o
+
+$(OBJDIR_PROFILENOOPT)/deps/networking/serialisable.o: deps/networking/serialisable.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/networking/serialisable.cpp -o $(OBJDIR_PROFILENOOPT)/deps/networking/serialisable.o
+
+$(OBJDIR_PROFILENOOPT)/deps/networking/networking.o: deps/networking/networking.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/networking/networking.cpp -o $(OBJDIR_PROFILENOOPT)/deps/networking/networking.o
+
+$(OBJDIR_PROFILENOOPT)/deps/networking/beast_compilation_unit.o: deps/networking/beast_compilation_unit.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/networking/beast_compilation_unit.cpp -o $(OBJDIR_PROFILENOOPT)/deps/networking/beast_compilation_unit.o
+
+$(OBJDIR_PROFILENOOPT)/db_storage_backend.o: db_storage_backend.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c db_storage_backend.cpp -o $(OBJDIR_PROFILENOOPT)/db_storage_backend.o
+
+$(OBJDIR_PROFILENOOPT)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c command_handler_state.cpp -o $(OBJDIR_PROFILENOOPT)/command_handler_state.o
+
+$(OBJDIR_PROFILENOOPT)/command_handler.o: command_handler.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c command_handler.cpp -o $(OBJDIR_PROFILENOOPT)/command_handler.o
+
+$(OBJDIR_PROFILENOOPT)/auth.o: auth.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c auth.cpp -o $(OBJDIR_PROFILENOOPT)/auth.o
+
+$(OBJDIR_PROFILENOOPT)/ascii_helpers.o: ascii_helpers.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c ascii_helpers.cpp -o $(OBJDIR_PROFILENOOPT)/ascii_helpers.o
+
+$(OBJDIR_PROFILENOOPT)/argument_object_qjs.o: argument_object_qjs.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c argument_object_qjs.cpp -o $(OBJDIR_PROFILENOOPT)/argument_object_qjs.o
+
+$(OBJDIR_PROFILENOOPT)/argument_object_duk.o: argument_object_duk.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c argument_object_duk.cpp -o $(OBJDIR_PROFILENOOPT)/argument_object_duk.o
+
+$(OBJDIR_PROFILENOOPT)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c argument_object.cpp -o $(OBJDIR_PROFILENOOPT)/argument_object.o
+
+$(OBJDIR_PROFILENOOPT)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c duk_modules.cpp -o $(OBJDIR_PROFILENOOPT)/duk_modules.o
+
+$(OBJDIR_PROFILENOOPT)/duk_module_duktape.o: duk_module_duktape.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c duk_module_duktape.cpp -o $(OBJDIR_PROFILENOOPT)/duk_module_duktape.o
+
+$(OBJDIR_PROFILENOOPT)/deps/toolkit/clock.o: deps/toolkit/clock.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/toolkit/clock.cpp -o $(OBJDIR_PROFILENOOPT)/deps/toolkit/clock.o
+
+$(OBJDIR_PROFILENOOPT)/deps/secret/tutorial.o: deps/secret/tutorial.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/secret/tutorial.cpp -o $(OBJDIR_PROFILENOOPT)/deps/secret/tutorial.o
+
+$(OBJDIR_PROFILENOOPT)/deps/secret/structure_generation_2.o: deps/secret/structure_generation_2.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/secret/structure_generation_2.cpp -o $(OBJDIR_PROFILENOOPT)/deps/secret/structure_generation_2.o
+
+$(OBJDIR_PROFILENOOPT)/deps/secret/structure.o: deps/secret/structure.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/secret/structure.cpp -o $(OBJDIR_PROFILENOOPT)/deps/secret/structure.o
+
+$(OBJDIR_PROFILENOOPT)/deps/secret/special_user_scripts.o: deps/secret/special_user_scripts.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/secret/special_user_scripts.cpp -o $(OBJDIR_PROFILENOOPT)/deps/secret/special_user_scripts.o
+
+$(OBJDIR_PROFILENOOPT)/deps/secret/secret.o: deps/secret/secret.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/secret/secret.cpp -o $(OBJDIR_PROFILENOOPT)/deps/secret/secret.o
+
+$(OBJDIR_PROFILENOOPT)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/secret/one_shots.cpp -o $(OBJDIR_PROFILENOOPT)/deps/secret/one_shots.o
+
+$(OBJDIR_PROFILENOOPT)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_PROFILENOOPT)/deps/secret/one_shot_core.o
+
+$(OBJDIR_PROFILENOOPT)/deps/secret/npc_manager.o: deps/secret/npc_manager.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/secret/npc_manager.cpp -o $(OBJDIR_PROFILENOOPT)/deps/secret/npc_manager.o
+
+$(OBJDIR_PROFILENOOPT)/deps/secret/node.o: deps/secret/node.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/secret/node.cpp -o $(OBJDIR_PROFILENOOPT)/deps/secret/node.o
+
+$(OBJDIR_PROFILENOOPT)/deps/secret/low_level_structure.o: deps/secret/low_level_structure.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/secret/low_level_structure.cpp -o $(OBJDIR_PROFILENOOPT)/deps/secret/low_level_structure.o
+
+$(OBJDIR_PROFILENOOPT)/deps/secret/loot_gen.o: deps/secret/loot_gen.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/secret/loot_gen.cpp -o $(OBJDIR_PROFILENOOPT)/deps/secret/loot_gen.o
+
+$(OBJDIR_PROFILENOOPT)/deps/secret/initial_link_setup.o: deps/secret/initial_link_setup.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/secret/initial_link_setup.cpp -o $(OBJDIR_PROFILENOOPT)/deps/secret/initial_link_setup.o
+
+$(OBJDIR_PROFILENOOPT)/deps/secret/common.o: deps/secret/common.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/secret/common.cpp -o $(OBJDIR_PROFILENOOPT)/deps/secret/common.o
+
+clean_profilenoopt: 
+	rm -f $(OBJ_PROFILENOOPT) $(OUT_PROFILENOOPT)
+	rm -rf bin/ProfileNoOpt
+	rm -rf $(OBJDIR_PROFILENOOPT)
+	rm -rf $(OBJDIR_PROFILENOOPT)/deps/quickjs
+	rm -rf $(OBJDIR_PROFILENOOPT)/deps/networking
+	rm -rf $(OBJDIR_PROFILENOOPT)/deps/toolkit
+	rm -rf $(OBJDIR_PROFILENOOPT)/deps/secret
+
+.PHONY: before_debug after_debug clean_debug before_release after_release clean_release before_releasenosymbols after_releasenosymbols clean_releasenosymbols before_profile after_profile clean_profile before_deploy after_deploy clean_deploy before_releaseandtest after_releaseandtest clean_releaseandtest before_debugbacktrace after_debugbacktrace clean_debugbacktrace before_debugtest after_debugtest clean_debugtest before_dmimic after_dmimic clean_dmimic before_releaseandtestwithdebuginfo after_releaseandtestwithdebuginfo clean_releaseandtestwithdebuginfo before_rt_prof after_rt_prof clean_rt_prof before_releaseandtestlto after_releaseandtestlto clean_releaseandtestlto before_linuxrelease after_linuxrelease clean_linuxrelease before_linuxdeploy after_linuxdeploy clean_linuxdeploy before_makelinuxreleasewsl after_makelinuxreleasewsl clean_makelinuxreleasewsl before_makelinuxdeploywsl after_makelinuxdeploywsl clean_makelinuxdeploywsl before_profilenoopt after_profilenoopt clean_profilenoopt
 

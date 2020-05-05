@@ -43,6 +43,16 @@ int interrupt_handler(JSRuntime* rt, void* udata)
     try
     {
         handle_sleep(sand_data);
+
+        /*if(JS_IsJobPending(rt))
+        {
+            JSContext* pending = nullptr;
+
+            int res = JS_ExecutePendingJob(rt, &pending);
+
+            if(res < 0)
+                return 1;
+        }*/
     }
     catch(...)
     {
@@ -713,9 +723,9 @@ std::pair<std::string, js::value> compile_and_call(js::value_context& vctx, js::
     return {extra, ret};
 }
 
-void async_launch_script_name(js::value_context& vctx, int sl, const std::string& sname, std::shared_ptr<shared_command_handler_state>& ptr)
+void async_launch_script_name(js::value_context& vctx, int sl, const std::string& sname, const std::string& args_json, std::shared_ptr<shared_command_handler_state>& ptr)
 {
-    std::string call_end = "s_call(\"" + sname + "\")({});";
+    std::string call_end = "s_call(\"" + sname + "\")(" + args_json + ");";
 
     std::string seclevel = "f";
 
@@ -861,7 +871,7 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
 
             std::cout << "launched async\n";
 
-            async_launch_script_name(*vctx, sl, to_call_fullname, *shared_state);
+            async_launch_script_name(*vctx, sl, to_call_fullname, arg.to_json(), *shared_state);
 
             ret = js::make_success(*vctx);
         }

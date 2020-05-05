@@ -290,6 +290,16 @@ js_quickjs::value js_quickjs::value_context::get_current_this()
     return val;
 }
 
+void js_quickjs::value_context::execute_jobs()
+{
+    if(JS_IsJobPending(JS_GetRuntime(ctx)))
+    {
+        JSContext* pending = nullptr;
+
+        JS_ExecutePendingJob(JS_GetRuntime(ctx), &pending);
+    }
+}
+
 js_quickjs::value::value(const js_quickjs::value& other)
 {
     vctx = other.vctx;
@@ -1182,31 +1192,31 @@ std::pair<js_quickjs::value, js_quickjs::value> js_quickjs::add_getter_setter(js
     return {vget, vset};
 }
 
+JSValue js_quickjs::process_return_value(JSContext* ctx, JSValue in)
+{
+    if(JS_IsException(in))
+    {
+        return JS_GetException(ctx);
+    }
+
+    return JS_DupValue(ctx, in);
+}
+
 std::pair<bool, js_quickjs::value> js_quickjs::call_compiled(value& bitcode)
 {
     JSValue ret = JS_EvalFunction(bitcode.ctx, JS_DupValue(bitcode.ctx, bitcode.val));
 
-    value val(*bitcode.vctx);
-    val = ret;
-
     bool err = JS_IsError(bitcode.ctx, ret) || JS_IsException(ret);
 
+    JSValue processed = js_quickjs::process_return_value(bitcode.ctx, ret);
     JS_FreeValue(bitcode.ctx, ret);
 
-    //assert(val.has("stack"));
+    value rval(*bitcode.vctx);
+    rval = processed;
 
-    //std::cout << "MSG " << val.to_error_message() << std::endl;
+    JS_FreeValue(bitcode.ctx, processed);
 
-    if(JS_IsException(ret))
-    {
-        JSValue err_val = JS_GetException(bitcode.ctx);
-
-        val = err_val;
-
-        JS_FreeValue(bitcode.ctx, err_val);
-    }
-
-    return {!err, val};
+    return {!err, rval};
 }
 
 std::pair<bool, js_quickjs::value> js_quickjs::compile(value_context& vctx, const std::string& data)
@@ -1223,7 +1233,7 @@ std::pair<bool, js_quickjs::value> js_quickjs::compile(value_context& vctx, cons
 
     JS_FreeValue(vctx.ctx, ret);
 
-    bool err = JS_IsException(val.val) || JS_IsError(vctx.ctx, ret);
+    bool err = JS_IsException(val.val) || JS_IsError(vctx.ctx, val.val);
 
     if(JS_IsException(val.val))
     {
@@ -1252,19 +1262,13 @@ value eval(value_context& vctx, const std::string& data)
 {
     JSValue ret = JS_Eval(vctx.ctx, data.c_str(), data.size(), "test-eval", 0);
 
-    value rval(vctx);
-    rval = ret;
-
+    JSValue processed = js_quickjs::process_return_value(vctx.ctx, ret);
     JS_FreeValue(vctx.ctx, ret);
 
-    if(rval.is_exception())
-    {
-        JSValue err_val = JS_GetException(vctx.ctx);
+    value rval(vctx);
+    rval = processed;
 
-        rval = err_val;
-
-        JS_FreeValue(vctx.ctx, err_val);
-    }
+    JS_FreeValue(vctx.ctx, processed);
 
     return rval;
 }

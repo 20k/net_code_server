@@ -255,10 +255,7 @@ int main()
 
     std::cout << std::hash<std::string>{}("aaaaaaaa") << std::endl;
 
-    #ifndef NO_STACKTRACE
     stack_on_start();
-    #endif // NO_STACKTRACE
-
 
     /*{
         nlohmann::json test;

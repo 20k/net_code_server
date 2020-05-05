@@ -8,6 +8,7 @@
 //#include "thread_debugger.hpp"
 #include <iostream>
 #include <mutex>
+#include <sys/time.h>
 
 struct sthread
 {
@@ -17,6 +18,8 @@ struct sthread
     sthread(T&& t, U&&... u) : thrd([](auto t, auto... u)
                                     {
                                         stack_on_start();
+                                        //setitimer()
+
 
                                         try{
                                             t(std::forward<U>(u)...);

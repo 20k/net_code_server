@@ -29,6 +29,9 @@ void signal_handler(int signum)
 void stack_on_start()
 {
     //CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    #ifdef NO_STACKTRACE
+    return;
+    #endif // NO_STACKTRACE
 
     ::signal(SIGSEGV, &signal_handler);
     ::signal(SIGABRT, &signal_handler);

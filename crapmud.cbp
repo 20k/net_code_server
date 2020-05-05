@@ -42,6 +42,9 @@
 					<Add option="-DSYSTEM_TESTING" />
 					<Add option="-DEXTRAS" />
 				</Compiler>
+				<Linker>
+					<Add option="-O2" />
+				</Linker>
 			</Target>
 			<Target title="Profile">
 				<Option output="bin/Profile/crapmud" prefix_auto="1" extension_auto="1" />
@@ -213,15 +216,15 @@
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
-					<Add option="-O3" />
-					<Add option="-std=c++1z" />
+					<Add option="-O2" />
 					<Add option="-g" />
+					<Add option="-std=c++1z" />
 					<Add option="-march=nehalem" />
 					<Add option="-no-pie" />
 					<Add option="-DLOCAL_IP" />
 				</Compiler>
 				<Linker>
-					<Add option="-O3" />
+					<Add option="-O2" />
 					<Add option="-lsfml-system" />
 					<Add option="-lcrypto" />
 					<Add option="-lssl" />
@@ -242,15 +245,16 @@
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
-					<Add option="-O3" />
-					<Add option="-std=c++1z" />
+					<Add option="-fexpensive-optimizations" />
+					<Add option="-O2" />
 					<Add option="-g" />
+					<Add option="-std=c++1z" />
 					<Add option="-march=nehalem" />
 					<Add option="-no-pie" />
 					<Add option="-DEXTERN_IP" />
 				</Compiler>
 				<Linker>
-					<Add option="-O3" />
+					<Add option="-O2" />
 					<Add option="-lsfml-system" />
 					<Add option="-lcrypto" />
 					<Add option="-lssl" />
@@ -296,14 +300,18 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-pg" />
-					<Add option="-Og" />
 					<Add option="-g" />
 					<Add option="-march=nehalem" />
+					<Add option="-fno-pie" />
+					<Add option="-shared" />
 					<Add option="-DLOCAL_IP" />
 					<Add option="-DNO_STACKTRACE" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg -lgmon" />
+					<Add option="-pg" />
+					<Add option="-no-pie" />
+					<Add option="-fno-pie" />
 				</Linker>
 			</Target>
 		</Build>
