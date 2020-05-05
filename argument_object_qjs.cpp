@@ -1199,6 +1199,13 @@ JSValue js_quickjs::process_return_value(JSContext* ctx, JSValue in)
         return JS_GetException(ctx);
     }
 
+    JSContext* tctx = nullptr;
+
+    while(JS_ExecutePendingJob(JS_GetRuntime(ctx), &tctx) > 0)
+    {
+
+    }
+
     return JS_DupValue(ctx, in);
 }
 
