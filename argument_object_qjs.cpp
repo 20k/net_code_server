@@ -292,11 +292,11 @@ js_quickjs::value js_quickjs::value_context::get_current_this()
 
 void js_quickjs::value_context::execute_jobs()
 {
-    if(JS_IsJobPending(JS_GetRuntime(ctx)))
-    {
-        JSContext* pending = nullptr;
+    JSContext* pending = nullptr;
 
-        JS_ExecutePendingJob(JS_GetRuntime(ctx), &pending);
+    while(JS_ExecutePendingJob(heap, &pending) > 0)
+    {
+
     }
 }
 
@@ -1199,12 +1199,12 @@ JSValue js_quickjs::process_return_value(JSContext* ctx, JSValue in)
         return JS_GetException(ctx);
     }
 
-    JSContext* tctx = nullptr;
+    /*JSContext* tctx = nullptr;
 
     while(JS_ExecutePendingJob(JS_GetRuntime(ctx), &tctx) > 0)
     {
 
-    }
+    }*/
 
     return JS_DupValue(ctx, in);
 }
