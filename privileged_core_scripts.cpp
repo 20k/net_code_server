@@ -1597,7 +1597,7 @@ js::value users__accessible(priv_context& priv_ctx, js::value_context& vctx, js:
     ///so have to revisit updating auth
     if(pretty)
     {
-        std::string str = format_pretty_names(names, true);
+        std::string str = format_pretty_names(names, true, true);
 
         return js::make_value(vctx, str);
     }
