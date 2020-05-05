@@ -2102,7 +2102,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
     if(str["type"] == "generic_server_command")
     {
         std::string to_exec;
-        std::string tag;
+        nlohmann::json tag;
         bool tagged = str.count("tag") > 0;
 
         if(tagged)
