@@ -289,6 +289,23 @@
 					<Mode after="always" />
 				</ExtraCommands>
 			</Target>
+			<Target title="ProfileNoOpt">
+				<Option output="bin/ProfileNoOpt/crapmud" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/ProfileNoOpt/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-pg" />
+					<Add option="-Og" />
+					<Add option="-g" />
+					<Add option="-march=nehalem" />
+					<Add option="-DLOCAL_IP" />
+					<Add option="-DNO_STACKTRACE" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg -lgmon" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wnon-virtual-dtor" />
@@ -353,6 +370,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="ascii_helpers.hpp">
 			<Option target="Debug" />
@@ -370,6 +388,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="auth.cpp">
 			<Option target="Debug" />
@@ -387,6 +406,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="auth.hpp">
 			<Option target="Debug" />
@@ -404,6 +424,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="command_handler.cpp">
 			<Option target="Debug" />
@@ -421,6 +442,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="command_handler.hpp">
 			<Option target="Debug" />
@@ -438,6 +460,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="command_handler_state.cpp">
 			<Option target="Debug" />
@@ -455,6 +478,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="command_handler_state.hpp">
 			<Option target="Debug" />
@@ -472,6 +496,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="db_storage_backend.cpp">
 			<Option target="Debug" />
@@ -489,6 +514,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="db_storage_backend.hpp">
 			<Option target="Debug" />
@@ -506,6 +532,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/libncclient/nc_util.hpp" />
 		<Unit filename="deps/networking/beast_compilation_unit.cpp">
@@ -524,6 +551,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/networking/networking.cpp">
 			<Option target="Debug" />
@@ -541,6 +569,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/networking/networking.hpp">
 			<Option target="Debug" />
@@ -558,6 +587,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/networking/serialisable.cpp">
 			<Option target="Debug" />
@@ -575,6 +605,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/networking/serialisable.hpp">
 			<Option target="Debug" />
@@ -592,6 +623,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/networking/serialisable_fwd.hpp">
 			<Option target="Debug" />
@@ -609,6 +641,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/quickjs/cutils.c">
 			<Option compilerVar="CC" />
@@ -642,6 +675,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/common.hpp">
 			<Option target="Debug" />
@@ -659,6 +693,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/initial_link_setup.cpp">
 			<Option target="Debug" />
@@ -676,6 +711,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/initial_link_setup.hpp">
 			<Option target="Debug" />
@@ -693,6 +729,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/items_secret.hpp">
 			<Option target="Debug" />
@@ -710,6 +747,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/loot_gen.cpp">
 			<Option target="Debug" />
@@ -727,6 +765,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/loot_gen.hpp">
 			<Option target="Debug" />
@@ -744,6 +783,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/low_level_structure.cpp">
 			<Option target="Debug" />
@@ -761,6 +801,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/low_level_structure.hpp">
 			<Option target="Debug" />
@@ -778,6 +819,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/node.cpp">
 			<Option target="Debug" />
@@ -795,6 +837,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/node.hpp">
 			<Option target="Debug" />
@@ -812,6 +855,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/npc_manager.cpp">
 			<Option target="Debug" />
@@ -829,6 +873,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/npc_manager.hpp">
 			<Option target="Debug" />
@@ -846,6 +891,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/one_shot_core.cpp">
 			<Option target="Debug" />
@@ -863,6 +909,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/one_shot_core.hpp">
 			<Option target="Debug" />
@@ -880,6 +927,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/one_shots.cpp">
 			<Option target="Debug" />
@@ -897,6 +945,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/one_shots.hpp">
 			<Option target="Debug" />
@@ -914,6 +963,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/secret.cpp">
 			<Option target="Debug" />
@@ -931,6 +981,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/secret.hpp">
 			<Option target="Debug" />
@@ -948,6 +999,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/special_user_scripts.cpp">
 			<Option target="Debug" />
@@ -965,6 +1017,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/special_user_scripts.hpp">
 			<Option target="Debug" />
@@ -982,6 +1035,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/structure.cpp">
 			<Option target="Debug" />
@@ -999,6 +1053,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/structure.hpp">
 			<Option target="Debug" />
@@ -1016,6 +1071,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/structure_generation_2.cpp" />
 		<Unit filename="deps/secret/structure_generation_2.hpp" />
@@ -1035,6 +1091,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/secret/tutorial.hpp">
 			<Option target="Debug" />
@@ -1052,6 +1109,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="deps/toolkit/clock.cpp" />
 		<Unit filename="deps/toolkit/clock.hpp" />
@@ -1071,6 +1129,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="duk_modules.cpp">
 			<Option target="Debug" />
@@ -1088,6 +1147,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="duk_modules.hpp">
 			<Option target="Debug" />
@@ -1105,6 +1165,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="duk_object_functions.cpp">
 			<Option target="Debug" />
@@ -1122,6 +1183,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="duk_object_functions.hpp">
 			<Option target="Debug" />
@@ -1139,6 +1201,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="duktape.cpp">
 			<Option target="Debug" />
@@ -1156,6 +1219,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="event_manager.cpp">
 			<Option target="Debug" />
@@ -1173,6 +1237,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="event_manager.hpp">
 			<Option target="Debug" />
@@ -1190,6 +1255,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="http_beast_server.cpp">
 			<Option target="Debug" />
@@ -1207,6 +1273,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="http_beast_server.hpp">
 			<Option target="Debug" />
@@ -1224,6 +1291,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="item.cpp">
 			<Option target="Debug" />
@@ -1241,6 +1309,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="item.hpp">
 			<Option target="Debug" />
@@ -1258,6 +1327,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="logging.cpp">
 			<Option target="Debug" />
@@ -1275,6 +1345,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="logging.hpp">
 			<Option target="Debug" />
@@ -1292,6 +1363,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="main.cpp">
 			<Option target="Debug" />
@@ -1309,6 +1381,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="memory_sandbox.hpp">
 			<Option target="Debug" />
@@ -1326,6 +1399,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="mongo.cpp">
 			<Option target="Debug" />
@@ -1343,6 +1417,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="mongo.hpp">
 			<Option target="Debug" />
@@ -1360,6 +1435,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="mongo_cleanup.hpp">
 			<Option target="Debug" />
@@ -1377,6 +1453,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="mongoc_fwd.hpp">
 			<Option target="Debug" />
@@ -1394,6 +1471,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="non_user_task_thread.cpp">
 			<Option target="Debug" />
@@ -1411,6 +1489,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="non_user_task_thread.hpp">
 			<Option target="Debug" />
@@ -1428,6 +1507,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="perfmon.cpp">
 			<Option target="Debug" />
@@ -1445,6 +1525,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="perfmon.hpp">
 			<Option target="Debug" />
@@ -1462,6 +1543,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="privileged_core_scripts.cpp">
 			<Option target="Debug" />
@@ -1479,6 +1561,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="privileged_core_scripts.hpp">
 			<Option target="Debug" />
@@ -1496,6 +1579,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="quest_manager.cpp">
 			<Option target="Debug" />
@@ -1513,6 +1597,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="quest_manager.hpp">
 			<Option target="Debug" />
@@ -1530,6 +1615,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="rate_limiting.cpp">
 			<Option target="Debug" />
@@ -1547,6 +1633,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="rate_limiting.hpp">
 			<Option target="Debug" />
@@ -1564,6 +1651,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="reoccurring_task_handler.cpp">
 			<Option target="Debug" />
@@ -1581,6 +1669,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="reoccurring_task_handler.hpp">
 			<Option target="Debug" />
@@ -1598,6 +1687,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="rng.cpp">
 			<Option target="Debug" />
@@ -1615,6 +1705,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="rng.hpp">
 			<Option target="Debug" />
@@ -1632,6 +1723,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="safe_thread.cpp">
 			<Option target="Debug" />
@@ -1649,6 +1741,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="safe_thread.hpp">
 			<Option target="Debug" />
@@ -1666,6 +1759,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="scheduled_tasks.cpp">
 			<Option target="Debug" />
@@ -1683,6 +1777,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="scheduled_tasks.hpp">
 			<Option target="Debug" />
@@ -1700,6 +1795,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="script_metadata.cpp">
 			<Option target="Debug" />
@@ -1717,6 +1813,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="script_metadata.hpp">
 			<Option target="Debug" />
@@ -1734,6 +1831,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="script_util.cpp">
 			<Option target="Debug" />
@@ -1751,6 +1849,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="script_util.hpp">
 			<Option target="Debug" />
@@ -1768,6 +1867,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="seccallers.cpp">
 			<Option target="Debug" />
@@ -1785,6 +1885,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="seccallers.hpp">
 			<Option target="Debug" />
@@ -1802,6 +1903,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="serialisables.cpp">
 			<Option target="Debug" />
@@ -1819,6 +1921,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="serialisables.hpp">
 			<Option target="Debug" />
@@ -1836,6 +1939,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="shared_command_handler_state.hpp">
 			<Option target="Debug" />
@@ -1853,6 +1957,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="shared_duk_worker_state.cpp">
 			<Option target="Debug" />
@@ -1870,6 +1975,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="shared_duk_worker_state.hpp">
 			<Option target="Debug" />
@@ -1887,6 +1993,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="source_maps.cpp">
 			<Option target="Debug" />
@@ -1904,6 +2011,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="source_maps.hpp">
 			<Option target="Debug" />
@@ -1921,6 +2029,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="stacktrace.cpp">
 			<Option target="Debug" />
@@ -1938,6 +2047,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="stacktrace.hpp">
 			<Option target="Debug" />
@@ -1955,6 +2065,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="steam_auth.cpp">
 			<Option target="Debug" />
@@ -1972,6 +2083,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="steam_auth.hpp">
 			<Option target="Debug" />
@@ -1989,6 +2101,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="time.cpp">
 			<Option target="Debug" />
@@ -2006,6 +2119,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="time.hpp">
 			<Option target="Debug" />
@@ -2023,6 +2137,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="timestamped_position.hpp">
 			<Option target="Debug" />
@@ -2040,6 +2155,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="tls.hpp">
 			<Option target="Debug" />
@@ -2057,6 +2173,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="unified_scripts.cpp">
 			<Option target="Debug" />
@@ -2074,6 +2191,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="unified_scripts.hpp">
 			<Option target="Debug" />
@@ -2091,6 +2209,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="user.cpp">
 			<Option target="Debug" />
@@ -2108,6 +2227,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Unit filename="user.hpp">
 			<Option target="Debug" />
@@ -2125,6 +2245,7 @@
 			<Option target="LinuxDeploy" />
 			<Option target="Profile" />
 			<Option target="ReleaseNoSymbols" />
+			<Option target="ProfileNoOpt" />
 		</Unit>
 		<Extensions />
 	</Project>
