@@ -17,6 +17,8 @@ void worker_thread()
 
 void boot_fiber_manager()
 {
+    printf("Boot?\n");
+
     int hardware_threads = 3;
 
     for(int i=0; i < hardware_threads; i++)

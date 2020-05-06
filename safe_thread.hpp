@@ -14,6 +14,10 @@
 #include <boost/fiber/mutex.hpp>
 #endif // USE_FIBERS
 
+#ifndef USE_FIBERS
+#include <shared_mutex>
+#endif // USE_FIBERS
+
 struct sthread
 {
     std::thread thrd;
@@ -179,7 +183,7 @@ using unique_lock = std::unique_lock<T>;
 #else
 
 using lock_type_t = safe_mutex;
-using shared_lock_type_t = shared_lock_type_t;
+using shared_lock_type_t = std::shared_mutex;
 
 template<typename T>
 using shared_lock = std::shared_lock<T>;
