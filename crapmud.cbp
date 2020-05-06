@@ -225,6 +225,7 @@
 					<Add option="-no-pie" />
 					<Add option="-DLOCAL_IP" />
 					<Add option="-DUSE_FIBERS" />
+					<Add directory="/home/james/boost_1_73_0" />
 				</Compiler>
 				<Linker>
 					<Add option="-O2" />
@@ -236,8 +237,11 @@
 					<Add option="-pthread" />
 					<Add option="-ldl" />
 					<Add option="-lsdkencryptedappticket" />
+					<Add option="-lboost_fiber" />
+					<Add option="-lboost_context" />
 					<Add directory="deps/libs" />
 					<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/linux64" />
+					<Add directory="/home/james/boost_1_73_0/stage/lib" />
 				</Linker>
 			</Target>
 			<Target title="LinuxDeploy">
@@ -248,13 +252,13 @@
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
-					<Add option="-fexpensive-optimizations" />
 					<Add option="-O2" />
 					<Add option="-g" />
 					<Add option="-std=c++1z" />
 					<Add option="-march=nehalem" />
 					<Add option="-no-pie" />
 					<Add option="-DEXTERN_IP" />
+					<Add directory="/home/james/boost_1_73_0" />
 				</Compiler>
 				<Linker>
 					<Add option="-O2" />
@@ -266,10 +270,11 @@
 					<Add option="-pthread" />
 					<Add option="-ldl" />
 					<Add option="-lsdkencryptedappticket" />
-					<Add option="-l:libboost_fiber.a" />
-					<Add option="-l:libboost_context.a" />
+					<Add option="-lboost_fiber" />
+					<Add option="-lboost_context" />
 					<Add directory="deps/libs" />
 					<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/linux64" />
+					<Add directory="/home/james/boost_1_73_0/stage/lib" />
 				</Linker>
 			</Target>
 			<Target title="MakeLinuxReleaseWSL">
