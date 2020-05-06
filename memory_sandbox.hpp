@@ -41,6 +41,7 @@ struct sandbox_data
     std::atomic_bool is_static{false};
     float max_elapsed_time_ms = 0;
     double ms_awake_elapsed_static = 0;
+    double framerate_limit = 30;
 
     size_t total_allocated = 0;
     std::atomic_bool terminate_semi_gracefully{false};

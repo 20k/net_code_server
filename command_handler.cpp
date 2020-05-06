@@ -139,6 +139,9 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
 
     js::value_context vctx(nvctx);
 
+    sandbox_data* sand = js::get_sandbox_data<sandbox_data>(nvctx);
+    sand->framerate_limit = current_framerate;
+
     /*MAKE_PERF_COUNTER();
     mongo_diagnostics diagnostic_scope;*/
 
@@ -307,6 +310,8 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             {
                 double celapsed = elapsed.getElapsedTime().asMicroseconds() / 1000.;
                 double diff = max_frame_time_ms - celapsed;
+
+                printf("ISleep %i\n", (int)diff);
 
                 #ifdef USE_FIBERS
                 if(diff > 0)

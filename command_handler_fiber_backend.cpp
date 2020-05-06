@@ -4,6 +4,8 @@
 #include <boost/fiber/algo/round_robin.hpp>
 #include <SFML/System/Clock.hpp>
 #include "safe_thread.hpp"
+#include <queue>
+#include <SFML/System/Sleep.hpp>
 
 //tls_variable<int, 0> is_fiber;
 
@@ -18,10 +20,46 @@ bool is_thread_fiber()
     #endif
 }
 
+struct custom_scheduler : boost::fibers::algo::algorithm
+{
+    std::queue<boost::fibers::context*> q;
+
+    void awakened(boost::fibers::context* f) noexcept override
+    {
+        q.push(f);
+    }
+
+    boost::fibers::context* pick_next() noexcept override
+    {
+        if(q.size() == 0)
+            return nullptr;
+
+        boost::fibers::context* next = q.front();
+        q.pop();
+
+        return next;
+    }
+
+    bool has_ready_fibers() const noexcept override
+    {
+        return q.size() > 0;
+    }
+
+    void suspend_until(std::chrono::steady_clock::time_point const&) noexcept override
+    {
+        sf::sleep(sf::milliseconds(1));
+    }
+
+    void notify() noexcept override
+    {
+
+    }
+};
+
 void worker_thread()
 {
     #ifdef USE_FIBERS
-    boost::fibers::use_scheduling_algorithm<boost::fibers::algo::round_robin>();
+    boost::fibers::use_scheduling_algorithm<custom_scheduler>();
     is_fiber = 1;
 
     fiber_queue& queue = get_global_fiber_queue();

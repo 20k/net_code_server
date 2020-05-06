@@ -100,7 +100,7 @@ void handle_sleep(sandbox_data* dat)
         else
         {
             #ifdef USE_FIBERS
-            double total_sleep = 0;
+            /*double total_sleep = 0;
 
             ///this is really bad code, FIX
             while(dat->realtime_ms_awake_elapsed >= max_allowed_frame_time_ms)
@@ -112,7 +112,51 @@ void handle_sleep(sandbox_data* dat)
             }
 
             boost::this_fiber::sleep_for(std::chrono::milliseconds((int)total_sleep));
-            dat->clk.restart();
+            dat->clk.restart();*/
+
+            double current_framerate = dat->framerate_limit;
+
+            double frametime = (1/current_framerate) * 1000;
+
+            double allowed_executable_time = max_to_allowed * frametime;
+            double sleep_time = (1 - max_to_allowed) * frametime;
+
+            //std::cout << "ALLOWD TIME " << allowed_executable_time << std::endl;
+
+            if(dat->realtime_ms_awake_elapsed > allowed_executable_time)
+            {
+                double extra = dat->realtime_ms_awake_elapsed - allowed_executable_time;
+
+                double total_sleep = extra + sleep_time;
+
+                //if(total_sleep < 1)
+                //    break;
+
+                int idiff = (int)total_sleep;
+                //int idiff = 1;
+
+                //if(idiff <= 0)
+                //    break;
+
+                //std::cout << "Total sleep " << total_sleep << std::endl;
+
+                if(idiff > 0)
+                {
+                    //for(int i=idiff; i > 0; i--)
+                    {
+                        sf::Clock real_sleep;
+                        boost::this_fiber::sleep_for(std::chrono::milliseconds((int)idiff));
+
+                        double elapsed = real_sleep.getElapsedTime().asMicroseconds() / 1000.;
+
+                        dat->realtime_ms_awake_elapsed -= elapsed;
+                        dat->clk.restart();
+
+                        dat->realtime_ms_awake_elapsed = clamp(dat->realtime_ms_awake_elapsed, -20, 100);
+                    }
+                }
+            }
+
             #endif // USE_FIBERS
         }
     }
@@ -192,7 +236,7 @@ void handle_sleep(sandbox_data* dat)
         else
         {
             #ifdef USE_FIBERS
-            boost::this_fiber::sleep_for(std::chrono::milliseconds(val));
+            //boost::this_fiber::sleep_for(std::chrono::milliseconds(val));
             #endif // USE_FIBERS
         }
     }
