@@ -3,6 +3,28 @@
 
 #include "safe_thread.hpp"
 
+#ifdef USE_FIBERS
+
+#include <boost/fiber/fss.hpp>
+
+template<typename T, T init>
+struct tls_variable
+{
+    boost::fibers::fiber_specific_ptr<T> ptr;
+
+    tls_variable()
+    {
+        *ptr.get() = init;
+    }
+
+    T* get()
+    {
+        return ptr.get();
+    }
+};
+
+#else
+
 namespace tls_detail
 {
     template<typename T, typename U>
@@ -50,5 +72,7 @@ struct tls_variable
         return tls_detail::tls_fetch<T>(key, [](T& i){i = init;});
     }
 };
+
+#endif // USE_FIBERS
 
 #endif // TLS_HPP_INCLUDED

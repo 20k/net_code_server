@@ -36,6 +36,7 @@
 #include "reoccurring_task_handler.hpp"
 #include "serialisables.hpp"
 #include <secret/structure_generation_2.hpp>
+#include "command_handler_fiber_backend.hpp"
 
 void test_hexbin()
 {
@@ -256,6 +257,10 @@ int main()
     std::cout << std::hash<std::string>{}("aaaaaaaa") << std::endl;
 
     stack_on_start();
+
+    #ifdef USE_FIBERS
+    boot_fiber_manager();
+    #endif // USE_FIBERS
 
     /*{
         nlohmann::json test;

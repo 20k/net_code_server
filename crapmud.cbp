@@ -41,9 +41,13 @@
 					<Add option="-DLOCAL_IP" />
 					<Add option="-DSYSTEM_TESTING" />
 					<Add option="-DEXTRAS" />
+					<Add option="-DTEST_FIBERS" />
+					<Add option="-DUSE_FIBERS" />
 				</Compiler>
 				<Linker>
 					<Add option="-O2" />
+					<Add option="-l:libboost_fiber-mt.a" />
+					<Add option="-l:libboost_context-mt.a" />
 				</Linker>
 			</Target>
 			<Target title="Profile">
@@ -470,6 +474,8 @@
 			<Option target="ReleaseNoSymbols" />
 			<Option target="ProfileNoOpt" />
 		</Unit>
+		<Unit filename="command_handler_fiber_backend.cpp" />
+		<Unit filename="command_handler_fiber_backend.hpp" />
 		<Unit filename="command_handler_state.cpp">
 			<Option target="Debug" />
 			<Option target="Release" />
