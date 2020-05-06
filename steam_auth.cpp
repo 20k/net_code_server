@@ -21,7 +21,7 @@ std::optional<steam_auth_data> get_steam_auth(const std::string& hex_auth_data)
     ///try it with the hardcoded spacewar token
     if(!loaded)
     {
-        static std::mutex lock;
+        static lock_type_t lock;
         std::lock_guard guard(lock);
 
         std::string hex_key = read_file_bin("deps/secret/akey.ect");

@@ -308,7 +308,7 @@ nlohmann::json project(const nlohmann::json& data, const nlohmann::json& proj)
     return ret;
 }
 
-using mutex_t = safe_mutex;
+using mutex_t = lock_type_t;
 
 struct database
 {
@@ -1287,9 +1287,9 @@ void db_storage_backend::remove_many(const nlohmann::json& selector)
     get_db_storage().remove_many(database, collection, selector);
 }
 
-std::mutex& db_storage_backend::get_lock_for()
+lock_type_t& db_storage_backend::get_lock_for()
 {
-    return get_db_storage().get_db(database).get_lock(collection).mutex;
+    return get_db_storage().get_db(database).get_lock(collection);
 }
 
 std::vector<nlohmann::json>& db_storage_backend::get_db_data_nolock_import()

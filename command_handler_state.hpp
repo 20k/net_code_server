@@ -18,16 +18,16 @@ struct unprocessed_key_info
 
 struct command_handler_state
 {
-    std::mutex command_lock;
-    std::mutex lock;
-    std::shared_mutex key_lock;
+    lock_type_t command_lock;
+    lock_type_t lock;
+    shared_lock_type_t key_lock;
 
     std::map<int, std::vector<unprocessed_key_info>> unprocessed_keystrokes;
     std::map<int, std::map<std::string, bool>> key_states;
 
     std::atomic_bool should_terminate_any_realtime{false};
 
-    std::mutex realtime_script_deltas_lock;
+    lock_type_t realtime_script_deltas_lock;
     std::map<int, float> realtime_script_deltas_ms;
 
     std::atomic_int number_of_oneshot_scripts{0};
@@ -73,9 +73,9 @@ private:
     std::string current_user_name;
 
     std::map<int, std::pair<int, int>> received_sizes;
-    std::mutex size_lock;
+    lock_type_t size_lock;
 
-    std::shared_mutex mouse_lock;
+    shared_lock_type_t mouse_lock;
 
     std::map<int, vec2f> mouse_pos;
     std::map<int, vec2f> mousewheel_state;

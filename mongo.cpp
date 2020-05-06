@@ -234,7 +234,7 @@ void mongo_context::make_unlock(const std::string& collection)
 
     #ifdef DEADLOCK_DETECTION
     {
-        std::lock_guard<std::mutex> guard(thread_lock);
+        std::lock_guard<lock_type_t> guard(thread_lock);
 
         thread_counter[std::this_thread::get_id()]--;
     }

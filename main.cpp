@@ -93,7 +93,7 @@ void test_locking()
     mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
     ctx.change_collection("i20k");
 
-    std::mutex mut;
+    lock_type_t mut;
 
     safe_lock_guard guard(mut);
 }

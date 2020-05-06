@@ -46,7 +46,7 @@ struct lock_internal
     #ifndef USE_STD_MUTEX
     std::atomic_flag locked = ATOMIC_FLAG_INIT;
     #else
-    safe_mutex mut_lock;
+    lock_type_t mut_lock;
     #endif // USE_STD_MUTEX
 
     void lock(const std::string& debug_info, size_t who);
@@ -66,13 +66,13 @@ struct mongo_context
     std::vector<std::string> all_collections;
 
     ///thread safety of below map
-    std::mutex map_lock;
+    lock_type_t map_lock;
 
     ///this isn't for thread safety, this is for marshalling db access
     std::map<std::string, lock_internal> per_collection_lock;
 
     static inline std::map<std::thread::id, std::atomic_int> thread_counter;
-    static inline std::mutex thread_lock;
+    static inline lock_type_t thread_lock;
 
     bool is_fixed = false;
 

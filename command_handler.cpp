@@ -88,12 +88,12 @@ void managed_duktape_thread(unsafe_info* info, size_t tid)
 
 struct cleanup_auth_at_exit
 {
-    std::mutex& to_lock;
+    lock_type_t& to_lock;
     std::map<std::string, int>& to_cleanup;
     std::string auth;
     bool blocked = true;
 
-    cleanup_auth_at_exit(std::mutex& lk, std::map<std::string, int>& cleanup, std::string ath) : to_lock(lk), to_cleanup(cleanup), auth(ath) {}
+    cleanup_auth_at_exit(lock_type_t& lk, std::map<std::string, int>& cleanup, std::string ath) : to_lock(lk), to_cleanup(cleanup), auth(ath) {}
 
     void unblock()
     {
@@ -363,7 +363,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                 return "No such user";
         }
 
-        static std::mutex id_mut;
+        static lock_type_t id_mut;
 
         static std::map<std::string, int> auth_guard;
         static std::atomic_int gthread_id{1};
@@ -1869,7 +1869,7 @@ std::vector<std::string> get_channels_for_user(user& usr)
     std::vector<std::string> ret;
 
     static std::vector<mongo_requester> all_data;
-    static std::mutex lock;
+    static lock_type_t lock;
     static sf::Clock clk;
 
     mongo_requester all;

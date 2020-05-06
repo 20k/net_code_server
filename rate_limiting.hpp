@@ -34,7 +34,7 @@ struct rate_limit
     std::map<rate_limit_t, double> max_reserve = {{rate::CHAT, 10}, {rate::CASH, 30}, {rate::UPG_CHEAT, 10}, {rate::AUTOCOMPLETES, 30}, {rate::DELETE_USER, 61*60}, {rate::POLL, 5}, {rate::ASYNC_PRINT, 60}, {rate::CREATE_CHANNEL, 10}};
     std::map<rate_limit_t, double> budget_deplete = {{rate::CHAT, 1}, {rate::CASH, 1}, {rate::UPG_CHEAT, 3}, {rate::AUTOCOMPLETES, 1}, {rate::DELETE_USER, 60*60}, {rate::POLL, 0.25f}, {rate::ASYNC_PRINT, 1/120.f}, {rate::CREATE_CHANNEL, 1}};
 
-    std::mutex lock;
+    lock_type_t lock;
 
     bool try_call(const std::string& usr_name, rate_limit_t type)
     {

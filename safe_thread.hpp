@@ -10,6 +10,10 @@
 #include <mutex>
 #include <sys/time.h>
 
+#ifdef USE_FIBERS
+#include <boost/fiber/mutex.hpp>
+#endif // USE_FIBERS
+
 struct sthread
 {
     std::thread thrd;
@@ -109,7 +113,7 @@ struct safe_lock_guard
     safe_lock_guard(T& t) : guard(t)
     {
         #ifdef DEADLOCK_DETECTION
-        std::lock_guard<std::mutex> g(mongo_context::thread_lock);
+        std::lock_guard<lock_type_t> g(mongo_context::thread_lock);
 
         mongo_context::thread_counter[std::this_thread::get_id()]++;
 
@@ -125,11 +129,64 @@ struct safe_lock_guard
     ~safe_lock_guard()
     {
         #ifdef DEADLOCK_DETECTION
-        std::lock_guard<std::mutex> g(mongo_context::thread_lock);
+        std::lock_guard<lock_type_t> g(mongo_context::thread_lock);
 
         mongo_context::thread_counter[std::this_thread::get_id()]--;
         #endif // DEADLOCK_DETECTION
     }
 };
+
+struct safe_mutex
+{
+    #ifdef USE_FIBERS
+    boost::fibers::mutex mutex;
+    #else
+    std::mutex mutex;
+    #endif // USE_FIBERS
+
+    void lock()
+    {
+        /*sf::Clock clk;
+
+        while(!mutex.try_lock())
+        {
+            if(clk.getElapsedTime().asMilliseconds() > 5000)
+            {
+                std::cout << get_stacktrace() << std::endl;
+            }
+        }*/
+
+        mutex.lock();
+    }
+
+    void unlock()
+    {
+        mutex.unlock();
+    }
+};
+
+#ifdef USE_FIBERS
+
+using lock_type_t = boost::fibers::mutex;
+using shared_lock_type_t = boost::fibers::mutex;
+
+template<typename T>
+using shared_lock = std::unique_lock<T>;
+
+template<typename T>
+using unique_lock = std::unique_lock<T>;
+
+#else
+
+using lock_type_t = safe_mutex;
+using shared_lock_type_t = shared_lock_type_t;
+
+template<typename T>
+using shared_lock = std::shared_lock<T>;
+
+template<typename T>
+using unique_lock = std::unique_lock<T>;
+
+#endif // USE_FIBERS
 
 #endif // SAFE_THREAD_HPP_INCLUDED

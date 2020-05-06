@@ -8,6 +8,7 @@
 #include "stacktrace.hpp"
 #include <iostream>
 #include <SFML/System/Clock.hpp>
+#include "safe_thread.hpp"
 
 #define CID_STRING "_cid"
 
@@ -16,31 +17,6 @@ struct mongo_context;
 using database_type = int32_t;
 
 void init_db_storage_backend();
-
-struct safe_mutex
-{
-    std::mutex mutex;
-
-    void lock()
-    {
-        /*sf::Clock clk;
-
-        while(!mutex.try_lock())
-        {
-            if(clk.getElapsedTime().asMilliseconds() > 5000)
-            {
-                std::cout << get_stacktrace() << std::endl;
-            }
-        }*/
-
-        mutex.lock();
-    }
-
-    void unlock()
-    {
-        mutex.unlock();
-    }
-};
 
 struct db_storage_backend
 {
@@ -62,7 +38,7 @@ struct db_storage_backend
     std::vector<nlohmann::json> find_many(const nlohmann::json& selector, const nlohmann::json& options);
     void remove_many(const nlohmann::json& selector);
 
-    std::mutex& get_lock_for();
+    lock_type_t& get_lock_for();
     std::vector<nlohmann::json>& get_db_data_nolock_import();
     void flush(const nlohmann::json& data);
     void disk_erase(const nlohmann::json& data);
