@@ -120,7 +120,17 @@ void worker_thread(int id)
 
             if(queue.q.size() > 0)
             {
-                boost::fibers::fiber(queue.q[0]).detach();
+                boost::fibers::fiber([](auto in)
+                {
+                    try
+                    {
+                        in();
+                    }
+                    catch(std::exception& e)
+                    {
+                        std::cout << "Caught exception in fibre manager" << e.what() << std::endl;
+                    }
+                }, queue.q[0]).detach();
 
                 queue.q.erase(queue.q.begin());
                 continue;

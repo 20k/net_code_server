@@ -12,11 +12,11 @@ LD = g++
 WINDRES = windres
 
 INC = -Ideps
-CFLAGS = -Wnon-virtual-dtor -Winit-self -Wunreachable-code -Wextra -Wall -std=c++2a -fexceptions -Wno-narrowing -fno-strict-aliasing -Wno-unused-parameter -Wno-unused-label -no-pie -Werror=return-type -Wno-cast-function-type -DBOOST_STACKTRACE_USE_BACKTRACE -DSERVER -DCONFIG_VERSION="" -DCONFIG_BIGNUM -DDUMP_LEAKS -DUSE_FIBERS
+CFLAGS = -Wnon-virtual-dtor -Winit-self -Wunreachable-code -Wextra -Wall -std=c++2a -fexceptions -Wno-narrowing -fno-strict-aliasing -Wno-unused-parameter -Wno-unused-label -no-pie -Werror=return-type -Wno-cast-function-type -DBOOST_STACKTRACE_USE_BACKTRACE -DSERVER -DCONFIG_VERSION="" -DCONFIG_BIGNUM -DDUMP_LEAKS
 RESINC = 
 LIBDIR = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/win64
 LIB = 
-LDFLAGS = -lmingw32 -lsfml-system -lws2_32 -lboost_system-mt -lmswsock -lole32 -lboost_filesystem-mt -ldbgeng -lcrypto -lssl -ldl -fno-pie -lbacktrace -lsdkencryptedappticket64
+LDFLAGS = -lmingw32 -lsfml-system -lws2_32 -lboost_system-mt -lmswsock -lole32 -lboost_filesystem-mt -ldbgeng -lcrypto -lssl -ldl -fno-pie -lbacktrace -lsdkencryptedappticket64 -lboost_fiber-mt -lboost_context-mt
 
 INC_DEBUG = $(INC)
 CFLAGS_DEBUG = $(CFLAGS) -Og -g -DLOCAL_IP
@@ -167,7 +167,7 @@ RESINC_LINUXDEPLOY = $(RESINC)
 RCFLAGS_LINUXDEPLOY = $(RCFLAGS)
 LIBDIR_LINUXDEPLOY = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/linux64
 LIB_LINUXDEPLOY = $(LIB)
-LDFLAGS_LINUXDEPLOY =  -O2 -lsfml-system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket
+LDFLAGS_LINUXDEPLOY =  -O2 -lsfml-system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket -l:libboost_fiber.a -l:libboost_context.a
 OBJDIR_LINUXDEPLOY = obj/LDeploy
 DEP_LINUXDEPLOY = 
 OUT_LINUXDEPLOY = bin/LDeploy/crapmud
@@ -211,7 +211,7 @@ RESINC_RELEASENOSYMFIBERS = $(RESINC)
 RCFLAGS_RELEASENOSYMFIBERS = $(RCFLAGS)
 LIBDIR_RELEASENOSYMFIBERS = $(LIBDIR)
 LIB_RELEASENOSYMFIBERS = $(LIB)
-LDFLAGS_RELEASENOSYMFIBERS = $(LDFLAGS) -O2 -l:libboost_fiber-mt.a -l:libboost_context-mt.a
+LDFLAGS_RELEASENOSYMFIBERS = $(LDFLAGS) -O2
 OBJDIR_RELEASENOSYMFIBERS = obj/ReleaseNoSymFibers
 DEP_RELEASENOSYMFIBERS = 
 OUT_RELEASENOSYMFIBERS = bin/ReleaseNoSymFibers/crapmud
@@ -222,7 +222,7 @@ RESINC_DEBUGFIBERS = $(RESINC)
 RCFLAGS_DEBUGFIBERS = $(RCFLAGS)
 LIBDIR_DEBUGFIBERS = $(LIBDIR)
 LIB_DEBUGFIBERS = $(LIB)
-LDFLAGS_DEBUGFIBERS = $(LDFLAGS) -l:libboost_fiber-mt.a -l:libboost_context-mt.a
+LDFLAGS_DEBUGFIBERS = $(LDFLAGS)
 OBJDIR_DEBUGFIBERS = obj/DebugFibers
 DEP_DEBUGFIBERS = 
 OUT_DEBUGFIBERS = bin/DebugFibers/crapmud

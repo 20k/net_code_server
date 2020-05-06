@@ -265,6 +265,8 @@
 					<Add option="-pthread" />
 					<Add option="-ldl" />
 					<Add option="-lsdkencryptedappticket" />
+					<Add option="-l:libboost_fiber.a" />
+					<Add option="-l:libboost_context.a" />
 					<Add directory="deps/libs" />
 					<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/linux64" />
 				</Linker>
@@ -331,8 +333,6 @@
 				</Compiler>
 				<Linker>
 					<Add option="-O2" />
-					<Add option="-l:libboost_fiber-mt.a" />
-					<Add option="-l:libboost_context-mt.a" />
 				</Linker>
 			</Target>
 			<Target title="DebugFibers">
@@ -349,10 +349,6 @@
 					<Add option="-DTEST_FIBERS" />
 					<Add option="-DUSE_FIBERS" />
 				</Compiler>
-				<Linker>
-					<Add option="-l:libboost_fiber-mt.a" />
-					<Add option="-l:libboost_context-mt.a" />
-				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
@@ -375,7 +371,6 @@
 			<Add option='-DCONFIG_VERSION=&quot;&quot;' />
 			<Add option="-DCONFIG_BIGNUM" />
 			<Add option="-DDUMP_LEAKS" />
-			<Add option="-DUSE_FIBERS" />
 			<Add directory="deps" />
 		</Compiler>
 		<Linker>
@@ -393,6 +388,8 @@
 			<Add option="-fno-pie" />
 			<Add option="-lbacktrace" />
 			<Add option="-lsdkencryptedappticket64" />
+			<Add option="-lboost_fiber-mt" />
+			<Add option="-lboost_context-mt" />
 			<Add directory="deps/libs" />
 			<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/win64" />
 		</Linker>

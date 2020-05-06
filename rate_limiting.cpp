@@ -152,6 +152,7 @@ void handle_sleep(sandbox_data* dat)
         }
         else
         {
+            #ifdef USE_FIBERS
             int units = dat->ms_awake_elapsed_static / awake_time;
 
             if(units > 0)
@@ -167,6 +168,7 @@ void handle_sleep(sandbox_data* dat)
 
             dat->ms_awake_elapsed_static = clamp(dat->ms_awake_elapsed_static, -20, 100);
             dat->clk.restart();
+            #endif // USE_FIBERS
         }
 
         double elapsed_ms = dat->full_run_clock.getElapsedTime().asMicroseconds() / 1000.;
