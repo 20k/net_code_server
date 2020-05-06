@@ -4,6 +4,11 @@
 #include "mongo.hpp"
 #include "shared_command_handler_state.hpp"
 #include "argument_object.hpp"
+#include "command_handler_fiber_backend.hpp"
+
+#ifdef USE_FIBERS
+#include <boost/fiber/operations.hpp>
+#endif // USE_FIBERS
 
 bool is_script_timeout(js::value_context& vctx)
 {
@@ -78,15 +83,36 @@ void handle_sleep(sandbox_data* dat)
         if(dat->realtime_ms_awake_elapsed > 100)
             dat->realtime_ms_awake_elapsed = 100;
 
-        thread_priority_handler tp;
-        //tp.enable();
-
-        while(dat->realtime_ms_awake_elapsed >= max_allowed_frame_time_ms)
+        if(!is_thread_fiber())
         {
-            sf::sleep(sf::milliseconds(sleep_time));
+            //thread_priority_handler tp;
+            //tp.enable();
 
+            while(dat->realtime_ms_awake_elapsed >= max_allowed_frame_time_ms)
+            {
+                sf::sleep(sf::milliseconds(sleep_time));
+
+                dat->clk.restart();
+                dat->realtime_ms_awake_elapsed -= max_allowed_frame_time_ms;
+            }
+        }
+        else
+        {
+            #ifdef USE_FIBERS
+            double total_sleep = 0;
+
+            ///this is really bad code, FIX
+            while(dat->realtime_ms_awake_elapsed >= max_allowed_frame_time_ms)
+            {
+                total_sleep += sleep_time;
+
+                dat->clk.restart();
+                dat->realtime_ms_awake_elapsed -= max_allowed_frame_time_ms;
+            }
+
+            boost::this_fiber::sleep_for(std::chrono::milliseconds((int)total_sleep));
             dat->clk.restart();
-            dat->realtime_ms_awake_elapsed -= max_allowed_frame_time_ms;
+            #endif // USE_FIBERS
         }
     }
 
@@ -100,14 +126,35 @@ void handle_sleep(sandbox_data* dat)
         if(dat->ms_awake_elapsed_static > 100)
             dat->ms_awake_elapsed_static = 100;
 
-        thread_priority_handler tp;
+        //thread_priority_handler tp;
         //tp.enable();
 
-        while(dat->ms_awake_elapsed_static >= awake_time)
+        if(!is_thread_fiber())
         {
-            sf::sleep(sf::milliseconds(sleep_time));
+            while(dat->ms_awake_elapsed_static >= awake_time)
+            {
+                sf::sleep(sf::milliseconds(sleep_time));
+                dat->clk.restart();
+                dat->ms_awake_elapsed_static -= awake_time;
+            }
+        }
+        else
+        {
+            #ifdef USE_FIBERS
+            double total_sleep = 0;
+
+            ///this is really bad code, FIX
+            while(dat->ms_awake_elapsed_static >= awake_time)
+            {
+                total_sleep += sleep_time;
+
+                dat->clk.restart();
+                dat->ms_awake_elapsed_static -= awake_time;
+            }
+
+            boost::this_fiber::sleep_for(std::chrono::milliseconds((int)total_sleep));
             dat->clk.restart();
-            dat->ms_awake_elapsed_static -= awake_time;
+            #endif // USE_FIBERS
         }
 
         double elapsed_ms = dat->full_run_clock.getElapsedTime().asMicroseconds() / 1000.;
@@ -136,10 +183,17 @@ void handle_sleep(sandbox_data* dat)
 
         dat->sleep_for -= floor(diff);*/
 
-        thread_priority_handler tp;
+        //thread_priority_handler tp;
         //tp.enable();
 
-        sf::sleep(sf::milliseconds(val));
+        if(!is_thread_fiber())
+            sf::sleep(sf::milliseconds(val));
+        else
+        {
+            #ifdef USE_FIBERS
+            boost::this_fiber::sleep_for(std::chrono::milliseconds(val));
+            #endif // USE_FIBERS
+        }
     }
 
     dat->sleep_for -= val;

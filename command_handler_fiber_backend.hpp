@@ -2,9 +2,12 @@
 #define COMMAND_HANDLER_FIBER_BACKEND_HPP_INCLUDED
 
 #include <vector>
+#include <functional>
 #include "safe_thread.hpp"
 
 void boot_fiber_manager();
+
+bool is_thread_fiber();
 
 struct fiber_queue
 {

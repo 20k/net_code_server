@@ -31,6 +31,10 @@
 #include "argument_object.hpp"
 #include "command_handler_fiber_backend.hpp"
 
+#ifdef USE_FIBERS
+#include <boost/fiber/operations.hpp>
+#endif // USE_FIBERS
+
 #ifndef __WIN32__
 #include <unistd.h>
 #endif // __WIN32__
@@ -291,9 +295,23 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             //thread_priority_handler tp;
             //tp.enable();
 
-            while(elapsed.getElapsedTime().asMicroseconds() / 1000. < max_frame_time_ms)
+
+            if(!is_thread_fiber())
             {
-                sf::sleep(sf::milliseconds(1));
+                while(elapsed.getElapsedTime().asMicroseconds() / 1000. < max_frame_time_ms)
+                {
+                    sf::sleep(sf::milliseconds(1));
+                }
+            }
+            else
+            {
+                double celapsed = elapsed.getElapsedTime().asMicroseconds() / 1000.;
+                double diff = max_frame_time_ms - celapsed;
+
+                #ifdef USE_FIBERS
+                if(diff > 0)
+                    boost::this_fiber::sleep_for(std::chrono::milliseconds((int)diff));
+                #endif // USE_FIBERS
             }
 
             if(callback(vctx))
