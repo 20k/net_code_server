@@ -327,7 +327,6 @@
 					<Add option="-DLOCAL_IP" />
 					<Add option="-DSYSTEM_TESTING" />
 					<Add option="-DEXTRAS" />
-					<Add option="-DTEST_FIBERS" />
 					<Add option="-DUSE_FIBERS" />
 				</Compiler>
 				<Linker>
@@ -376,6 +375,7 @@
 			<Add option='-DCONFIG_VERSION=&quot;&quot;' />
 			<Add option="-DCONFIG_BIGNUM" />
 			<Add option="-DDUMP_LEAKS" />
+			<Add option="-DUSE_FIBERS" />
 			<Add directory="deps" />
 		</Compiler>
 		<Linker>
