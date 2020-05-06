@@ -224,6 +224,7 @@
 					<Add option="-march=nehalem" />
 					<Add option="-no-pie" />
 					<Add option="-DLOCAL_IP" />
+					<Add option="-DUSE_FIBERS" />
 				</Compiler>
 				<Linker>
 					<Add option="-O2" />

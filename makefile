@@ -151,7 +151,7 @@ DEP_RELEASEANDTESTLTO =
 OUT_RELEASEANDTESTLTO = bin/ReleaseTestLTO/crapmud
 
 INC_LINUXRELEASE = $(INC)
-CFLAGS_LINUXRELEASE = $(CFLAGS) -O2 -g -std=c++1z -march=nehalem -no-pie -DLOCAL_IP
+CFLAGS_LINUXRELEASE = $(CFLAGS) -O2 -g -std=c++1z -march=nehalem -no-pie -DLOCAL_IP -DUSE_FIBERS
 RESINC_LINUXRELEASE = $(RESINC)
 RCFLAGS_LINUXRELEASE = $(RCFLAGS)
 LIBDIR_LINUXRELEASE = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/linux64
