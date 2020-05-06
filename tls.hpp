@@ -14,11 +14,17 @@ struct tls_variable
 
     tls_variable()
     {
-        *ptr.get() = init;
+        /*ptr.reset(new T());
+        *ptr.get() = init;*/
     }
 
     T* get()
     {
+        if(ptr.get() == nullptr)
+        {
+            ptr.reset(new T(init));
+        }
+
         return ptr.get();
     }
 };

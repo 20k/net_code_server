@@ -317,8 +317,8 @@
 				</Linker>
 			</Target>
 			<Target title="ReleaseNoSymFibers">
-				<Option output="bin/ReleaseNoSymbols/crapmud" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/ReleaseNoSymbols/" />
+				<Option output="bin/ReleaseNoSymFibers/crapmud" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/ReleaseNoSymFibers/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -337,8 +337,8 @@
 				</Linker>
 			</Target>
 			<Target title="DebugFibers">
-				<Option output="bin/Debug/crapmud" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug/" />
+				<Option output="bin/DebugFibers/crapmud" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/DebugFibers/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -350,6 +350,10 @@
 					<Add option="-DTEST_FIBERS" />
 					<Add option="-DUSE_FIBERS" />
 				</Compiler>
+				<Linker>
+					<Add option="-l:libboost_fiber-mt.a" />
+					<Add option="-l:libboost_context-mt.a" />
+				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
