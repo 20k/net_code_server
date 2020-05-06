@@ -32,7 +32,7 @@ void worker_thread()
     while(1)
     {
         //boost::this_fiber::yield();
-        boost::this_fiber::sleep_for(std::chrono::milliseconds(160));
+        boost::this_fiber::sleep_for(std::chrono::milliseconds(100));
 
         safe_lock_guard guard(queue.lock);
 

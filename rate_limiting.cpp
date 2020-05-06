@@ -68,6 +68,7 @@ void handle_sleep(sandbox_data* dat)
 
     if(dat->is_realtime)
     {
+        ///I think this is all broken
         double sleep_time = 1;
         double max_to_allowed = (1/4.) / sleep_mult;
 
@@ -144,16 +145,16 @@ void handle_sleep(sandbox_data* dat)
             double total_sleep = 0;
 
             ///this is really bad code, FIX
-            while(dat->ms_awake_elapsed_static >= awake_time)
+            //while(dat->ms_awake_elapsed_static >= awake_time)
             {
                 total_sleep += sleep_time;
 
-                dat->clk.restart();
-                dat->ms_awake_elapsed_static -= awake_time;
+                //dat->clk.restart();
+                //dat->ms_awake_elapsed_static -= awake_time;
             }
 
-            boost::this_fiber::sleep_for(std::chrono::milliseconds((int)total_sleep));
-            dat->clk.restart();
+            //boost::this_fiber::sleep_for(std::chrono::milliseconds((int)total_sleep));
+            //dat->clk.restart();
             #endif // USE_FIBERS
         }
 
