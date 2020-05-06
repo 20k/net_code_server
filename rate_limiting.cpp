@@ -101,8 +101,10 @@ void handle_sleep(sandbox_data* dat)
 
             double frametime = (1/current_framerate) * 1000;
 
-            double allowed_executable_time = max_to_allowed * frametime;
-            double sleep_time = (1 - max_to_allowed) * frametime;
+            double allowed_executable_time = (1/4.f) * frametime;
+            double sleep_time = (1 - (1/4.f)) * frametime;
+
+            sleep_time += frametime * sleep_mult;
 
             if(dat->realtime_ms_awake_elapsed > allowed_executable_time)
             {

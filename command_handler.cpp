@@ -130,7 +130,7 @@ namespace script_management_mode
 
 template<typename T>
 void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, command_handler_state& state, std::string& ret,
-                                   int current_id, T& callback)
+                                   int current_id, T& callback, std::shared_ptr<shared_command_handler_state>& all_shared)
 {
     double current_framerate = js::get_heap_stash(nvctx).get("framerate_limit");
     current_framerate = clamp(current_framerate, 1., 30.);
@@ -293,10 +293,12 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             ///need to set work units based on how much of elapsed frametime is used
             double max_frame_time_ms = (1./current_framerate) * 1000.;
 
+            int sleep_mult = all_shared->live_work_units();
+
             ///remember to set work units here
             if(!is_thread_fiber())
             {
-                while(elapsed.getElapsedTime().asMicroseconds() / 1000. < max_frame_time_ms)
+                while(elapsed.getElapsedTime().asMicroseconds() / 1000. < (max_frame_time_ms * sleep_mult))
                 {
                     sf::sleep(sf::milliseconds(1));
                 }
@@ -304,7 +306,7 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             else
             {
                 double celapsed = elapsed.getElapsedTime().asMicroseconds() / 1000.;
-                double diff = max_frame_time_ms - celapsed;
+                double diff = max_frame_time_ms * sleep_mult - celapsed;
 
                 #ifdef USE_FIBERS
                 if(diff > 0)
@@ -596,7 +598,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                     sand_data->realtime_script_id = current_id;
 
                     ///remember, need to also set work units and do other things!
-                    async_realtime_script_handler(inf.heap, inf.returned_val, cstate, inf.ret, current_id, update_check);
+                    async_realtime_script_handler(inf.heap, inf.returned_val, cstate, inf.ret, current_id, update_check, all_shared.value());
 
                     if(shared_duk_state->close_window_on_exit())
                     {
