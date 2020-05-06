@@ -294,11 +294,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             double max_frame_time_ms = (1./current_framerate) * 1000.;
 
             ///remember to set work units here
-
-            //thread_priority_handler tp;
-            //tp.enable();
-
-
             if(!is_thread_fiber())
             {
                 while(elapsed.getElapsedTime().asMicroseconds() / 1000. < max_frame_time_ms)
@@ -310,8 +305,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             {
                 double celapsed = elapsed.getElapsedTime().asMicroseconds() / 1000.;
                 double diff = max_frame_time_ms - celapsed;
-
-                printf("ISleep %i\n", (int)diff);
 
                 #ifdef USE_FIBERS
                 if(diff > 0)

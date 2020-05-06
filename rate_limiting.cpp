@@ -86,9 +86,6 @@ void handle_sleep(sandbox_data* dat)
 
         if(!is_thread_fiber())
         {
-            //thread_priority_handler tp;
-            //tp.enable();
-
             while(dat->realtime_ms_awake_elapsed >= max_allowed_frame_time_ms)
             {
                 sf::sleep(sf::milliseconds(sleep_time));
@@ -100,20 +97,6 @@ void handle_sleep(sandbox_data* dat)
         else
         {
             #ifdef USE_FIBERS
-            /*double total_sleep = 0;
-
-            ///this is really bad code, FIX
-            while(dat->realtime_ms_awake_elapsed >= max_allowed_frame_time_ms)
-            {
-                total_sleep += sleep_time;
-
-                dat->clk.restart();
-                dat->realtime_ms_awake_elapsed -= max_allowed_frame_time_ms;
-            }
-
-            boost::this_fiber::sleep_for(std::chrono::milliseconds((int)total_sleep));
-            dat->clk.restart();*/
-
             double current_framerate = dat->framerate_limit;
 
             double frametime = (1/current_framerate) * 1000;
@@ -121,42 +104,27 @@ void handle_sleep(sandbox_data* dat)
             double allowed_executable_time = max_to_allowed * frametime;
             double sleep_time = (1 - max_to_allowed) * frametime;
 
-            //std::cout << "ALLOWD TIME " << allowed_executable_time << std::endl;
-
             if(dat->realtime_ms_awake_elapsed > allowed_executable_time)
             {
                 double extra = dat->realtime_ms_awake_elapsed - allowed_executable_time;
 
                 double total_sleep = extra + sleep_time;
 
-                //if(total_sleep < 1)
-                //    break;
-
                 int idiff = (int)total_sleep;
-                //int idiff = 1;
-
-                //if(idiff <= 0)
-                //    break;
-
-                //std::cout << "Total sleep " << total_sleep << std::endl;
 
                 if(idiff > 0)
                 {
-                    //for(int i=idiff; i > 0; i--)
-                    {
-                        sf::Clock real_sleep;
-                        boost::this_fiber::sleep_for(std::chrono::milliseconds((int)idiff));
+                    sf::Clock real_sleep;
+                    boost::this_fiber::sleep_for(std::chrono::milliseconds((int)idiff));
 
-                        double elapsed = real_sleep.getElapsedTime().asMicroseconds() / 1000.;
+                    double elapsed = real_sleep.getElapsedTime().asMicroseconds() / 1000.;
 
-                        dat->realtime_ms_awake_elapsed -= elapsed;
-                        dat->clk.restart();
+                    dat->realtime_ms_awake_elapsed -= elapsed;
+                    dat->clk.restart();
 
-                        dat->realtime_ms_awake_elapsed = clamp(dat->realtime_ms_awake_elapsed, -20, 100);
-                    }
+                    dat->realtime_ms_awake_elapsed = clamp(dat->realtime_ms_awake_elapsed, -20, 100);
                 }
             }
-
             #endif // USE_FIBERS
         }
     }
@@ -171,9 +139,6 @@ void handle_sleep(sandbox_data* dat)
         if(dat->ms_awake_elapsed_static > 100)
             dat->ms_awake_elapsed_static = 100;
 
-        //thread_priority_handler tp;
-        //tp.enable();
-
         if(!is_thread_fiber())
         {
             while(dat->ms_awake_elapsed_static >= awake_time)
@@ -185,21 +150,21 @@ void handle_sleep(sandbox_data* dat)
         }
         else
         {
-            #ifdef USE_FIBERS
-            double total_sleep = 0;
+            int units = dat->ms_awake_elapsed_static / awake_time;
 
-            ///this is really bad code, FIX
-            //while(dat->ms_awake_elapsed_static >= awake_time)
+            if(units > 0)
             {
-                total_sleep += sleep_time;
+                int idiff = units * sleep_time;
 
-                //dat->clk.restart();
-                //dat->ms_awake_elapsed_static -= awake_time;
+                sf::Clock real_sleep;
+                boost::this_fiber::sleep_for(std::chrono::milliseconds(idiff));
+                double real_time = real_sleep.getElapsedTime().asMicroseconds() / 1000.;
+
+                dat->ms_awake_elapsed_static -= (real_time / sleep_time) * awake_time;
             }
 
-            //boost::this_fiber::sleep_for(std::chrono::milliseconds((int)total_sleep));
-            //dat->clk.restart();
-            #endif // USE_FIBERS
+            dat->ms_awake_elapsed_static = clamp(dat->ms_awake_elapsed_static, -20, 100);
+            dat->clk.restart();
         }
 
         double elapsed_ms = dat->full_run_clock.getElapsedTime().asMicroseconds() / 1000.;
@@ -215,28 +180,12 @@ void handle_sleep(sandbox_data* dat)
 
     if(val > 0)
     {
-        /*double diff = 0;
-
-        sf::Clock clk;
-
-        while(diff < val)
-        {
-            sf::sleep(sf::milliseconds(1));
-
-            diff += clk.restart().asMicroseconds() / 1000.;
-        }
-
-        dat->sleep_for -= floor(diff);*/
-
-        //thread_priority_handler tp;
-        //tp.enable();
-
         if(!is_thread_fiber())
             sf::sleep(sf::milliseconds(val));
         else
         {
             #ifdef USE_FIBERS
-            //boost::this_fiber::sleep_for(std::chrono::milliseconds(val));
+            boost::this_fiber::sleep_for(std::chrono::milliseconds(val));
             #endif // USE_FIBERS
         }
     }
