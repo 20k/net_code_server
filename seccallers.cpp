@@ -13,6 +13,7 @@
 #include "quest_manager.hpp"
 #include "duk_modules.hpp"
 #include "argument_object.hpp"
+#include "command_handler_fiber_backend.hpp"
 
 ///still needs to be defined while we're compiling duktape
 int my_timeout_check(void* udata)
@@ -742,9 +743,23 @@ void async_launch_script_name(js::value_context& vctx, int sl, const std::string
 
     //std::cout <<" running " << seclevel + call_end << std::endl;
 
-    sthread sthr(run_in_user_context, get_caller(vctx), seclevel + call_end, ptr, std::nullopt, true);
+    ///TODO: FIBRE
 
+    std::string caller = get_caller(vctx);
+
+    #ifndef USE_FIBERS
+
+    sthread sthr(run_in_user_context, get_caller(vctx), seclevel + call_end, ptr, std::nullopt, true);
     sthr.detach();
+
+    #else
+
+    get_global_fiber_queue().add([=]()
+    {
+        run_in_user_context(caller, seclevel + call_end, ptr, std::nullopt, true);
+    });
+
+    #endif // USE_FIBERS
 }
 
 js::value js_call(js::value_context* vctx, int sl, js::value arg)

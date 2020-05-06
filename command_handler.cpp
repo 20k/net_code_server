@@ -29,6 +29,7 @@
 #include <networking/serialisable.hpp>
 #include "serialisables.hpp"
 #include "argument_object.hpp"
+#include "command_handler_fiber_backend.hpp"
 
 #ifndef __WIN32__
 #include <unistd.h>
@@ -616,7 +617,19 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
 void throwaway_user_thread(const std::string& username, const std::string& command, std::optional<float> custom_exec_time_s, bool force_exec)
 {
+    ///TODO: FIBRE
+    #ifndef USE_FIBERS
+
     sthread(run_in_user_context, username, command, std::nullopt, custom_exec_time_s, force_exec).detach();
+
+    #else
+
+    get_global_fiber_queue().add([=]()
+    {
+        run_in_user_context(username, command, std::nullopt, custom_exec_time_s, force_exec);
+    });
+
+    #endif
 }
 
 std::string binary_to_hex(const std::string& in, bool swap_endianness)
@@ -2402,19 +2415,38 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
 
 void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const nlohmann::json& data)
 {
+    #ifndef USE_FIBERS
+
     sthread([=]()
-                {
-                    nlohmann::json result = handle_command(all_shared, data);
+    {
+        nlohmann::json result = handle_command(all_shared, data);
 
-                    all_shared->execution_requested = false;
+        all_shared->execution_requested = false;
 
-                    if(result.count("type") == 0)
-                        return;
+        if(result.count("type") == 0)
+            return;
 
-                    shared_data& shared = all_shared->shared;
-                    shared.add_back_write(result.dump());
+        shared_data& shared = all_shared->shared;
+        shared.add_back_write(result.dump());
+    }).detach();
 
-                }).detach();
+    #else
+
+    get_global_fiber_queue().add([=]()
+    {
+        nlohmann::json result = handle_command(all_shared, data);
+
+        all_shared->execution_requested = false;
+
+        if(result.count("type") == 0)
+            return;
+
+        shared_data& shared = all_shared->shared;
+        shared.add_back_write(result.dump());
+
+    });
+
+    #endif // USE_FIBERS
 }
 
 #if 0
