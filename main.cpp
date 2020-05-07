@@ -259,6 +259,9 @@ int main()
     stack_on_start();
 
     #ifdef USE_FIBERS
+
+    printf("IN IFDEF\n");
+
     boot_fiber_manager();
     #endif // USE_FIBERS
 

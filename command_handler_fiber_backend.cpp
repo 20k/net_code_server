@@ -93,6 +93,8 @@ void worker_thread(int id)
     thread_priority_handler tp;
     tp.enable();
 
+    printf("Boot fiber worker %i\n", id);
+
     while(1)
     {
         //boost::this_fiber::yield();
@@ -163,6 +165,8 @@ void worker_thread(int id)
 
 void boot_fiber_manager()
 {
+    printf("FIBER START\n");
+
     #ifdef USE_FIBERS
     printf("Boot?\n");
 
