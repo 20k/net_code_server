@@ -225,7 +225,6 @@
 					<Add option="-no-pie" />
 					<Add option="-DLOCAL_IP" />
 					<Add option="-DUSE_FIBERS" />
-					<Add directory="~/boost_1_73_0" />
 				</Compiler>
 				<Linker>
 					<Add option="-O2" />
@@ -258,7 +257,6 @@
 					<Add option="-march=nehalem" />
 					<Add option="-no-pie" />
 					<Add option="-DEXTERN_IP" />
-					<Add directory="~/boost_1_73_0" />
 				</Compiler>
 				<Linker>
 					<Add option="-O2" />
