@@ -182,7 +182,7 @@ void pathfind_stresstest()
 
 void cleanup_notifs()
 {
-    sthread([]()
+    get_noncritical_fiber_queue().add([]()
     {
         for_each_user([](user& u1)
                       {
@@ -190,6 +190,8 @@ void cleanup_notifs()
                             ctx.change_collection(u1.name);
 
                             strip_old_msg_or_notif(ctx);
+
+                            fiber_sleep(1);
                       });
 
         printf("Finished stripping users\n");
@@ -200,10 +202,31 @@ void cleanup_notifs()
                             ctx.change_collection(u1.name);
 
                             strip_old_msg_or_notif(ctx);
+
+                            fiber_sleep(1);
                       });
 
         printf("Finished all strip\n");
-    }).detach();
+    });
+}
+
+void fix_users()
+{
+    for_each_user([](user& u1)
+    {
+        mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
+        ctx.change_collection(u1.name);
+
+        u1.overwrite_user_in_db(ctx);
+    });
+
+    for_each_npc([](npc_user& u1)
+    {
+        mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
+        ctx.change_collection(u1.name);
+
+        u1.overwrite_user_in_db(ctx);
+    });
 }
 
 template<typename T>
@@ -258,12 +281,14 @@ int main()
 
     stack_on_start();
 
+
     #ifdef USE_FIBERS
 
     printf("IN IFDEF\n");
 
     boot_fiber_manager();
     #endif // USE_FIBERS
+
 
     /*{
         nlohmann::json test;
@@ -301,6 +326,7 @@ int main()
     parse_source();
     #endif // TESTING
 
+
     get_global_structure();
     get_global_structure_info();
 
@@ -324,6 +350,8 @@ int main()
     //#endif // TESTING
 
     //undupe_items();
+
+    //fix_users();
 
     sthread([]()
            {

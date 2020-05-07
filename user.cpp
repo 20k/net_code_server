@@ -66,7 +66,16 @@ bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
 {
     ctx.change_collection(name_);
 
-    return db_disk_load(ctx, *this, name_);
+    try
+    {
+        return db_disk_load(ctx, *this, name_);
+    }
+    catch(...)
+    {
+        std::cout << "Invalid user " << name_ << std::endl;
+
+        return false;
+    }
 }
 
 bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, const std::string& auth)

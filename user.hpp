@@ -213,4 +213,6 @@ std::vector<user> filter_users(const std::vector<user>& users, int lock_id, cons
     return ret;
 }
 
+void cleanup_invalid_users();
+
 #endif // USER_HPP_INCLUDED

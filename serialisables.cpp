@@ -49,7 +49,15 @@ DEFINE_SERIALISE_FUNCTION(user)
     DO_FSERIALISE(call_stack);
     DO_FSERIALISE(owner_list);
     DO_FSERIALISE(users_i_have_access_to);
-    DO_FSERIALISE(user_limits);
+    try
+    {
+        DO_FSERIALISE(user_limits);
+    }
+    catch(...)
+    {
+
+    }
+
     DO_FSERIALISE(pos);
     DO_FSERIALISE(has_local_pos);
     DO_FSERIALISE(hacked_progress);
