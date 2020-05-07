@@ -35,6 +35,20 @@ struct scheduler_data
     //std::mutex lock;
 };
 
+void fiber_sleep(double time_ms)
+{
+    int ms = (int)time_ms;
+
+    if(is_thread_fiber())
+    {
+        boost::this_fiber::sleep_for(std::chrono::milliseconds(ms));
+    }
+    else
+    {
+        sthread::this_sleep(ms);
+    }
+}
+
 //std::array<scheduler_data, HARDWARE_THREADS> global_data;
 
 struct custom_scheduler : boost::fibers::algo::algorithm

@@ -11,6 +11,7 @@
 #include "serialisables.hpp"
 #include <networking/serialisable_fwd.hpp>
 #include "mongo.hpp"
+#include "command_handler_fiber_backend.hpp"
 
 struct scheduled_tasks;
 
@@ -80,29 +81,29 @@ struct scheduled_tasks
             counter++;
         }
 
-        sthread(task_thread, std::ref(*this)).detach();
+        get_noncritical_fiber_queue().add(task_thread, std::ref(*this));
     }
 
     void handle_callback(task_data_db& d)
     {
         if(d.type == task_type::ON_RELINK)
         {
-             sthread(on_finish_relink, d.count_offset, (std::vector<std::string>)d.udata).detach();
+             get_noncritical_fiber_queue().add(on_finish_relink, d.count_offset, (std::vector<std::string>)d.udata);
         }
 
         if(d.type == task_type::ON_DISCONNECT)
         {
-             sthread(on_disconnect_link, d.count_offset, (std::vector<std::string>)d.udata).detach();
+             get_noncritical_fiber_queue().add(on_disconnect_link, d.count_offset, (std::vector<std::string>)d.udata);
         }
 
         if(d.type == task_type::ON_HEAL_NETWORK)
         {
-             sthread(on_heal_network_link, d.count_offset, (std::vector<std::string>)d.udata).detach();
+             get_noncritical_fiber_queue().add(on_heal_network_link, d.count_offset, (std::vector<std::string>)d.udata);
         }
 
         if(d.type == task_type::ON_FORCE_DISCONNECT)
         {
-             sthread(on_force_disconnect_link, d.count_offset, (std::vector<std::string>)d.udata).detach();
+             get_noncritical_fiber_queue().add(on_force_disconnect_link, d.count_offset, (std::vector<std::string>)d.udata);
         }
 
         {

@@ -18,11 +18,10 @@ namespace event
 {
     struct db_saver
     {
-        bool owns = false;
-        event_impl evt;
-
-        static inline std::mutex transitory_lock;
+        static inline lock_type_t transitory_lock;
         static inline std::map<std::string, std::map<std::string, bool>> transitory_map;
+
+        std::shared_ptr<event_impl> evt;
 
         static bool in_progress(event_impl& _evt)
         {
@@ -41,52 +40,31 @@ namespace event
 
         db_saver(){}
 
-        db_saver(event_impl& _evt)
+        db_saver(std::shared_ptr<event_impl> _evt)
         {
             evt = _evt;
-            owns = true;
 
             {
                 safe_lock_guard slg(transitory_lock);
 
-                transitory_map[evt.user_name][evt.unique_event_tag] = true;
+                transitory_map[evt->user_name][evt->unique_event_tag] = true;
             }
         }
 
-        db_saver(db_saver&& other)
+        /*db_saver(db_saver&& other)
         {
             owns = other.owns;
             evt = other.evt;
 
             other.owns = false;
-        }
+        }*/
 
-        db_saver(const db_saver&) = delete;
-        db_saver& operator=(const db_saver&) = delete;
+        //db_saver(const db_saver&) = delete;
+        //db_saver& operator=(const db_saver&) = delete;
 
         ~db_saver()
         {
-            if(!owns)
-                return;
 
-            {
-                mongo_nolock_proxy ctx = get_global_mongo_event_manager_context(-2);
-                ctx.change_collection(evt.user_name);
-
-                db_disk_overwrite(ctx, evt);
-            }
-
-            auto i1 = transitory_map.find(evt.user_name);
-
-            if(i1 == transitory_map.end())
-                return;
-
-            auto i2 = i1->second.find(evt.unique_event_tag);
-
-            if(i2 == i1->second.end())
-                return;
-
-            i1->second.erase(i2);
         }
     };
 
@@ -153,6 +131,32 @@ namespace event
         }
     }
 
+    inline
+    void deleter(event_impl* impl)
+    {
+        if(impl == nullptr)
+            return;
+
+        {
+            mongo_nolock_proxy ctx = get_global_mongo_event_manager_context(-2);
+            ctx.change_collection(impl->user_name);
+
+            db_disk_overwrite(ctx, *impl);
+        }
+
+        auto i1 = db_saver::transitory_map.find(impl->user_name);
+
+        if(i1 == db_saver::transitory_map.end())
+            return;
+
+        auto i2 = i1->second.find(impl->unique_event_tag);
+
+        if(i2 == i1->second.end())
+            return;
+
+        i1->second.erase(i2);
+    }
+
     template<typename T>
     inline
     bool exec_once_ever(const std::string& user_name, const std::string& unique_event_tag, const T& func)
@@ -169,16 +173,21 @@ namespace event
             in_memory_map[user_name][unique_event_tag] = true;
         }
 
-        event_impl evt;
-        evt.user_name = user_name;
-        evt.unique_event_tag = unique_event_tag;
-        evt.complete = true;
-        evt.id = std::to_string(db_storage_backend::get_unique_id());
+        event_impl* evt = new event_impl;
+        evt->user_name = user_name;
+        evt->unique_event_tag = unique_event_tag;
+        evt->complete = true;
+        evt->id = std::to_string(db_storage_backend::get_unique_id());
 
-        if(db_saver::in_progress(evt))
+        if(db_saver::in_progress(*evt))
+        {
+            delete evt;
             return false;
+        }
 
-        db_saver save(evt);
+        std::shared_ptr<event_impl> shared_evt(evt, deleter);
+
+        db_saver save(shared_evt);
 
         func(std::move(save));
 

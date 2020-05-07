@@ -10,6 +10,7 @@
 #include "safe_thread.hpp"
 #include <networking/serialisable.hpp>
 #include "serialisables.hpp"
+#include "command_handler_fiber_backend.hpp"
 
 template<typename T, typename U>
 void erase_remove(T& v, const U& val)
@@ -923,22 +924,22 @@ void event_pumper()
         for_each_user([](user& usr)
                       {
                         usr.pump_notifications(-2);
-                        sthread::this_sleep(1);
+                        fiber_sleep(1);
                       });
 
         for_each_npc([](user& usr)
                      {
                         usr.pump_notifications(-2);
-                        sthread::this_sleep(1);
+                        fiber_sleep(1);
                      });
 
-        sthread::this_sleep(10);
+        fiber_sleep(10);
     }
 }
 
 void user::launch_pump_events_thread()
 {
-    sthread(event_pumper).detach();
+    get_global_fiber_queue().add(event_pumper);
 }
 
 std::vector<user> load_users(const std::vector<std::string>& names, int lock_id)

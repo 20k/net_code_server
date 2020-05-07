@@ -10,7 +10,7 @@
 #include <secret/npc_manager.hpp>
 #include "safe_thread.hpp"
 #include "unified_scripts.hpp"
-
+#include "command_handler_fiber_backend.hpp"
 
 ///THESE ARE NOW INCORRECT DUE TO BAD AUTH USAGE
 
@@ -96,7 +96,7 @@ void manhandle_thread()
     {
         manhandle_away_critical_users();
 
-        Sleep(10000);
+        fiber_sleep(10000);
     }
 }
 #endif // ONE_TIME_MANHANDLE
@@ -107,14 +107,14 @@ void bot_thread()
 {
     while(1)
     {
-        sthread::this_sleep(1000);
+        fiber_sleep(1000);
 
         ///milliseconds
         size_t current_time = get_wall_time();
 
         auto check_autorun = [&](user& found_user)
         {
-            sthread::this_sleep(5);
+            fiber_sleep(5);
 
             {
                 std::string err;
@@ -165,7 +165,7 @@ void bot_thread()
 
                     throwaway_user_thread(found_user.name, "#" + found_user.name + ".autorun()");
 
-                    sthread::this_sleep(100);
+                    fiber_sleep(100);
 
                     break;
                 }
@@ -186,7 +186,7 @@ void run_non_user_tasks()
 
     while(1)
     {
-        sthread::this_sleep(500);
+        fiber_sleep(500);
 
         get_global_rate_limit()->donate_time_budget(0.5f);
 
@@ -267,10 +267,10 @@ void run_non_user_tasks()
 
 void start_non_user_task_thread()
 {
-    sthread(run_non_user_tasks).detach();
-    sthread(bot_thread).detach();
+    get_noncritical_fiber_queue().add(run_non_user_tasks);
+    get_noncritical_fiber_queue().add(bot_thread);
     #ifdef ONE_TIME_MANHANDLE
-    sthread(manhandle_away_critical_users).detach();
+    get_noncritical_fiber_queue().add(manhandle_away_critical_users);
     #endif // ONE_TIME_MANHANDLE
 
     //fix_auth_errors();

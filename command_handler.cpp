@@ -631,7 +631,7 @@ void throwaway_user_thread(const std::string& username, const std::string& comma
     ///TODO: FIBRE
     #ifndef USE_FIBERS
 
-    sthread(run_in_user_context, username, command, std::nullopt, custom_exec_time_s, force_exec).detach();
+    get_global_fiber_queue().add(run_in_user_context, username, command, std::nullopt, custom_exec_time_s, force_exec);
 
     #else
 

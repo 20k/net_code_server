@@ -1,6 +1,7 @@
 #include "reoccurring_task_handler.hpp"
 #include "time.hpp"
 #include "safe_thread.hpp"
+#include "command_handler_fiber_backend.hpp"
 
 void reoccuring_task_thread(reoccuring_task_handler& handler)
 {
@@ -31,13 +32,13 @@ void reoccuring_task_thread(reoccuring_task_handler& handler)
             idx++;
         }
 
-        sthread::this_sleep(100);
+        fiber_sleep(100);
     }
 }
 
 reoccuring_task_handler::reoccuring_task_handler()
 {
-    sthread(reoccuring_task_thread, std::ref(*this)).detach();
+    get_noncritical_fiber_queue().add(reoccuring_task_thread, std::ref(*this));
 }
 
 reoccuring_task_handler& get_global_task_handler()
