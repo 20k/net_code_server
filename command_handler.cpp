@@ -286,6 +286,10 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                 break;
             }
 
+            #ifdef USE_QUICKJS
+            vctx.execute_jobs();
+            #endif // USE_QUICKJS
+
             ///DO PROMISES STUFF
 
             sandbox_data* sand_data = js::get_sandbox_data<sandbox_data>(vctx);

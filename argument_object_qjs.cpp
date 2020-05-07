@@ -1209,6 +1209,56 @@ JSValue js_quickjs::process_return_value(JSContext* ctx, JSValue in)
     return JS_DupValue(ctx, in);
 }
 
+js_quickjs::value js_quickjs::execute_promises(js_quickjs::value_context& vctx, js_quickjs::value& potential_promise)
+{
+    js_quickjs::value js_val = potential_promise;
+
+    if(js_val.has("then"))
+    {
+        std::string to_eval = R"(
+                    // Values:
+                    //   - undefined: promise not finished
+                    //   - false: error ocurred, __promiseError is set.
+                    //   - true: finished, __promiseSuccess is set.
+                    var __promiseResult = false;
+                    var __promiseValue = undefined;
+
+                    var __resolvePromise = function(p) {
+                        p
+                            .then(value => {
+                                __promiseResult = true;
+                                __promiseValue = value;
+                            }, e => {
+                                __promiseResult = false;
+                                __promiseValue = e;
+                            })
+                    }
+
+                    __resolvePromise;
+                )";
+
+        js::value prom_function = js::eval(vctx, to_eval);
+
+        js::call(prom_function, js_val);
+
+        vctx.execute_jobs();
+
+        js_val = js::get_global(vctx).get("__promiseValue");
+        bool is_err = (bool)js::get_global(vctx).get("__promiseResult") == false;
+
+        if(js_val.is_exception() || js_val.is_error() || is_err)
+        {
+            js_val = js::make_error(vctx, js_val.to_error_message());
+        }
+    }
+    else
+    {
+        vctx.execute_jobs();
+    }
+
+    return js_val;
+}
+
 std::pair<bool, js_quickjs::value> js_quickjs::call_compiled(value& bitcode)
 {
     JSValue ret = JS_EvalFunction(bitcode.ctx, JS_DupValue(bitcode.ctx, bitcode.val));

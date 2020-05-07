@@ -626,6 +626,8 @@ namespace js_quickjs
         return call(func, std::forward<T>(vals)...);
     }
 
+    js_quickjs::value execute_promises(js_quickjs::value_context& vctx, js_quickjs::value& potential_promise);
+
     template<typename T, typename... U>
     constexpr bool is_first_context()
     {
