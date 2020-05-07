@@ -8,6 +8,11 @@
 #include <SFML/System/Sleep.hpp>
 #include <atomic>
 
+#ifndef __WIN32__
+#include <pthread.h>
+#include <sched.h>
+#endif // __WIN32__
+
 //tls_variable<int, 0> is_fiber;
 
 #define HARDWARE_THREADS 3
@@ -94,6 +99,37 @@ void worker_thread(int id)
     tp.enable();
 
     printf("Boot fiber worker %i\n", id);
+
+    #ifndef __WIN32__
+
+    #define MY_SCHED SCHED_RR
+
+    sched_param sp = { .sched_priority = 50 };
+    int ret = sched_setscheduler(0, MY_SCHED, &sp);
+
+    if (ret == -1)
+    {
+        printf("sched_setscheduler");
+        return;
+    }
+
+    sched_param params;
+    params.sched_priority = sched_get_priority_max(MY_SCHED);
+
+    pthread_t this_thread = pthread_self();
+
+    std::cout << "Trying to set thread realtime prio = " << params.sched_priority << std::endl;
+
+    ret = pthread_setschedparam(this_thread, MY_SCHED, &params);
+
+    if (ret != 0)
+    {
+        // Print the error
+        std::cout << "Unsuccessful in setting thread realtime prio" << std::endl;
+        return;
+    }
+
+    #endif // __WIN32__
 
     while(1)
     {

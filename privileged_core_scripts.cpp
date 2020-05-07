@@ -1391,7 +1391,7 @@ void create_notification(int lock_id, const std::string& to, const std::string& 
     if(notif_msg.size() > 10000)
         return;
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(lock_id);
+    mongo_nolock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(lock_id);
     mongo_ctx.change_collection(to);
 
     size_t real_time = get_wall_time();

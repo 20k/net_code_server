@@ -368,8 +368,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
     try
     {
-        thread_priority_handler tp;
-
         execution_blocker_guard exec_guard(all_shared);
 
         user usr;
@@ -454,11 +452,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
         if(custom_exec_time_s.has_value())
         {
             sand_data->max_elapsed_time_ms = custom_exec_time_s.value() * 1000;
-        }
-
-        if(all_shared.has_value())
-        {
-            tp.enable();
         }
 
         script_management_mode::mode current_mode = script_management_mode::DEFAULT;
