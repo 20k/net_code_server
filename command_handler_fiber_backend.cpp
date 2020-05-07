@@ -13,10 +13,6 @@
 #include <sched.h>
 #endif // __WIN32__
 
-//tls_variable<int, 0> is_fiber;
-
-//#define HARDWARE_THREADS 3
-
 thread_local int is_fiber;
 
 bool is_thread_fiber()
