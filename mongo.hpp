@@ -33,8 +33,6 @@ enum class mongo_database_type
     MONGO_COUNT
 };
 
-#define USE_STD_MUTEX
-
 struct lock_internal
 {
     size_t locked_by = -1;
@@ -43,11 +41,7 @@ struct lock_internal
     std::string locked_by_debug;
     #endif // DEADLOCK_DETECTION
 
-    #ifndef USE_STD_MUTEX
-    std::atomic_flag locked = ATOMIC_FLAG_INIT;
-    #else
     lock_type_t mut_lock;
-    #endif // USE_STD_MUTEX
 
     void lock(const std::string& debug_info, size_t who);
     void unlock();

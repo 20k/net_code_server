@@ -64,6 +64,14 @@ int interrupt_handler(JSRuntime* rt, void* udata)
 }
 #endif // USE_QUICKJS
 
+js::value get_current_user(js::value_context* vctx)
+{
+    js::value val(*vctx);
+
+    val = get_caller(*vctx);
+
+    return val;
+}
 
 void dummy(js::value_context* vctx)
 {
@@ -1154,6 +1162,7 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     js::add_key_value(global, "print", js::function<native_print>);
     js::add_key_value(global, "async_print", js::function<async_print>);
     js::add_key_value(global, "async_print_raw", js::function<async_print_raw>);
+    js::add_key_value(global, "get_current_user", js::function<get_current_user>);
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);

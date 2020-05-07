@@ -88,7 +88,9 @@ struct custom_scheduler : boost::fibers::algo::algorithm
 
     void suspend_until(std::chrono::steady_clock::time_point const&) noexcept override
     {
+        //#ifndef EXTERN_IP
         sf::sleep(sf::milliseconds(1));
+        //#endif // EXTERN_IP
     }
 
     void notify() noexcept override
@@ -119,6 +121,7 @@ void worker_thread(int id, std::array<scheduler_data, HARDWARE_THREADS>* pothers
 
     if(high_priority)
     {
+        //#define MY_SCHED SCHED_FIFO
         #define MY_SCHED SCHED_RR
 
         sched_param sp = { .sched_priority = 50 };
