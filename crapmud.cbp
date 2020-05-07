@@ -229,6 +229,7 @@
 				<Linker>
 					<Add option="-O2" />
 					<Add option="-lsfml-system" />
+					<Add option="-lboost_system" />
 					<Add option="-lcrypto" />
 					<Add option="-lssl" />
 					<Add option="-fno-pie" />
@@ -240,7 +241,6 @@
 					<Add option="-lboost_context" />
 					<Add directory="deps/libs" />
 					<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/linux64" />
-					<Add directory="~/boost_1_73_0/stage/lib" />
 				</Linker>
 			</Target>
 			<Target title="LinuxDeploy">
@@ -261,6 +261,7 @@
 				<Linker>
 					<Add option="-O2" />
 					<Add option="-lsfml-system" />
+					<Add option="-lboost_system" />
 					<Add option="-lcrypto" />
 					<Add option="-lssl" />
 					<Add option="-fno-pie" />
@@ -272,7 +273,6 @@
 					<Add option="-lboost_context" />
 					<Add directory="deps/libs" />
 					<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/linux64" />
-					<Add directory="~/boost_1_73_0/stage/lib" />
 				</Linker>
 			</Target>
 			<Target title="ProfileNoOpt">

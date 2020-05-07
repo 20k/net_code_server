@@ -150,24 +150,24 @@ OBJDIR_RELEASEANDTESTLTO = obj/ReleaseTestLTO
 DEP_RELEASEANDTESTLTO = 
 OUT_RELEASEANDTESTLTO = bin/ReleaseTestLTO/crapmud
 
-INC_LINUXRELEASE = $(INC) -I~/boost_1_73_0
+INC_LINUXRELEASE = $(INC)
 CFLAGS_LINUXRELEASE = $(CFLAGS) -O2 -g -std=c++1z -march=nehalem -no-pie -DLOCAL_IP -DUSE_FIBERS
 RESINC_LINUXRELEASE = $(RESINC)
 RCFLAGS_LINUXRELEASE = $(RCFLAGS)
-LIBDIR_LINUXRELEASE = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/linux64 -L~/boost_1_73_0/stage/lib
+LIBDIR_LINUXRELEASE = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/linux64
 LIB_LINUXRELEASE = $(LIB)
-LDFLAGS_LINUXRELEASE =  -O2 -lsfml-system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket -lboost_fiber -lboost_context
+LDFLAGS_LINUXRELEASE =  -O2 -lsfml-system -lboost_system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket -lboost_fiber -lboost_context
 OBJDIR_LINUXRELEASE = obj/LRelease
 DEP_LINUXRELEASE = 
 OUT_LINUXRELEASE = bin/LRelease/crapmud
 
-INC_LINUXDEPLOY = $(INC) -I~/boost_1_73_0
+INC_LINUXDEPLOY = $(INC)
 CFLAGS_LINUXDEPLOY = $(CFLAGS) -O2 -g -std=c++1z -march=nehalem -no-pie -DEXTERN_IP
 RESINC_LINUXDEPLOY = $(RESINC)
 RCFLAGS_LINUXDEPLOY = $(RCFLAGS)
-LIBDIR_LINUXDEPLOY = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/linux64 -L~/boost_1_73_0/stage/lib
+LIBDIR_LINUXDEPLOY = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/linux64
 LIB_LINUXDEPLOY = $(LIB)
-LDFLAGS_LINUXDEPLOY =  -O2 -lsfml-system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket -lboost_fiber -lboost_context
+LDFLAGS_LINUXDEPLOY =  -O2 -lsfml-system -lboost_system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket -lboost_fiber -lboost_context
 OBJDIR_LINUXDEPLOY = obj/LDeploy
 DEP_LINUXDEPLOY = 
 OUT_LINUXDEPLOY = bin/LDeploy/crapmud
@@ -205,39 +205,39 @@ OBJDIR_DEBUGFIBERS = obj/DebugFibers
 DEP_DEBUGFIBERS = 
 OUT_DEBUGFIBERS = bin/DebugFibers/crapmud
 
-OBJ_DEBUG = $(OBJDIR_DEBUG)/mongo.o $(OBJDIR_DEBUG)/reoccurring_task_handler.o $(OBJDIR_DEBUG)/rate_limiting.o $(OBJDIR_DEBUG)/quest_manager.o $(OBJDIR_DEBUG)/privileged_core_scripts.o $(OBJDIR_DEBUG)/perfmon.o $(OBJDIR_DEBUG)/non_user_task_thread.o $(OBJDIR_DEBUG)/rng.o $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/logging.o $(OBJDIR_DEBUG)/item.o $(OBJDIR_DEBUG)/http_beast_server.o $(OBJDIR_DEBUG)/event_manager.o $(OBJDIR_DEBUG)/duktape.o $(OBJDIR_DEBUG)/duk_object_functions.o $(OBJDIR_DEBUG)/shared_duk_worker_state.o $(OBJDIR_DEBUG)/user.o $(OBJDIR_DEBUG)/unified_scripts.o $(OBJDIR_DEBUG)/time.o $(OBJDIR_DEBUG)/steam_auth.o $(OBJDIR_DEBUG)/stacktrace.o $(OBJDIR_DEBUG)/source_maps.o $(OBJDIR_DEBUG)/duk_modules.o $(OBJDIR_DEBUG)/serialisables.o $(OBJDIR_DEBUG)/seccallers.o $(OBJDIR_DEBUG)/script_util.o $(OBJDIR_DEBUG)/script_metadata.o $(OBJDIR_DEBUG)/scheduled_tasks.o $(OBJDIR_DEBUG)/safe_thread.o $(OBJDIR_DEBUG)/command_handler_state.o $(OBJDIR_DEBUG)/deps/quickjs/quickjs.o $(OBJDIR_DEBUG)/deps/quickjs/libunicode.o $(OBJDIR_DEBUG)/deps/quickjs/libregexp.o $(OBJDIR_DEBUG)/deps/quickjs/libbf.o $(OBJDIR_DEBUG)/deps/quickjs/cutils.o $(OBJDIR_DEBUG)/deps/networking/serialisable.o $(OBJDIR_DEBUG)/deps/networking/networking.o $(OBJDIR_DEBUG)/deps/networking/beast_compilation_unit.o $(OBJDIR_DEBUG)/db_storage_backend.o $(OBJDIR_DEBUG)/command_handler_fiber_backend.o $(OBJDIR_DEBUG)/command_handler.o $(OBJDIR_DEBUG)/auth.o $(OBJDIR_DEBUG)/ascii_helpers.o $(OBJDIR_DEBUG)/argument_object_qjs.o $(OBJDIR_DEBUG)/argument_object_duk.o $(OBJDIR_DEBUG)/duk_module_duktape.o $(OBJDIR_DEBUG)/deps/toolkit/clock.o $(OBJDIR_DEBUG)/deps/secret/tutorial.o $(OBJDIR_DEBUG)/deps/secret/structure_generation_2.o $(OBJDIR_DEBUG)/deps/secret/structure.o $(OBJDIR_DEBUG)/deps/secret/special_user_scripts.o $(OBJDIR_DEBUG)/deps/secret/secret.o $(OBJDIR_DEBUG)/deps/secret/one_shots.o $(OBJDIR_DEBUG)/argument_object.o $(OBJDIR_DEBUG)/deps/secret/one_shot_core.o $(OBJDIR_DEBUG)/deps/secret/npc_manager.o $(OBJDIR_DEBUG)/deps/secret/node.o $(OBJDIR_DEBUG)/deps/secret/low_level_structure.o $(OBJDIR_DEBUG)/deps/secret/loot_gen.o $(OBJDIR_DEBUG)/deps/secret/initial_link_setup.o $(OBJDIR_DEBUG)/deps/secret/common.o
+OBJ_DEBUG = $(OBJDIR_DEBUG)/reoccurring_task_handler.o $(OBJDIR_DEBUG)/rate_limiting.o $(OBJDIR_DEBUG)/quest_manager.o $(OBJDIR_DEBUG)/privileged_core_scripts.o $(OBJDIR_DEBUG)/perfmon.o $(OBJDIR_DEBUG)/non_user_task_thread.o $(OBJDIR_DEBUG)/mongo.o $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/logging.o $(OBJDIR_DEBUG)/item.o $(OBJDIR_DEBUG)/http_beast_server.o $(OBJDIR_DEBUG)/event_manager.o $(OBJDIR_DEBUG)/duktape.o $(OBJDIR_DEBUG)/duk_object_functions.o $(OBJDIR_DEBUG)/duk_modules.o $(OBJDIR_DEBUG)/user.o $(OBJDIR_DEBUG)/unified_scripts.o $(OBJDIR_DEBUG)/time.o $(OBJDIR_DEBUG)/steam_auth.o $(OBJDIR_DEBUG)/stacktrace.o $(OBJDIR_DEBUG)/source_maps.o $(OBJDIR_DEBUG)/shared_duk_worker_state.o $(OBJDIR_DEBUG)/serialisables.o $(OBJDIR_DEBUG)/seccallers.o $(OBJDIR_DEBUG)/script_util.o $(OBJDIR_DEBUG)/script_metadata.o $(OBJDIR_DEBUG)/scheduled_tasks.o $(OBJDIR_DEBUG)/safe_thread.o $(OBJDIR_DEBUG)/rng.o $(OBJDIR_DEBUG)/deps/quickjs/quickjs.o $(OBJDIR_DEBUG)/deps/quickjs/libunicode.o $(OBJDIR_DEBUG)/deps/quickjs/libregexp.o $(OBJDIR_DEBUG)/deps/quickjs/libbf.o $(OBJDIR_DEBUG)/deps/quickjs/cutils.o $(OBJDIR_DEBUG)/deps/networking/serialisable.o $(OBJDIR_DEBUG)/deps/networking/networking.o $(OBJDIR_DEBUG)/deps/networking/beast_compilation_unit.o $(OBJDIR_DEBUG)/db_storage_backend.o $(OBJDIR_DEBUG)/command_handler_state.o $(OBJDIR_DEBUG)/command_handler_fiber_backend.o $(OBJDIR_DEBUG)/command_handler.o $(OBJDIR_DEBUG)/auth.o $(OBJDIR_DEBUG)/ascii_helpers.o $(OBJDIR_DEBUG)/argument_object_qjs.o $(OBJDIR_DEBUG)/argument_object_duk.o $(OBJDIR_DEBUG)/argument_object.o $(OBJDIR_DEBUG)/duk_module_duktape.o $(OBJDIR_DEBUG)/deps/toolkit/clock.o $(OBJDIR_DEBUG)/deps/secret/tutorial.o $(OBJDIR_DEBUG)/deps/secret/structure_generation_2.o $(OBJDIR_DEBUG)/deps/secret/structure.o $(OBJDIR_DEBUG)/deps/secret/special_user_scripts.o $(OBJDIR_DEBUG)/deps/secret/secret.o $(OBJDIR_DEBUG)/deps/secret/one_shots.o $(OBJDIR_DEBUG)/deps/secret/one_shot_core.o $(OBJDIR_DEBUG)/deps/secret/npc_manager.o $(OBJDIR_DEBUG)/deps/secret/node.o $(OBJDIR_DEBUG)/deps/secret/low_level_structure.o $(OBJDIR_DEBUG)/deps/secret/loot_gen.o $(OBJDIR_DEBUG)/deps/secret/initial_link_setup.o $(OBJDIR_DEBUG)/deps/secret/common.o
 
-OBJ_RELEASE = $(OBJDIR_RELEASE)/mongo.o $(OBJDIR_RELEASE)/reoccurring_task_handler.o $(OBJDIR_RELEASE)/rate_limiting.o $(OBJDIR_RELEASE)/quest_manager.o $(OBJDIR_RELEASE)/privileged_core_scripts.o $(OBJDIR_RELEASE)/perfmon.o $(OBJDIR_RELEASE)/non_user_task_thread.o $(OBJDIR_RELEASE)/rng.o $(OBJDIR_RELEASE)/main.o $(OBJDIR_RELEASE)/logging.o $(OBJDIR_RELEASE)/item.o $(OBJDIR_RELEASE)/http_beast_server.o $(OBJDIR_RELEASE)/event_manager.o $(OBJDIR_RELEASE)/duktape.o $(OBJDIR_RELEASE)/duk_object_functions.o $(OBJDIR_RELEASE)/shared_duk_worker_state.o $(OBJDIR_RELEASE)/user.o $(OBJDIR_RELEASE)/unified_scripts.o $(OBJDIR_RELEASE)/time.o $(OBJDIR_RELEASE)/steam_auth.o $(OBJDIR_RELEASE)/stacktrace.o $(OBJDIR_RELEASE)/source_maps.o $(OBJDIR_RELEASE)/duk_modules.o $(OBJDIR_RELEASE)/serialisables.o $(OBJDIR_RELEASE)/seccallers.o $(OBJDIR_RELEASE)/script_util.o $(OBJDIR_RELEASE)/script_metadata.o $(OBJDIR_RELEASE)/scheduled_tasks.o $(OBJDIR_RELEASE)/safe_thread.o $(OBJDIR_RELEASE)/command_handler_state.o $(OBJDIR_RELEASE)/deps/quickjs/quickjs.o $(OBJDIR_RELEASE)/deps/quickjs/libunicode.o $(OBJDIR_RELEASE)/deps/quickjs/libregexp.o $(OBJDIR_RELEASE)/deps/quickjs/libbf.o $(OBJDIR_RELEASE)/deps/quickjs/cutils.o $(OBJDIR_RELEASE)/deps/networking/serialisable.o $(OBJDIR_RELEASE)/deps/networking/networking.o $(OBJDIR_RELEASE)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASE)/db_storage_backend.o $(OBJDIR_RELEASE)/command_handler_fiber_backend.o $(OBJDIR_RELEASE)/command_handler.o $(OBJDIR_RELEASE)/auth.o $(OBJDIR_RELEASE)/ascii_helpers.o $(OBJDIR_RELEASE)/argument_object_qjs.o $(OBJDIR_RELEASE)/argument_object_duk.o $(OBJDIR_RELEASE)/duk_module_duktape.o $(OBJDIR_RELEASE)/deps/toolkit/clock.o $(OBJDIR_RELEASE)/deps/secret/tutorial.o $(OBJDIR_RELEASE)/deps/secret/structure_generation_2.o $(OBJDIR_RELEASE)/deps/secret/structure.o $(OBJDIR_RELEASE)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASE)/deps/secret/secret.o $(OBJDIR_RELEASE)/deps/secret/one_shots.o $(OBJDIR_RELEASE)/argument_object.o $(OBJDIR_RELEASE)/deps/secret/one_shot_core.o $(OBJDIR_RELEASE)/deps/secret/npc_manager.o $(OBJDIR_RELEASE)/deps/secret/node.o $(OBJDIR_RELEASE)/deps/secret/low_level_structure.o $(OBJDIR_RELEASE)/deps/secret/loot_gen.o $(OBJDIR_RELEASE)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASE)/deps/secret/common.o
+OBJ_RELEASE = $(OBJDIR_RELEASE)/reoccurring_task_handler.o $(OBJDIR_RELEASE)/rate_limiting.o $(OBJDIR_RELEASE)/quest_manager.o $(OBJDIR_RELEASE)/privileged_core_scripts.o $(OBJDIR_RELEASE)/perfmon.o $(OBJDIR_RELEASE)/non_user_task_thread.o $(OBJDIR_RELEASE)/mongo.o $(OBJDIR_RELEASE)/main.o $(OBJDIR_RELEASE)/logging.o $(OBJDIR_RELEASE)/item.o $(OBJDIR_RELEASE)/http_beast_server.o $(OBJDIR_RELEASE)/event_manager.o $(OBJDIR_RELEASE)/duktape.o $(OBJDIR_RELEASE)/duk_object_functions.o $(OBJDIR_RELEASE)/duk_modules.o $(OBJDIR_RELEASE)/user.o $(OBJDIR_RELEASE)/unified_scripts.o $(OBJDIR_RELEASE)/time.o $(OBJDIR_RELEASE)/steam_auth.o $(OBJDIR_RELEASE)/stacktrace.o $(OBJDIR_RELEASE)/source_maps.o $(OBJDIR_RELEASE)/shared_duk_worker_state.o $(OBJDIR_RELEASE)/serialisables.o $(OBJDIR_RELEASE)/seccallers.o $(OBJDIR_RELEASE)/script_util.o $(OBJDIR_RELEASE)/script_metadata.o $(OBJDIR_RELEASE)/scheduled_tasks.o $(OBJDIR_RELEASE)/safe_thread.o $(OBJDIR_RELEASE)/rng.o $(OBJDIR_RELEASE)/deps/quickjs/quickjs.o $(OBJDIR_RELEASE)/deps/quickjs/libunicode.o $(OBJDIR_RELEASE)/deps/quickjs/libregexp.o $(OBJDIR_RELEASE)/deps/quickjs/libbf.o $(OBJDIR_RELEASE)/deps/quickjs/cutils.o $(OBJDIR_RELEASE)/deps/networking/serialisable.o $(OBJDIR_RELEASE)/deps/networking/networking.o $(OBJDIR_RELEASE)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASE)/db_storage_backend.o $(OBJDIR_RELEASE)/command_handler_state.o $(OBJDIR_RELEASE)/command_handler_fiber_backend.o $(OBJDIR_RELEASE)/command_handler.o $(OBJDIR_RELEASE)/auth.o $(OBJDIR_RELEASE)/ascii_helpers.o $(OBJDIR_RELEASE)/argument_object_qjs.o $(OBJDIR_RELEASE)/argument_object_duk.o $(OBJDIR_RELEASE)/argument_object.o $(OBJDIR_RELEASE)/duk_module_duktape.o $(OBJDIR_RELEASE)/deps/toolkit/clock.o $(OBJDIR_RELEASE)/deps/secret/tutorial.o $(OBJDIR_RELEASE)/deps/secret/structure_generation_2.o $(OBJDIR_RELEASE)/deps/secret/structure.o $(OBJDIR_RELEASE)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASE)/deps/secret/secret.o $(OBJDIR_RELEASE)/deps/secret/one_shots.o $(OBJDIR_RELEASE)/deps/secret/one_shot_core.o $(OBJDIR_RELEASE)/deps/secret/npc_manager.o $(OBJDIR_RELEASE)/deps/secret/node.o $(OBJDIR_RELEASE)/deps/secret/low_level_structure.o $(OBJDIR_RELEASE)/deps/secret/loot_gen.o $(OBJDIR_RELEASE)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASE)/deps/secret/common.o
 
-OBJ_RELEASENOSYMBOLS = $(OBJDIR_RELEASENOSYMBOLS)/mongo.o $(OBJDIR_RELEASENOSYMBOLS)/reoccurring_task_handler.o $(OBJDIR_RELEASENOSYMBOLS)/rate_limiting.o $(OBJDIR_RELEASENOSYMBOLS)/quest_manager.o $(OBJDIR_RELEASENOSYMBOLS)/privileged_core_scripts.o $(OBJDIR_RELEASENOSYMBOLS)/perfmon.o $(OBJDIR_RELEASENOSYMBOLS)/non_user_task_thread.o $(OBJDIR_RELEASENOSYMBOLS)/rng.o $(OBJDIR_RELEASENOSYMBOLS)/main.o $(OBJDIR_RELEASENOSYMBOLS)/logging.o $(OBJDIR_RELEASENOSYMBOLS)/item.o $(OBJDIR_RELEASENOSYMBOLS)/http_beast_server.o $(OBJDIR_RELEASENOSYMBOLS)/event_manager.o $(OBJDIR_RELEASENOSYMBOLS)/duktape.o $(OBJDIR_RELEASENOSYMBOLS)/duk_object_functions.o $(OBJDIR_RELEASENOSYMBOLS)/shared_duk_worker_state.o $(OBJDIR_RELEASENOSYMBOLS)/user.o $(OBJDIR_RELEASENOSYMBOLS)/unified_scripts.o $(OBJDIR_RELEASENOSYMBOLS)/time.o $(OBJDIR_RELEASENOSYMBOLS)/steam_auth.o $(OBJDIR_RELEASENOSYMBOLS)/stacktrace.o $(OBJDIR_RELEASENOSYMBOLS)/source_maps.o $(OBJDIR_RELEASENOSYMBOLS)/duk_modules.o $(OBJDIR_RELEASENOSYMBOLS)/serialisables.o $(OBJDIR_RELEASENOSYMBOLS)/seccallers.o $(OBJDIR_RELEASENOSYMBOLS)/script_util.o $(OBJDIR_RELEASENOSYMBOLS)/script_metadata.o $(OBJDIR_RELEASENOSYMBOLS)/scheduled_tasks.o $(OBJDIR_RELEASENOSYMBOLS)/safe_thread.o $(OBJDIR_RELEASENOSYMBOLS)/command_handler_state.o $(OBJDIR_RELEASENOSYMBOLS)/deps/quickjs/quickjs.o $(OBJDIR_RELEASENOSYMBOLS)/deps/quickjs/libunicode.o $(OBJDIR_RELEASENOSYMBOLS)/deps/quickjs/libregexp.o $(OBJDIR_RELEASENOSYMBOLS)/deps/quickjs/libbf.o $(OBJDIR_RELEASENOSYMBOLS)/deps/quickjs/cutils.o $(OBJDIR_RELEASENOSYMBOLS)/deps/networking/serialisable.o $(OBJDIR_RELEASENOSYMBOLS)/deps/networking/networking.o $(OBJDIR_RELEASENOSYMBOLS)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASENOSYMBOLS)/db_storage_backend.o $(OBJDIR_RELEASENOSYMBOLS)/command_handler_fiber_backend.o $(OBJDIR_RELEASENOSYMBOLS)/command_handler.o $(OBJDIR_RELEASENOSYMBOLS)/auth.o $(OBJDIR_RELEASENOSYMBOLS)/ascii_helpers.o $(OBJDIR_RELEASENOSYMBOLS)/argument_object_qjs.o $(OBJDIR_RELEASENOSYMBOLS)/argument_object_duk.o $(OBJDIR_RELEASENOSYMBOLS)/duk_module_duktape.o $(OBJDIR_RELEASENOSYMBOLS)/deps/toolkit/clock.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/tutorial.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/structure_generation_2.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/structure.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/secret.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/one_shots.o $(OBJDIR_RELEASENOSYMBOLS)/argument_object.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/one_shot_core.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/npc_manager.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/node.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/low_level_structure.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/loot_gen.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/common.o
+OBJ_RELEASENOSYMBOLS = $(OBJDIR_RELEASENOSYMBOLS)/reoccurring_task_handler.o $(OBJDIR_RELEASENOSYMBOLS)/rate_limiting.o $(OBJDIR_RELEASENOSYMBOLS)/quest_manager.o $(OBJDIR_RELEASENOSYMBOLS)/privileged_core_scripts.o $(OBJDIR_RELEASENOSYMBOLS)/perfmon.o $(OBJDIR_RELEASENOSYMBOLS)/non_user_task_thread.o $(OBJDIR_RELEASENOSYMBOLS)/mongo.o $(OBJDIR_RELEASENOSYMBOLS)/main.o $(OBJDIR_RELEASENOSYMBOLS)/logging.o $(OBJDIR_RELEASENOSYMBOLS)/item.o $(OBJDIR_RELEASENOSYMBOLS)/http_beast_server.o $(OBJDIR_RELEASENOSYMBOLS)/event_manager.o $(OBJDIR_RELEASENOSYMBOLS)/duktape.o $(OBJDIR_RELEASENOSYMBOLS)/duk_object_functions.o $(OBJDIR_RELEASENOSYMBOLS)/duk_modules.o $(OBJDIR_RELEASENOSYMBOLS)/user.o $(OBJDIR_RELEASENOSYMBOLS)/unified_scripts.o $(OBJDIR_RELEASENOSYMBOLS)/time.o $(OBJDIR_RELEASENOSYMBOLS)/steam_auth.o $(OBJDIR_RELEASENOSYMBOLS)/stacktrace.o $(OBJDIR_RELEASENOSYMBOLS)/source_maps.o $(OBJDIR_RELEASENOSYMBOLS)/shared_duk_worker_state.o $(OBJDIR_RELEASENOSYMBOLS)/serialisables.o $(OBJDIR_RELEASENOSYMBOLS)/seccallers.o $(OBJDIR_RELEASENOSYMBOLS)/script_util.o $(OBJDIR_RELEASENOSYMBOLS)/script_metadata.o $(OBJDIR_RELEASENOSYMBOLS)/scheduled_tasks.o $(OBJDIR_RELEASENOSYMBOLS)/safe_thread.o $(OBJDIR_RELEASENOSYMBOLS)/rng.o $(OBJDIR_RELEASENOSYMBOLS)/deps/quickjs/quickjs.o $(OBJDIR_RELEASENOSYMBOLS)/deps/quickjs/libunicode.o $(OBJDIR_RELEASENOSYMBOLS)/deps/quickjs/libregexp.o $(OBJDIR_RELEASENOSYMBOLS)/deps/quickjs/libbf.o $(OBJDIR_RELEASENOSYMBOLS)/deps/quickjs/cutils.o $(OBJDIR_RELEASENOSYMBOLS)/deps/networking/serialisable.o $(OBJDIR_RELEASENOSYMBOLS)/deps/networking/networking.o $(OBJDIR_RELEASENOSYMBOLS)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASENOSYMBOLS)/db_storage_backend.o $(OBJDIR_RELEASENOSYMBOLS)/command_handler_state.o $(OBJDIR_RELEASENOSYMBOLS)/command_handler_fiber_backend.o $(OBJDIR_RELEASENOSYMBOLS)/command_handler.o $(OBJDIR_RELEASENOSYMBOLS)/auth.o $(OBJDIR_RELEASENOSYMBOLS)/ascii_helpers.o $(OBJDIR_RELEASENOSYMBOLS)/argument_object_qjs.o $(OBJDIR_RELEASENOSYMBOLS)/argument_object_duk.o $(OBJDIR_RELEASENOSYMBOLS)/argument_object.o $(OBJDIR_RELEASENOSYMBOLS)/duk_module_duktape.o $(OBJDIR_RELEASENOSYMBOLS)/deps/toolkit/clock.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/tutorial.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/structure_generation_2.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/structure.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/secret.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/one_shots.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/one_shot_core.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/npc_manager.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/node.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/low_level_structure.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/loot_gen.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/common.o
 
-OBJ_PROFILE = $(OBJDIR_PROFILE)/mongo.o $(OBJDIR_PROFILE)/reoccurring_task_handler.o $(OBJDIR_PROFILE)/rate_limiting.o $(OBJDIR_PROFILE)/quest_manager.o $(OBJDIR_PROFILE)/privileged_core_scripts.o $(OBJDIR_PROFILE)/perfmon.o $(OBJDIR_PROFILE)/non_user_task_thread.o $(OBJDIR_PROFILE)/rng.o $(OBJDIR_PROFILE)/main.o $(OBJDIR_PROFILE)/logging.o $(OBJDIR_PROFILE)/item.o $(OBJDIR_PROFILE)/http_beast_server.o $(OBJDIR_PROFILE)/event_manager.o $(OBJDIR_PROFILE)/duktape.o $(OBJDIR_PROFILE)/duk_object_functions.o $(OBJDIR_PROFILE)/shared_duk_worker_state.o $(OBJDIR_PROFILE)/user.o $(OBJDIR_PROFILE)/unified_scripts.o $(OBJDIR_PROFILE)/time.o $(OBJDIR_PROFILE)/steam_auth.o $(OBJDIR_PROFILE)/stacktrace.o $(OBJDIR_PROFILE)/source_maps.o $(OBJDIR_PROFILE)/duk_modules.o $(OBJDIR_PROFILE)/serialisables.o $(OBJDIR_PROFILE)/seccallers.o $(OBJDIR_PROFILE)/script_util.o $(OBJDIR_PROFILE)/script_metadata.o $(OBJDIR_PROFILE)/scheduled_tasks.o $(OBJDIR_PROFILE)/safe_thread.o $(OBJDIR_PROFILE)/command_handler_state.o $(OBJDIR_PROFILE)/deps/quickjs/quickjs.o $(OBJDIR_PROFILE)/deps/quickjs/libunicode.o $(OBJDIR_PROFILE)/deps/quickjs/libregexp.o $(OBJDIR_PROFILE)/deps/quickjs/libbf.o $(OBJDIR_PROFILE)/deps/quickjs/cutils.o $(OBJDIR_PROFILE)/deps/networking/serialisable.o $(OBJDIR_PROFILE)/deps/networking/networking.o $(OBJDIR_PROFILE)/deps/networking/beast_compilation_unit.o $(OBJDIR_PROFILE)/db_storage_backend.o $(OBJDIR_PROFILE)/command_handler_fiber_backend.o $(OBJDIR_PROFILE)/command_handler.o $(OBJDIR_PROFILE)/auth.o $(OBJDIR_PROFILE)/ascii_helpers.o $(OBJDIR_PROFILE)/argument_object_qjs.o $(OBJDIR_PROFILE)/argument_object_duk.o $(OBJDIR_PROFILE)/duk_module_duktape.o $(OBJDIR_PROFILE)/deps/toolkit/clock.o $(OBJDIR_PROFILE)/deps/secret/tutorial.o $(OBJDIR_PROFILE)/deps/secret/structure_generation_2.o $(OBJDIR_PROFILE)/deps/secret/structure.o $(OBJDIR_PROFILE)/deps/secret/special_user_scripts.o $(OBJDIR_PROFILE)/deps/secret/secret.o $(OBJDIR_PROFILE)/deps/secret/one_shots.o $(OBJDIR_PROFILE)/argument_object.o $(OBJDIR_PROFILE)/deps/secret/one_shot_core.o $(OBJDIR_PROFILE)/deps/secret/npc_manager.o $(OBJDIR_PROFILE)/deps/secret/node.o $(OBJDIR_PROFILE)/deps/secret/low_level_structure.o $(OBJDIR_PROFILE)/deps/secret/loot_gen.o $(OBJDIR_PROFILE)/deps/secret/initial_link_setup.o $(OBJDIR_PROFILE)/deps/secret/common.o
+OBJ_PROFILE = $(OBJDIR_PROFILE)/reoccurring_task_handler.o $(OBJDIR_PROFILE)/rate_limiting.o $(OBJDIR_PROFILE)/quest_manager.o $(OBJDIR_PROFILE)/privileged_core_scripts.o $(OBJDIR_PROFILE)/perfmon.o $(OBJDIR_PROFILE)/non_user_task_thread.o $(OBJDIR_PROFILE)/mongo.o $(OBJDIR_PROFILE)/main.o $(OBJDIR_PROFILE)/logging.o $(OBJDIR_PROFILE)/item.o $(OBJDIR_PROFILE)/http_beast_server.o $(OBJDIR_PROFILE)/event_manager.o $(OBJDIR_PROFILE)/duktape.o $(OBJDIR_PROFILE)/duk_object_functions.o $(OBJDIR_PROFILE)/duk_modules.o $(OBJDIR_PROFILE)/user.o $(OBJDIR_PROFILE)/unified_scripts.o $(OBJDIR_PROFILE)/time.o $(OBJDIR_PROFILE)/steam_auth.o $(OBJDIR_PROFILE)/stacktrace.o $(OBJDIR_PROFILE)/source_maps.o $(OBJDIR_PROFILE)/shared_duk_worker_state.o $(OBJDIR_PROFILE)/serialisables.o $(OBJDIR_PROFILE)/seccallers.o $(OBJDIR_PROFILE)/script_util.o $(OBJDIR_PROFILE)/script_metadata.o $(OBJDIR_PROFILE)/scheduled_tasks.o $(OBJDIR_PROFILE)/safe_thread.o $(OBJDIR_PROFILE)/rng.o $(OBJDIR_PROFILE)/deps/quickjs/quickjs.o $(OBJDIR_PROFILE)/deps/quickjs/libunicode.o $(OBJDIR_PROFILE)/deps/quickjs/libregexp.o $(OBJDIR_PROFILE)/deps/quickjs/libbf.o $(OBJDIR_PROFILE)/deps/quickjs/cutils.o $(OBJDIR_PROFILE)/deps/networking/serialisable.o $(OBJDIR_PROFILE)/deps/networking/networking.o $(OBJDIR_PROFILE)/deps/networking/beast_compilation_unit.o $(OBJDIR_PROFILE)/db_storage_backend.o $(OBJDIR_PROFILE)/command_handler_state.o $(OBJDIR_PROFILE)/command_handler_fiber_backend.o $(OBJDIR_PROFILE)/command_handler.o $(OBJDIR_PROFILE)/auth.o $(OBJDIR_PROFILE)/ascii_helpers.o $(OBJDIR_PROFILE)/argument_object_qjs.o $(OBJDIR_PROFILE)/argument_object_duk.o $(OBJDIR_PROFILE)/argument_object.o $(OBJDIR_PROFILE)/duk_module_duktape.o $(OBJDIR_PROFILE)/deps/toolkit/clock.o $(OBJDIR_PROFILE)/deps/secret/tutorial.o $(OBJDIR_PROFILE)/deps/secret/structure_generation_2.o $(OBJDIR_PROFILE)/deps/secret/structure.o $(OBJDIR_PROFILE)/deps/secret/special_user_scripts.o $(OBJDIR_PROFILE)/deps/secret/secret.o $(OBJDIR_PROFILE)/deps/secret/one_shots.o $(OBJDIR_PROFILE)/deps/secret/one_shot_core.o $(OBJDIR_PROFILE)/deps/secret/npc_manager.o $(OBJDIR_PROFILE)/deps/secret/node.o $(OBJDIR_PROFILE)/deps/secret/low_level_structure.o $(OBJDIR_PROFILE)/deps/secret/loot_gen.o $(OBJDIR_PROFILE)/deps/secret/initial_link_setup.o $(OBJDIR_PROFILE)/deps/secret/common.o
 
-OBJ_DEPLOY = $(OBJDIR_DEPLOY)/mongo.o $(OBJDIR_DEPLOY)/reoccurring_task_handler.o $(OBJDIR_DEPLOY)/rate_limiting.o $(OBJDIR_DEPLOY)/quest_manager.o $(OBJDIR_DEPLOY)/privileged_core_scripts.o $(OBJDIR_DEPLOY)/perfmon.o $(OBJDIR_DEPLOY)/non_user_task_thread.o $(OBJDIR_DEPLOY)/rng.o $(OBJDIR_DEPLOY)/main.o $(OBJDIR_DEPLOY)/logging.o $(OBJDIR_DEPLOY)/item.o $(OBJDIR_DEPLOY)/http_beast_server.o $(OBJDIR_DEPLOY)/event_manager.o $(OBJDIR_DEPLOY)/duktape.o $(OBJDIR_DEPLOY)/duk_object_functions.o $(OBJDIR_DEPLOY)/shared_duk_worker_state.o $(OBJDIR_DEPLOY)/user.o $(OBJDIR_DEPLOY)/unified_scripts.o $(OBJDIR_DEPLOY)/time.o $(OBJDIR_DEPLOY)/steam_auth.o $(OBJDIR_DEPLOY)/stacktrace.o $(OBJDIR_DEPLOY)/source_maps.o $(OBJDIR_DEPLOY)/duk_modules.o $(OBJDIR_DEPLOY)/serialisables.o $(OBJDIR_DEPLOY)/seccallers.o $(OBJDIR_DEPLOY)/script_util.o $(OBJDIR_DEPLOY)/script_metadata.o $(OBJDIR_DEPLOY)/scheduled_tasks.o $(OBJDIR_DEPLOY)/safe_thread.o $(OBJDIR_DEPLOY)/command_handler_state.o $(OBJDIR_DEPLOY)/deps/quickjs/quickjs.o $(OBJDIR_DEPLOY)/deps/quickjs/libunicode.o $(OBJDIR_DEPLOY)/deps/quickjs/libregexp.o $(OBJDIR_DEPLOY)/deps/quickjs/libbf.o $(OBJDIR_DEPLOY)/deps/quickjs/cutils.o $(OBJDIR_DEPLOY)/deps/networking/serialisable.o $(OBJDIR_DEPLOY)/deps/networking/networking.o $(OBJDIR_DEPLOY)/deps/networking/beast_compilation_unit.o $(OBJDIR_DEPLOY)/db_storage_backend.o $(OBJDIR_DEPLOY)/command_handler_fiber_backend.o $(OBJDIR_DEPLOY)/command_handler.o $(OBJDIR_DEPLOY)/auth.o $(OBJDIR_DEPLOY)/ascii_helpers.o $(OBJDIR_DEPLOY)/argument_object_qjs.o $(OBJDIR_DEPLOY)/argument_object_duk.o $(OBJDIR_DEPLOY)/duk_module_duktape.o $(OBJDIR_DEPLOY)/deps/toolkit/clock.o $(OBJDIR_DEPLOY)/deps/secret/tutorial.o $(OBJDIR_DEPLOY)/deps/secret/structure_generation_2.o $(OBJDIR_DEPLOY)/deps/secret/structure.o $(OBJDIR_DEPLOY)/deps/secret/special_user_scripts.o $(OBJDIR_DEPLOY)/deps/secret/secret.o $(OBJDIR_DEPLOY)/deps/secret/one_shots.o $(OBJDIR_DEPLOY)/argument_object.o $(OBJDIR_DEPLOY)/deps/secret/one_shot_core.o $(OBJDIR_DEPLOY)/deps/secret/npc_manager.o $(OBJDIR_DEPLOY)/deps/secret/node.o $(OBJDIR_DEPLOY)/deps/secret/low_level_structure.o $(OBJDIR_DEPLOY)/deps/secret/loot_gen.o $(OBJDIR_DEPLOY)/deps/secret/initial_link_setup.o $(OBJDIR_DEPLOY)/deps/secret/common.o
+OBJ_DEPLOY = $(OBJDIR_DEPLOY)/reoccurring_task_handler.o $(OBJDIR_DEPLOY)/rate_limiting.o $(OBJDIR_DEPLOY)/quest_manager.o $(OBJDIR_DEPLOY)/privileged_core_scripts.o $(OBJDIR_DEPLOY)/perfmon.o $(OBJDIR_DEPLOY)/non_user_task_thread.o $(OBJDIR_DEPLOY)/mongo.o $(OBJDIR_DEPLOY)/main.o $(OBJDIR_DEPLOY)/logging.o $(OBJDIR_DEPLOY)/item.o $(OBJDIR_DEPLOY)/http_beast_server.o $(OBJDIR_DEPLOY)/event_manager.o $(OBJDIR_DEPLOY)/duktape.o $(OBJDIR_DEPLOY)/duk_object_functions.o $(OBJDIR_DEPLOY)/duk_modules.o $(OBJDIR_DEPLOY)/user.o $(OBJDIR_DEPLOY)/unified_scripts.o $(OBJDIR_DEPLOY)/time.o $(OBJDIR_DEPLOY)/steam_auth.o $(OBJDIR_DEPLOY)/stacktrace.o $(OBJDIR_DEPLOY)/source_maps.o $(OBJDIR_DEPLOY)/shared_duk_worker_state.o $(OBJDIR_DEPLOY)/serialisables.o $(OBJDIR_DEPLOY)/seccallers.o $(OBJDIR_DEPLOY)/script_util.o $(OBJDIR_DEPLOY)/script_metadata.o $(OBJDIR_DEPLOY)/scheduled_tasks.o $(OBJDIR_DEPLOY)/safe_thread.o $(OBJDIR_DEPLOY)/rng.o $(OBJDIR_DEPLOY)/deps/quickjs/quickjs.o $(OBJDIR_DEPLOY)/deps/quickjs/libunicode.o $(OBJDIR_DEPLOY)/deps/quickjs/libregexp.o $(OBJDIR_DEPLOY)/deps/quickjs/libbf.o $(OBJDIR_DEPLOY)/deps/quickjs/cutils.o $(OBJDIR_DEPLOY)/deps/networking/serialisable.o $(OBJDIR_DEPLOY)/deps/networking/networking.o $(OBJDIR_DEPLOY)/deps/networking/beast_compilation_unit.o $(OBJDIR_DEPLOY)/db_storage_backend.o $(OBJDIR_DEPLOY)/command_handler_state.o $(OBJDIR_DEPLOY)/command_handler_fiber_backend.o $(OBJDIR_DEPLOY)/command_handler.o $(OBJDIR_DEPLOY)/auth.o $(OBJDIR_DEPLOY)/ascii_helpers.o $(OBJDIR_DEPLOY)/argument_object_qjs.o $(OBJDIR_DEPLOY)/argument_object_duk.o $(OBJDIR_DEPLOY)/argument_object.o $(OBJDIR_DEPLOY)/duk_module_duktape.o $(OBJDIR_DEPLOY)/deps/toolkit/clock.o $(OBJDIR_DEPLOY)/deps/secret/tutorial.o $(OBJDIR_DEPLOY)/deps/secret/structure_generation_2.o $(OBJDIR_DEPLOY)/deps/secret/structure.o $(OBJDIR_DEPLOY)/deps/secret/special_user_scripts.o $(OBJDIR_DEPLOY)/deps/secret/secret.o $(OBJDIR_DEPLOY)/deps/secret/one_shots.o $(OBJDIR_DEPLOY)/deps/secret/one_shot_core.o $(OBJDIR_DEPLOY)/deps/secret/npc_manager.o $(OBJDIR_DEPLOY)/deps/secret/node.o $(OBJDIR_DEPLOY)/deps/secret/low_level_structure.o $(OBJDIR_DEPLOY)/deps/secret/loot_gen.o $(OBJDIR_DEPLOY)/deps/secret/initial_link_setup.o $(OBJDIR_DEPLOY)/deps/secret/common.o
 
-OBJ_RELEASEANDTEST = $(OBJDIR_RELEASEANDTEST)/mongo.o $(OBJDIR_RELEASEANDTEST)/reoccurring_task_handler.o $(OBJDIR_RELEASEANDTEST)/rate_limiting.o $(OBJDIR_RELEASEANDTEST)/quest_manager.o $(OBJDIR_RELEASEANDTEST)/privileged_core_scripts.o $(OBJDIR_RELEASEANDTEST)/perfmon.o $(OBJDIR_RELEASEANDTEST)/non_user_task_thread.o $(OBJDIR_RELEASEANDTEST)/rng.o $(OBJDIR_RELEASEANDTEST)/main.o $(OBJDIR_RELEASEANDTEST)/logging.o $(OBJDIR_RELEASEANDTEST)/item.o $(OBJDIR_RELEASEANDTEST)/http_beast_server.o $(OBJDIR_RELEASEANDTEST)/event_manager.o $(OBJDIR_RELEASEANDTEST)/duktape.o $(OBJDIR_RELEASEANDTEST)/duk_object_functions.o $(OBJDIR_RELEASEANDTEST)/shared_duk_worker_state.o $(OBJDIR_RELEASEANDTEST)/user.o $(OBJDIR_RELEASEANDTEST)/unified_scripts.o $(OBJDIR_RELEASEANDTEST)/time.o $(OBJDIR_RELEASEANDTEST)/steam_auth.o $(OBJDIR_RELEASEANDTEST)/stacktrace.o $(OBJDIR_RELEASEANDTEST)/source_maps.o $(OBJDIR_RELEASEANDTEST)/duk_modules.o $(OBJDIR_RELEASEANDTEST)/serialisables.o $(OBJDIR_RELEASEANDTEST)/seccallers.o $(OBJDIR_RELEASEANDTEST)/script_util.o $(OBJDIR_RELEASEANDTEST)/script_metadata.o $(OBJDIR_RELEASEANDTEST)/scheduled_tasks.o $(OBJDIR_RELEASEANDTEST)/safe_thread.o $(OBJDIR_RELEASEANDTEST)/command_handler_state.o $(OBJDIR_RELEASEANDTEST)/deps/quickjs/quickjs.o $(OBJDIR_RELEASEANDTEST)/deps/quickjs/libunicode.o $(OBJDIR_RELEASEANDTEST)/deps/quickjs/libregexp.o $(OBJDIR_RELEASEANDTEST)/deps/quickjs/libbf.o $(OBJDIR_RELEASEANDTEST)/deps/quickjs/cutils.o $(OBJDIR_RELEASEANDTEST)/deps/networking/serialisable.o $(OBJDIR_RELEASEANDTEST)/deps/networking/networking.o $(OBJDIR_RELEASEANDTEST)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASEANDTEST)/db_storage_backend.o $(OBJDIR_RELEASEANDTEST)/command_handler_fiber_backend.o $(OBJDIR_RELEASEANDTEST)/command_handler.o $(OBJDIR_RELEASEANDTEST)/auth.o $(OBJDIR_RELEASEANDTEST)/ascii_helpers.o $(OBJDIR_RELEASEANDTEST)/argument_object_qjs.o $(OBJDIR_RELEASEANDTEST)/argument_object_duk.o $(OBJDIR_RELEASEANDTEST)/duk_module_duktape.o $(OBJDIR_RELEASEANDTEST)/deps/toolkit/clock.o $(OBJDIR_RELEASEANDTEST)/deps/secret/tutorial.o $(OBJDIR_RELEASEANDTEST)/deps/secret/structure_generation_2.o $(OBJDIR_RELEASEANDTEST)/deps/secret/structure.o $(OBJDIR_RELEASEANDTEST)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASEANDTEST)/deps/secret/secret.o $(OBJDIR_RELEASEANDTEST)/deps/secret/one_shots.o $(OBJDIR_RELEASEANDTEST)/argument_object.o $(OBJDIR_RELEASEANDTEST)/deps/secret/one_shot_core.o $(OBJDIR_RELEASEANDTEST)/deps/secret/npc_manager.o $(OBJDIR_RELEASEANDTEST)/deps/secret/node.o $(OBJDIR_RELEASEANDTEST)/deps/secret/low_level_structure.o $(OBJDIR_RELEASEANDTEST)/deps/secret/loot_gen.o $(OBJDIR_RELEASEANDTEST)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASEANDTEST)/deps/secret/common.o
+OBJ_RELEASEANDTEST = $(OBJDIR_RELEASEANDTEST)/reoccurring_task_handler.o $(OBJDIR_RELEASEANDTEST)/rate_limiting.o $(OBJDIR_RELEASEANDTEST)/quest_manager.o $(OBJDIR_RELEASEANDTEST)/privileged_core_scripts.o $(OBJDIR_RELEASEANDTEST)/perfmon.o $(OBJDIR_RELEASEANDTEST)/non_user_task_thread.o $(OBJDIR_RELEASEANDTEST)/mongo.o $(OBJDIR_RELEASEANDTEST)/main.o $(OBJDIR_RELEASEANDTEST)/logging.o $(OBJDIR_RELEASEANDTEST)/item.o $(OBJDIR_RELEASEANDTEST)/http_beast_server.o $(OBJDIR_RELEASEANDTEST)/event_manager.o $(OBJDIR_RELEASEANDTEST)/duktape.o $(OBJDIR_RELEASEANDTEST)/duk_object_functions.o $(OBJDIR_RELEASEANDTEST)/duk_modules.o $(OBJDIR_RELEASEANDTEST)/user.o $(OBJDIR_RELEASEANDTEST)/unified_scripts.o $(OBJDIR_RELEASEANDTEST)/time.o $(OBJDIR_RELEASEANDTEST)/steam_auth.o $(OBJDIR_RELEASEANDTEST)/stacktrace.o $(OBJDIR_RELEASEANDTEST)/source_maps.o $(OBJDIR_RELEASEANDTEST)/shared_duk_worker_state.o $(OBJDIR_RELEASEANDTEST)/serialisables.o $(OBJDIR_RELEASEANDTEST)/seccallers.o $(OBJDIR_RELEASEANDTEST)/script_util.o $(OBJDIR_RELEASEANDTEST)/script_metadata.o $(OBJDIR_RELEASEANDTEST)/scheduled_tasks.o $(OBJDIR_RELEASEANDTEST)/safe_thread.o $(OBJDIR_RELEASEANDTEST)/rng.o $(OBJDIR_RELEASEANDTEST)/deps/quickjs/quickjs.o $(OBJDIR_RELEASEANDTEST)/deps/quickjs/libunicode.o $(OBJDIR_RELEASEANDTEST)/deps/quickjs/libregexp.o $(OBJDIR_RELEASEANDTEST)/deps/quickjs/libbf.o $(OBJDIR_RELEASEANDTEST)/deps/quickjs/cutils.o $(OBJDIR_RELEASEANDTEST)/deps/networking/serialisable.o $(OBJDIR_RELEASEANDTEST)/deps/networking/networking.o $(OBJDIR_RELEASEANDTEST)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASEANDTEST)/db_storage_backend.o $(OBJDIR_RELEASEANDTEST)/command_handler_state.o $(OBJDIR_RELEASEANDTEST)/command_handler_fiber_backend.o $(OBJDIR_RELEASEANDTEST)/command_handler.o $(OBJDIR_RELEASEANDTEST)/auth.o $(OBJDIR_RELEASEANDTEST)/ascii_helpers.o $(OBJDIR_RELEASEANDTEST)/argument_object_qjs.o $(OBJDIR_RELEASEANDTEST)/argument_object_duk.o $(OBJDIR_RELEASEANDTEST)/argument_object.o $(OBJDIR_RELEASEANDTEST)/duk_module_duktape.o $(OBJDIR_RELEASEANDTEST)/deps/toolkit/clock.o $(OBJDIR_RELEASEANDTEST)/deps/secret/tutorial.o $(OBJDIR_RELEASEANDTEST)/deps/secret/structure_generation_2.o $(OBJDIR_RELEASEANDTEST)/deps/secret/structure.o $(OBJDIR_RELEASEANDTEST)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASEANDTEST)/deps/secret/secret.o $(OBJDIR_RELEASEANDTEST)/deps/secret/one_shots.o $(OBJDIR_RELEASEANDTEST)/deps/secret/one_shot_core.o $(OBJDIR_RELEASEANDTEST)/deps/secret/npc_manager.o $(OBJDIR_RELEASEANDTEST)/deps/secret/node.o $(OBJDIR_RELEASEANDTEST)/deps/secret/low_level_structure.o $(OBJDIR_RELEASEANDTEST)/deps/secret/loot_gen.o $(OBJDIR_RELEASEANDTEST)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASEANDTEST)/deps/secret/common.o
 
-OBJ_DEBUGBACKTRACE = $(OBJDIR_DEBUGBACKTRACE)/mongo.o $(OBJDIR_DEBUGBACKTRACE)/reoccurring_task_handler.o $(OBJDIR_DEBUGBACKTRACE)/rate_limiting.o $(OBJDIR_DEBUGBACKTRACE)/quest_manager.o $(OBJDIR_DEBUGBACKTRACE)/privileged_core_scripts.o $(OBJDIR_DEBUGBACKTRACE)/perfmon.o $(OBJDIR_DEBUGBACKTRACE)/non_user_task_thread.o $(OBJDIR_DEBUGBACKTRACE)/rng.o $(OBJDIR_DEBUGBACKTRACE)/main.o $(OBJDIR_DEBUGBACKTRACE)/logging.o $(OBJDIR_DEBUGBACKTRACE)/item.o $(OBJDIR_DEBUGBACKTRACE)/http_beast_server.o $(OBJDIR_DEBUGBACKTRACE)/event_manager.o $(OBJDIR_DEBUGBACKTRACE)/duktape.o $(OBJDIR_DEBUGBACKTRACE)/duk_object_functions.o $(OBJDIR_DEBUGBACKTRACE)/shared_duk_worker_state.o $(OBJDIR_DEBUGBACKTRACE)/user.o $(OBJDIR_DEBUGBACKTRACE)/unified_scripts.o $(OBJDIR_DEBUGBACKTRACE)/time.o $(OBJDIR_DEBUGBACKTRACE)/steam_auth.o $(OBJDIR_DEBUGBACKTRACE)/stacktrace.o $(OBJDIR_DEBUGBACKTRACE)/source_maps.o $(OBJDIR_DEBUGBACKTRACE)/duk_modules.o $(OBJDIR_DEBUGBACKTRACE)/serialisables.o $(OBJDIR_DEBUGBACKTRACE)/seccallers.o $(OBJDIR_DEBUGBACKTRACE)/script_util.o $(OBJDIR_DEBUGBACKTRACE)/script_metadata.o $(OBJDIR_DEBUGBACKTRACE)/scheduled_tasks.o $(OBJDIR_DEBUGBACKTRACE)/safe_thread.o $(OBJDIR_DEBUGBACKTRACE)/command_handler_state.o $(OBJDIR_DEBUGBACKTRACE)/deps/quickjs/quickjs.o $(OBJDIR_DEBUGBACKTRACE)/deps/quickjs/libunicode.o $(OBJDIR_DEBUGBACKTRACE)/deps/quickjs/libregexp.o $(OBJDIR_DEBUGBACKTRACE)/deps/quickjs/libbf.o $(OBJDIR_DEBUGBACKTRACE)/deps/quickjs/cutils.o $(OBJDIR_DEBUGBACKTRACE)/deps/networking/serialisable.o $(OBJDIR_DEBUGBACKTRACE)/deps/networking/networking.o $(OBJDIR_DEBUGBACKTRACE)/deps/networking/beast_compilation_unit.o $(OBJDIR_DEBUGBACKTRACE)/db_storage_backend.o $(OBJDIR_DEBUGBACKTRACE)/command_handler_fiber_backend.o $(OBJDIR_DEBUGBACKTRACE)/command_handler.o $(OBJDIR_DEBUGBACKTRACE)/auth.o $(OBJDIR_DEBUGBACKTRACE)/ascii_helpers.o $(OBJDIR_DEBUGBACKTRACE)/argument_object_qjs.o $(OBJDIR_DEBUGBACKTRACE)/argument_object_duk.o $(OBJDIR_DEBUGBACKTRACE)/duk_module_duktape.o $(OBJDIR_DEBUGBACKTRACE)/deps/toolkit/clock.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/tutorial.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/structure_generation_2.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/structure.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/special_user_scripts.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/secret.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/one_shots.o $(OBJDIR_DEBUGBACKTRACE)/argument_object.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/one_shot_core.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/npc_manager.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/node.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/low_level_structure.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/loot_gen.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/initial_link_setup.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/common.o
+OBJ_DEBUGBACKTRACE = $(OBJDIR_DEBUGBACKTRACE)/reoccurring_task_handler.o $(OBJDIR_DEBUGBACKTRACE)/rate_limiting.o $(OBJDIR_DEBUGBACKTRACE)/quest_manager.o $(OBJDIR_DEBUGBACKTRACE)/privileged_core_scripts.o $(OBJDIR_DEBUGBACKTRACE)/perfmon.o $(OBJDIR_DEBUGBACKTRACE)/non_user_task_thread.o $(OBJDIR_DEBUGBACKTRACE)/mongo.o $(OBJDIR_DEBUGBACKTRACE)/main.o $(OBJDIR_DEBUGBACKTRACE)/logging.o $(OBJDIR_DEBUGBACKTRACE)/item.o $(OBJDIR_DEBUGBACKTRACE)/http_beast_server.o $(OBJDIR_DEBUGBACKTRACE)/event_manager.o $(OBJDIR_DEBUGBACKTRACE)/duktape.o $(OBJDIR_DEBUGBACKTRACE)/duk_object_functions.o $(OBJDIR_DEBUGBACKTRACE)/duk_modules.o $(OBJDIR_DEBUGBACKTRACE)/user.o $(OBJDIR_DEBUGBACKTRACE)/unified_scripts.o $(OBJDIR_DEBUGBACKTRACE)/time.o $(OBJDIR_DEBUGBACKTRACE)/steam_auth.o $(OBJDIR_DEBUGBACKTRACE)/stacktrace.o $(OBJDIR_DEBUGBACKTRACE)/source_maps.o $(OBJDIR_DEBUGBACKTRACE)/shared_duk_worker_state.o $(OBJDIR_DEBUGBACKTRACE)/serialisables.o $(OBJDIR_DEBUGBACKTRACE)/seccallers.o $(OBJDIR_DEBUGBACKTRACE)/script_util.o $(OBJDIR_DEBUGBACKTRACE)/script_metadata.o $(OBJDIR_DEBUGBACKTRACE)/scheduled_tasks.o $(OBJDIR_DEBUGBACKTRACE)/safe_thread.o $(OBJDIR_DEBUGBACKTRACE)/rng.o $(OBJDIR_DEBUGBACKTRACE)/deps/quickjs/quickjs.o $(OBJDIR_DEBUGBACKTRACE)/deps/quickjs/libunicode.o $(OBJDIR_DEBUGBACKTRACE)/deps/quickjs/libregexp.o $(OBJDIR_DEBUGBACKTRACE)/deps/quickjs/libbf.o $(OBJDIR_DEBUGBACKTRACE)/deps/quickjs/cutils.o $(OBJDIR_DEBUGBACKTRACE)/deps/networking/serialisable.o $(OBJDIR_DEBUGBACKTRACE)/deps/networking/networking.o $(OBJDIR_DEBUGBACKTRACE)/deps/networking/beast_compilation_unit.o $(OBJDIR_DEBUGBACKTRACE)/db_storage_backend.o $(OBJDIR_DEBUGBACKTRACE)/command_handler_state.o $(OBJDIR_DEBUGBACKTRACE)/command_handler_fiber_backend.o $(OBJDIR_DEBUGBACKTRACE)/command_handler.o $(OBJDIR_DEBUGBACKTRACE)/auth.o $(OBJDIR_DEBUGBACKTRACE)/ascii_helpers.o $(OBJDIR_DEBUGBACKTRACE)/argument_object_qjs.o $(OBJDIR_DEBUGBACKTRACE)/argument_object_duk.o $(OBJDIR_DEBUGBACKTRACE)/argument_object.o $(OBJDIR_DEBUGBACKTRACE)/duk_module_duktape.o $(OBJDIR_DEBUGBACKTRACE)/deps/toolkit/clock.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/tutorial.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/structure_generation_2.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/structure.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/special_user_scripts.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/secret.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/one_shots.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/one_shot_core.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/npc_manager.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/node.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/low_level_structure.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/loot_gen.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/initial_link_setup.o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/common.o
 
-OBJ_DEBUGTEST = $(OBJDIR_DEBUGTEST)/mongo.o $(OBJDIR_DEBUGTEST)/reoccurring_task_handler.o $(OBJDIR_DEBUGTEST)/rate_limiting.o $(OBJDIR_DEBUGTEST)/quest_manager.o $(OBJDIR_DEBUGTEST)/privileged_core_scripts.o $(OBJDIR_DEBUGTEST)/perfmon.o $(OBJDIR_DEBUGTEST)/non_user_task_thread.o $(OBJDIR_DEBUGTEST)/rng.o $(OBJDIR_DEBUGTEST)/main.o $(OBJDIR_DEBUGTEST)/logging.o $(OBJDIR_DEBUGTEST)/item.o $(OBJDIR_DEBUGTEST)/http_beast_server.o $(OBJDIR_DEBUGTEST)/event_manager.o $(OBJDIR_DEBUGTEST)/duktape.o $(OBJDIR_DEBUGTEST)/duk_object_functions.o $(OBJDIR_DEBUGTEST)/shared_duk_worker_state.o $(OBJDIR_DEBUGTEST)/user.o $(OBJDIR_DEBUGTEST)/unified_scripts.o $(OBJDIR_DEBUGTEST)/time.o $(OBJDIR_DEBUGTEST)/steam_auth.o $(OBJDIR_DEBUGTEST)/stacktrace.o $(OBJDIR_DEBUGTEST)/source_maps.o $(OBJDIR_DEBUGTEST)/duk_modules.o $(OBJDIR_DEBUGTEST)/serialisables.o $(OBJDIR_DEBUGTEST)/seccallers.o $(OBJDIR_DEBUGTEST)/script_util.o $(OBJDIR_DEBUGTEST)/script_metadata.o $(OBJDIR_DEBUGTEST)/scheduled_tasks.o $(OBJDIR_DEBUGTEST)/safe_thread.o $(OBJDIR_DEBUGTEST)/command_handler_state.o $(OBJDIR_DEBUGTEST)/deps/quickjs/quickjs.o $(OBJDIR_DEBUGTEST)/deps/quickjs/libunicode.o $(OBJDIR_DEBUGTEST)/deps/quickjs/libregexp.o $(OBJDIR_DEBUGTEST)/deps/quickjs/libbf.o $(OBJDIR_DEBUGTEST)/deps/quickjs/cutils.o $(OBJDIR_DEBUGTEST)/deps/networking/serialisable.o $(OBJDIR_DEBUGTEST)/deps/networking/networking.o $(OBJDIR_DEBUGTEST)/deps/networking/beast_compilation_unit.o $(OBJDIR_DEBUGTEST)/db_storage_backend.o $(OBJDIR_DEBUGTEST)/command_handler_fiber_backend.o $(OBJDIR_DEBUGTEST)/command_handler.o $(OBJDIR_DEBUGTEST)/auth.o $(OBJDIR_DEBUGTEST)/ascii_helpers.o $(OBJDIR_DEBUGTEST)/argument_object_qjs.o $(OBJDIR_DEBUGTEST)/argument_object_duk.o $(OBJDIR_DEBUGTEST)/duk_module_duktape.o $(OBJDIR_DEBUGTEST)/deps/toolkit/clock.o $(OBJDIR_DEBUGTEST)/deps/secret/tutorial.o $(OBJDIR_DEBUGTEST)/deps/secret/structure_generation_2.o $(OBJDIR_DEBUGTEST)/deps/secret/structure.o $(OBJDIR_DEBUGTEST)/deps/secret/special_user_scripts.o $(OBJDIR_DEBUGTEST)/deps/secret/secret.o $(OBJDIR_DEBUGTEST)/deps/secret/one_shots.o $(OBJDIR_DEBUGTEST)/argument_object.o $(OBJDIR_DEBUGTEST)/deps/secret/one_shot_core.o $(OBJDIR_DEBUGTEST)/deps/secret/npc_manager.o $(OBJDIR_DEBUGTEST)/deps/secret/node.o $(OBJDIR_DEBUGTEST)/deps/secret/low_level_structure.o $(OBJDIR_DEBUGTEST)/deps/secret/loot_gen.o $(OBJDIR_DEBUGTEST)/deps/secret/initial_link_setup.o $(OBJDIR_DEBUGTEST)/deps/secret/common.o
+OBJ_DEBUGTEST = $(OBJDIR_DEBUGTEST)/reoccurring_task_handler.o $(OBJDIR_DEBUGTEST)/rate_limiting.o $(OBJDIR_DEBUGTEST)/quest_manager.o $(OBJDIR_DEBUGTEST)/privileged_core_scripts.o $(OBJDIR_DEBUGTEST)/perfmon.o $(OBJDIR_DEBUGTEST)/non_user_task_thread.o $(OBJDIR_DEBUGTEST)/mongo.o $(OBJDIR_DEBUGTEST)/main.o $(OBJDIR_DEBUGTEST)/logging.o $(OBJDIR_DEBUGTEST)/item.o $(OBJDIR_DEBUGTEST)/http_beast_server.o $(OBJDIR_DEBUGTEST)/event_manager.o $(OBJDIR_DEBUGTEST)/duktape.o $(OBJDIR_DEBUGTEST)/duk_object_functions.o $(OBJDIR_DEBUGTEST)/duk_modules.o $(OBJDIR_DEBUGTEST)/user.o $(OBJDIR_DEBUGTEST)/unified_scripts.o $(OBJDIR_DEBUGTEST)/time.o $(OBJDIR_DEBUGTEST)/steam_auth.o $(OBJDIR_DEBUGTEST)/stacktrace.o $(OBJDIR_DEBUGTEST)/source_maps.o $(OBJDIR_DEBUGTEST)/shared_duk_worker_state.o $(OBJDIR_DEBUGTEST)/serialisables.o $(OBJDIR_DEBUGTEST)/seccallers.o $(OBJDIR_DEBUGTEST)/script_util.o $(OBJDIR_DEBUGTEST)/script_metadata.o $(OBJDIR_DEBUGTEST)/scheduled_tasks.o $(OBJDIR_DEBUGTEST)/safe_thread.o $(OBJDIR_DEBUGTEST)/rng.o $(OBJDIR_DEBUGTEST)/deps/quickjs/quickjs.o $(OBJDIR_DEBUGTEST)/deps/quickjs/libunicode.o $(OBJDIR_DEBUGTEST)/deps/quickjs/libregexp.o $(OBJDIR_DEBUGTEST)/deps/quickjs/libbf.o $(OBJDIR_DEBUGTEST)/deps/quickjs/cutils.o $(OBJDIR_DEBUGTEST)/deps/networking/serialisable.o $(OBJDIR_DEBUGTEST)/deps/networking/networking.o $(OBJDIR_DEBUGTEST)/deps/networking/beast_compilation_unit.o $(OBJDIR_DEBUGTEST)/db_storage_backend.o $(OBJDIR_DEBUGTEST)/command_handler_state.o $(OBJDIR_DEBUGTEST)/command_handler_fiber_backend.o $(OBJDIR_DEBUGTEST)/command_handler.o $(OBJDIR_DEBUGTEST)/auth.o $(OBJDIR_DEBUGTEST)/ascii_helpers.o $(OBJDIR_DEBUGTEST)/argument_object_qjs.o $(OBJDIR_DEBUGTEST)/argument_object_duk.o $(OBJDIR_DEBUGTEST)/argument_object.o $(OBJDIR_DEBUGTEST)/duk_module_duktape.o $(OBJDIR_DEBUGTEST)/deps/toolkit/clock.o $(OBJDIR_DEBUGTEST)/deps/secret/tutorial.o $(OBJDIR_DEBUGTEST)/deps/secret/structure_generation_2.o $(OBJDIR_DEBUGTEST)/deps/secret/structure.o $(OBJDIR_DEBUGTEST)/deps/secret/special_user_scripts.o $(OBJDIR_DEBUGTEST)/deps/secret/secret.o $(OBJDIR_DEBUGTEST)/deps/secret/one_shots.o $(OBJDIR_DEBUGTEST)/deps/secret/one_shot_core.o $(OBJDIR_DEBUGTEST)/deps/secret/npc_manager.o $(OBJDIR_DEBUGTEST)/deps/secret/node.o $(OBJDIR_DEBUGTEST)/deps/secret/low_level_structure.o $(OBJDIR_DEBUGTEST)/deps/secret/loot_gen.o $(OBJDIR_DEBUGTEST)/deps/secret/initial_link_setup.o $(OBJDIR_DEBUGTEST)/deps/secret/common.o
 
-OBJ_DMIMIC = $(OBJDIR_DMIMIC)/mongo.o $(OBJDIR_DMIMIC)/reoccurring_task_handler.o $(OBJDIR_DMIMIC)/rate_limiting.o $(OBJDIR_DMIMIC)/quest_manager.o $(OBJDIR_DMIMIC)/privileged_core_scripts.o $(OBJDIR_DMIMIC)/perfmon.o $(OBJDIR_DMIMIC)/non_user_task_thread.o $(OBJDIR_DMIMIC)/rng.o $(OBJDIR_DMIMIC)/main.o $(OBJDIR_DMIMIC)/logging.o $(OBJDIR_DMIMIC)/item.o $(OBJDIR_DMIMIC)/http_beast_server.o $(OBJDIR_DMIMIC)/event_manager.o $(OBJDIR_DMIMIC)/duktape.o $(OBJDIR_DMIMIC)/duk_object_functions.o $(OBJDIR_DMIMIC)/shared_duk_worker_state.o $(OBJDIR_DMIMIC)/user.o $(OBJDIR_DMIMIC)/unified_scripts.o $(OBJDIR_DMIMIC)/time.o $(OBJDIR_DMIMIC)/steam_auth.o $(OBJDIR_DMIMIC)/stacktrace.o $(OBJDIR_DMIMIC)/source_maps.o $(OBJDIR_DMIMIC)/duk_modules.o $(OBJDIR_DMIMIC)/serialisables.o $(OBJDIR_DMIMIC)/seccallers.o $(OBJDIR_DMIMIC)/script_util.o $(OBJDIR_DMIMIC)/script_metadata.o $(OBJDIR_DMIMIC)/scheduled_tasks.o $(OBJDIR_DMIMIC)/safe_thread.o $(OBJDIR_DMIMIC)/command_handler_state.o $(OBJDIR_DMIMIC)/deps/quickjs/quickjs.o $(OBJDIR_DMIMIC)/deps/quickjs/libunicode.o $(OBJDIR_DMIMIC)/deps/quickjs/libregexp.o $(OBJDIR_DMIMIC)/deps/quickjs/libbf.o $(OBJDIR_DMIMIC)/deps/quickjs/cutils.o $(OBJDIR_DMIMIC)/deps/networking/serialisable.o $(OBJDIR_DMIMIC)/deps/networking/networking.o $(OBJDIR_DMIMIC)/deps/networking/beast_compilation_unit.o $(OBJDIR_DMIMIC)/db_storage_backend.o $(OBJDIR_DMIMIC)/command_handler_fiber_backend.o $(OBJDIR_DMIMIC)/command_handler.o $(OBJDIR_DMIMIC)/auth.o $(OBJDIR_DMIMIC)/ascii_helpers.o $(OBJDIR_DMIMIC)/argument_object_qjs.o $(OBJDIR_DMIMIC)/argument_object_duk.o $(OBJDIR_DMIMIC)/duk_module_duktape.o $(OBJDIR_DMIMIC)/deps/toolkit/clock.o $(OBJDIR_DMIMIC)/deps/secret/tutorial.o $(OBJDIR_DMIMIC)/deps/secret/structure_generation_2.o $(OBJDIR_DMIMIC)/deps/secret/structure.o $(OBJDIR_DMIMIC)/deps/secret/special_user_scripts.o $(OBJDIR_DMIMIC)/deps/secret/secret.o $(OBJDIR_DMIMIC)/deps/secret/one_shots.o $(OBJDIR_DMIMIC)/argument_object.o $(OBJDIR_DMIMIC)/deps/secret/one_shot_core.o $(OBJDIR_DMIMIC)/deps/secret/npc_manager.o $(OBJDIR_DMIMIC)/deps/secret/node.o $(OBJDIR_DMIMIC)/deps/secret/low_level_structure.o $(OBJDIR_DMIMIC)/deps/secret/loot_gen.o $(OBJDIR_DMIMIC)/deps/secret/initial_link_setup.o $(OBJDIR_DMIMIC)/deps/secret/common.o
+OBJ_DMIMIC = $(OBJDIR_DMIMIC)/reoccurring_task_handler.o $(OBJDIR_DMIMIC)/rate_limiting.o $(OBJDIR_DMIMIC)/quest_manager.o $(OBJDIR_DMIMIC)/privileged_core_scripts.o $(OBJDIR_DMIMIC)/perfmon.o $(OBJDIR_DMIMIC)/non_user_task_thread.o $(OBJDIR_DMIMIC)/mongo.o $(OBJDIR_DMIMIC)/main.o $(OBJDIR_DMIMIC)/logging.o $(OBJDIR_DMIMIC)/item.o $(OBJDIR_DMIMIC)/http_beast_server.o $(OBJDIR_DMIMIC)/event_manager.o $(OBJDIR_DMIMIC)/duktape.o $(OBJDIR_DMIMIC)/duk_object_functions.o $(OBJDIR_DMIMIC)/duk_modules.o $(OBJDIR_DMIMIC)/user.o $(OBJDIR_DMIMIC)/unified_scripts.o $(OBJDIR_DMIMIC)/time.o $(OBJDIR_DMIMIC)/steam_auth.o $(OBJDIR_DMIMIC)/stacktrace.o $(OBJDIR_DMIMIC)/source_maps.o $(OBJDIR_DMIMIC)/shared_duk_worker_state.o $(OBJDIR_DMIMIC)/serialisables.o $(OBJDIR_DMIMIC)/seccallers.o $(OBJDIR_DMIMIC)/script_util.o $(OBJDIR_DMIMIC)/script_metadata.o $(OBJDIR_DMIMIC)/scheduled_tasks.o $(OBJDIR_DMIMIC)/safe_thread.o $(OBJDIR_DMIMIC)/rng.o $(OBJDIR_DMIMIC)/deps/quickjs/quickjs.o $(OBJDIR_DMIMIC)/deps/quickjs/libunicode.o $(OBJDIR_DMIMIC)/deps/quickjs/libregexp.o $(OBJDIR_DMIMIC)/deps/quickjs/libbf.o $(OBJDIR_DMIMIC)/deps/quickjs/cutils.o $(OBJDIR_DMIMIC)/deps/networking/serialisable.o $(OBJDIR_DMIMIC)/deps/networking/networking.o $(OBJDIR_DMIMIC)/deps/networking/beast_compilation_unit.o $(OBJDIR_DMIMIC)/db_storage_backend.o $(OBJDIR_DMIMIC)/command_handler_state.o $(OBJDIR_DMIMIC)/command_handler_fiber_backend.o $(OBJDIR_DMIMIC)/command_handler.o $(OBJDIR_DMIMIC)/auth.o $(OBJDIR_DMIMIC)/ascii_helpers.o $(OBJDIR_DMIMIC)/argument_object_qjs.o $(OBJDIR_DMIMIC)/argument_object_duk.o $(OBJDIR_DMIMIC)/argument_object.o $(OBJDIR_DMIMIC)/duk_module_duktape.o $(OBJDIR_DMIMIC)/deps/toolkit/clock.o $(OBJDIR_DMIMIC)/deps/secret/tutorial.o $(OBJDIR_DMIMIC)/deps/secret/structure_generation_2.o $(OBJDIR_DMIMIC)/deps/secret/structure.o $(OBJDIR_DMIMIC)/deps/secret/special_user_scripts.o $(OBJDIR_DMIMIC)/deps/secret/secret.o $(OBJDIR_DMIMIC)/deps/secret/one_shots.o $(OBJDIR_DMIMIC)/deps/secret/one_shot_core.o $(OBJDIR_DMIMIC)/deps/secret/npc_manager.o $(OBJDIR_DMIMIC)/deps/secret/node.o $(OBJDIR_DMIMIC)/deps/secret/low_level_structure.o $(OBJDIR_DMIMIC)/deps/secret/loot_gen.o $(OBJDIR_DMIMIC)/deps/secret/initial_link_setup.o $(OBJDIR_DMIMIC)/deps/secret/common.o
 
-OBJ_RELEASEANDTESTWITHDEBUGINFO = $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/mongo.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/reoccurring_task_handler.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/rate_limiting.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/quest_manager.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/privileged_core_scripts.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/perfmon.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/non_user_task_thread.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/rng.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/main.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/logging.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/item.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/http_beast_server.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/event_manager.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duktape.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duk_object_functions.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/shared_duk_worker_state.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/user.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/unified_scripts.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/time.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/steam_auth.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/stacktrace.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/source_maps.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duk_modules.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/serialisables.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/seccallers.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/script_util.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/script_metadata.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/scheduled_tasks.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/safe_thread.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/command_handler_state.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/quickjs/quickjs.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/quickjs/libunicode.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/quickjs/libregexp.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/quickjs/libbf.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/quickjs/cutils.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/networking/serialisable.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/networking/networking.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/db_storage_backend.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/command_handler_fiber_backend.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/command_handler.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/auth.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/ascii_helpers.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/argument_object_qjs.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/argument_object_duk.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duk_module_duktape.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/toolkit/clock.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/tutorial.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/structure_generation_2.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/structure.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/secret.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/one_shots.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/argument_object.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/one_shot_core.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/npc_manager.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/node.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/low_level_structure.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/loot_gen.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/common.o
+OBJ_RELEASEANDTESTWITHDEBUGINFO = $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/reoccurring_task_handler.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/rate_limiting.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/quest_manager.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/privileged_core_scripts.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/perfmon.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/non_user_task_thread.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/mongo.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/main.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/logging.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/item.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/http_beast_server.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/event_manager.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duktape.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duk_object_functions.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duk_modules.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/user.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/unified_scripts.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/time.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/steam_auth.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/stacktrace.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/source_maps.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/shared_duk_worker_state.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/serialisables.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/seccallers.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/script_util.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/script_metadata.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/scheduled_tasks.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/safe_thread.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/rng.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/quickjs/quickjs.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/quickjs/libunicode.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/quickjs/libregexp.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/quickjs/libbf.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/quickjs/cutils.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/networking/serialisable.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/networking/networking.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/db_storage_backend.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/command_handler_state.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/command_handler_fiber_backend.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/command_handler.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/auth.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/ascii_helpers.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/argument_object_qjs.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/argument_object_duk.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/argument_object.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duk_module_duktape.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/toolkit/clock.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/tutorial.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/structure_generation_2.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/structure.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/secret.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/one_shots.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/one_shot_core.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/npc_manager.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/node.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/low_level_structure.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/loot_gen.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/common.o
 
-OBJ_RT_PROF = $(OBJDIR_RT_PROF)/mongo.o $(OBJDIR_RT_PROF)/reoccurring_task_handler.o $(OBJDIR_RT_PROF)/rate_limiting.o $(OBJDIR_RT_PROF)/quest_manager.o $(OBJDIR_RT_PROF)/privileged_core_scripts.o $(OBJDIR_RT_PROF)/perfmon.o $(OBJDIR_RT_PROF)/non_user_task_thread.o $(OBJDIR_RT_PROF)/rng.o $(OBJDIR_RT_PROF)/main.o $(OBJDIR_RT_PROF)/logging.o $(OBJDIR_RT_PROF)/item.o $(OBJDIR_RT_PROF)/http_beast_server.o $(OBJDIR_RT_PROF)/event_manager.o $(OBJDIR_RT_PROF)/duktape.o $(OBJDIR_RT_PROF)/duk_object_functions.o $(OBJDIR_RT_PROF)/shared_duk_worker_state.o $(OBJDIR_RT_PROF)/user.o $(OBJDIR_RT_PROF)/unified_scripts.o $(OBJDIR_RT_PROF)/time.o $(OBJDIR_RT_PROF)/steam_auth.o $(OBJDIR_RT_PROF)/stacktrace.o $(OBJDIR_RT_PROF)/source_maps.o $(OBJDIR_RT_PROF)/duk_modules.o $(OBJDIR_RT_PROF)/serialisables.o $(OBJDIR_RT_PROF)/seccallers.o $(OBJDIR_RT_PROF)/script_util.o $(OBJDIR_RT_PROF)/script_metadata.o $(OBJDIR_RT_PROF)/scheduled_tasks.o $(OBJDIR_RT_PROF)/safe_thread.o $(OBJDIR_RT_PROF)/command_handler_state.o $(OBJDIR_RT_PROF)/deps/quickjs/quickjs.o $(OBJDIR_RT_PROF)/deps/quickjs/libunicode.o $(OBJDIR_RT_PROF)/deps/quickjs/libregexp.o $(OBJDIR_RT_PROF)/deps/quickjs/libbf.o $(OBJDIR_RT_PROF)/deps/quickjs/cutils.o $(OBJDIR_RT_PROF)/deps/networking/serialisable.o $(OBJDIR_RT_PROF)/deps/networking/networking.o $(OBJDIR_RT_PROF)/deps/networking/beast_compilation_unit.o $(OBJDIR_RT_PROF)/db_storage_backend.o $(OBJDIR_RT_PROF)/command_handler_fiber_backend.o $(OBJDIR_RT_PROF)/command_handler.o $(OBJDIR_RT_PROF)/auth.o $(OBJDIR_RT_PROF)/ascii_helpers.o $(OBJDIR_RT_PROF)/argument_object_qjs.o $(OBJDIR_RT_PROF)/argument_object_duk.o $(OBJDIR_RT_PROF)/duk_module_duktape.o $(OBJDIR_RT_PROF)/deps/toolkit/clock.o $(OBJDIR_RT_PROF)/deps/secret/tutorial.o $(OBJDIR_RT_PROF)/deps/secret/structure_generation_2.o $(OBJDIR_RT_PROF)/deps/secret/structure.o $(OBJDIR_RT_PROF)/deps/secret/special_user_scripts.o $(OBJDIR_RT_PROF)/deps/secret/secret.o $(OBJDIR_RT_PROF)/deps/secret/one_shots.o $(OBJDIR_RT_PROF)/argument_object.o $(OBJDIR_RT_PROF)/deps/secret/one_shot_core.o $(OBJDIR_RT_PROF)/deps/secret/npc_manager.o $(OBJDIR_RT_PROF)/deps/secret/node.o $(OBJDIR_RT_PROF)/deps/secret/low_level_structure.o $(OBJDIR_RT_PROF)/deps/secret/loot_gen.o $(OBJDIR_RT_PROF)/deps/secret/initial_link_setup.o $(OBJDIR_RT_PROF)/deps/secret/common.o
+OBJ_RT_PROF = $(OBJDIR_RT_PROF)/reoccurring_task_handler.o $(OBJDIR_RT_PROF)/rate_limiting.o $(OBJDIR_RT_PROF)/quest_manager.o $(OBJDIR_RT_PROF)/privileged_core_scripts.o $(OBJDIR_RT_PROF)/perfmon.o $(OBJDIR_RT_PROF)/non_user_task_thread.o $(OBJDIR_RT_PROF)/mongo.o $(OBJDIR_RT_PROF)/main.o $(OBJDIR_RT_PROF)/logging.o $(OBJDIR_RT_PROF)/item.o $(OBJDIR_RT_PROF)/http_beast_server.o $(OBJDIR_RT_PROF)/event_manager.o $(OBJDIR_RT_PROF)/duktape.o $(OBJDIR_RT_PROF)/duk_object_functions.o $(OBJDIR_RT_PROF)/duk_modules.o $(OBJDIR_RT_PROF)/user.o $(OBJDIR_RT_PROF)/unified_scripts.o $(OBJDIR_RT_PROF)/time.o $(OBJDIR_RT_PROF)/steam_auth.o $(OBJDIR_RT_PROF)/stacktrace.o $(OBJDIR_RT_PROF)/source_maps.o $(OBJDIR_RT_PROF)/shared_duk_worker_state.o $(OBJDIR_RT_PROF)/serialisables.o $(OBJDIR_RT_PROF)/seccallers.o $(OBJDIR_RT_PROF)/script_util.o $(OBJDIR_RT_PROF)/script_metadata.o $(OBJDIR_RT_PROF)/scheduled_tasks.o $(OBJDIR_RT_PROF)/safe_thread.o $(OBJDIR_RT_PROF)/rng.o $(OBJDIR_RT_PROF)/deps/quickjs/quickjs.o $(OBJDIR_RT_PROF)/deps/quickjs/libunicode.o $(OBJDIR_RT_PROF)/deps/quickjs/libregexp.o $(OBJDIR_RT_PROF)/deps/quickjs/libbf.o $(OBJDIR_RT_PROF)/deps/quickjs/cutils.o $(OBJDIR_RT_PROF)/deps/networking/serialisable.o $(OBJDIR_RT_PROF)/deps/networking/networking.o $(OBJDIR_RT_PROF)/deps/networking/beast_compilation_unit.o $(OBJDIR_RT_PROF)/db_storage_backend.o $(OBJDIR_RT_PROF)/command_handler_state.o $(OBJDIR_RT_PROF)/command_handler_fiber_backend.o $(OBJDIR_RT_PROF)/command_handler.o $(OBJDIR_RT_PROF)/auth.o $(OBJDIR_RT_PROF)/ascii_helpers.o $(OBJDIR_RT_PROF)/argument_object_qjs.o $(OBJDIR_RT_PROF)/argument_object_duk.o $(OBJDIR_RT_PROF)/argument_object.o $(OBJDIR_RT_PROF)/duk_module_duktape.o $(OBJDIR_RT_PROF)/deps/toolkit/clock.o $(OBJDIR_RT_PROF)/deps/secret/tutorial.o $(OBJDIR_RT_PROF)/deps/secret/structure_generation_2.o $(OBJDIR_RT_PROF)/deps/secret/structure.o $(OBJDIR_RT_PROF)/deps/secret/special_user_scripts.o $(OBJDIR_RT_PROF)/deps/secret/secret.o $(OBJDIR_RT_PROF)/deps/secret/one_shots.o $(OBJDIR_RT_PROF)/deps/secret/one_shot_core.o $(OBJDIR_RT_PROF)/deps/secret/npc_manager.o $(OBJDIR_RT_PROF)/deps/secret/node.o $(OBJDIR_RT_PROF)/deps/secret/low_level_structure.o $(OBJDIR_RT_PROF)/deps/secret/loot_gen.o $(OBJDIR_RT_PROF)/deps/secret/initial_link_setup.o $(OBJDIR_RT_PROF)/deps/secret/common.o
 
-OBJ_RELEASEANDTESTLTO = $(OBJDIR_RELEASEANDTESTLTO)/mongo.o $(OBJDIR_RELEASEANDTESTLTO)/reoccurring_task_handler.o $(OBJDIR_RELEASEANDTESTLTO)/rate_limiting.o $(OBJDIR_RELEASEANDTESTLTO)/quest_manager.o $(OBJDIR_RELEASEANDTESTLTO)/privileged_core_scripts.o $(OBJDIR_RELEASEANDTESTLTO)/perfmon.o $(OBJDIR_RELEASEANDTESTLTO)/non_user_task_thread.o $(OBJDIR_RELEASEANDTESTLTO)/rng.o $(OBJDIR_RELEASEANDTESTLTO)/main.o $(OBJDIR_RELEASEANDTESTLTO)/logging.o $(OBJDIR_RELEASEANDTESTLTO)/item.o $(OBJDIR_RELEASEANDTESTLTO)/http_beast_server.o $(OBJDIR_RELEASEANDTESTLTO)/event_manager.o $(OBJDIR_RELEASEANDTESTLTO)/duktape.o $(OBJDIR_RELEASEANDTESTLTO)/duk_object_functions.o $(OBJDIR_RELEASEANDTESTLTO)/shared_duk_worker_state.o $(OBJDIR_RELEASEANDTESTLTO)/user.o $(OBJDIR_RELEASEANDTESTLTO)/unified_scripts.o $(OBJDIR_RELEASEANDTESTLTO)/time.o $(OBJDIR_RELEASEANDTESTLTO)/steam_auth.o $(OBJDIR_RELEASEANDTESTLTO)/stacktrace.o $(OBJDIR_RELEASEANDTESTLTO)/source_maps.o $(OBJDIR_RELEASEANDTESTLTO)/duk_modules.o $(OBJDIR_RELEASEANDTESTLTO)/serialisables.o $(OBJDIR_RELEASEANDTESTLTO)/seccallers.o $(OBJDIR_RELEASEANDTESTLTO)/script_util.o $(OBJDIR_RELEASEANDTESTLTO)/script_metadata.o $(OBJDIR_RELEASEANDTESTLTO)/scheduled_tasks.o $(OBJDIR_RELEASEANDTESTLTO)/safe_thread.o $(OBJDIR_RELEASEANDTESTLTO)/command_handler_state.o $(OBJDIR_RELEASEANDTESTLTO)/deps/quickjs/quickjs.o $(OBJDIR_RELEASEANDTESTLTO)/deps/quickjs/libunicode.o $(OBJDIR_RELEASEANDTESTLTO)/deps/quickjs/libregexp.o $(OBJDIR_RELEASEANDTESTLTO)/deps/quickjs/libbf.o $(OBJDIR_RELEASEANDTESTLTO)/deps/quickjs/cutils.o $(OBJDIR_RELEASEANDTESTLTO)/deps/networking/serialisable.o $(OBJDIR_RELEASEANDTESTLTO)/deps/networking/networking.o $(OBJDIR_RELEASEANDTESTLTO)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASEANDTESTLTO)/db_storage_backend.o $(OBJDIR_RELEASEANDTESTLTO)/command_handler_fiber_backend.o $(OBJDIR_RELEASEANDTESTLTO)/command_handler.o $(OBJDIR_RELEASEANDTESTLTO)/auth.o $(OBJDIR_RELEASEANDTESTLTO)/ascii_helpers.o $(OBJDIR_RELEASEANDTESTLTO)/argument_object_qjs.o $(OBJDIR_RELEASEANDTESTLTO)/argument_object_duk.o $(OBJDIR_RELEASEANDTESTLTO)/duk_module_duktape.o $(OBJDIR_RELEASEANDTESTLTO)/deps/toolkit/clock.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/tutorial.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/structure_generation_2.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/structure.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/secret.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/one_shots.o $(OBJDIR_RELEASEANDTESTLTO)/argument_object.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/one_shot_core.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/npc_manager.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/node.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/low_level_structure.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/loot_gen.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/common.o
+OBJ_RELEASEANDTESTLTO = $(OBJDIR_RELEASEANDTESTLTO)/reoccurring_task_handler.o $(OBJDIR_RELEASEANDTESTLTO)/rate_limiting.o $(OBJDIR_RELEASEANDTESTLTO)/quest_manager.o $(OBJDIR_RELEASEANDTESTLTO)/privileged_core_scripts.o $(OBJDIR_RELEASEANDTESTLTO)/perfmon.o $(OBJDIR_RELEASEANDTESTLTO)/non_user_task_thread.o $(OBJDIR_RELEASEANDTESTLTO)/mongo.o $(OBJDIR_RELEASEANDTESTLTO)/main.o $(OBJDIR_RELEASEANDTESTLTO)/logging.o $(OBJDIR_RELEASEANDTESTLTO)/item.o $(OBJDIR_RELEASEANDTESTLTO)/http_beast_server.o $(OBJDIR_RELEASEANDTESTLTO)/event_manager.o $(OBJDIR_RELEASEANDTESTLTO)/duktape.o $(OBJDIR_RELEASEANDTESTLTO)/duk_object_functions.o $(OBJDIR_RELEASEANDTESTLTO)/duk_modules.o $(OBJDIR_RELEASEANDTESTLTO)/user.o $(OBJDIR_RELEASEANDTESTLTO)/unified_scripts.o $(OBJDIR_RELEASEANDTESTLTO)/time.o $(OBJDIR_RELEASEANDTESTLTO)/steam_auth.o $(OBJDIR_RELEASEANDTESTLTO)/stacktrace.o $(OBJDIR_RELEASEANDTESTLTO)/source_maps.o $(OBJDIR_RELEASEANDTESTLTO)/shared_duk_worker_state.o $(OBJDIR_RELEASEANDTESTLTO)/serialisables.o $(OBJDIR_RELEASEANDTESTLTO)/seccallers.o $(OBJDIR_RELEASEANDTESTLTO)/script_util.o $(OBJDIR_RELEASEANDTESTLTO)/script_metadata.o $(OBJDIR_RELEASEANDTESTLTO)/scheduled_tasks.o $(OBJDIR_RELEASEANDTESTLTO)/safe_thread.o $(OBJDIR_RELEASEANDTESTLTO)/rng.o $(OBJDIR_RELEASEANDTESTLTO)/deps/quickjs/quickjs.o $(OBJDIR_RELEASEANDTESTLTO)/deps/quickjs/libunicode.o $(OBJDIR_RELEASEANDTESTLTO)/deps/quickjs/libregexp.o $(OBJDIR_RELEASEANDTESTLTO)/deps/quickjs/libbf.o $(OBJDIR_RELEASEANDTESTLTO)/deps/quickjs/cutils.o $(OBJDIR_RELEASEANDTESTLTO)/deps/networking/serialisable.o $(OBJDIR_RELEASEANDTESTLTO)/deps/networking/networking.o $(OBJDIR_RELEASEANDTESTLTO)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASEANDTESTLTO)/db_storage_backend.o $(OBJDIR_RELEASEANDTESTLTO)/command_handler_state.o $(OBJDIR_RELEASEANDTESTLTO)/command_handler_fiber_backend.o $(OBJDIR_RELEASEANDTESTLTO)/command_handler.o $(OBJDIR_RELEASEANDTESTLTO)/auth.o $(OBJDIR_RELEASEANDTESTLTO)/ascii_helpers.o $(OBJDIR_RELEASEANDTESTLTO)/argument_object_qjs.o $(OBJDIR_RELEASEANDTESTLTO)/argument_object_duk.o $(OBJDIR_RELEASEANDTESTLTO)/argument_object.o $(OBJDIR_RELEASEANDTESTLTO)/duk_module_duktape.o $(OBJDIR_RELEASEANDTESTLTO)/deps/toolkit/clock.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/tutorial.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/structure_generation_2.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/structure.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/secret.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/one_shots.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/one_shot_core.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/npc_manager.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/node.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/low_level_structure.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/loot_gen.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/common.o
 
-OBJ_LINUXRELEASE = $(OBJDIR_LINUXRELEASE)/mongo.o $(OBJDIR_LINUXRELEASE)/reoccurring_task_handler.o $(OBJDIR_LINUXRELEASE)/rate_limiting.o $(OBJDIR_LINUXRELEASE)/quest_manager.o $(OBJDIR_LINUXRELEASE)/privileged_core_scripts.o $(OBJDIR_LINUXRELEASE)/perfmon.o $(OBJDIR_LINUXRELEASE)/non_user_task_thread.o $(OBJDIR_LINUXRELEASE)/rng.o $(OBJDIR_LINUXRELEASE)/main.o $(OBJDIR_LINUXRELEASE)/logging.o $(OBJDIR_LINUXRELEASE)/item.o $(OBJDIR_LINUXRELEASE)/http_beast_server.o $(OBJDIR_LINUXRELEASE)/event_manager.o $(OBJDIR_LINUXRELEASE)/duktape.o $(OBJDIR_LINUXRELEASE)/duk_object_functions.o $(OBJDIR_LINUXRELEASE)/shared_duk_worker_state.o $(OBJDIR_LINUXRELEASE)/user.o $(OBJDIR_LINUXRELEASE)/unified_scripts.o $(OBJDIR_LINUXRELEASE)/time.o $(OBJDIR_LINUXRELEASE)/steam_auth.o $(OBJDIR_LINUXRELEASE)/stacktrace.o $(OBJDIR_LINUXRELEASE)/source_maps.o $(OBJDIR_LINUXRELEASE)/duk_modules.o $(OBJDIR_LINUXRELEASE)/serialisables.o $(OBJDIR_LINUXRELEASE)/seccallers.o $(OBJDIR_LINUXRELEASE)/script_util.o $(OBJDIR_LINUXRELEASE)/script_metadata.o $(OBJDIR_LINUXRELEASE)/scheduled_tasks.o $(OBJDIR_LINUXRELEASE)/safe_thread.o $(OBJDIR_LINUXRELEASE)/command_handler_state.o $(OBJDIR_LINUXRELEASE)/deps/quickjs/quickjs.o $(OBJDIR_LINUXRELEASE)/deps/quickjs/libunicode.o $(OBJDIR_LINUXRELEASE)/deps/quickjs/libregexp.o $(OBJDIR_LINUXRELEASE)/deps/quickjs/libbf.o $(OBJDIR_LINUXRELEASE)/deps/quickjs/cutils.o $(OBJDIR_LINUXRELEASE)/deps/networking/serialisable.o $(OBJDIR_LINUXRELEASE)/deps/networking/networking.o $(OBJDIR_LINUXRELEASE)/deps/networking/beast_compilation_unit.o $(OBJDIR_LINUXRELEASE)/db_storage_backend.o $(OBJDIR_LINUXRELEASE)/command_handler_fiber_backend.o $(OBJDIR_LINUXRELEASE)/command_handler.o $(OBJDIR_LINUXRELEASE)/auth.o $(OBJDIR_LINUXRELEASE)/ascii_helpers.o $(OBJDIR_LINUXRELEASE)/argument_object_qjs.o $(OBJDIR_LINUXRELEASE)/argument_object_duk.o $(OBJDIR_LINUXRELEASE)/duk_module_duktape.o $(OBJDIR_LINUXRELEASE)/deps/toolkit/clock.o $(OBJDIR_LINUXRELEASE)/deps/secret/tutorial.o $(OBJDIR_LINUXRELEASE)/deps/secret/structure_generation_2.o $(OBJDIR_LINUXRELEASE)/deps/secret/structure.o $(OBJDIR_LINUXRELEASE)/deps/secret/special_user_scripts.o $(OBJDIR_LINUXRELEASE)/deps/secret/secret.o $(OBJDIR_LINUXRELEASE)/deps/secret/one_shots.o $(OBJDIR_LINUXRELEASE)/argument_object.o $(OBJDIR_LINUXRELEASE)/deps/secret/one_shot_core.o $(OBJDIR_LINUXRELEASE)/deps/secret/npc_manager.o $(OBJDIR_LINUXRELEASE)/deps/secret/node.o $(OBJDIR_LINUXRELEASE)/deps/secret/low_level_structure.o $(OBJDIR_LINUXRELEASE)/deps/secret/loot_gen.o $(OBJDIR_LINUXRELEASE)/deps/secret/initial_link_setup.o $(OBJDIR_LINUXRELEASE)/deps/secret/common.o
+OBJ_LINUXRELEASE = $(OBJDIR_LINUXRELEASE)/reoccurring_task_handler.o $(OBJDIR_LINUXRELEASE)/rate_limiting.o $(OBJDIR_LINUXRELEASE)/quest_manager.o $(OBJDIR_LINUXRELEASE)/privileged_core_scripts.o $(OBJDIR_LINUXRELEASE)/perfmon.o $(OBJDIR_LINUXRELEASE)/non_user_task_thread.o $(OBJDIR_LINUXRELEASE)/mongo.o $(OBJDIR_LINUXRELEASE)/main.o $(OBJDIR_LINUXRELEASE)/logging.o $(OBJDIR_LINUXRELEASE)/item.o $(OBJDIR_LINUXRELEASE)/http_beast_server.o $(OBJDIR_LINUXRELEASE)/event_manager.o $(OBJDIR_LINUXRELEASE)/duktape.o $(OBJDIR_LINUXRELEASE)/duk_object_functions.o $(OBJDIR_LINUXRELEASE)/duk_modules.o $(OBJDIR_LINUXRELEASE)/user.o $(OBJDIR_LINUXRELEASE)/unified_scripts.o $(OBJDIR_LINUXRELEASE)/time.o $(OBJDIR_LINUXRELEASE)/steam_auth.o $(OBJDIR_LINUXRELEASE)/stacktrace.o $(OBJDIR_LINUXRELEASE)/source_maps.o $(OBJDIR_LINUXRELEASE)/shared_duk_worker_state.o $(OBJDIR_LINUXRELEASE)/serialisables.o $(OBJDIR_LINUXRELEASE)/seccallers.o $(OBJDIR_LINUXRELEASE)/script_util.o $(OBJDIR_LINUXRELEASE)/script_metadata.o $(OBJDIR_LINUXRELEASE)/scheduled_tasks.o $(OBJDIR_LINUXRELEASE)/safe_thread.o $(OBJDIR_LINUXRELEASE)/rng.o $(OBJDIR_LINUXRELEASE)/deps/quickjs/quickjs.o $(OBJDIR_LINUXRELEASE)/deps/quickjs/libunicode.o $(OBJDIR_LINUXRELEASE)/deps/quickjs/libregexp.o $(OBJDIR_LINUXRELEASE)/deps/quickjs/libbf.o $(OBJDIR_LINUXRELEASE)/deps/quickjs/cutils.o $(OBJDIR_LINUXRELEASE)/deps/networking/serialisable.o $(OBJDIR_LINUXRELEASE)/deps/networking/networking.o $(OBJDIR_LINUXRELEASE)/deps/networking/beast_compilation_unit.o $(OBJDIR_LINUXRELEASE)/db_storage_backend.o $(OBJDIR_LINUXRELEASE)/command_handler_state.o $(OBJDIR_LINUXRELEASE)/command_handler_fiber_backend.o $(OBJDIR_LINUXRELEASE)/command_handler.o $(OBJDIR_LINUXRELEASE)/auth.o $(OBJDIR_LINUXRELEASE)/ascii_helpers.o $(OBJDIR_LINUXRELEASE)/argument_object_qjs.o $(OBJDIR_LINUXRELEASE)/argument_object_duk.o $(OBJDIR_LINUXRELEASE)/argument_object.o $(OBJDIR_LINUXRELEASE)/duk_module_duktape.o $(OBJDIR_LINUXRELEASE)/deps/toolkit/clock.o $(OBJDIR_LINUXRELEASE)/deps/secret/tutorial.o $(OBJDIR_LINUXRELEASE)/deps/secret/structure_generation_2.o $(OBJDIR_LINUXRELEASE)/deps/secret/structure.o $(OBJDIR_LINUXRELEASE)/deps/secret/special_user_scripts.o $(OBJDIR_LINUXRELEASE)/deps/secret/secret.o $(OBJDIR_LINUXRELEASE)/deps/secret/one_shots.o $(OBJDIR_LINUXRELEASE)/deps/secret/one_shot_core.o $(OBJDIR_LINUXRELEASE)/deps/secret/npc_manager.o $(OBJDIR_LINUXRELEASE)/deps/secret/node.o $(OBJDIR_LINUXRELEASE)/deps/secret/low_level_structure.o $(OBJDIR_LINUXRELEASE)/deps/secret/loot_gen.o $(OBJDIR_LINUXRELEASE)/deps/secret/initial_link_setup.o $(OBJDIR_LINUXRELEASE)/deps/secret/common.o
 
-OBJ_LINUXDEPLOY = $(OBJDIR_LINUXDEPLOY)/mongo.o $(OBJDIR_LINUXDEPLOY)/reoccurring_task_handler.o $(OBJDIR_LINUXDEPLOY)/rate_limiting.o $(OBJDIR_LINUXDEPLOY)/quest_manager.o $(OBJDIR_LINUXDEPLOY)/privileged_core_scripts.o $(OBJDIR_LINUXDEPLOY)/perfmon.o $(OBJDIR_LINUXDEPLOY)/non_user_task_thread.o $(OBJDIR_LINUXDEPLOY)/rng.o $(OBJDIR_LINUXDEPLOY)/main.o $(OBJDIR_LINUXDEPLOY)/logging.o $(OBJDIR_LINUXDEPLOY)/item.o $(OBJDIR_LINUXDEPLOY)/http_beast_server.o $(OBJDIR_LINUXDEPLOY)/event_manager.o $(OBJDIR_LINUXDEPLOY)/duktape.o $(OBJDIR_LINUXDEPLOY)/duk_object_functions.o $(OBJDIR_LINUXDEPLOY)/shared_duk_worker_state.o $(OBJDIR_LINUXDEPLOY)/user.o $(OBJDIR_LINUXDEPLOY)/unified_scripts.o $(OBJDIR_LINUXDEPLOY)/time.o $(OBJDIR_LINUXDEPLOY)/steam_auth.o $(OBJDIR_LINUXDEPLOY)/stacktrace.o $(OBJDIR_LINUXDEPLOY)/source_maps.o $(OBJDIR_LINUXDEPLOY)/duk_modules.o $(OBJDIR_LINUXDEPLOY)/serialisables.o $(OBJDIR_LINUXDEPLOY)/seccallers.o $(OBJDIR_LINUXDEPLOY)/script_util.o $(OBJDIR_LINUXDEPLOY)/script_metadata.o $(OBJDIR_LINUXDEPLOY)/scheduled_tasks.o $(OBJDIR_LINUXDEPLOY)/safe_thread.o $(OBJDIR_LINUXDEPLOY)/command_handler_state.o $(OBJDIR_LINUXDEPLOY)/deps/quickjs/quickjs.o $(OBJDIR_LINUXDEPLOY)/deps/quickjs/libunicode.o $(OBJDIR_LINUXDEPLOY)/deps/quickjs/libregexp.o $(OBJDIR_LINUXDEPLOY)/deps/quickjs/libbf.o $(OBJDIR_LINUXDEPLOY)/deps/quickjs/cutils.o $(OBJDIR_LINUXDEPLOY)/deps/networking/serialisable.o $(OBJDIR_LINUXDEPLOY)/deps/networking/networking.o $(OBJDIR_LINUXDEPLOY)/deps/networking/beast_compilation_unit.o $(OBJDIR_LINUXDEPLOY)/db_storage_backend.o $(OBJDIR_LINUXDEPLOY)/command_handler_fiber_backend.o $(OBJDIR_LINUXDEPLOY)/command_handler.o $(OBJDIR_LINUXDEPLOY)/auth.o $(OBJDIR_LINUXDEPLOY)/ascii_helpers.o $(OBJDIR_LINUXDEPLOY)/argument_object_qjs.o $(OBJDIR_LINUXDEPLOY)/argument_object_duk.o $(OBJDIR_LINUXDEPLOY)/duk_module_duktape.o $(OBJDIR_LINUXDEPLOY)/deps/toolkit/clock.o $(OBJDIR_LINUXDEPLOY)/deps/secret/tutorial.o $(OBJDIR_LINUXDEPLOY)/deps/secret/structure_generation_2.o $(OBJDIR_LINUXDEPLOY)/deps/secret/structure.o $(OBJDIR_LINUXDEPLOY)/deps/secret/special_user_scripts.o $(OBJDIR_LINUXDEPLOY)/deps/secret/secret.o $(OBJDIR_LINUXDEPLOY)/deps/secret/one_shots.o $(OBJDIR_LINUXDEPLOY)/argument_object.o $(OBJDIR_LINUXDEPLOY)/deps/secret/one_shot_core.o $(OBJDIR_LINUXDEPLOY)/deps/secret/npc_manager.o $(OBJDIR_LINUXDEPLOY)/deps/secret/node.o $(OBJDIR_LINUXDEPLOY)/deps/secret/low_level_structure.o $(OBJDIR_LINUXDEPLOY)/deps/secret/loot_gen.o $(OBJDIR_LINUXDEPLOY)/deps/secret/initial_link_setup.o $(OBJDIR_LINUXDEPLOY)/deps/secret/common.o
+OBJ_LINUXDEPLOY = $(OBJDIR_LINUXDEPLOY)/reoccurring_task_handler.o $(OBJDIR_LINUXDEPLOY)/rate_limiting.o $(OBJDIR_LINUXDEPLOY)/quest_manager.o $(OBJDIR_LINUXDEPLOY)/privileged_core_scripts.o $(OBJDIR_LINUXDEPLOY)/perfmon.o $(OBJDIR_LINUXDEPLOY)/non_user_task_thread.o $(OBJDIR_LINUXDEPLOY)/mongo.o $(OBJDIR_LINUXDEPLOY)/main.o $(OBJDIR_LINUXDEPLOY)/logging.o $(OBJDIR_LINUXDEPLOY)/item.o $(OBJDIR_LINUXDEPLOY)/http_beast_server.o $(OBJDIR_LINUXDEPLOY)/event_manager.o $(OBJDIR_LINUXDEPLOY)/duktape.o $(OBJDIR_LINUXDEPLOY)/duk_object_functions.o $(OBJDIR_LINUXDEPLOY)/duk_modules.o $(OBJDIR_LINUXDEPLOY)/user.o $(OBJDIR_LINUXDEPLOY)/unified_scripts.o $(OBJDIR_LINUXDEPLOY)/time.o $(OBJDIR_LINUXDEPLOY)/steam_auth.o $(OBJDIR_LINUXDEPLOY)/stacktrace.o $(OBJDIR_LINUXDEPLOY)/source_maps.o $(OBJDIR_LINUXDEPLOY)/shared_duk_worker_state.o $(OBJDIR_LINUXDEPLOY)/serialisables.o $(OBJDIR_LINUXDEPLOY)/seccallers.o $(OBJDIR_LINUXDEPLOY)/script_util.o $(OBJDIR_LINUXDEPLOY)/script_metadata.o $(OBJDIR_LINUXDEPLOY)/scheduled_tasks.o $(OBJDIR_LINUXDEPLOY)/safe_thread.o $(OBJDIR_LINUXDEPLOY)/rng.o $(OBJDIR_LINUXDEPLOY)/deps/quickjs/quickjs.o $(OBJDIR_LINUXDEPLOY)/deps/quickjs/libunicode.o $(OBJDIR_LINUXDEPLOY)/deps/quickjs/libregexp.o $(OBJDIR_LINUXDEPLOY)/deps/quickjs/libbf.o $(OBJDIR_LINUXDEPLOY)/deps/quickjs/cutils.o $(OBJDIR_LINUXDEPLOY)/deps/networking/serialisable.o $(OBJDIR_LINUXDEPLOY)/deps/networking/networking.o $(OBJDIR_LINUXDEPLOY)/deps/networking/beast_compilation_unit.o $(OBJDIR_LINUXDEPLOY)/db_storage_backend.o $(OBJDIR_LINUXDEPLOY)/command_handler_state.o $(OBJDIR_LINUXDEPLOY)/command_handler_fiber_backend.o $(OBJDIR_LINUXDEPLOY)/command_handler.o $(OBJDIR_LINUXDEPLOY)/auth.o $(OBJDIR_LINUXDEPLOY)/ascii_helpers.o $(OBJDIR_LINUXDEPLOY)/argument_object_qjs.o $(OBJDIR_LINUXDEPLOY)/argument_object_duk.o $(OBJDIR_LINUXDEPLOY)/argument_object.o $(OBJDIR_LINUXDEPLOY)/duk_module_duktape.o $(OBJDIR_LINUXDEPLOY)/deps/toolkit/clock.o $(OBJDIR_LINUXDEPLOY)/deps/secret/tutorial.o $(OBJDIR_LINUXDEPLOY)/deps/secret/structure_generation_2.o $(OBJDIR_LINUXDEPLOY)/deps/secret/structure.o $(OBJDIR_LINUXDEPLOY)/deps/secret/special_user_scripts.o $(OBJDIR_LINUXDEPLOY)/deps/secret/secret.o $(OBJDIR_LINUXDEPLOY)/deps/secret/one_shots.o $(OBJDIR_LINUXDEPLOY)/deps/secret/one_shot_core.o $(OBJDIR_LINUXDEPLOY)/deps/secret/npc_manager.o $(OBJDIR_LINUXDEPLOY)/deps/secret/node.o $(OBJDIR_LINUXDEPLOY)/deps/secret/low_level_structure.o $(OBJDIR_LINUXDEPLOY)/deps/secret/loot_gen.o $(OBJDIR_LINUXDEPLOY)/deps/secret/initial_link_setup.o $(OBJDIR_LINUXDEPLOY)/deps/secret/common.o
 
-OBJ_PROFILENOOPT = $(OBJDIR_PROFILENOOPT)/mongo.o $(OBJDIR_PROFILENOOPT)/reoccurring_task_handler.o $(OBJDIR_PROFILENOOPT)/rate_limiting.o $(OBJDIR_PROFILENOOPT)/quest_manager.o $(OBJDIR_PROFILENOOPT)/privileged_core_scripts.o $(OBJDIR_PROFILENOOPT)/perfmon.o $(OBJDIR_PROFILENOOPT)/non_user_task_thread.o $(OBJDIR_PROFILENOOPT)/rng.o $(OBJDIR_PROFILENOOPT)/main.o $(OBJDIR_PROFILENOOPT)/logging.o $(OBJDIR_PROFILENOOPT)/item.o $(OBJDIR_PROFILENOOPT)/http_beast_server.o $(OBJDIR_PROFILENOOPT)/event_manager.o $(OBJDIR_PROFILENOOPT)/duktape.o $(OBJDIR_PROFILENOOPT)/duk_object_functions.o $(OBJDIR_PROFILENOOPT)/shared_duk_worker_state.o $(OBJDIR_PROFILENOOPT)/user.o $(OBJDIR_PROFILENOOPT)/unified_scripts.o $(OBJDIR_PROFILENOOPT)/time.o $(OBJDIR_PROFILENOOPT)/steam_auth.o $(OBJDIR_PROFILENOOPT)/stacktrace.o $(OBJDIR_PROFILENOOPT)/source_maps.o $(OBJDIR_PROFILENOOPT)/duk_modules.o $(OBJDIR_PROFILENOOPT)/serialisables.o $(OBJDIR_PROFILENOOPT)/seccallers.o $(OBJDIR_PROFILENOOPT)/script_util.o $(OBJDIR_PROFILENOOPT)/script_metadata.o $(OBJDIR_PROFILENOOPT)/scheduled_tasks.o $(OBJDIR_PROFILENOOPT)/safe_thread.o $(OBJDIR_PROFILENOOPT)/command_handler_state.o $(OBJDIR_PROFILENOOPT)/deps/quickjs/quickjs.o $(OBJDIR_PROFILENOOPT)/deps/quickjs/libunicode.o $(OBJDIR_PROFILENOOPT)/deps/quickjs/libregexp.o $(OBJDIR_PROFILENOOPT)/deps/quickjs/libbf.o $(OBJDIR_PROFILENOOPT)/deps/quickjs/cutils.o $(OBJDIR_PROFILENOOPT)/deps/networking/serialisable.o $(OBJDIR_PROFILENOOPT)/deps/networking/networking.o $(OBJDIR_PROFILENOOPT)/deps/networking/beast_compilation_unit.o $(OBJDIR_PROFILENOOPT)/db_storage_backend.o $(OBJDIR_PROFILENOOPT)/command_handler_fiber_backend.o $(OBJDIR_PROFILENOOPT)/command_handler.o $(OBJDIR_PROFILENOOPT)/auth.o $(OBJDIR_PROFILENOOPT)/ascii_helpers.o $(OBJDIR_PROFILENOOPT)/argument_object_qjs.o $(OBJDIR_PROFILENOOPT)/argument_object_duk.o $(OBJDIR_PROFILENOOPT)/duk_module_duktape.o $(OBJDIR_PROFILENOOPT)/deps/toolkit/clock.o $(OBJDIR_PROFILENOOPT)/deps/secret/tutorial.o $(OBJDIR_PROFILENOOPT)/deps/secret/structure_generation_2.o $(OBJDIR_PROFILENOOPT)/deps/secret/structure.o $(OBJDIR_PROFILENOOPT)/deps/secret/special_user_scripts.o $(OBJDIR_PROFILENOOPT)/deps/secret/secret.o $(OBJDIR_PROFILENOOPT)/deps/secret/one_shots.o $(OBJDIR_PROFILENOOPT)/argument_object.o $(OBJDIR_PROFILENOOPT)/deps/secret/one_shot_core.o $(OBJDIR_PROFILENOOPT)/deps/secret/npc_manager.o $(OBJDIR_PROFILENOOPT)/deps/secret/node.o $(OBJDIR_PROFILENOOPT)/deps/secret/low_level_structure.o $(OBJDIR_PROFILENOOPT)/deps/secret/loot_gen.o $(OBJDIR_PROFILENOOPT)/deps/secret/initial_link_setup.o $(OBJDIR_PROFILENOOPT)/deps/secret/common.o
+OBJ_PROFILENOOPT = $(OBJDIR_PROFILENOOPT)/reoccurring_task_handler.o $(OBJDIR_PROFILENOOPT)/rate_limiting.o $(OBJDIR_PROFILENOOPT)/quest_manager.o $(OBJDIR_PROFILENOOPT)/privileged_core_scripts.o $(OBJDIR_PROFILENOOPT)/perfmon.o $(OBJDIR_PROFILENOOPT)/non_user_task_thread.o $(OBJDIR_PROFILENOOPT)/mongo.o $(OBJDIR_PROFILENOOPT)/main.o $(OBJDIR_PROFILENOOPT)/logging.o $(OBJDIR_PROFILENOOPT)/item.o $(OBJDIR_PROFILENOOPT)/http_beast_server.o $(OBJDIR_PROFILENOOPT)/event_manager.o $(OBJDIR_PROFILENOOPT)/duktape.o $(OBJDIR_PROFILENOOPT)/duk_object_functions.o $(OBJDIR_PROFILENOOPT)/duk_modules.o $(OBJDIR_PROFILENOOPT)/user.o $(OBJDIR_PROFILENOOPT)/unified_scripts.o $(OBJDIR_PROFILENOOPT)/time.o $(OBJDIR_PROFILENOOPT)/steam_auth.o $(OBJDIR_PROFILENOOPT)/stacktrace.o $(OBJDIR_PROFILENOOPT)/source_maps.o $(OBJDIR_PROFILENOOPT)/shared_duk_worker_state.o $(OBJDIR_PROFILENOOPT)/serialisables.o $(OBJDIR_PROFILENOOPT)/seccallers.o $(OBJDIR_PROFILENOOPT)/script_util.o $(OBJDIR_PROFILENOOPT)/script_metadata.o $(OBJDIR_PROFILENOOPT)/scheduled_tasks.o $(OBJDIR_PROFILENOOPT)/safe_thread.o $(OBJDIR_PROFILENOOPT)/rng.o $(OBJDIR_PROFILENOOPT)/deps/quickjs/quickjs.o $(OBJDIR_PROFILENOOPT)/deps/quickjs/libunicode.o $(OBJDIR_PROFILENOOPT)/deps/quickjs/libregexp.o $(OBJDIR_PROFILENOOPT)/deps/quickjs/libbf.o $(OBJDIR_PROFILENOOPT)/deps/quickjs/cutils.o $(OBJDIR_PROFILENOOPT)/deps/networking/serialisable.o $(OBJDIR_PROFILENOOPT)/deps/networking/networking.o $(OBJDIR_PROFILENOOPT)/deps/networking/beast_compilation_unit.o $(OBJDIR_PROFILENOOPT)/db_storage_backend.o $(OBJDIR_PROFILENOOPT)/command_handler_state.o $(OBJDIR_PROFILENOOPT)/command_handler_fiber_backend.o $(OBJDIR_PROFILENOOPT)/command_handler.o $(OBJDIR_PROFILENOOPT)/auth.o $(OBJDIR_PROFILENOOPT)/ascii_helpers.o $(OBJDIR_PROFILENOOPT)/argument_object_qjs.o $(OBJDIR_PROFILENOOPT)/argument_object_duk.o $(OBJDIR_PROFILENOOPT)/argument_object.o $(OBJDIR_PROFILENOOPT)/duk_module_duktape.o $(OBJDIR_PROFILENOOPT)/deps/toolkit/clock.o $(OBJDIR_PROFILENOOPT)/deps/secret/tutorial.o $(OBJDIR_PROFILENOOPT)/deps/secret/structure_generation_2.o $(OBJDIR_PROFILENOOPT)/deps/secret/structure.o $(OBJDIR_PROFILENOOPT)/deps/secret/special_user_scripts.o $(OBJDIR_PROFILENOOPT)/deps/secret/secret.o $(OBJDIR_PROFILENOOPT)/deps/secret/one_shots.o $(OBJDIR_PROFILENOOPT)/deps/secret/one_shot_core.o $(OBJDIR_PROFILENOOPT)/deps/secret/npc_manager.o $(OBJDIR_PROFILENOOPT)/deps/secret/node.o $(OBJDIR_PROFILENOOPT)/deps/secret/low_level_structure.o $(OBJDIR_PROFILENOOPT)/deps/secret/loot_gen.o $(OBJDIR_PROFILENOOPT)/deps/secret/initial_link_setup.o $(OBJDIR_PROFILENOOPT)/deps/secret/common.o
 
-OBJ_RELEASENOSYMFIBERS = $(OBJDIR_RELEASENOSYMFIBERS)/mongo.o $(OBJDIR_RELEASENOSYMFIBERS)/reoccurring_task_handler.o $(OBJDIR_RELEASENOSYMFIBERS)/rate_limiting.o $(OBJDIR_RELEASENOSYMFIBERS)/quest_manager.o $(OBJDIR_RELEASENOSYMFIBERS)/privileged_core_scripts.o $(OBJDIR_RELEASENOSYMFIBERS)/perfmon.o $(OBJDIR_RELEASENOSYMFIBERS)/non_user_task_thread.o $(OBJDIR_RELEASENOSYMFIBERS)/rng.o $(OBJDIR_RELEASENOSYMFIBERS)/main.o $(OBJDIR_RELEASENOSYMFIBERS)/logging.o $(OBJDIR_RELEASENOSYMFIBERS)/item.o $(OBJDIR_RELEASENOSYMFIBERS)/http_beast_server.o $(OBJDIR_RELEASENOSYMFIBERS)/event_manager.o $(OBJDIR_RELEASENOSYMFIBERS)/duktape.o $(OBJDIR_RELEASENOSYMFIBERS)/duk_object_functions.o $(OBJDIR_RELEASENOSYMFIBERS)/shared_duk_worker_state.o $(OBJDIR_RELEASENOSYMFIBERS)/user.o $(OBJDIR_RELEASENOSYMFIBERS)/unified_scripts.o $(OBJDIR_RELEASENOSYMFIBERS)/time.o $(OBJDIR_RELEASENOSYMFIBERS)/steam_auth.o $(OBJDIR_RELEASENOSYMFIBERS)/stacktrace.o $(OBJDIR_RELEASENOSYMFIBERS)/source_maps.o $(OBJDIR_RELEASENOSYMFIBERS)/duk_modules.o $(OBJDIR_RELEASENOSYMFIBERS)/serialisables.o $(OBJDIR_RELEASENOSYMFIBERS)/seccallers.o $(OBJDIR_RELEASENOSYMFIBERS)/script_util.o $(OBJDIR_RELEASENOSYMFIBERS)/script_metadata.o $(OBJDIR_RELEASENOSYMFIBERS)/scheduled_tasks.o $(OBJDIR_RELEASENOSYMFIBERS)/safe_thread.o $(OBJDIR_RELEASENOSYMFIBERS)/command_handler_state.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/quickjs/quickjs.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/quickjs/libunicode.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/quickjs/libregexp.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/quickjs/libbf.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/quickjs/cutils.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/networking/serialisable.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/networking/networking.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASENOSYMFIBERS)/db_storage_backend.o $(OBJDIR_RELEASENOSYMFIBERS)/command_handler_fiber_backend.o $(OBJDIR_RELEASENOSYMFIBERS)/command_handler.o $(OBJDIR_RELEASENOSYMFIBERS)/auth.o $(OBJDIR_RELEASENOSYMFIBERS)/ascii_helpers.o $(OBJDIR_RELEASENOSYMFIBERS)/argument_object_qjs.o $(OBJDIR_RELEASENOSYMFIBERS)/argument_object_duk.o $(OBJDIR_RELEASENOSYMFIBERS)/duk_module_duktape.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/toolkit/clock.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/tutorial.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/structure_generation_2.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/structure.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/secret.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/one_shots.o $(OBJDIR_RELEASENOSYMFIBERS)/argument_object.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/one_shot_core.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/npc_manager.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/node.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/low_level_structure.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/loot_gen.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/common.o
+OBJ_RELEASENOSYMFIBERS = $(OBJDIR_RELEASENOSYMFIBERS)/reoccurring_task_handler.o $(OBJDIR_RELEASENOSYMFIBERS)/rate_limiting.o $(OBJDIR_RELEASENOSYMFIBERS)/quest_manager.o $(OBJDIR_RELEASENOSYMFIBERS)/privileged_core_scripts.o $(OBJDIR_RELEASENOSYMFIBERS)/perfmon.o $(OBJDIR_RELEASENOSYMFIBERS)/non_user_task_thread.o $(OBJDIR_RELEASENOSYMFIBERS)/mongo.o $(OBJDIR_RELEASENOSYMFIBERS)/main.o $(OBJDIR_RELEASENOSYMFIBERS)/logging.o $(OBJDIR_RELEASENOSYMFIBERS)/item.o $(OBJDIR_RELEASENOSYMFIBERS)/http_beast_server.o $(OBJDIR_RELEASENOSYMFIBERS)/event_manager.o $(OBJDIR_RELEASENOSYMFIBERS)/duktape.o $(OBJDIR_RELEASENOSYMFIBERS)/duk_object_functions.o $(OBJDIR_RELEASENOSYMFIBERS)/duk_modules.o $(OBJDIR_RELEASENOSYMFIBERS)/user.o $(OBJDIR_RELEASENOSYMFIBERS)/unified_scripts.o $(OBJDIR_RELEASENOSYMFIBERS)/time.o $(OBJDIR_RELEASENOSYMFIBERS)/steam_auth.o $(OBJDIR_RELEASENOSYMFIBERS)/stacktrace.o $(OBJDIR_RELEASENOSYMFIBERS)/source_maps.o $(OBJDIR_RELEASENOSYMFIBERS)/shared_duk_worker_state.o $(OBJDIR_RELEASENOSYMFIBERS)/serialisables.o $(OBJDIR_RELEASENOSYMFIBERS)/seccallers.o $(OBJDIR_RELEASENOSYMFIBERS)/script_util.o $(OBJDIR_RELEASENOSYMFIBERS)/script_metadata.o $(OBJDIR_RELEASENOSYMFIBERS)/scheduled_tasks.o $(OBJDIR_RELEASENOSYMFIBERS)/safe_thread.o $(OBJDIR_RELEASENOSYMFIBERS)/rng.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/quickjs/quickjs.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/quickjs/libunicode.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/quickjs/libregexp.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/quickjs/libbf.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/quickjs/cutils.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/networking/serialisable.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/networking/networking.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/networking/beast_compilation_unit.o $(OBJDIR_RELEASENOSYMFIBERS)/db_storage_backend.o $(OBJDIR_RELEASENOSYMFIBERS)/command_handler_state.o $(OBJDIR_RELEASENOSYMFIBERS)/command_handler_fiber_backend.o $(OBJDIR_RELEASENOSYMFIBERS)/command_handler.o $(OBJDIR_RELEASENOSYMFIBERS)/auth.o $(OBJDIR_RELEASENOSYMFIBERS)/ascii_helpers.o $(OBJDIR_RELEASENOSYMFIBERS)/argument_object_qjs.o $(OBJDIR_RELEASENOSYMFIBERS)/argument_object_duk.o $(OBJDIR_RELEASENOSYMFIBERS)/argument_object.o $(OBJDIR_RELEASENOSYMFIBERS)/duk_module_duktape.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/toolkit/clock.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/tutorial.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/structure_generation_2.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/structure.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/special_user_scripts.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/secret.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/one_shots.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/one_shot_core.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/npc_manager.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/node.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/low_level_structure.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/loot_gen.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/initial_link_setup.o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/common.o
 
-OBJ_DEBUGFIBERS = $(OBJDIR_DEBUGFIBERS)/mongo.o $(OBJDIR_DEBUGFIBERS)/reoccurring_task_handler.o $(OBJDIR_DEBUGFIBERS)/rate_limiting.o $(OBJDIR_DEBUGFIBERS)/quest_manager.o $(OBJDIR_DEBUGFIBERS)/privileged_core_scripts.o $(OBJDIR_DEBUGFIBERS)/perfmon.o $(OBJDIR_DEBUGFIBERS)/non_user_task_thread.o $(OBJDIR_DEBUGFIBERS)/rng.o $(OBJDIR_DEBUGFIBERS)/main.o $(OBJDIR_DEBUGFIBERS)/logging.o $(OBJDIR_DEBUGFIBERS)/item.o $(OBJDIR_DEBUGFIBERS)/http_beast_server.o $(OBJDIR_DEBUGFIBERS)/event_manager.o $(OBJDIR_DEBUGFIBERS)/duktape.o $(OBJDIR_DEBUGFIBERS)/duk_object_functions.o $(OBJDIR_DEBUGFIBERS)/shared_duk_worker_state.o $(OBJDIR_DEBUGFIBERS)/user.o $(OBJDIR_DEBUGFIBERS)/unified_scripts.o $(OBJDIR_DEBUGFIBERS)/time.o $(OBJDIR_DEBUGFIBERS)/steam_auth.o $(OBJDIR_DEBUGFIBERS)/stacktrace.o $(OBJDIR_DEBUGFIBERS)/source_maps.o $(OBJDIR_DEBUGFIBERS)/duk_modules.o $(OBJDIR_DEBUGFIBERS)/serialisables.o $(OBJDIR_DEBUGFIBERS)/seccallers.o $(OBJDIR_DEBUGFIBERS)/script_util.o $(OBJDIR_DEBUGFIBERS)/script_metadata.o $(OBJDIR_DEBUGFIBERS)/scheduled_tasks.o $(OBJDIR_DEBUGFIBERS)/safe_thread.o $(OBJDIR_DEBUGFIBERS)/command_handler_state.o $(OBJDIR_DEBUGFIBERS)/deps/quickjs/quickjs.o $(OBJDIR_DEBUGFIBERS)/deps/quickjs/libunicode.o $(OBJDIR_DEBUGFIBERS)/deps/quickjs/libregexp.o $(OBJDIR_DEBUGFIBERS)/deps/quickjs/libbf.o $(OBJDIR_DEBUGFIBERS)/deps/quickjs/cutils.o $(OBJDIR_DEBUGFIBERS)/deps/networking/serialisable.o $(OBJDIR_DEBUGFIBERS)/deps/networking/networking.o $(OBJDIR_DEBUGFIBERS)/deps/networking/beast_compilation_unit.o $(OBJDIR_DEBUGFIBERS)/db_storage_backend.o $(OBJDIR_DEBUGFIBERS)/command_handler_fiber_backend.o $(OBJDIR_DEBUGFIBERS)/command_handler.o $(OBJDIR_DEBUGFIBERS)/auth.o $(OBJDIR_DEBUGFIBERS)/ascii_helpers.o $(OBJDIR_DEBUGFIBERS)/argument_object_qjs.o $(OBJDIR_DEBUGFIBERS)/argument_object_duk.o $(OBJDIR_DEBUGFIBERS)/duk_module_duktape.o $(OBJDIR_DEBUGFIBERS)/deps/toolkit/clock.o $(OBJDIR_DEBUGFIBERS)/deps/secret/tutorial.o $(OBJDIR_DEBUGFIBERS)/deps/secret/structure_generation_2.o $(OBJDIR_DEBUGFIBERS)/deps/secret/structure.o $(OBJDIR_DEBUGFIBERS)/deps/secret/special_user_scripts.o $(OBJDIR_DEBUGFIBERS)/deps/secret/secret.o $(OBJDIR_DEBUGFIBERS)/deps/secret/one_shots.o $(OBJDIR_DEBUGFIBERS)/argument_object.o $(OBJDIR_DEBUGFIBERS)/deps/secret/one_shot_core.o $(OBJDIR_DEBUGFIBERS)/deps/secret/npc_manager.o $(OBJDIR_DEBUGFIBERS)/deps/secret/node.o $(OBJDIR_DEBUGFIBERS)/deps/secret/low_level_structure.o $(OBJDIR_DEBUGFIBERS)/deps/secret/loot_gen.o $(OBJDIR_DEBUGFIBERS)/deps/secret/initial_link_setup.o $(OBJDIR_DEBUGFIBERS)/deps/secret/common.o
+OBJ_DEBUGFIBERS = $(OBJDIR_DEBUGFIBERS)/reoccurring_task_handler.o $(OBJDIR_DEBUGFIBERS)/rate_limiting.o $(OBJDIR_DEBUGFIBERS)/quest_manager.o $(OBJDIR_DEBUGFIBERS)/privileged_core_scripts.o $(OBJDIR_DEBUGFIBERS)/perfmon.o $(OBJDIR_DEBUGFIBERS)/non_user_task_thread.o $(OBJDIR_DEBUGFIBERS)/mongo.o $(OBJDIR_DEBUGFIBERS)/main.o $(OBJDIR_DEBUGFIBERS)/logging.o $(OBJDIR_DEBUGFIBERS)/item.o $(OBJDIR_DEBUGFIBERS)/http_beast_server.o $(OBJDIR_DEBUGFIBERS)/event_manager.o $(OBJDIR_DEBUGFIBERS)/duktape.o $(OBJDIR_DEBUGFIBERS)/duk_object_functions.o $(OBJDIR_DEBUGFIBERS)/duk_modules.o $(OBJDIR_DEBUGFIBERS)/user.o $(OBJDIR_DEBUGFIBERS)/unified_scripts.o $(OBJDIR_DEBUGFIBERS)/time.o $(OBJDIR_DEBUGFIBERS)/steam_auth.o $(OBJDIR_DEBUGFIBERS)/stacktrace.o $(OBJDIR_DEBUGFIBERS)/source_maps.o $(OBJDIR_DEBUGFIBERS)/shared_duk_worker_state.o $(OBJDIR_DEBUGFIBERS)/serialisables.o $(OBJDIR_DEBUGFIBERS)/seccallers.o $(OBJDIR_DEBUGFIBERS)/script_util.o $(OBJDIR_DEBUGFIBERS)/script_metadata.o $(OBJDIR_DEBUGFIBERS)/scheduled_tasks.o $(OBJDIR_DEBUGFIBERS)/safe_thread.o $(OBJDIR_DEBUGFIBERS)/rng.o $(OBJDIR_DEBUGFIBERS)/deps/quickjs/quickjs.o $(OBJDIR_DEBUGFIBERS)/deps/quickjs/libunicode.o $(OBJDIR_DEBUGFIBERS)/deps/quickjs/libregexp.o $(OBJDIR_DEBUGFIBERS)/deps/quickjs/libbf.o $(OBJDIR_DEBUGFIBERS)/deps/quickjs/cutils.o $(OBJDIR_DEBUGFIBERS)/deps/networking/serialisable.o $(OBJDIR_DEBUGFIBERS)/deps/networking/networking.o $(OBJDIR_DEBUGFIBERS)/deps/networking/beast_compilation_unit.o $(OBJDIR_DEBUGFIBERS)/db_storage_backend.o $(OBJDIR_DEBUGFIBERS)/command_handler_state.o $(OBJDIR_DEBUGFIBERS)/command_handler_fiber_backend.o $(OBJDIR_DEBUGFIBERS)/command_handler.o $(OBJDIR_DEBUGFIBERS)/auth.o $(OBJDIR_DEBUGFIBERS)/ascii_helpers.o $(OBJDIR_DEBUGFIBERS)/argument_object_qjs.o $(OBJDIR_DEBUGFIBERS)/argument_object_duk.o $(OBJDIR_DEBUGFIBERS)/argument_object.o $(OBJDIR_DEBUGFIBERS)/duk_module_duktape.o $(OBJDIR_DEBUGFIBERS)/deps/toolkit/clock.o $(OBJDIR_DEBUGFIBERS)/deps/secret/tutorial.o $(OBJDIR_DEBUGFIBERS)/deps/secret/structure_generation_2.o $(OBJDIR_DEBUGFIBERS)/deps/secret/structure.o $(OBJDIR_DEBUGFIBERS)/deps/secret/special_user_scripts.o $(OBJDIR_DEBUGFIBERS)/deps/secret/secret.o $(OBJDIR_DEBUGFIBERS)/deps/secret/one_shots.o $(OBJDIR_DEBUGFIBERS)/deps/secret/one_shot_core.o $(OBJDIR_DEBUGFIBERS)/deps/secret/npc_manager.o $(OBJDIR_DEBUGFIBERS)/deps/secret/node.o $(OBJDIR_DEBUGFIBERS)/deps/secret/low_level_structure.o $(OBJDIR_DEBUGFIBERS)/deps/secret/loot_gen.o $(OBJDIR_DEBUGFIBERS)/deps/secret/initial_link_setup.o $(OBJDIR_DEBUGFIBERS)/deps/secret/common.o
 
 all: debug release releasenosymbols profile deploy releaseandtest debugbacktrace debugtest dmimic releaseandtestwithdebuginfo rdclang rt_prof releaseandtestlto linuxrelease linuxdeploy profilenoopt releasenosymfibers debugfibers
 
@@ -258,9 +258,6 @@ debug: before_debug out_debug after_debug
 out_debug: before_debug $(OBJ_DEBUG) $(DEP_DEBUG)
 	$(LD) $(LIBDIR_DEBUG) -o $(OUT_DEBUG) $(OBJ_DEBUG)  $(LDFLAGS_DEBUG) $(LIB_DEBUG)
 
-$(OBJDIR_DEBUG)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c mongo.cpp -o $(OBJDIR_DEBUG)/mongo.o
-
 $(OBJDIR_DEBUG)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c reoccurring_task_handler.cpp -o $(OBJDIR_DEBUG)/reoccurring_task_handler.o
 
@@ -279,8 +276,8 @@ $(OBJDIR_DEBUG)/perfmon.o: perfmon.cpp
 $(OBJDIR_DEBUG)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c non_user_task_thread.cpp -o $(OBJDIR_DEBUG)/non_user_task_thread.o
 
-$(OBJDIR_DEBUG)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c rng.cpp -o $(OBJDIR_DEBUG)/rng.o
+$(OBJDIR_DEBUG)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c mongo.cpp -o $(OBJDIR_DEBUG)/mongo.o
 
 $(OBJDIR_DEBUG)/main.o: main.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c main.cpp -o $(OBJDIR_DEBUG)/main.o
@@ -303,8 +300,8 @@ $(OBJDIR_DEBUG)/duktape.o: duktape.cpp
 $(OBJDIR_DEBUG)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c duk_object_functions.cpp -o $(OBJDIR_DEBUG)/duk_object_functions.o
 
-$(OBJDIR_DEBUG)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c shared_duk_worker_state.cpp -o $(OBJDIR_DEBUG)/shared_duk_worker_state.o
+$(OBJDIR_DEBUG)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c duk_modules.cpp -o $(OBJDIR_DEBUG)/duk_modules.o
 
 $(OBJDIR_DEBUG)/user.o: user.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c user.cpp -o $(OBJDIR_DEBUG)/user.o
@@ -324,8 +321,8 @@ $(OBJDIR_DEBUG)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_DEBUG)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c source_maps.cpp -o $(OBJDIR_DEBUG)/source_maps.o
 
-$(OBJDIR_DEBUG)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c duk_modules.cpp -o $(OBJDIR_DEBUG)/duk_modules.o
+$(OBJDIR_DEBUG)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c shared_duk_worker_state.cpp -o $(OBJDIR_DEBUG)/shared_duk_worker_state.o
 
 $(OBJDIR_DEBUG)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c serialisables.cpp -o $(OBJDIR_DEBUG)/serialisables.o
@@ -345,8 +342,8 @@ $(OBJDIR_DEBUG)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_DEBUG)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c safe_thread.cpp -o $(OBJDIR_DEBUG)/safe_thread.o
 
-$(OBJDIR_DEBUG)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c command_handler_state.cpp -o $(OBJDIR_DEBUG)/command_handler_state.o
+$(OBJDIR_DEBUG)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c rng.cpp -o $(OBJDIR_DEBUG)/rng.o
 
 $(OBJDIR_DEBUG)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_DEBUG) $(INC_DEBUG) -c deps/quickjs/quickjs.c -o $(OBJDIR_DEBUG)/deps/quickjs/quickjs.o
@@ -375,6 +372,9 @@ $(OBJDIR_DEBUG)/deps/networking/beast_compilation_unit.o: deps/networking/beast_
 $(OBJDIR_DEBUG)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c db_storage_backend.cpp -o $(OBJDIR_DEBUG)/db_storage_backend.o
 
+$(OBJDIR_DEBUG)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c command_handler_state.cpp -o $(OBJDIR_DEBUG)/command_handler_state.o
+
 $(OBJDIR_DEBUG)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c command_handler_fiber_backend.cpp -o $(OBJDIR_DEBUG)/command_handler_fiber_backend.o
 
@@ -392,6 +392,9 @@ $(OBJDIR_DEBUG)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_DEBUG)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c argument_object_duk.cpp -o $(OBJDIR_DEBUG)/argument_object_duk.o
+
+$(OBJDIR_DEBUG)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c argument_object.cpp -o $(OBJDIR_DEBUG)/argument_object.o
 
 $(OBJDIR_DEBUG)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c duk_module_duktape.cpp -o $(OBJDIR_DEBUG)/duk_module_duktape.o
@@ -416,9 +419,6 @@ $(OBJDIR_DEBUG)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_DEBUG)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c deps/secret/one_shots.cpp -o $(OBJDIR_DEBUG)/deps/secret/one_shots.o
-
-$(OBJDIR_DEBUG)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c argument_object.cpp -o $(OBJDIR_DEBUG)/argument_object.o
 
 $(OBJDIR_DEBUG)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_DEBUG)/deps/secret/one_shot_core.o
@@ -465,9 +465,6 @@ release: before_release out_release after_release
 out_release: before_release $(OBJ_RELEASE) $(DEP_RELEASE)
 	$(LD) $(LIBDIR_RELEASE) -o $(OUT_RELEASE) $(OBJ_RELEASE)  $(LDFLAGS_RELEASE) $(LIB_RELEASE)
 
-$(OBJDIR_RELEASE)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c mongo.cpp -o $(OBJDIR_RELEASE)/mongo.o
-
 $(OBJDIR_RELEASE)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c reoccurring_task_handler.cpp -o $(OBJDIR_RELEASE)/reoccurring_task_handler.o
 
@@ -486,8 +483,8 @@ $(OBJDIR_RELEASE)/perfmon.o: perfmon.cpp
 $(OBJDIR_RELEASE)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c non_user_task_thread.cpp -o $(OBJDIR_RELEASE)/non_user_task_thread.o
 
-$(OBJDIR_RELEASE)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c rng.cpp -o $(OBJDIR_RELEASE)/rng.o
+$(OBJDIR_RELEASE)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c mongo.cpp -o $(OBJDIR_RELEASE)/mongo.o
 
 $(OBJDIR_RELEASE)/main.o: main.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c main.cpp -o $(OBJDIR_RELEASE)/main.o
@@ -510,8 +507,8 @@ $(OBJDIR_RELEASE)/duktape.o: duktape.cpp
 $(OBJDIR_RELEASE)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c duk_object_functions.cpp -o $(OBJDIR_RELEASE)/duk_object_functions.o
 
-$(OBJDIR_RELEASE)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c shared_duk_worker_state.cpp -o $(OBJDIR_RELEASE)/shared_duk_worker_state.o
+$(OBJDIR_RELEASE)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c duk_modules.cpp -o $(OBJDIR_RELEASE)/duk_modules.o
 
 $(OBJDIR_RELEASE)/user.o: user.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c user.cpp -o $(OBJDIR_RELEASE)/user.o
@@ -531,8 +528,8 @@ $(OBJDIR_RELEASE)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_RELEASE)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c source_maps.cpp -o $(OBJDIR_RELEASE)/source_maps.o
 
-$(OBJDIR_RELEASE)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c duk_modules.cpp -o $(OBJDIR_RELEASE)/duk_modules.o
+$(OBJDIR_RELEASE)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c shared_duk_worker_state.cpp -o $(OBJDIR_RELEASE)/shared_duk_worker_state.o
 
 $(OBJDIR_RELEASE)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c serialisables.cpp -o $(OBJDIR_RELEASE)/serialisables.o
@@ -552,8 +549,8 @@ $(OBJDIR_RELEASE)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_RELEASE)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c safe_thread.cpp -o $(OBJDIR_RELEASE)/safe_thread.o
 
-$(OBJDIR_RELEASE)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c command_handler_state.cpp -o $(OBJDIR_RELEASE)/command_handler_state.o
+$(OBJDIR_RELEASE)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c rng.cpp -o $(OBJDIR_RELEASE)/rng.o
 
 $(OBJDIR_RELEASE)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_RELEASE) $(INC_RELEASE) -c deps/quickjs/quickjs.c -o $(OBJDIR_RELEASE)/deps/quickjs/quickjs.o
@@ -582,6 +579,9 @@ $(OBJDIR_RELEASE)/deps/networking/beast_compilation_unit.o: deps/networking/beas
 $(OBJDIR_RELEASE)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c db_storage_backend.cpp -o $(OBJDIR_RELEASE)/db_storage_backend.o
 
+$(OBJDIR_RELEASE)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c command_handler_state.cpp -o $(OBJDIR_RELEASE)/command_handler_state.o
+
 $(OBJDIR_RELEASE)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c command_handler_fiber_backend.cpp -o $(OBJDIR_RELEASE)/command_handler_fiber_backend.o
 
@@ -599,6 +599,9 @@ $(OBJDIR_RELEASE)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_RELEASE)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c argument_object_duk.cpp -o $(OBJDIR_RELEASE)/argument_object_duk.o
+
+$(OBJDIR_RELEASE)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c argument_object.cpp -o $(OBJDIR_RELEASE)/argument_object.o
 
 $(OBJDIR_RELEASE)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c duk_module_duktape.cpp -o $(OBJDIR_RELEASE)/duk_module_duktape.o
@@ -623,9 +626,6 @@ $(OBJDIR_RELEASE)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_RELEASE)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c deps/secret/one_shots.cpp -o $(OBJDIR_RELEASE)/deps/secret/one_shots.o
-
-$(OBJDIR_RELEASE)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c argument_object.cpp -o $(OBJDIR_RELEASE)/argument_object.o
 
 $(OBJDIR_RELEASE)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_RELEASE)/deps/secret/one_shot_core.o
@@ -672,9 +672,6 @@ releasenosymbols: before_releasenosymbols out_releasenosymbols after_releasenosy
 out_releasenosymbols: before_releasenosymbols $(OBJ_RELEASENOSYMBOLS) $(DEP_RELEASENOSYMBOLS)
 	$(LD) $(LIBDIR_RELEASENOSYMBOLS) -o $(OUT_RELEASENOSYMBOLS) $(OBJ_RELEASENOSYMBOLS)  $(LDFLAGS_RELEASENOSYMBOLS) $(LIB_RELEASENOSYMBOLS)
 
-$(OBJDIR_RELEASENOSYMBOLS)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c mongo.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/mongo.o
-
 $(OBJDIR_RELEASENOSYMBOLS)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c reoccurring_task_handler.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/reoccurring_task_handler.o
 
@@ -693,8 +690,8 @@ $(OBJDIR_RELEASENOSYMBOLS)/perfmon.o: perfmon.cpp
 $(OBJDIR_RELEASENOSYMBOLS)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c non_user_task_thread.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/non_user_task_thread.o
 
-$(OBJDIR_RELEASENOSYMBOLS)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c rng.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/rng.o
+$(OBJDIR_RELEASENOSYMBOLS)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c mongo.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/mongo.o
 
 $(OBJDIR_RELEASENOSYMBOLS)/main.o: main.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c main.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/main.o
@@ -717,8 +714,8 @@ $(OBJDIR_RELEASENOSYMBOLS)/duktape.o: duktape.cpp
 $(OBJDIR_RELEASENOSYMBOLS)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c duk_object_functions.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/duk_object_functions.o
 
-$(OBJDIR_RELEASENOSYMBOLS)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c shared_duk_worker_state.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/shared_duk_worker_state.o
+$(OBJDIR_RELEASENOSYMBOLS)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c duk_modules.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/duk_modules.o
 
 $(OBJDIR_RELEASENOSYMBOLS)/user.o: user.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c user.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/user.o
@@ -738,8 +735,8 @@ $(OBJDIR_RELEASENOSYMBOLS)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_RELEASENOSYMBOLS)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c source_maps.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/source_maps.o
 
-$(OBJDIR_RELEASENOSYMBOLS)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c duk_modules.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/duk_modules.o
+$(OBJDIR_RELEASENOSYMBOLS)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c shared_duk_worker_state.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/shared_duk_worker_state.o
 
 $(OBJDIR_RELEASENOSYMBOLS)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c serialisables.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/serialisables.o
@@ -759,8 +756,8 @@ $(OBJDIR_RELEASENOSYMBOLS)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_RELEASENOSYMBOLS)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c safe_thread.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/safe_thread.o
 
-$(OBJDIR_RELEASENOSYMBOLS)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c command_handler_state.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/command_handler_state.o
+$(OBJDIR_RELEASENOSYMBOLS)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c rng.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/rng.o
 
 $(OBJDIR_RELEASENOSYMBOLS)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/quickjs/quickjs.c -o $(OBJDIR_RELEASENOSYMBOLS)/deps/quickjs/quickjs.o
@@ -789,6 +786,9 @@ $(OBJDIR_RELEASENOSYMBOLS)/deps/networking/beast_compilation_unit.o: deps/networ
 $(OBJDIR_RELEASENOSYMBOLS)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c db_storage_backend.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/db_storage_backend.o
 
+$(OBJDIR_RELEASENOSYMBOLS)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c command_handler_state.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/command_handler_state.o
+
 $(OBJDIR_RELEASENOSYMBOLS)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c command_handler_fiber_backend.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/command_handler_fiber_backend.o
 
@@ -806,6 +806,9 @@ $(OBJDIR_RELEASENOSYMBOLS)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_RELEASENOSYMBOLS)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c argument_object_duk.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/argument_object_duk.o
+
+$(OBJDIR_RELEASENOSYMBOLS)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c argument_object.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/argument_object.o
 
 $(OBJDIR_RELEASENOSYMBOLS)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c duk_module_duktape.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/duk_module_duktape.o
@@ -830,9 +833,6 @@ $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/secret/one_shots.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/one_shots.o
-
-$(OBJDIR_RELEASENOSYMBOLS)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c argument_object.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/argument_object.o
 
 $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMBOLS) $(INC_RELEASENOSYMBOLS) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_RELEASENOSYMBOLS)/deps/secret/one_shot_core.o
@@ -879,9 +879,6 @@ profile: before_profile out_profile after_profile
 out_profile: before_profile $(OBJ_PROFILE) $(DEP_PROFILE)
 	$(LD) $(LIBDIR_PROFILE) -o $(OUT_PROFILE) $(OBJ_PROFILE)  $(LDFLAGS_PROFILE) $(LIB_PROFILE)
 
-$(OBJDIR_PROFILE)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c mongo.cpp -o $(OBJDIR_PROFILE)/mongo.o
-
 $(OBJDIR_PROFILE)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c reoccurring_task_handler.cpp -o $(OBJDIR_PROFILE)/reoccurring_task_handler.o
 
@@ -900,8 +897,8 @@ $(OBJDIR_PROFILE)/perfmon.o: perfmon.cpp
 $(OBJDIR_PROFILE)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c non_user_task_thread.cpp -o $(OBJDIR_PROFILE)/non_user_task_thread.o
 
-$(OBJDIR_PROFILE)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c rng.cpp -o $(OBJDIR_PROFILE)/rng.o
+$(OBJDIR_PROFILE)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c mongo.cpp -o $(OBJDIR_PROFILE)/mongo.o
 
 $(OBJDIR_PROFILE)/main.o: main.cpp
 	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c main.cpp -o $(OBJDIR_PROFILE)/main.o
@@ -924,8 +921,8 @@ $(OBJDIR_PROFILE)/duktape.o: duktape.cpp
 $(OBJDIR_PROFILE)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c duk_object_functions.cpp -o $(OBJDIR_PROFILE)/duk_object_functions.o
 
-$(OBJDIR_PROFILE)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c shared_duk_worker_state.cpp -o $(OBJDIR_PROFILE)/shared_duk_worker_state.o
+$(OBJDIR_PROFILE)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c duk_modules.cpp -o $(OBJDIR_PROFILE)/duk_modules.o
 
 $(OBJDIR_PROFILE)/user.o: user.cpp
 	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c user.cpp -o $(OBJDIR_PROFILE)/user.o
@@ -945,8 +942,8 @@ $(OBJDIR_PROFILE)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_PROFILE)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c source_maps.cpp -o $(OBJDIR_PROFILE)/source_maps.o
 
-$(OBJDIR_PROFILE)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c duk_modules.cpp -o $(OBJDIR_PROFILE)/duk_modules.o
+$(OBJDIR_PROFILE)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c shared_duk_worker_state.cpp -o $(OBJDIR_PROFILE)/shared_duk_worker_state.o
 
 $(OBJDIR_PROFILE)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c serialisables.cpp -o $(OBJDIR_PROFILE)/serialisables.o
@@ -966,8 +963,8 @@ $(OBJDIR_PROFILE)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_PROFILE)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c safe_thread.cpp -o $(OBJDIR_PROFILE)/safe_thread.o
 
-$(OBJDIR_PROFILE)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c command_handler_state.cpp -o $(OBJDIR_PROFILE)/command_handler_state.o
+$(OBJDIR_PROFILE)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c rng.cpp -o $(OBJDIR_PROFILE)/rng.o
 
 $(OBJDIR_PROFILE)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/quickjs/quickjs.c -o $(OBJDIR_PROFILE)/deps/quickjs/quickjs.o
@@ -996,6 +993,9 @@ $(OBJDIR_PROFILE)/deps/networking/beast_compilation_unit.o: deps/networking/beas
 $(OBJDIR_PROFILE)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c db_storage_backend.cpp -o $(OBJDIR_PROFILE)/db_storage_backend.o
 
+$(OBJDIR_PROFILE)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c command_handler_state.cpp -o $(OBJDIR_PROFILE)/command_handler_state.o
+
 $(OBJDIR_PROFILE)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c command_handler_fiber_backend.cpp -o $(OBJDIR_PROFILE)/command_handler_fiber_backend.o
 
@@ -1013,6 +1013,9 @@ $(OBJDIR_PROFILE)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_PROFILE)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c argument_object_duk.cpp -o $(OBJDIR_PROFILE)/argument_object_duk.o
+
+$(OBJDIR_PROFILE)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c argument_object.cpp -o $(OBJDIR_PROFILE)/argument_object.o
 
 $(OBJDIR_PROFILE)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c duk_module_duktape.cpp -o $(OBJDIR_PROFILE)/duk_module_duktape.o
@@ -1037,9 +1040,6 @@ $(OBJDIR_PROFILE)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_PROFILE)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/secret/one_shots.cpp -o $(OBJDIR_PROFILE)/deps/secret/one_shots.o
-
-$(OBJDIR_PROFILE)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c argument_object.cpp -o $(OBJDIR_PROFILE)/argument_object.o
 
 $(OBJDIR_PROFILE)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_PROFILE) $(INC_PROFILE) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_PROFILE)/deps/secret/one_shot_core.o
@@ -1087,9 +1087,6 @@ deploy: before_deploy out_deploy after_deploy
 out_deploy: before_deploy $(OBJ_DEPLOY) $(DEP_DEPLOY)
 	$(LD) $(LIBDIR_DEPLOY) -o $(OUT_DEPLOY) $(OBJ_DEPLOY)  $(LDFLAGS_DEPLOY) $(LIB_DEPLOY)
 
-$(OBJDIR_DEPLOY)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c mongo.cpp -o $(OBJDIR_DEPLOY)/mongo.o
-
 $(OBJDIR_DEPLOY)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c reoccurring_task_handler.cpp -o $(OBJDIR_DEPLOY)/reoccurring_task_handler.o
 
@@ -1108,8 +1105,8 @@ $(OBJDIR_DEPLOY)/perfmon.o: perfmon.cpp
 $(OBJDIR_DEPLOY)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c non_user_task_thread.cpp -o $(OBJDIR_DEPLOY)/non_user_task_thread.o
 
-$(OBJDIR_DEPLOY)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c rng.cpp -o $(OBJDIR_DEPLOY)/rng.o
+$(OBJDIR_DEPLOY)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c mongo.cpp -o $(OBJDIR_DEPLOY)/mongo.o
 
 $(OBJDIR_DEPLOY)/main.o: main.cpp
 	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c main.cpp -o $(OBJDIR_DEPLOY)/main.o
@@ -1132,8 +1129,8 @@ $(OBJDIR_DEPLOY)/duktape.o: duktape.cpp
 $(OBJDIR_DEPLOY)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c duk_object_functions.cpp -o $(OBJDIR_DEPLOY)/duk_object_functions.o
 
-$(OBJDIR_DEPLOY)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c shared_duk_worker_state.cpp -o $(OBJDIR_DEPLOY)/shared_duk_worker_state.o
+$(OBJDIR_DEPLOY)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c duk_modules.cpp -o $(OBJDIR_DEPLOY)/duk_modules.o
 
 $(OBJDIR_DEPLOY)/user.o: user.cpp
 	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c user.cpp -o $(OBJDIR_DEPLOY)/user.o
@@ -1153,8 +1150,8 @@ $(OBJDIR_DEPLOY)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_DEPLOY)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c source_maps.cpp -o $(OBJDIR_DEPLOY)/source_maps.o
 
-$(OBJDIR_DEPLOY)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c duk_modules.cpp -o $(OBJDIR_DEPLOY)/duk_modules.o
+$(OBJDIR_DEPLOY)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c shared_duk_worker_state.cpp -o $(OBJDIR_DEPLOY)/shared_duk_worker_state.o
 
 $(OBJDIR_DEPLOY)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c serialisables.cpp -o $(OBJDIR_DEPLOY)/serialisables.o
@@ -1174,8 +1171,8 @@ $(OBJDIR_DEPLOY)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_DEPLOY)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c safe_thread.cpp -o $(OBJDIR_DEPLOY)/safe_thread.o
 
-$(OBJDIR_DEPLOY)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c command_handler_state.cpp -o $(OBJDIR_DEPLOY)/command_handler_state.o
+$(OBJDIR_DEPLOY)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c rng.cpp -o $(OBJDIR_DEPLOY)/rng.o
 
 $(OBJDIR_DEPLOY)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c deps/quickjs/quickjs.c -o $(OBJDIR_DEPLOY)/deps/quickjs/quickjs.o
@@ -1204,6 +1201,9 @@ $(OBJDIR_DEPLOY)/deps/networking/beast_compilation_unit.o: deps/networking/beast
 $(OBJDIR_DEPLOY)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c db_storage_backend.cpp -o $(OBJDIR_DEPLOY)/db_storage_backend.o
 
+$(OBJDIR_DEPLOY)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c command_handler_state.cpp -o $(OBJDIR_DEPLOY)/command_handler_state.o
+
 $(OBJDIR_DEPLOY)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c command_handler_fiber_backend.cpp -o $(OBJDIR_DEPLOY)/command_handler_fiber_backend.o
 
@@ -1221,6 +1221,9 @@ $(OBJDIR_DEPLOY)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_DEPLOY)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c argument_object_duk.cpp -o $(OBJDIR_DEPLOY)/argument_object_duk.o
+
+$(OBJDIR_DEPLOY)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c argument_object.cpp -o $(OBJDIR_DEPLOY)/argument_object.o
 
 $(OBJDIR_DEPLOY)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c duk_module_duktape.cpp -o $(OBJDIR_DEPLOY)/duk_module_duktape.o
@@ -1245,9 +1248,6 @@ $(OBJDIR_DEPLOY)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_DEPLOY)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c deps/secret/one_shots.cpp -o $(OBJDIR_DEPLOY)/deps/secret/one_shots.o
-
-$(OBJDIR_DEPLOY)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c argument_object.cpp -o $(OBJDIR_DEPLOY)/argument_object.o
 
 $(OBJDIR_DEPLOY)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_DEPLOY) $(INC_DEPLOY) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_DEPLOY)/deps/secret/one_shot_core.o
@@ -1294,9 +1294,6 @@ releaseandtest: before_releaseandtest out_releaseandtest after_releaseandtest
 out_releaseandtest: before_releaseandtest $(OBJ_RELEASEANDTEST) $(DEP_RELEASEANDTEST)
 	$(LD) $(LIBDIR_RELEASEANDTEST) -o $(OUT_RELEASEANDTEST) $(OBJ_RELEASEANDTEST)  $(LDFLAGS_RELEASEANDTEST) $(LIB_RELEASEANDTEST)
 
-$(OBJDIR_RELEASEANDTEST)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c mongo.cpp -o $(OBJDIR_RELEASEANDTEST)/mongo.o
-
 $(OBJDIR_RELEASEANDTEST)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c reoccurring_task_handler.cpp -o $(OBJDIR_RELEASEANDTEST)/reoccurring_task_handler.o
 
@@ -1315,8 +1312,8 @@ $(OBJDIR_RELEASEANDTEST)/perfmon.o: perfmon.cpp
 $(OBJDIR_RELEASEANDTEST)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c non_user_task_thread.cpp -o $(OBJDIR_RELEASEANDTEST)/non_user_task_thread.o
 
-$(OBJDIR_RELEASEANDTEST)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c rng.cpp -o $(OBJDIR_RELEASEANDTEST)/rng.o
+$(OBJDIR_RELEASEANDTEST)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c mongo.cpp -o $(OBJDIR_RELEASEANDTEST)/mongo.o
 
 $(OBJDIR_RELEASEANDTEST)/main.o: main.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c main.cpp -o $(OBJDIR_RELEASEANDTEST)/main.o
@@ -1339,8 +1336,8 @@ $(OBJDIR_RELEASEANDTEST)/duktape.o: duktape.cpp
 $(OBJDIR_RELEASEANDTEST)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c duk_object_functions.cpp -o $(OBJDIR_RELEASEANDTEST)/duk_object_functions.o
 
-$(OBJDIR_RELEASEANDTEST)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c shared_duk_worker_state.cpp -o $(OBJDIR_RELEASEANDTEST)/shared_duk_worker_state.o
+$(OBJDIR_RELEASEANDTEST)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c duk_modules.cpp -o $(OBJDIR_RELEASEANDTEST)/duk_modules.o
 
 $(OBJDIR_RELEASEANDTEST)/user.o: user.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c user.cpp -o $(OBJDIR_RELEASEANDTEST)/user.o
@@ -1360,8 +1357,8 @@ $(OBJDIR_RELEASEANDTEST)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_RELEASEANDTEST)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c source_maps.cpp -o $(OBJDIR_RELEASEANDTEST)/source_maps.o
 
-$(OBJDIR_RELEASEANDTEST)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c duk_modules.cpp -o $(OBJDIR_RELEASEANDTEST)/duk_modules.o
+$(OBJDIR_RELEASEANDTEST)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c shared_duk_worker_state.cpp -o $(OBJDIR_RELEASEANDTEST)/shared_duk_worker_state.o
 
 $(OBJDIR_RELEASEANDTEST)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c serialisables.cpp -o $(OBJDIR_RELEASEANDTEST)/serialisables.o
@@ -1381,8 +1378,8 @@ $(OBJDIR_RELEASEANDTEST)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_RELEASEANDTEST)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c safe_thread.cpp -o $(OBJDIR_RELEASEANDTEST)/safe_thread.o
 
-$(OBJDIR_RELEASEANDTEST)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c command_handler_state.cpp -o $(OBJDIR_RELEASEANDTEST)/command_handler_state.o
+$(OBJDIR_RELEASEANDTEST)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c rng.cpp -o $(OBJDIR_RELEASEANDTEST)/rng.o
 
 $(OBJDIR_RELEASEANDTEST)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c deps/quickjs/quickjs.c -o $(OBJDIR_RELEASEANDTEST)/deps/quickjs/quickjs.o
@@ -1411,6 +1408,9 @@ $(OBJDIR_RELEASEANDTEST)/deps/networking/beast_compilation_unit.o: deps/networki
 $(OBJDIR_RELEASEANDTEST)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c db_storage_backend.cpp -o $(OBJDIR_RELEASEANDTEST)/db_storage_backend.o
 
+$(OBJDIR_RELEASEANDTEST)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c command_handler_state.cpp -o $(OBJDIR_RELEASEANDTEST)/command_handler_state.o
+
 $(OBJDIR_RELEASEANDTEST)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c command_handler_fiber_backend.cpp -o $(OBJDIR_RELEASEANDTEST)/command_handler_fiber_backend.o
 
@@ -1428,6 +1428,9 @@ $(OBJDIR_RELEASEANDTEST)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_RELEASEANDTEST)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c argument_object_duk.cpp -o $(OBJDIR_RELEASEANDTEST)/argument_object_duk.o
+
+$(OBJDIR_RELEASEANDTEST)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c argument_object.cpp -o $(OBJDIR_RELEASEANDTEST)/argument_object.o
 
 $(OBJDIR_RELEASEANDTEST)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c duk_module_duktape.cpp -o $(OBJDIR_RELEASEANDTEST)/duk_module_duktape.o
@@ -1452,9 +1455,6 @@ $(OBJDIR_RELEASEANDTEST)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_RELEASEANDTEST)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c deps/secret/one_shots.cpp -o $(OBJDIR_RELEASEANDTEST)/deps/secret/one_shots.o
-
-$(OBJDIR_RELEASEANDTEST)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c argument_object.cpp -o $(OBJDIR_RELEASEANDTEST)/argument_object.o
 
 $(OBJDIR_RELEASEANDTEST)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTEST) $(INC_RELEASEANDTEST) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_RELEASEANDTEST)/deps/secret/one_shot_core.o
@@ -1502,9 +1502,6 @@ debugbacktrace: before_debugbacktrace out_debugbacktrace after_debugbacktrace
 out_debugbacktrace: before_debugbacktrace $(OBJ_DEBUGBACKTRACE) $(DEP_DEBUGBACKTRACE)
 	$(LD) $(LIBDIR_DEBUGBACKTRACE) -o $(OUT_DEBUGBACKTRACE) $(OBJ_DEBUGBACKTRACE)  $(LDFLAGS_DEBUGBACKTRACE) $(LIB_DEBUGBACKTRACE)
 
-$(OBJDIR_DEBUGBACKTRACE)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c mongo.cpp -o $(OBJDIR_DEBUGBACKTRACE)/mongo.o
-
 $(OBJDIR_DEBUGBACKTRACE)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c reoccurring_task_handler.cpp -o $(OBJDIR_DEBUGBACKTRACE)/reoccurring_task_handler.o
 
@@ -1523,8 +1520,8 @@ $(OBJDIR_DEBUGBACKTRACE)/perfmon.o: perfmon.cpp
 $(OBJDIR_DEBUGBACKTRACE)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c non_user_task_thread.cpp -o $(OBJDIR_DEBUGBACKTRACE)/non_user_task_thread.o
 
-$(OBJDIR_DEBUGBACKTRACE)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c rng.cpp -o $(OBJDIR_DEBUGBACKTRACE)/rng.o
+$(OBJDIR_DEBUGBACKTRACE)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c mongo.cpp -o $(OBJDIR_DEBUGBACKTRACE)/mongo.o
 
 $(OBJDIR_DEBUGBACKTRACE)/main.o: main.cpp
 	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c main.cpp -o $(OBJDIR_DEBUGBACKTRACE)/main.o
@@ -1547,8 +1544,8 @@ $(OBJDIR_DEBUGBACKTRACE)/duktape.o: duktape.cpp
 $(OBJDIR_DEBUGBACKTRACE)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c duk_object_functions.cpp -o $(OBJDIR_DEBUGBACKTRACE)/duk_object_functions.o
 
-$(OBJDIR_DEBUGBACKTRACE)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c shared_duk_worker_state.cpp -o $(OBJDIR_DEBUGBACKTRACE)/shared_duk_worker_state.o
+$(OBJDIR_DEBUGBACKTRACE)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c duk_modules.cpp -o $(OBJDIR_DEBUGBACKTRACE)/duk_modules.o
 
 $(OBJDIR_DEBUGBACKTRACE)/user.o: user.cpp
 	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c user.cpp -o $(OBJDIR_DEBUGBACKTRACE)/user.o
@@ -1568,8 +1565,8 @@ $(OBJDIR_DEBUGBACKTRACE)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_DEBUGBACKTRACE)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c source_maps.cpp -o $(OBJDIR_DEBUGBACKTRACE)/source_maps.o
 
-$(OBJDIR_DEBUGBACKTRACE)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c duk_modules.cpp -o $(OBJDIR_DEBUGBACKTRACE)/duk_modules.o
+$(OBJDIR_DEBUGBACKTRACE)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c shared_duk_worker_state.cpp -o $(OBJDIR_DEBUGBACKTRACE)/shared_duk_worker_state.o
 
 $(OBJDIR_DEBUGBACKTRACE)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c serialisables.cpp -o $(OBJDIR_DEBUGBACKTRACE)/serialisables.o
@@ -1589,8 +1586,8 @@ $(OBJDIR_DEBUGBACKTRACE)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_DEBUGBACKTRACE)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c safe_thread.cpp -o $(OBJDIR_DEBUGBACKTRACE)/safe_thread.o
 
-$(OBJDIR_DEBUGBACKTRACE)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c command_handler_state.cpp -o $(OBJDIR_DEBUGBACKTRACE)/command_handler_state.o
+$(OBJDIR_DEBUGBACKTRACE)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c rng.cpp -o $(OBJDIR_DEBUGBACKTRACE)/rng.o
 
 $(OBJDIR_DEBUGBACKTRACE)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c deps/quickjs/quickjs.c -o $(OBJDIR_DEBUGBACKTRACE)/deps/quickjs/quickjs.o
@@ -1619,6 +1616,9 @@ $(OBJDIR_DEBUGBACKTRACE)/deps/networking/beast_compilation_unit.o: deps/networki
 $(OBJDIR_DEBUGBACKTRACE)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c db_storage_backend.cpp -o $(OBJDIR_DEBUGBACKTRACE)/db_storage_backend.o
 
+$(OBJDIR_DEBUGBACKTRACE)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c command_handler_state.cpp -o $(OBJDIR_DEBUGBACKTRACE)/command_handler_state.o
+
 $(OBJDIR_DEBUGBACKTRACE)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c command_handler_fiber_backend.cpp -o $(OBJDIR_DEBUGBACKTRACE)/command_handler_fiber_backend.o
 
@@ -1636,6 +1636,9 @@ $(OBJDIR_DEBUGBACKTRACE)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_DEBUGBACKTRACE)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c argument_object_duk.cpp -o $(OBJDIR_DEBUGBACKTRACE)/argument_object_duk.o
+
+$(OBJDIR_DEBUGBACKTRACE)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c argument_object.cpp -o $(OBJDIR_DEBUGBACKTRACE)/argument_object.o
 
 $(OBJDIR_DEBUGBACKTRACE)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c duk_module_duktape.cpp -o $(OBJDIR_DEBUGBACKTRACE)/duk_module_duktape.o
@@ -1660,9 +1663,6 @@ $(OBJDIR_DEBUGBACKTRACE)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_DEBUGBACKTRACE)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c deps/secret/one_shots.cpp -o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/one_shots.o
-
-$(OBJDIR_DEBUGBACKTRACE)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c argument_object.cpp -o $(OBJDIR_DEBUGBACKTRACE)/argument_object.o
 
 $(OBJDIR_DEBUGBACKTRACE)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_DEBUGBACKTRACE) $(INC_DEBUGBACKTRACE) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_DEBUGBACKTRACE)/deps/secret/one_shot_core.o
@@ -1709,9 +1709,6 @@ debugtest: before_debugtest out_debugtest after_debugtest
 out_debugtest: before_debugtest $(OBJ_DEBUGTEST) $(DEP_DEBUGTEST)
 	$(LD) $(LIBDIR_DEBUGTEST) -o $(OUT_DEBUGTEST) $(OBJ_DEBUGTEST)  $(LDFLAGS_DEBUGTEST) $(LIB_DEBUGTEST)
 
-$(OBJDIR_DEBUGTEST)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c mongo.cpp -o $(OBJDIR_DEBUGTEST)/mongo.o
-
 $(OBJDIR_DEBUGTEST)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c reoccurring_task_handler.cpp -o $(OBJDIR_DEBUGTEST)/reoccurring_task_handler.o
 
@@ -1730,8 +1727,8 @@ $(OBJDIR_DEBUGTEST)/perfmon.o: perfmon.cpp
 $(OBJDIR_DEBUGTEST)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c non_user_task_thread.cpp -o $(OBJDIR_DEBUGTEST)/non_user_task_thread.o
 
-$(OBJDIR_DEBUGTEST)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c rng.cpp -o $(OBJDIR_DEBUGTEST)/rng.o
+$(OBJDIR_DEBUGTEST)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c mongo.cpp -o $(OBJDIR_DEBUGTEST)/mongo.o
 
 $(OBJDIR_DEBUGTEST)/main.o: main.cpp
 	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c main.cpp -o $(OBJDIR_DEBUGTEST)/main.o
@@ -1754,8 +1751,8 @@ $(OBJDIR_DEBUGTEST)/duktape.o: duktape.cpp
 $(OBJDIR_DEBUGTEST)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c duk_object_functions.cpp -o $(OBJDIR_DEBUGTEST)/duk_object_functions.o
 
-$(OBJDIR_DEBUGTEST)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c shared_duk_worker_state.cpp -o $(OBJDIR_DEBUGTEST)/shared_duk_worker_state.o
+$(OBJDIR_DEBUGTEST)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c duk_modules.cpp -o $(OBJDIR_DEBUGTEST)/duk_modules.o
 
 $(OBJDIR_DEBUGTEST)/user.o: user.cpp
 	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c user.cpp -o $(OBJDIR_DEBUGTEST)/user.o
@@ -1775,8 +1772,8 @@ $(OBJDIR_DEBUGTEST)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_DEBUGTEST)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c source_maps.cpp -o $(OBJDIR_DEBUGTEST)/source_maps.o
 
-$(OBJDIR_DEBUGTEST)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c duk_modules.cpp -o $(OBJDIR_DEBUGTEST)/duk_modules.o
+$(OBJDIR_DEBUGTEST)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c shared_duk_worker_state.cpp -o $(OBJDIR_DEBUGTEST)/shared_duk_worker_state.o
 
 $(OBJDIR_DEBUGTEST)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c serialisables.cpp -o $(OBJDIR_DEBUGTEST)/serialisables.o
@@ -1796,8 +1793,8 @@ $(OBJDIR_DEBUGTEST)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_DEBUGTEST)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c safe_thread.cpp -o $(OBJDIR_DEBUGTEST)/safe_thread.o
 
-$(OBJDIR_DEBUGTEST)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c command_handler_state.cpp -o $(OBJDIR_DEBUGTEST)/command_handler_state.o
+$(OBJDIR_DEBUGTEST)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c rng.cpp -o $(OBJDIR_DEBUGTEST)/rng.o
 
 $(OBJDIR_DEBUGTEST)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c deps/quickjs/quickjs.c -o $(OBJDIR_DEBUGTEST)/deps/quickjs/quickjs.o
@@ -1826,6 +1823,9 @@ $(OBJDIR_DEBUGTEST)/deps/networking/beast_compilation_unit.o: deps/networking/be
 $(OBJDIR_DEBUGTEST)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c db_storage_backend.cpp -o $(OBJDIR_DEBUGTEST)/db_storage_backend.o
 
+$(OBJDIR_DEBUGTEST)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c command_handler_state.cpp -o $(OBJDIR_DEBUGTEST)/command_handler_state.o
+
 $(OBJDIR_DEBUGTEST)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c command_handler_fiber_backend.cpp -o $(OBJDIR_DEBUGTEST)/command_handler_fiber_backend.o
 
@@ -1843,6 +1843,9 @@ $(OBJDIR_DEBUGTEST)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_DEBUGTEST)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c argument_object_duk.cpp -o $(OBJDIR_DEBUGTEST)/argument_object_duk.o
+
+$(OBJDIR_DEBUGTEST)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c argument_object.cpp -o $(OBJDIR_DEBUGTEST)/argument_object.o
 
 $(OBJDIR_DEBUGTEST)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c duk_module_duktape.cpp -o $(OBJDIR_DEBUGTEST)/duk_module_duktape.o
@@ -1867,9 +1870,6 @@ $(OBJDIR_DEBUGTEST)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_DEBUGTEST)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c deps/secret/one_shots.cpp -o $(OBJDIR_DEBUGTEST)/deps/secret/one_shots.o
-
-$(OBJDIR_DEBUGTEST)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c argument_object.cpp -o $(OBJDIR_DEBUGTEST)/argument_object.o
 
 $(OBJDIR_DEBUGTEST)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_DEBUGTEST) $(INC_DEBUGTEST) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_DEBUGTEST)/deps/secret/one_shot_core.o
@@ -1917,9 +1917,6 @@ dmimic: before_dmimic out_dmimic after_dmimic
 out_dmimic: before_dmimic $(OBJ_DMIMIC) $(DEP_DMIMIC)
 	$(LD) $(LIBDIR_DMIMIC) -o $(OUT_DMIMIC) $(OBJ_DMIMIC)  $(LDFLAGS_DMIMIC) $(LIB_DMIMIC)
 
-$(OBJDIR_DMIMIC)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c mongo.cpp -o $(OBJDIR_DMIMIC)/mongo.o
-
 $(OBJDIR_DMIMIC)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c reoccurring_task_handler.cpp -o $(OBJDIR_DMIMIC)/reoccurring_task_handler.o
 
@@ -1938,8 +1935,8 @@ $(OBJDIR_DMIMIC)/perfmon.o: perfmon.cpp
 $(OBJDIR_DMIMIC)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c non_user_task_thread.cpp -o $(OBJDIR_DMIMIC)/non_user_task_thread.o
 
-$(OBJDIR_DMIMIC)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c rng.cpp -o $(OBJDIR_DMIMIC)/rng.o
+$(OBJDIR_DMIMIC)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c mongo.cpp -o $(OBJDIR_DMIMIC)/mongo.o
 
 $(OBJDIR_DMIMIC)/main.o: main.cpp
 	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c main.cpp -o $(OBJDIR_DMIMIC)/main.o
@@ -1962,8 +1959,8 @@ $(OBJDIR_DMIMIC)/duktape.o: duktape.cpp
 $(OBJDIR_DMIMIC)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c duk_object_functions.cpp -o $(OBJDIR_DMIMIC)/duk_object_functions.o
 
-$(OBJDIR_DMIMIC)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c shared_duk_worker_state.cpp -o $(OBJDIR_DMIMIC)/shared_duk_worker_state.o
+$(OBJDIR_DMIMIC)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c duk_modules.cpp -o $(OBJDIR_DMIMIC)/duk_modules.o
 
 $(OBJDIR_DMIMIC)/user.o: user.cpp
 	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c user.cpp -o $(OBJDIR_DMIMIC)/user.o
@@ -1983,8 +1980,8 @@ $(OBJDIR_DMIMIC)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_DMIMIC)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c source_maps.cpp -o $(OBJDIR_DMIMIC)/source_maps.o
 
-$(OBJDIR_DMIMIC)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c duk_modules.cpp -o $(OBJDIR_DMIMIC)/duk_modules.o
+$(OBJDIR_DMIMIC)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c shared_duk_worker_state.cpp -o $(OBJDIR_DMIMIC)/shared_duk_worker_state.o
 
 $(OBJDIR_DMIMIC)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c serialisables.cpp -o $(OBJDIR_DMIMIC)/serialisables.o
@@ -2004,8 +2001,8 @@ $(OBJDIR_DMIMIC)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_DMIMIC)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c safe_thread.cpp -o $(OBJDIR_DMIMIC)/safe_thread.o
 
-$(OBJDIR_DMIMIC)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c command_handler_state.cpp -o $(OBJDIR_DMIMIC)/command_handler_state.o
+$(OBJDIR_DMIMIC)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c rng.cpp -o $(OBJDIR_DMIMIC)/rng.o
 
 $(OBJDIR_DMIMIC)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c deps/quickjs/quickjs.c -o $(OBJDIR_DMIMIC)/deps/quickjs/quickjs.o
@@ -2034,6 +2031,9 @@ $(OBJDIR_DMIMIC)/deps/networking/beast_compilation_unit.o: deps/networking/beast
 $(OBJDIR_DMIMIC)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c db_storage_backend.cpp -o $(OBJDIR_DMIMIC)/db_storage_backend.o
 
+$(OBJDIR_DMIMIC)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c command_handler_state.cpp -o $(OBJDIR_DMIMIC)/command_handler_state.o
+
 $(OBJDIR_DMIMIC)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c command_handler_fiber_backend.cpp -o $(OBJDIR_DMIMIC)/command_handler_fiber_backend.o
 
@@ -2051,6 +2051,9 @@ $(OBJDIR_DMIMIC)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_DMIMIC)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c argument_object_duk.cpp -o $(OBJDIR_DMIMIC)/argument_object_duk.o
+
+$(OBJDIR_DMIMIC)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c argument_object.cpp -o $(OBJDIR_DMIMIC)/argument_object.o
 
 $(OBJDIR_DMIMIC)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c duk_module_duktape.cpp -o $(OBJDIR_DMIMIC)/duk_module_duktape.o
@@ -2075,9 +2078,6 @@ $(OBJDIR_DMIMIC)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_DMIMIC)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c deps/secret/one_shots.cpp -o $(OBJDIR_DMIMIC)/deps/secret/one_shots.o
-
-$(OBJDIR_DMIMIC)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c argument_object.cpp -o $(OBJDIR_DMIMIC)/argument_object.o
 
 $(OBJDIR_DMIMIC)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_DMIMIC) $(INC_DMIMIC) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_DMIMIC)/deps/secret/one_shot_core.o
@@ -2124,9 +2124,6 @@ releaseandtestwithdebuginfo: before_releaseandtestwithdebuginfo out_releaseandte
 out_releaseandtestwithdebuginfo: before_releaseandtestwithdebuginfo $(OBJ_RELEASEANDTESTWITHDEBUGINFO) $(DEP_RELEASEANDTESTWITHDEBUGINFO)
 	$(LD) $(LIBDIR_RELEASEANDTESTWITHDEBUGINFO) -o $(OUT_RELEASEANDTESTWITHDEBUGINFO) $(OBJ_RELEASEANDTESTWITHDEBUGINFO)  $(LDFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(LIB_RELEASEANDTESTWITHDEBUGINFO)
 
-$(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c mongo.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/mongo.o
-
 $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c reoccurring_task_handler.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/reoccurring_task_handler.o
 
@@ -2145,8 +2142,8 @@ $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/perfmon.o: perfmon.cpp
 $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c non_user_task_thread.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/non_user_task_thread.o
 
-$(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c rng.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/rng.o
+$(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c mongo.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/mongo.o
 
 $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/main.o: main.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c main.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/main.o
@@ -2169,8 +2166,8 @@ $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duktape.o: duktape.cpp
 $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c duk_object_functions.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duk_object_functions.o
 
-$(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c shared_duk_worker_state.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/shared_duk_worker_state.o
+$(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c duk_modules.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duk_modules.o
 
 $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/user.o: user.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c user.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/user.o
@@ -2190,8 +2187,8 @@ $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c source_maps.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/source_maps.o
 
-$(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c duk_modules.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duk_modules.o
+$(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c shared_duk_worker_state.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/shared_duk_worker_state.o
 
 $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c serialisables.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/serialisables.o
@@ -2211,8 +2208,8 @@ $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c safe_thread.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/safe_thread.o
 
-$(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c command_handler_state.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/command_handler_state.o
+$(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c rng.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/rng.o
 
 $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c deps/quickjs/quickjs.c -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/quickjs/quickjs.o
@@ -2241,6 +2238,9 @@ $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/networking/beast_compilation_unit.o: 
 $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c db_storage_backend.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/db_storage_backend.o
 
+$(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c command_handler_state.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/command_handler_state.o
+
 $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c command_handler_fiber_backend.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/command_handler_fiber_backend.o
 
@@ -2258,6 +2258,9 @@ $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/argument_object_qjs.o: argument_object_qjs
 
 $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c argument_object_duk.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/argument_object_duk.o
+
+$(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c argument_object.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/argument_object.o
 
 $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c duk_module_duktape.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/duk_module_duktape.o
@@ -2282,9 +2285,6 @@ $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/secret.o: deps/secret/secret.c
 
 $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c deps/secret/one_shots.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/one_shots.o
-
-$(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c argument_object.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/argument_object.o
 
 $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTWITHDEBUGINFO) $(INC_RELEASEANDTESTWITHDEBUGINFO) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_RELEASEANDTESTWITHDEBUGINFO)/deps/secret/one_shot_core.o
@@ -2331,9 +2331,6 @@ rt_prof: before_rt_prof out_rt_prof after_rt_prof
 out_rt_prof: before_rt_prof $(OBJ_RT_PROF) $(DEP_RT_PROF)
 	$(LD) $(LIBDIR_RT_PROF) -o $(OUT_RT_PROF) $(OBJ_RT_PROF)  $(LDFLAGS_RT_PROF) $(LIB_RT_PROF)
 
-$(OBJDIR_RT_PROF)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c mongo.cpp -o $(OBJDIR_RT_PROF)/mongo.o
-
 $(OBJDIR_RT_PROF)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c reoccurring_task_handler.cpp -o $(OBJDIR_RT_PROF)/reoccurring_task_handler.o
 
@@ -2352,8 +2349,8 @@ $(OBJDIR_RT_PROF)/perfmon.o: perfmon.cpp
 $(OBJDIR_RT_PROF)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c non_user_task_thread.cpp -o $(OBJDIR_RT_PROF)/non_user_task_thread.o
 
-$(OBJDIR_RT_PROF)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c rng.cpp -o $(OBJDIR_RT_PROF)/rng.o
+$(OBJDIR_RT_PROF)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c mongo.cpp -o $(OBJDIR_RT_PROF)/mongo.o
 
 $(OBJDIR_RT_PROF)/main.o: main.cpp
 	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c main.cpp -o $(OBJDIR_RT_PROF)/main.o
@@ -2376,8 +2373,8 @@ $(OBJDIR_RT_PROF)/duktape.o: duktape.cpp
 $(OBJDIR_RT_PROF)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c duk_object_functions.cpp -o $(OBJDIR_RT_PROF)/duk_object_functions.o
 
-$(OBJDIR_RT_PROF)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c shared_duk_worker_state.cpp -o $(OBJDIR_RT_PROF)/shared_duk_worker_state.o
+$(OBJDIR_RT_PROF)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c duk_modules.cpp -o $(OBJDIR_RT_PROF)/duk_modules.o
 
 $(OBJDIR_RT_PROF)/user.o: user.cpp
 	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c user.cpp -o $(OBJDIR_RT_PROF)/user.o
@@ -2397,8 +2394,8 @@ $(OBJDIR_RT_PROF)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_RT_PROF)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c source_maps.cpp -o $(OBJDIR_RT_PROF)/source_maps.o
 
-$(OBJDIR_RT_PROF)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c duk_modules.cpp -o $(OBJDIR_RT_PROF)/duk_modules.o
+$(OBJDIR_RT_PROF)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c shared_duk_worker_state.cpp -o $(OBJDIR_RT_PROF)/shared_duk_worker_state.o
 
 $(OBJDIR_RT_PROF)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c serialisables.cpp -o $(OBJDIR_RT_PROF)/serialisables.o
@@ -2418,8 +2415,8 @@ $(OBJDIR_RT_PROF)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_RT_PROF)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c safe_thread.cpp -o $(OBJDIR_RT_PROF)/safe_thread.o
 
-$(OBJDIR_RT_PROF)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c command_handler_state.cpp -o $(OBJDIR_RT_PROF)/command_handler_state.o
+$(OBJDIR_RT_PROF)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c rng.cpp -o $(OBJDIR_RT_PROF)/rng.o
 
 $(OBJDIR_RT_PROF)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c deps/quickjs/quickjs.c -o $(OBJDIR_RT_PROF)/deps/quickjs/quickjs.o
@@ -2448,6 +2445,9 @@ $(OBJDIR_RT_PROF)/deps/networking/beast_compilation_unit.o: deps/networking/beas
 $(OBJDIR_RT_PROF)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c db_storage_backend.cpp -o $(OBJDIR_RT_PROF)/db_storage_backend.o
 
+$(OBJDIR_RT_PROF)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c command_handler_state.cpp -o $(OBJDIR_RT_PROF)/command_handler_state.o
+
 $(OBJDIR_RT_PROF)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c command_handler_fiber_backend.cpp -o $(OBJDIR_RT_PROF)/command_handler_fiber_backend.o
 
@@ -2465,6 +2465,9 @@ $(OBJDIR_RT_PROF)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_RT_PROF)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c argument_object_duk.cpp -o $(OBJDIR_RT_PROF)/argument_object_duk.o
+
+$(OBJDIR_RT_PROF)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c argument_object.cpp -o $(OBJDIR_RT_PROF)/argument_object.o
 
 $(OBJDIR_RT_PROF)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c duk_module_duktape.cpp -o $(OBJDIR_RT_PROF)/duk_module_duktape.o
@@ -2489,9 +2492,6 @@ $(OBJDIR_RT_PROF)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_RT_PROF)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c deps/secret/one_shots.cpp -o $(OBJDIR_RT_PROF)/deps/secret/one_shots.o
-
-$(OBJDIR_RT_PROF)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c argument_object.cpp -o $(OBJDIR_RT_PROF)/argument_object.o
 
 $(OBJDIR_RT_PROF)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_RT_PROF) $(INC_RT_PROF) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_RT_PROF)/deps/secret/one_shot_core.o
@@ -2538,9 +2538,6 @@ releaseandtestlto: before_releaseandtestlto out_releaseandtestlto after_releasea
 out_releaseandtestlto: before_releaseandtestlto $(OBJ_RELEASEANDTESTLTO) $(DEP_RELEASEANDTESTLTO)
 	$(LD) $(LIBDIR_RELEASEANDTESTLTO) -o $(OUT_RELEASEANDTESTLTO) $(OBJ_RELEASEANDTESTLTO)  $(LDFLAGS_RELEASEANDTESTLTO) $(LIB_RELEASEANDTESTLTO)
 
-$(OBJDIR_RELEASEANDTESTLTO)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c mongo.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/mongo.o
-
 $(OBJDIR_RELEASEANDTESTLTO)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c reoccurring_task_handler.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/reoccurring_task_handler.o
 
@@ -2559,8 +2556,8 @@ $(OBJDIR_RELEASEANDTESTLTO)/perfmon.o: perfmon.cpp
 $(OBJDIR_RELEASEANDTESTLTO)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c non_user_task_thread.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/non_user_task_thread.o
 
-$(OBJDIR_RELEASEANDTESTLTO)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c rng.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/rng.o
+$(OBJDIR_RELEASEANDTESTLTO)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c mongo.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/mongo.o
 
 $(OBJDIR_RELEASEANDTESTLTO)/main.o: main.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c main.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/main.o
@@ -2583,8 +2580,8 @@ $(OBJDIR_RELEASEANDTESTLTO)/duktape.o: duktape.cpp
 $(OBJDIR_RELEASEANDTESTLTO)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c duk_object_functions.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/duk_object_functions.o
 
-$(OBJDIR_RELEASEANDTESTLTO)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c shared_duk_worker_state.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/shared_duk_worker_state.o
+$(OBJDIR_RELEASEANDTESTLTO)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c duk_modules.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/duk_modules.o
 
 $(OBJDIR_RELEASEANDTESTLTO)/user.o: user.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c user.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/user.o
@@ -2604,8 +2601,8 @@ $(OBJDIR_RELEASEANDTESTLTO)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_RELEASEANDTESTLTO)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c source_maps.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/source_maps.o
 
-$(OBJDIR_RELEASEANDTESTLTO)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c duk_modules.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/duk_modules.o
+$(OBJDIR_RELEASEANDTESTLTO)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c shared_duk_worker_state.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/shared_duk_worker_state.o
 
 $(OBJDIR_RELEASEANDTESTLTO)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c serialisables.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/serialisables.o
@@ -2625,8 +2622,8 @@ $(OBJDIR_RELEASEANDTESTLTO)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_RELEASEANDTESTLTO)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c safe_thread.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/safe_thread.o
 
-$(OBJDIR_RELEASEANDTESTLTO)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c command_handler_state.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/command_handler_state.o
+$(OBJDIR_RELEASEANDTESTLTO)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c rng.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/rng.o
 
 $(OBJDIR_RELEASEANDTESTLTO)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c deps/quickjs/quickjs.c -o $(OBJDIR_RELEASEANDTESTLTO)/deps/quickjs/quickjs.o
@@ -2655,6 +2652,9 @@ $(OBJDIR_RELEASEANDTESTLTO)/deps/networking/beast_compilation_unit.o: deps/netwo
 $(OBJDIR_RELEASEANDTESTLTO)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c db_storage_backend.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/db_storage_backend.o
 
+$(OBJDIR_RELEASEANDTESTLTO)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c command_handler_state.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/command_handler_state.o
+
 $(OBJDIR_RELEASEANDTESTLTO)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c command_handler_fiber_backend.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/command_handler_fiber_backend.o
 
@@ -2672,6 +2672,9 @@ $(OBJDIR_RELEASEANDTESTLTO)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_RELEASEANDTESTLTO)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c argument_object_duk.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/argument_object_duk.o
+
+$(OBJDIR_RELEASEANDTESTLTO)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c argument_object.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/argument_object.o
 
 $(OBJDIR_RELEASEANDTESTLTO)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c duk_module_duktape.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/duk_module_duktape.o
@@ -2696,9 +2699,6 @@ $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c deps/secret/one_shots.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/one_shots.o
-
-$(OBJDIR_RELEASEANDTESTLTO)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c argument_object.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/argument_object.o
 
 $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_RELEASEANDTESTLTO) $(INC_RELEASEANDTESTLTO) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_RELEASEANDTESTLTO)/deps/secret/one_shot_core.o
@@ -2745,9 +2745,6 @@ linuxrelease: before_linuxrelease out_linuxrelease after_linuxrelease
 out_linuxrelease: before_linuxrelease $(OBJ_LINUXRELEASE) $(DEP_LINUXRELEASE)
 	$(LD) $(LIBDIR_LINUXRELEASE) -o $(OUT_LINUXRELEASE) $(OBJ_LINUXRELEASE)  $(LDFLAGS_LINUXRELEASE) $(LIB_LINUXRELEASE)
 
-$(OBJDIR_LINUXRELEASE)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c mongo.cpp -o $(OBJDIR_LINUXRELEASE)/mongo.o
-
 $(OBJDIR_LINUXRELEASE)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c reoccurring_task_handler.cpp -o $(OBJDIR_LINUXRELEASE)/reoccurring_task_handler.o
 
@@ -2766,8 +2763,8 @@ $(OBJDIR_LINUXRELEASE)/perfmon.o: perfmon.cpp
 $(OBJDIR_LINUXRELEASE)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c non_user_task_thread.cpp -o $(OBJDIR_LINUXRELEASE)/non_user_task_thread.o
 
-$(OBJDIR_LINUXRELEASE)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c rng.cpp -o $(OBJDIR_LINUXRELEASE)/rng.o
+$(OBJDIR_LINUXRELEASE)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c mongo.cpp -o $(OBJDIR_LINUXRELEASE)/mongo.o
 
 $(OBJDIR_LINUXRELEASE)/main.o: main.cpp
 	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c main.cpp -o $(OBJDIR_LINUXRELEASE)/main.o
@@ -2790,8 +2787,8 @@ $(OBJDIR_LINUXRELEASE)/duktape.o: duktape.cpp
 $(OBJDIR_LINUXRELEASE)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c duk_object_functions.cpp -o $(OBJDIR_LINUXRELEASE)/duk_object_functions.o
 
-$(OBJDIR_LINUXRELEASE)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c shared_duk_worker_state.cpp -o $(OBJDIR_LINUXRELEASE)/shared_duk_worker_state.o
+$(OBJDIR_LINUXRELEASE)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c duk_modules.cpp -o $(OBJDIR_LINUXRELEASE)/duk_modules.o
 
 $(OBJDIR_LINUXRELEASE)/user.o: user.cpp
 	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c user.cpp -o $(OBJDIR_LINUXRELEASE)/user.o
@@ -2811,8 +2808,8 @@ $(OBJDIR_LINUXRELEASE)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_LINUXRELEASE)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c source_maps.cpp -o $(OBJDIR_LINUXRELEASE)/source_maps.o
 
-$(OBJDIR_LINUXRELEASE)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c duk_modules.cpp -o $(OBJDIR_LINUXRELEASE)/duk_modules.o
+$(OBJDIR_LINUXRELEASE)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c shared_duk_worker_state.cpp -o $(OBJDIR_LINUXRELEASE)/shared_duk_worker_state.o
 
 $(OBJDIR_LINUXRELEASE)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c serialisables.cpp -o $(OBJDIR_LINUXRELEASE)/serialisables.o
@@ -2832,8 +2829,8 @@ $(OBJDIR_LINUXRELEASE)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_LINUXRELEASE)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c safe_thread.cpp -o $(OBJDIR_LINUXRELEASE)/safe_thread.o
 
-$(OBJDIR_LINUXRELEASE)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c command_handler_state.cpp -o $(OBJDIR_LINUXRELEASE)/command_handler_state.o
+$(OBJDIR_LINUXRELEASE)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c rng.cpp -o $(OBJDIR_LINUXRELEASE)/rng.o
 
 $(OBJDIR_LINUXRELEASE)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c deps/quickjs/quickjs.c -o $(OBJDIR_LINUXRELEASE)/deps/quickjs/quickjs.o
@@ -2862,6 +2859,9 @@ $(OBJDIR_LINUXRELEASE)/deps/networking/beast_compilation_unit.o: deps/networking
 $(OBJDIR_LINUXRELEASE)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c db_storage_backend.cpp -o $(OBJDIR_LINUXRELEASE)/db_storage_backend.o
 
+$(OBJDIR_LINUXRELEASE)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c command_handler_state.cpp -o $(OBJDIR_LINUXRELEASE)/command_handler_state.o
+
 $(OBJDIR_LINUXRELEASE)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c command_handler_fiber_backend.cpp -o $(OBJDIR_LINUXRELEASE)/command_handler_fiber_backend.o
 
@@ -2879,6 +2879,9 @@ $(OBJDIR_LINUXRELEASE)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_LINUXRELEASE)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c argument_object_duk.cpp -o $(OBJDIR_LINUXRELEASE)/argument_object_duk.o
+
+$(OBJDIR_LINUXRELEASE)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c argument_object.cpp -o $(OBJDIR_LINUXRELEASE)/argument_object.o
 
 $(OBJDIR_LINUXRELEASE)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c duk_module_duktape.cpp -o $(OBJDIR_LINUXRELEASE)/duk_module_duktape.o
@@ -2903,9 +2906,6 @@ $(OBJDIR_LINUXRELEASE)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_LINUXRELEASE)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c deps/secret/one_shots.cpp -o $(OBJDIR_LINUXRELEASE)/deps/secret/one_shots.o
-
-$(OBJDIR_LINUXRELEASE)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c argument_object.cpp -o $(OBJDIR_LINUXRELEASE)/argument_object.o
 
 $(OBJDIR_LINUXRELEASE)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_LINUXRELEASE) $(INC_LINUXRELEASE) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_LINUXRELEASE)/deps/secret/one_shot_core.o
@@ -2952,9 +2952,6 @@ linuxdeploy: before_linuxdeploy out_linuxdeploy after_linuxdeploy
 out_linuxdeploy: before_linuxdeploy $(OBJ_LINUXDEPLOY) $(DEP_LINUXDEPLOY)
 	$(LD) $(LIBDIR_LINUXDEPLOY) -o $(OUT_LINUXDEPLOY) $(OBJ_LINUXDEPLOY)  $(LDFLAGS_LINUXDEPLOY) $(LIB_LINUXDEPLOY)
 
-$(OBJDIR_LINUXDEPLOY)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c mongo.cpp -o $(OBJDIR_LINUXDEPLOY)/mongo.o
-
 $(OBJDIR_LINUXDEPLOY)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c reoccurring_task_handler.cpp -o $(OBJDIR_LINUXDEPLOY)/reoccurring_task_handler.o
 
@@ -2973,8 +2970,8 @@ $(OBJDIR_LINUXDEPLOY)/perfmon.o: perfmon.cpp
 $(OBJDIR_LINUXDEPLOY)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c non_user_task_thread.cpp -o $(OBJDIR_LINUXDEPLOY)/non_user_task_thread.o
 
-$(OBJDIR_LINUXDEPLOY)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c rng.cpp -o $(OBJDIR_LINUXDEPLOY)/rng.o
+$(OBJDIR_LINUXDEPLOY)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c mongo.cpp -o $(OBJDIR_LINUXDEPLOY)/mongo.o
 
 $(OBJDIR_LINUXDEPLOY)/main.o: main.cpp
 	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c main.cpp -o $(OBJDIR_LINUXDEPLOY)/main.o
@@ -2997,8 +2994,8 @@ $(OBJDIR_LINUXDEPLOY)/duktape.o: duktape.cpp
 $(OBJDIR_LINUXDEPLOY)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c duk_object_functions.cpp -o $(OBJDIR_LINUXDEPLOY)/duk_object_functions.o
 
-$(OBJDIR_LINUXDEPLOY)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c shared_duk_worker_state.cpp -o $(OBJDIR_LINUXDEPLOY)/shared_duk_worker_state.o
+$(OBJDIR_LINUXDEPLOY)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c duk_modules.cpp -o $(OBJDIR_LINUXDEPLOY)/duk_modules.o
 
 $(OBJDIR_LINUXDEPLOY)/user.o: user.cpp
 	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c user.cpp -o $(OBJDIR_LINUXDEPLOY)/user.o
@@ -3018,8 +3015,8 @@ $(OBJDIR_LINUXDEPLOY)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_LINUXDEPLOY)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c source_maps.cpp -o $(OBJDIR_LINUXDEPLOY)/source_maps.o
 
-$(OBJDIR_LINUXDEPLOY)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c duk_modules.cpp -o $(OBJDIR_LINUXDEPLOY)/duk_modules.o
+$(OBJDIR_LINUXDEPLOY)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c shared_duk_worker_state.cpp -o $(OBJDIR_LINUXDEPLOY)/shared_duk_worker_state.o
 
 $(OBJDIR_LINUXDEPLOY)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c serialisables.cpp -o $(OBJDIR_LINUXDEPLOY)/serialisables.o
@@ -3039,8 +3036,8 @@ $(OBJDIR_LINUXDEPLOY)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_LINUXDEPLOY)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c safe_thread.cpp -o $(OBJDIR_LINUXDEPLOY)/safe_thread.o
 
-$(OBJDIR_LINUXDEPLOY)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c command_handler_state.cpp -o $(OBJDIR_LINUXDEPLOY)/command_handler_state.o
+$(OBJDIR_LINUXDEPLOY)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c rng.cpp -o $(OBJDIR_LINUXDEPLOY)/rng.o
 
 $(OBJDIR_LINUXDEPLOY)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/quickjs/quickjs.c -o $(OBJDIR_LINUXDEPLOY)/deps/quickjs/quickjs.o
@@ -3069,6 +3066,9 @@ $(OBJDIR_LINUXDEPLOY)/deps/networking/beast_compilation_unit.o: deps/networking/
 $(OBJDIR_LINUXDEPLOY)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c db_storage_backend.cpp -o $(OBJDIR_LINUXDEPLOY)/db_storage_backend.o
 
+$(OBJDIR_LINUXDEPLOY)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c command_handler_state.cpp -o $(OBJDIR_LINUXDEPLOY)/command_handler_state.o
+
 $(OBJDIR_LINUXDEPLOY)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c command_handler_fiber_backend.cpp -o $(OBJDIR_LINUXDEPLOY)/command_handler_fiber_backend.o
 
@@ -3086,6 +3086,9 @@ $(OBJDIR_LINUXDEPLOY)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_LINUXDEPLOY)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c argument_object_duk.cpp -o $(OBJDIR_LINUXDEPLOY)/argument_object_duk.o
+
+$(OBJDIR_LINUXDEPLOY)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c argument_object.cpp -o $(OBJDIR_LINUXDEPLOY)/argument_object.o
 
 $(OBJDIR_LINUXDEPLOY)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c duk_module_duktape.cpp -o $(OBJDIR_LINUXDEPLOY)/duk_module_duktape.o
@@ -3110,9 +3113,6 @@ $(OBJDIR_LINUXDEPLOY)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_LINUXDEPLOY)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/secret/one_shots.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/secret/one_shots.o
-
-$(OBJDIR_LINUXDEPLOY)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c argument_object.cpp -o $(OBJDIR_LINUXDEPLOY)/argument_object.o
 
 $(OBJDIR_LINUXDEPLOY)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_LINUXDEPLOY) $(INC_LINUXDEPLOY) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_LINUXDEPLOY)/deps/secret/one_shot_core.o
@@ -3159,9 +3159,6 @@ profilenoopt: before_profilenoopt out_profilenoopt after_profilenoopt
 out_profilenoopt: before_profilenoopt $(OBJ_PROFILENOOPT) $(DEP_PROFILENOOPT)
 	$(LD) $(LIBDIR_PROFILENOOPT) -o $(OUT_PROFILENOOPT) $(OBJ_PROFILENOOPT)  $(LDFLAGS_PROFILENOOPT) $(LIB_PROFILENOOPT)
 
-$(OBJDIR_PROFILENOOPT)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c mongo.cpp -o $(OBJDIR_PROFILENOOPT)/mongo.o
-
 $(OBJDIR_PROFILENOOPT)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c reoccurring_task_handler.cpp -o $(OBJDIR_PROFILENOOPT)/reoccurring_task_handler.o
 
@@ -3180,8 +3177,8 @@ $(OBJDIR_PROFILENOOPT)/perfmon.o: perfmon.cpp
 $(OBJDIR_PROFILENOOPT)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c non_user_task_thread.cpp -o $(OBJDIR_PROFILENOOPT)/non_user_task_thread.o
 
-$(OBJDIR_PROFILENOOPT)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c rng.cpp -o $(OBJDIR_PROFILENOOPT)/rng.o
+$(OBJDIR_PROFILENOOPT)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c mongo.cpp -o $(OBJDIR_PROFILENOOPT)/mongo.o
 
 $(OBJDIR_PROFILENOOPT)/main.o: main.cpp
 	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c main.cpp -o $(OBJDIR_PROFILENOOPT)/main.o
@@ -3204,8 +3201,8 @@ $(OBJDIR_PROFILENOOPT)/duktape.o: duktape.cpp
 $(OBJDIR_PROFILENOOPT)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c duk_object_functions.cpp -o $(OBJDIR_PROFILENOOPT)/duk_object_functions.o
 
-$(OBJDIR_PROFILENOOPT)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c shared_duk_worker_state.cpp -o $(OBJDIR_PROFILENOOPT)/shared_duk_worker_state.o
+$(OBJDIR_PROFILENOOPT)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c duk_modules.cpp -o $(OBJDIR_PROFILENOOPT)/duk_modules.o
 
 $(OBJDIR_PROFILENOOPT)/user.o: user.cpp
 	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c user.cpp -o $(OBJDIR_PROFILENOOPT)/user.o
@@ -3225,8 +3222,8 @@ $(OBJDIR_PROFILENOOPT)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_PROFILENOOPT)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c source_maps.cpp -o $(OBJDIR_PROFILENOOPT)/source_maps.o
 
-$(OBJDIR_PROFILENOOPT)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c duk_modules.cpp -o $(OBJDIR_PROFILENOOPT)/duk_modules.o
+$(OBJDIR_PROFILENOOPT)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c shared_duk_worker_state.cpp -o $(OBJDIR_PROFILENOOPT)/shared_duk_worker_state.o
 
 $(OBJDIR_PROFILENOOPT)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c serialisables.cpp -o $(OBJDIR_PROFILENOOPT)/serialisables.o
@@ -3246,8 +3243,8 @@ $(OBJDIR_PROFILENOOPT)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_PROFILENOOPT)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c safe_thread.cpp -o $(OBJDIR_PROFILENOOPT)/safe_thread.o
 
-$(OBJDIR_PROFILENOOPT)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c command_handler_state.cpp -o $(OBJDIR_PROFILENOOPT)/command_handler_state.o
+$(OBJDIR_PROFILENOOPT)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c rng.cpp -o $(OBJDIR_PROFILENOOPT)/rng.o
 
 $(OBJDIR_PROFILENOOPT)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/quickjs/quickjs.c -o $(OBJDIR_PROFILENOOPT)/deps/quickjs/quickjs.o
@@ -3276,6 +3273,9 @@ $(OBJDIR_PROFILENOOPT)/deps/networking/beast_compilation_unit.o: deps/networking
 $(OBJDIR_PROFILENOOPT)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c db_storage_backend.cpp -o $(OBJDIR_PROFILENOOPT)/db_storage_backend.o
 
+$(OBJDIR_PROFILENOOPT)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c command_handler_state.cpp -o $(OBJDIR_PROFILENOOPT)/command_handler_state.o
+
 $(OBJDIR_PROFILENOOPT)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c command_handler_fiber_backend.cpp -o $(OBJDIR_PROFILENOOPT)/command_handler_fiber_backend.o
 
@@ -3293,6 +3293,9 @@ $(OBJDIR_PROFILENOOPT)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_PROFILENOOPT)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c argument_object_duk.cpp -o $(OBJDIR_PROFILENOOPT)/argument_object_duk.o
+
+$(OBJDIR_PROFILENOOPT)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c argument_object.cpp -o $(OBJDIR_PROFILENOOPT)/argument_object.o
 
 $(OBJDIR_PROFILENOOPT)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c duk_module_duktape.cpp -o $(OBJDIR_PROFILENOOPT)/duk_module_duktape.o
@@ -3317,9 +3320,6 @@ $(OBJDIR_PROFILENOOPT)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_PROFILENOOPT)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/secret/one_shots.cpp -o $(OBJDIR_PROFILENOOPT)/deps/secret/one_shots.o
-
-$(OBJDIR_PROFILENOOPT)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c argument_object.cpp -o $(OBJDIR_PROFILENOOPT)/argument_object.o
 
 $(OBJDIR_PROFILENOOPT)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_PROFILENOOPT) $(INC_PROFILENOOPT) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_PROFILENOOPT)/deps/secret/one_shot_core.o
@@ -3366,9 +3366,6 @@ releasenosymfibers: before_releasenosymfibers out_releasenosymfibers after_relea
 out_releasenosymfibers: before_releasenosymfibers $(OBJ_RELEASENOSYMFIBERS) $(DEP_RELEASENOSYMFIBERS)
 	$(LD) $(LIBDIR_RELEASENOSYMFIBERS) -o $(OUT_RELEASENOSYMFIBERS) $(OBJ_RELEASENOSYMFIBERS)  $(LDFLAGS_RELEASENOSYMFIBERS) $(LIB_RELEASENOSYMFIBERS)
 
-$(OBJDIR_RELEASENOSYMFIBERS)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c mongo.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/mongo.o
-
 $(OBJDIR_RELEASENOSYMFIBERS)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c reoccurring_task_handler.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/reoccurring_task_handler.o
 
@@ -3387,8 +3384,8 @@ $(OBJDIR_RELEASENOSYMFIBERS)/perfmon.o: perfmon.cpp
 $(OBJDIR_RELEASENOSYMFIBERS)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c non_user_task_thread.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/non_user_task_thread.o
 
-$(OBJDIR_RELEASENOSYMFIBERS)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c rng.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/rng.o
+$(OBJDIR_RELEASENOSYMFIBERS)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c mongo.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/mongo.o
 
 $(OBJDIR_RELEASENOSYMFIBERS)/main.o: main.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c main.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/main.o
@@ -3411,8 +3408,8 @@ $(OBJDIR_RELEASENOSYMFIBERS)/duktape.o: duktape.cpp
 $(OBJDIR_RELEASENOSYMFIBERS)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c duk_object_functions.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/duk_object_functions.o
 
-$(OBJDIR_RELEASENOSYMFIBERS)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c shared_duk_worker_state.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/shared_duk_worker_state.o
+$(OBJDIR_RELEASENOSYMFIBERS)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c duk_modules.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/duk_modules.o
 
 $(OBJDIR_RELEASENOSYMFIBERS)/user.o: user.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c user.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/user.o
@@ -3432,8 +3429,8 @@ $(OBJDIR_RELEASENOSYMFIBERS)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_RELEASENOSYMFIBERS)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c source_maps.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/source_maps.o
 
-$(OBJDIR_RELEASENOSYMFIBERS)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c duk_modules.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/duk_modules.o
+$(OBJDIR_RELEASENOSYMFIBERS)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c shared_duk_worker_state.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/shared_duk_worker_state.o
 
 $(OBJDIR_RELEASENOSYMFIBERS)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c serialisables.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/serialisables.o
@@ -3453,8 +3450,8 @@ $(OBJDIR_RELEASENOSYMFIBERS)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_RELEASENOSYMFIBERS)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c safe_thread.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/safe_thread.o
 
-$(OBJDIR_RELEASENOSYMFIBERS)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c command_handler_state.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/command_handler_state.o
+$(OBJDIR_RELEASENOSYMFIBERS)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c rng.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/rng.o
 
 $(OBJDIR_RELEASENOSYMFIBERS)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c deps/quickjs/quickjs.c -o $(OBJDIR_RELEASENOSYMFIBERS)/deps/quickjs/quickjs.o
@@ -3483,6 +3480,9 @@ $(OBJDIR_RELEASENOSYMFIBERS)/deps/networking/beast_compilation_unit.o: deps/netw
 $(OBJDIR_RELEASENOSYMFIBERS)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c db_storage_backend.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/db_storage_backend.o
 
+$(OBJDIR_RELEASENOSYMFIBERS)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c command_handler_state.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/command_handler_state.o
+
 $(OBJDIR_RELEASENOSYMFIBERS)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c command_handler_fiber_backend.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/command_handler_fiber_backend.o
 
@@ -3500,6 +3500,9 @@ $(OBJDIR_RELEASENOSYMFIBERS)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_RELEASENOSYMFIBERS)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c argument_object_duk.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/argument_object_duk.o
+
+$(OBJDIR_RELEASENOSYMFIBERS)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c argument_object.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/argument_object.o
 
 $(OBJDIR_RELEASENOSYMFIBERS)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c duk_module_duktape.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/duk_module_duktape.o
@@ -3524,9 +3527,6 @@ $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c deps/secret/one_shots.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/one_shots.o
-
-$(OBJDIR_RELEASENOSYMFIBERS)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c argument_object.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/argument_object.o
 
 $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_RELEASENOSYMFIBERS) $(INC_RELEASENOSYMFIBERS) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_RELEASENOSYMFIBERS)/deps/secret/one_shot_core.o
@@ -3573,9 +3573,6 @@ debugfibers: before_debugfibers out_debugfibers after_debugfibers
 out_debugfibers: before_debugfibers $(OBJ_DEBUGFIBERS) $(DEP_DEBUGFIBERS)
 	$(LD) $(LIBDIR_DEBUGFIBERS) -o $(OUT_DEBUGFIBERS) $(OBJ_DEBUGFIBERS)  $(LDFLAGS_DEBUGFIBERS) $(LIB_DEBUGFIBERS)
 
-$(OBJDIR_DEBUGFIBERS)/mongo.o: mongo.cpp
-	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c mongo.cpp -o $(OBJDIR_DEBUGFIBERS)/mongo.o
-
 $(OBJDIR_DEBUGFIBERS)/reoccurring_task_handler.o: reoccurring_task_handler.cpp
 	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c reoccurring_task_handler.cpp -o $(OBJDIR_DEBUGFIBERS)/reoccurring_task_handler.o
 
@@ -3594,8 +3591,8 @@ $(OBJDIR_DEBUGFIBERS)/perfmon.o: perfmon.cpp
 $(OBJDIR_DEBUGFIBERS)/non_user_task_thread.o: non_user_task_thread.cpp
 	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c non_user_task_thread.cpp -o $(OBJDIR_DEBUGFIBERS)/non_user_task_thread.o
 
-$(OBJDIR_DEBUGFIBERS)/rng.o: rng.cpp
-	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c rng.cpp -o $(OBJDIR_DEBUGFIBERS)/rng.o
+$(OBJDIR_DEBUGFIBERS)/mongo.o: mongo.cpp
+	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c mongo.cpp -o $(OBJDIR_DEBUGFIBERS)/mongo.o
 
 $(OBJDIR_DEBUGFIBERS)/main.o: main.cpp
 	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c main.cpp -o $(OBJDIR_DEBUGFIBERS)/main.o
@@ -3618,8 +3615,8 @@ $(OBJDIR_DEBUGFIBERS)/duktape.o: duktape.cpp
 $(OBJDIR_DEBUGFIBERS)/duk_object_functions.o: duk_object_functions.cpp
 	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c duk_object_functions.cpp -o $(OBJDIR_DEBUGFIBERS)/duk_object_functions.o
 
-$(OBJDIR_DEBUGFIBERS)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
-	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c shared_duk_worker_state.cpp -o $(OBJDIR_DEBUGFIBERS)/shared_duk_worker_state.o
+$(OBJDIR_DEBUGFIBERS)/duk_modules.o: duk_modules.cpp
+	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c duk_modules.cpp -o $(OBJDIR_DEBUGFIBERS)/duk_modules.o
 
 $(OBJDIR_DEBUGFIBERS)/user.o: user.cpp
 	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c user.cpp -o $(OBJDIR_DEBUGFIBERS)/user.o
@@ -3639,8 +3636,8 @@ $(OBJDIR_DEBUGFIBERS)/stacktrace.o: stacktrace.cpp
 $(OBJDIR_DEBUGFIBERS)/source_maps.o: source_maps.cpp
 	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c source_maps.cpp -o $(OBJDIR_DEBUGFIBERS)/source_maps.o
 
-$(OBJDIR_DEBUGFIBERS)/duk_modules.o: duk_modules.cpp
-	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c duk_modules.cpp -o $(OBJDIR_DEBUGFIBERS)/duk_modules.o
+$(OBJDIR_DEBUGFIBERS)/shared_duk_worker_state.o: shared_duk_worker_state.cpp
+	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c shared_duk_worker_state.cpp -o $(OBJDIR_DEBUGFIBERS)/shared_duk_worker_state.o
 
 $(OBJDIR_DEBUGFIBERS)/serialisables.o: serialisables.cpp
 	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c serialisables.cpp -o $(OBJDIR_DEBUGFIBERS)/serialisables.o
@@ -3660,8 +3657,8 @@ $(OBJDIR_DEBUGFIBERS)/scheduled_tasks.o: scheduled_tasks.cpp
 $(OBJDIR_DEBUGFIBERS)/safe_thread.o: safe_thread.cpp
 	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c safe_thread.cpp -o $(OBJDIR_DEBUGFIBERS)/safe_thread.o
 
-$(OBJDIR_DEBUGFIBERS)/command_handler_state.o: command_handler_state.cpp
-	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c command_handler_state.cpp -o $(OBJDIR_DEBUGFIBERS)/command_handler_state.o
+$(OBJDIR_DEBUGFIBERS)/rng.o: rng.cpp
+	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c rng.cpp -o $(OBJDIR_DEBUGFIBERS)/rng.o
 
 $(OBJDIR_DEBUGFIBERS)/deps/quickjs/quickjs.o: deps/quickjs/quickjs.c
 	$(CC) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c deps/quickjs/quickjs.c -o $(OBJDIR_DEBUGFIBERS)/deps/quickjs/quickjs.o
@@ -3690,6 +3687,9 @@ $(OBJDIR_DEBUGFIBERS)/deps/networking/beast_compilation_unit.o: deps/networking/
 $(OBJDIR_DEBUGFIBERS)/db_storage_backend.o: db_storage_backend.cpp
 	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c db_storage_backend.cpp -o $(OBJDIR_DEBUGFIBERS)/db_storage_backend.o
 
+$(OBJDIR_DEBUGFIBERS)/command_handler_state.o: command_handler_state.cpp
+	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c command_handler_state.cpp -o $(OBJDIR_DEBUGFIBERS)/command_handler_state.o
+
 $(OBJDIR_DEBUGFIBERS)/command_handler_fiber_backend.o: command_handler_fiber_backend.cpp
 	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c command_handler_fiber_backend.cpp -o $(OBJDIR_DEBUGFIBERS)/command_handler_fiber_backend.o
 
@@ -3707,6 +3707,9 @@ $(OBJDIR_DEBUGFIBERS)/argument_object_qjs.o: argument_object_qjs.cpp
 
 $(OBJDIR_DEBUGFIBERS)/argument_object_duk.o: argument_object_duk.cpp
 	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c argument_object_duk.cpp -o $(OBJDIR_DEBUGFIBERS)/argument_object_duk.o
+
+$(OBJDIR_DEBUGFIBERS)/argument_object.o: argument_object.cpp
+	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c argument_object.cpp -o $(OBJDIR_DEBUGFIBERS)/argument_object.o
 
 $(OBJDIR_DEBUGFIBERS)/duk_module_duktape.o: duk_module_duktape.cpp
 	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c duk_module_duktape.cpp -o $(OBJDIR_DEBUGFIBERS)/duk_module_duktape.o
@@ -3731,9 +3734,6 @@ $(OBJDIR_DEBUGFIBERS)/deps/secret/secret.o: deps/secret/secret.cpp
 
 $(OBJDIR_DEBUGFIBERS)/deps/secret/one_shots.o: deps/secret/one_shots.cpp
 	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c deps/secret/one_shots.cpp -o $(OBJDIR_DEBUGFIBERS)/deps/secret/one_shots.o
-
-$(OBJDIR_DEBUGFIBERS)/argument_object.o: argument_object.cpp
-	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c argument_object.cpp -o $(OBJDIR_DEBUGFIBERS)/argument_object.o
 
 $(OBJDIR_DEBUGFIBERS)/deps/secret/one_shot_core.o: deps/secret/one_shot_core.cpp
 	$(CXX) $(CFLAGS_DEBUGFIBERS) $(INC_DEBUGFIBERS) -c deps/secret/one_shot_core.cpp -o $(OBJDIR_DEBUGFIBERS)/deps/secret/one_shot_core.o
@@ -3765,13 +3765,11 @@ clean_debugfibers:
 	rm -rf $(OBJDIR_DEBUGFIBERS)/deps/toolkit
 	rm -rf $(OBJDIR_DEBUGFIBERS)/deps/secret
 
-mongo.cpp: mongo.hpp logging.hpp stacktrace.hpp safe_thread.hpp rate_limiting.hpp tls.hpp
-
-mongo.hpp: perfmon.hpp db_storage_backend.hpp
-
-db_storage_backend.hpp: mongoc_fwd.hpp stacktrace.hpp safe_thread.hpp
+reoccurring_task_handler.cpp: reoccurring_task_handler.hpp time.hpp safe_thread.hpp
 
 safe_thread.hpp: stacktrace.hpp
+
+rate_limiting.cpp: rate_limiting.hpp memory_sandbox.hpp mongo.hpp shared_command_handler_state.hpp argument_object.hpp command_handler_fiber_backend.hpp
 
 rate_limiting.hpp: safe_thread.hpp argument_object.hpp
 
@@ -3783,13 +3781,11 @@ duktape.h: duk_config.h
 
 argument_object_duk.hpp: duktape.h argument_object_common.hpp
 
-tls.hpp: safe_thread.hpp
-
-reoccurring_task_handler.cpp: reoccurring_task_handler.hpp time.hpp safe_thread.hpp
-
-rate_limiting.cpp: rate_limiting.hpp memory_sandbox.hpp mongo.hpp shared_command_handler_state.hpp argument_object.hpp command_handler_fiber_backend.hpp
-
 memory_sandbox.hpp: safe_thread.hpp
+
+mongo.hpp: perfmon.hpp db_storage_backend.hpp
+
+db_storage_backend.hpp: mongoc_fwd.hpp stacktrace.hpp safe_thread.hpp
 
 shared_command_handler_state.hpp: command_handler_state.hpp command_handler.hpp shared_data.hpp
 
@@ -3825,7 +3821,9 @@ perfmon.cpp: perfmon.hpp mongo.hpp
 
 non_user_task_thread.cpp: non_user_task_thread.hpp mongo.hpp shared_data.hpp rate_limiting.hpp command_handler.hpp safe_thread.hpp unified_scripts.hpp
 
-rng.cpp: rng.hpp
+mongo.cpp: mongo.hpp logging.hpp stacktrace.hpp safe_thread.hpp rate_limiting.hpp tls.hpp
+
+tls.hpp: safe_thread.hpp
 
 main.cpp: stacktrace.hpp script_util.hpp seccallers.hpp mongo.hpp user.hpp item.hpp http_beast_server.hpp command_handler.hpp logging.hpp db_storage_backend.hpp auth.hpp safe_thread.hpp source_maps.hpp reoccurring_task_handler.hpp serialisables.hpp command_handler_fiber_backend.hpp
 
@@ -3843,7 +3841,11 @@ duktape.cpp: duktape.h
 
 duk_object_functions.cpp: duk_object_functions.hpp mongo.hpp argument_object.hpp
 
-shared_duk_worker_state.cpp: shared_duk_worker_state.hpp safe_thread.hpp
+duk_modules.cpp: duk_modules.hpp duk_module_duktape.h duk_object_functions.hpp memory_sandbox.hpp directory_helpers.hpp argument_object.hpp
+
+duk_modules.hpp: argument_object.hpp
+
+duk_module_duktape.h: duktape.h
 
 user.cpp: user.hpp rng.hpp privileged_core_scripts.hpp logging.hpp command_handler.hpp safe_thread.hpp serialisables.hpp
 
@@ -3857,11 +3859,7 @@ stacktrace.cpp: stacktrace.hpp
 
 source_maps.cpp: source_maps.hpp
 
-duk_modules.cpp: duk_modules.hpp duk_module_duktape.h duk_object_functions.hpp memory_sandbox.hpp directory_helpers.hpp argument_object.hpp
-
-duk_modules.hpp: argument_object.hpp
-
-duk_module_duktape.h: duktape.h
+shared_duk_worker_state.cpp: shared_duk_worker_state.hpp safe_thread.hpp
 
 serialisables.cpp: serialisables.hpp user.hpp auth.hpp event_manager.hpp scheduled_tasks.hpp quest_manager.hpp item.hpp
 
@@ -3875,9 +3873,11 @@ scheduled_tasks.cpp: scheduled_tasks.hpp rng.hpp privileged_core_scripts.hpp
 
 safe_thread.cpp: safe_thread.hpp mongo.hpp
 
-command_handler_state.cpp: command_handler_state.hpp command_handler.hpp safe_thread.hpp
+rng.cpp: rng.hpp
 
 db_storage_backend.cpp: db_storage_backend.hpp mongo.hpp user.hpp rate_limiting.hpp stacktrace.hpp directory_helpers.hpp
+
+command_handler_state.cpp: command_handler_state.hpp command_handler.hpp safe_thread.hpp
 
 command_handler_fiber_backend.cpp: command_handler_fiber_backend.hpp safe_thread.hpp
 
@@ -3891,6 +3891,8 @@ argument_object_qjs.cpp: argument_object_qjs.hpp memory_sandbox.hpp argument_obj
 
 argument_object_duk.cpp: argument_object_duk.hpp duktape.h memory_sandbox.hpp argument_object.hpp
 
+argument_object.cpp: argument_object.hpp
+
 duk_module_duktape.cpp: duktape.h duk_modules.hpp duk_module_duktape.h duk_object_functions.hpp
 
 deps/secret/tutorial.cpp: privileged_core_scripts.hpp rate_limiting.hpp memory_sandbox.hpp duk_object_functions.hpp rng.hpp quest_manager.hpp event_manager.hpp safe_thread.hpp
@@ -3902,8 +3904,6 @@ deps/secret/structure.cpp: rng.hpp
 deps/secret/secret.cpp: privileged_core_scripts.hpp rng.hpp duk_object_functions.hpp ascii_helpers.hpp argument_object.hpp
 
 deps/secret/one_shots.cpp: user.hpp unified_scripts.hpp rate_limiting.hpp memory_sandbox.hpp duk_object_functions.hpp rng.hpp command_handler.hpp safe_thread.hpp serialisables.hpp argument_object.hpp
-
-argument_object.cpp: argument_object.hpp
 
 deps/secret/one_shot_core.cpp: user.hpp rate_limiting.hpp rng.hpp safe_thread.hpp serialisables.hpp
 
