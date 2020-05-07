@@ -29,4 +29,11 @@ fiber_queue& get_global_fiber_queue()
     return q;
 }
 
+inline
+fiber_queue& get_noncritical_fiber_queue()
+{
+    static fiber_queue q;
+    return q;
+}
+
 #endif // COMMAND_HANDLER_FIBER_BACKEND_HPP_INCLUDED

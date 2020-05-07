@@ -15,7 +15,7 @@
 
 //tls_variable<int, 0> is_fiber;
 
-#define HARDWARE_THREADS 3
+//#define HARDWARE_THREADS 3
 
 thread_local int is_fiber;
 
@@ -35,14 +35,14 @@ struct scheduler_data
     //std::mutex lock;
 };
 
-std::array<scheduler_data, HARDWARE_THREADS> global_data;
+//std::array<scheduler_data, HARDWARE_THREADS> global_data;
 
 struct custom_scheduler : boost::fibers::algo::algorithm
 {
     int my_id = 0;
     scheduler_data& dat;
 
-    custom_scheduler(int id) : my_id(id), dat(global_data[my_id])
+    custom_scheduler(int id, scheduler_data& _dat) : my_id(id), dat(_dat)
     {
 
     }
@@ -87,48 +87,55 @@ struct custom_scheduler : boost::fibers::algo::algorithm
     }
 };
 
-void worker_thread(int id)
+template<int HARDWARE_THREADS>
+void worker_thread(int id, std::array<scheduler_data, HARDWARE_THREADS>* pothers, bool high_priority, fiber_queue& fqueue)
 {
+    std::array<scheduler_data, HARDWARE_THREADS>& others = *pothers;
+
     #ifdef USE_FIBERS
-    boost::fibers::use_scheduling_algorithm<custom_scheduler>(id);
+    boost::fibers::use_scheduling_algorithm<custom_scheduler>(id, others[id]);
     is_fiber = 1;
 
-    fiber_queue& queue = get_global_fiber_queue();
+    fiber_queue& queue = fqueue;
 
     thread_priority_handler tp;
-    tp.enable();
+
+    if(high_priority)
+        tp.enable();
 
     printf("Boot fiber worker %i\n", id);
 
     #ifndef __WIN32__
 
-    #define MY_SCHED SCHED_RR
-
-    sched_param sp = { .sched_priority = 50 };
-    int ret = sched_setscheduler(0, MY_SCHED, &sp);
-
-    if (ret == -1)
+    if(high_priority)
     {
-        printf("sched_setscheduler");
-        return;
+        #define MY_SCHED SCHED_RR
+
+        sched_param sp = { .sched_priority = 50 };
+        int ret = sched_setscheduler(0, MY_SCHED, &sp);
+
+        if (ret == -1)
+        {
+            printf("sched_setscheduler");
+            return;
+        }
+
+        sched_param params;
+        params.sched_priority = sched_get_priority_max(MY_SCHED);
+
+        pthread_t this_thread = pthread_self();
+
+        std::cout << "Trying to set thread realtime prio = " << params.sched_priority << std::endl;
+
+        ret = pthread_setschedparam(this_thread, MY_SCHED, &params);
+
+        if (ret != 0)
+        {
+            // Print the error
+            std::cout << "Unsuccessful in setting thread realtime prio" << std::endl;
+            return;
+        }
     }
-
-    sched_param params;
-    params.sched_priority = sched_get_priority_max(MY_SCHED);
-
-    pthread_t this_thread = pthread_self();
-
-    std::cout << "Trying to set thread realtime prio = " << params.sched_priority << std::endl;
-
-    ret = pthread_setschedparam(this_thread, MY_SCHED, &params);
-
-    if (ret != 0)
-    {
-        // Print the error
-        std::cout << "Unsuccessful in setting thread realtime prio" << std::endl;
-        return;
-    }
-
     #endif // __WIN32__
 
     while(1)
@@ -136,7 +143,7 @@ void worker_thread(int id)
         //boost::this_fiber::yield();
         boost::this_fiber::sleep_for(std::chrono::milliseconds(100));
 
-        int my_size = global_data[id].q.size();
+        int my_size = others[id].q.size();
         bool small = true;
 
         if(my_size > 0)
@@ -147,7 +154,7 @@ void worker_thread(int id)
                     continue;
 
                 ///significant difference in thread load
-                if(global_data[i].approx_queue_size < my_size - 3)
+                if(others[i].approx_queue_size < my_size - 3)
                     small = false;
             }
         }
@@ -204,11 +211,25 @@ void boot_fiber_manager()
     printf("FIBER START\n");
 
     #ifdef USE_FIBERS
-    printf("Boot?\n");
+    printf("Boot Script Scheduler\n");
 
-    for(int i=0; i < HARDWARE_THREADS; i++)
+    std::array<scheduler_data, 3>* script_workers = new std::array<scheduler_data, 3>;
+
+    for(int i=0; i < 3; i++)
     {
-        std::thread(worker_thread, i).detach();
+        std::thread(worker_thread<3>, i, script_workers, true, std::ref(get_global_fiber_queue())).detach();
     }
+
+    printf("Boot Server Scheduler");
+
+    std::array<scheduler_data, 1>* server_workers = new std::array<scheduler_data, 1>;
+
+    for(int i=0; i < 1; i++)
+    {
+        std::thread(worker_thread<1>, i, server_workers, false, std::ref(get_noncritical_fiber_queue())).detach();
+    }
+
+    printf("Finished booting fibers\n");
+
     #endif // USE_FIBERS
 }
