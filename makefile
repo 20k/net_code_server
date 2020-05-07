@@ -12,7 +12,7 @@ LD = g++
 WINDRES = windres
 
 INC = -Ideps
-CFLAGS = -Wnon-virtual-dtor -Winit-self -Wunreachable-code -Wextra -Wall -std=c++2a -fexceptions -Wno-narrowing -fno-strict-aliasing -Wno-unused-parameter -Wno-unused-label -no-pie -Werror=return-type -Wno-cast-function-type -DBOOST_STACKTRACE_USE_BACKTRACE -DSERVER -DCONFIG_VERSION="" -DCONFIG_BIGNUM -DDUMP_LEAKS
+CFLAGS = -Wnon-virtual-dtor -Winit-self -Wunreachable-code -Wextra -Wall -std=c++2a -fexceptions -Wno-narrowing -fno-strict-aliasing -Wno-unused-parameter -Wno-unused-label -no-pie -Werror=return-type -Wno-cast-function-type -DBOOST_STACKTRACE_USE_BACKTRACE -DSERVER -DCONFIG_VERSION="" -DCONFIG_BIGNUM -DDUMP_LEAKS -DUSE_FIBERS
 RESINC = 
 LIBDIR = -Ldeps/libs -Ldeps/steamworks_sdk_142/sdk/public/steam/lib/win64
 LIB = 
