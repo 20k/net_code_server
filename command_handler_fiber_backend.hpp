@@ -49,5 +49,6 @@ fiber_queue& get_noncritical_fiber_queue()
 }
 
 void fiber_sleep(double time_ms);
+void fiber_yield();
 
 #endif // COMMAND_HANDLER_FIBER_BACKEND_HPP_INCLUDED

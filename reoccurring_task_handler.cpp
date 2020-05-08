@@ -12,6 +12,8 @@ void reoccuring_task_thread(reoccuring_task_handler& handler)
 
         while(1)
         {
+            fiber_yield();
+
             reoccuring_task* ctask = nullptr;
 
             {

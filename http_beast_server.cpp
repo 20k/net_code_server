@@ -385,16 +385,16 @@ void boot_connection_handlers()
 {
     start_non_user_task_thread();
 
-    connection* c1 = new connection;
-    c1->host("0.0.0.0", HOST_WEBSOCKET_SSL_PORT, connection_type::SSL);
+    /*connection* c1 = new connection;
+    c1->host("0.0.0.0", HOST_WEBSOCKET_SSL_PORT, connection_type::SSL);*/
 
     connection* c2 = new connection;
     c2->host("0.0.0.0", HOST_WEBSOCKET_SSL_PORT_2, connection_type::SSL);
 
-    connection* c3 = new connection;
-    c3->host("0.0.0.0", HOST_WEBSOCKET_PORT, connection_type::PLAIN);
+    //connection* c3 = new connection;
+    //c3->host("0.0.0.0", HOST_WEBSOCKET_PORT, connection_type::PLAIN);
 
-    sthread(websocket_server, std::ref(*c1)).detach();
+    //sthread(websocket_server, std::ref(*c1)).detach();
     sthread(websocket_server, std::ref(*c2)).detach();
-    sthread(websocket_server, std::ref(*c3)).detach();
+    //sthread(websocket_server, std::ref(*c3)).detach();
 }

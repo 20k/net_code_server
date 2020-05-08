@@ -351,12 +351,21 @@ int main()
 
     //undupe_items();
 
-    fix_users();
+    //fix_users();
 
     sthread([]()
            {
             tickle_item_cache();
            }).detach();
+
+    {
+        mongo_lock_proxy usr = get_global_mongo_user_info_context(-2);
+
+        user me;
+        me.load_from_db(usr, "i20k");
+        me.cash = 10000;
+        me.overwrite_user_in_db(usr);
+    }
 
     get_global_task_handler().register_task(cleanup_notifs, 60*60*24);
 

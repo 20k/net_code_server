@@ -45,6 +45,14 @@ void fiber_sleep(double time_ms)
     }
 }
 
+void fiber_yield()
+{
+    if(is_thread_fiber())
+    {
+        boost::this_fiber::yield();
+    }
+}
+
 //std::array<scheduler_data, HARDWARE_THREADS> global_data;
 
 struct custom_scheduler : boost::fibers::algo::algorithm

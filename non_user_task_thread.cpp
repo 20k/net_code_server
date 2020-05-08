@@ -267,7 +267,7 @@ void run_non_user_tasks()
 
 void start_non_user_task_thread()
 {
-    get_noncritical_fiber_queue().add(run_non_user_tasks);
+    get_global_fiber_queue().add(run_non_user_tasks);
     get_noncritical_fiber_queue().add(bot_thread);
     #ifdef ONE_TIME_MANHANDLE
     get_noncritical_fiber_queue().add(manhandle_away_critical_users);
