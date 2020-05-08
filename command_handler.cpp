@@ -2093,7 +2093,7 @@ nlohmann::json handle_autocompletes_json(const std::string& username, const std:
     return obj;
 }
 
-nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const nlohmann::json& str)
+nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_shared, nlohmann::json str)
 {
     std::string current_user = all_shared->state.get_user_name();
     std::string current_auth = all_shared->state.get_auth();
