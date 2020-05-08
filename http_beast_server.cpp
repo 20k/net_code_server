@@ -226,11 +226,23 @@ void websocket_server(connection& conn)
 
                 conn.pop_disconnected_client();
 
-                if(user_states.find(disconnected_client.value()) != user_states.end())
-                {
-                    user_states[disconnected_client.value()]->state.should_terminate_any_realtime = true;
+                int disconnected_id = disconnected_client.value();
 
-                    user_states.erase(disconnected_client.value());
+                if(user_states.find(disconnected_id) != user_states.end())
+                {
+                    user_states[disconnected_id]->state.should_terminate_any_realtime = true;
+
+                    user_states.erase(disconnected_id);
+                }
+
+                if(command_queue.find(disconnected_id) != command_queue.end())
+                {
+                    command_queue.erase(disconnected_id);
+                }
+
+                if(terminate_timers.find(disconnected_id) != terminate_timers.end())
+                {
+                    terminate_timers.erase(disconnected_id);
                 }
 
                 disconnected_client = conn.has_disconnected_client();
