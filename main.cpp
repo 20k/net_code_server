@@ -351,7 +351,7 @@ int main()
 
     //undupe_items();
 
-    //fix_users();
+    fix_users();
 
     sthread([]()
            {
