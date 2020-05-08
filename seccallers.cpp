@@ -1029,7 +1029,9 @@ js::value jxos_call(js::value_context* vctx, js::value val)
     std::vector<std::string> old_caller_stack = get_caller_stack(*vctx);
     std::string old_caller = get_caller(*vctx);
 
-    std::string new_caller = get_script_host(*vctx);
+    js::value current_function = js::get_current_function(*vctx);
+
+    std::string new_caller = current_function.get_hidden("script_host");
 
     {
         js::value heap = js::get_heap_stash(*vctx);
