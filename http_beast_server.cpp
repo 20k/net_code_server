@@ -193,9 +193,11 @@ void websocket_server(connection& conn)
     std::map<int, std::shared_ptr<shared_command_handler_state>> user_states;
     std::map<int, std::deque<nlohmann::json>> command_queue;
     std::map<int, sf::Clock> terminate_timers;
+    std::map<int, sf::Clock> time_since_join;
 
     sf::Clock ping_timer;
     sf::Clock poll_clock; ///!!!
+    sf::Clock disconnect_clock;
 
     while(1)
     {
@@ -208,6 +210,7 @@ void websocket_server(connection& conn)
             while(next_client.has_value())
             {
                 user_states[next_client.value()] = std::make_shared<shared_command_handler_state>();
+                time_since_join[next_client.value()].restart();
 
                 conn.pop_new_client();
 
@@ -243,6 +246,11 @@ void websocket_server(connection& conn)
                 if(terminate_timers.find(disconnected_id) != terminate_timers.end())
                 {
                     terminate_timers.erase(disconnected_id);
+                }
+
+                if(time_since_join.find(disconnected_id) != time_since_join.end())
+                {
+                    time_since_join.erase(disconnected_id);
                 }
 
                 disconnected_client = conn.has_disconnected_client();
@@ -323,6 +331,24 @@ void websocket_server(connection& conn)
 
                 write_count++;
             }
+        }
+
+        if(disconnect_clock.getElapsedTime().asSeconds() > 5)
+        {
+            ///disconnect unauthed users
+            for(auto& i : user_states)
+            {
+                int auth_time_ms = 8000;
+
+                std::shared_ptr<shared_command_handler_state>& shared_state = i.second;
+
+                if(!shared_state->state.is_authenticated() && (time_since_join[i.first].getElapsedTime().asMicroseconds() / 1000.) > auth_time_ms)
+                {
+                    conn.force_disconnect(i.first);
+                }
+            }
+
+            disconnect_clock.restart();
         }
 
         for(auto& i : command_queue)
