@@ -39,6 +39,8 @@ struct command_handler_state
     std::string get_auth();
     void set_auth(const std::string& str);
 
+    bool is_authenticated();
+
     void set_steam_id(uint64_t psteam_id);
     uint64_t get_steam_id();
 

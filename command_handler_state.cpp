@@ -23,6 +23,13 @@ void command_handler_state::set_auth(const std::string& str)
     auth = str;
 }
 
+bool command_handler_state::is_authenticated()
+{
+    safe_lock_guard guard(command_lock);
+
+    return auth.size() != 0;
+}
+
 void command_handler_state::set_steam_id(uint64_t psteam_id)
 {
     safe_lock_guard guard(command_lock);
