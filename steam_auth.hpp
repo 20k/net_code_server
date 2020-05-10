@@ -4,6 +4,7 @@
 #include <memory>
 #include <optional>
 #include <stdint.h>
+#include <string>
 
 struct steam_auth_data
 {
