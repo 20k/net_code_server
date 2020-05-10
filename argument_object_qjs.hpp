@@ -562,6 +562,8 @@ namespace js_quickjs
             return ret;
         }
 
+        std::vector<std::pair<js_quickjs::value, js_quickjs::value>> iterate();
+
         value operator[](int64_t val);
         value operator[](const std::string& str);
         value operator[](const char* str);

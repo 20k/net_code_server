@@ -946,7 +946,6 @@ js_quickjs::value& js_quickjs::value::operator=(const JSValue& in)
     return *this;
 }
 
-
 void js_quickjs::value::stringify_parse()
 {
     std::string json = to_json();
@@ -1010,6 +1009,18 @@ js_quickjs::value::operator bool() const
 
     return ret;
 }
+
+std::vector<std::pair<js_quickjs::value, js_quickjs::value>> js_quickjs::value::iterate()
+{
+    if(!has_value)
+        return std::vector<std::pair<js_quickjs::value, js_quickjs::value>>();
+
+    std::vector<std::pair<js_quickjs::value, js_quickjs::value>> ret;
+    qarg::get(*vctx, val, ret);
+
+    return ret;
+}
+
 
 js_quickjs::value js_quickjs::value::operator[](int64_t arg)
 {

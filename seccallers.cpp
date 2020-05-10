@@ -1113,6 +1113,12 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     global.del("ols_call");
     global.del("ons_call");
 
+    {
+        #ifdef USE_QUICKJS
+        std::vector<std::pair<js::value, js::value>> val = global.iterate();
+        #endif // USE_QUICKJS
+    }
+
     js::add_key_value(global, "is_realtime_script", js::function<is_realtime_script>);
     js::add_key_value(global, "timeout_yield", js::function<timeout_yield>);
     js::add_key_value(global, "async_pipe", js::function<async_pipe>);
