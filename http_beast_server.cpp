@@ -261,6 +261,9 @@ void websocket_server(connection& conn)
         {
             for(auto& i : user_states)
             {
+                if(!i.second->state.is_authenticated())
+                    continue;
+
                 nlohmann::json data;
                 data["type"] = "server_ping";
 
