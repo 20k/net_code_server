@@ -1116,6 +1116,17 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     {
         #ifdef USE_QUICKJS
         std::vector<std::pair<js::value, js::value>> val = global.iterate();
+
+        for(auto& i : val)
+        {
+            if(!i.second.has("prototype"))
+                continue;
+
+            if(!i.second["prototype"].has("constructor"))
+                continue;
+
+            i.second["prototype"].del("constructor");
+        }
         #endif // USE_QUICKJS
     }
 
