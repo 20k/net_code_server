@@ -749,10 +749,6 @@ void async_launch_script_name(js::value_context& vctx, int sl, const std::string
     if(sl == 0)
         seclevel = "n";
 
-    //std::cout <<" running " << seclevel + call_end << std::endl;
-
-    ///TODO: FIBRE
-
     std::string caller = get_caller(vctx);
 
     #ifndef USE_FIBERS

@@ -632,7 +632,6 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
 void throwaway_user_thread(const std::string& username, const std::string& command, std::optional<float> custom_exec_time_s, bool force_exec)
 {
-    ///TODO: FIBRE
     #ifndef USE_FIBERS
 
     get_global_fiber_queue().add(run_in_user_context, username, command, std::nullopt, custom_exec_time_s, force_exec);
