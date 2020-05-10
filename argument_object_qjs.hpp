@@ -45,6 +45,9 @@ namespace js_quickjs
 
     struct undefined_t{};
     const static inline undefined_t undefined;
+
+    struct null_t{};
+    const static inline null_t null;
 }
 
 namespace qarg
@@ -147,6 +150,12 @@ namespace qarg
     JSValue push(JSContext* ctx, const js_quickjs::undefined_t&)
     {
         return JS_UNDEFINED;
+    }
+
+    inline
+    JSValue push(JSContext* ctx, const js_quickjs::null_t&)
+    {
+        return JS_NULL;
     }
 
     inline
@@ -440,6 +449,7 @@ namespace js_quickjs
         value& operator=(const value& right);
         //value& operator=(value&& right);
         value& operator=(js_quickjs::undefined_t);
+        value& operator=(js_quickjs::null_t);
         value& operator=(const nlohmann::json&);
 
         template<typename T>

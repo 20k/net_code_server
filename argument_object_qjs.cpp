@@ -919,6 +919,15 @@ js_quickjs::value& js_quickjs::value::operator=(js_quickjs::undefined_t)
     return *this;
 }
 
+js_quickjs::value& js_quickjs::value::operator=(js_quickjs::null_t)
+{
+    qstack_manager m(*this);
+
+    val = qarg::push(ctx, js_quickjs::null);
+
+    return *this;
+}
+
 js_quickjs::value& js_quickjs::value::operator=(const nlohmann::json& in)
 {
     qstack_manager m(*this);
