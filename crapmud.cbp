@@ -405,6 +405,7 @@
 			<Add option="-lsdkencryptedappticket64" />
 			<Add option="-lboost_fiber-mt" />
 			<Add option="-lboost_context-mt" />
+			<Add option="-llmdb" />
 			<Add directory="deps/libs" />
 			<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/win64" />
 		</Linker>
@@ -427,6 +428,8 @@
 		<Unit filename="command_handler_state.hpp" />
 		<Unit filename="db_storage_backend.cpp" />
 		<Unit filename="db_storage_backend.hpp" />
+		<Unit filename="db_storage_backend_lmdb.cpp" />
+		<Unit filename="db_storage_backend_lmdb.hpp" />
 		<Unit filename="deps/libncclient/nc_util.hpp" />
 		<Unit filename="deps/networking/beast_compilation_unit.cpp" />
 		<Unit filename="deps/networking/fiber_round_robin.hpp" />
