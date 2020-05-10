@@ -75,7 +75,7 @@ struct db::backend
 
 db::backend& get_backend()
 {
-    static db::backend ret("./", 50);
+    static db::backend ret("./lmdb_storage", 50);
 
     return ret;
 }
