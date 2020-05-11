@@ -191,6 +191,15 @@ DEFINE_SERIALISE_FUNCTION(item)
     DO_FSERIALISE(data);
 }
 
+DEFINE_SERIALISE_FUNCTION(playspace_network_link)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(name);
+    DO_FSERIALISE(links);
+    DO_FSERIALISE(strengths);
+}
+
 template<typename T, typename U>
 bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
 {
@@ -331,3 +340,4 @@ DEFINE_GENERIC_DB(quest, std::string, id);
 DEFINE_GENERIC_DB(low_level_structure, std::string, name);
 DEFINE_GENERIC_DB(item, std::string, item_id);
 DEFINE_GENERIC_DB(user, std::string, name);
+DEFINE_GENERIC_DB(playspace_network_link, std::string, name);

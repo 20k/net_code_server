@@ -1105,7 +1105,7 @@ std::string delete_user(command_handler_state& state, const std::string& str, bo
             mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(-2);
 
             item it;
-            it.id = i;
+            it.item_id = i;
 
             db_disk_remove(items_ctx, it);
         }
