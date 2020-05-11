@@ -807,10 +807,10 @@ void delete_user_for(const std::string& name)
         mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
         ctx.change_collection(name);
 
-        mongo_requester req;
-        req.set_prop("name", name);
+        user usr;
+        usr.name = name;
 
-        req.remove_all_from_db(ctx);
+        db_disk_remove(ctx, usr);
     }
 }
 
@@ -895,6 +895,7 @@ void delete_events_for(const std::string& name)
 
 ///not updated for quest stuff
 ///not updated for event stuff
+#if 0
 std::string rename_user_force(const std::string& from_name, const std::string& to_name)
 {
     user usr;
@@ -1026,6 +1027,7 @@ std::string rename_user_force(const std::string& from_name, const std::string& t
 
     return "Renamed " + from_name + " " + to_name;
 }
+#endif // 0
 
 ///should really queue this or something
 std::string delete_user(command_handler_state& state, const std::string& str, bool cli_force)
@@ -1088,13 +1090,25 @@ std::string delete_user(command_handler_state& state, const std::string& str, bo
     }
 
     ///DELETE ITEMS
+    ///TODO: RACEY
     {
-        mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(-2);
+        user usr;
 
-        mongo_requester req;
-        req.set_prop("owner", name);
+        {
+            mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(-2);
 
-        req.remove_all_from_db(items_ctx);
+            usr.load_from_db(user_ctx, name);
+        }
+
+        for(auto& i : usr.get_all_items())
+        {
+            mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(-2);
+
+            item it;
+            it.id = i;
+
+            db_disk_remove(items_ctx, it);
+        }
     }
 
     ///DELETE AUTH
@@ -1449,12 +1463,6 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
 
             if(old_auth.steam_id == steam_id)
                 return make_response("Auth already tied to steam id");
-
-            ///this is just simply too dangerous
-            /*mongo_requester request;
-            request.set_prop("steam_id", steam_id);
-
-            request.remove_all_from_db(ctx);*/
 
             ///this is massively safer
             ///it will result in orphaned auths but this doesn't matter

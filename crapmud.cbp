@@ -224,6 +224,7 @@
 					<Add option="-DLOCAL_IP" />
 					<Add option="-DUSE_FIBERS" />
 					<Add directory="deps/SFML-2.5.1/include" />
+					<Add directory="deps/liblmdb" />
 				</Compiler>
 				<Linker>
 					<Add option="-O2" />
@@ -241,6 +242,7 @@
 					<Add directory="deps/libs" />
 					<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/linux64" />
 					<Add directory="deps/SFML-2.5.1/lib" />
+					<Add directory="deps/liblmdb" />
 				</Linker>
 			</Target>
 			<Target title="LinuxDeploy">
@@ -258,6 +260,7 @@
 					<Add option="-no-pie" />
 					<Add option="-DEXTERN_IP" />
 					<Add directory="deps/SFML-2.5.1/include" />
+					<Add directory="deps/liblmdb" />
 				</Compiler>
 				<Linker>
 					<Add option="-O2" />
@@ -275,6 +278,7 @@
 					<Add directory="deps/libs" />
 					<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/linux64" />
 					<Add directory="deps/SFML-2.5.1/lib" />
+					<Add directory="deps/liblmdb" />
 				</Linker>
 			</Target>
 			<Target title="ProfileNoOpt">
@@ -387,6 +391,7 @@
 			<Add option="-DDUMP_LEAKS" />
 			<Add option="-DUSE_FIBERS" />
 			<Add directory="deps" />
+			<Add directory="deps/liblmdb" />
 		</Compiler>
 		<Linker>
 			<Add option="-lmingw32" />
@@ -408,6 +413,7 @@
 			<Add option="-llmdb" />
 			<Add directory="deps/libs" />
 			<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/win64" />
+			<Add directory="deps/liblmdb" />
 		</Linker>
 		<Unit filename="argument_object.cpp" />
 		<Unit filename="argument_object.hpp" />

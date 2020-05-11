@@ -822,7 +822,7 @@ int main()
 
             if(starts_with(sure, "y"))
             {
-                std::cout << rename_user_force(start, fin) << std::endl;
+                //std::cout << rename_user_force(start, fin) << std::endl;
             }
             else
             {
