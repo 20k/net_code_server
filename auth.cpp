@@ -7,46 +7,31 @@
 
 bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary_in)
 {
-    nlohmann::json req;
-    req["auth_token_hex"] = binary_to_hex(auth_binary_in);
+    std::string auth_found = binary_to_hex(auth_binary_in);
 
-    std::vector<nlohmann::json> found = fetch_from_db(ctx, req);
-
-    if(found.size() != 1)
-        return false;
-
-    *this = auth();
-
-    deserialise(found[0], *this, serialise_mode::DISK);
-
-    return true;
+    return db_disk_load(ctx, *this, auth_found);
 }
 
+///THIS IS REALLY BAD
 bool auth::load_from_db_steamid(mongo_lock_proxy& ctx, uint64_t psteam_id)
 {
-    steam_id = psteam_id;
+    std::vector<auth> all_auth = db_disk_load_all(ctx, auth());
 
-    nlohmann::json req;
-    req["steam_id"] = steam_id;
+    for(auto& i : all_auth)
+    {
+        if(i.steam_id == psteam_id)
+        {
+            *this = i;
+            return true;
+        }
+    }
 
-    std::vector<nlohmann::json> found = fetch_from_db(ctx, req);
-
-    if(found.size() != 1)
-        return false;
-
-    deserialise(found[0], *this, serialise_mode::DISK);
-
-    return true;
+    return false;
 }
 
 void auth::overwrite_in_db(mongo_lock_proxy& ctx)
 {
-    nlohmann::json req;
-    req["auth_token_hex"] = auth_token_hex;
-
-    nlohmann::json data = serialise(*this, serialise_mode::DISK);
-
-    update_in_db_if_exact(ctx, req, data);
+    db_disk_overwrite(ctx, *this);
 }
 
 void auth::insert_user_exclusive(const std::string& username)

@@ -341,3 +341,4 @@ DEFINE_GENERIC_DB(low_level_structure, std::string, name);
 DEFINE_GENERIC_DB(item, std::string, item_id);
 DEFINE_GENERIC_DB(user, std::string, name);
 DEFINE_GENERIC_DB(playspace_network_link, std::string, name);
+DEFINE_GENERIC_DB(auth, std::string, auth_token_hex);
