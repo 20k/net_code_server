@@ -8,34 +8,6 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
 
     #define USE_C_SHIMS
     #ifdef USE_C_SHIMS
-    ///check C hooks
-    /*{
-        mongo_requester req;
-        req.set_prop("item_id", full_scriptname);
-        req.set_prop("c_shim", 1);
-
-        mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(thread_id);
-
-        auto found = req.fetch_from_db(items_ctx);
-
-        if(found.size() == 1)
-        {
-            std::string c_shim_name = found[0].get_prop("c_shim_name");
-
-            if(shim_map.find(c_shim_name) != shim_map.end())
-            {
-                ret.c_shim_name = c_shim_name;
-                ret.seclevel = 4;
-                ret.owner = found[0].get_prop("owner");
-                ret.is_c_shim = true;
-                ret.valid = true;
-                ret.parsed_source = "function(context, args){\n    return \"This script is a fake shim to c++ and this source is fake, sorry <3\";\n}";
-
-                return ret;
-            }
-        }
-    }*/
-
     if(auto priv_it = privileged_functions.find(full_scriptname); priv_it != privileged_functions.end())
     {
         ret.c_shim_name = full_scriptname;
