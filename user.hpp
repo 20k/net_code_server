@@ -8,6 +8,7 @@
 
 #include <secret/structure.hpp>
 #include "timestamped_position.hpp"
+#include "auth.hpp"
 
 struct low_level_structure;
 
