@@ -911,22 +911,6 @@ int main()
 
         mongo_lock_proxy lock = get_global_mongo_user_info_context(-2);
 
-        /*mongo_requester req;
-        req.set_prop("name", command);
-
-        auto res = req.fetch_from_db(lock);
-
-        if(res.size() == 1)
-        {
-            mongo_requester found = res[0];
-
-            std::string key = found.get_prop("auth");
-
-            write_all_bin(command + ".key", key);
-
-            std::cout << "found" << std::endl;
-        }*/
-
         user usr;
 
         if(!usr.load_from_db(lock, command))
