@@ -2744,10 +2744,7 @@ duk_ret_t item__create(priv_context& priv_ctx, duk_context* ctx, int sl)
     ///which sorts out indices
     //test_item.set_prop("owner", get_caller(ctx));
 
-    {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(get_thread_id(ctx));
-        test_item.generate_set_id(mongo_ctx);
-    }
+    test_item.generate_set_id();
 
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
@@ -7077,10 +7074,7 @@ duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)
         test_item.generate_set_id(mongo_ctx);
     }
 
-    {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(ctx));
-        test_item.create_in_db(mongo_ctx);
-    }
+    test_item.create_in_db();
 
     if(test_item.transfer_to_user(target, get_thread_id(ctx)))
     {

@@ -3,39 +3,9 @@
 #include <libncclient/nc_util.hpp>
 #include "rng.hpp"
 
-int32_t item::get_new_id(mongo_lock_proxy& global_props_ctx)
+int32_t item::get_new_id()
 {
-    mongo_requester request;
-    request.set_prop("items_id_is_gid", 1);
-
-    std::vector<mongo_requester> found = request.fetch_from_db(global_props_ctx);
-
-    if(found.size() == 0)
-    {
-        mongo_requester to_set;
-        to_set.set_prop("items_id_is_gid", 1);
-        to_set.set_prop("items_id_gid", 1);
-
-        to_set.insert_in_db(global_props_ctx);
-
-        return 0;
-    }
-    else
-    {
-        mongo_requester& fid = found[0];
-
-        int32_t id = fid.get_prop_as_integer("items_id_gid");
-
-        mongo_requester to_find;
-        to_find.set_prop("items_id_is_gid", 1);
-
-        mongo_requester to_set;
-        to_set.set_prop("items_id_gid", id+1);
-
-        to_find.update_in_db_if_exact(global_props_ctx, to_set);
-
-        return id;
-    }
+    return db_storage_backend::get_unique_id();
 }
 
 bool array_contains(const std::vector<std::string>& arr, const std::string& str)
@@ -330,10 +300,7 @@ item item_types::get_named_describer(const std::string& short_name, const std::s
 
 void item_types::give_item_to(item& new_item, const std::string& to, int thread_id)
 {
-    {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(thread_id);
-        new_item.generate_set_id(mongo_ctx);
-    }
+    new_item.generate_set_id();
 
     {
         mongo_nolock_proxy mongo_ctx = get_global_mongo_user_items_context(thread_id);

@@ -140,16 +140,16 @@ struct item : serialisable, free_function
         }
     }
 
-    void generate_set_id(mongo_lock_proxy& global_props_context)
+    void generate_set_id()
     {
-        int32_t id = get_new_id(global_props_context);
+        int32_t id = get_new_id();
 
         item_id = std::to_string(id);
 
         set_as("item_id", item_id);
     }
 
-    int32_t get_new_id(mongo_lock_proxy& global_props_context);
+    int32_t get_new_id();
 
     ///manages lock proxies internally
     bool transfer_to_user(const std::string& name, int thread_id);
