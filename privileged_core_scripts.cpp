@@ -7070,8 +7070,7 @@ duk_ret_t cheats__arm(priv_context& priv_ctx, duk_context* ctx, int sl)
     item test_item = item_types::get_default_of(item_types::LOCK, lock);
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(get_thread_id(ctx));
-        test_item.generate_set_id(mongo_ctx);
+        test_item.generate_set_id();
     }
 
     test_item.create_in_db();

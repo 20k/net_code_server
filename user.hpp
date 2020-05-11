@@ -158,24 +158,17 @@ template<typename T>
 inline
 void for_each_user(const T& t)
 {
-    std::vector<mongo_requester> all;
+    std::vector<auth> all;
 
     {
         mongo_lock_proxy all_auth = get_global_mongo_global_properties_context(-2);
 
-        mongo_requester request;
-
-        request.exists_check["auth_token_hex"] = 1;
-
-        all = request.fetch_from_db(all_auth);
+        all = db_disk_load_all(all_auth, auth());
     }
 
-    for(mongo_requester& i : all)
+    for(auth& i : all)
     {
-        if(!i.has_prop("users"))
-            continue;
-
-        auto users = (std::vector<std::string>)i.get_prop("users");
+        auto users = i.users;
 
         for(std::string& usrname : users)
         {
