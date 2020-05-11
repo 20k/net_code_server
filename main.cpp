@@ -37,6 +37,7 @@
 #include "serialisables.hpp"
 #include <secret/structure_generation_2.hpp>
 #include "command_handler_fiber_backend.hpp"
+#include "db_storage_backend_lmdb.hpp"
 
 void test_hexbin()
 {
@@ -344,6 +345,7 @@ int main()
 
     test_hexbin();
     initialse_db_all();
+    db_tests();
 
     //#ifdef TESTING
     init_db_storage_backend();

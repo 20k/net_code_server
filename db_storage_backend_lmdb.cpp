@@ -8,7 +8,7 @@
 #include <sstream>
 #include <iostream>
 
-#define CHECK_THROW(x) if(const int rc = x) { std::cout << rc << std::endl; throw std::runtime_error("DB Error " + std::to_string(rc));}
+#define CHECK_THROW(x) if(const int rc = x) { std::cout << rc << std::endl; throw std::runtime_error("DB Error " + std::to_string(rc) + #x);}
 #define CHECK_ASSERT(x) if(const int rc = x) {printf("DB Error %i %s\n", rc, #x); assert(false && #x);}
 
 struct db::backend
@@ -37,6 +37,8 @@ struct db::backend
 
         ///10000 MB
         mdb_env_set_mapsize(env, 10485760ull * 10000ull);
+
+        std::cout << "STORAGE " << storage << std::endl;
 
         CHECK_ASSERT(mdb_env_open(env, storage.c_str(), MDB_NOTLS, 0777));
 
@@ -221,4 +223,21 @@ void db::bound_read_write_tx::write(std::string_view skey, std::string_view sdat
 bool db::bound_read_write_tx::del(std::string_view skey)
 {
     return do_del_tx(dbid, *this, skey);
+}
+
+void db_tests()
+{
+    //get_backend() = db::backend("./lmdb_test", 50);
+
+    /*{
+        db::read_write_tx tx;
+
+        tx.write(0, "key", "value");
+
+        auto val = tx.read(0, "key");
+
+        std::cout << "VHAS " << val.has_value() << std::endl;
+    }*/
+
+    //get_backend() = db::backend("./lmdb_storage", 50);
 }

@@ -79,5 +79,6 @@ namespace db
     };
 }
 
+void db_tests();
 
 #endif // DB_STORAGE_BACKEND_LMDB_HPP_INCLUDED
