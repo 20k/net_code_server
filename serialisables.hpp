@@ -52,5 +52,6 @@ DECLARE_GENERIC_DB(user, std::string);
 DECLARE_GENERIC_DB(playspace_network_link, std::string);
 DECLARE_GENERIC_DB(auth, std::string);
 DECLARE_GENERIC_DB(chat_channel, std::string);
+DECLARE_GENERIC_DB(chat_message, size_t);
 
 #endif // SERIALISABLES_HPP_INCLUDED

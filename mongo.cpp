@@ -169,6 +169,12 @@ mongo_context::mongo_context(mongo_database_type type)
         default_collection = "all_networks";
         is_fixed = true;
     }
+
+    if(type == mongo_database_type::CHAT_MESSAGES)
+    {
+        default_collection = "all_chat_messages";
+        is_fixed = true;
+    }
 }
 
 void mongo_context::make_lock(const std::string& debug_info, const std::string& collection, size_t who)

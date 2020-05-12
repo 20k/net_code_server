@@ -8,6 +8,7 @@
 
 struct chat_message : serialisable, free_function
 {
+    size_t id = -1;
     size_t time_ms = 0;
     std::string originator;
     std::string msg;
@@ -20,7 +21,7 @@ struct chat_channel : serialisable, free_function
     std::string channel_name;
     std::string password;
     std::vector<std::string> user_list;
-    std::vector<chat_message> history;
+    std::vector<size_t> history;
 };
 
 namespace chats

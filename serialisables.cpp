@@ -215,6 +215,7 @@ DEFINE_SERIALISE_FUNCTION(chat_message)
 {
     SERIALISE_SETUP();
 
+    DO_FSERIALISE(id);
     DO_FSERIALISE(time_ms);
     DO_FSERIALISE(originator);
     DO_FSERIALISE(msg);
@@ -365,3 +366,4 @@ DEFINE_GENERIC_DB(user, std::string, name);
 DEFINE_GENERIC_DB(playspace_network_link, std::string, name);
 DEFINE_GENERIC_DB(auth, std::string, auth_token_hex);
 DEFINE_GENERIC_DB(chat_channel, std::string, channel_name);
+DEFINE_GENERIC_DB(chat_message, size_t, id);
