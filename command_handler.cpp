@@ -30,6 +30,7 @@
 #include "serialisables.hpp"
 #include "argument_object.hpp"
 #include "command_handler_fiber_backend.hpp"
+#include "chat_channels.hpp"
 
 #ifdef USE_FIBERS
 #include <boost/fiber/operations.hpp>
@@ -1903,20 +1904,17 @@ std::vector<std::string> get_channels_for_user(user& usr)
 
     std::vector<std::string> ret;
 
-    static std::vector<mongo_requester> all_data;
+    static std::vector<chat_channel> all_data;
     static lock_type_t lock;
     static sf::Clock clk;
 
-    mongo_requester all;
-    all.exists_check["channel_name"] = 1;
-
-    std::vector<mongo_requester> found;
+    std::vector<chat_channel> found;
 
     if(clk.getElapsedTime().asSeconds() > 1)
     {
         mongo_nolock_proxy ctx = get_global_mongo_chat_channel_propeties_context(-2);
 
-        found = all.fetch_from_db(ctx);
+        db_disk_load_all(ctx, chat_channel());
         clk.restart();
     }
     else
@@ -1934,13 +1932,11 @@ std::vector<std::string> get_channels_for_user(user& usr)
 
     for(auto& i : found)
     {
-        std::vector<std::string> users = (std::vector<std::string>)i.get_prop("user_list");
-
-        for(auto& k : users)
+        for(auto& k : i.user_list)
         {
             if(k == name)
             {
-                ret.push_back(i.get_prop("channel_name"));
+                ret.push_back(i.channel_name);
                 break;
             }
         }
