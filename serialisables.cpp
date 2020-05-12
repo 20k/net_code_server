@@ -208,6 +208,7 @@ DEFINE_SERIALISE_FUNCTION(chat_channel)
     DO_FSERIALISE(channel_name);
     DO_FSERIALISE(password);
     DO_FSERIALISE(user_list);
+    DO_FSERIALISE(history);
 }
 
 DEFINE_SERIALISE_FUNCTION(chat_message)
