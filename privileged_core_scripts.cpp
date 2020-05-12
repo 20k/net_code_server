@@ -535,8 +535,6 @@ js::value scripts__me(priv_context& priv_ctx, js::value_context& vctx, js::value
 
             names.push_back(name);
         }
-
-
     }
 
     if(make_array)
