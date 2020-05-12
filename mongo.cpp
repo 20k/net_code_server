@@ -222,7 +222,7 @@ void database_read_interface::change_collection_unsafe(const std::string& coll, 
 
     if(ctx->is_fixed && !force_change)
     {
-        std::cout << "warning, collection should not be changed" << std::endl;
+        std::cout << "warning, collection should not be changed " << coll << " I am " << last_collection << std::endl;
         return;
     }
 

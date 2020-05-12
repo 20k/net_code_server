@@ -96,7 +96,7 @@ void chats::tell_to(const std::string& msg, const std::string& to, const std::st
     mongo_lock_proxy ctx = get_global_mongo_chat_channel_propeties_context(-2);
 
     ///yep. I don't want to talk about it
-    std::string channel = "$" + to;
+    std::string channel = "@" + to;
 
     chat_channel chan;
     chan.channel_name = channel;
@@ -110,7 +110,34 @@ void chats::tell_to(const std::string& msg, const std::string& to, const std::st
 
 void chats::create_notif_to(const std::string& msg, const std::string& to)
 {
-    chats::tell_to(msg, "^" + to, "$core");
+    chat_message cmsg;
+
+    {
+        mongo_nolock_proxy nctx = get_global_mongo_chat_messages_context(-2);
+
+        cmsg.id = db_storage_backend::get_unique_id();
+        cmsg.time_ms = get_wall_time();
+        cmsg.originator = "$core";
+        cmsg.msg = msg;
+        cmsg.recipient_list = {to};
+        cmsg.sent_to_client.resize(1);
+
+        db_disk_overwrite(nctx, cmsg);
+    }
+
+    mongo_lock_proxy ctx = get_global_mongo_chat_channel_propeties_context(-2);
+
+    ///yep. I don't want to talk about it
+    std::string channel = "^" + to;
+
+    chat_channel chan;
+    chan.channel_name = channel;
+
+    ///will create if it doesn't exist, notifs are a virtual channel
+    db_disk_load(ctx, chan, channel);
+    chan.history.push_back(cmsg.id);
+
+    db_disk_overwrite(ctx, chan);
 }
 
 bool chats::join_channel(const std::string& channel, const std::string& user)
@@ -277,7 +304,7 @@ bool is_chat_channel(const std::string& name)
     if(name == "$$local")
         return true;
 
-    if(name[0] == '$')
+    if(name[0] == '@')
         return false;
 
     if(name[0] == '^')
@@ -294,7 +321,7 @@ bool is_tell_channel(const std::string& name)
     if(name == "$$local")
         return false;
 
-    return name[0] == '$';
+    return name[0] == '@';
 }
 
 bool is_notif_channel(const std::string& name)

@@ -38,6 +38,7 @@
 #include <secret/structure_generation_2.hpp>
 #include "command_handler_fiber_backend.hpp"
 #include "db_storage_backend_lmdb.hpp"
+#include "chat_channels.hpp"
 
 void test_hexbin()
 {
@@ -183,32 +184,7 @@ void pathfind_stresstest()
 
 void cleanup_notifs()
 {
-    get_noncritical_fiber_queue().add([]()
-    {
-        for_each_user([](user& u1)
-                      {
-                            mongo_nolock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
-                            ctx.change_collection(u1.name);
-
-                            strip_old_msg_or_notif(ctx);
-
-                            fiber_sleep(1);
-                      });
-
-        printf("Finished stripping users\n");
-
-        for_each_npc([](npc_user& u1)
-                      {
-                            mongo_nolock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
-                            ctx.change_collection(u1.name);
-
-                            strip_old_msg_or_notif(ctx);
-
-                            fiber_sleep(1);
-                      });
-
-        printf("Finished all strip\n");
-    });
+    chats::strip_all_old();
 }
 
 void fix_users()
