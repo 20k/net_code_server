@@ -1043,40 +1043,26 @@ js::value channel__leave(priv_context& priv_ctx, js::value_context& vctx, js::va
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
 
-    mongo_requester request;
-    request.set_prop("channel_name", chan);
+    chat_channel chanl;
 
-    std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
-
-    if(found.size() == 0)
+    if(!db_disk_load(mongo_ctx, chanl, chan))
         return js::make_error(vctx, "Channel does not exist");
-
-    if(found.size() > 1)
-        return js::make_error(vctx, "Some kind of catastrophic error: Yellow Sparrow");
-
-    mongo_requester& found_channel = found[0];
-
-    std::vector<std::string> users = (std::vector<std::string>)found_channel.get_prop("user_list");
 
     std::string username = get_caller(vctx);
 
-    if(!array_contains(users, username))
+    if(!array_contains(chanl.user_list, username))
         return js::make_error(vctx, "Not in Channel");
 
-    auto it = std::find(users.begin(), users.end(), username);
+    auto it = std::find(chanl.user_list.begin(), chanl.user_list.end(), username);
 
-    if(it != users.end())
-        users.erase(it);
+    if(it != chanl.user_list.end())
+        chanl.user_list.erase(it);
 
-    if(array_contains(users, username))
-        return js::make_success(vctx);
+    ///???
+    //if(array_contains(chanl.user_list, username))
+    //    return js::make_success(vctx);
 
-    mongo_requester to_find = request;
-
-    mongo_requester to_set;
-    to_set.set_prop("user_list", users);
-
-    to_find.update_in_db_if_exact(mongo_ctx, to_set);
+    db_disk_overwrite(mongo_ctx, chanl);
 
     return js::make_success(vctx);
 }
