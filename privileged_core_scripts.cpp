@@ -1072,6 +1072,10 @@ js::value msg__manage(priv_context& priv_ctx, js::value_context& vctx, js::value
     std::string to_join = arg["join"];
     std::string to_leave = arg["leave"];
     std::string to_create = arg["create"];
+    std::string password = arg["password"];
+
+    if(password.size() > 16)
+        password.resize(16);
 
     int num_set = 0;
 
@@ -1115,64 +1119,57 @@ js::value msg__manage(priv_context& priv_ctx, js::value_context& vctx, js::value
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
 
-        mongo_requester request;
+        chat_channel chanl;
 
         if(to_join != "")
-            request.set_prop("channel_name", to_join);
+        {
+            if(!db_disk_load(mongo_ctx, chanl, to_join))
+                return js::make_error(vctx, "Channel does not exist");
+        }
+
         if(to_leave != "")
-            request.set_prop("channel_name", to_leave);
+        {
+            if(!db_disk_load(mongo_ctx, chanl, to_leave))
+                return js::make_error(vctx, "Channel does not exist");
+        }
 
-        std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
-
-        if(found.size() == 0)
-            return js::make_error(vctx, "Channel does not exist");
-
-        if(found.size() > 1)
-            return js::make_error(vctx, "Some kind of catastrophic error: Yellow Sparrow");
-
-        mongo_requester& chan = found[0];
-
-        std::vector<std::string> users = (std::vector<std::string>)chan.get_prop("user_list");
-
-        if(joining && array_contains(users, username))
+        if(joining && array_contains(chanl.user_list, username))
             return js::make_error(vctx, "In channel");
 
-        if(!joining && !array_contains(users, username))
-            return js::make_error(vctx, "Not in Channel");
+        if(!joining && !array_contains(chanl.user_list, username))
+            return js::make_error(vctx, "Not in channel");
 
         if(joining)
         {
-            users.push_back(username);
+            if(chanl.password != "" && chanl.password != password)
+                return js::make_error(vctx, "Incorrect password");
+
+            chanl.user_list.push_back(username);
         }
 
         if(!joining)
         {
-            auto it = std::find(users.begin(), users.end(), username);
-            users.erase(it);
+            auto it = std::find(chanl.user_list.begin(), chanl.user_list.end(), username);
+            chanl.user_list.erase(it);
         }
 
-        mongo_requester to_find = request;
-
-        mongo_requester to_set;
-        to_set.set_prop("user_list", users);
-
-        to_find.update_in_db_if_exact(mongo_ctx, to_set);
+        db_disk_overwrite(mongo_ctx, chanl);
     }
 
     if(to_create.size() > 0)
     {
         mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
 
-        mongo_requester request;
-        request.set_prop("channel_name", to_create);
+        chat_channel chanl;
+        chanl.channel_name = to_create;
 
-        if(request.fetch_from_db(mongo_ctx).size() > 0)
+        if(db_disk_exists(mongo_ctx, chanl))
             return js::make_error(vctx, "Channel already exists");
 
-        mongo_requester to_insert;
-        to_insert.set_prop("channel_name", to_create);
+        chanl.user_list.push_back(username);
+        chanl.password = password;
 
-        to_insert.insert_in_db(mongo_ctx);
+        db_disk_overwrite(mongo_ctx, chanl);
     }
 
     return js::make_success(vctx);
