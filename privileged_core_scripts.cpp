@@ -18,6 +18,7 @@
 #include "quest_manager.hpp"
 #include "rng.hpp"
 #include "argument_object.hpp"
+#include "chat_channels.hpp"
 
 #define SECLEVEL_FUNCTIONS
 
@@ -941,20 +942,16 @@ js::value channel__create(priv_context& priv_ctx, js::value_context& vctx, js::v
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
 
-    mongo_requester request;
-    request.set_prop("channel_name", chan);
+    chat_channel chanl;
+    chanl.channel_name = chan;
 
-    if(request.fetch_from_db(mongo_ctx).size() > 0)
+    if(db_disk_exists(mongo_ctx, chanl))
         return js::make_error(vctx, "Channel already exists");
 
-    std::vector<std::string> user_list{get_caller(vctx)};
+    chanl.password = password;
+    chanl.user_list = {get_caller(vctx)};
 
-    mongo_requester to_insert;
-    to_insert.set_prop("channel_name", chan);
-    to_insert.set_prop("password", password);
-    to_insert.set_prop("user_list", user_list);
-
-    to_insert.insert_in_db(mongo_ctx);
+    db_disk_overwrite(mongo_ctx, chanl);
 
     return js::make_success(vctx);
 }
@@ -972,37 +969,22 @@ js::value channel__join(priv_context& priv_ctx, js::value_context& vctx, js::val
 
     mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
 
-    mongo_requester request;
-    request.set_prop("channel_name", chan);
+    chat_channel chanl;
 
-    std::vector<mongo_requester> found = request.fetch_from_db(mongo_ctx);
-
-    if(found.size() == 0)
+    if(!db_disk_load(mongo_ctx, chanl, chan))
         return js::make_error(vctx, "Channel does not exist");
 
-    if(found.size() > 1)
-        return js::make_error(vctx, "Some kind of catastrophic error: Yellow Sparrow");
-
-    mongo_requester& found_channel = found[0];
-
-    if(found_channel.has_prop("password") && found_channel.get_prop("password") != password)
+    if(chanl.password != "" && chanl.password != password)
         return js::make_error(vctx, "Wrong Password");
-
-    std::vector<std::string> users = (std::vector<std::string>)found_channel.get_prop("user_list");
 
     std::string username = get_caller(vctx);
 
-    if(array_contains(users, username))
+    if(array_contains(chanl.user_list, username))
         return js::make_success(vctx);
 
-    users.push_back(username);
+    chanl.user_list.push_back(username);
 
-    mongo_requester to_find = request;
-
-    mongo_requester to_set;
-    to_set.set_prop("user_list", users);
-
-    to_find.update_in_db_if_exact(mongo_ctx, to_set);
+    db_disk_overwrite(mongo_ctx, chanl);
 
     return js::make_success(vctx);
 }
