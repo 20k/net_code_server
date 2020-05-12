@@ -165,3 +165,29 @@ void chats::leave_channels_for(const std::string& user)
         i.user_list.erase(it);
     }
 }
+
+std::vector<std::string> chats::get_channels_for_user(const std::string& name)
+{
+    std::vector<chat_channel> all_channels;
+    std::vector<std::string> ret;
+
+    {
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
+
+        all_channels = db_disk_load_all(mongo_ctx, chat_channel());
+    }
+
+    for(auto& i : all_channels)
+    {
+        for(auto& k : i.user_list)
+        {
+            if(k == name)
+            {
+                ret.push_back(i.channel_name);
+                break;
+            }
+        }
+    }
+
+    return ret;
+}

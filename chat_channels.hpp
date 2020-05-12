@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <networking/serialisable_fwd.hpp>
+#include <utility>
 
 struct chat_message : serialisable, free_function
 {
@@ -35,7 +36,15 @@ namespace chats
     void delete_notifs_for(const std::string& user);
     void leave_channels_for(const std::string& user);
 
-    std::vector<chat_message> get_and_update_chat_msgs_for_user(const std::string& name);
+    std::vector<std::string> get_channels_for_user(const std::string& name);
+
+    std::vector<std::pair<std::string, chat_message>> get_and_update_chat_msgs_for_user(const std::string& name);
+    std::vector<chat_message> get_and_update_tells_for_user(const std::string& name);
+    std::vector<chat_message> get_and_update_notifs_for_user(const std::string& name);
+
+    void strip_old_for(const std::string& name);
+
+    std::string prettify(const std::vector<chat_message>& in, bool use_channels);
 }
 
 #endif // CHAT_CHANNELS_HPP_INCLUDED

@@ -1768,7 +1768,7 @@ void strip_old_msg_or_notif(mongo_lock_proxy& ctx)
     }
     #endif // 0
 
-    size_t thirty_days = 1000ull * 60ull * 60ull * 24ull * 30ull;
+    /*size_t thirty_days = 1000ull * 60ull * 60ull * 24ull * 30ull;
 
     size_t delete_older_than = get_wall_time() - thirty_days;
 
@@ -1778,7 +1778,17 @@ void strip_old_msg_or_notif(mongo_lock_proxy& ctx)
     nlohmann::json to_delete;
     to_delete["time_ms"] = lt_than;
 
-    remove_all_from_db(ctx, to_delete);
+    remove_all_from_db(ctx, to_delete);*/
+
+    for_each_user([](user& usr)
+    {
+        chats::strip_old_for(usr.name);
+    });
+
+    for_each_npc([](user& usr)
+    {
+        chats::strip_old_for(usr.name);
+    });
 
     /*nlohmann::json to_sort;
     to_sort["sort"] = 1;
@@ -1810,200 +1820,47 @@ void strip_old_msg_or_notif(mongo_lock_proxy& ctx)
     #endif // FULL_REBUILD
 }
 
-std::vector<nlohmann::json> get_and_update_chat_msgs_for_user(user& usr)
-{
-    std::vector<nlohmann::json> found;
-
-    usr.cleanup_call_stack(-2);
-
-    {
-        mongo_nolock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
-        ctx.change_collection(usr.get_call_stack().back());
-
-        nlohmann::json to_send;
-        to_send["is_chat"] = 1;
-        to_send["processed"] = 0;
-
-        found = fetch_from_db(ctx, to_send);
-
-        nlohmann::json old_search = to_send;
-
-        to_send["processed"] = 1;
-
-        update_in_db_if_exact(ctx, old_search, to_send);
-    }
-
-    if(found.size() > 1000)
-        found.resize(1000);
-
-    return found;
-}
-
-std::vector<nlohmann::json> get_and_update_tells_for_user(user& usr)
-{
-    std::vector<nlohmann::json> found;
-
-    usr.cleanup_call_stack(-2);
-
-    {
-        mongo_nolock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
-        ctx.change_collection(usr.get_call_stack().back());
-
-        nlohmann::json to_send;
-        to_send["is_tell"] = 1;
-        to_send["processed"] = 0;
-
-        found = fetch_from_db(ctx, to_send);
-
-        nlohmann::json old_search = to_send;
-
-        to_send["processed"] = 1;
-
-        update_in_db_if_exact(ctx, old_search, to_send);
-    }
-
-    if(found.size() > 1000)
-        found.resize(1000);
-
-    return found;
-}
-
-std::vector<nlohmann::json> get_and_update_notifs_for_user(user& usr)
-{
-    std::vector<nlohmann::json> found;
-
-    usr.cleanup_call_stack(-2);
-
-    {
-        mongo_nolock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
-        ctx.change_collection(usr.get_call_stack().back());
-
-        nlohmann::json to_send;
-        to_send["is_notif"] = 1;
-        to_send["processed"] = 0;
-
-        found = fetch_from_db(ctx, to_send);
-
-        nlohmann::json old_search = to_send;
-
-        to_send["processed"] = 1;
-
-        update_in_db_if_exact(ctx, old_search, to_send);
-    }
-
-    if(found.size() > 1000)
-        found.resize(1000);
-
-    return found;
-}
-
-std::vector<std::string> get_channels_for_user(user& usr)
-{
-    usr.cleanup_call_stack(-2);
-
-    std::string name = usr.get_call_stack().back();
-
-    std::vector<std::string> ret;
-
-    static std::vector<chat_channel> all_data;
-    static lock_type_t lock;
-    static sf::Clock clk;
-
-    std::vector<chat_channel> found;
-
-    if(clk.getElapsedTime().asSeconds() > 1)
-    {
-        mongo_nolock_proxy ctx = get_global_mongo_chat_channel_propeties_context(-2);
-
-        db_disk_load_all(ctx, chat_channel());
-        clk.restart();
-    }
-    else
-    {
-        safe_lock_guard guard(lock);
-
-        found = all_data;
-    }
-
-    {
-        safe_lock_guard guard(lock);
-
-        all_data = found;
-    }
-
-    for(auto& i : found)
-    {
-        for(auto& k : i.user_list)
-        {
-            if(k == name)
-            {
-                ret.push_back(i.channel_name);
-                break;
-            }
-        }
-    }
-
-    return ret;
-}
-
 nlohmann::json handle_client_poll_json(user& usr)
 {
-    std::vector<nlohmann::json> found = get_and_update_chat_msgs_for_user(usr);
-    std::vector<std::string> channels = get_channels_for_user(usr);
+    usr.cleanup_call_stack(-2);
+    std::string name = usr.get_call_stack().back();
 
-    std::vector<nlohmann::json> tells = get_and_update_tells_for_user(usr);
-    std::vector<nlohmann::json> notifs = get_and_update_notifs_for_user(usr);
+    std::vector<std::string> channels = chats::get_channels_for_user(name);
 
-    using json = nlohmann::json;
+    std::vector<std::pair<std::string, chat_message>> msgs = chats::get_and_update_chat_msgs_for_user(name);
+    std::vector<chat_message> tells = chats::get_and_update_tells_for_user(name);
+    std::vector<chat_message> notifs = chats::get_and_update_notifs_for_user(name);
 
-    json all;
+    nlohmann::json all;
 
     all["channels"] = channels;
 
-    /*std::cout << "poll json\n";
+    std::vector<nlohmann::json> cdata;
+    std::vector<nlohmann::json> tdata;
+    std::vector<std::string> ndata;
 
-    for(auto& i : channels)
+    for(auto& [channel_name, msg] : msgs)
     {
-        std::cout << "CHAN " << i << std::endl;
-    }*/
-
-    std::vector<json> cdata;
-
-    for(nlohmann::json& req : found)
-    {
-        if(req.count("channel") == 0 || req["channel"].is_string() == false)
-            continue;
-
-        json api;
-        std::string chan = req["channel"];
-        std::vector<nlohmann::json> to_col{req};
-        std::string pretty = prettify_chat_strings(to_col);
-
-        api["channel"] = chan;
-        api["text"] = pretty;
+        nlohmann::json api;
+        api["channel"] = channel_name;
+        api["text"] = chats::prettify({msg}, true);
 
         cdata.push_back(api);
     }
 
-    std::vector<json> tdata;
-
-    for(nlohmann::json& req : tells)
+    for(auto& msg : tells)
     {
-        std::vector<nlohmann::json> all{req};
+        nlohmann::json api;
 
-        json api;
-
-        api["user"] = req["user"];
-        api["text"] = prettify_chat_strings(all, false);
+        api["user"] = msg.originator;
+        api["text"] = chats::prettify({msg}, false);
 
         tdata.push_back(api);
     }
 
-    std::vector<std::string> ndata;
-
-    for(nlohmann::json& req : notifs)
+    for(auto& msg : notifs)
     {
-        ndata.push_back(req["msg"]);
+        ndata.push_back(msg.msg);
     }
 
     all["data"] = cdata;
