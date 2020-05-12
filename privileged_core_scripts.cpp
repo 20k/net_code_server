@@ -1177,21 +1177,12 @@ js::value msg__manage(priv_context& priv_ctx, js::value_context& vctx, js::value
 
 std::vector<std::string> get_users_in_channel(mongo_lock_proxy& mongo_ctx, const std::string& channel)
 {
-    mongo_requester request;
-    request.set_prop("channel_name", channel);
+    chat_channel chanl;
 
-    auto found = request.fetch_from_db(mongo_ctx);
-
-    if(found.size() != 1)
+    if(!db_disk_load(mongo_ctx, chanl, channel))
         return {};
 
-        //return push_error(ctx, "Something real weird happened: Orange Canary");
-
-    mongo_requester& chan = found[0];
-
-    std::vector<std::string> users = (std::vector<std::string>)chan.get_prop("user_list");
-
-    return users;
+    return chanl.user_list;
 }
 
 js::value msg__send(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
