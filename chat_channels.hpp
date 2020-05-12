@@ -43,9 +43,11 @@ namespace chats
     std::vector<chat_message> get_and_update_tells_for_user(const std::string& name);
     std::vector<chat_message> get_and_update_notifs_for_user(const std::string& name);
 
-    void strip_old_for(const std::string& name);
+    //void strip_old_for(const std::string& name);
 
-    std::string prettify(const std::vector<chat_message>& in, bool use_channels);
+    void strip_all_old();
+
+    std::string prettify(const std::vector<chat_message>& in, bool use_channels, const std::string& channel_name);
 }
 
 #endif // CHAT_CHANNELS_HPP_INCLUDED

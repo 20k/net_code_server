@@ -1780,7 +1780,7 @@ void strip_old_msg_or_notif(mongo_lock_proxy& ctx)
 
     remove_all_from_db(ctx, to_delete);*/
 
-    for_each_user([](user& usr)
+    /*for_each_user([](user& usr)
     {
         chats::strip_old_for(usr.name);
     });
@@ -1788,7 +1788,9 @@ void strip_old_msg_or_notif(mongo_lock_proxy& ctx)
     for_each_npc([](user& usr)
     {
         chats::strip_old_for(usr.name);
-    });
+    });*/
+
+    chats::strip_all_old();
 
     /*nlohmann::json to_sort;
     to_sort["sort"] = 1;
@@ -1843,7 +1845,7 @@ nlohmann::json handle_client_poll_json(user& usr)
     {
         nlohmann::json api;
         api["channel"] = channel_name;
-        api["text"] = chats::prettify({msg}, true);
+        api["text"] = chats::prettify({msg}, true, channel_name);
 
         cdata.push_back(api);
     }
@@ -1853,7 +1855,7 @@ nlohmann::json handle_client_poll_json(user& usr)
         nlohmann::json api;
 
         api["user"] = msg.originator;
-        api["text"] = chats::prettify({msg}, false);
+        api["text"] = chats::prettify({msg}, false, "");
 
         tdata.push_back(api);
     }

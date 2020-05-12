@@ -2,6 +2,7 @@
 #include "mongo.hpp"
 #include "time.hpp"
 #include "serialisables.hpp"
+#include <libncclient/nc_util.hpp>
 
 void chats::say_in_local(const std::string& msg, const std::vector<std::string>& to, const std::string& from)
 {
@@ -430,4 +431,64 @@ std::vector<chat_message> chats::get_and_update_notifs_for_user(const std::strin
     }
 
     return ret;
+}
+
+void chats::strip_all_old()
+{
+
+}
+
+namespace
+{
+std::string format_time(const std::string& in)
+{
+    if(in.size() == 1)
+        return "0" + in;
+
+    if(in.size() == 0)
+        return "00";
+
+    return in;
+}
+}
+
+std::string chats::prettify(const std::vector<chat_message>& in, bool use_channels, const std::string& channel_name)
+{
+    std::string str;
+
+    ///STD::CHRONO PLS
+    for(int kk=0; kk < (int)in.size(); kk++)
+    {
+        const chat_message& fmsg = in[kk];
+
+        size_t time_code_ms = fmsg.time_ms;
+
+        std::string channel = channel_name;
+        std::string usrname = fmsg.originator;
+        std::string msg = fmsg.msg;
+
+        time_structure time_s;
+        time_s.from_time_ms(time_code_ms);
+
+        int hour = time_s.hours;
+        int minute = time_s.minutes;
+
+        std::string tstr = "`b" + format_time(std::to_string(hour)) + format_time(std::to_string(minute)) + "`";
+
+        std::string chan_str = " `P" + channel + "`";
+
+        std::string total_msg;
+
+        if(use_channels)
+            total_msg = tstr + chan_str + " " + colour_string(usrname) + " "  + msg;
+        else
+            total_msg = tstr + " " + colour_string(usrname) + " "  + msg;
+
+        if(kk != 0)
+            str = total_msg + "\n" + str;
+        else
+            str = total_msg;
+    }
+
+    return str;
 }
