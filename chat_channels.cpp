@@ -267,35 +267,6 @@ std::vector<std::string> chats::get_channels_for_user(const std::string& name)
     return ret;
 }
 
-/*std::vector<nlohmann::json> get_and_update_chat_msgs_for_user(user& usr)
-{
-    std::vector<nlohmann::json> found;
-
-    usr.cleanup_call_stack(-2);
-
-    {
-        mongo_nolock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
-        ctx.change_collection(usr.get_call_stack().back());
-
-        nlohmann::json to_send;
-        to_send["is_chat"] = 1;
-        to_send["processed"] = 0;
-
-        found = fetch_from_db(ctx, to_send);
-
-        nlohmann::json old_search = to_send;
-
-        to_send["processed"] = 1;
-
-        update_in_db_if_exact(ctx, old_search, to_send);
-    }
-
-    if(found.size() > 1000)
-        found.resize(1000);
-
-    return found;
-}*/
-
 bool is_chat_channel(const std::string& name)
 {
     if(name.size() == 0)

@@ -1169,9 +1169,6 @@ js::value msg__send(priv_context& priv_ctx, js::value_context& vctx, js::value& 
     std::string channel = arg["channel"];
     std::string msg = arg["msg"];
 
-    if(channel == "")
-        channel = "global";
-
     if(channel == "" || msg == "" || channel.size() >= 10 || msg.size() >= 10000)
     {
         js::make_error(vctx, "Usage: #hs.msg.send({channel:\"<name>\", msg:\"msg\"})");
