@@ -140,10 +140,11 @@ mongo_context::mongo_context(mongo_database_type type)
         is_fixed = true;
     }
 
-    /*if(type == mongo_database_type::PENDING_NOTIFS)
+    if(type == mongo_database_type::PENDING_NOTIFS)
     {
-        change_collection("all_notifs");
-    }*/
+        default_collection = "all_notifs";
+        is_fixed = true;
+    }
 
     if(type == mongo_database_type::CHAT_CHANNEL_PROPERTIES)
     {

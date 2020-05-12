@@ -25,9 +25,12 @@ struct chat_channel : serialisable, free_function
 namespace chats
 {
     void say_in_local(const std::string& msg, const std::vector<std::string>& to, const std::string& from);
-    void say_in_channel(const std::string& msg, const std::string& channel, const std::string& from);
+    bool say_in_channel(const std::string& msg, const std::string& channel, const std::string& from);
     ///locks
     void tell_to(const std::string& msg, const std::string& to, const std::string& from);
+
+    bool join_channel(const std::string& channel, const std::string& user);
+    bool leave_channel(const std::string& channel, const std::string& user);
 }
 
 #endif // CHAT_CHANNELS_HPP_INCLUDED
