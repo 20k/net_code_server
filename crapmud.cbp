@@ -426,6 +426,7 @@
 		<Unit filename="ascii_helpers.hpp" />
 		<Unit filename="auth.cpp" />
 		<Unit filename="auth.hpp" />
+		<Unit filename="chat_channels.hpp" />
 		<Unit filename="command_handler.cpp" />
 		<Unit filename="command_handler.hpp" />
 		<Unit filename="command_handler_fiber_backend.cpp" />

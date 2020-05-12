@@ -39,6 +39,7 @@ DECLARE_SERIALISE_FUNCTION(quest);
 DECLARE_SERIALISE_FUNCTION(low_level_structure);
 DECLARE_SERIALISE_FUNCTION(item);
 DECLARE_SERIALISE_FUNCTION(playspace_network_link);
+DECLARE_SERIALISE_FUNCTION(chat_channel);
 
 DECLARE_GENERIC_DB(npc_prop_list, std::string);
 DECLARE_GENERIC_DB(event_impl, std::string);
@@ -49,5 +50,6 @@ DECLARE_GENERIC_DB(item, std::string);
 DECLARE_GENERIC_DB(user, std::string);
 DECLARE_GENERIC_DB(playspace_network_link, std::string);
 DECLARE_GENERIC_DB(auth, std::string);
+DECLARE_GENERIC_DB(chat_channel, std::string);
 
 #endif // SERIALISABLES_HPP_INCLUDED

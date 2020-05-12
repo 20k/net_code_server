@@ -9,6 +9,7 @@
 #include "quest_manager.hpp"
 #include <secret/low_level_structure.hpp>
 #include "item.hpp"
+#include "chat_channels.hpp"
 
 DEFINE_SERIALISE_FUNCTION(user_limit)
 {
@@ -200,6 +201,15 @@ DEFINE_SERIALISE_FUNCTION(playspace_network_link)
     DO_FSERIALISE(strengths);
 }
 
+DEFINE_SERIALISE_FUNCTION(chat_channel)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(channel_name);
+    DO_FSERIALISE(password);
+    DO_FSERIALISE(user_list);
+}
+
 template<typename T, typename U>
 bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
 {
@@ -342,3 +352,4 @@ DEFINE_GENERIC_DB(item, std::string, item_id);
 DEFINE_GENERIC_DB(user, std::string, name);
 DEFINE_GENERIC_DB(playspace_network_link, std::string, name);
 DEFINE_GENERIC_DB(auth, std::string, auth_token_hex);
+DEFINE_GENERIC_DB(chat_channel, std::string, channel_name);
