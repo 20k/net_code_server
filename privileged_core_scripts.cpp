@@ -502,43 +502,40 @@ js::value scripts__me(priv_context& priv_ctx, js::value_context& vctx, js::value
 
     ///regular scripts
     {
-        mongo_requester request;
-        request.set_prop("owner", usr);
-        request.set_prop("is_script", 1);
+        std::vector<item> my_scripts = loaded_user.search_my_scripts(item_context);
 
-        std::vector<mongo_requester> results = request.fetch_from_db(item_context);
-
-        for(mongo_requester& req : results)
+        for(item& i : my_scripts)
         {
-            if(!req.has_prop("item_id"))
-                continue;
-
-            names.push_back("#" + (std::string)req.get_prop("item_id"));
+            names.push_back("#" + i.item_id);
         }
     }
 
     {
-        mongo_requester request;
-        request.set_prop("owner", usr);
-        request.set_prop("full", 1);
-        request.set_prop("item_type", (int)item_types::EMPTY_SCRIPT_BUNDLE);
-
-        std::vector<mongo_requester> results = request.fetch_from_db(item_context);
-
-        for(mongo_requester& req : results)
+        for(auto id : loaded_user.all_loaded_items())
         {
-            if(req.get_prop("registered_as") == "")
+            item it;
+
+            if(!db_disk_load(item_context, it, id))
                 continue;
 
-            std::string item_id = req.get_prop("item_id");
+            if(it.get_string("owner") != usr)
+                throw std::runtime_error("SOMETHING REALLY BAD HAPPENED IN SCRIPTS.ME");
 
-            if(!loaded_user.has_loaded_item(item_id))
+            if(it.get_int("full") != 1)
                 continue;
 
-            std::string name = usr + "." + (std::string)req.get_prop("registered_as") + " `D[bundle]`";
+            if(it.get_int("item_type") != (int)item_types::EMPTY_SCRIPT_BUNDLE)
+                continue;
+
+            if(it.get_string("registered_as") == "")
+                continue;
+
+            std::string name = usr + "." + (std::string)it.get_string("registered_as") + " `D[bundle]`";
 
             names.push_back(name);
         }
+
+
     }
 
     if(make_array)
