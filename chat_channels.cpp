@@ -109,7 +109,7 @@ void chats::tell_to(const std::string& msg, const std::string& to, const std::st
 
 void chats::create_notif_to(const std::string& msg, const std::string& to)
 {
-    chats::tell_to(msg, to, "core");
+    chats::tell_to(msg, "^" + to, "$core");
 }
 
 bool chats::join_channel(const std::string& channel, const std::string& user)
@@ -268,20 +268,58 @@ std::vector<std::string> chats::get_channels_for_user(const std::string& name)
     return found;
 }*/
 
+bool is_chat_channel(const std::string& name)
+{
+    if(name.size() == 0)
+        return false;
+
+    if(name == "$$local")
+        return true;
+
+    if(name[0] == '$')
+        return false;
+
+    if(name[0] == '^')
+        return false;
+
+    return true;
+}
+
+bool is_tell_channel(const std::string& name)
+{
+    if(name.size() == 0)
+        return false;
+
+    if(name == "$$local")
+        return false;
+
+    return name[0] == '$';
+}
+
+bool is_notif_channel(const std::string& name)
+{
+    if(name.size() == 0)
+        return false;
+
+    return name[0] == '^';
+}
+
 std::vector<std::pair<std::string, chat_message>> chats::get_and_update_chat_msgs_for_user(const std::string& name)
 {
     std::vector<std::pair<std::string, chat_message>> ret;
-
     std::vector<chat_channel> all_channels;
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
 
         all_channels = db_disk_load_all(mongo_ctx, chat_channel());
     }
 
     for(chat_channel& chan : all_channels)
     {
+        if(!is_chat_channel(chan.channel_name))
+            continue;
+
         for(size_t id : chan.history)
         {
             mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_messages_context(-2);
@@ -310,3 +348,86 @@ std::vector<std::pair<std::string, chat_message>> chats::get_and_update_chat_msg
     return ret;
 }
 
+std::vector<chat_message> chats::get_and_update_tells_for_user(const std::string& name)
+{
+    std::vector<chat_message> ret;
+    std::vector<chat_channel> all_channels;
+
+    {
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
+        all_channels = db_disk_load_all(mongo_ctx, chat_channel());
+    }
+
+    for(chat_channel& chan : all_channels)
+    {
+        if(!is_tell_channel(chan.channel_name))
+            continue;
+
+        for(size_t id : chan.history)
+        {
+            mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_messages_context(-2);
+
+            chat_message msg;
+            db_disk_load(mongo_ctx, msg, id);
+
+            auto it = std::find(msg.recipient_list.begin(), msg.recipient_list.end(), name);
+
+            if(it == msg.recipient_list.end())
+                continue;
+
+            int offset = std::distance(msg.recipient_list.begin(), it);
+
+            if(msg.sent_to_client[offset])
+                continue;
+
+            msg.sent_to_client[offset] = 1;
+
+            ret.push_back(msg);
+            db_disk_overwrite(mongo_ctx, msg);
+        }
+    }
+
+    return ret;
+}
+
+std::vector<chat_message> chats::get_and_update_notifs_for_user(const std::string& name)
+{
+    std::vector<chat_message> ret;
+    std::vector<chat_channel> all_channels;
+
+    {
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
+        all_channels = db_disk_load_all(mongo_ctx, chat_channel());
+    }
+
+    for(chat_channel& chan : all_channels)
+    {
+        if(!is_notif_channel(chan.channel_name))
+            continue;
+
+        for(size_t id : chan.history)
+        {
+            mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_messages_context(-2);
+
+            chat_message msg;
+            db_disk_load(mongo_ctx, msg, id);
+
+            auto it = std::find(msg.recipient_list.begin(), msg.recipient_list.end(), name);
+
+            if(it == msg.recipient_list.end())
+                continue;
+
+            int offset = std::distance(msg.recipient_list.begin(), it);
+
+            if(msg.sent_to_client[offset])
+                continue;
+
+            msg.sent_to_client[offset] = 1;
+
+            ret.push_back(msg);
+            db_disk_overwrite(mongo_ctx, msg);
+        }
+    }
+
+    return ret;
+}
