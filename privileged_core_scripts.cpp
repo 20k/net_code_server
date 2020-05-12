@@ -897,12 +897,10 @@ js::value scripts__core(priv_context& priv_ctx, js::value_context& vctx, js::val
 size_t get_wall_time();
 double get_wall_time_s();
 
-
 bool user_in_channel(mongo_lock_proxy& mongo_ctx, const std::string& username, const std::string& channel)
 {
     return array_contains(get_users_in_channel(mongo_ctx, channel), username);
 }
-
 
 bool is_valid_channel_name(const std::string& in)
 {
@@ -1266,25 +1264,13 @@ js::value msg__send(priv_context& priv_ctx, js::value_context& vctx, js::value& 
     if(!found)
         return js::make_error(vctx, "Not in channel");
 
+    if(channel == "local")
     {
-        ///TODO: LIMIT
-        for(auto& current_user : users)
-        {
-            mongo_nolock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(vctx));
-            mongo_ctx.change_collection(current_user);
-
-            size_t real_time = get_wall_time();
-
-            nlohmann::json to_insert;
-            to_insert["user"] = get_caller(vctx);
-            to_insert["is_chat"] = 1;
-            to_insert["msg"] = msg;
-            to_insert["channel"] = channel;
-            to_insert["time_ms"] = real_time;
-            to_insert["processed"] = 0;
-
-            insert_in_db(mongo_ctx, to_insert);
-        }
+        chats::say_in_local(msg, users, get_caller(vctx));
+    }
+    else
+    {
+        chats::say_in_channel(msg, channel, get_caller(vctx));
     }
 
     command_handler_state* found_ptr = js::get_heap_stash(vctx)["command_handler_state_pointer"].get_ptr<command_handler_state>();
@@ -1312,19 +1298,7 @@ js::value msg__tell(priv_context& priv_ctx, js::value_context& vctx, js::value& 
     if(!get_user(to, get_thread_id(vctx)))
         return js::make_error(vctx, "Invalid User");
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(vctx));
-    mongo_ctx.change_collection(to);
-
-    size_t real_time = get_wall_time();
-
-    nlohmann::json to_insert;
-    to_insert["user"] = get_caller(vctx);
-    to_insert["is_tell"] = 1;
-    to_insert["msg"] = msg;
-    to_insert["time_ms"] = real_time;
-    to_insert["processed"] = 0;
-
-    insert_in_db(mongo_ctx, to_insert);
+    chats::tell_to(msg, to, get_caller(vctx));
 
     return js::make_success(vctx);
 }
@@ -1339,19 +1313,8 @@ void create_notification(int lock_id, const std::string& to, const std::string& 
     if(notif_msg.size() > 10000)
         return;
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(lock_id);
-    mongo_ctx.change_collection(to);
-
-    size_t real_time = get_wall_time();
-
-    nlohmann::json to_insert;
-    to_insert["user"] = to;
-    to_insert["is_notif"] = 1;
-    to_insert["msg"] = notif_msg;
-    to_insert["time_ms"] = real_time;
-    to_insert["processed"] = 0;
-
-    insert_in_db(mongo_ctx, to_insert);
+    ///TODO: KIND OF SHITTY
+    chats::create_notif_to(notif_msg, to);
 }
 
 void create_xfer_notif(js::value_context& vctx, const std::string& xfer_from, const std::string& xfer_to, double amount)

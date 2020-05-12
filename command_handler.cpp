@@ -768,13 +768,12 @@ std::string get_update_message()
 
 void delete_notifs_for(const std::string& name)
 {
-    ///DELETE NOTIFS
-    {
-        mongo_lock_proxy notifs_db = get_global_mongo_pending_notifs_context(-2);
-        notifs_db.change_collection(name);
+    chats::delete_notifs_for(name);
+}
 
-        notifs_db->remove_json_many_new(nlohmann::json());
-    }
+void leave_channels_for(const std::string& name)
+{
+    chats::leave_channels_for(name);
 }
 
 void delete_user_db_for(const std::string& name)
@@ -1157,6 +1156,8 @@ std::string delete_user(command_handler_state& state, const std::string& str, bo
     }
 
     delete_notifs_for(name);
+
+    leave_channels_for(name);
 
     delete_user_db_for(name);
 
