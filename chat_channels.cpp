@@ -24,7 +24,7 @@ void chats::say_in_local(const std::string& msg, const std::vector<std::string>&
     db_disk_overwrite(ctx, chan);
 }
 
-void chats::say_in_channel(const std::string& msg, const std::string& channel, const std::string& from)
+bool chats::say_in_channel(const std::string& msg, const std::string& channel, const std::string& from)
 {
     mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
 
@@ -44,7 +44,7 @@ void chats::say_in_channel(const std::string& msg, const std::string& channel, c
 
     db_disk_overwrite(ctx, chan);
 
-    return true
+    return true;
 }
 
 void chats::tell_to(const std::string& msg, const std::string& to, const std::string& from)
@@ -72,7 +72,7 @@ void chats::tell_to(const std::string& msg, const std::string& to, const std::st
     db_disk_overwrite(ctx, chan);
 }
 
-void chats::join_channel(const std::string& channel, const std::string& user)
+bool chats::join_channel(const std::string& channel, const std::string& user)
 {
     mongo_lock_proxy ctx = get_global_mongo_pending_notifs_context(-2);
 
@@ -97,7 +97,7 @@ bool chats::leave_channel(const std::string& channel, const std::string& user)
     if(!db_disk_load(ctx, chan, channel))
         return false;
 
-    auto it = chan.user_list.find(user);
+    auto it = std::find(chan.user_list.begin(), chan.user_list.end(), user);
 
     if(it == chan.user_list.end())
         return false;
