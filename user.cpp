@@ -492,27 +492,43 @@ void user::remove_allowed_user(const std::string& usr, mongo_lock_proxy& ctx)
     }
 }
 
+///TODO: THIS IS REALLY BAD AND SLOW
+std::vector<item> user::search_my_scripts(mongo_lock_proxy& ctx)
+{
+    std::vector<item> all_items = db_disk_load_all(ctx, item());
+
+    std::vector<item> ret;
+
+    for(item& i : all_items)
+    {
+        if(i.get_string("owner") != name)
+            continue;
+
+        if(i.get_int("is_script") != 1)
+            continue;
+    }
+
+    return ret;
+}
+
 int user::find_num_scripts(mongo_lock_proxy& ctx)
 {
-    mongo_requester request;
-    request.set_prop("owner", name);
-    request.set_prop("is_script", 1);
-
-    std::vector<mongo_requester> results = request.fetch_from_db(ctx);
-
-    return results.size();
+    return search_my_scripts(ctx).size();
 }
 
 int user::find_num_public_scripts(mongo_lock_proxy& ctx)
 {
-    mongo_requester request;
-    request.set_prop("owner", name);
-    request.set_prop("is_script", 1);
-    request.set_prop("in_public", 1);
+    auto my_scripts = search_my_scripts(ctx);
 
-    std::vector<mongo_requester> results = request.fetch_from_db(ctx);
+    int pub = 0;
 
-    return results.size();
+    for(item& i : my_scripts)
+    {
+        if(i.get_int("in_public") == 1)
+            pub++;
+    }
+
+    return pub;
 }
 
 int user::get_default_network_links(int thread_id)

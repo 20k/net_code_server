@@ -114,6 +114,7 @@ struct user : serialisable, free_function
     void add_allowed_user(const std::string& usr, mongo_lock_proxy& ctx);
     void remove_allowed_user(const std::string& usr, mongo_lock_proxy& ctx); ///does nothing on self
 
+    std::vector<item> search_my_scripts(mongo_lock_proxy& ctx);
     int find_num_scripts(mongo_lock_proxy& ctx);
     int find_num_public_scripts(mongo_lock_proxy& ctx);
 
