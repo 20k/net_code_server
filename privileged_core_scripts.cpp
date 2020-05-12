@@ -997,25 +997,21 @@ js::value channel__list(priv_context& priv_ctx, js::value_context& vctx, js::val
 
     std::vector<std::string> ret;
 
-    mongo_requester all;
-    all.exists_check["channel_name"] = 1;
-
-    std::vector<mongo_requester> found;
+    std::vector<chat_channel> all_channels;
 
     {
         mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
-        found = all.fetch_from_db(mongo_ctx);
+
+        all_channels = db_disk_load_all(mongo_ctx, chat_channel());
     }
 
-    for(auto& i : found)
+    for(auto& i : all_channels)
     {
-        std::vector<std::string> users = (std::vector<std::string>)i.get_prop("user_list");
-
-        for(auto& k : users)
+        for(auto& k : i.user_list)
         {
             if(k == username)
             {
-                ret.push_back(i.get_prop("channel_name"));
+                ret.push_back(i.channel_name);
                 break;
             }
         }
