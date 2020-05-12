@@ -891,17 +891,7 @@ double get_wall_time_s();
 
 bool user_in_channel(mongo_lock_proxy& mongo_ctx, const std::string& username, const std::string& channel)
 {
-    mongo_requester request;
-    request.set_prop("channel_name", channel);
-
-    auto found = request.fetch_from_db(mongo_ctx);
-
-    if(found.size() != 1)
-        return false;
-
-    auto channel_users = (std::vector<std::string>)found[0].get_prop("user_list");
-
-    return array_contains(channel_users, username);
+    return array_contains(get_users_in_channel(mongo_ctx, channel), username);
 }
 
 
