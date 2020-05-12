@@ -40,6 +40,7 @@ DECLARE_SERIALISE_FUNCTION(low_level_structure);
 DECLARE_SERIALISE_FUNCTION(item);
 DECLARE_SERIALISE_FUNCTION(playspace_network_link);
 DECLARE_SERIALISE_FUNCTION(chat_channel);
+DECLARE_SERIALISE_FUNCTION(chat_message);
 
 DECLARE_GENERIC_DB(npc_prop_list, std::string);
 DECLARE_GENERIC_DB(event_impl, std::string);

@@ -210,6 +210,17 @@ DEFINE_SERIALISE_FUNCTION(chat_channel)
     DO_FSERIALISE(user_list);
 }
 
+DEFINE_SERIALISE_FUNCTION(chat_message)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(time_ms);
+    DO_FSERIALISE(originator);
+    DO_FSERIALISE(msg);
+    DO_FSERIALISE(recipient_list);
+    DO_FSERIALISE(sent_to_client);
+}
+
 template<typename T, typename U>
 bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
 {
