@@ -558,28 +558,39 @@ js::value scripts__public(priv_context& priv_ctx, js::value_context& vctx, js::v
     int pretty = !requested_scripting_api(arg);
     int seclevel = arg.has("sec") ? arg["sec"] : -1;
 
-    mongo_requester request;
-    request.set_prop("is_script", 1);
-    request.set_prop("in_public", 1);
-
-    if(seclevel >= 0 && seclevel <= 4)
-        request.set_prop("seclevel", seclevel);
-
-    request.set_prop_sort_on("item_id", 1);
-
-    ///seclevel
-    //request.set_prop("seclevel", num);
-    //request.set_prop("in_public", 1"; ///TODO: FOR WHEN YOU CAN UP PUBLIC
-
     mongo_nolock_proxy item_context = get_global_mongo_user_items_context(get_thread_id(vctx));
 
-    std::vector<mongo_requester> results = request.fetch_from_db(item_context);
+    std::vector<item> all_items = db_disk_load_all(item_context, item());
+
+    std::vector<item> usable;
+
+    for(item& it : all_items)
+    {
+        if(it.get_int("is_script") != 1)
+            continue;
+
+        if(it.get_int("in_public") != 1)
+            continue;
+
+        if(seclevel >= 0 && seclevel <= 4)
+        {
+            if(it.get_int("seclevel") != seclevel)
+                continue;
+        }
+
+        usable.push_back(it);
+    }
+
+    std::sort(usable.begin(), usable.end(), [](auto& i1, auto& i2)
+    {
+        return i1.item_id < i2.item_id;
+    });
 
     std::vector<std::string> names;
 
-    for(mongo_requester& req : results)
+    for(item& i : usable)
     {
-        names.push_back("#" + (std::string)req.get_prop("item_id"));
+        names.push_back("#" + i.item_id);
     }
 
     if(pretty)

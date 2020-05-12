@@ -506,6 +506,8 @@ std::vector<item> user::search_my_scripts(mongo_lock_proxy& ctx)
 
         if(i.get_int("is_script") != 1)
             continue;
+
+        ret.push_back(i);
     }
 
     return ret;
