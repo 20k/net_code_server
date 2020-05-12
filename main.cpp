@@ -485,18 +485,12 @@ int main()
 
         std::vector<std::string> chans{"global", "local", "help", "memes"};
 
-        for(auto& i : chans)
+        for(auto& name : chans)
         {
-            mongo_requester to_insert;
-            to_insert.set_prop("channel_name", i);
+            chat_channel chanl;
+            chanl.channel_name = name;
 
-            if(to_insert.fetch_from_db(mongo_ctx).size() == 0)
-            {
-                to_insert.set_prop("password", "");
-                to_insert.set_prop("user_list", std::vector<std::string>());
-
-                to_insert.insert_in_db(mongo_ctx);
-            }
+            db_disk_overwrite(mongo_ctx, chanl);
         }
     }
 
