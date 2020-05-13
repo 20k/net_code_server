@@ -118,7 +118,6 @@ DEFINE_SERIALISE_FUNCTION(user_nodes)
 
     DO_FSERIALISE(nodes);
     DO_FSERIALISE(owned_by);
-    DO_FSERIALISE(owner);
 }
 
 DEFINE_SERIALISE_FUNCTION(npc_prop)
@@ -367,3 +366,4 @@ DEFINE_GENERIC_DB(playspace_network_link, std::string, name);
 DEFINE_GENERIC_DB(auth, std::string, auth_token_hex);
 DEFINE_GENERIC_DB(chat_channel, std::string, channel_name);
 DEFINE_GENERIC_DB(chat_message, size_t, id);
+DEFINE_GENERIC_DB(user_nodes, std::string, owned_by);
