@@ -1396,7 +1396,9 @@ js::value msg__recent(priv_context& priv_ctx, js::value_context& vctx, js::value
         mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_messages_context(-2);
 
         chat_message cmsg;
-        db_disk_load(mongo_ctx, cmsg, id);
+
+        if(!db_disk_load(mongo_ctx, cmsg, id))
+            continue;
 
         if(!array_contains(cmsg.recipient_list, get_caller(vctx)))
             continue;
