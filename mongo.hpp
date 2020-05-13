@@ -168,9 +168,6 @@ mongo_shim get_global_mongo_context(mongo_database_type type, int lock_id, bool 
 void initialse_db_all();
 void cleanup_db_all();
 
-//bson_t* make_bson_default();
-//void destroy_bson_default(bson_t* t);
-
 inline
 mongo_shim get_global_mongo_user_accessible_context(int lock_id)
 {
