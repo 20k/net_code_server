@@ -15,6 +15,11 @@
 
 //#define DEADLOCK_DETECTION
 
+int* tls_get_thread_id_storage_hack();
+int* tls_get_print_performance_diagnostics();
+int* tls_get_should_throw();
+int* tls_get_holds_lock();
+
 enum class mongo_database_type
 {
     USER_ACCESSIBLE,
@@ -80,11 +85,6 @@ struct mongo_context
     void make_lock(const std::string& debug_info, const std::string& collection, size_t who);
     void make_unlock(const std::string& collection);
 };
-
-int* tls_get_thread_id_storage_hack();
-int* tls_get_print_performance_diagnostics();
-int* tls_get_should_throw();
-int* tls_get_holds_lock();
 
 struct database_read_interface
 {
