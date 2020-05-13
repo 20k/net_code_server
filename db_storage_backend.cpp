@@ -1075,16 +1075,6 @@ void init_db_storage_backend()
 
 void db_storage_backend::run_tests()
 {
-    {
-        db_storage_backend backend(mongo_databases[(int)mongo_database_type::USER_PROPERTIES]);
-
-        backend.change_collection_unsafe("i20k");
-
-        assert(backend.collection == "i20k");
-        assert(backend.database == (int)mongo_database_type::USER_PROPERTIES);
-        //assert(backend.database == "user_properties");
-    }
-
     nlohmann::json data;
     data["cat"] = "dog";
     data["potato"] = "ketchup";
@@ -1244,7 +1234,7 @@ void db_storage_backend::make_backup(const std::string& to_where)
 
 void db_storage_backend::change_collection_unsafe(const std::string& coll, bool force_change)
 {
-    if(ctx->is_fixed && !force_change)
+    if(is_fixed && !force_change)
     {
         std::cout << "warning, collection should not be changed" << std::endl;
         return;
@@ -1256,10 +1246,10 @@ void db_storage_backend::change_collection_unsafe(const std::string& coll, bool 
     collection = coll;
 }
 
-db_storage_backend::db_storage_backend(mongo_context* fctx)
+db_storage_backend::db_storage_backend(database_type _database, bool _is_fixed)
 {
-    ctx = fctx;
-    database = (int)fctx->last_db_type;
+    database = _database;
+    is_fixed = _is_fixed;
 }
 
 void db_storage_backend::insert_one(const nlohmann::json& json)

@@ -17,6 +17,31 @@
 #include "rate_limiting.hpp"
 #include "tls.hpp"
 
+tls_variable<int, -2> thread_id_storage_key;
+tls_variable<int, 0> print_performance_diagnostics_key;
+tls_variable<int, 0> should_throw;
+tls_variable<int, 0> holds_lock;
+
+int* tls_get_thread_id_storage_hack()
+{
+    return thread_id_storage_key.get();
+}
+
+int* tls_get_print_performance_diagnostics()
+{
+    return print_performance_diagnostics_key.get();
+}
+
+int* tls_get_should_throw()
+{
+    return should_throw.get();
+}
+
+int* tls_get_holds_lock()
+{
+    return holds_lock.get();
+}
+
 void lock_internal::lock(const std::string& debug_info, size_t who)
 {
     mut_lock.lock();
@@ -257,7 +282,7 @@ void database_read_write_interface::remove_json_many_new(const nlohmann::json& j
     backend.remove_many(json);
 }
 
-database_read_interface::database_read_interface(mongo_context* fctx) : backend(fctx)
+database_read_interface::database_read_interface(mongo_context* fctx) : backend((int)fctx->last_db_type, fctx->is_fixed)
 {
     ctx = fctx;
 }
@@ -271,31 +296,6 @@ mongo_shim::mongo_shim(mongo_context* fctx, int plock_id)
 {
     ctx = fctx;
     lock_id = plock_id;
-}
-
-tls_variable<int, -2> thread_id_storage_key;
-tls_variable<int, 0> print_performance_diagnostics_key;
-tls_variable<int, 0> should_throw;
-tls_variable<int, 0> holds_lock;
-
-int* tls_get_thread_id_storage_hack()
-{
-    return thread_id_storage_key.get();
-}
-
-int* tls_get_print_performance_diagnostics()
-{
-    return print_performance_diagnostics_key.get();
-}
-
-int* tls_get_should_throw()
-{
-    return should_throw.get();
-}
-
-int* tls_get_holds_lock()
-{
-    return holds_lock.get();
 }
 
 mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim, bool lock) : ctx(shim.ctx)

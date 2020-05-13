@@ -12,8 +12,6 @@
 
 #define CID_STRING "_cid"
 
-struct mongo_context;
-
 using database_type = int32_t;
 
 void init_db_storage_backend();
@@ -22,8 +20,7 @@ struct db_storage_backend
 {
     static void run_tests();
 
-    mongo_context* ctx = nullptr;
-
+    bool is_fixed = false;
     database_type database;
     std::string collection;
 
@@ -46,7 +43,7 @@ struct db_storage_backend
     static
     size_t get_unique_id();
 
-    db_storage_backend(mongo_context* fctx);
+    db_storage_backend(database_type _database, bool _is_fixed);
 };
 
 #endif // DB_STORAGE_BACKEND_HPP_INCLUDED
