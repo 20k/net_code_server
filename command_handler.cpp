@@ -2234,7 +2234,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
 
                 all_shared->state.set_auth(to_ret);
 
-                insert_in_db(ctx, serialise(to_insert, serialise_mode::DISK));
+                to_insert.overwrite_in_db(ctx);
 
                 if(steam_auth.user_data.size() != 128)
                 {
