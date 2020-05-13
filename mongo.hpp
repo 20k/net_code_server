@@ -168,12 +168,6 @@ void update_in_db_if_exact(mongo_lock_proxy& ctx, const nlohmann::json& to_selec
     ctx->update_json_many_new(to_select, to_set);
 }
 
-inline
-void insert_in_db(mongo_lock_proxy& ctx, const nlohmann::json& to_insert)
-{
-    ctx->insert_json_one_new(to_insert);
-}
-
 extern std::array<mongo_context*, (int)mongo_database_type::MONGO_COUNT> mongo_databases;
 
 inline
