@@ -1,5 +1,4 @@
 #include "db_storage_backend.hpp"
-#include "mongo.hpp"
 #include "user.hpp"
 #include <secret/npc_manager.hpp>
 
