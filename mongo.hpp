@@ -71,8 +71,10 @@ struct mongo_context
     ///this isn't for thread safety, this is for marshalling db access
     std::map<std::string, lock_internal> per_collection_lock;
 
+    #ifdef DEADLOCK_DETECTION
     static inline std::map<std::thread::id, std::atomic_int> thread_counter;
     static inline lock_type_t thread_lock;
+    #endif // DEADLOCK_DETECTION
 
     bool is_fixed = false;
 
