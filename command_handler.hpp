@@ -29,7 +29,7 @@ nlohmann::json handle_autocompletes_json(const std::string& username, const std:
 std::string binary_to_hex(const std::string& in, bool swap_endianness = false);
 std::string hex_to_binary(const std::string& in, bool swap_endianness = false);
 std::string delete_user(command_handler_state& state, const std::string& str, bool cli_force = false);
-//std::string rename_user_force(const std::string& from_name, const std::string& to_name);
+std::string rename_user_force(const std::string& from_name, const std::string& to_name);
 
 nlohmann::json handle_client_poll_json(user& usr);
 void strip_old_msg_or_notif(mongo_lock_proxy& ctx);

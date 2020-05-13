@@ -31,6 +31,7 @@
 #include "argument_object.hpp"
 #include "command_handler_fiber_backend.hpp"
 #include "chat_channels.hpp"
+#include "event_manager.hpp"
 
 #ifdef USE_FIBERS
 #include <boost/fiber/operations.hpp>
@@ -875,10 +876,18 @@ void delete_quests_for(const std::string& name)
 
 void delete_events_for(const std::string& name)
 {
-    mongo_lock_proxy ctx = get_global_mongo_event_manager_context(-2);
+    mongo_nolock_proxy ctx = get_global_mongo_event_manager_context(-2);
     ctx.change_collection(name);
 
-    ctx->remove_json_many_new(nlohmann::json({}));
+    std::vector<event_impl> all_events = db_disk_load_all(ctx, event_impl());
+
+    for(event_impl& e : all_events)
+    {
+        if(e.user_name == name)
+        {
+            db_disk_remove(ctx, e);
+        }
+    }
 }
 
 ///ok
