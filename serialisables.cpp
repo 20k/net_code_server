@@ -231,7 +231,7 @@ bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, co
     nlohmann::json fetch;
     fetch[key_name] = key_val;
 
-    std::vector<nlohmann::json> found = fetch_from_db(ctx, fetch);
+    std::vector<nlohmann::json> found = ctx->find_json_new(fetch, {});
 
     if(found.size() != 1)
         return false;

@@ -793,10 +793,10 @@ void delete_nodes_for(const std::string& name)
     {
         mongo_lock_proxy ctx = get_global_mongo_node_properties_context(-2);
 
-        nlohmann::json req;
-        req["owner"] = name;
+        user_nodes nodes;
+        nodes.owned_by = name;
 
-        remove_all_from_db(ctx, req);
+        db_disk_remove(ctx, nodes);
     }
 }
 

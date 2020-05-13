@@ -146,28 +146,6 @@ struct mongo_nolock_proxy : mongo_lock_proxy
     mongo_nolock_proxy(const mongo_shim& shim);
 };
 
-inline
-std::vector<nlohmann::json> fetch_from_db(mongo_lock_proxy& ctx, const nlohmann::json& fnd, nlohmann::json proj = {})
-{
-    return ctx->find_json_new(fnd, proj);
-}
-
-inline
-void remove_all_from_db(mongo_lock_proxy& ctx, const nlohmann::json& rem)
-{
-    ctx->remove_json_many_new(rem);
-}
-
-inline
-void update_in_db_if_exact(mongo_lock_proxy& ctx, const nlohmann::json& to_select, const nlohmann::json& to_update)
-{
-    nlohmann::json to_set;
-
-    to_set["$set"] = to_update;
-
-    ctx->update_json_many_new(to_select, to_set);
-}
-
 extern std::array<mongo_context*, (int)mongo_database_type::MONGO_COUNT> mongo_databases;
 
 inline
