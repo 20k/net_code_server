@@ -324,7 +324,6 @@ mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim, bool lock) : ctx(shim
     if(shim.ctx == nullptr)
         return;
 
-    friendly_id = shim.lock_id;
     ilock_id = my_id;
 
     //if(ctx.ctx->default_collection != "")
@@ -390,6 +389,63 @@ mongo_lock_proxy::~mongo_lock_proxy()
 mongo_nolock_proxy::mongo_nolock_proxy(const mongo_shim& shim) : mongo_lock_proxy(shim, false)
 {
 
+}
+
+disk_lock_proxy::disk_lock_proxy(const mongo_shim& shim, bool _lock) : ctx(shim.ctx)
+{
+    should_lock = _lock;
+
+    if(shim.ctx == nullptr)
+        return;
+
+    ctx.last_collection = ctx.ctx->default_collection;
+
+    if(ctx.ctx->default_collection != "")
+    {
+        change_collection(ctx.ctx->default_collection, true);
+    }
+}
+
+void disk_lock_proxy::change_collection(const std::string& coll, bool force_change)
+{
+    ///need to alter locks
+    unlock();
+
+    ctx.change_collection_unsafe(coll, force_change);
+
+    lock();
+}
+
+void disk_lock_proxy::lock()
+{
+    if(!should_lock)
+        return;
+
+    if(!has_lock)
+    {
+        ctx.ctx->make_lock(ctx.ctx->last_db, ctx.last_collection, -2);
+    }
+
+    has_lock = true;
+}
+
+void disk_lock_proxy::unlock()
+{
+    if(!has_lock)
+        return;
+
+    has_lock = false;
+    ctx.ctx->make_unlock(ctx.last_collection);
+}
+
+disk_lock_proxy::~disk_lock_proxy()
+{
+    unlock();
+}
+
+database_read_write_interface* disk_lock_proxy::operator->()
+{
+    return &ctx;
 }
 
 database_read_write_interface* mongo_lock_proxy::operator->()

@@ -253,19 +253,16 @@ void quest::set_on_finish(const std::string& on_finish)
 
 std::vector<quest> quest_manager::fetch_quests_of(mongo_lock_proxy& ctx, const std::string& user)
 {
-    nlohmann::json req;
-    req["user_for"] = user;
+    std::vector<quest> all_quests = db_disk_load_all(ctx, quest());
+    std::vector<quest> ret;
 
-    auto found = ctx->find_json_new(req, nlohmann::json());
-
-    std::vector<quest> q;
-
-    for(auto& i : found)
+    for(quest& q : all_quests)
     {
-        deserialise(i, q.emplace_back(), serialise_mode::DISK);
+        if(q.user_for == user)
+            ret.push_back(q);
     }
 
-    return q;
+    return ret;
 }
 
 quest quest_manager::get_new_quest_for(const std::string& username, const std::string& name, const std::string& description)

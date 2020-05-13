@@ -148,6 +148,25 @@ struct mongo_nolock_proxy : mongo_lock_proxy
     mongo_nolock_proxy(const mongo_shim& shim);
 };
 
+struct disk_lock_proxy
+{
+    database_read_write_interface ctx;
+
+    bool has_lock = false;
+    bool should_lock = true;
+
+    disk_lock_proxy(const mongo_shim& shim, bool lock = true);
+    disk_lock_proxy(const disk_lock_proxy&) = delete;
+    ~disk_lock_proxy();
+
+    void change_collection(const std::string& coll, bool force_change = false);
+
+    void lock();
+    void unlock();
+
+    database_read_write_interface* operator->();
+};
+
 extern std::array<mongo_context*, (int)mongo_database_type::MONGO_COUNT> mongo_databases;
 
 inline

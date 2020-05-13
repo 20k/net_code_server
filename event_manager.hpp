@@ -78,15 +78,13 @@ namespace event
             mongo_nolock_proxy ctx = get_global_mongo_event_manager_context(-2);
             ctx.change_collection(user_name);
 
-            nlohmann::json req;
-            req["user_name"] = user_name;
-            req["unique_event_tag"] = unique_event_tag;
-            req["complete"] = true;
+            std::vector<event_impl> all = db_disk_load_all(ctx, event_impl());
 
-            auto found = ctx->find_json_new(req, nlohmann::json());
-
-            if(found.size() > 0)
-                return true;
+            for(event_impl& e : all)
+            {
+                if(e.user_name == user_name && e.unique_event_tag == unique_event_tag && e.complete)
+                    return true;
+            }
         }
 
         {
