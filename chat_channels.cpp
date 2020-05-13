@@ -4,6 +4,12 @@
 #include "serialisables.hpp"
 #include <libncclient/nc_util.hpp>
 
+void prune_chat_history(chat_channel& in)
+{
+    while(in.history.size() > 100)
+        in.history.erase(in.history.begin());
+}
+
 void chats::say_in_local(const std::string& msg, const std::vector<std::string>& to, const std::string& from)
 {
     chat_message cmsg;
@@ -28,6 +34,8 @@ void chats::say_in_local(const std::string& msg, const std::vector<std::string>&
 
     db_disk_load(ctx, chan, "$$local");
     chan.history.push_back(cmsg.id);
+
+    prune_chat_history(chan);
 
     db_disk_overwrite(ctx, chan);
 }
@@ -70,6 +78,7 @@ bool chats::say_in_channel(const std::string& msg, const std::string& channel, c
         return false;
 
     chan.history.push_back(cmsg.id);
+    prune_chat_history(chan);
 
     db_disk_overwrite(ctx, chan);
 
@@ -104,6 +113,7 @@ void chats::tell_to(const std::string& msg, const std::string& to, const std::st
     ///will create if it doesn't exist, tells are a virtual channel
     db_disk_load(ctx, chan, channel);
     chan.history.push_back(cmsg.id);
+    prune_chat_history(chan);
 
     db_disk_overwrite(ctx, chan);
 }
@@ -136,6 +146,7 @@ void chats::create_notif_to(const std::string& msg, const std::string& to)
     ///will create if it doesn't exist, notifs are a virtual channel
     db_disk_load(ctx, chan, channel);
     chan.history.push_back(cmsg.id);
+    prune_chat_history(chan);
 
     db_disk_overwrite(ctx, chan);
 }
