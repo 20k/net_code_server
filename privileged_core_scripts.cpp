@@ -1369,52 +1369,76 @@ js::value msg__recent(priv_context& priv_ctx, js::value_context& vctx, js::value
         channel.resize(50);
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
 
         if(!user_in_channel(mongo_ctx, get_caller(vctx), channel))
             return js::make_error(vctx, "User not in channel or doesn't exist");
     }
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_pending_notifs_context(get_thread_id(vctx));
-    mongo_ctx.change_collection(get_caller(vctx));
+    chat_channel chanl;
 
-    ///ALARM: ALARM: RATE LIMIT
-    nlohmann::json request;
+    {
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
 
-    if(!is_tell)
-    {
-        request["channel"] =  channel;
-        request["is_chat"] = 1;
-    }
-    else
-    {
-        request["is_tell"] = 1;
+        std::string name = channel;
+
+        if(is_tell)
+            name = "@" + get_caller(vctx);
+
+        if(!db_disk_load(mongo_ctx, chanl, name))
+            return js::make_error(vctx, "Channel does not exist");
     }
 
-    nlohmann::json time_opt;
-    time_opt["time_ms"] = -1;
+    std::vector<chat_message> pruned_messages;
 
-    nlohmann::json opt;
-    opt["sort"] = time_opt;
-    opt["limit"] = num;
-
-    std::vector<nlohmann::json> found = fetch_from_db(mongo_ctx, request, opt);
-
-    for(nlohmann::json& j : found)
+    for(size_t id : chanl.history)
     {
-        if(j.find("_id") != j.end())
+        mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_messages_context(-2);
+
+        chat_message cmsg;
+        db_disk_load(mongo_ctx, cmsg, id);
+
+        if(!array_contains(cmsg.recipient_list, get_caller(vctx)))
+            continue;
+
+        pruned_messages.push_back(cmsg);
+    }
+
+    if(pretty)
+    {
+        std::sort(pruned_messages.begin(), pruned_messages.end(), [](const chat_message& i1, const chat_message& i2)
         {
-            j.erase(j.find("_id"));
-        }
+            return i1.time_ms > i2.time_ms;
+        });
     }
+
+    ///yeah this is bad
+    while((int)pruned_messages.size() > num)
+        pruned_messages.erase(pruned_messages.begin());
 
     if(!pretty)
     {
+        nlohmann::json found = nlohmann::json::array();
+
+        for(int i=0; i < (int)pruned_messages.size(); i++)
+        {
+            chat_message& m = pruned_messages[i];
+
+            found[i]["msg"] = m.msg;
+            found[i]["user"] = m.originator;
+            found[i]["time_ms"] = m.time_ms;
+
+            if(is_tell)
+                found[i]["is_tell"] = 1;
+            else
+                found[i]["is_chat"] = 1;
+        }
+
         return js::make_value(vctx, found);
     }
     else
     {
-        std::string str = prettify_chat_strings(found, !is_tell);
+        std::string str = chats::prettify(pruned_messages, !is_tell, channel);
 
         return js::make_value(vctx, str);
     }
