@@ -281,6 +281,11 @@ void db_tests()
 
     {
         db::read_write_tx tx;
+        tx.write(0, "key", "WEOW");
+    }
+
+    {
+        db::read_write_tx tx;
 
         auto all = tx.read_all(0);
 
