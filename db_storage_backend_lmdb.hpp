@@ -3,6 +3,7 @@
 
 #include <optional>
 #include <string_view>
+#include <vector>
 
 typedef unsigned int MDB_dbi;
 typedef struct MDB_txn MDB_txn;
@@ -14,7 +15,6 @@ namespace db
 
     struct data
     {
-        MDB_cursor* cursor = nullptr;
         std::string_view data_view;
 
         data(const data&) = delete;
@@ -22,7 +22,7 @@ namespace db
         data& operator=(data&&) = delete;
 
         data(data&&);
-        data(std::string_view _data_view, MDB_cursor* _cursor);
+        data(std::string_view _data_view);
         ~data();
     };
 
@@ -48,6 +48,7 @@ namespace db
         read_tx();
 
         std::optional<data> read(int _db_id, std::string_view skey);
+        std::optional<std::vector<data>> read_all(int _db_id);
     };
 
     struct read_write_tx : read_tx
@@ -56,9 +57,10 @@ namespace db
 
         void write(int _db_id, std::string_view skey, std::string_view sdata);
         bool del(int _db_id, std::string_view skey); //returns true on successful deletion
+        void drop(int _db_id);
     };
 
-    struct bound_read_tx : read_tx
+    /*struct bound_read_tx : read_tx
     {
         MDB_dbi dbid;
 
@@ -76,7 +78,7 @@ namespace db
         std::optional<data> read(std::string_view skey);
         void write(std::string_view skey, std::string_view sdata);
         bool del(std::string_view skey); //returns true on successful deletion
-    };
+    };*/
 }
 
 void db_tests();

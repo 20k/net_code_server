@@ -88,18 +88,21 @@ std::optional<db::data> do_read_tx(MDB_dbi dbi, const db::impl_tx& tx, std::stri
 
     MDB_val data;
 
-    MDB_cursor* cursor = nullptr;
-
-    CHECK_THROW(mdb_cursor_open(tx.transaction, dbi, &cursor));
+    /*CHECK_THROW(mdb_cursor_open(tx.transaction, dbi, &cursor));
 
     if(mdb_cursor_get(cursor, &key, &data, MDB_SET_KEY) != 0)
     {
         mdb_cursor_close(cursor);
 
         return std::nullopt;
+    }*/
+
+    if(mdb_get(tx.transaction, dbi, &key, &data) != 0)
+    {
+        return std::nullopt;
     }
 
-    return db::data({(const char*)data.mv_data, data.mv_size}, cursor);
+    return db::data({(const char*)data.mv_data, data.mv_size});
 }
 
 void do_write_tx(MDB_dbi dbi, const db::impl_tx& tx, std::string_view skey, std::string_view sdata)
@@ -125,22 +128,54 @@ bool do_del_tx(MDB_dbi dbi, const db::impl_tx& tx, std::string_view skey)
     return rval != MDB_NOTFOUND;
 }
 
-db::data::data(std::string_view _data_view, MDB_cursor* _cursor) : cursor(_cursor), data_view(_data_view){}
+void do_drop_tx(MDB_dbi dbi, const db::impl_tx& tx)
+{
+    CHECK_THROW(mdb_drop(tx.transaction, dbi, 0));
+}
+
+std::vector<db::data> do_read_all_tx(MDB_dbi dbi, const db::impl_tx& tx)
+{
+    MDB_cursor* cursor = nullptr;
+
+    CHECK_THROW(mdb_cursor_open(tx.transaction, dbi, &cursor));
+
+    bool first = true;
+
+    std::vector<db::data> ret;
+
+    MDB_val key;
+    MDB_val data;
+
+    while(1)
+    {
+        int rc = -1;
+
+        if(first)
+            rc = mdb_cursor_get(cursor, &key, &data, MDB_FIRST);
+        else
+            rc = mdb_cursor_get(cursor, &key, &data, MDB_NEXT);
+
+        if(rc == MDB_NOTFOUND)
+            break;
+
+        ret.push_back(db::data({(const char*)data.mv_data, data.mv_size}));
+    }
+
+    mdb_cursor_close(cursor);
+
+    return ret;
+}
+
+db::data::data(std::string_view _data_view) : data_view(_data_view){}
 
 db::data::data(db::data&& other)
 {
     data_view = other.data_view;
-    cursor = other.cursor;
-
-    other.cursor = nullptr;
 }
 
 db::data::data::~data()
 {
-    if(cursor == nullptr)
-        return;
 
-    mdb_cursor_close(cursor);
 }
 
 db::impl_tx::impl_tx()
@@ -185,6 +220,11 @@ std::optional<db::data> db::read_tx::read(int _db_id, std::string_view skey)
     return do_read_tx(get_backend().get_db(_db_id), *this, skey);
 }
 
+std::optional<std::vector<db::data>> db::read_tx::read_all(int _db_id)
+{
+    return do_read_all_tx(get_backend().get_db(_db_id), *this);
+}
+
 void db::read_write_tx::write(int _db_id, std::string_view skey, std::string_view sdata)
 {
     return do_write_tx(get_backend().get_db(_db_id), *this, skey, sdata);
@@ -195,7 +235,12 @@ bool db::read_write_tx::del(int _db_id, std::string_view skey)
     return do_del_tx(get_backend().get_db(_db_id), *this, skey);
 }
 
-db::bound_read_tx::bound_read_tx(int _db_id)
+void db::read_write_tx::drop(int _db_id)
+{
+    do_drop_tx(get_backend().get_db(_db_id), *this);
+}
+
+/*db::bound_read_tx::bound_read_tx(int _db_id)
 {
     dbid = get_backend().get_db(_db_id);
 }
@@ -223,7 +268,7 @@ void db::bound_read_write_tx::write(std::string_view skey, std::string_view sdat
 bool db::bound_read_write_tx::del(std::string_view skey)
 {
     return do_del_tx(dbid, *this, skey);
-}
+}*/
 
 void db_tests()
 {
