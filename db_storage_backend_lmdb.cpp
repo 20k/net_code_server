@@ -207,8 +207,6 @@ db::impl_tx::~impl_tx()
 
         CHECK_ASSERT(mdb_txn_commit(transaction));
     }
-
-
 }
 
 db::read_tx::read_tx()

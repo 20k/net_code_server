@@ -54,7 +54,7 @@ void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
     db_disk_overwrite(ctx, *this);
 }
 
-bool user::exists(mongo_lock_proxy& ctx, const std::string& name_)
+bool user::exists(mongo_read_proxy& ctx, const std::string& name_)
 {
     ctx.change_collection(name_);
     name = name_;
@@ -62,7 +62,7 @@ bool user::exists(mongo_lock_proxy& ctx, const std::string& name_)
     return db_disk_exists(ctx, *this);
 }
 
-bool user::load_from_db(mongo_lock_proxy& ctx, const std::string& name_)
+bool user::load_from_db(mongo_read_proxy& ctx, const std::string& name_)
 {
     ctx.change_collection(name_);
 
@@ -973,7 +973,7 @@ std::vector<user> load_users(const std::vector<std::string>& names, int lock_id)
 {
     std::vector<user> ret;
 
-    mongo_lock_proxy ctx = get_global_mongo_user_info_context(lock_id);
+    mongo_read_proxy ctx = get_global_mongo_user_info_context(lock_id);
 
     for(auto& i : names)
     {

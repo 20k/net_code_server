@@ -70,8 +70,8 @@ struct user : serialisable, free_function
     user();
 
     void overwrite_user_in_db(mongo_lock_proxy& ctx);
-    bool exists(mongo_lock_proxy& ctx, const std::string& name_);
-    bool load_from_db(mongo_lock_proxy& ctx, const std::string& name_);
+    bool exists(mongo_read_proxy& ctx, const std::string& name_);
+    bool load_from_db(mongo_read_proxy& ctx, const std::string& name_);
     bool construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, const std::string& auth);
 
     std::string get_auth_token_hex();
@@ -163,7 +163,7 @@ void for_each_user(const T& t)
     std::vector<auth> all;
 
     {
-        mongo_lock_proxy all_auth = get_global_mongo_global_properties_context(-2);
+        mongo_read_proxy all_auth = get_global_mongo_global_properties_context(-2);
 
         all = db_disk_load_all(all_auth, auth());
     }
@@ -177,7 +177,7 @@ void for_each_user(const T& t)
             user usr;
 
             {
-                mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
+                mongo_read_proxy ctx = get_global_mongo_user_info_context(-2);
 
                 if(!usr.load_from_db(ctx, usrname))
                     continue;

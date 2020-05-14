@@ -144,9 +144,9 @@ struct mongo_lock_proxy
 };
 #endif // OLD_PROXY
 
-struct mongo_lock_proxy
+struct mongo_lock_proxy : db::read_write_tx
 {
-    db::read_write_tx rwtx;
+    //db::read_write_tx rwtx;
 
     int db_id = -1;
 
@@ -160,10 +160,8 @@ struct mongo_lock_proxy
     //void unlock();
 };
 
-struct mongo_read_proxy
+struct mongo_read_proxy : db::read_tx
 {
-    db::read_tx rwtx;
-
     int db_id = -1;
 
     mongo_read_proxy(const mongo_shim& shim, bool lock = true);
