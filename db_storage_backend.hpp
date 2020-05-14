@@ -3,7 +3,6 @@
 
 #include <string>
 #include <nlohmann/json.hpp>
-#include "mongoc_fwd.hpp"
 #include <mutex>
 #include "stacktrace.hpp"
 #include <iostream>
