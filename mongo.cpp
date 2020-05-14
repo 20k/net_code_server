@@ -406,6 +406,8 @@ disk_lock_proxy::disk_lock_proxy(const mongo_shim& shim, bool _lock) : ctx(shim.
     }
 }
 
+disk_nolock_proxy::disk_nolock_proxy(const mongo_shim& shim) : disk_lock_proxy(shim, false) {}
+
 void disk_lock_proxy::change_collection(const std::string& coll, bool force_change)
 {
     ///need to alter locks
@@ -445,15 +447,6 @@ disk_lock_proxy::~disk_lock_proxy()
 
 database_read_write_interface* disk_lock_proxy::operator->()
 {
-    return &ctx;
-}
-
-database_read_write_interface* mongo_lock_proxy::operator->()
-{
-    //lock();
-
-    perf.db_hits++;
-
     return &ctx;
 }
 

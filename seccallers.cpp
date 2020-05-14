@@ -164,12 +164,12 @@ std::string db_insert(js::value_context* vctx, js::value arg)
 
     std::string secret_script_host = this_bound.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
-    mongo_ctx.change_collection(secret_script_host);
+    disk_nolock_proxy disk_ctx = get_global_disk_user_accessible_context();
+    disk_ctx.change_collection(secret_script_host);
 
     std::string json = arg.to_json();
 
-    mongo_ctx->insert_json_one_new(nlohmann::json::parse(json));
+    disk_ctx->insert_json_one_new(nlohmann::json::parse(json));
 
     return json;
 }
@@ -179,8 +179,8 @@ js::value db_update(js::value_context* vctx, js::value json_1_arg, js::value jso
     js::value current_func = js::get_current_function(*vctx);
     std::string secret_script_host = current_func.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
-    mongo_ctx.change_collection(secret_script_host);
+    disk_nolock_proxy disk_ctx = get_global_disk_user_accessible_context();
+    disk_ctx.change_collection(secret_script_host);
 
     std::string json_1 = json_1_arg.to_json();
     std::string json_2 = json_2_arg.to_json();
@@ -188,7 +188,7 @@ js::value db_update(js::value_context* vctx, js::value json_1_arg, js::value jso
     nlohmann::json j1 = nlohmann::json::parse(json_1);
     nlohmann::json j2 = nlohmann::json::parse(json_2);
 
-    mongo_ctx->update_json_many_new(j1, j2);
+    disk_ctx->update_json_many_new(j1, j2);
 
     js::value ret(*vctx);
     ret.add("filter", json_1);
@@ -205,8 +205,8 @@ js::value db_find_all(js::value_context* vctx)
     js::value current_func = js::get_current_function(*vctx);
     std::string secret_script_host = current_func.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
-    mongo_ctx.change_collection(secret_script_host);
+    disk_nolock_proxy disk_ctx = get_global_disk_user_accessible_context();
+    disk_ctx.change_collection(secret_script_host);
 
     js::value current_this = js::get_this(*vctx);
 
@@ -217,7 +217,7 @@ js::value db_find_all(js::value_context* vctx)
     if(caller != get_caller(*vctx))
         return js::make_error(*vctx, "caller != get_caller() in db_find.array, you probably know what you did");
 
-    std::vector<nlohmann::json> db_data = mongo_ctx->find_json_new(nlohmann::json::parse(json), nlohmann::json::parse(proj));
+    std::vector<nlohmann::json> db_data = disk_ctx->find_json_new(nlohmann::json::parse(json), nlohmann::json::parse(proj));
 
     return js::make_value(*vctx, db_data);
 }
@@ -229,8 +229,8 @@ js::value db_find_one(js::value_context* vctx)
     js::value current_func = js::get_current_function(*vctx);
     std::string secret_script_host = current_func.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
-    mongo_ctx.change_collection(secret_script_host);
+    disk_nolock_proxy disk_ctx = get_global_disk_user_accessible_context();
+    disk_ctx.change_collection(secret_script_host);
 
     js::value current_this = js::get_this(*vctx);
 
@@ -241,7 +241,7 @@ js::value db_find_one(js::value_context* vctx)
     if(caller != get_caller(*vctx))
         return js::make_error(*vctx, "caller != get_caller() in db_find.array, you probably know what you did");
 
-    std::vector<nlohmann::json> db_data = mongo_ctx->find_json_new(nlohmann::json::parse(json), nlohmann::json::parse(proj));
+    std::vector<nlohmann::json> db_data = disk_ctx->find_json_new(nlohmann::json::parse(json), nlohmann::json::parse(proj));
 
     if(db_data.size() == 0)
     {
@@ -293,12 +293,12 @@ std::string db_remove(js::value_context* vctx, js::value arg)
     js::value current_func = js::get_current_function(*vctx);
     std::string secret_script_host = current_func.get_hidden("script_host");
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
-    mongo_ctx.change_collection(secret_script_host);
+    disk_nolock_proxy disk_ctx = get_global_disk_user_accessible_context();
+    disk_ctx.change_collection(secret_script_host);
 
     std::string json = arg.to_json();
 
-    mongo_ctx->remove_json_many_new(nlohmann::json::parse(json));
+    disk_ctx->remove_json_many_new(nlohmann::json::parse(json));
 
     return json;
 }

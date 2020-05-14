@@ -781,7 +781,7 @@ void delete_user_db_for(const std::string& name)
 {
     ///delete user db
     {
-        mongo_lock_proxy user_db = get_global_mongo_user_accessible_context(-2);
+        disk_lock_proxy user_db = get_global_disk_user_accessible_context();
         user_db.change_collection(name);
 
         user_db->remove_json_many_new(nlohmann::json());

@@ -422,10 +422,10 @@ js::value db_fetch(js::value_context* vctx)
     std::vector<nlohmann::json> found;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
-        mongo_ctx.change_collection(secret_host);
+        disk_nolock_proxy disk_ctx = get_global_disk_user_accessible_context();
+        disk_ctx.change_collection(secret_host);
 
-        found = mongo_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
+        found = disk_ctx->find_json_new(nlohmann::json({}), nlohmann::json());
     }
 
     if(found.size() == 0)
@@ -470,16 +470,16 @@ js::value db_set(js::value_context* vctx, js::value val, std::string prop)
     }
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
-        mongo_ctx.change_collection(secret_host);
+        disk_nolock_proxy disk_ctx = get_global_disk_user_accessible_context();
+        disk_ctx.change_collection(secret_host);
 
         {
-            std::lock_guard guard(mongo_ctx->backend.get_lock_for());
+            std::lock_guard guard(disk_ctx->backend.get_lock_for());
 
-            std::vector<nlohmann::json>& direct_data = mongo_ctx->backend.get_db_data_nolock_import();
+            std::vector<nlohmann::json>& direct_data = disk_ctx->backend.get_db_data_nolock_import();
 
             ///need to flush db
-            set_from_request(mongo_ctx->backend, direct_data, proxy_chain, to_set_value);
+            set_from_request(disk_ctx->backend, direct_data, proxy_chain, to_set_value);
         }
     }
 
@@ -509,15 +509,15 @@ js::value db_delete(js::value_context* vctx)
     }
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_accessible_context(get_thread_id(*vctx));
-        mongo_ctx.change_collection(secret_host);
+        disk_nolock_proxy disk_ctx = get_global_disk_user_accessible_context();
+        disk_ctx.change_collection(secret_host);
 
         {
-            std::lock_guard guard(mongo_ctx->backend.get_lock_for());
+            std::lock_guard guard(disk_ctx->backend.get_lock_for());
 
-            std::vector<nlohmann::json>& direct_data = mongo_ctx->backend.get_db_data_nolock_import();
+            std::vector<nlohmann::json>& direct_data = disk_ctx->backend.get_db_data_nolock_import();
 
-            delete_from_request(mongo_ctx->backend, direct_data, proxy_chain);
+            delete_from_request(disk_ctx->backend, direct_data, proxy_chain);
         }
     }
 

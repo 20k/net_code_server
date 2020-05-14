@@ -231,7 +231,7 @@ bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, co
     nlohmann::json fetch;
     fetch[key_name] = key_val;
 
-    std::vector<nlohmann::json> found = ctx->find_json_new(fetch, {});
+    std::vector<nlohmann::json> found = ctx.ctx.find_json_new(fetch, {});
 
     if(found.size() != 1)
         return false;
@@ -253,7 +253,7 @@ bool db_exists_impl(mongo_lock_proxy& ctx, const std::string& key_name, const U&
 {
     nlohmann::json to_find;
     to_find[key_name] = key_val;
-    return ctx->find_json_new(to_find, nlohmann::json()).size() == 1;
+    return ctx.ctx.find_json_new(to_find, nlohmann::json()).size() == 1;
 }
 
 template<typename U>
@@ -261,7 +261,7 @@ void db_remove_impl(mongo_lock_proxy& ctx, const std::string& key_name, const U&
 {
     nlohmann::json to_remove;
     to_remove[key_name] = key_val;
-    ctx->remove_json_many_new(to_remove);
+    ctx.ctx.remove_json_many_new(to_remove);
 }
 
 template<typename T, typename U>
@@ -269,7 +269,7 @@ void db_overwrite_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_nam
 {
     if(!db_exists_impl(ctx, key_name, key_val))
     {
-        ctx->insert_json_one_new(serialise(val, serialise_mode::DISK));
+        ctx.ctx.insert_json_one_new(serialise(val, serialise_mode::DISK));
     }
     else
     {
@@ -279,7 +279,7 @@ void db_overwrite_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_nam
         nlohmann::json to_set;
         to_set["$set"] = serialise(val, serialise_mode::DISK);
 
-        ctx->update_json_one_new(selector, to_set);
+        ctx.ctx.update_json_one_new(selector, to_set);
     }
 }
 
@@ -300,7 +300,7 @@ void db_overwrite_impl<item, std::string>(item& val, mongo_lock_proxy& ctx, cons
 
     if(!db_exists_impl(ctx, key_name, item_id))
     {
-        ctx->insert_json_one_new(as_ser);
+        ctx.ctx.insert_json_one_new(as_ser);
     }
     else
     {
@@ -310,7 +310,7 @@ void db_overwrite_impl<item, std::string>(item& val, mongo_lock_proxy& ctx, cons
         nlohmann::json to_set;
         to_set["$set"] = as_ser;
 
-        ctx->update_json_one_new(selector, to_set);
+        ctx.ctx.update_json_one_new(selector, to_set);
     }
 }
 
@@ -323,7 +323,7 @@ std::vector<T> db_load_all_impl(mongo_lock_proxy& ctx, const std::string& key_na
     nlohmann::json to_find;
     to_find[key_name] = exist;
 
-    auto found = ctx->find_json_new(to_find, nlohmann::json());
+    auto found = ctx.ctx.find_json_new(to_find, nlohmann::json());
 
     std::vector<T> ret;
     ret.reserve(found.size());
@@ -352,7 +352,7 @@ void db_remove_all_impl(mongo_lock_proxy& ctx, const std::string& key_name)
     nlohmann::json to_find;
     to_find[key_name] = exist;
 
-    ctx->remove_json_many_new(to_find);
+    ctx.ctx.remove_json_many_new(to_find);
 }
 
 DEFINE_GENERIC_DB(npc_prop_list, std::string, name);

@@ -139,8 +139,6 @@ struct mongo_lock_proxy
 
     void lock();
     void unlock();
-
-    database_read_write_interface* operator->();
 };
 
 struct mongo_nolock_proxy : mongo_lock_proxy
@@ -167,6 +165,11 @@ struct disk_lock_proxy
     database_read_write_interface* operator->();
 };
 
+struct disk_nolock_proxy : disk_lock_proxy
+{
+    disk_nolock_proxy(const mongo_shim& shim);
+};
+
 extern std::array<mongo_context*, (int)mongo_database_type::MONGO_COUNT> mongo_databases;
 
 inline
@@ -190,9 +193,9 @@ void initialse_db_all();
 void cleanup_db_all();
 
 inline
-mongo_shim get_global_mongo_user_accessible_context(int lock_id)
+mongo_shim get_global_disk_user_accessible_context()
 {
-    return get_global_mongo_context(mongo_database_type::USER_ACCESSIBLE, lock_id);
+    return get_global_mongo_context(mongo_database_type::USER_ACCESSIBLE, -2);
 }
 
 inline

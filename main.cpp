@@ -68,7 +68,7 @@ void test_json()
     std::cout << handle_autocompletes_json(usr.name, "server_scriptargs_json cash.steal");
 }
 
-void test_deadlock_detection()
+/*void test_deadlock_detection()
 {
     printf("predl\n");
 
@@ -79,16 +79,16 @@ void test_deadlock_detection()
     ctx3.change_collection("i20k");
 
     printf("postdl\n");
-}
+}*/
 
-void test_correct_collection_locking()
+/*void test_correct_collection_locking()
 {
     mongo_lock_proxy ctx = get_global_mongo_user_info_context(-2);
     ctx.change_collection("i20k");
     mongo_lock_proxy ctx2 = get_global_mongo_user_accessible_context(-2);
     mongo_lock_proxy ctx3 = get_global_mongo_user_info_context(-3);
     ctx3.change_collection("i20k8");
-}
+}*/
 
 void test_locking()
 {
