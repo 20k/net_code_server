@@ -7,11 +7,14 @@
 #include <optional>
 #include <sstream>
 #include <iostream>
+#include "tls.hpp"
 
 #define CHECK_THROW(x) if(const int rc = x) { std::cout << rc << std::endl; throw std::runtime_error("DB Error " + std::to_string(rc) + #x);}
 #define CHECK_ASSERT(x) if(const int rc = x) {printf("DB Error %i %s\n", rc, #x); assert(false && #x);}
 
 boost::fibers::mutex thread_mut;
+
+tls_variable<int, 0> lock_count;
 
 struct db::backend
 {
@@ -204,10 +207,17 @@ db::impl_tx::~impl_tx()
 
         CHECK_ASSERT(mdb_txn_commit(transaction));
     }
+
+    (*lock_count.get())--;
 }
 
 db::read_tx::read_tx()
 {
+    (*lock_count.get())++;
+
+    if((*lock_count.get()) > 1)
+        assert(false);
+
     //printf("RONLYSTART\n");
 
     CHECK_THROW(mdb_txn_begin(get_backend().env, nullptr, MDB_RDONLY, &transaction));
@@ -215,7 +225,10 @@ db::read_tx::read_tx()
 
 db::read_tx::read_tx(bool)
 {
+    (*lock_count.get())++;
 
+    if((*lock_count.get()) > 1)
+        assert(false);
 }
 
 db::read_write_tx::read_write_tx() : read_tx(true), guard(thread_mut)
