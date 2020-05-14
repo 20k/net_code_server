@@ -393,6 +393,11 @@ mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim, bool _should_lock)
     db_id = (int)shim.ctx->last_db_type;
 }
 
+mongo_lock_proxy::~mongo_lock_proxy()
+{
+
+}
+
 void mongo_lock_proxy::change_collection(const std::string& coll, bool force_change)
 {
 

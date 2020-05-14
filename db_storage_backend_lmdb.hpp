@@ -55,7 +55,7 @@ namespace db
     struct read_write_tx : read_tx
     {
         ///serialise writers on an os thread for userland threads
-        static inline thread_local boost::fibers::mutex thread_mut;
+        static thread_local boost::fibers::mutex thread_mut;
 
         read_write_tx();
         ~read_write_tx();
