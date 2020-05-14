@@ -269,7 +269,7 @@ bool db_load_impl(T& val, read_type& ctx, const std::string& key_name, const U& 
 
     return true;
     #else
-    std::optional<db::data> data = ctx.rwtx.read(db_id, any_to_string(key_val));
+    std::optional<db::data> data = ctx.read(db_id, any_to_string(key_val));
 
     if(!data.has_value())
         return false;
@@ -292,7 +292,7 @@ bool db_exists_impl(read_type& ctx, const std::string& key_name, const U& key_va
     to_find[key_name] = key_val;
     return ctx.ctx.find_json_new(to_find, nlohmann::json()).size() == 1;
     #else
-    return ctx.rwtx.read(db_id, any_to_string(key_val)).has_value();
+    return ctx.read(db_id, any_to_string(key_val)).has_value();
     #endif
 }
 
@@ -304,12 +304,12 @@ void db_remove_impl(read_write_type& ctx, const std::string& key_name, const U& 
     to_remove[key_name] = key_val;
     ctx.ctx.remove_json_many_new(to_remove);
     #else
-    ctx.rwtx.del(db_id, any_to_string(key_val));
+    ctx.del(db_id, any_to_string(key_val));
     #endif
 }
 
 template<typename T, typename U>
-void db_overwrite_impl(T& val, read_write_tx& ctx, const std::string& key_name, const U& key_val, int db_id)
+void db_overwrite_impl(T& val, read_write_type& ctx, const std::string& key_name, const U& key_val, int db_id)
 {
     #ifdef OLD_DB
     if(!db_exists_impl(ctx, key_name, key_val))
@@ -337,7 +337,7 @@ void db_overwrite_impl(T& val, read_write_tx& ctx, const std::string& key_name, 
 
     std::string_view view((const char*)&vals[0], vals.size());
 
-    ctx.rwtx.write(db_id, any_to_string(key_val), view);
+    ctx.write(db_id, any_to_string(key_val), view);
     #endif
 }
 
@@ -391,7 +391,7 @@ void db_overwrite_impl<item, std::string>(item& val, read_write_type& ctx, const
 
     std::string_view view((const char*)&vals[0], vals.size());
 
-    ctx.rwtx.write(db_id, any_to_string(item_id), view);
+    ctx.write(db_id, any_to_string(item_id), view);
     #endif
 }
 
@@ -424,7 +424,7 @@ std::vector<T> db_load_all_impl(read_type& ctx, const std::string& key_name, int
 
     return ret;
     #else
-    std::vector<db::data> data = ctx.rwtx.read_all(db_id);
+    std::vector<db::data> data = ctx.read_all(db_id);
 
     std::vector<T> ret;
 
@@ -453,7 +453,7 @@ void db_remove_all_impl(read_write_type& ctx, const std::string& key_name, int d
 
     ctx.ctx.remove_json_many_new(to_find);
     #else
-    ctx.rwtx.drop(db_id);
+    ctx.drop(db_id);
     #endif
 }
 
