@@ -11,7 +11,7 @@
 #define CHECK_THROW(x) if(const int rc = x) { std::cout << rc << std::endl; throw std::runtime_error("DB Error " + std::to_string(rc) + #x);}
 #define CHECK_ASSERT(x) if(const int rc = x) {printf("DB Error %i %s\n", rc, #x); assert(false && #x);}
 
-thread_local boost::fibers::mutex db::read_write_tx::thread_mut;
+boost::fibers::mutex thread_mut;
 
 struct db::backend
 {
@@ -44,7 +44,7 @@ struct db::backend
 
         std::cout << "STORAGE " << storage << std::endl;
 
-        CHECK_ASSERT(mdb_env_open(env, storage.c_str(), MDB_NOTLS, 0777));
+        CHECK_ASSERT(mdb_env_open(env, storage.c_str(), 0, 0777));
 
         dbis.resize(db_count);
 
@@ -52,7 +52,7 @@ struct db::backend
         {
             MDB_txn* transaction = nullptr;
 
-            CHECK_ASSERT(mdb_txn_begin(env, nullptr, 0, &transaction));
+            CHECK_ASSERT(mdb_txn_begin(env, nullptr, MDB_NOTLS, &transaction));
 
             CHECK_ASSERT(mdb_dbi_open(transaction, std::to_string(i).c_str(), MDB_CREATE, &dbis[i]));
 
@@ -200,17 +200,23 @@ db::impl_tx::~impl_tx()
     ///no exception
     else
     {
+        printf("STOP\n");
+
         CHECK_ASSERT(mdb_txn_commit(transaction));
     }
 }
 
 db::read_tx::read_tx()
 {
+    printf("RONLYSTART\n");
+
     CHECK_THROW(mdb_txn_begin(get_backend().env, nullptr, MDB_RDONLY, &transaction));
 }
 
 db::read_write_tx::read_write_tx() : guard(thread_mut)
 {
+    printf("START\n");
+
     CHECK_THROW(mdb_txn_begin(get_backend().env, nullptr, 0, &transaction));
 }
 
