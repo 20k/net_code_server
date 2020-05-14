@@ -340,9 +340,12 @@ int main()
         mongo_lock_proxy usr = get_global_mongo_user_info_context(-2);
 
         user me;
-        me.load_from_db(usr, "i20k");
-        me.cash = 10000;
-        me.overwrite_user_in_db(usr);
+
+        if(me.load_from_db(usr, "i20k"))
+        {
+            me.cash = 10000;
+            me.overwrite_user_in_db(usr);
+        }
     }
 
     get_global_task_handler().register_task(cleanup_notifs, 60*60*24);
@@ -362,7 +365,7 @@ int main()
     //cgen.make(50, 0, "mcmurdo");
     #endif // INIT_TEST_BACK
 
-    //#define SERVER_FIRST_TIME_EVER_RELEASE
+    #define SERVER_FIRST_TIME_EVER_RELEASE
     #ifdef SERVER_FIRST_TIME_EVER_RELEASE
     //#define FIXJOIN_CHANNELS
     #define REGENERATE_LINKS_AND_USERS

@@ -315,6 +315,9 @@ void db_overwrite_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_nam
         ctx.ctx.update_json_one_new(selector, to_set);
     }
     #else
+
+    std::cout << "WRITING KEYVAL " << key_val << " FOR " << key_name << std::endl;
+
     std::vector<uint8_t> vals = nlohmann::json::to_cbor(serialise(val, serialise_mode::DISK));
 
     if(vals.size() == 0)

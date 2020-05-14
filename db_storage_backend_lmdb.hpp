@@ -58,7 +58,6 @@ namespace db
         static thread_local boost::fibers::mutex thread_mut;
 
         read_write_tx();
-        ~read_write_tx();
 
         void write(int _db_id, std::string_view skey, std::string_view sdata);
         bool del(int _db_id, std::string_view skey); //returns true on successful deletion

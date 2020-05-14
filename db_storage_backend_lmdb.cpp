@@ -40,6 +40,8 @@ struct db::backend
         ///10000 MB
         mdb_env_set_mapsize(env, 10485760ull * 10000ull);
 
+        mdb_env_set_maxreaders(env, 1024);
+
         std::cout << "STORAGE " << storage << std::endl;
 
         CHECK_ASSERT(mdb_env_open(env, storage.c_str(), MDB_NOTLS, 0777));
@@ -102,6 +104,8 @@ void do_write_tx(MDB_dbi dbi, const db::impl_tx& tx, std::string_view skey, std:
 {
     MDB_val key = {skey.size(), const_cast<void*>((const void*)skey.data())};
     MDB_val data = {sdata.size(), const_cast<void*>((const void*)sdata.data())};
+
+    std::cout << "KEY " << skey.size() << " DATA " << sdata.size() << std::endl;
 
     CHECK_THROW(mdb_put(tx.transaction, dbi, &key, &data, 0));
 }
@@ -208,11 +212,6 @@ db::read_tx::read_tx()
 db::read_write_tx::read_write_tx() : guard(thread_mut)
 {
     CHECK_THROW(mdb_txn_begin(get_backend().env, nullptr, 0, &transaction));
-}
-
-db::read_write_tx::~read_write_tx()
-{
-
 }
 
 std::optional<db::data> db::read_tx::read(int _db_id, std::string_view skey)
