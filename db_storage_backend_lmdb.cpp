@@ -295,7 +295,5 @@ void db_tests()
         }
     }*/
 
-    exit(0);
-
     //get_backend() = db::backend("./lmdb_storage", 50);
 }
