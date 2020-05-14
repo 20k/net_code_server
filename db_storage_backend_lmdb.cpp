@@ -210,6 +210,11 @@ db::read_write_tx::read_write_tx() : guard(thread_mut)
     CHECK_THROW(mdb_txn_begin(get_backend().env, nullptr, 0, &transaction));
 }
 
+db::read_write_tx::~read_write_tx()
+{
+
+}
+
 std::optional<db::data> db::read_tx::read(int _db_id, std::string_view skey)
 {
     return do_read_tx(get_backend().get_db(_db_id), *this, skey);
