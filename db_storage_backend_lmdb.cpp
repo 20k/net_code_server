@@ -105,7 +105,7 @@ void do_write_tx(MDB_dbi dbi, const db::impl_tx& tx, std::string_view skey, std:
     MDB_val key = {skey.size(), const_cast<void*>((const void*)skey.data())};
     MDB_val data = {sdata.size(), const_cast<void*>((const void*)sdata.data())};
 
-    std::cout << "KEY " << skey.size() << " DATA " << sdata.size() << std::endl;
+    //std::cout << "KEY " << skey.size() << " DATA " << sdata.size() << std::endl;
 
     CHECK_THROW(mdb_put(tx.transaction, dbi, &key, &data, 0));
 }
@@ -200,7 +200,7 @@ db::impl_tx::~impl_tx()
     ///no exception
     else
     {
-        printf("STOP\n");
+        //printf("STOP\n");
 
         CHECK_ASSERT(mdb_txn_commit(transaction));
     }
@@ -208,14 +208,19 @@ db::impl_tx::~impl_tx()
 
 db::read_tx::read_tx()
 {
-    printf("RONLYSTART\n");
+    //printf("RONLYSTART\n");
 
     CHECK_THROW(mdb_txn_begin(get_backend().env, nullptr, MDB_RDONLY, &transaction));
 }
 
-db::read_write_tx::read_write_tx() : guard(thread_mut)
+db::read_tx::read_tx(bool)
 {
-    printf("START\n");
+
+}
+
+db::read_write_tx::read_write_tx() : read_tx(true), guard(thread_mut)
+{
+    //printf("START\n");
 
     CHECK_THROW(mdb_txn_begin(get_backend().env, nullptr, 0, &transaction));
 }

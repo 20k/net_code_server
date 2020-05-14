@@ -47,6 +47,7 @@ namespace db
     struct read_tx : impl_tx
     {
         read_tx();
+        read_tx(bool);
 
         std::optional<data> read(int _db_id, std::string_view skey);
         std::vector<data> read_all(int _db_id);
