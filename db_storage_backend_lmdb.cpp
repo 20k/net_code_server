@@ -158,6 +158,8 @@ std::vector<db::data> do_read_all_tx(MDB_dbi dbi, const db::impl_tx& tx)
         if(rc == MDB_NOTFOUND)
             break;
 
+        first = false;
+
         ret.push_back(db::data({(const char*)data.mv_data, data.mv_size}));
     }
 
@@ -220,7 +222,7 @@ std::optional<db::data> db::read_tx::read(int _db_id, std::string_view skey)
     return do_read_tx(get_backend().get_db(_db_id), *this, skey);
 }
 
-std::optional<std::vector<db::data>> db::read_tx::read_all(int _db_id)
+std::vector<db::data> db::read_tx::read_all(int _db_id)
 {
     return do_read_all_tx(get_backend().get_db(_db_id), *this);
 }
@@ -278,11 +280,26 @@ void db_tests()
         db::read_write_tx tx;
 
         tx.write(0, "key", "value");
+        tx.write(0, "key1", "value2");
+        tx.write(0, "key2", "value3");
 
         auto val = tx.read(0, "key");
 
         std::cout << "VHAS " << val.has_value() << std::endl;
+    }
+
+    {
+        db::read_write_tx tx;
+
+        auto all = tx.read_all(0);
+
+        for(db::data& i : all)
+        {
+            std::cout << "FOUND " << i.data_view << std::endl;
+        }
     }*/
+
+    exit(0);
 
     //get_backend() = db::backend("./lmdb_storage", 50);
 }
