@@ -224,6 +224,11 @@ db::read_tx::read_tx(bool)
         assert(false);
 }
 
+db::read_tx::~read_tx()
+{
+
+}
+
 db::read_write_tx::read_write_tx() : read_tx(true), guard(thread_mut)
 {
     //printf("START\n");
