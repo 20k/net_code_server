@@ -320,7 +320,7 @@ void db_overwrite_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_nam
     if(vals.size() == 0)
         throw std::runtime_error("Vals.size() == 0");
 
-    std::string_view view((const char*)vals.begin(), vals.size());
+    std::string_view view((const char*)&vals[0], vals.size());
 
     ctx.rwtx.write(ctx.db_id, any_to_string(key_val), view);
     #endif
@@ -374,9 +374,9 @@ void db_overwrite_impl<item, std::string>(item& val, mongo_lock_proxy& ctx, cons
     if(vals.size() == 0)
         throw std::runtime_error("Vals.size() == 0");
 
-    std::string_view view((const char*)vals.begin(), vals.size());
+    std::string_view view((const char*)&vals[0], vals.size());
 
-    ctx.rwtx.write(ctx.db_id, any_to_string(key_val), view);
+    ctx.rwtx.write(ctx.db_id, any_to_string(item_id), view);
     #endif
 }
 
