@@ -11,6 +11,8 @@
 #define CHECK_THROW(x) if(const int rc = x) { std::cout << rc << std::endl; throw std::runtime_error("DB Error " + std::to_string(rc) + #x);}
 #define CHECK_ASSERT(x) if(const int rc = x) {printf("DB Error %i %s\n", rc, #x); assert(false && #x);}
 
+thread_local boost::fibers::mutex db::read_write_tx::thread_mut;
+
 struct db::backend
 {
     MDB_env* env = nullptr;
