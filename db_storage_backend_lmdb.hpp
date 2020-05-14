@@ -48,6 +48,7 @@ namespace db
     {
         read_tx();
         read_tx(bool);
+        ~read_tx();
 
         std::optional<data> read(int _db_id, std::string_view skey);
         std::vector<data> read_all(int _db_id);
@@ -56,6 +57,7 @@ namespace db
     struct read_write_tx : read_tx
     {
         read_write_tx();
+        ~read_write_tx();
 
         void write(int _db_id, std::string_view skey, std::string_view sdata);
         bool del(int _db_id, std::string_view skey); //returns true on successful deletion

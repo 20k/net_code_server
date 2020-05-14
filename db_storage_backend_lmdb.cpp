@@ -208,18 +208,11 @@ db::impl_tx::~impl_tx()
         CHECK_ASSERT(mdb_txn_commit(transaction));
     }
 
-    (*lock_count.get())--;
+
 }
 
 db::read_tx::read_tx()
 {
-    (*lock_count.get())++;
-
-    if((*lock_count.get()) > 1)
-        assert(false);
-
-    //printf("RONLYSTART\n");
-
     CHECK_THROW(mdb_txn_begin(get_backend().env, nullptr, MDB_RDONLY, &transaction));
 }
 
@@ -236,6 +229,11 @@ db::read_write_tx::read_write_tx() : read_tx(true), guard(thread_mut)
     //printf("START\n");
 
     CHECK_THROW(mdb_txn_begin(get_backend().env, nullptr, 0, &transaction));
+}
+
+db::read_write_tx::~read_write_tx()
+{
+    (*lock_count.get())--;
 }
 
 std::optional<db::data> db::read_tx::read(int _db_id, std::string_view skey)

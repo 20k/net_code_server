@@ -232,8 +232,20 @@ std::string any_to_string(const T& in)
         return std::to_string(in);
 }
 
+#ifdef OLD_DB
+using read_write_type = mongo_lock_proxy;
+#else
+using read_write_type = db::read_write_tx;
+#endif
+
+#ifdef OLD_DB
+using read_type = mongo_lock_proxy
+#else
+using read_type = db::read_tx;
+#endif // OLD_DB
+
 template<typename T, typename U>
-bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
+bool db_load_impl(T& val, read_type& ctx, const std::string& key_name, const U& key_val, int db_id)
 {
     #ifdef OLD_DB
     if(!db_exists_impl(ctx, key_name, key_val))
@@ -257,7 +269,7 @@ bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, co
 
     return true;
     #else
-    std::optional<db::data> data = ctx.rwtx.read(ctx.db_id, any_to_string(key_val));
+    std::optional<db::data> data = ctx.rwtx.read(db_id, any_to_string(key_val));
 
     if(!data.has_value())
         return false;
@@ -273,31 +285,31 @@ bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, co
 }
 
 template<typename U>
-bool db_exists_impl(mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
+bool db_exists_impl(read_type& ctx, const std::string& key_name, const U& key_val, int db_id)
 {
     #ifdef OLD_DB
     nlohmann::json to_find;
     to_find[key_name] = key_val;
     return ctx.ctx.find_json_new(to_find, nlohmann::json()).size() == 1;
     #else
-    return ctx.rwtx.read(ctx.db_id, any_to_string(key_val)).has_value();
+    return ctx.rwtx.read(db_id, any_to_string(key_val)).has_value();
     #endif
 }
 
 template<typename U>
-void db_remove_impl(mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
+void db_remove_impl(read_write_type& ctx, const std::string& key_name, const U& key_val, int db_id)
 {
     #ifdef OLD_DB
     nlohmann::json to_remove;
     to_remove[key_name] = key_val;
     ctx.ctx.remove_json_many_new(to_remove);
     #else
-    ctx.rwtx.del(ctx.db_id, any_to_string(key_val));
+    ctx.rwtx.del(db_id, any_to_string(key_val));
     #endif
 }
 
 template<typename T, typename U>
-void db_overwrite_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
+void db_overwrite_impl(T& val, read_write_tx& ctx, const std::string& key_name, const U& key_val, int db_id)
 {
     #ifdef OLD_DB
     if(!db_exists_impl(ctx, key_name, key_val))
@@ -325,12 +337,12 @@ void db_overwrite_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_nam
 
     std::string_view view((const char*)&vals[0], vals.size());
 
-    ctx.rwtx.write(ctx.db_id, any_to_string(key_val), view);
+    ctx.rwtx.write(db_id, any_to_string(key_val), view);
     #endif
 }
 
 template<>
-void db_overwrite_impl<item, std::string>(item& val, mongo_lock_proxy& ctx, const std::string& key_name, const std::string& item_id)
+void db_overwrite_impl<item, std::string>(item& val, read_write_type& ctx, const std::string& key_name, const std::string& item_id, int db_id)
 {
     #ifdef OLD_DB
     nlohmann::json as_ser = serialise(val, serialise_mode::DISK);
@@ -379,12 +391,12 @@ void db_overwrite_impl<item, std::string>(item& val, mongo_lock_proxy& ctx, cons
 
     std::string_view view((const char*)&vals[0], vals.size());
 
-    ctx.rwtx.write(ctx.db_id, any_to_string(item_id), view);
+    ctx.rwtx.write(db_id, any_to_string(item_id), view);
     #endif
 }
 
 template<typename T>
-std::vector<T> db_load_all_impl(mongo_lock_proxy& ctx, const std::string& key_name)
+std::vector<T> db_load_all_impl(read_type& ctx, const std::string& key_name, int db_id)
 {
     #ifdef OLD_DB
     nlohmann::json exist;
@@ -412,7 +424,7 @@ std::vector<T> db_load_all_impl(mongo_lock_proxy& ctx, const std::string& key_na
 
     return ret;
     #else
-    std::vector<db::data> data = ctx.rwtx.read_all(ctx.db_id);
+    std::vector<db::data> data = ctx.rwtx.read_all(db_id);
 
     std::vector<T> ret;
 
@@ -430,7 +442,7 @@ std::vector<T> db_load_all_impl(mongo_lock_proxy& ctx, const std::string& key_na
 }
 
 template<typename T>
-void db_remove_all_impl(mongo_lock_proxy& ctx, const std::string& key_name)
+void db_remove_all_impl(read_write_type& ctx, const std::string& key_name, int db_id)
 {
     #ifdef OLD_DB
     nlohmann::json exist;
@@ -441,7 +453,7 @@ void db_remove_all_impl(mongo_lock_proxy& ctx, const std::string& key_name)
 
     ctx.ctx.remove_json_many_new(to_find);
     #else
-    ctx.rwtx.drop(ctx.db_id);
+    ctx.rwtx.drop(db_id);
     #endif
 }
 
