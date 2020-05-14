@@ -4,6 +4,7 @@
 #include <optional>
 #include <string_view>
 #include <vector>
+#include <boost/fiber/mutex.hpp>
 
 typedef unsigned int MDB_dbi;
 typedef struct MDB_txn MDB_txn;
@@ -53,11 +54,18 @@ namespace db
 
     struct read_write_tx : read_tx
     {
+        ///serialise writers on an os thread for userland threads
+        static inline thread_local boost::fibers::mutex thread_mut;
+
         read_write_tx();
+        ~read_write_tx();
 
         void write(int _db_id, std::string_view skey, std::string_view sdata);
         bool del(int _db_id, std::string_view skey); //returns true on successful deletion
         void drop(int _db_id);
+
+    private:
+        std::lock_guard<boost::fibers::mutex> guard;
     };
 
     /*struct bound_read_tx : read_tx

@@ -203,7 +203,7 @@ db::read_tx::read_tx()
     CHECK_THROW(mdb_txn_begin(get_backend().env, nullptr, MDB_RDONLY, &transaction));
 }
 
-db::read_write_tx::read_write_tx()
+db::read_write_tx::read_write_tx() : guard(thread_mut)
 {
     CHECK_THROW(mdb_txn_begin(get_backend().env, nullptr, 0, &transaction));
 }

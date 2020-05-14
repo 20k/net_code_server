@@ -12,6 +12,7 @@
 
 #include <nlohmann/json.hpp>
 #include "db_storage_backend.hpp"
+#include "db_storage_backend_lmdb.hpp"
 
 //#define DEADLOCK_DETECTION
 
@@ -119,6 +120,7 @@ struct mongo_shim
     mongo_shim(mongo_context* fctx, int lock_id);
 };
 
+#ifdef OLD_PROXY
 struct mongo_lock_proxy
 {
     database_read_write_interface ctx;
@@ -139,6 +141,23 @@ struct mongo_lock_proxy
 
     void lock();
     void unlock();
+};
+#endif // OLD_PROXY
+
+struct mongo_lock_proxy
+{
+    db::read_write_tx rwtx;
+
+    int db_id = -1;
+
+    mongo_lock_proxy(const mongo_shim& shim, bool lock = true);
+    mongo_lock_proxy(const mongo_lock_proxy&) = delete;
+    ~mongo_lock_proxy();
+
+    void change_collection(const std::string& coll, bool force_change = false);
+
+    //void lock();
+    //void unlock();
 };
 
 struct mongo_nolock_proxy : mongo_lock_proxy

@@ -10,6 +10,7 @@
 #include <secret/low_level_structure.hpp>
 #include "item.hpp"
 #include "chat_channels.hpp"
+#include "db_storage_backend_lmdb.hpp"
 
 DEFINE_SERIALISE_FUNCTION(user_limit)
 {
@@ -222,15 +223,24 @@ DEFINE_SERIALISE_FUNCTION(chat_message)
     DO_FSERIALISE(sent_to_client);
 }
 
+template<typename T>
+std::string any_to_string(const T& in)
+{
+    if constexpr(std::is_same_v<T, std::string>)
+        return in;
+    else
+        return std::to_string(in);
+}
+
 template<typename T, typename U>
 bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
 {
+    #ifdef OLD_DB
     if(!db_exists_impl(ctx, key_name, key_val))
         return false;
 
     nlohmann::json fetch;
     fetch[key_name] = key_val;
-
     std::vector<nlohmann::json> found = ctx.ctx.find_json_new(fetch, {});
 
     if(found.size() != 1)
@@ -246,27 +256,50 @@ bool db_load_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, co
     }
 
     return true;
+    #else
+    std::optional<db::data> data = ctx.rwtx.read(ctx.db_id, any_to_string(key_val));
+
+    if(!data.has_value())
+        return false;
+
+    val = T();
+
+    nlohmann::json json = nlohmann::json::from_cbor(data.value().data_view);
+
+    deserialise(json, val, serialise_mode::DISK);
+
+    return true;
+    #endif
 }
 
 template<typename U>
 bool db_exists_impl(mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
 {
+    #ifdef OLD_DB
     nlohmann::json to_find;
     to_find[key_name] = key_val;
     return ctx.ctx.find_json_new(to_find, nlohmann::json()).size() == 1;
+    #else
+    return ctx.rwtx.read(ctx.db_id, any_to_string(key_val)).has_value();
+    #endif
 }
 
 template<typename U>
 void db_remove_impl(mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
 {
+    #ifdef OLD_DB
     nlohmann::json to_remove;
     to_remove[key_name] = key_val;
     ctx.ctx.remove_json_many_new(to_remove);
+    #else
+    ctx.rwtx.del(ctx.db_id, any_to_string(key_val));
+    #endif
 }
 
 template<typename T, typename U>
 void db_overwrite_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_name, const U& key_val)
 {
+    #ifdef OLD_DB
     if(!db_exists_impl(ctx, key_name, key_val))
     {
         ctx.ctx.insert_json_one_new(serialise(val, serialise_mode::DISK));
@@ -281,11 +314,22 @@ void db_overwrite_impl(T& val, mongo_lock_proxy& ctx, const std::string& key_nam
 
         ctx.ctx.update_json_one_new(selector, to_set);
     }
+    #else
+    std::vector<uint8_t> vals = nlohmann::json::to_cbor(serialise(val, serialise_mode::DISK));
+
+    if(vals.size() == 0)
+        throw std::runtime_error("Vals.size() == 0");
+
+    std::string_view view((const char*)vals.begin(), vals.size());
+
+    ctx.rwtx.write(ctx.db_id, any_to_string(key_val), view);
+    #endif
 }
 
 template<>
 void db_overwrite_impl<item, std::string>(item& val, mongo_lock_proxy& ctx, const std::string& key_name, const std::string& item_id)
 {
+    #ifdef OLD_DB
     nlohmann::json as_ser = serialise(val, serialise_mode::DISK);
 
     nlohmann::json hacky_data = val.data;
@@ -312,11 +356,34 @@ void db_overwrite_impl<item, std::string>(item& val, mongo_lock_proxy& ctx, cons
 
         ctx.ctx.update_json_one_new(selector, to_set);
     }
+    #else
+    nlohmann::json as_ser = serialise(val, serialise_mode::DISK);
+
+    nlohmann::json hacky_data = val.data;
+    hacky_data["item_id"] = val.item_id;
+
+    for(auto& i : hacky_data.items())
+    {
+        as_ser[i.key()] = i.value();
+    }
+
+    as_ser["item_id"] = val.item_id;
+
+    std::vector<uint8_t> vals = nlohmann::json::to_cbor(as_ser);
+
+    if(vals.size() == 0)
+        throw std::runtime_error("Vals.size() == 0");
+
+    std::string_view view((const char*)vals.begin(), vals.size());
+
+    ctx.rwtx.write(ctx.db_id, any_to_string(key_val), view);
+    #endif
 }
 
 template<typename T>
 std::vector<T> db_load_all_impl(mongo_lock_proxy& ctx, const std::string& key_name)
 {
+    #ifdef OLD_DB
     nlohmann::json exist;
     exist["$exists"] = true;
 
@@ -341,11 +408,28 @@ std::vector<T> db_load_all_impl(mongo_lock_proxy& ctx, const std::string& key_na
     }
 
     return ret;
+    #else
+    std::vector<db::data> data = ctx.rwtx.read_all(ctx.db_id);
+
+    std::vector<T> ret;
+
+    for(db::data& dat : data)
+    {
+        T& val = ret.emplace_back();
+
+        nlohmann::json json = nlohmann::json::from_cbor(dat.data_view);
+
+        deserialise(json, val, serialise_mode::DISK);
+    }
+
+    return ret;
+    #endif
 }
 
 template<typename T>
 void db_remove_all_impl(mongo_lock_proxy& ctx, const std::string& key_name)
 {
+    #ifdef OLD_DB
     nlohmann::json exist;
     exist["$exists"] = true;
 
@@ -353,6 +437,9 @@ void db_remove_all_impl(mongo_lock_proxy& ctx, const std::string& key_name)
     to_find[key_name] = exist;
 
     ctx.ctx.remove_json_many_new(to_find);
+    #else
+    ctx.rwtx.drop(ctx.db_id);
+    #endif
 }
 
 DEFINE_GENERIC_DB(npc_prop_list, std::string, name);

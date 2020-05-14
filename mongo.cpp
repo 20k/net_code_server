@@ -298,6 +298,7 @@ mongo_shim::mongo_shim(mongo_context* fctx, int plock_id)
     lock_id = plock_id;
 }
 
+#if 0
 mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim, bool lock) : ctx(shim.ctx)
 {
     should_lock = lock;
@@ -385,6 +386,27 @@ mongo_lock_proxy::~mongo_lock_proxy()
 {
     unlock();
 }
+#endif // 0
+
+mongo_lock_proxy::mongo_lock_proxy(const mongo_shim& shim, bool _should_lock)
+{
+    db_id = (int)shim.ctx->last_db_type;
+}
+
+void mongo_lock_proxy::change_collection(const std::string& coll, bool force_change)
+{
+
+}
+
+/*void mongo_lock_proxy::lock()
+{
+
+}
+
+void mongo_lock_proxy::unlock()
+{
+
+}*/
 
 mongo_nolock_proxy::mongo_nolock_proxy(const mongo_shim& shim) : mongo_lock_proxy(shim, false)
 {
