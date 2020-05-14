@@ -4,6 +4,7 @@
 #include <networking/serialisable_fwd.hpp>
 
 struct mongo_lock_proxy;
+struct mongo_read_proxy;
 
 #define DECLARE_GENERIC_DB(type, keytype) \
     bool db_disk_load(mongo_lock_proxy& ctx, type& val, const keytype& key_val); \
