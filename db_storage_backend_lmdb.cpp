@@ -88,15 +88,6 @@ std::optional<db::data> do_read_tx(MDB_dbi dbi, const db::impl_tx& tx, std::stri
 
     MDB_val data;
 
-    /*CHECK_THROW(mdb_cursor_open(tx.transaction, dbi, &cursor));
-
-    if(mdb_cursor_get(cursor, &key, &data, MDB_SET_KEY) != 0)
-    {
-        mdb_cursor_close(cursor);
-
-        return std::nullopt;
-    }*/
-
     if(mdb_get(tx.transaction, dbi, &key, &data) != 0)
     {
         return std::nullopt;
