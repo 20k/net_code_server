@@ -2792,8 +2792,12 @@ std::optional<js::value> handle_confirmed(js::value_context& vctx, bool confirm,
         return js::make_error(vctx, "Please acquire more wealth");
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
-        opt_user->cash -= iprice;
+        {
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
+            opt_user->cash -= iprice;
+
+            opt_user->overwrite_user_in_db(mongo_ctx);
+        }
 
         user_log next;
         next.add("type", "cash_xfer", "X");
@@ -2804,8 +2808,6 @@ std::optional<js::value> handle_confirmed(js::value_context& vctx, bool confirm,
         make_logs_on(vctx, username, user_node_info::CASH_SEG, {next});
 
         create_xfer_notif(vctx, username, "", price);
-
-        opt_user->overwrite_user_in_db(mongo_ctx);
     }
 
     return std::nullopt;
