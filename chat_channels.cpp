@@ -249,6 +249,8 @@ void chats::leave_channels_for(const std::string& user)
             continue;
 
         i.user_list.erase(it);
+
+        db_disk_overwrite(ctx, i);
     }
 }
 
