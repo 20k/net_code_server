@@ -209,17 +209,24 @@ db::impl_tx::~impl_tx()
     }
 }
 
-db::read_tx::read_tx()
+db::read_tx::read_tx() : read_tx(true)
 {
-    CHECK_THROW(mdb_txn_begin(get_backend().env, nullptr, MDB_RDONLY, &transaction));
+
 }
 
-db::read_tx::read_tx(bool)
+db::read_tx::read_tx(bool enabled)
 {
-    (*lock_count.get())++;
+    if(enabled)
+    {
+        CHECK_THROW(mdb_txn_begin(get_backend().env, nullptr, MDB_RDONLY, &transaction));
+    }
+    else
+    {
+        (*lock_count.get())++;
 
-    if((*lock_count.get()) > 1)
-        assert(false);
+        if((*lock_count.get()) > 1)
+            assert(false);
+    }
 }
 
 db::read_tx::~read_tx()
@@ -227,7 +234,7 @@ db::read_tx::~read_tx()
 
 }
 
-db::read_write_tx::read_write_tx() : read_tx(true), guard(thread_mut)
+db::read_write_tx::read_write_tx() : read_tx(false), guard(thread_mut)
 {
     //printf("START\n");
 
@@ -269,19 +276,34 @@ void db::read_write_tx::drop(int _db_id)
     dbid = get_backend().get_db(_db_id);
 }
 
+db::bound_read_tx::bound_read_tx(int _db_id, bool enabled) : read_tx(enabled)
+{
+    dbid = get_backend().get_db(_db_id);
+}
+
+db::bound_read_tx::~bound_read_tx()
+{
+
+}
+
 std::optional<db::data> db::bound_read_tx::read(std::string_view skey)
 {
     return do_read_tx(dbid, *this, skey);
 }
 
-db::bound_read_write_tx::bound_read_write_tx(int _db_id)
+std::optional<db::data> db::bound_read_tx::read_all()
 {
-    dbid = get_backend().get_db(_db_id);
+    return do_read_all_tx(dbid, *this);
 }
 
-std::optional<db::data> db::bound_read_write_tx::read(std::string_view skey)
+db::bound_read_write_tx::bound_read_write_tx(int _db_id) : bound_read_tx(_db_id, false)
 {
-    return do_read_tx(dbid, *this, skey);
+    CHECK_THROW(mdb_txn_begin(get_backend().env, nullptr, 0, &transaction));
+}
+
+db::bound_read_write_tx::~bound_read_write_tx()
+{
+    (*lock_count.get())--;
 }
 
 void db::bound_read_write_tx::write(std::string_view skey, std::string_view sdata)

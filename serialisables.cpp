@@ -11,6 +11,7 @@
 #include "item.hpp"
 #include "chat_channels.hpp"
 #include "db_storage_backend_lmdb.hpp"
+#include "mongo.hpp"
 
 DEFINE_SERIALISE_FUNCTION(user_limit)
 {
@@ -457,15 +458,15 @@ void db_remove_all_impl(read_write_type& ctx, const std::string& key_name, int d
     #endif
 }
 
-DEFINE_GENERIC_DB(npc_prop_list, std::string, name);
-DEFINE_GENERIC_DB(event_impl, std::string, id);
-DEFINE_GENERIC_DB(task_data_db, std::string, id);
-DEFINE_GENERIC_DB(quest, std::string, id);
-DEFINE_GENERIC_DB(low_level_structure, std::string, name);
-DEFINE_GENERIC_DB(item, std::string, item_id);
-DEFINE_GENERIC_DB(user, std::string, name);
-DEFINE_GENERIC_DB(playspace_network_link, std::string, name);
-DEFINE_GENERIC_DB(auth, std::string, auth_token_hex);
-DEFINE_GENERIC_DB(chat_channel, std::string, channel_name);
-DEFINE_GENERIC_DB(chat_message, size_t, id);
-DEFINE_GENERIC_DB(user_nodes, std::string, owned_by);
+DEFINE_GENERIC_DB(npc_prop_list, std::string, name, mongo_database_type::NPC_PROPERTIES);
+DEFINE_GENERIC_DB(event_impl, std::string, id, mongo_database_type::EVENT_MANAGER);
+DEFINE_GENERIC_DB(task_data_db, std::string, id, mongo_database_type::SCHEDULED_TASK);
+DEFINE_GENERIC_DB(quest, std::string, id, mongo_database_type::QUEST_MANAGER);
+DEFINE_GENERIC_DB(low_level_structure, std::string, name, mongo_database_type::LOW_LEVEL_STRUCTURE);
+DEFINE_GENERIC_DB(item, std::string, item_id, mongo_database_type::USER_ITEMS);
+DEFINE_GENERIC_DB(user, std::string, name, mongo_database_type::USER_PROPERTIES);
+DEFINE_GENERIC_DB(playspace_network_link, std::string, name, mongo_database_type::NETWORK_PROPERTIES);
+DEFINE_GENERIC_DB(auth, std::string, auth_token_hex, mongo_database_type::GLOBAL_PROPERTIES);
+DEFINE_GENERIC_DB(chat_channel, std::string, channel_name, mongo_database_type::CHAT_CHANNEL_PROPERTIES);
+DEFINE_GENERIC_DB(chat_message, size_t, id, mongo_database_type::CHAT_MESSAGES);
+DEFINE_GENERIC_DB(user_nodes, std::string, owned_by, mongo_database_type::NODE_PROPERTIES);

@@ -47,24 +47,24 @@ user::user()
 
 }
 
-void user::overwrite_user_in_db(mongo_lock_proxy& ctx)
+void user::overwrite_user_in_db(db::read_write_tx& ctx)
 {
-    ctx.change_collection(name);
+    //ctx.change_collection(name);
 
     db_disk_overwrite(ctx, *this);
 }
 
-bool user::exists(mongo_read_proxy& ctx, const std::string& name_)
+bool user::exists(db::read_tx& ctx, const std::string& name_)
 {
-    ctx.change_collection(name_);
+    //ctx.change_collection(name_);
     name = name_;
 
     return db_disk_exists(ctx, *this);
 }
 
-bool user::load_from_db(mongo_read_proxy& ctx, const std::string& name_)
+bool user::load_from_db(db::read_tx& ctx, const std::string& name_)
 {
-    ctx.change_collection(name_);
+    //ctx.change_collection(name_);
 
     try
     {
@@ -78,9 +78,9 @@ bool user::load_from_db(mongo_read_proxy& ctx, const std::string& name_)
     }
 }
 
-bool user::construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, const std::string& auth)
+bool user::construct_new_user(db::read_write_tx& ctx, const std::string& name_, const std::string& auth)
 {
-    ctx.change_collection(name_);
+    //ctx.change_collection(name_);
 
     name = name_;
     auth_hex = binary_to_hex(auth);

@@ -69,10 +69,10 @@ struct user : serialisable, free_function
 
     user();
 
-    void overwrite_user_in_db(mongo_lock_proxy& ctx);
-    bool exists(mongo_read_proxy& ctx, const std::string& name_);
-    bool load_from_db(mongo_read_proxy& ctx, const std::string& name_);
-    bool construct_new_user(mongo_lock_proxy& ctx, const std::string& name_, const std::string& auth);
+    void overwrite_user_in_db(db::read_write_tx& ctx);
+    bool exists(db::read_tx& ctx, const std::string& name_);
+    bool load_from_db(db::read_tx& ctx, const std::string& name_);
+    bool construct_new_user(db::read_write_tx& ctx, const std::string& name_, const std::string& auth);
 
     std::string get_auth_token_hex();
     std::string get_auth_token_binary();

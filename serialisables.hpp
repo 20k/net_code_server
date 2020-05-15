@@ -2,31 +2,26 @@
 #define SERIALISABLES_HPP_INCLUDED
 
 #include <networking/serialisable_fwd.hpp>
+#include "db_storage_backend_lmdb.hpp"
 
 struct mongo_lock_proxy;
 struct mongo_read_proxy;
 
 #define DECLARE_GENERIC_DB(type, keytype) \
-    bool db_disk_load(mongo_lock_proxy& ctx, type& val, const keytype& key_val); \
-    bool db_disk_load(mongo_read_proxy& ctx, type& val, const keytype& key_val); \
-    bool db_disk_exists(mongo_lock_proxy& ctx, const type& val); \
-    bool db_disk_exists(mongo_read_proxy& ctx, const type& val); \
-    void db_disk_remove(mongo_lock_proxy& ctx, const type& val); \
-    void db_disk_overwrite(mongo_lock_proxy& ctx, type& val); \
-    std::vector<type> db_disk_load_all(mongo_lock_proxy& ctx, const type& dummy); \
-    std::vector<type> db_disk_load_all(mongo_read_proxy& ctx, const type& dummy); \
-    void db_disk_remove_all(mongo_lock_proxy& ctx, const type& dummy);
+    bool db_disk_load(db::read_tx& ctx, type& val, const keytype& key_val); \
+    bool db_disk_exists(db::read_tx& ctx, const type& val); \
+    void db_disk_remove(db::read_write_tx& ctx, const type& val); \
+    void db_disk_overwrite(db::read_write_tx& ctx, type& val); \
+    std::vector<type> db_disk_load_all(db::read_tx& ctx, const type& dummy); \
+    void db_disk_remove_all(db::read_write_tx& ctx, const type& dummy);
 
-#define DEFINE_GENERIC_DB(type, keytype, key_name) \
-    bool db_disk_load(mongo_lock_proxy& ctx, type& val, const keytype& key_val) {return db_load_impl(val, ctx, #key_name, key_val, ctx.db_id);} \
-    bool db_disk_load(mongo_read_proxy& ctx, type& val, const keytype& key_val) {return db_load_impl(val, ctx, #key_name, key_val, ctx.db_id);} \
-    bool db_disk_exists(mongo_lock_proxy& ctx, const type& val) {return db_exists_impl(ctx, #key_name, val.key_name, ctx.db_id);} \
-    bool db_disk_exists(mongo_read_proxy& ctx, const type& val) {return db_exists_impl(ctx, #key_name, val.key_name, ctx.db_id);} \
-    void db_disk_remove(mongo_lock_proxy& ctx, const type& val) {return db_remove_impl(ctx, #key_name, val.key_name, ctx.db_id);} \
-    void db_disk_overwrite(mongo_lock_proxy& ctx, type& val) {return db_overwrite_impl(val, ctx, #key_name, val.key_name, ctx.db_id);} \
-    std::vector<type> db_disk_load_all(mongo_lock_proxy& ctx, const type& dummy) {return db_load_all_impl<type>(ctx, #key_name, ctx.db_id);} \
-    std::vector<type> db_disk_load_all(mongo_read_proxy& ctx, const type& dummy) {return db_load_all_impl<type>(ctx, #key_name, ctx.db_id);} \
-    void db_disk_remove_all(mongo_lock_proxy& ctx, const type& dummy){return db_remove_all_impl<type>(ctx, #key_name, ctx.db_id);}
+#define DEFINE_GENERIC_DB(type, keytype, key_name, db_id) \
+    bool db_disk_load(db::read_tx& ctx, type& val, const keytype& key_val) {return db_load_impl(val, ctx, #key_name, key_val, (int)db_id);} \
+    bool db_disk_exists(db::read_tx& ctx, const type& val) {return db_exists_impl(ctx, #key_name, val.key_name, (int)db_id);} \
+    void db_disk_remove(db::read_write_tx& ctx, const type& val) {return db_remove_impl(ctx, #key_name, val.key_name, (int)db_id);} \
+    void db_disk_overwrite(db::read_write_tx& ctx, type& val) {return db_overwrite_impl(val, ctx, #key_name, val.key_name, (int)db_id);} \
+    std::vector<type> db_disk_load_all(db::read_tx& ctx, const type& dummy) {return db_load_all_impl<type>(ctx, #key_name, (int)db_id);} \
+    void db_disk_remove_all(db::read_write_tx& ctx, const type& dummy){return db_remove_all_impl<type>(ctx, #key_name, (int)db_id);}
 
 
 DECLARE_SERIALISE_FUNCTION(user_limit);

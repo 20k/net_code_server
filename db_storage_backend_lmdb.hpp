@@ -72,17 +72,18 @@ namespace db
         MDB_dbi dbid;
 
         bound_read_tx(int _db_id);
+        bound_read_tx(int _db_id, bool read);
+        ~bound_read_tx();
 
         std::optional<data> read(std::string_view skey);
+        std::vector<data> read_all();
     };
 
-    struct bound_read_write_tx : read_write_tx
+    struct bound_read_write_tx : bound_read_tx
     {
-        MDB_dbi dbid;
-
         bound_read_write_tx(int _db_id);
+        ~bound_read_write_tx();
 
-        std::optional<data> read(std::string_view skey);
         void write(std::string_view skey, std::string_view sdata);
         bool del(std::string_view skey); //returns true on successful deletion
     };*/
