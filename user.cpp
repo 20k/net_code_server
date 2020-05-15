@@ -992,7 +992,7 @@ std::vector<user> load_users_nolock(const std::vector<std::string>& names)
 {
     std::vector<user> ret;
 
-    mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
+    mongo_read_proxy ctx = get_global_mongo_user_info_context(-2);
 
     for(auto& i : names)
     {
