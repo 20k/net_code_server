@@ -534,7 +534,7 @@ int user::get_default_network_links(int thread_id)
     npc_prop_list props;
 
     {
-        mongo_nolock_proxy ctx = get_global_mongo_npc_properties_context(thread_id);
+        mongo_read_proxy ctx = get_global_mongo_npc_properties_context(thread_id);
 
         if(!db_disk_load(ctx, props, name))
             return 4;

@@ -47,7 +47,7 @@ struct db::backend
 
         std::cout << "STORAGE " << storage << std::endl;
 
-        CHECK_ASSERT(mdb_env_open(env, storage.c_str(), 0, 0777));
+        CHECK_ASSERT(mdb_env_open(env, storage.c_str(), MDB_NOTLS, 0777));
 
         dbis.resize(db_count);
 
@@ -55,7 +55,7 @@ struct db::backend
         {
             MDB_txn* transaction = nullptr;
 
-            CHECK_ASSERT(mdb_txn_begin(env, nullptr, MDB_NOTLS, &transaction));
+            CHECK_ASSERT(mdb_txn_begin(env, nullptr, 0, &transaction));
 
             CHECK_ASSERT(mdb_dbi_open(transaction, std::to_string(i).c_str(), MDB_CREATE, &dbis[i]));
 
