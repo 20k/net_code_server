@@ -258,7 +258,7 @@ std::vector<std::string> chats::get_channels_for_user(const std::string& name)
     std::vector<std::string> ret;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
+        mongo_read_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
 
         all_channels = db_disk_load_all(mongo_ctx, chat_channel());
     }
@@ -320,7 +320,7 @@ std::vector<std::pair<std::string, chat_message>> chats::get_and_update_chat_msg
     std::vector<chat_channel> all_channels;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
+        mongo_read_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
 
         all_channels = db_disk_load_all(mongo_ctx, chat_channel());
     }
@@ -364,7 +364,7 @@ std::vector<chat_message> chats::get_and_update_tells_for_user(const std::string
     std::vector<chat_channel> all_channels;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
+        mongo_read_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
         all_channels = db_disk_load_all(mongo_ctx, chat_channel());
     }
 
@@ -406,7 +406,7 @@ std::vector<chat_message> chats::get_and_update_notifs_for_user(const std::strin
     std::vector<chat_channel> all_channels;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
+        mongo_read_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
         all_channels = db_disk_load_all(mongo_ctx, chat_channel());
     }
 
