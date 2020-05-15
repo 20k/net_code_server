@@ -77,7 +77,7 @@ struct user : serialisable, free_function
     std::string get_auth_token_hex();
     std::string get_auth_token_binary();
 
-    std::map<std::string, double> get_properties_from_loaded_items(mongo_lock_proxy& ctx);
+    std::map<std::string, double> get_properties_from_loaded_items(db::read_tx& ctx);
 
     std::map<std::string, double> get_total_user_properties(int thread_id);
 

@@ -105,7 +105,7 @@ std::string user::get_auth_token_binary()
     return hex_to_binary(auth_hex);
 }
 
-std::map<std::string, double> user::get_properties_from_loaded_items(mongo_lock_proxy& ctx)
+std::map<std::string, double> user::get_properties_from_loaded_items(db::read_tx& ctx)
 {
     std::map<std::string, double> ret;
 
@@ -118,7 +118,7 @@ std::map<std::string, double> user::get_properties_from_loaded_items(mongo_lock_
 
         ret["char_count"] += (int)item_id.get_int("char_count");
         ret["script_slots"] += (int)item_id.get_int("script_slots");
-        ret["public_script_slots"] += (int)item_id.get_int("public_script_slots");
+        ret["public_sscript_slots"] += (int)item_id.get_int("public_script_slots");
         ret["network_links"] += (int)item_id.get_int("network_links");
     }
 
@@ -129,12 +129,9 @@ std::map<std::string, double> user::get_total_user_properties(int thread_id)
 {
     std::map<std::string, double> found;
 
+    db::read_tx ctx;
 
-    {
-        mongo_nolock_proxy ctx = get_global_mongo_user_items_context(thread_id);
-
-        found = get_properties_from_loaded_items(ctx);
-    }
+    found = get_properties_from_loaded_items(ctx);
 
     found["char_count"] += 500;
     found["script_slots"] += 2;
@@ -150,13 +147,7 @@ std::map<std::string, double> user::get_total_user_properties(int thread_id)
     {
         npc_prop_list props;
 
-        bool valid = false;
-
-        {
-            mongo_nolock_proxy ctx = get_global_mongo_npc_properties_context(thread_id);
-
-            valid = db_disk_load(ctx, props, name);
-        }
+        bool valid = db_disk_load(ctx, props, name);
 
         if(valid)
         {
