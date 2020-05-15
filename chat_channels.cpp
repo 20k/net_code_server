@@ -12,22 +12,18 @@ void prune_chat_history(chat_channel& in)
 
 void chats::say_in_local(const std::string& msg, const std::vector<std::string>& to, const std::string& from)
 {
+    db::read_write_tx ctx;
+
     chat_message cmsg;
 
-    {
-        mongo_nolock_proxy nctx = get_global_mongo_chat_messages_context(-2);
+    cmsg.id = db_storage_backend::get_unique_id();
+    cmsg.time_ms = get_wall_time();
+    cmsg.originator = from;
+    cmsg.msg = msg;
+    cmsg.recipient_list = to;
+    cmsg.sent_to_client.resize(cmsg.recipient_list.size());
 
-        cmsg.id = db_storage_backend::get_unique_id();
-        cmsg.time_ms = get_wall_time();
-        cmsg.originator = from;
-        cmsg.msg = msg;
-        cmsg.recipient_list = to;
-        cmsg.sent_to_client.resize(cmsg.recipient_list.size());
-
-        db_disk_overwrite(nctx, cmsg);
-    }
-
-    mongo_lock_proxy ctx = get_global_mongo_chat_channel_propeties_context(-2);
+    db_disk_overwrite(ctx, cmsg);
 
     chat_channel chan;
     chan.channel_name = "$$local";
@@ -42,40 +38,23 @@ void chats::say_in_local(const std::string& msg, const std::vector<std::string>&
 
 bool chats::say_in_channel(const std::string& msg, const std::string& channel, const std::string& from)
 {
-    std::vector<std::string> user_list;
-
-    {
-        mongo_nolock_proxy ctx = get_global_mongo_chat_channel_propeties_context(-2);
-
-        chat_channel chan;
-
-        if(!db_disk_load(ctx, chan, channel))
-            return false;
-
-        user_list = chan.user_list;
-    }
-
-    chat_message cmsg;
-
-    {
-        mongo_nolock_proxy nctx = get_global_mongo_chat_messages_context(-2);
-
-        cmsg.id = db_storage_backend::get_unique_id();
-        cmsg.time_ms = get_wall_time();
-        cmsg.originator = from;
-        cmsg.msg = msg;
-        cmsg.recipient_list = user_list;
-        cmsg.sent_to_client.resize(cmsg.recipient_list.size());
-
-        db_disk_overwrite(nctx, cmsg);
-    }
-
-    mongo_lock_proxy ctx = get_global_mongo_chat_channel_propeties_context(-2);
+    db::read_write_tx ctx;
 
     chat_channel chan;
 
     if(!db_disk_load(ctx, chan, channel))
         return false;
+
+    chat_message cmsg;
+
+    cmsg.id = db_storage_backend::get_unique_id();
+    cmsg.time_ms = get_wall_time();
+    cmsg.originator = from;
+    cmsg.msg = msg;
+    cmsg.recipient_list = chan.user_list;
+    cmsg.sent_to_client.resize(cmsg.recipient_list.size());
+
+    db_disk_overwrite(ctx, cmsg);
 
     chan.history.push_back(cmsg.id);
     prune_chat_history(chan);
@@ -87,22 +66,18 @@ bool chats::say_in_channel(const std::string& msg, const std::string& channel, c
 
 void chats::tell_to(const std::string& msg, const std::string& to, const std::string& from)
 {
+    db::read_write_tx ctx;
+
     chat_message cmsg;
 
-    {
-        mongo_nolock_proxy nctx = get_global_mongo_chat_messages_context(-2);
+    cmsg.id = db_storage_backend::get_unique_id();
+    cmsg.time_ms = get_wall_time();
+    cmsg.originator = from;
+    cmsg.msg = msg;
+    cmsg.recipient_list = {to};
+    cmsg.sent_to_client.resize(1);
 
-        cmsg.id = db_storage_backend::get_unique_id();
-        cmsg.time_ms = get_wall_time();
-        cmsg.originator = from;
-        cmsg.msg = msg;
-        cmsg.recipient_list = {to};
-        cmsg.sent_to_client.resize(1);
-
-        db_disk_overwrite(nctx, cmsg);
-    }
-
-    mongo_lock_proxy ctx = get_global_mongo_chat_channel_propeties_context(-2);
+    db_disk_overwrite(ctx, cmsg);
 
     ///yep. I don't want to talk about it
     std::string channel = "@" + to;
@@ -112,6 +87,7 @@ void chats::tell_to(const std::string& msg, const std::string& to, const std::st
 
     ///will create if it doesn't exist, tells are a virtual channel
     db_disk_load(ctx, chan, channel);
+
     chan.history.push_back(cmsg.id);
     prune_chat_history(chan);
 
@@ -120,22 +96,18 @@ void chats::tell_to(const std::string& msg, const std::string& to, const std::st
 
 void chats::create_notif_to(const std::string& msg, const std::string& to)
 {
+    db::read_write_tx ctx;
+
     chat_message cmsg;
 
-    {
-        mongo_nolock_proxy nctx = get_global_mongo_chat_messages_context(-2);
+    cmsg.id = db_storage_backend::get_unique_id();
+    cmsg.time_ms = get_wall_time();
+    cmsg.originator = "$core";
+    cmsg.msg = msg;
+    cmsg.recipient_list = {to};
+    cmsg.sent_to_client.resize(1);
 
-        cmsg.id = db_storage_backend::get_unique_id();
-        cmsg.time_ms = get_wall_time();
-        cmsg.originator = "$core";
-        cmsg.msg = msg;
-        cmsg.recipient_list = {to};
-        cmsg.sent_to_client.resize(1);
-
-        db_disk_overwrite(nctx, cmsg);
-    }
-
-    mongo_lock_proxy ctx = get_global_mongo_chat_channel_propeties_context(-2);
+    db_disk_overwrite(ctx, cmsg);
 
     ///yep. I don't want to talk about it
     std::string channel = "^" + to;
