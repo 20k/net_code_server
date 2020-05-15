@@ -251,7 +251,7 @@ void quest::set_on_finish(const std::string& on_finish)
     run_on_complete = on_finish;
 }
 
-std::vector<quest> quest_manager::fetch_quests_of(mongo_lock_proxy& ctx, const std::string& user)
+std::vector<quest> quest_manager::fetch_quests_of(db::read_tx& ctx, const std::string& user)
 {
     std::vector<quest> all_quests = db_disk_load_all(ctx, quest());
     std::vector<quest> ret;

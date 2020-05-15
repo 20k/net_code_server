@@ -626,7 +626,7 @@ std::string script_info::load_from_unparsed_source(js::value_context& vctx, cons
     return err;
 }
 
-bool script_info::load_from_db(mongo_lock_proxy& ctx)
+bool script_info::load_from_db(db::read_tx& ctx)
 {
     if(!exists_in_db(ctx))
         return false;
@@ -686,7 +686,7 @@ bool script_info::load_from_db(mongo_lock_proxy& ctx)
     return true;
 }
 
-void script_info::overwrite_in_db(mongo_lock_proxy& ctx)
+void script_info::overwrite_in_db(db::read_write_tx& ctx)
 {
     if(!valid)
         return;
@@ -727,7 +727,7 @@ void script_info::fill_as_bundle_compatible_item(item& my_script)
     my_script.set_as("metadata", metadata.dump());
 }
 
-bool script_info::exists_in_db(mongo_lock_proxy& ctx)
+bool script_info::exists_in_db(db::read_tx& ctx)
 {
     item my_script;
 

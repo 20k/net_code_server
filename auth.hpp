@@ -5,8 +5,7 @@
 #include <vector>
 #include <SFML/System.hpp>
 #include <networking/serialisable_fwd.hpp>
-
-struct mongo_lock_proxy;
+#include "db_storage_backend_lmdb.hpp"
 
 ///so the key thing to remember is
 ///every user and steam auth has a non steamauth
@@ -17,9 +16,9 @@ struct auth : serialisable, free_function
     uint64_t steam_id = 0;
     std::vector<std::string> users;
 
-    bool load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary);
-    bool load_from_db_steamid(mongo_lock_proxy& ctx, uint64_t psteam_id);
-    void overwrite_in_db(mongo_lock_proxy& ctx);
+    bool load_from_db(db::read_tx& ctx, const std::string& auth_binary);
+    bool load_from_db_steamid(db::read_tx& ctx, uint64_t psteam_id);
+    void overwrite_in_db(db::read_write_tx& ctx);
 
     void insert_user_exclusive(const std::string& username);
 };

@@ -1425,7 +1425,7 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
         std::string unparsed_source;
 
         {
-            mongo_nolock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
+            mongo_read_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
             script_info inf;
             inf.name = fullname;
@@ -1727,7 +1727,7 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
         auto name = all_shared->state.get_user_name();
 
         {
-            mongo_nolock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
+            mongo_read_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
             if(!user().exists(mongo_user_info, name))
                 return make_response("No account or not logged in");
@@ -1933,7 +1933,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
 
     if(current_user != "")
     {
-        mongo_nolock_proxy ctx = get_global_mongo_user_info_context(-2);
+        mongo_read_proxy ctx = get_global_mongo_user_info_context(-2);
 
         if(!found.load_from_db(ctx, current_user))
         {
@@ -2014,7 +2014,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
             return nlohmann::json();
 
         {
-            mongo_nolock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
+            mongo_read_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
             user u1;
 
@@ -2029,7 +2029,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
         user usr;
 
         {
-            mongo_nolock_proxy user_info = get_global_mongo_user_info_context(-2);
+            mongo_read_proxy user_info = get_global_mongo_user_info_context(-2);
 
             if(!usr.load_from_db(user_info, cur_name))
             {

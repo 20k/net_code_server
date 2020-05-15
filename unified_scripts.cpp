@@ -66,7 +66,7 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
     script_info script;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_items_context(thread_id);
+        mongo_read_proxy mongo_ctx = get_global_mongo_user_items_context(thread_id);
 
         //script.load_from_disk_with_db_metadata(str);
         script.name = full_scriptname;
@@ -81,13 +81,13 @@ unified_script_info unified_script_loading(int thread_id, const std::string& ful
             user current_user;
 
             {
-                mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(thread_id);
+                mongo_read_proxy mongo_ctx = get_global_mongo_user_info_context(thread_id);
 
                 if(!current_user.load_from_db(mongo_ctx, target))
                     return unified_script_info();
             }
 
-            mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
+            mongo_read_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
 
             item fnd = current_user.get_loaded_callable_scriptname_item(item_ctx, full_scriptname);
 

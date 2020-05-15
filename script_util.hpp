@@ -9,6 +9,7 @@
 #include "script_metadata.hpp"
 
 #include "argument_object.hpp"
+#include "db_storage_backend_lmdb.hpp"
 
 inline
 std::string base_scripts_string = "./scripts/";
@@ -39,10 +40,10 @@ struct script_info
     ///typescript support is heavy, so disable for cli invocation
     std::string load_from_unparsed_source(js::value_context& vctx, const std::string& unparsed, const std::string& name, bool enable_typescript, bool is_cli);
 
-    bool load_from_db(mongo_lock_proxy& ctx);
-    void overwrite_in_db(mongo_lock_proxy& ctx);
+    bool load_from_db(db::read_tx& ctx);
+    void overwrite_in_db(db::read_write_tx& ctx);
 
-    bool exists_in_db(mongo_lock_proxy& ctx);
+    bool exists_in_db(db::read_tx& ctx);
 
     void fill_as_bundle_compatible_item(item& i);
 };

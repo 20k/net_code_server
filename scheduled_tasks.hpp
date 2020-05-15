@@ -136,7 +136,7 @@ struct scheduled_tasks
         }
 
         {
-            mongo_nolock_proxy ctx = get_global_mongo_scheduled_task_context(thread_id);
+            mongo_lock_proxy ctx = get_global_mongo_scheduled_task_context(thread_id);
 
             db_disk_overwrite(ctx, tdd);
         }

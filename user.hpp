@@ -88,8 +88,8 @@ struct user : serialisable, free_function
 
     //std::string get_loaded_callable_scriptname_source(mongo_lock_proxy& ctx, const std::string& full_name);
 
-    item get_loaded_callable_scriptname_item(mongo_lock_proxy& ctx, const std::string& full_name);
-    std::vector<item> get_all_items(mongo_lock_proxy& ctx);
+    item get_loaded_callable_scriptname_item(db::read_tx& ctx, const std::string& full_name);
+    std::vector<item> get_all_items(db::read_tx& ctx);
     std::vector<std::string> get_all_items();
 
     std::string index_to_item(int index);

@@ -130,7 +130,7 @@ void bot_thread()
                 item next_item;
 
                 {
-                    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
+                    mongo_read_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
                     db_disk_load(mongo_ctx, next_item, item_id);
                 }

@@ -5,6 +5,7 @@
 #include <vector>
 #include <nlohmann/json.hpp>
 #include "serialisables.hpp"
+#include "db_storage_backend_lmdb.hpp"
 
 namespace quest_type
 {
@@ -146,7 +147,7 @@ struct quest : serialisable, free_function
 
 struct quest_manager
 {
-    std::vector<quest> fetch_quests_of(mongo_lock_proxy& ctx, const std::string& user);
+    std::vector<quest> fetch_quests_of(db::read_tx& ctx, const std::string& user);
 
     quest get_new_quest_for(const std::string& username, const std::string& name, const std::string& description);
 

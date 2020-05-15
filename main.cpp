@@ -116,7 +116,7 @@ void tickle_cache()
 
 void tickle_item_cache()
 {
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
+    mongo_read_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
 
     item it;
     db_disk_load(mongo_ctx, it, "0");

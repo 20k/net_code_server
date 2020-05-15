@@ -232,7 +232,7 @@ std::vector<std::string> user::all_loaded_items()
     return "";
 }*/
 
-item user::get_loaded_callable_scriptname_item(mongo_lock_proxy& ctx, const std::string& full_name)
+item user::get_loaded_callable_scriptname_item(db::read_tx& ctx, const std::string& full_name)
 {
     std::vector<std::string> loaded = all_loaded_items();
 
@@ -248,7 +248,7 @@ item user::get_loaded_callable_scriptname_item(mongo_lock_proxy& ctx, const std:
     return item();
 }
 
-std::vector<item> user::get_all_items(mongo_lock_proxy& ctx)
+std::vector<item> user::get_all_items(db::read_tx& ctx)
 {
     std::vector<std::string> all_items = upgr_idx;
 
@@ -362,7 +362,7 @@ void user::cleanup_call_stack(int thread_id)
 
     for(int i=0; i < (int)stk.size(); i++)
     {
-        mongo_nolock_proxy ctx = get_global_mongo_user_info_context(thread_id);
+        mongo_read_proxy ctx = get_global_mongo_user_info_context(thread_id);
 
         user usr;
 
@@ -383,7 +383,7 @@ void user::cleanup_call_stack(int thread_id)
 
     if(start_valid != last_valid)
     {
-        mongo_nolock_proxy ctx = get_global_mongo_user_info_context(thread_id);
+        mongo_lock_proxy ctx = get_global_mongo_user_info_context(thread_id);
 
         overwrite_user_in_db(ctx);
     }
@@ -929,7 +929,7 @@ void user::pump_notifications(int lock_id)
 
     if(any_pumped)
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(lock_id);
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(lock_id);
 
         overwrite_user_in_db(mongo_ctx);
     }

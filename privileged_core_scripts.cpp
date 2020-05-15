@@ -400,7 +400,7 @@ std::string prettify_chat_strings(std::vector<nlohmann::json>& found, bool use_c
 
 js::value cash__balance(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
-    mongo_nolock_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(vctx));
+    mongo_read_proxy mongo_user_info = get_global_mongo_user_info_context(get_thread_id(vctx));
 
     user usr;
     usr.load_from_db(mongo_user_info, get_caller(vctx));
@@ -493,7 +493,7 @@ js::value scripts__me(priv_context& priv_ctx, js::value_context& vctx, js::value
     user loaded_user;
 
     {
-        mongo_nolock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
+        mongo_read_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         loaded_user.load_from_db(user_ctx, usr);
     }
@@ -556,7 +556,7 @@ js::value scripts__public(priv_context& priv_ctx, js::value_context& vctx, js::v
     int pretty = !requested_scripting_api(arg);
     int seclevel = arg.has("sec") ? arg["sec"] : -1;
 
-    mongo_nolock_proxy item_context = get_global_mongo_user_items_context(get_thread_id(vctx));
+    mongo_read_proxy item_context = get_global_mongo_user_items_context(get_thread_id(vctx));
 
     std::vector<item> all_items = db_disk_load_all(item_context, item());
 
@@ -897,7 +897,7 @@ js::value scripts__core(priv_context& priv_ctx, js::value_context& vctx, js::val
 size_t get_wall_time();
 double get_wall_time_s();
 
-bool user_in_channel(mongo_lock_proxy& mongo_ctx, const std::string& username, const std::string& channel)
+bool user_in_channel(db::read_tx& mongo_ctx, const std::string& username, const std::string& channel)
 {
     return array_contains(get_users_in_channel(mongo_ctx, channel), username);
 }
@@ -1152,7 +1152,7 @@ js::value msg__manage(priv_context& priv_ctx, js::value_context& vctx, js::value
     return js::make_success(vctx);
 }
 
-std::vector<std::string> get_users_in_channel(mongo_lock_proxy& mongo_ctx, const std::string& channel)
+std::vector<std::string> get_users_in_channel(db::read_tx& mongo_ctx, const std::string& channel)
 {
     chat_channel chanl;
 
@@ -1177,7 +1177,7 @@ js::value msg__send(priv_context& priv_ctx, js::value_context& vctx, js::value& 
     user my_user;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
+        mongo_read_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         if(!my_user.load_from_db(mongo_ctx, get_caller(vctx)))
             return js::make_error(vctx, "No such user");
@@ -1199,7 +1199,7 @@ js::value msg__send(priv_context& priv_ctx, js::value_context& vctx, js::value& 
 
         if(channel != "local")
         {
-            mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
+            mongo_read_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
             users = get_users_in_channel(mongo_ctx, channel);
         }
         else
@@ -1339,7 +1339,6 @@ std::string format_time(const std::string& in)
     return in;
 }
 
-///TODO: THIS
 js::value msg__recent(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
 {
     std::string channel = arg["channel"];
@@ -1369,7 +1368,7 @@ js::value msg__recent(priv_context& priv_ctx, js::value_context& vctx, js::value
         channel.resize(50);
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
+        mongo_read_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(get_thread_id(vctx));
 
         if(!user_in_channel(mongo_ctx, get_caller(vctx), channel))
             return js::make_error(vctx, "User not in channel or doesn't exist");
@@ -1378,7 +1377,7 @@ js::value msg__recent(priv_context& priv_ctx, js::value_context& vctx, js::value
     chat_channel chanl;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
+        mongo_read_proxy mongo_ctx = get_global_mongo_chat_channel_propeties_context(-2);
 
         std::string name = channel;
 
@@ -1393,7 +1392,7 @@ js::value msg__recent(priv_context& priv_ctx, js::value_context& vctx, js::value
 
     for(size_t id : chanl.history)
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_chat_messages_context(-2);
+        mongo_read_proxy mongo_ctx = get_global_mongo_chat_messages_context(-2);
 
         chat_message cmsg;
 
@@ -1456,7 +1455,7 @@ js::value users__me(priv_context& priv_ctx, js::value_context& vctx, js::value& 
     user current_user;
 
     {
-        mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
+        mongo_read_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         if(!current_user.exists(mongo_ctx, caller))
             return js::make_error(vctx, "Should be impossible (users.me no user)");
@@ -1464,7 +1463,7 @@ js::value users__me(priv_context& priv_ctx, js::value_context& vctx, js::value& 
         current_user.load_from_db(mongo_ctx, caller);
     }
 
-    mongo_nolock_proxy mongo_ctx = get_global_mongo_global_properties_context(get_thread_id(vctx));
+    mongo_read_proxy mongo_ctx = get_global_mongo_global_properties_context(get_thread_id(vctx));
 
     std::string auth_token = current_user.get_auth_token_binary();
 
@@ -1717,17 +1716,17 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
     if(which == "")
         return "Item not found";
 
+    db::read_write_tx ctx;
+
     item next;
 
     {
-        mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
-
         next.item_id = which;
 
-        if(!db_disk_exists(item_ctx, next))
+        if(!db_disk_exists(ctx, next))
             return "Something weird happened";
 
-        db_disk_load(item_ctx, next, which);
+        db_disk_load(ctx, next, which);
     }
 
     if((int)next.get_int("item_type") != (int)item_types::LOCK)
@@ -1741,9 +1740,7 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
         usr.unload_item(tul);
 
         {
-            mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(thread_id);
-
-            usr.overwrite_user_in_db(mongo_ctx);
+            usr.overwrite_user_in_db(ctx);
         }
 
         accum += "Success";
@@ -1757,14 +1754,12 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
             return "Already loaded";
 
         {
-            mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
-
             item lock;
-            db_disk_load(item_ctx, lock, to_load);
+            db_disk_load(ctx, lock, to_load);
             lock.breach();
-            db_disk_overwrite(item_ctx, lock);
+            db_disk_overwrite(ctx, lock);
 
-            nodes.load_lock_to_any(item_ctx, to_load);
+            nodes.load_lock_to_any(ctx, to_load);
         }
 
         accum += "Loaded\n";
@@ -1775,14 +1770,12 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
         user_node* node = nodes.type_to_node((user_node_t)node_idx);
 
         {
-            mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
-
-            if(node->can_load_lock(item_ctx, to_load))
+            if(node->can_load_lock(ctx, to_load))
             {
                 item lock;
-                db_disk_load(item_ctx, lock, to_load);
+                db_disk_load(ctx, lock, to_load);
                 lock.breach();
-                db_disk_overwrite(item_ctx, lock);
+                db_disk_overwrite(ctx, lock);
 
                 node->load_lock(to_load);
             }
@@ -1815,8 +1808,7 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
     //if(which == to_unload && node_idx )
 
     {
-        mongo_nolock_proxy node_ctx = get_global_mongo_node_properties_context(thread_id);
-        nodes.overwrite_in_db(node_ctx);
+        nodes.overwrite_in_db(ctx);
     }
 
     return "";
@@ -1834,7 +1826,7 @@ js::value push_internal_items_view(js::value_context& vctx, int pretty, int full
 
     low_level_structure& sys = *sys_opt.value();
 
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
+    mongo_read_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
 
     std::vector<std::string> to_ret = found_user.upgr_idx;
 
@@ -2054,7 +2046,7 @@ js::value item__manage(priv_context& priv_ctx, js::value_context& vctx, js::valu
     user found_user;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
+        mongo_read_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         if(!found_user.load_from_db(mongo_ctx, get_caller(vctx)))
             return js::make_error(vctx, "No such user/really catastrophic error");
@@ -2063,9 +2055,8 @@ js::value item__manage(priv_context& priv_ctx, js::value_context& vctx, js::valu
     user_nodes nodes;
 
     {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
+        mongo_read_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
 
-        nodes.ensure_exists(node_ctx, get_caller(vctx));
         nodes.load_from_db(node_ctx, get_caller(vctx));
     }
 
@@ -2235,7 +2226,7 @@ js::value push_xfer_item_id_with_logs(js::value_context& vctx, std::string item_
     {
         item it;
 
-        mongo_nolock_proxy mongo_context = get_global_mongo_user_items_context(-2);
+        mongo_read_proxy mongo_context = get_global_mongo_user_items_context(-2);
 
         if(!db_disk_load(mongo_context, it, item_id))
             return js::make_error(vctx, "No such item");
@@ -2400,7 +2391,7 @@ js::value item__bundle_script(priv_context& priv_ctx, js::value_context& vctx, j
     user current_user;
 
     {
-        mongo_nolock_proxy user_lock = get_global_mongo_user_info_context(get_thread_id(vctx));
+        mongo_read_proxy user_lock = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         current_user.load_from_db(user_lock, get_caller(vctx));
     }
@@ -2487,7 +2478,7 @@ js::value item__register_bundle(priv_context& priv_ctx, js::value_context& vctx,
     user current_user;
 
     {
-        mongo_nolock_proxy user_lock = get_global_mongo_user_info_context(get_thread_id(vctx));
+        mongo_read_proxy user_lock = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         current_user.load_from_db(user_lock, get_caller(vctx));
     }
@@ -2556,7 +2547,7 @@ js::value item__configure_on_breach(priv_context& priv_ctx, js::value_context& v
     user usr;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
+        mongo_read_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         if(!usr.load_from_db(mongo_ctx, get_caller(vctx)))
             return js::make_error(vctx, "Invalid calling user");
@@ -2570,7 +2561,7 @@ js::value item__configure_on_breach(priv_context& priv_ctx, js::value_context& v
     item it;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
+        mongo_read_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
 
         if(!db_disk_load(mongo_ctx, it, item_id))
             return js::make_error(vctx, "No such item");
@@ -2903,7 +2894,7 @@ js::value item__steal(priv_context& priv_ctx, js::value_context& vctx, js::value
 
     for(int i=0; i < (int)indices.size(); i++)
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
+        mongo_read_proxy mongo_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
 
         std::string item_id = found_user.index_to_item(indices[i]);
 
@@ -3002,7 +2993,7 @@ js::value cash__steal(priv_context& priv_ctx, js::value_context& vctx, js::value
     user target;
 
     {
-        mongo_nolock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
+        mongo_read_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         if(!target.load_from_db(user_ctx, from))
             return js::make_error(vctx, "Target does not exist");
@@ -3011,9 +3002,8 @@ js::value cash__steal(priv_context& priv_ctx, js::value_context& vctx, js::value
     user_nodes nodes;
 
     {
-        mongo_nolock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
+        mongo_read_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
 
-        nodes.ensure_exists(node_ctx, from);
         nodes.load_from_db(node_ctx, from);
     }
 
@@ -3146,7 +3136,7 @@ js::value nodes__view_log(priv_context& priv_ctx, js::value_context& vctx, js::v
     user usr;
 
     {
-        mongo_nolock_proxy user_info = get_global_mongo_user_info_context(get_thread_id(vctx));
+        mongo_read_proxy user_info = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         if(!usr.load_from_db(user_info, name_of_person_being_attacked))
             return js::make_error(vctx, "No such user");
@@ -3155,9 +3145,8 @@ js::value nodes__view_log(priv_context& priv_ctx, js::value_context& vctx, js::v
     user_nodes nodes;
 
     {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
+        mongo_read_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
 
-        nodes.ensure_exists(node_ctx, name_of_person_being_attacked);
         nodes.load_from_db(node_ctx, name_of_person_being_attacked);
     }
 
@@ -3243,7 +3232,7 @@ js::value hack_internal(priv_context& priv_ctx, js::value_context& vctx, js::val
         current_node = nodes.name_to_node(name_of_person_being_attacked + "_" + node_fullname);
 
         {
-            mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
+            mongo_read_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
 
             attackables = current_node->get_locks(item_ctx);
         }
@@ -3287,7 +3276,7 @@ js::value hack_internal(priv_context& priv_ctx, js::value_context& vctx, js::val
         user attacker;
 
         {
-            mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
+            mongo_read_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
             attacker.load_from_db(mongo_ctx, get_caller(vctx));
         }
@@ -3296,7 +3285,7 @@ js::value hack_internal(priv_context& priv_ctx, js::value_context& vctx, js::val
 
         ///hmm, we are actually double overwriting here
         {
-            mongo_nolock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
+            mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
 
             nodes.overwrite_in_db(node_ctx);
         }
@@ -3320,7 +3309,7 @@ js::value hack_internal(priv_context& priv_ctx, js::value_context& vctx, js::val
                 i.handle_rotate();
 
                 ///synchronous so that multiple things don't rotate
-                mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
+                mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
                 db_disk_overwrite(item_ctx, i);
 
                 ///todo: send a chats.tell to victim here
@@ -3356,7 +3345,7 @@ js::value hack_internal(priv_context& priv_ctx, js::value_context& vctx, js::val
                     create_notification(get_thread_id(vctx), name_of_person_being_attacked, make_notif_col("-" + i.get_prop("short_name") + " breached-"));
 
                     ///wants to be synchronous so that we don't overlap writes
-                    mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
+                    mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
                     db_disk_overwrite(item_ctx, i);
                 }
             }
@@ -3439,7 +3428,7 @@ js::value hack_internal(priv_context& priv_ctx, js::value_context& vctx, js::val
         std::vector<item> all_items;
 
         {
-            mongo_nolock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
+            mongo_read_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
 
             all_items = usr.get_all_items(item_ctx);
         }
@@ -3511,7 +3500,7 @@ js::value net__hack(priv_context& priv_ctx, js::value_context& vctx, js::value& 
         return js::make_error(vctx, "No such user");
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(vctx));
+        mongo_read_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(vctx));
 
         if(npc_info::has_type(mongo_ctx, npc_info::WARPY, name_of_person_being_attacked))
         {
@@ -3621,7 +3610,7 @@ js::value nodes__manage(priv_context& priv_ctx, js::value_context& vctx, js::val
     user usr;
 
     {
-        mongo_nolock_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
+        mongo_read_proxy user_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         if(!usr.load_from_db(user_ctx, get_caller(vctx)))
             return js::make_error(vctx, "No such user, really bad error");
@@ -3630,12 +3619,10 @@ js::value nodes__manage(priv_context& priv_ctx, js::value_context& vctx, js::val
     user_nodes nodes;
 
     {
-        mongo_lock_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
+        mongo_read_proxy node_ctx = get_global_mongo_node_properties_context(get_thread_id(vctx));
 
         ///yeah this isn't good enough, need to do what we did for locs?
         ///or just do it in loc handler i guess
-        nodes.ensure_exists(node_ctx, get_caller(vctx));
-
         nodes.load_from_db(node_ctx, get_caller(vctx));
     }
 
@@ -5171,7 +5158,7 @@ js::value sys__map(priv_context& priv_ctx, js::value_context& vctx, js::value& a
     user my_user;
 
     {
-        mongo_nolock_proxy lock = get_global_mongo_user_info_context(-2);
+        mongo_read_proxy lock = get_global_mongo_user_info_context(-2);
 
         if(!my_user.load_from_db(lock, get_caller(vctx)))
             return js::make_error(vctx, "Error: Does not exist");
@@ -5514,7 +5501,7 @@ js::value sys__view(priv_context& priv_ctx, js::value_context& vctx, js::value& 
     user target_user;
 
     {
-        mongo_nolock_proxy lock = get_global_mongo_user_info_context(get_thread_id(vctx));
+        mongo_read_proxy lock = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         if(!target_user.load_from_db(lock, found_target))
             return js::make_error(vctx, "Error: Target does not exist");
@@ -5526,7 +5513,7 @@ js::value sys__view(priv_context& priv_ctx, js::value_context& vctx, js::value& 
     user my_user;
 
     {
-        mongo_nolock_proxy lock = get_global_mongo_user_info_context(get_thread_id(vctx));
+        mongo_read_proxy lock = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         if(!my_user.load_from_db(lock, get_caller(vctx)))
             return js::make_error(vctx, "Error: Does not exist");
@@ -5569,7 +5556,7 @@ js::value sys__view(priv_context& priv_ctx, js::value_context& vctx, js::value& 
     std::vector<user> all_users;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
+        mongo_read_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
         all_users = structure.get_all_users(mongo_ctx);
     }
 
@@ -5948,7 +5935,7 @@ js::value sys__move(priv_context& priv_ctx, js::value_context& vctx, js::value& 
             user targeting_user;
 
             {
-                mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
+                mongo_read_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
                 if(!targeting_user.load_from_db(mongo_ctx, str))
                     return js::make_error(vctx, "Invalid user");
@@ -6017,7 +6004,7 @@ js::value sys__move(priv_context& priv_ctx, js::value_context& vctx, js::value& 
         my_user.add_position_target(move_to.position, move_to.timestamp, make_success_col("-Move Completed-"));
 
         {
-            mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
             my_user.overwrite_user_in_db(mongo_ctx);
         }
@@ -6073,7 +6060,7 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
     user my_user;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
+        mongo_read_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
         if(!target.load_from_db(mongo_ctx, target_name))
             return js::make_error(vctx, "Invalid user");
@@ -6159,7 +6146,7 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
             bool of_type = false;
 
             {
-                mongo_nolock_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(vctx));
+                mongo_read_proxy mongo_ctx = get_global_mongo_npc_properties_context(get_thread_id(vctx));
 
                 of_type = npc_info::has_type(mongo_ctx, npc_info::WARPY, usr.name);
             }
@@ -6224,7 +6211,7 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
 
         ///should also print sys.view map
         {
-            mongo_nolock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
+            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
             my_user.overwrite_user_in_db(mongo_ctx);
         }
@@ -6818,7 +6805,7 @@ js::value mission__list(priv_context& priv_ctx, js::value_context& vctx, js::val
     std::vector<quest> all_quests;
 
     {
-        mongo_nolock_proxy mongo_ctx = get_global_mongo_quest_manager_context(get_thread_id(vctx));
+        mongo_read_proxy mongo_ctx = get_global_mongo_quest_manager_context(get_thread_id(vctx));
         all_quests = quest_manage.fetch_quests_of(mongo_ctx, caller);
     }
 

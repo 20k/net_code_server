@@ -5,7 +5,7 @@
 #include <networking/serialisable.hpp>
 #include "serialisables.hpp"
 
-bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary_in)
+bool auth::load_from_db(db::read_tx& ctx, const std::string& auth_binary_in)
 {
     std::string auth_found = binary_to_hex(auth_binary_in);
 
@@ -13,7 +13,7 @@ bool auth::load_from_db(mongo_lock_proxy& ctx, const std::string& auth_binary_in
 }
 
 ///THIS IS REALLY BAD
-bool auth::load_from_db_steamid(mongo_lock_proxy& ctx, uint64_t psteam_id)
+bool auth::load_from_db_steamid(db::read_tx& ctx, uint64_t psteam_id)
 {
     std::vector<auth> all_auth = db_disk_load_all(ctx, auth());
 
@@ -29,7 +29,7 @@ bool auth::load_from_db_steamid(mongo_lock_proxy& ctx, uint64_t psteam_id)
     return false;
 }
 
-void auth::overwrite_in_db(mongo_lock_proxy& ctx)
+void auth::overwrite_in_db(db::read_write_tx& ctx)
 {
     db_disk_overwrite(ctx, *this);
 }
