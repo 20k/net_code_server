@@ -1702,8 +1702,7 @@ void change_item_raw(mongo_lock_proxy& mongo_ctx, int load_idx, int unload_idx, 
     found_user.overwrite_user_in_db(mongo_ctx);
 }*/
 
-
-std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr, user_nodes& nodes, std::string& accum, int thread_id)
+std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr, user_nodes& nodes, std::string& accum, db::read_write_tx& ctx)
 {
     std::string to_load = usr.index_to_item(load_idx);
     std::string to_unload = usr.index_to_item(unload_idx);
@@ -1715,8 +1714,6 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
 
     if(which == "")
         return "Item not found";
-
-    db::read_write_tx ctx;
 
     item next;
 
@@ -1814,6 +1811,12 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
     return "";
 }
 
+std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr, user_nodes& nodes, std::string& accum, int thread_id)
+{
+    db::read_write_tx ctx;
+
+    return load_item_raw(node_idx, load_idx, unload_idx, usr, nodes, accum, ctx);
+}
 
 js::value push_internal_items_view(js::value_context& vctx, int pretty, int full, user_nodes& nodes, user& found_user, std::string preamble, bool pvp)
 {
@@ -2323,12 +2326,14 @@ js::value item__xfer_to(priv_context& priv_ctx, js::value_context& vctx, js::val
     std::string from = get_caller(vctx);
     std::string to = arg["user"];
 
-    std::optional user_and_nodes = get_user_and_nodes(get_caller(vctx), get_thread_id(vctx));
+    db::read_write_tx rtx;
+
+    std::optional user_and_nodes = get_user_and_nodes(get_caller(vctx), rtx);
 
     if(!user_and_nodes.has_value())
         return js::make_error(vctx, "No such user/really catastrophic error");
 
-    std::optional user_and_nodes_to = get_user_and_nodes(to, get_thread_id(vctx));
+    std::optional user_and_nodes_to = get_user_and_nodes(to, rtx);
 
     if(!user_and_nodes_to)
         return js::make_error(vctx, "Destination user does not exist");
@@ -2344,7 +2349,7 @@ js::value item__xfer_to(priv_context& priv_ctx, js::value_context& vctx, js::val
     {
         std::string accum;
 
-        auto ret = load_item_raw(-1, -1, item_idx, user_and_nodes->first, user_and_nodes->second, accum, get_thread_id(vctx));
+        auto ret = load_item_raw(-1, -1, item_idx, user_and_nodes->first, user_and_nodes->second, accum, rtx);
 
         if(ret != "")
             rvector.push_back(js::make_error(vctx, ret + " for index " + std::to_string(item_idx)));
@@ -2353,10 +2358,8 @@ js::value item__xfer_to(priv_context& priv_ctx, js::value_context& vctx, js::val
     }
 
     {
-        mongo_lock_proxy mctx = get_global_mongo_user_info_context(get_thread_id(vctx));
-
-        usr_from.overwrite_user_in_db(mctx);
-        usr_to.overwrite_user_in_db(mctx);
+        usr_from.overwrite_user_in_db(rtx);
+        usr_to.overwrite_user_in_db(rtx);
     }
 
     if(is_arr)

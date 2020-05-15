@@ -143,6 +143,7 @@ void change_item_raw(mongo_lock_proxy& mongo_ctx, int load_idx, int unload_idx, 
 
 
 std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr, user_nodes& nodes, std::string& accum, int thread_id);
+std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr, user_nodes& nodes, std::string& accum, db::read_write_tx& ctx);
 
 js::value push_internal_items_view(js::value_context& vctx, int pretty, int full, user_nodes& nodes, user& found_user, std::string preamble, bool pvp);
 
