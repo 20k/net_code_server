@@ -100,28 +100,6 @@ void test_locking()
     safe_lock_guard guard(mut);
 }
 
-void tickle_cache()
-{
-    for_each_npc([](npc_user& usr)
-    {
-        npc_prop_list props;
-
-        mongo_lock_proxy ctx = get_global_mongo_npc_properties_context(-2);
-
-        db_disk_load(ctx, props, usr.name);
-
-        get_user_and_nodes(usr.name, -2);
-    });
-}
-
-void tickle_item_cache()
-{
-    mongo_read_proxy mongo_ctx = get_global_mongo_user_items_context(-2);
-
-    item it;
-    db_disk_load(mongo_ctx, it, "0");
-}
-
 void termination_func()
 {
     //if(std::uncaught_exceptions() > 0)
@@ -330,11 +308,6 @@ int main()
     //undupe_items();
 
     //fix_users();
-
-    sthread([]()
-           {
-            tickle_item_cache();
-           }).detach();
 
     {
         mongo_lock_proxy usr = get_global_mongo_user_info_context(-2);
