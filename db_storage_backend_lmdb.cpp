@@ -8,6 +8,7 @@
 #include <sstream>
 #include <iostream>
 #include "tls.hpp"
+#include "mongo.hpp"
 
 #define CHECK_THROW(x) if(const int rc = x) { std::cout << rc << std::endl; throw std::runtime_error("DB Error " + std::to_string(rc) + " " + #x);}
 #define CHECK_ASSERT(x) if(const int rc = x) {printf("DB Error %i %s\n", rc, #x); assert(false && #x);}
@@ -269,6 +270,31 @@ bool db::read_write_tx::del(int _db_id, std::string_view skey)
 void db::read_write_tx::drop(int _db_id)
 {
     do_drop_tx(get_backend().get_db(_db_id), *this);
+}
+
+size_t db::get_next_id(db::read_write_tx& rwtx)
+{
+    std::optional<db::data> dat = rwtx.read(get_backend().get_db((int)mongo_database_type::GLOBAL_ID_COUNTER), "g");
+
+    size_t gid = 0;
+
+    if(dat.has_value())
+    {
+        if(dat.value().data_view.size() != 8)
+            throw std::runtime_error("Super bad, db id size != 8");
+
+        const char* ptr = (const char*)dat.value().data_view.data();
+
+        gid = *(size_t*)ptr;
+    }
+
+    gid++;
+
+    char* ptr = (char*)&gid;
+
+    rwtx.write(get_backend().get_db((int)mongo_database_type::GLOBAL_ID_COUNTER), "g", std::string_view(ptr, sizeof(size_t)));
+
+    return gid;
 }
 
 /*db::bound_read_tx::bound_read_tx(int _db_id)

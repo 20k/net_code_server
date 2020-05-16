@@ -67,6 +67,8 @@ namespace db
         std::lock_guard<boost::fibers::mutex> guard;
     };
 
+    size_t get_next_id(db::read_write_tx& rwtx);
+
     /*struct bound_read_tx : read_tx
     {
         MDB_dbi dbid;

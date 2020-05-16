@@ -37,6 +37,7 @@ enum class mongo_database_type
     QUEST_MANAGER,
     EVENT_MANAGER,
     CHAT_MESSAGES,
+    GLOBAL_ID_COUNTER,
     MONGO_COUNT
 };
 
