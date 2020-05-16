@@ -178,7 +178,11 @@ namespace event
         evt->user_name = user_name;
         evt->unique_event_tag = unique_event_tag;
         evt->complete = true;
-        evt->id = std::to_string(db_storage_backend::get_unique_id());
+
+        {
+            db::read_write_tx tx;
+            evt->id = std::to_string(db::get_next_id(tx));
+        }
 
         if(db_saver::in_progress(*evt))
         {

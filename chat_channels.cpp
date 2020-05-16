@@ -16,7 +16,7 @@ void chats::say_in_local(const std::string& msg, const std::vector<std::string>&
 
     chat_message cmsg;
 
-    cmsg.id = db_storage_backend::get_unique_id();
+    cmsg.id = db::get_next_id(ctx);
     cmsg.time_ms = get_wall_time();
     cmsg.originator = from;
     cmsg.msg = msg;
@@ -47,7 +47,7 @@ bool chats::say_in_channel(const std::string& msg, const std::string& channel, c
 
     chat_message cmsg;
 
-    cmsg.id = db_storage_backend::get_unique_id();
+    cmsg.id = db::get_next_id(ctx);
     cmsg.time_ms = get_wall_time();
     cmsg.originator = from;
     cmsg.msg = msg;
@@ -70,7 +70,7 @@ void chats::tell_to(const std::string& msg, const std::string& to, const std::st
 
     chat_message cmsg;
 
-    cmsg.id = db_storage_backend::get_unique_id();
+    cmsg.id = db::get_next_id(ctx);
     cmsg.time_ms = get_wall_time();
     cmsg.originator = from;
     cmsg.msg = msg;
@@ -100,7 +100,7 @@ void chats::create_notif_to(const std::string& msg, const std::string& to)
 
     chat_message cmsg;
 
-    cmsg.id = db_storage_backend::get_unique_id();
+    cmsg.id = db::get_next_id(ctx);
     cmsg.time_ms = get_wall_time();
     cmsg.originator = "$core";
     cmsg.msg = msg;

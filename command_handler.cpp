@@ -501,7 +501,12 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                 launched_realtime = true;
 
-                int current_id = db_storage_backend::get_unique_id();
+                int current_id = -1;
+
+                {
+                    db::read_write_tx tx;
+                    current_id = db::get_next_id(tx);
+                }
 
                 printf("cid %i\n", current_id);
 

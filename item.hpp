@@ -140,16 +140,16 @@ struct item : serialisable, free_function
         }
     }
 
-    void generate_set_id()
+    void generate_set_id(db::read_write_tx& tx)
     {
-        int32_t id = get_new_id();
+        int32_t id = get_new_id(tx);
 
         item_id = std::to_string(id);
 
         set_as("item_id", item_id);
     }
 
-    int32_t get_new_id();
+    int32_t get_new_id(db::read_write_tx& tx);
 
     ///manages lock proxies internally
     bool transfer_to_user(const std::string& name, int thread_id);

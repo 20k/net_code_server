@@ -271,7 +271,11 @@ quest quest_manager::get_new_quest_for(const std::string& username, const std::s
     nquest.user_for = username;
     nquest.name = name;
     nquest.description = description;
-    nquest.id = std::to_string(db_storage_backend::get_unique_id());
+
+    {
+        db::read_write_tx tx;
+        nquest.id = std::to_string(db::get_next_id(tx));
+    }
 
     return nquest;
 }
