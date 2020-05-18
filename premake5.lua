@@ -48,9 +48,9 @@ project "NetCodeServer"
 
     files
     {
-        "**.h",
-        "**.hpp",
-        "**.cpp",
+        "*.h",
+        "*.hpp",
+        "*.cpp",
         "deps/secret/**.cpp",
         "deps/secret/**.hpp",
         "%{ToolkitSourceFiles.toolkit1}",
