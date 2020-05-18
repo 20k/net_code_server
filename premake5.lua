@@ -48,7 +48,6 @@ project "NetCodeServer"
 
     files
     {
-        "*.h",
         "*.hpp",
         "*.cpp",
         "deps/secret/**.cpp",
@@ -57,6 +56,11 @@ project "NetCodeServer"
         "%{NetworkingSourceFiles.networking1}",
         "%{NetworkingSourceFiles.networking2}",
         "%{NetworkingSourceFiles.networking3}",
+        "%{QuickjsSourceFiles.qjs1}",
+        "%{QuickjsSourceFiles.qjs2}",
+        "%{QuickjsSourceFiles.qjs3}",
+        "%{QuickjsSourceFiles.qjs4}",
+        "%{QuickjsSourceFiles.qjs5}"
     }
 
     defines{
