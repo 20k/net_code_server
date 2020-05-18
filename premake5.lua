@@ -48,11 +48,11 @@ project "NetCodeServer"
 
     files
     {
-        "src/**.h",
-        "src/**.hpp",
-        "src/**.cpp",
-        "src/deps/secret/**.cpp",
-        "src/deps/secret/**.hpp",
+        "**.h",
+        "**.hpp",
+        "**.cpp",
+        "deps/secret/**.cpp",
+        "deps/secret/**.hpp",
         "%{ToolkitSourceFiles.toolkit1}",
         "%{NetworkingSourceFiles.networking1}",
         "%{NetworkingSourceFiles.networking2}",
@@ -80,6 +80,12 @@ project "NetCodeServer"
         "/mingw64/include/freetype2"
     }
 
+    libdirs
+    {
+        "deps/libs",
+        "deps/steamworks_sdk_142/sdk/public/steam/lib/win64"
+    }
+
     links
     {
         "mingw32",
@@ -93,12 +99,16 @@ project "NetCodeServer"
         "crypto",
         "ssl",
         "dl",
-        "-fno-pie",
         "backtrace",
         "sdkencryptedappticket64",
         "boost_fiber-mt",
         "boost_context-mt",
         "lmdb"
+    }
+
+    linkoptions
+    {
+        "-fno-pie",
     }
 
     filter "system:windows"
@@ -112,8 +122,7 @@ project "NetCodeServer"
     buildoptions
     {
         "-std=c++17", "-Wall", "-Wextra", "-Wnon-virtual-dtor", "-Wunreachable-code", "-fexceptions", "-Wno-narrowing", 
-        "-fno-strict-aliasing", "-Wno-unused-parameter", "-Wno-unused-label", "-no-pie", "-Werror=return-type", "-Wno-cast-function-type"
-    }
+        "-fno-strict-aliasing", "-Wno-unused-parameter", "-Wno-unused-label", "-no-pie", "-Werror=return-type", "-Wno-cast-function-type"    }
 
     configuration "Debug"
         defines {}
