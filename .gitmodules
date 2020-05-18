@@ -31,3 +31,6 @@
 [submodule "deps/vec"]
 	path = deps/vec
 	url = https://github.com/20k/funvectormaths
+[submodule "deps/secret"]
+	path = deps/secret
+	url = https://github.com/20k/net_code_server_secret
