@@ -87,7 +87,8 @@ project "NetCodeServer"
     libdirs
     {
         "deps/libs",
-        "deps/steamworks_sdk_142/sdk/public/steam/lib/win64"
+        "deps/steamworks_sdk_142/sdk/public/steam/lib/win64",
+		"deps/liblmdb"
     }
 
     links
@@ -107,7 +108,10 @@ project "NetCodeServer"
         "sdkencryptedappticket64",
         "boost_fiber-mt",
         "boost_context-mt",
-        "lmdb"
+        "lmdb",
+        "winmm",
+        "dbghelp",
+        "shlwapi"
     }
 
     linkoptions
