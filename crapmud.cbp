@@ -547,6 +547,7 @@
 		<Unit filename="steam_auth.hpp" />
 		<Unit filename="time.cpp" />
 		<Unit filename="time.hpp" />
+		<Unit filename="timestamped_event_queue.hpp" />
 		<Unit filename="timestamped_position.hpp" />
 		<Unit filename="tls.hpp" />
 		<Unit filename="unified_scripts.cpp" />
