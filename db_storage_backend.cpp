@@ -312,7 +312,6 @@ using mutex_t = lock_type_t;
 struct database
 {
     std::map<std::string, std::vector<nlohmann::json>> all_data;
-    std::map<std::string, std::map<std::string, nlohmann::json>> index_map;
     std::map<std::string, bool> collection_imported;
 
     mutex_t all_coll_guard;
@@ -326,21 +325,10 @@ struct database
         return all_data[coll];
     }
 
-    std::map<std::string, nlohmann::json>& get_indexed(const std::string& coll)
-    {
-        std::lock_guard guard(all_coll_guard);
-
-        return index_map[coll];
-    }
 
     std::vector<nlohmann::json>& get_collection_nolock(const std::string& coll)
     {
         return all_data[coll];
-    }
-
-    std::map<std::string, nlohmann::json>& get_indexed_nolock(const std::string& coll)
-    {
-        return index_map[coll];
     }
 
     mutex_t& get_lock(const std::string& coll)
@@ -386,82 +374,12 @@ void import_from_disk(bool force);
 struct db_storage
 {
     std::array<database, (int)mongo_database_type::MONGO_COUNT> all_data;
-    std::array<std::string, (int)mongo_database_type::MONGO_COUNT> indices;
 
     size_t global_id = 0;
     size_t reserved_global_id = 0;
     mutex_t id_guard;
 
     bool atomic_enabled = true;
-
-    void make_backup(const std::string& to_where)
-    {
-        /*std::lock_guard guard(id_guard);
-
-        std::vector<std::unique_lock<std::mutex>> all_locks;
-
-        for(database& d : all_data)
-        {
-            all_locks.emplace_back(d.all_coll_guard.mutex);
-
-            for(auto& k : d.per_collection_lock)
-            {
-                all_locks.emplace_back(k.second.mutex);
-            }
-        }*/
-
-        import_from_disk(true);
-
-        for(int db_idx = 0; db_idx < (int)mongo_database_type::MONGO_COUNT; db_idx++)
-        {
-            printf("DBIDX %i\n", db_idx);
-
-            if(!has_index(db_idx))
-            {
-                //all_data[db_idx].all_data[coll].push_back(fdata);
-
-                for(const auto& cpair : all_data[db_idx].all_data)
-                {
-                    std::string coll = cpair.first;
-
-                    std::vector<nlohmann::json> fdata = all_data[db_idx].all_data[coll];
-
-                    for(auto& i : fdata)
-                        flush_to(to_where, db_idx, coll, i);
-                }
-            }
-            else
-            {
-                for(const auto& cpair : all_data[db_idx].index_map)
-                {
-                    std::string coll = cpair.first;
-
-                    std::string index = get_index(db_idx);
-
-                    //assert(fdata.count(index) > 0);
-
-                    //std::string current_idx = fdata.at(index);
-
-                    std::map<std::string, nlohmann::json>& indices = all_data[db_idx].index_map[coll];
-
-                    //assert(fdata.count(index) == 1);
-
-                    assert(indices.size() == 1);
-
-                    //nlohmann::json fdata = indices[current_idx];
-
-                    for(auto& i : indices)
-                        flush_to(to_where, db_idx, coll, i.second);
-
-                    //std::map<std::string, nlohmann::json>& indices = all_data[db_idx].index_map[coll];
-
-                    //indices[current_idx] = fdata;
-                }
-            }
-        }
-
-        printf("Finished backup\n");
-    }
 
     template<typename T>
     void atomic_write(const std::string& file, const T& data)
@@ -485,16 +403,6 @@ struct db_storage
     database& get_db(const database_type& db)
     {
         return all_data[db];
-    }
-
-    bool has_index(const database_type& db)
-    {
-        return indices[db].size() > 0;
-    }
-
-    std::string get_index(const database_type& db)
-    {
-        return indices[db];
     }
 
     size_t get_next_id()
@@ -556,10 +464,6 @@ struct db_storage
         assert(data.count(CID_STRING) > 0);
 
         remove(get_filename(db, coll, data).c_str());
-
-        ///don't care about notifs and they're taking up waaaay too much space
-        if((mongo_database_type)db == mongo_database_type::PENDING_NOTIFS)
-            remove((get_filename(db, coll, data) + ".back").c_str());
     }
 
     ///must have collection locked to work
@@ -578,10 +482,8 @@ struct db_storage
         }
 
         std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
-        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
 
         collection.clear();
-        indices.clear();
 
         std::string coll_path = std::string(ROOT_STORE) + "/" + std::to_string((int)db_idx) + "/" + coll;
 
@@ -642,22 +544,8 @@ struct db_storage
                 }
             }
 
-            if(!has_index(db_idx))
-            {
-                collection.push_back(fdata);
-            }
-            else
-            {
-                std::string index = get_index(db_idx);
+            collection.push_back(fdata);
 
-                assert(fdata.count(index) > 0);
-
-                std::string current_idx = fdata.at(index);
-
-                //std::map<std::string, nlohmann::json>& indices = all_data[db_idx].index_map[coll];
-
-                indices[current_idx] = fdata;
-            }
         });
 
         {
@@ -672,7 +560,6 @@ struct db_storage
         database& cdb = get_db(db);
 
         std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
-        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
 
         std::lock_guard guard(cdb.get_lock(coll));
 
@@ -682,24 +569,10 @@ struct db_storage
         auto fdata = js;
         fdata[CID_STRING] = get_next_id();
 
-        if(!has_index(db))
-        {
-            if(is_imported)
-                collection.push_back(fdata);
+        if(is_imported)
+            collection.push_back(fdata);
 
-            flush(db, coll, fdata);
-        }
-        else
-        {
-            std::string index = get_index(db);
-
-            assert(fdata.count(index) > 0);
-
-            if(is_imported)
-                indices[fdata.at(index)] = fdata;
-
-            flush(db, coll, fdata);
-        }
+        flush(db, coll, fdata);
     }
 
     template<typename T>
@@ -707,66 +580,14 @@ struct db_storage
     {
         database& cdb = get_db(db);
 
-        //std::lock_guard guard(cdb.get_lock(coll));
-
         std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
-        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
 
-        if(!has_index(db))
+        for(nlohmann::json& js : collection)
         {
-            for(nlohmann::json& js : collection)
+            if(matches(js, selector))
             {
-                if(matches(js, selector))
-                {
-                    if(t(js))
-                        return;
-                }
-            }
-        }
-        else
-        {
-            std::string index = get_index(db);
-
-            bool has_index_key = selector.count(index) > 0;
-
-            if(has_index_key)
-            {
-                if(is_exists(selector, index))
-                {
-                    for(auto& i : indices)
-                    {
-                        if(matches(i.second, selector))
-                        {
-                            if(t(i.second))
-                                return;
-                        }
-                    }
-                }
-                else
-                {
-                    ///throwing
-                    auto found = indices.find(selector.at(index));
-
-                    if(found == indices.end())
-                        return;
-
-                    if(matches(found->second, selector))
-                    {
-                        if(t(found->second))
-                            return;
-                    }
-                }
-            }
-            else
-            {
-                for(auto& i : indices)
-                {
-                    if(matches(i.second, selector))
-                    {
-                        if(t(i.second))
-                            return;
-                    }
-                }
+                if(t(js))
+                    return;
             }
         }
     }
@@ -839,12 +660,12 @@ struct db_storage
                     int direction = pairs.second;
 
                     std::sort(ret.begin(), ret.end(), [&](const nlohmann::json& n_1, const nlohmann::json& n_2)
-                              {
-                                  if(direction == 1)
-                                    return n_1.at(sort_on) < n_2.at(sort_on);
-                                  else
-                                    return n_1.at(sort_on) > n_2.at(sort_on);
-                              });
+                    {
+                        if(direction == 1)
+                            return n_1.at(sort_on) < n_2.at(sort_on);
+                        else
+                            return n_1.at(sort_on) > n_2.at(sort_on);
+                    });
 
                     break;
                 }
@@ -886,52 +707,16 @@ struct db_storage
         import_collection_nolock(db, coll);
 
         std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
-        std::map<std::string, nlohmann::json>& indices = cdb.get_indexed(coll);
 
-        if(!has_index(db))
+        for(auto& js : collection)
         {
-            for(auto& js : collection)
+            if(matches(js, selector))
             {
-                if(matches(js, selector))
-                {
-                    disk_erase(db, coll, js);
-                }
-            }
-
-            collection.erase( std::remove_if(collection.begin(), collection.end(), [&](const nlohmann::json& js){return matches(js, selector);}), collection.end() );
-        }
-        else
-        {
-            std::string index = get_index(db);
-
-            if(is_exists(selector, index) || selector.count(index) == 0)
-            {
-                for(auto it = indices.begin(); it != indices.end(); )
-                {
-                    if(matches(it->second, selector))
-                    {
-                        disk_erase(db, coll, it->second);
-
-                        it = indices.erase(it);
-                    }
-                    else
-                    {
-                        it++;
-                    }
-                }
-            }
-            else
-            {
-                auto found = indices.find(selector.at(index));
-
-                if(found == indices.end())
-                    return;
-
-                disk_erase(db, coll, found->second);
-
-                indices.erase(found);
+                disk_erase(db, coll, js);
             }
         }
+
+        collection.erase( std::remove_if(collection.begin(), collection.end(), [&](const nlohmann::json& js){return matches(js, selector);}), collection.end() );
     }
 };
 
@@ -967,22 +752,7 @@ void import_from_disk(bool force)
 
                     nlohmann::json fdata = nlohmann::json::from_cbor(data);
 
-                    if(!store.has_index(db_idx))
-                    {
-                        store.all_data[db_idx].all_data[coll].push_back(fdata);
-                    }
-                    else
-                    {
-                        std::string index = store.get_index(db_idx);
-
-                        assert(fdata.count(index) > 0);
-
-                        std::string current_idx = fdata.at(index);
-
-                        std::map<std::string, nlohmann::json>& indices = store.all_data[db_idx].index_map[coll];
-
-                        indices[current_idx] = fdata;
-                    }
+                    store.all_data[db_idx].all_data[coll].push_back(fdata);
 
                     store.all_data[db_idx].collection_imported[coll] = true;
                 });
@@ -1043,11 +813,6 @@ void init_db_storage_backend()
         store.all_data[(int)mongo_databases[idx]->last_db_type];
     }
 
-    store.indices[(int)mongo_database_type::USER_PROPERTIES] = "name";
-    store.indices[(int)mongo_database_type::USER_ITEMS] = "item_id";
-    store.indices[(int)mongo_database_type::NPC_PROPERTIES] = "name";
-    store.indices[(int)mongo_database_type::NETWORK_PROPERTIES] = "name";
-
     import_from_disk(false);
 
     database& user_db = store.get_db((int)mongo_database_type::USER_ACCESSIBLE);
@@ -1063,13 +828,6 @@ void init_db_storage_backend()
             return i1.at(CID_STRING).get<size_t>() < i2.at(CID_STRING).get<size_t>();
         });
     }
-
-    //#define BACKUP
-    #ifdef BACKUP
-    store.make_backup("C:/net_code_backup_from");
-    #endif // BACKUP
-
-    ///error with "unique_id" : "fragme_vgdajw_6153"
 }
 
 void db_storage_backend::run_tests()
@@ -1226,11 +984,6 @@ void db_storage_backend::run_tests()
     }
 }
 
-void db_storage_backend::make_backup(const std::string& to_where)
-{
-    get_db_storage().make_backup(to_where);
-}
-
 void db_storage_backend::change_collection_unsafe(const std::string& coll, bool force_change)
 {
     if(is_fixed && !force_change)
@@ -1247,6 +1000,9 @@ void db_storage_backend::change_collection_unsafe(const std::string& coll, bool 
 
 db_storage_backend::db_storage_backend(database_type _database, bool _is_fixed)
 {
+    if(_database != (int)mongo_database_type::USER_ACCESSIBLE)
+        throw std::runtime_error("Somehow used the old db system");
+
     database = _database;
     is_fixed = _is_fixed;
 }

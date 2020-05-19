@@ -23,9 +23,6 @@ struct db_storage_backend
     database_type database;
     std::string collection;
 
-    static
-    void make_backup(const std::string& to_where);
-
     void change_collection_unsafe(const std::string& coll, bool force_change = false);
 
     void insert_one(const nlohmann::json& json);
