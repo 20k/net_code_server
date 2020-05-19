@@ -106,7 +106,19 @@ namespace event_queue
                 }
             }
 
-            events.push_back(in);
+            if(queue_size == 0)
+            {
+                events.push_back(in);
+            }
+            else
+            {
+                auto dup = events.back();
+
+                dup.timestamp = interrupt_when;
+
+                events.push_back(dup);
+                events.push_back(finish);
+            }
         }
     };
 
