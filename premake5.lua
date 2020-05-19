@@ -82,7 +82,8 @@ project "NetCodeServer"
         "%{IncludeDir.include}",	
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.entt}",
-        "/mingw64/include/freetype2"
+        "/mingw64/include/freetype2",
+		"deps/liblmdb"
     }
 
     libdirs
