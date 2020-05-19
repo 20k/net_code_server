@@ -300,11 +300,13 @@ item item_types::get_named_describer(const std::string& short_name, const std::s
 
 void item_types::give_item_to(item& new_item, const std::string& to, int thread_id)
 {
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(thread_id);
+    {
+        mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context(thread_id);
 
-    new_item.generate_set_id(mongo_ctx);
+        new_item.generate_set_id(mongo_ctx);
 
-    db_disk_overwrite(mongo_ctx, new_item);
+        db_disk_overwrite(mongo_ctx, new_item);
+    }
 
     new_item.transfer_to_user(to, thread_id);
 }
