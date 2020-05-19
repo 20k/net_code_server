@@ -23,6 +23,8 @@ namespace event_queue
         uint64_t timestamp = 0;
 
         QuantityType quantity = QuantityType();
+
+        bool blocker = false;
     };
 
     template<int typeidx, typename QuantityType>
@@ -51,8 +53,9 @@ namespace event_queue
 
     struct spatial_event : timestamp_event_base<0, vec3f>
     {
-        type t = type::NONE;
-        uint64_t entity_id = -1; ///target
+        ///i think we need two queues
+        //type t = type::NONE;
+        //uint64_t entity_id = -1; ///target
     };
 
     template<int N>
@@ -63,7 +66,51 @@ namespace event_queue
 
     };
 
-    template<typename T>
+    template<typename T.
+    struct event_queue
+    {
+        std::vector<T> events;
+
+        void interrupt_with_action(uint64_t interrupt_when, const T& finish)
+        {
+            int queue_size = events.size();
+            uint64_t check_timestamp = interrupt_when;
+
+            for(int i=0; i < queue_size; i++)
+            {
+                uint64_t current_timestamp = events[i].timestamp;
+
+                ///if my event is earlier than the current event in the queue
+                if(check_timestamp < current_timestamp)
+                {
+                    if(i != 0)
+                    {
+                        ///event must be later than the previous timestamp, and earlier than the current timestamp
+                        assert(check_timestamp < current_timestamp && check_timestamp >= events[i-1].timestamp);
+
+                        auto value = interpolate_event_at(events[i-1], events[i], check_timestamp);
+
+                        ///delete all events in the future, including the current one
+                        events.resize(i);
+                        events.push_back(value);
+                        events.push_back(finish);
+                    }
+
+                    else
+                    {
+                        events.clear();
+                        events.push_back(finish);
+                    }
+
+                    return;
+                }
+            }
+
+            events.push_back(in);
+        }
+    };
+
+    /*template<typename T>
     struct event_queue
     {
         std::vector<T> events;
@@ -123,10 +170,28 @@ namespace event_queue
             {
                 uint64_t current_timestamp = events[i].timestamp;
 
+                ///if my event is earlier than the current event in the queue
                 if(check_timestamp < current_timestamp)
                 {
-                    events.resize(i+1);
-                    events.push_back(in);
+                    if(i != 0)
+                    {
+                        ///event must be later than the previous timestamp, and earlier than the current timestamp
+                        assert(check_timestamp < current_timestamp && check_timestamp >= events[i-1].timestamp);
+
+                        auto value = interpolate_event_at(events[i-1], events[i], check_timestamp);
+
+                        ///delete all events in the future, including the current one
+                        events.resize(i);
+                        events.push_back(value);
+                        events.push_back(in);
+                    }
+
+                    else
+                    {
+                        events.clear();
+                        events.push_back(in);
+                    }
+
                     return;
                 }
             }
@@ -141,7 +206,7 @@ namespace event_queue
 
             queue_specific_event_and_drop_future_events(next);
         }
-    };
+    };*/
 
     inline
     uint64_t calculate_end_timestamp(uint64_t start_timestamp, float current_quantity, float end_quantity, float deltatime_s)
