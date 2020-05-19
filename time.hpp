@@ -18,6 +18,7 @@ struct time_structure
     static std::string format(int unit);
 };
 
+size_t get_monotonic_time_ms();
 size_t get_wall_time();
 double get_wall_time_s();
 

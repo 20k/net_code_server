@@ -41,6 +41,11 @@ std::string time_structure::format(int unit)
     return str;
 }
 
+size_t get_monotonic_time_ms()
+{
+    return get_wall_time();
+}
+
 ///https://stackoverflow.com/questions/16177295/get-time-since-epoch-in-milliseconds-preferably-using-c11-chrono
 ///thanks stack overflow
 size_t get_wall_time()

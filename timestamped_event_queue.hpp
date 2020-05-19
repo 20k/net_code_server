@@ -2,6 +2,11 @@
 #define TIMESTAMPED_EVENT_QUEUE_HPP_INCLUDED
 
 #include <array>
+#include <vec/vec.hpp>
+#include "time.hpp"
+
+#define NEVER_TIMESTAMP -1
+#define QUANTITY_DELTA_ERROR 0.0001f
 
 namespace event_queue
 {
@@ -15,7 +20,7 @@ namespace event_queue
     template<int typeidx, typename QuantityType>
     struct timestamp_event_base
     {
-        uint64_t abs_time_monotonic_ms = 0;
+        uint64_t timestamp = 0;
 
         QuantityType quantity = QuantityType();
     };
@@ -24,37 +29,149 @@ namespace event_queue
     timestamp_event_base<typeidx, QuantityType>
     interpolate_event_at(const timestamp_event_base<typeidx, QuantityType>& p1, const timestamp_event_base<typeidx, QuantityType>& p2, uint64_t timestamp_ms)
     {
-        if(timestamp_ms >= p2.abs_time_monotonic_ms)
+        if(timestamp_ms >= p2.timestamp)
             return p2;
 
-        if(timestamp_ms <= p1.abs_time_monotonic_ms)
+        if(timestamp_ms <= p1.timestamp)
             return p1;
 
-        __float128 t1 = p1.abs_time_monotonic_ms;
-        __float128 t2 = p2.abs_time_monotonic_ms;
+        __float128 t1 = p1.timestamp;
+        __float128 t2 = p2.timestamp;
 
         __float128 val = timestamp_ms;
 
         __float128 fraction = (val - t1) / (t2 - t1);
 
         timestamp_event_base<typeidx, QuantityType> ret;
-        ret.abs_time_monotonic_ms = (uint64_t)((t1 * (1 - fraction)) + (t2 * fraction));
+        ret.timestamp = (uint64_t)((t1 * (1 - fraction)) + (t2 * fraction));
         ret.quantity = p1.quantity * (1 - fraction) + p2.quantity * fraction;
 
         return ret;
     }
 
-    /*struct spatial_event : timestamp_event_base<0, vec3f>
+    struct spatial_event : timestamp_event_base<0, vec3f>
     {
         type t = type::NONE;
         uint64_t entity_id = -1; ///target
     };
 
     template<int N>
-    struct ship_data
+    using ship_data = vec<N, float>;
+
+    struct ship_event : timestamp_event_base<1, ship_data>
     {
-        std::array<float, N> data;
-    };*/
+
+    };
+
+    template<typename T>
+    struct event_queue
+    {
+        std::vector<T> events;
+
+        void insert_specific_event(const T& in)
+        {
+            if(events.size() == 0)
+            {
+                events.push_back(in);
+                return;
+            }
+
+            if(events.size() == 1)
+            {
+                if(events[0].timestamp <= in.timestamp)
+                {
+                    events.push_back(in);
+                    return;
+                }
+                else
+                {
+                    events.insert(events.begin(), in);
+                    return;
+                }
+            }
+
+            int queue_size = events.size();
+            uint64_t check_timestamp = in.timestamp;
+
+            for(int i=0; i < queue_size - 1; i++)
+            {
+                uint64_t current_timestamp = events[i].timestamp;
+                uint64_t next_timestamp = events[i+1].timestamp;
+
+                if(check_timestamp < current_timestamp)
+                {
+                    events.insert(events.begin(), in);
+                    return;
+                }
+
+                if(check_timestamp >= current_timestamp && check_timestamp < next_timestamp)
+                {
+                    events.insert(events.begin() + i + 1, in);
+                    return;
+                }
+            }
+
+            events.push_back(in);
+        }
+
+        void queue_specific_event_and_drop_future_events(const T& in)
+        {
+            int queue_size = events.size();
+            uint64_t check_timestamp = in.timestamp;
+
+            for(int i=0; i < queue_size; i++)
+            {
+                uint64_t current_timestamp = events[i].timestamp;
+
+                if(check_timestamp < current_timestamp)
+                {
+                    events.resize(i+1);
+                    events.push_back(in);
+                    return;
+                }
+            }
+
+            events.push_back(in);
+        }
+
+        void queue_event_in(const T& in, uint64_t timestamp, uint64_t offset)
+        {
+            T next = in;
+            next.timestamp = timestamp + offset;
+
+            queue_specific_event_and_drop_future_events(next);
+        }
+    };
+
+    inline
+    uint64_t calculate_end_timestamp(uint64_t start_timestamp, float current_quantity, float end_quantity, float deltatime_s)
+    {
+        if(end_quantity == current_quantity)
+            return start_timestamp;
+
+        float fabs_deltatime = fabs(deltatime_s);
+        float fabs_difference = fabs(end_quantity - current_quantity);
+
+        if(fabs_deltatime < QUANTITY_DELTA_ERROR)
+        {
+            if(fabs_difference < QUANTITY_DELTA_ERROR)
+                return start_timestamp + 1; ///this is the numerically unstable part, which is why this redundant check is in here
+            else
+                return start_timestamp + 1;
+        }
+        else
+        {
+            if(fabs_difference < QUANTITY_DELTA_ERROR)
+                return NEVER_TIMESTAMP;
+            else
+            {
+                float difference = max_quantity - current_quantity;
+                float time_offset_s = difference / deltatime_s;
+
+                return start_timestamp + time_offset_s * 1000.f;
+            }
+        }
+    }
 }
 
 #endif // TIMESTAMPED_EVENT_QUEUE_HPP_INCLUDED
