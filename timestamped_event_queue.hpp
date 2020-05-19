@@ -101,6 +101,8 @@ namespace event_queue
 
                     else
                     {
+                        printf("Warning, queue has no definite state\n");
+
                         events.clear();
                         events.push_back(finish);
                     }
