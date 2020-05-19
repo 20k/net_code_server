@@ -118,7 +118,7 @@ std::map<std::string, double> user::get_properties_from_loaded_items(db::read_tx
 
         ret["char_count"] += (int)item_id.get_int("char_count");
         ret["script_slots"] += (int)item_id.get_int("script_slots");
-        ret["public_sscript_slots"] += (int)item_id.get_int("public_script_slots");
+        ret["public_script_slots"] += (int)item_id.get_int("public_script_slots");
         ret["network_links"] += (int)item_id.get_int("network_links");
     }
 
