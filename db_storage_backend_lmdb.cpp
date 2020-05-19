@@ -42,7 +42,8 @@ struct db::backend
         mdb_env_set_maxdbs(env, 50);
 
         ///10000 MB
-        mdb_env_set_mapsize(env, 10485760ull * 10000ull);
+        //mdb_env_set_mapsize(env, 10485760ull * 10000ull);
+        mdb_env_set_mapsize(env, 1000 * 1000 * 1000);
 
         mdb_env_set_maxreaders(env, 1024);
 
