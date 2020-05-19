@@ -73,6 +73,7 @@ project "NetCodeServer"
         "CONFIG_BIGNUM",
         "DUMP_LEAKS",
         "USE_FIBERS",
+		"SFML_STATIC"
     }
 
     includedirs
@@ -94,16 +95,18 @@ project "NetCodeServer"
     links
     {
         "mingw32",
-        "sfml-system",
-        "ws2_32",
-        "boost_system-mt",
-        "mswsock",
+		":libssl.a",
+
+        "sfml-system-s",
+        ":libboost_system-mt.a",
         "ole32",
         "boost_filesystem-mt",
         "dbgeng",
-        "crypto",
-        "ssl",
-        "dl",
+		":libz.a",
+		":librpcrt4.a",
+        ":libcrypto.a",
+		"ws2_32",
+		"mswsock",
         "backtrace",
         "sdkencryptedappticket64",
         "boost_fiber-mt",
