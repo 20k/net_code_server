@@ -71,8 +71,11 @@ namespace event_queue
     {
         std::vector<T> events;
 
-        void interrupt_with_action(uint64_t interrupt_when, const T& finish)
+        void interrupt_with_action(uint64_t current_timestamp, uint64_t interrupt_when, const T& finish)
         {
+            if(interrupt_when < current_timestamp)
+                throw std::runtime_error("Tried to interrupt into the past");
+
             int queue_size = events.size();
             uint64_t check_timestamp = interrupt_when;
 
@@ -102,6 +105,8 @@ namespace event_queue
                         events.push_back(finish);
                     }
 
+                    cleanup_older_than(current_timestamp);
+
                     return;
                 }
             }
@@ -118,6 +123,36 @@ namespace event_queue
 
                 events.push_back(dup);
                 events.push_back(finish);
+            }
+
+            cleanup_older_than(current_timestamp);
+        }
+
+        ///if the queue started with > 2 elements, it'll always remain with ~2 elements
+        void cleanup_older_than(uint64_t timestamp)
+        {
+            if(events.size() < 2)
+                return;
+
+            int queue_size = events.size();
+
+            for(int i=0; i < queue_size; i++)
+            {
+                uint64_t current_timestamp = events[i].timestamp;
+
+                ///my timestamp is earlier than the current timestamp in the queue
+                if(timestamp < current_timestamp)
+                {
+                    if(i == 0)
+                        return;
+
+                    auto value = interpolate_event_at(events[i-1], events[i], timestamp);
+
+                    events.erase(events.begin(), events.begin() + i);
+                    events.insert(events.begin(), value);
+
+                    return;
+                }
             }
         }
     };
