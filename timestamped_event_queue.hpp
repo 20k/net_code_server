@@ -58,15 +58,15 @@ namespace event_queue
         //uint64_t entity_id = -1; ///target
     };
 
-    template<int N>
+    /*template<int N>
     using ship_data = vec<N, float>;
 
     struct ship_event : timestamp_event_base<1, ship_data>
     {
 
-    };
+    };*/
 
-    template<typename T.
+    template<typename T>
     struct event_queue
     {
         std::vector<T> events;
@@ -115,7 +115,7 @@ namespace event_queue
 
             if(queue_size == 0)
             {
-                events.push_back(in);
+                events.push_back(finish);
             }
             else
             {
@@ -128,6 +128,21 @@ namespace event_queue
             }
 
             cleanup_older_than(current_timestamp);
+        }
+
+        void offset_from_back(uint64_t offset, const T& finish)
+        {
+            if(events.size() == 0)
+                throw std::runtime_error("bad queue in offset from back");
+
+            uint64_t last = events.back().timestamp;
+
+            last += offset;
+
+            auto val = finish;
+            val.timestamp = last;
+
+            events.push_back(val);
         }
 
         ///if the queue started with > 2 elements, it'll always remain with ~2 elements
@@ -182,7 +197,7 @@ namespace event_queue
                 return NEVER_TIMESTAMP;
             else
             {
-                float difference = max_quantity - current_quantity;
+                float difference = end_quantity - current_quantity;
                 float time_offset_s = difference / deltatime_s;
 
                 return start_timestamp + time_offset_s * 1000.f;
