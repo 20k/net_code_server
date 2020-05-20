@@ -17,7 +17,7 @@ namespace event_queue
         NONE,
     };
 
-    template<int typeidx, typename QuantityType>
+    template<typename QuantityType>
     struct timestamp_event_base
     {
         uint64_t timestamp = 0;
@@ -27,15 +27,24 @@ namespace event_queue
         bool blocker = false;
     };
 
-    template<int typeidx, typename QuantityType>
-    timestamp_event_base<typeidx, QuantityType>
-    interpolate_event_at(const timestamp_event_base<typeidx, QuantityType>& p1, const timestamp_event_base<typeidx, QuantityType>& p2, uint64_t timestamp_ms)
+    ///guaranteed that the return value with have a timestamp of timestamp_ms
+    template<typename QuantityType>
+    timestamp_event_base<QuantityType>
+    interpolate_event_at(const timestamp_event_base<QuantityType>& p1, const timestamp_event_base<QuantityType>& p2, uint64_t timestamp_ms)
     {
         if(timestamp_ms >= p2.timestamp)
-            return p2;
+        {
+            auto rval = p2;
+            rval.timestamp = timestamp_ms;
+            return rval;
+        }
 
         if(timestamp_ms <= p1.timestamp)
-            return p1;
+        {
+            auto rval = p1;
+            rval.timestamp = timestamp_ms;
+            return rval;
+        }
 
         __float128 t1 = p1.timestamp;
         __float128 t2 = p2.timestamp;
@@ -44,14 +53,14 @@ namespace event_queue
 
         __float128 fraction = (val - t1) / (t2 - t1);
 
-        timestamp_event_base<typeidx, QuantityType> ret;
-        ret.timestamp = (uint64_t)((t1 * (1 - fraction)) + (t2 * fraction));
+        timestamp_event_base<QuantityType> ret;
+        ret.timestamp = timestamp_ms;
         ret.quantity = p1.quantity * (1 - fraction) + p2.quantity * fraction;
 
         return ret;
     }
 
-    struct spatial_event : timestamp_event_base<0, vec3f>
+    struct spatial_event : timestamp_event_base<vec3f>
     {
         ///i think we need two queues
         //type t = type::NONE;
@@ -61,119 +70,45 @@ namespace event_queue
     /*template<int N>
     using ship_data = vec<N, float>;
 
-    struct ship_event : timestamp_event_base<1, ship_data>
+    struct ship_event : timestamp_event_base<ship_data>
     {
 
     };*/
 
     template<typename T>
-    struct event_queue
+    struct event_stack
     {
-        std::vector<T> events;
+        ///when a event_stack is made, it starts with the array [initial_event, initial_event]
+        std::array<T, 2> events;
 
         void interrupt_with_action(uint64_t current_timestamp, uint64_t interrupt_when, const T& finish)
         {
             if(interrupt_when < current_timestamp)
                 throw std::runtime_error("Tried to interrupt into the past");
 
-            int queue_size = events.size();
-            uint64_t check_timestamp = interrupt_when;
+            if(interrupt_when < events[0].timestamp)
+                throw std::runtime_error("cannot be earlier than our start timestamp");
 
-            for(int i=0; i < queue_size; i++)
+            else if(interrupt_when >= events[0].timestamp && interrupt_when < events[1].timestamp)
             {
-                uint64_t current_timestamp = events[i].timestamp;
+                ///get current value in time
+                auto value = interpolate_event_at(events[0], events[1], current_timestamp);
 
-                ///if my event is earlier than the current event in the queue
-                if(check_timestamp < current_timestamp)
-                {
-                    if(i != 0)
-                    {
-                        ///event must be later than the previous timestamp, and earlier than the current timestamp
-                        assert(check_timestamp < current_timestamp && check_timestamp >= events[i-1].timestamp);
-
-                        auto value = interpolate_event_at(events[i-1], events[i], check_timestamp);
-
-                        ///delete all events in the future, including the current one
-                        events.resize(i);
-                        events.push_back(value);
-                        events.push_back(finish);
-                    }
-
-                    else
-                    {
-                        printf("Warning, queue has no definite state\n");
-
-                        events.clear();
-                        events.push_back(finish);
-                    }
-
-                    cleanup_older_than(current_timestamp);
-
-                    return;
-                }
+                events[0] = value;
+                events[1] = finish;
             }
 
-            if(queue_size == 0)
+            ///ok so. these two branches are obviously exactly the same
+            ///but this is a non obvious corner case, so its explicitly signalled
+            else if(interrupt_when >= events[1].timestamp)
             {
-                events.push_back(finish);
-            }
-            else
-            {
-                auto dup = events.back();
+                auto value = interpolate_event_at(events[0], events[1], current_timestamp);
 
-                dup.timestamp = interrupt_when;
-
-                events.push_back(dup);
-                events.push_back(finish);
-            }
-
-            cleanup_older_than(current_timestamp);
-        }
-
-        void offset_from_back(uint64_t offset, const T& finish)
-        {
-            if(events.size() == 0)
-                throw std::runtime_error("bad queue in offset from back");
-
-            uint64_t last = events.back().timestamp;
-
-            last += offset;
-
-            auto val = finish;
-            val.timestamp = last;
-
-            events.push_back(val);
-        }
-
-        ///if the queue started with > 2 elements, it'll always remain with ~2 elements
-        void cleanup_older_than(uint64_t timestamp)
-        {
-            if(events.size() < 2)
-                return;
-
-            int queue_size = events.size();
-
-            for(int i=0; i < queue_size; i++)
-            {
-                uint64_t current_timestamp = events[i].timestamp;
-
-                ///my timestamp is earlier than the current timestamp in the queue
-                if(timestamp < current_timestamp)
-                {
-                    if(i == 0)
-                        return;
-
-                    auto value = interpolate_event_at(events[i-1], events[i], timestamp);
-
-                    events.erase(events.begin(), events.begin() + i);
-                    events.insert(events.begin(), value);
-
-                    return;
-                }
+                events[0] = value;
+                events[1] = finish;
             }
         }
     };
-
 
     inline
     uint64_t calculate_end_timestamp(uint64_t start_timestamp, float current_quantity, float end_quantity, float deltatime_s)
