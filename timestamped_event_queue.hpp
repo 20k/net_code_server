@@ -83,37 +83,48 @@ namespace event_queue
         ///when a event_stack is made, it starts with the array [initial_event, initial_event]
         std::array<timestamp_event_base<T>, 2> events;
 
-        void interrupt(uint64_t current_timestamp, uint64_t interrupt_when, const T& finish)
+        void init(const T& val)
         {
-            if(interrupt_when < current_timestamp)
-                throw std::runtime_error("Tried to interrupt into the past");
+            timestamp_event_base<T> base;
+            base.quantity = val;
+            base.timestamp = ALWAYS_TIMESTAMP;
 
-            if(interrupt_when < events[0].timestamp)
+            events[0] = base;
+            events[1] = base;
+        }
+
+        void interrupt(uint64_t current_timestamp, uint64_t finish_timestamp, const T& finish)
+        {
+            if(current_timestamp < events[0].timestamp)
                 throw std::runtime_error("cannot be earlier than our start timestamp");
 
-            else if(interrupt_when >= events[0].timestamp && interrupt_when < events[1].timestamp)
+            else if(current_timestamp >= events[0].timestamp && current_timestamp < events[1].timestamp)
             {
                 ///get current value in time
                 auto value = interpolate_event_at(events[0], events[1], current_timestamp);
 
                 events[0] = value;
-                events[1] = finish;
+
+                timestamp_event_base<T> next;
+                next.quantity = finish;
+                next.timestamp = finish_timestamp;
+
+                events[1] = next;
             }
 
             ///ok so. these two branches are obviously exactly the same
             ///but this is a non obvious corner case, so its explicitly signalled
-            else if(interrupt_when >= events[1].timestamp)
+            else if(current_timestamp >= events[1].timestamp)
             {
                 auto value = interpolate_event_at(events[0], events[1], current_timestamp);
 
-                events[0] = value;
-                events[1] = finish;
-            }
-        }
+                timestamp_event_base<T> next;
+                next.quantity = finish;
+                next.timestamp = finish_timestamp;
 
-        void interrupt_now(uint64_t current_timestamp, const T& finish)
-        {
-            return interrupt(current_timestamp, current_timestamp, finish);
+                events[0] = value;
+                events[1] = next;
+            }
         }
 
         T get(uint64_t timestamp)
