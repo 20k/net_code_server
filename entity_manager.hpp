@@ -13,7 +13,9 @@ namespace entity
         uint32_t id = -1;
     };
 
-    using ship_stats = vec<SHIP_SPECS_COUNT, float>;
+    //using ship_stats = vec<SHIP_SPECS_COUNT, float>;
+
+    using ship_state = std::array<event_queue::event_stack<event_queue::timestamp_event_base<float>>, SHIP_SPECS_COUNT>;
 
     ///ok so. You cannot queue up the events move -> dock
     ///because that is expected to happen from the javascript scripting side
@@ -22,7 +24,8 @@ namespace entity
     {
         event_queue::event_stack<event_queue::timestamp_event_base<vec3f>> position_queue;
 
-
+        ship_state system_current;
+        std::array<float, SHIP_SPECS_COUNT> system_max;
     };
 
     struct manager

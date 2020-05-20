@@ -20,8 +20,7 @@ namespace event_queue
     template<typename QuantityType>
     struct timestamp_event_base
     {
-        uint64_t timestamp = 0;
-
+        uint64_t timestamp = NEVER_TIMESTAMP;
         QuantityType quantity = QuantityType();
 
         bool blocker = false;
