@@ -4,6 +4,7 @@
 #include <array>
 #include <vec/vec.hpp>
 #include "time.hpp"
+#include <networking/serialisable_fwd.hpp>
 
 ///something that will or should never happen
 #define NEVER_TIMESTAMP -1
@@ -21,12 +22,10 @@ namespace event_queue
     };
 
     template<typename QuantityType>
-    struct timestamp_event_base
+    struct timestamp_event_base : serialisable, free_function
     {
         uint64_t timestamp = NEVER_TIMESTAMP;
         QuantityType quantity = QuantityType();
-
-        bool blocker = false;
     };
 
     ///guaranteed that the return value with have a timestamp of timestamp_ms
@@ -62,23 +61,8 @@ namespace event_queue
         return ret;
     }
 
-    struct spatial_event : timestamp_event_base<vec3f>
-    {
-        ///i think we need two queues
-        //type t = type::NONE;
-        //uint64_t entity_id = -1; ///target
-    };
-
-    /*template<int N>
-    using ship_data = vec<N, float>;
-
-    struct ship_event : timestamp_event_base<ship_data>
-    {
-
-    };*/
-
     template<typename T>
-    struct event_stack
+    struct event_stack : serialisable, free_function
     {
         ///when a event_stack is made, it starts with the array [initial_event, initial_event]
         std::array<timestamp_event_base<T>, 2> events;

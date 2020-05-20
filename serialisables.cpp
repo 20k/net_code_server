@@ -12,6 +12,24 @@
 #include "chat_channels.hpp"
 #include "db_storage_backend_lmdb.hpp"
 #include "mongo.hpp"
+#include "timestamped_event_queue.hpp"
+
+template<typename T>
+DEFINE_SERIALISE_FUNCTION(event_queue::timestamp_event_base<T>)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(quantity);
+    DO_FSERIALISE(timestamp);
+}
+
+template<typename T>
+DEFINE_SERIALISE_FUNCTION(event_queue::event_stack<T>)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(events);
+}
 
 DEFINE_SERIALISE_FUNCTION(user_limit)
 {

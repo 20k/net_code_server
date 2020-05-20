@@ -1,4 +1,5 @@
 #include "entity_manager.hpp"
+#include <assert.h>
 
 namespace
 {
@@ -14,8 +15,13 @@ namespace
 
             float val = stk.get(55);
 
-            printf("VAL %f\n", val);
-            exit(0);
+            assert(val == 3.5);
+
+            stk.interrupt(55, 75, 8);
+
+            float val2 = stk.get(65);
+
+            assert(val2 == 5.75);
         }
     };
 
