@@ -107,6 +107,11 @@ namespace event_queue
                 events[1] = finish;
             }
         }
+
+        T get(uint64_t timestamp)
+        {
+            return interpolate_event_at(events[0], events[1], timestamp).quantity;
+        }
     };
 
     inline
