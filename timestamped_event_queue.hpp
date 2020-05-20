@@ -5,7 +5,10 @@
 #include <vec/vec.hpp>
 #include "time.hpp"
 
+///something that will or should never happen
 #define NEVER_TIMESTAMP -1
+///something that has always been true
+#define ALWAYS_TIMESTAMP 0
 #define QUANTITY_DELTA_ERROR 0.0001f
 
 namespace event_queue
@@ -78,9 +81,9 @@ namespace event_queue
     struct event_stack
     {
         ///when a event_stack is made, it starts with the array [initial_event, initial_event]
-        std::array<T, 2> events;
+        std::array<timestamp_event_base<T>, 2> events;
 
-        void interrupt_with_action(uint64_t current_timestamp, uint64_t interrupt_when, const T& finish)
+        void interrupt(uint64_t current_timestamp, uint64_t interrupt_when, const T& finish)
         {
             if(interrupt_when < current_timestamp)
                 throw std::runtime_error("Tried to interrupt into the past");
@@ -108,9 +111,24 @@ namespace event_queue
             }
         }
 
+        void interrupt_now(uint64_t current_timestamp, const T& finish)
+        {
+            return interrupt(current_timestamp, current_timestamp, finish);
+        }
+
         T get(uint64_t timestamp)
         {
             return interpolate_event_at(events[0], events[1], timestamp).quantity;
+        }
+
+        void instantaneous_change(const T& value)
+        {
+            timestamp_event_base<T> rval;
+            rval.quantity = value;
+            rval.timestamp = ALWAYS_TIMESTAMP;
+
+            events[0] = rval;
+            events[1] = rval;
         }
     };
 

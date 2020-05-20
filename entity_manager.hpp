@@ -15,14 +15,14 @@ namespace entity
 
     //using ship_stats = vec<SHIP_SPECS_COUNT, float>;
 
-    using ship_state = std::array<event_queue::event_stack<event_queue::timestamp_event_base<float>>, SHIP_SPECS_COUNT>;
+    using ship_state = std::array<event_queue::event_stack<float>, SHIP_SPECS_COUNT>;
 
     ///ok so. You cannot queue up the events move -> dock
     ///because that is expected to happen from the javascript scripting side
     ///aka await ship.move(dest); await ship.dock(target);
     struct ship : entity
     {
-        event_queue::event_stack<event_queue::timestamp_event_base<vec3f>> position_queue;
+        event_queue::event_stack<vec3f> position_queue;
 
         ship_state system_current;
         std::array<float, SHIP_SPECS_COUNT> system_max;
