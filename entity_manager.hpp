@@ -22,7 +22,7 @@ namespace entity
     ///aka await ship.move(dest); await ship.dock(target);
     struct ship : entity
     {
-        event_queue::event_stack<vec3f> position_queue;
+        event_queue::event_stack<vec3f> position;
 
         ship_state system_current;
         std::array<float, SHIP_SPECS_COUNT> system_max;
