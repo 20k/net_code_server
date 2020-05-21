@@ -276,25 +276,11 @@ struct malloc_data
 
     malloc_header* find_free_block(size_t size)
     {
-        auto it = block_ptr.find(size);
+        auto it = block_ptr.lower_bound(size);
 
         if(it != block_ptr.end())
         {
             for(auto mem_id : it->second)
-            {
-                malloc_header* head = (malloc_header*)&memory[mem_id];
-
-                if(head->free)
-                    return head;
-            }
-        }
-
-        for(auto& it : block_ptr)
-        {
-            if(it.first < size)
-                continue;
-
-            for(auto mem_id : it.second)
             {
                 malloc_header* head = (malloc_header*)&memory[mem_id];
 
