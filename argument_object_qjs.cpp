@@ -225,12 +225,243 @@ js_quickjs::value_context::value_context(value_context& other)
     context_owner = true;
 }
 
+#define MEMORY_LIMIT (4 * 1024 * 1024)
+
+struct malloc_header
+{
+    size_t size;
+    //size_t next;
+
+    malloc_header* next;
+    int free;
+};
+
+struct malloc_data
+{
+    std::vector<uint8_t> memory;
+    size_t memory_end = sizeof(malloc_header);
+    malloc_header* base = nullptr;
+
+    malloc_data()
+    {
+        memory.resize(MEMORY_LIMIT);
+
+        base = nullptr;
+    }
+
+    size_t round_up(size_t in)
+    {
+        return ((in + 32 - 1) / 32) * 32;
+    }
+
+    bool is_nullptr(malloc_header* header)
+    {
+        return header == nullptr;
+    }
+
+    malloc_header* find_free_block(malloc_header** last, size_t size)
+    {
+        malloc_header* current = base;
+
+        while(!is_nullptr(current) && !(current->free && current->size >= size))
+        {
+            *last = current;
+            current = current->next;
+        }
+
+        return current;
+    }
+
+    malloc_header* request_space(malloc_header* last, size_t size)
+    {
+        size = round_up(size);
+
+        size_t size_with_header = size + sizeof(malloc_header);
+
+        size_t mindex = memory_end;
+
+        memory_end += size_with_header;
+
+        assert(memory_end < memory.size());
+
+        if(last)
+        {
+            last->next = (malloc_header*)&memory[mindex];
+        }
+
+        malloc_header* block = (malloc_header*)&memory[mindex];
+
+        block->free = 0;
+        block->size = size;
+        block->next = nullptr;
+
+        return block;
+    }
+
+    malloc_header* get_block_ptr(void *ptr)
+    {
+        return (malloc_header*)ptr - 1;
+    }
+
+    void* allocate(size_t size)
+    {
+        if(size == 0)
+            return nullptr;
+
+        malloc_header* block = nullptr;
+
+        if(is_nullptr(base))
+        {
+            block = request_space(nullptr, size);
+
+            if(is_nullptr(block))
+                return nullptr;
+
+            base = block;
+        }
+        else
+        {
+            malloc_header* last = base;
+
+            block = find_free_block(&last, size);
+
+            if(is_nullptr(block))
+            {
+                block = request_space(last, size);
+
+                if(is_nullptr(block))
+                    return nullptr;
+            }
+            else
+            {
+                block->free = 0;
+
+            }
+        }
+
+        return (void*)(block + 1);
+    }
+
+    void deallocate(void* ptr)
+    {
+        malloc_header* head = get_block_ptr(ptr);
+
+        head->free = 1;
+    }
+
+    void* realloc(void* ptr, size_t size)
+    {
+        if(!ptr)
+            return allocate(size);
+
+        malloc_header* head = get_block_ptr(ptr);
+
+        if(head->size >= size)
+            return ptr;
+
+        void* new_ptr = allocate(size);
+
+        if(!new_ptr)
+            return nullptr;
+
+        memcpy(new_ptr, ptr, size);
+
+        deallocate(ptr);
+        return new_ptr;
+    }
+
+    size_t ptr_size(void* ptr)
+    {
+        if(ptr == nullptr)
+            return 0;
+
+        malloc_header* head = get_block_ptr(ptr);
+
+        return head->size;
+    }
+};
+
+size_t my_js_malloc_usable_size(const void* ptr)
+{
+    return 0;
+}
+
+void* my_js_malloc(JSMallocState *s, size_t size)
+{
+    void *ptr;
+
+    /* Do not allocate zero bytes: behavior is platform dependent */
+    assert(size != 0);
+
+    if (s->malloc_size + size > s->malloc_limit)
+        return NULL;
+
+    malloc_data* mdata = (malloc_data*)s->opaque;
+
+    ptr = mdata->allocate(size);
+    if (!ptr)
+        return NULL;
+
+    s->malloc_count++;
+    s->malloc_size += mdata->ptr_size(ptr);
+    return ptr;
+}
+
+void my_js_free(JSMallocState *s, void *ptr)
+{
+    if (!ptr)
+        return;
+
+    malloc_data* mdata = (malloc_data*)s->opaque;
+
+    s->malloc_count--;
+    s->malloc_size -= mdata->ptr_size(ptr);
+    mdata->deallocate(ptr);
+}
+
+void* my_js_realloc(JSMallocState *s, void *ptr, size_t size)
+{
+    size_t old_size;
+
+    malloc_data* mdata = (malloc_data*)s->opaque;
+
+    if (!ptr) {
+        if (size == 0)
+            return NULL;
+        return my_js_malloc(s, size);
+    }
+    old_size = mdata->ptr_size(ptr);
+    if (size == 0) {
+        s->malloc_count--;
+        s->malloc_size -= old_size;
+        mdata->deallocate(ptr);
+        return NULL;
+    }
+    if (s->malloc_size + size - old_size > s->malloc_limit)
+        return NULL;
+
+    ptr = mdata->realloc(ptr, size);
+    if (!ptr)
+        return NULL;
+
+    s->malloc_size += mdata->ptr_size(ptr) - old_size;
+    return ptr;
+}
+
 js_quickjs::value_context::value_context(JSInterruptHandler interrupt)
 {
-    heap = JS_NewRuntime();
+    auto my_malloc_data = new malloc_data();
+
+    JSMallocFunctions funcs;
+    funcs.js_malloc = my_js_malloc;
+    funcs.js_free = my_js_free;
+    funcs.js_realloc = my_js_realloc;
+    funcs.js_malloc_usable_size = my_js_malloc_usable_size;
+
+    heap = JS_NewRuntime2(&funcs, my_malloc_data);
     ctx = JS_NewContext(heap);
 
-    JS_SetMemoryLimit(heap, 1024*1024*4);
+    JS_SetMemoryLimit(heap, MEMORY_LIMIT);
 
     init_heap(ctx, interrupt);
 
