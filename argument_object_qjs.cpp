@@ -232,7 +232,7 @@ struct malloc_header
     size_t size;
     //size_t next;
 
-    malloc_header* next;
+    //malloc_header* next;
     int free;
 };
 
@@ -241,6 +241,8 @@ struct malloc_data
     std::vector<uint8_t> memory;
     size_t memory_end = sizeof(malloc_header);
     malloc_header* base = nullptr;
+
+    std::map<size_t, std::vector<size_t>> block_ptr;
 
     malloc_data()
     {
@@ -259,7 +261,7 @@ struct malloc_data
         return header == nullptr;
     }
 
-    malloc_header* find_free_block(malloc_header** last, size_t size)
+    /*malloc_header* find_free_block(malloc_header** last, size_t size)
     {
         malloc_header* current = base;
 
@@ -270,6 +272,38 @@ struct malloc_data
         }
 
         return current;
+    }*/
+
+    malloc_header* find_free_block(size_t size)
+    {
+        auto it = block_ptr.find(size);
+
+        if(it != block_ptr.end())
+        {
+            for(auto mem_id : it->second)
+            {
+                malloc_header* head = (malloc_header*)&memory[mem_id];
+
+                if(head->free)
+                    return head;
+            }
+        }
+
+        for(auto& it : block_ptr)
+        {
+            if(it.first < size)
+                continue;
+
+            for(auto mem_id : it.second)
+            {
+                malloc_header* head = (malloc_header*)&memory[mem_id];
+
+                if(head->free)
+                    return head;
+            }
+        }
+
+        return nullptr;
     }
 
     malloc_header* request_space(malloc_header* last, size_t size)
@@ -284,16 +318,18 @@ struct malloc_data
 
         assert(memory_end < memory.size());
 
-        if(last)
+        /*if(last)
         {
             last->next = (malloc_header*)&memory[mindex];
-        }
+        }*/
 
         malloc_header* block = (malloc_header*)&memory[mindex];
 
         block->free = 0;
         block->size = size;
-        block->next = nullptr;
+        //block->next = nullptr;
+
+        block_ptr[size].push_back(mindex);
 
         return block;
     }
@@ -323,11 +359,13 @@ struct malloc_data
         {
             malloc_header* last = base;
 
-            block = find_free_block(&last, size);
+            block = find_free_block(size);
+            //block = find_free_block(&last, size);
 
             if(is_nullptr(block))
             {
-                block = request_space(last, size);
+                block = request_space(nullptr, size);
+                //block = request_space(last, size);
 
                 if(is_nullptr(block))
                     return nullptr;
