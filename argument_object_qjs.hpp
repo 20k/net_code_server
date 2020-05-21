@@ -14,6 +14,8 @@
 #include "duktape.h"
 #include "argument_object_common.hpp"
 
+struct malloc_data;
+
 namespace js_quickjs
 {
     struct value;
@@ -24,6 +26,7 @@ namespace js_quickjs
 
         JSRuntime* heap = nullptr;
         JSContext* ctx = nullptr;
+        malloc_data* mdata = nullptr;
         bool runtime_owner = false;
         bool context_owner = false;
 

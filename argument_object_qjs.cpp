@@ -230,9 +230,6 @@ js_quickjs::value_context::value_context(value_context& other)
 struct malloc_header
 {
     size_t size;
-    //size_t next;
-
-    //malloc_header* next;
     int free;
 };
 
@@ -242,7 +239,7 @@ struct malloc_data
     size_t memory_end = sizeof(malloc_header);
     malloc_header* base = nullptr;
 
-    std::map<size_t, std::vector<size_t>> block_ptr;
+    std::map<size_t, std::vector<size_t>> free_block_ptr;
 
     malloc_data()
     {
@@ -261,38 +258,26 @@ struct malloc_data
         return header == nullptr;
     }
 
-    /*malloc_header* find_free_block(malloc_header** last, size_t size)
-    {
-        malloc_header* current = base;
-
-        while(!is_nullptr(current) && !(current->free && current->size >= size))
-        {
-            *last = current;
-            current = current->next;
-        }
-
-        return current;
-    }*/
-
     malloc_header* find_free_block(size_t size)
     {
-        auto it = block_ptr.lower_bound(size);
+        auto it = free_block_ptr.lower_bound(size);
 
-        if(it != block_ptr.end())
+        for(; it != free_block_ptr.end(); it++)
         {
-            for(auto mem_id : it->second)
-            {
-                malloc_header* head = (malloc_header*)&memory[mem_id];
+            if(it->second.size() == 0)
+                continue;
 
-                if(head->free)
-                    return head;
-            }
+            malloc_header* head = (malloc_header*)&memory[it->second.back()];
+
+            it->second.pop_back();
+
+            return head;
         }
 
         return nullptr;
     }
 
-    malloc_header* request_space(malloc_header* last, size_t size)
+    malloc_header* request_space(size_t size)
     {
         size = round_up(size);
 
@@ -302,20 +287,14 @@ struct malloc_data
 
         memory_end += size_with_header;
 
-        assert(memory_end < memory.size());
-
-        /*if(last)
-        {
-            last->next = (malloc_header*)&memory[mindex];
-        }*/
+        if(memory_end >= memory.size())
+            return nullptr;
 
         malloc_header* block = (malloc_header*)&memory[mindex];
 
         block->free = 0;
         block->size = size;
         //block->next = nullptr;
-
-        block_ptr[size].push_back(mindex);
 
         return block;
     }
@@ -334,7 +313,7 @@ struct malloc_data
 
         if(is_nullptr(base))
         {
-            block = request_space(nullptr, size);
+            block = request_space(size);
 
             if(is_nullptr(block))
                 return nullptr;
@@ -346,12 +325,10 @@ struct malloc_data
             malloc_header* last = base;
 
             block = find_free_block(size);
-            //block = find_free_block(&last, size);
 
             if(is_nullptr(block))
             {
-                block = request_space(nullptr, size);
-                //block = request_space(last, size);
+                block = request_space( size);
 
                 if(is_nullptr(block))
                     return nullptr;
@@ -368,9 +345,17 @@ struct malloc_data
 
     void deallocate(void* ptr)
     {
+        size_t size = ptr_size(ptr);
+
         malloc_header* head = get_block_ptr(ptr);
 
         head->free = 1;
+
+        uint8_t* chead = (uint8_t*)head;
+
+        size_t offset = chead - &memory[0];
+
+        free_block_ptr[size].push_back(offset);
     }
 
     void* realloc(void* ptr, size_t size)
@@ -474,7 +459,7 @@ void* my_js_realloc(JSMallocState *s, void *ptr, size_t size)
 
 js_quickjs::value_context::value_context(JSInterruptHandler interrupt)
 {
-    auto my_malloc_data = new malloc_data();
+    mdata = new malloc_data();
 
     JSMallocFunctions funcs;
     funcs.js_malloc = my_js_malloc;
@@ -482,7 +467,7 @@ js_quickjs::value_context::value_context(JSInterruptHandler interrupt)
     funcs.js_realloc = my_js_realloc;
     funcs.js_malloc_usable_size = my_js_malloc_usable_size;
 
-    heap = JS_NewRuntime2(&funcs, my_malloc_data);
+    heap = JS_NewRuntime2(&funcs, mdata);
     ctx = JS_NewContext(heap);
 
     JS_SetMemoryLimit(heap, MEMORY_LIMIT);
@@ -513,6 +498,8 @@ js_quickjs::value_context::~value_context()
     if(runtime_owner)
     {
         JS_FreeRuntime(heap);
+
+        delete mdata;
     }
 }
 
