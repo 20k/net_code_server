@@ -26,19 +26,12 @@ namespace entity
 
         ship_state system_current;
         std::array<float, SHIP_SPECS_COUNT> system_max;
+
+        uint64_t get_next_event();
+
+        vec3f get_position(uint64_t timestamp);
+        std::array<float, SHIP_SPECS_COUNT> get_specs(uint64_t timestamp);
     };
-
-    struct manager
-    {
-
-    };
-
-    inline
-    manager& get_global_manager()
-    {
-        static manager m;
-        return m;
-    }
 }
 
 #endif // ENTITY_MANAGER_HPP_INCLUDED

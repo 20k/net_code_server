@@ -1,6 +1,37 @@
 #include "entity_manager.hpp"
 #include <assert.h>
 
+uint64_t entity::ship::get_next_event()
+{
+    uint64_t next = NEVER_TIMESTAMP;
+
+    next = std::min(next, position.events[1].timestamp);
+
+    for(int i=0; i < (int)system_current.size(); i++)
+    {
+        next = std::min(next, system_current[i].events[1].timestamp);
+    }
+
+    return next;
+}
+
+vec3f entity::ship::get_position(uint64_t timestamp)
+{
+    return position.get(timestamp);
+}
+
+std::array<float, SHIP_SPECS_COUNT> entity::ship::get_specs(uint64_t timestamp)
+{
+    std::array<float, SHIP_SPECS_COUNT> ret;
+
+    for(int i=0; i < (int)ret.size(); i++)
+    {
+        ret[i] = system_current[i].get(timestamp);
+    }
+
+    return ret;
+}
+
 namespace
 {
     struct timestamp_tester
