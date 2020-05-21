@@ -15,6 +15,14 @@ namespace virtual_memory
 {
     void* allocate_at(void* address, size_t size);
     void free_at(void* address, size_t size);
+    void decommit_at(void* address, size_t size); ///removes physical backing, keeps address
+}
+
+namespace virtual_memory_manager
+{
+    void* allocate_for(size_t unique_id, size_t size);
+    void decommit_for(size_t unique_id, size_t size);
+    //void free_for(void* address, size_t unique_id, size_t size);
 }
 
 #endif // VIRTUAL_MEMORY_HPP_INCLUDED
