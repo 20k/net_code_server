@@ -276,6 +276,9 @@ struct malloc_data
 
             it->second.pop_back();
 
+            if(it->second.size() == 0)
+                free_block_ptr.erase(it);
+
             return head;
         }
 
