@@ -12,11 +12,76 @@ SECTIONS
   . = SIZEOF_HEADERS;
   . = ALIGN(__section_alignment__);
 
-  .hello __image_base__ + ( __section_alignment__ < 0x1000 ? . : __section_alignment__ ) :
-  {
-    KEEP(*(.hello.*));
+  /*section alignment is 0x2000*/
 
-    //. = ADDR (text_env) + SIZEOF (text_env);
+  .static_func __image_base__ + ( __section_alignment__ < 0x1000 ? . : __section_alignment__ ) :
+  {
+    KEEP(*(.static_func.S0));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S1));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S2));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S3));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S4));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S5));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S6));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S7));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S8));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S9));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S10));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S11));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S12));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S13));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S14));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S15));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S16));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S17));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S18));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S19));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S20));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S21));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S22));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S23));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S24));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S25));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S26));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S27));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S28));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S29));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S30));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S31));
+    . = ALIGN(0x2000*64);
+    KEEP(*(.static_func.S32));
+    . = ALIGN(0x2000*64);
   }
 
   .text BLOCK(__section_alignment__)  :

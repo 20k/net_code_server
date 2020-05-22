@@ -25,4 +25,6 @@ namespace virtual_memory_manager
     //void free_for(void* address, size_t unique_id, size_t size);
 }
 
+#define JS_FUNCTION(x) __attribute__((section(".static_func.S" #x)))
+
 #endif // VIRTUAL_MEMORY_HPP_INCLUDED
