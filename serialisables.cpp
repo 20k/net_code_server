@@ -21,6 +21,8 @@ DEFINE_SERIALISE_FUNCTION(event_queue::timestamp_event_base<T>)
 
     DO_FSERIALISE(quantity);
     DO_FSERIALISE(timestamp);
+    DO_FSERIALISE(originator_script);
+    DO_FSERIALISE(originator_script_id);
 }
 
 template<typename T>

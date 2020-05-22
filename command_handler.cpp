@@ -32,6 +32,8 @@
 #include "command_handler_fiber_backend.hpp"
 #include "chat_channels.hpp"
 #include "event_manager.hpp"
+#include <secret/solar_system.hpp>
+#include "entity_manager.hpp"
 
 #ifdef USE_FIBERS
 #include <boost/fiber/operations.hpp>
@@ -246,6 +248,34 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                 ///DONT SET real_operation
                 any = true;
             }
+
+            auto on_callback = [&](entity::entity& en, auto event, entity::event_type type)
+            {
+                printf("Hooray! I am a callback of type %i\n", type);
+
+                if(event.originator_script_id == current_id)
+                {
+                    if(args.has(event.callback))
+                    {
+                        js::value entity_id = js::make_value(vctx, (int)en.id);
+                        js::value quantity = js::make_value(vctx, event.quantity);
+
+                        auto [success, result] = js::call_prop(args, event.callback, entity_id, quantity);
+
+                        if(!success)
+                        {
+                            ret = (std::string)result;
+                            force_terminate = true;
+                        }
+                    }
+                }
+            };
+
+            space::playable_space& all_space = space::get_global_playable_space();
+
+            auto [current_timestamp, last_timestamp] = tick::get_timestamps();
+
+            all_space.on_trigger_event(current_timestamp, last_timestamp, on_callback);
 
             if(args.has("on_update"))
             {

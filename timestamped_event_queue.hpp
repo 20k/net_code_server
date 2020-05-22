@@ -26,6 +26,9 @@ namespace event_queue
     {
         uint64_t timestamp = NEVER_TIMESTAMP;
         QuantityType quantity = QuantityType();
+        std::string originator_script;
+        uint32_t originator_script_id = -1;
+        std::string callback;
     };
 
     ///guaranteed that the return value with have a timestamp of timestamp_ms
@@ -54,7 +57,7 @@ namespace event_queue
 
         __float128 fraction = (val - t1) / (t2 - t1);
 
-        timestamp_event_base<QuantityType> ret;
+        timestamp_event_base<QuantityType> ret = p2;
         ret.timestamp = timestamp_ms;
         ret.quantity = p1.quantity * (1 - fraction) + p2.quantity * fraction;
 
@@ -89,7 +92,7 @@ namespace event_queue
 
                 events[0] = value;
 
-                timestamp_event_base<T> next;
+                timestamp_event_base<T> next = events[1];
                 next.quantity = finish;
                 next.timestamp = finish_timestamp;
 
@@ -102,7 +105,7 @@ namespace event_queue
             {
                 auto value = interpolate_event_at(events[0], events[1], current_timestamp);
 
-                timestamp_event_base<T> next;
+                timestamp_event_base<T> next = events[1];
                 next.quantity = finish;
                 next.timestamp = finish_timestamp;
 
@@ -116,7 +119,7 @@ namespace event_queue
             return interpolate_event_at(events[0], events[1], timestamp).quantity;
         }
 
-        void instantaneous_change(const T& value)
+        /*void instantaneous_change(const T& value)
         {
             timestamp_event_base<T> rval;
             rval.quantity = value;
@@ -124,7 +127,7 @@ namespace event_queue
 
             events[0] = rval;
             events[1] = rval;
-        }
+        }*/
     };
 
     inline
