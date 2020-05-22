@@ -13,6 +13,7 @@
 #include <quickjs/quickjs.h>
 #include "duktape.h"
 #include "argument_object_common.hpp"
+#include <vec/vec.hpp>
 
 namespace js_quickjs
 {
@@ -70,6 +71,8 @@ namespace qarg
     JSValue push(JSContext* ctx, const js_quickjs::value& in);
     JSValue push(JSContext* ctx, js_quickjs::funcptr_t in);
     JSValue push(JSContext* ctx, const JSValue& in);
+    template<int N, typename T>
+    JSValue push(JSContext* ctx, const vec<N, T>& in);
 
     inline
     JSValue push(JSContext* ctx, const char* v)
@@ -193,6 +196,37 @@ namespace qarg
     JSValue push(JSContext* ctx, const JSValue& val)
     {
         return JS_DupValue(ctx, val);
+    }
+
+    template<int N, typename T>
+    inline
+    JSValue push(JSContext* ctx, const vec<N, T>& in)
+    {
+        std::map<std::string, T> val;
+
+        if constexpr(N >= 1)
+        {
+            val["x"] = in.v[0];
+        }
+
+        if constexpr(N >= 2)
+        {
+            val["y"] = in.v[1];
+        }
+
+        if constexpr(N >= 3)
+        {
+            val["z"] = in.v[2];
+        }
+
+        if constexpr(N >= 4)
+        {
+            val["w"] = in.v[3];
+        }
+
+        static_assert(N <= 4);
+
+        return push(ctx, val);
     }
 
     #define UNDEF() if(JS_IsUndefined(val)){out = std::remove_reference_t<decltype(out)>(); return;}
@@ -474,6 +508,16 @@ namespace js_quickjs
 
         value& operator=(js_quickjs::funcptr_t fptr);
         value& operator=(const JSValue& val);
+
+        template<int N, typename T>
+        value& operator=(const vec<N, T>& in)
+        {
+            qstack_manager m(*this);
+
+            val = qarg::push(ctx, in);
+
+            return *this;
+        }
 
         value& set_ptr(std::nullptr_t)
         {
