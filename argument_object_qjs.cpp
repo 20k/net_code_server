@@ -450,7 +450,7 @@ void my_js_free(JSMallocState *s, void *ptr)
     mdata->deallocate(ptr);
 }
 
-void* my_js_realloc(JSMallocState *s, void *ptr, size_t size)
+void* __attribute__((section(".hello.A"))) my_js_realloc(JSMallocState *s, void *ptr, size_t size)
 {
     size_t old_size;
 
@@ -1862,6 +1862,8 @@ struct quickjs_tester
         }
 
         printf("Tested quickjs\n");
+
+        std::cout << "ADDR " << std::hex << (uint64_t)&my_js_realloc << std::endl;
 
         //exit(0);
     }
