@@ -1,6 +1,7 @@
 #include "argument_object_qjs.hpp"
 #include "memory_sandbox.hpp"
 #include "argument_object.hpp"
+#include "virtual_memory.hpp"
 
 uint64_t value_to_key(const js_quickjs::value& root)
 {
@@ -227,6 +228,7 @@ js_quickjs::value_context::value_context(value_context& other)
 
 #define MEMORY_LIMIT (4 * 1024 * 1024)
 
+
 struct malloc_header
 {
     size_t size;
@@ -236,6 +238,8 @@ struct malloc_data
 {
     uint8_t* memory;
     size_t memory_end = sizeof(malloc_header);
+    bool is_pinned = false;
+    size_t unique_id = -1;
 
     std::map<size_t, std::vector<size_t>> free_block_ptr;
 
@@ -244,9 +248,45 @@ struct malloc_data
         memory = (uint8_t*)malloc(MEMORY_LIMIT);
     }
 
+    malloc_data(size_t _unique_id)
+    {
+        unique_id = unique_id;
+        memory = (uint8_t*)virtual_memory_manager::allocate_for(unique_id, MEMORY_LIMIT);
+        is_pinned = true;
+    }
+
     ~malloc_data()
     {
-        free(memory);
+        if(!is_pinned)
+            free(memory);
+        else
+            virtual_memory_manager::decommit_for(unique_id, MEMORY_LIMIT);
+    }
+
+    std::vector<uint8_t> dump()
+    {
+        std::vector<uint8_t> mem_ptr;
+        mem_ptr.resize(MEMORY_LIMIT);
+
+        memcpy(&mem_ptr[0], memory, MEMORY_LIMIT);
+
+        nlohmann::json js;
+        js["h"] = mem_ptr;
+        js["m"] = free_block_ptr;
+
+        return nlohmann::json::to_cbor(js);
+
+    }
+
+    void load(const std::vector<uint8_t>& hs)
+    {
+        nlohmann::json js = nlohmann::json::from_cbor(hs);
+
+        std::vector<uint8_t> all_state = js["h"];
+        free_block_ptr = (std::map<size_t, std::vector<size_t>>)js["m"];
+
+        memset(memory, 0, MEMORY_LIMIT);
+        memcpy(memory, &all_state[0], std::min((size_t)MEMORY_LIMIT, all_state.size()));
     }
 
     size_t round_up(size_t in)
