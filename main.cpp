@@ -39,6 +39,7 @@
 #include "command_handler_fiber_backend.hpp"
 #include "db_storage_backend_lmdb.hpp"
 #include "chat_channels.hpp"
+#include "time.hpp"
 
 void test_hexbin()
 {
@@ -730,6 +731,8 @@ int main()
     init_special_user_scripts();
     user::launch_pump_events_thread();
     //#endif // TESTING
+
+    tick::detach_tick_process();
 
     printf("post\n");
 

@@ -249,11 +249,12 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                 any = true;
             }
 
-            auto on_callback = [&](entity::entity& en, auto event, entity::event_type type)
+            ///need to unconditionally trigger timestamps regardless of server lag, use a flag
+            auto on_callback = [&](entity::entity& en, auto& event, entity::event_type type)
             {
                 printf("Hooray! I am a callback of type %i\n", type);
 
-                if(event.originator_script_id == current_id)
+                if(event.originator_script_id == (uint32_t)current_id)
                 {
                     if(args.has(event.callback))
                     {
@@ -268,6 +269,8 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                             force_terminate = true;
                         }
                     }
+
+                    event.fired = true;
                 }
             };
 
@@ -547,6 +550,8 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                 if(is_valid)
                 {
+                    js::get_heap_stash(inf.heap)["realtime_id"] = current_id;
+
                     command_handler_state& cstate = all_shared.value()->state;
 
                     bool last_use_square_font = false;

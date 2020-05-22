@@ -49,7 +49,7 @@ namespace entity
     struct ship;
 }
 
-DECLARE_SERIALISE_FUNCTION(entity::ship);
+DEFINE_SERIALISE_FUNCTION(entity::ship);
 
 DECLARE_GENERIC_DB(npc_prop_list, std::string);
 DECLARE_GENERIC_DB(event_impl, std::string);

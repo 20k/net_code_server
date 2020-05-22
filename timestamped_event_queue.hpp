@@ -29,6 +29,7 @@ namespace event_queue
         std::string originator_script;
         uint32_t originator_script_id = -1;
         std::string callback;
+        bool fired = true;
     };
 
     ///guaranteed that the return value with have a timestamp of timestamp_ms
@@ -111,6 +112,31 @@ namespace event_queue
 
                 events[0] = value;
                 events[1] = next;
+            }
+        }
+
+        void interrupt_event(uint64_t current_timestamp, const timestamp_event_base<T>& finish)
+        {
+            if(current_timestamp < events[0].timestamp)
+                throw std::runtime_error("cannot be earlier than our start timestamp");
+
+            else if(current_timestamp >= events[0].timestamp && current_timestamp < events[1].timestamp)
+            {
+                ///get current value in time
+                auto value = interpolate_event_at(events[0], events[1], current_timestamp);
+
+                events[0] = value;
+                events[1] = finish;
+            }
+
+            ///ok so. these two branches are obviously exactly the same
+            ///but this is a non obvious corner case, so its explicitly signalled
+            else if(current_timestamp >= events[1].timestamp)
+            {
+                auto value = interpolate_event_at(events[0], events[1], current_timestamp);
+
+                events[0] = value;
+                events[1] = finish;
             }
         }
 

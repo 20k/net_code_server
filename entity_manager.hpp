@@ -41,18 +41,27 @@ namespace entity
         template<typename T>
         void on_trigger_event(size_t current_timestamp, size_t last_timestamp, T t)
         {
-            if(position.events[1].timestamp >= last_timestamp && position.events[1].timestamp < current_timestamp)
+            if(position.events[1].timestamp >= last_timestamp && position.events[1].timestamp < current_timestamp && !position.events[1].fired)
             {
                 t(*this, position.events[1], event_type::MOVE);
             }
 
             for(int i=0; i < (int)system_current.size(); i++)
             {
-                if(system_current[i].events[1].timestamp >= last_timestamp && system_current[i].events[1].timestamp < current_timestamp)
+                if(system_current[i].events[1].timestamp >= last_timestamp && system_current[i].events[1].timestamp < current_timestamp && !system_current[i].events[1].fired)
                 {
                     t(*this, system_current[i].events[1], event_type::SYSTEM_RECHARGE);
                 }
             }
+        }
+
+        template<typename T>
+        void add_event(uint64_t current_timestamp, const T& event, event_type type)
+        {
+            if(type != MOVE)
+                throw std::runtime_error("Ship systems don't really exist yet, this function is a placeholder");
+
+            position.interrupt_event(current_timestamp, event);
         }
     };
 }

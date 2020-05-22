@@ -14,6 +14,9 @@
 #include "duk_modules.hpp"
 #include "argument_object.hpp"
 #include "command_handler_fiber_backend.hpp"
+#include "time.hpp"
+#include "timestamped_event_queue.hpp"
+#include <secret/solar_system.hpp>
 
 ///still needs to be defined while we're compiling duktape
 int my_timeout_check(void* udata)
@@ -1093,6 +1096,41 @@ js::value os_call(js::value_context* vctx, std::string script_name, js::value as
     return val;
 }
 
+js::value queue_test_event(js::value_context* vctx, js::value id, js::value dest, std::string callback)
+{
+    int rid = -1;
+
+    {
+        js::value heap = js::get_heap_stash(*vctx);
+
+        if(!heap.has("realtime_id"))
+            return js::make_error(*vctx, "Not a realtime script");
+
+        rid = heap["realtime_id"];
+    }
+
+    ///race condition, server might tick between here and set
+    auto [ctime, _] = tick::get_timestamps();
+
+    vec3f vdest = {(double)dest["x"], (double)dest["y"], (double)dest["z"]};
+
+    event_queue::timestamp_event_base<vec3f> positional_event;
+    positional_event.timestamp = ctime + vdest.length() * 1000;
+    positional_event.quantity = vdest;
+    positional_event.originator_script = get_script_host(*vctx) + "." + get_script_ending(*vctx); ///WRONG, USE SECRET HOSTS
+    positional_event.originator_script_id = rid;
+    positional_event.callback = callback;
+    positional_event.fired = false;
+
+    std::cout << "WHEN " << (positional_event.timestamp - ctime) << std::endl;
+
+    ///currently doing no ownership checks at all so that's a thing
+
+    space::get_global_playable_space().add_event_to_id(id, ctime, positional_event, entity::MOVE);
+
+    return js::make_success(*vctx);
+}
+
 void register_funcs(js::value_context& vctx, int seclevel, const std::string& script_host, bool polyfill)
 {
     js::value global = js::get_global(vctx);
@@ -1178,6 +1216,11 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     js::add_key_value(global, "async_print", js::function<async_print>);
     js::add_key_value(global, "async_print_raw", js::function<async_print_raw>);
     js::add_key_value(global, "get_current_user", js::function<get_current_user>);
+
+    #ifdef EXTRAS
+    js::add_key_value(global, "queue_test_event", js::function<queue_test_event>);
+    #endif // EXTRAS
+
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);
