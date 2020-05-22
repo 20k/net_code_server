@@ -26,7 +26,7 @@ namespace entity
     ///ok so. You cannot queue up the events move -> dock
     ///because that is expected to happen from the javascript scripting side
     ///aka await ship.move(dest); await ship.dock(target);
-    struct ship : entity
+    struct ship : entity, serialisable, free_function
     {
         event_queue::event_stack<vec3f> position;
 

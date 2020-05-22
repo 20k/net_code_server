@@ -13,6 +13,7 @@
 #include "db_storage_backend_lmdb.hpp"
 #include "mongo.hpp"
 #include "timestamped_event_queue.hpp"
+#include "entity_manager.hpp"
 
 template<typename T>
 DEFINE_SERIALISE_FUNCTION(event_queue::timestamp_event_base<T>)
@@ -242,6 +243,16 @@ DEFINE_SERIALISE_FUNCTION(chat_message)
     DO_FSERIALISE(msg);
     DO_FSERIALISE(recipient_list);
     DO_FSERIALISE(sent_to_client);
+}
+
+DEFINE_SERIALISE_FUNCTION(entity::ship)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(id);
+    DO_FSERIALISE(position);
+    DO_FSERIALISE(system_current);
+    DO_FSERIALISE(system_max);
 }
 
 template<typename T>
@@ -490,3 +501,4 @@ DEFINE_GENERIC_DB(auth, std::string, auth_token_hex, mongo_database_type::GLOBAL
 DEFINE_GENERIC_DB(chat_channel, std::string, channel_name, mongo_database_type::CHAT_CHANNEL_PROPERTIES);
 DEFINE_GENERIC_DB(chat_message, size_t, id, mongo_database_type::CHAT_MESSAGES);
 DEFINE_GENERIC_DB(user_nodes, std::string, owned_by, mongo_database_type::NODE_PROPERTIES);
+DEFINE_GENERIC_DB(entity::ship, uint32_t, id, mongo_database_type::SHIP_PROPERTIES);
