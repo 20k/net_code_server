@@ -1,7 +1,6 @@
 #include "argument_object_qjs.hpp"
 #include "memory_sandbox.hpp"
 #include "argument_object.hpp"
-#include "virtual_memory.hpp"
 
 uint64_t value_to_key(const js_quickjs::value& root)
 {
@@ -226,287 +225,17 @@ js_quickjs::value_context::value_context(value_context& other)
     context_owner = true;
 }
 
-#define MEMORY_LIMIT (4 * 1024 * 1024)
-
-
-struct malloc_header
-{
-    size_t size;
-};
-
-struct malloc_data
-{
-    uint8_t* memory;
-    size_t memory_end = sizeof(malloc_header);
-    bool is_pinned = false;
-    size_t unique_id = -1;
-
-    std::map<size_t, std::vector<size_t>> free_block_ptr;
-
-    malloc_data()
-    {
-        memory = (uint8_t*)malloc(MEMORY_LIMIT);
-    }
-
-    malloc_data(size_t _unique_id)
-    {
-        unique_id = unique_id;
-        memory = (uint8_t*)virtual_memory_manager::allocate_for(unique_id, MEMORY_LIMIT);
-        is_pinned = true;
-    }
-
-    ~malloc_data()
-    {
-        if(!is_pinned)
-            free(memory);
-        else
-            virtual_memory_manager::decommit_for(unique_id, MEMORY_LIMIT);
-    }
-
-    std::vector<uint8_t> dump()
-    {
-        std::vector<uint8_t> mem_ptr;
-        mem_ptr.resize(MEMORY_LIMIT);
-
-        memcpy(&mem_ptr[0], memory, MEMORY_LIMIT);
-
-        nlohmann::json js;
-        js["h"] = mem_ptr;
-        js["m"] = free_block_ptr;
-
-        return nlohmann::json::to_cbor(js);
-
-    }
-
-    void load(const std::vector<uint8_t>& hs)
-    {
-        nlohmann::json js = nlohmann::json::from_cbor(hs);
-
-        std::vector<uint8_t> all_state = js["h"];
-        free_block_ptr = (std::map<size_t, std::vector<size_t>>)js["m"];
-
-        memset(memory, 0, MEMORY_LIMIT);
-        memcpy(memory, &all_state[0], std::min((size_t)MEMORY_LIMIT, all_state.size()));
-    }
-
-    size_t round_up(size_t in)
-    {
-        return ((in + 32 - 1) / 32) * 32;
-    }
-
-    bool is_nullptr(malloc_header* header)
-    {
-        return header == nullptr;
-    }
-
-    malloc_header* find_free_block(size_t size)
-    {
-        auto it = free_block_ptr.lower_bound(size);
-
-        for(; it != free_block_ptr.end(); it++)
-        {
-            if(it->second.size() == 0)
-                continue;
-
-            malloc_header* head = (malloc_header*)&memory[it->second.back()];
-
-            it->second.pop_back();
-
-            if(it->second.size() == 0)
-                free_block_ptr.erase(it);
-
-            return head;
-        }
-
-        return nullptr;
-    }
-
-    malloc_header* request_space(size_t size)
-    {
-        size = round_up(size);
-
-        size_t size_with_header = size + sizeof(malloc_header);
-
-        size_t mindex = memory_end;
-
-        memory_end += size_with_header;
-
-        if(memory_end >= MEMORY_LIMIT)
-            return nullptr;
-
-        malloc_header* block = (malloc_header*)&memory[mindex];
-
-        block->size = size;
-        //block->next = nullptr;
-
-        return block;
-    }
-
-    malloc_header* get_block_ptr(void *ptr)
-    {
-        return (malloc_header*)ptr - 1;
-    }
-
-    void* allocate(size_t size)
-    {
-        if(size == 0)
-            return nullptr;
-
-        malloc_header* block = nullptr;
-
-        block = find_free_block(size);
-
-        if(is_nullptr(block))
-        {
-            block = request_space( size);
-
-            if(is_nullptr(block))
-                return nullptr;
-        }
-
-        return (void*)(block + 1);
-    }
-
-    void deallocate(void* ptr)
-    {
-        size_t size = ptr_size(ptr);
-
-        malloc_header* head = get_block_ptr(ptr);
-
-        uint8_t* chead = (uint8_t*)head;
-
-        size_t offset = chead - &memory[0];
-
-        free_block_ptr[size].push_back(offset);
-    }
-
-    void* realloc(void* ptr, size_t size)
-    {
-        if(!ptr)
-            return allocate(size);
-
-        malloc_header* head = get_block_ptr(ptr);
-
-        if(head->size >= size)
-            return ptr;
-
-        void* new_ptr = allocate(size);
-
-        if(!new_ptr)
-            return nullptr;
-
-        memcpy(new_ptr, ptr, size);
-
-        deallocate(ptr);
-        return new_ptr;
-    }
-
-    size_t ptr_size(void* ptr)
-    {
-        if(ptr == nullptr)
-            return 0;
-
-        malloc_header* head = get_block_ptr(ptr);
-
-        return head->size;
-    }
-};
-
-size_t my_js_malloc_usable_size(const void* ptr)
-{
-    return 0;
-}
-
-void* my_js_malloc(JSMallocState *s, size_t size)
-{
-    void *ptr;
-
-    /* Do not allocate zero bytes: behavior is platform dependent */
-    assert(size != 0);
-
-    if (s->malloc_size + size > s->malloc_limit)
-        return NULL;
-
-    malloc_data* mdata = (malloc_data*)s->opaque;
-
-    ptr = mdata->allocate(size);
-    if (!ptr)
-        return NULL;
-
-    s->malloc_count++;
-    s->malloc_size += mdata->ptr_size(ptr);
-    return ptr;
-}
-
-void JS_FUNCTION(1) my_js_free(JSMallocState *s, void *ptr)
-{
-    if (!ptr)
-        return;
-
-    malloc_data* mdata = (malloc_data*)s->opaque;
-
-    s->malloc_count--;
-    s->malloc_size -= mdata->ptr_size(ptr);
-    mdata->deallocate(ptr);
-}
-
-void* JS_FUNCTION(0) my_js_realloc(JSMallocState *s, void *ptr, size_t size)
-{
-    size_t old_size;
-
-    malloc_data* mdata = (malloc_data*)s->opaque;
-
-    if (!ptr) {
-        if (size == 0)
-            return NULL;
-        return my_js_malloc(s, size);
-    }
-    old_size = mdata->ptr_size(ptr);
-    if (size == 0) {
-        s->malloc_count--;
-        s->malloc_size -= old_size;
-        mdata->deallocate(ptr);
-        return NULL;
-    }
-    if (s->malloc_size + size - old_size > s->malloc_limit)
-        return NULL;
-
-    ptr = mdata->realloc(ptr, size);
-    if (!ptr)
-        return NULL;
-
-    s->malloc_size += mdata->ptr_size(ptr) - old_size;
-    return ptr;
-}
-
 js_quickjs::value_context::value_context(JSInterruptHandler interrupt)
 {
-    mdata = new malloc_data();
-
-    JSMallocFunctions funcs;
-    funcs.js_malloc = my_js_malloc;
-    funcs.js_free = my_js_free;
-    funcs.js_realloc = my_js_realloc;
-    funcs.js_malloc_usable_size = my_js_malloc_usable_size;
-
-    heap = JS_NewRuntime2(&funcs, mdata);
+    heap = JS_NewRuntime();
     ctx = JS_NewContext(heap);
 
-    JS_SetMemoryLimit(heap, MEMORY_LIMIT);
+    JS_SetMemoryLimit(heap, 1024*1024*4);
 
     init_heap(ctx, interrupt);
 
     runtime_owner = true;
     context_owner = true;
-}
-
-js_quickjs::value_context::value_context(size_t _unique_id, const byte_script& st, JSInterruptHandler handler)
-{
-    unique_id = _unique_id;
-    mdata = new malloc_data(unique_id);
-
-    heap = (JSRuntime*)st.jsruntime_heap_ptr;
-    ctx = (JSContext*)st.jscontext_ctx_ptr;
 }
 
 js_quickjs::value_context::~value_context()
@@ -529,8 +258,6 @@ js_quickjs::value_context::~value_context()
     if(runtime_owner)
     {
         JS_FreeRuntime(heap);
-
-        delete mdata;
     }
 }
 
@@ -571,11 +298,6 @@ void js_quickjs::value_context::execute_jobs()
     {
 
     }
-}
-
-js_quickjs::byte_script js_quickjs::dump_from_context(JSRuntime* heap, JSContext* ctx, malloc_data* mdata)
-{
-    return js_quickjs::byte_script();
 }
 
 js_quickjs::value::value(const js_quickjs::value& other)

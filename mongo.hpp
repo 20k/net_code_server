@@ -38,7 +38,6 @@ enum class mongo_database_type
     EVENT_MANAGER,
     CHAT_MESSAGES,
     GLOBAL_ID_COUNTER,
-    USER_PAGE, ///virtual memory mappings
     MONGO_COUNT
 };
 

@@ -384,7 +384,6 @@
 			<Add option="-no-pie" />
 			<Add option="-Werror=return-type" />
 			<Add option="-Wno-cast-function-type" />
-			<Add option="-ffunction-sections" />
 			<Add option="-DBOOST_STACKTRACE_USE_BACKTRACE" />
 			<Add option="-DSERVER" />
 			<Add option='-DCONFIG_VERSION=&quot;&quot;' />
@@ -412,11 +411,9 @@
 			<Add option="-lboost_fiber-mt" />
 			<Add option="-lboost_context-mt" />
 			<Add option="-llmdb" />
-			<Add option="-T linker_script.o" />
 			<Add directory="deps/libs" />
 			<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/win64" />
 			<Add directory="deps/liblmdb" />
-			<Add directory="../crapmud" />
 		</Linker>
 		<Unit filename="argument_object.cpp" />
 		<Unit filename="argument_object.hpp" />
@@ -560,8 +557,6 @@
 		<Unit filename="unified_scripts.hpp" />
 		<Unit filename="user.cpp" />
 		<Unit filename="user.hpp" />
-		<Unit filename="virtual_memory.cpp" />
-		<Unit filename="virtual_memory.hpp" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>
