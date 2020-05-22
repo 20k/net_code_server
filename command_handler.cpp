@@ -379,8 +379,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
         user usr;
 
         {
-            mongo_lock_proxy mongo_ctx = get_global_mongo_user_info_context(-2);
-            mongo_ctx.change_collection(username);
+            mongo_read_proxy mongo_ctx = get_global_mongo_user_info_context(-2);
 
             if(!usr.load_from_db(mongo_ctx, username))
                 return "No such user";

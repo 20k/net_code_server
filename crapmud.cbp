@@ -384,8 +384,6 @@
 			<Add option="-no-pie" />
 			<Add option="-Werror=return-type" />
 			<Add option="-Wno-cast-function-type" />
-			<Add option="-ffunction-sections" />
-			<Add option="-fdata-sections" />
 			<Add option="-DBOOST_STACKTRACE_USE_BACKTRACE" />
 			<Add option="-DSERVER" />
 			<Add option='-DCONFIG_VERSION=&quot;&quot;' />
@@ -413,7 +411,6 @@
 			<Add option="-lboost_fiber-mt" />
 			<Add option="-lboost_context-mt" />
 			<Add option="-llmdb" />
-			<Add option="-Wl,--gc-sections" />
 			<Add directory="deps/libs" />
 			<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/win64" />
 			<Add directory="deps/liblmdb" />
