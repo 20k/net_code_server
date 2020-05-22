@@ -20,6 +20,15 @@ namespace js_quickjs
 {
     struct value;
 
+    struct uninit_context{};
+
+    struct byte_script
+    {
+        uint64_t jsruntime_heap_ptr = 0;
+        uint64_t jscontext_ctx_ptr = 0;
+        std::vector<uint8_t> allocation_data;
+    };
+
     struct value_context
     {
         std::vector<value> this_stack;
@@ -29,10 +38,12 @@ namespace js_quickjs
         malloc_data* mdata = nullptr;
         bool runtime_owner = false;
         bool context_owner = false;
+        size_t unique_id = -1;
 
         value_context(JSContext* ctx);
         value_context(value_context&);
         value_context(JSInterruptHandler handler = nullptr);
+        value_context(size_t unique_id, const byte_script& st, JSInterruptHandler handler);
         ~value_context();
 
         value_context& operator=(const value_context& other);
@@ -43,6 +54,8 @@ namespace js_quickjs
 
         void execute_jobs();
     };
+
+    byte_script dump_from_context(JSRuntime* heap, JSContext* ctx, malloc_data* mdata);
 
     using funcptr_t = JSValue (*)(JSContext*, JSValueConst, int, JSValueConst*);
 

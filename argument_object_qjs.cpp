@@ -500,6 +500,15 @@ js_quickjs::value_context::value_context(JSInterruptHandler interrupt)
     context_owner = true;
 }
 
+js_quickjs::value_context::value_context(size_t _unique_id, const byte_script& st, JSInterruptHandler handler)
+{
+    unique_id = _unique_id;
+    mdata = new malloc_data(unique_id);
+
+    heap = (JSRuntime*)st.jsruntime_heap_ptr;
+    ctx = (JSContext*)st.jscontext_ctx_ptr;
+}
+
 js_quickjs::value_context::~value_context()
 {
     if(context_owner)
@@ -562,6 +571,11 @@ void js_quickjs::value_context::execute_jobs()
     {
 
     }
+}
+
+js_quickjs::byte_script js_quickjs::dump_from_context(JSRuntime* heap, JSContext* ctx, malloc_data* mdata)
+{
+    return js_quickjs::byte_script();
 }
 
 js_quickjs::value::value(const js_quickjs::value& other)
