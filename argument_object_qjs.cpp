@@ -237,15 +237,12 @@ struct malloc_data
 {
     uint8_t* memory;
     size_t memory_end = sizeof(malloc_header);
-    malloc_header* base = nullptr;
 
     std::map<size_t, std::vector<size_t>> free_block_ptr;
 
     malloc_data()
     {
         memory = (uint8_t*)malloc(MEMORY_LIMIT);
-
-        base = nullptr;
     }
 
     ~malloc_data()
@@ -319,33 +316,19 @@ struct malloc_data
 
         malloc_header* block = nullptr;
 
-        if(is_nullptr(base))
+        block = find_free_block(size);
+
+        if(is_nullptr(block))
         {
-            block = request_space(size);
+            block = request_space( size);
 
             if(is_nullptr(block))
                 return nullptr;
-
-            base = block;
         }
         else
         {
-            malloc_header* last = base;
+            block->free = 0;
 
-            block = find_free_block(size);
-
-            if(is_nullptr(block))
-            {
-                block = request_space( size);
-
-                if(is_nullptr(block))
-                    return nullptr;
-            }
-            else
-            {
-                block->free = 0;
-
-            }
         }
 
         return (void*)(block + 1);
