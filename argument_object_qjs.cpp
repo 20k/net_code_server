@@ -235,7 +235,7 @@ struct malloc_header
 
 struct malloc_data
 {
-    std::vector<uint8_t> memory;
+    uint8_t* memory;
     size_t memory_end = sizeof(malloc_header);
     malloc_header* base = nullptr;
 
@@ -243,9 +243,14 @@ struct malloc_data
 
     malloc_data()
     {
-        memory.resize(MEMORY_LIMIT);
+        memory = (uint8_t*)malloc(MEMORY_LIMIT);
 
         base = nullptr;
+    }
+
+    ~malloc_data()
+    {
+        free(memory);
     }
 
     size_t round_up(size_t in)
@@ -287,7 +292,7 @@ struct malloc_data
 
         memory_end += size_with_header;
 
-        if(memory_end >= memory.size())
+        if(memory_end >= MEMORY_LIMIT)
             return nullptr;
 
         malloc_header* block = (malloc_header*)&memory[mindex];
