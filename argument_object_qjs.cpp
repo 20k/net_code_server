@@ -230,7 +230,6 @@ js_quickjs::value_context::value_context(value_context& other)
 struct malloc_header
 {
     size_t size;
-    int free;
 };
 
 struct malloc_data
@@ -297,7 +296,6 @@ struct malloc_data
 
         malloc_header* block = (malloc_header*)&memory[mindex];
 
-        block->free = 0;
         block->size = size;
         //block->next = nullptr;
 
@@ -325,11 +323,6 @@ struct malloc_data
             if(is_nullptr(block))
                 return nullptr;
         }
-        else
-        {
-            block->free = 0;
-
-        }
 
         return (void*)(block + 1);
     }
@@ -339,8 +332,6 @@ struct malloc_data
         size_t size = ptr_size(ptr);
 
         malloc_header* head = get_block_ptr(ptr);
-
-        head->free = 1;
 
         uint8_t* chead = (uint8_t*)head;
 
