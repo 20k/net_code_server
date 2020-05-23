@@ -17,6 +17,7 @@ namespace entity
     struct entity
     {
         uint32_t id = -1;
+        uint32_t solar_system_id = -1;
     };
 
     //using ship_stats = vec<SHIP_SPECS_COUNT, float>;

@@ -254,6 +254,7 @@ DEFINE_SERIALISE_FUNCTION(entity::ship)
     SERIALISE_SETUP();
 
     DO_FSERIALISE(id);
+    DO_FSERIALISE(solar_system_id);
     DO_FSERIALISE(position);
     DO_FSERIALISE(system_current);
     DO_FSERIALISE(system_max);
