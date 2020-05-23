@@ -49,7 +49,13 @@ namespace entity
     struct ship;
 }
 
+namespace space
+{
+    struct solar_system;
+}
+
 DEFINE_SERIALISE_FUNCTION(entity::ship);
+DEFINE_SERIALISE_FUNCTION(space::solar_system);
 
 DECLARE_GENERIC_DB(npc_prop_list, std::string);
 DECLARE_GENERIC_DB(event_impl, std::string);
@@ -64,5 +70,6 @@ DECLARE_GENERIC_DB(chat_channel, std::string);
 DECLARE_GENERIC_DB(chat_message, size_t);
 DECLARE_GENERIC_DB(user_nodes, std::string);
 DECLARE_GENERIC_DB(entity::ship, uint32_t);
+DECLARE_GENERIC_DB(space::solar_system, uint32_t);
 
 #endif // SERIALISABLES_HPP_INCLUDED

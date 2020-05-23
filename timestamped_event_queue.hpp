@@ -28,6 +28,7 @@ namespace event_queue
         QuantityType quantity = QuantityType();
         std::string originator_script;
         uint32_t originator_script_id = -1;
+        uint32_t entity_id = -1;
         std::string callback;
         bool fired = true;
     };

@@ -1121,6 +1121,7 @@ js::value queue_test_event(js::value_context* vctx, js::value id, js::value dest
     positional_event.originator_script_id = rid;
     positional_event.callback = callback;
     positional_event.fired = false;
+    positional_event.entity_id = (int)id;
 
     std::cout << "WHEN " << (positional_event.timestamp - ctime) << std::endl;
 

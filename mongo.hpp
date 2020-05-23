@@ -39,6 +39,7 @@ enum class mongo_database_type
     CHAT_MESSAGES,
     GLOBAL_ID_COUNTER,
     SHIP_PROPERTIES,
+    SOLAR_SYSTEM_PROPERTIES,
     MONGO_COUNT
 };
 

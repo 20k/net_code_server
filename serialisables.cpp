@@ -14,16 +14,20 @@
 #include "mongo.hpp"
 #include "timestamped_event_queue.hpp"
 #include "entity_manager.hpp"
+#include <secret/solar_system.hpp>
 
 template<typename T>
 DEFINE_SERIALISE_FUNCTION(event_queue::timestamp_event_base<T>)
 {
     SERIALISE_SETUP();
 
-    DO_FSERIALISE(quantity);
     DO_FSERIALISE(timestamp);
+    DO_FSERIALISE(quantity);
     DO_FSERIALISE(originator_script);
     DO_FSERIALISE(originator_script_id);
+    DO_FSERIALISE(entity_id);
+    DO_FSERIALISE(callback);
+    DO_FSERIALISE(fired);
 }
 
 template<typename T>
@@ -253,6 +257,16 @@ DEFINE_SERIALISE_FUNCTION(entity::ship)
     DO_FSERIALISE(position);
     DO_FSERIALISE(system_current);
     DO_FSERIALISE(system_max);
+}
+
+DEFINE_SERIALISE_FUNCTION(space::solar_system)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(id);
+    DO_FSERIALISE(name);
+    DO_FSERIALISE(seclevel);
+    DO_FSERIALISE(sorted_ships);
 }
 
 template<typename T>
@@ -502,3 +516,4 @@ DEFINE_GENERIC_DB(chat_channel, std::string, channel_name, mongo_database_type::
 DEFINE_GENERIC_DB(chat_message, size_t, id, mongo_database_type::CHAT_MESSAGES);
 DEFINE_GENERIC_DB(user_nodes, std::string, owned_by, mongo_database_type::NODE_PROPERTIES);
 DEFINE_GENERIC_DB(entity::ship, uint32_t, id, mongo_database_type::SHIP_PROPERTIES);
+DEFINE_GENERIC_DB(space::solar_system, uint32_t, id, mongo_database_type::SOLAR_SYSTEM_PROPERTIES);
