@@ -1104,6 +1104,9 @@ js::value queue_test_event(js::value_context* vctx, js::value id, js::value dest
 
     realtime_script_data* realtime_data = js::get_heap_stash(*vctx)["realtime_script_data"].get_ptr<realtime_script_data>();
 
+    if(realtime_data == nullptr)
+        throw std::runtime_error("Nullptr realtime data");
+
     int rid = -1;
 
     {
@@ -1146,7 +1149,7 @@ js::value queue_test_event(js::value_context* vctx, js::value id, js::value dest
 
     ///currently doing no ownership checks at all so that's a thing
 
-    space::get_global_playable_space().add_event_to_id(id, ctime, positional_event, entity::MOVE);
+    space::get_global_playable_space().add_event_to_id(*realtime_data, id, ctime, positional_event, entity::MOVE);
 
     return js::make_success(*vctx);
 }
