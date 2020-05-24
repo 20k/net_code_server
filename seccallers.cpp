@@ -1114,6 +1114,8 @@ js::value queue_test_event(js::value_context* vctx, js::value id, js::value dest
 
     vec3f vdest = {(double)dest["x"], (double)dest["y"], (double)dest["z"]};
 
+    vec3f final_pos = vdest;
+
     {
         db::read_tx rtx;
 
@@ -1122,12 +1124,12 @@ js::value queue_test_event(js::value_context* vctx, js::value id, js::value dest
         if(!db_disk_load(rtx, s, (int)id))
             return js::make_error(*vctx, "No such ship");
 
-        vdest += s.position.get(ctime);
+        final_pos += s.position.get(ctime);
     }
 
     event_queue::timestamp_event_base<vec3f> positional_event;
     positional_event.timestamp = ctime + vdest.length() * 1000;
-    positional_event.quantity = vdest;
+    positional_event.quantity = final_pos;
     positional_event.originator_script = get_script_host(*vctx) + "." + get_script_ending(*vctx); ///WRONG, USE SECRET HOSTS
     positional_event.originator_script_id = rid;
     positional_event.callback = callback;
