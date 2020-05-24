@@ -283,7 +283,45 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
 
             auto [current_timestamp, last_timestamp] = tick::get_timestamps();
 
-            all_space.on_trigger_event(current_timestamp, last_timestamp, on_callback);
+            //all_space.on_trigger_event(current_timestamp, last_timestamp, on_callback);
+
+            ///event timestamp list is sorted
+            if(shared_realtime_script_data.event_timestamps.size() > 0)
+            {
+                uint64_t timestamp = shared_realtime_script_data.event_timestamps[0];
+
+                int idx = 0;
+
+                std::vector<uint32_t> ids;
+                std::vector<entity::event_type> types;
+
+                for(idx = 0; idx < (int)shared_realtime_script_data.event_timestamps.size(); idx++)
+                {
+                    if(shared_realtime_script_data.event_timestamps[idx] >= current_timestamp)
+                        break;
+
+                    ids.push_back(shared_realtime_script_data.entity_ids[idx]);
+                    types.push_back(shared_realtime_script_data.event_types[idx]);
+                }
+
+                shared_realtime_script_data.entity_ids.erase(shared_realtime_script_data.entity_ids.begin(), shared_realtime_script_data.entity_ids.begin() + idx);
+                shared_realtime_script_data.event_types.erase(shared_realtime_script_data.event_types.begin(), shared_realtime_script_data.event_types.begin() + idx);
+                shared_realtime_script_data.event_timestamps.erase(shared_realtime_script_data.event_timestamps.begin(), shared_realtime_script_data.event_timestamps.begin() + idx);
+
+                for(int i=0; i < (int)ids.size(); i++)
+                {
+                    entity::ship s;
+
+                    {
+                        db::read_tx rtx;
+
+                        if(!db_disk_load(rtx, s, ids[i]))
+                            continue;
+                    }
+
+                    s.call_for_type(types[i], on_callback);
+                }
+            }
 
             if(args.has("on_update"))
             {

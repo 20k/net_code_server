@@ -35,6 +35,16 @@ namespace entity
         std::array<float, SHIP_SPECS_COUNT> system_max;
 
         uint64_t get_next_event();
+        uint64_t get_next_event_of(event_type type);
+
+        template<typename T>
+        void call_for_type(event_type type, T t)
+        {
+            if(type == event_type::MOVE)
+                t(*this, position.events[1], type);
+            else
+                throw std::runtime_error("Other types not supported in call_for_type");
+        }
 
         vec3f get_position(uint64_t timestamp);
         std::array<float, SHIP_SPECS_COUNT> get_specs(uint64_t timestamp);

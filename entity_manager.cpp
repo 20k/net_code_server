@@ -15,6 +15,14 @@ uint64_t entity::ship::get_next_event()
     return next;
 }
 
+uint64_t entity::ship::get_next_event_of(event_type type)
+{
+    if(type == event_type::MOVE)
+        return position.events[1].timestamp;
+
+    throw std::runtime_error("Unsupported get_next_event_of");
+}
+
 vec3f entity::ship::get_position(uint64_t timestamp)
 {
     return position.get(timestamp);
