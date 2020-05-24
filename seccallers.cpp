@@ -17,6 +17,7 @@
 #include "time.hpp"
 #include "timestamped_event_queue.hpp"
 #include <secret/solar_system.hpp>
+#include "realtime_script_data.hpp"
 
 ///still needs to be defined while we're compiling duktape
 int my_timeout_check(void* udata)
@@ -1098,6 +1099,11 @@ js::value os_call(js::value_context* vctx, std::string script_name, js::value as
 
 js::value queue_test_event(js::value_context* vctx, js::value id, js::value dest, std::string callback)
 {
+    if(!js::get_heap_stash(*vctx).has("realtime_script_data"))
+        return js::make_error(*vctx, "Not executed in realtime script");
+
+    realtime_script_data* realtime_data = js::get_heap_stash(*vctx)["realtime_script_data"].get_ptr<realtime_script_data>();
+
     int rid = -1;
 
     {

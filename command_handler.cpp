@@ -34,6 +34,7 @@
 #include "event_manager.hpp"
 #include <secret/solar_system.hpp>
 #include "entity_manager.hpp"
+#include "realtime_script_data.hpp"
 
 #ifdef USE_FIBERS
 #include <boost/fiber/operations.hpp>
@@ -150,6 +151,10 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
     mongo_diagnostics diagnostic_scope;*/
 
     js::value args = js::xfer_between_contexts(vctx, in_arg);
+
+    realtime_script_data shared_realtime_script_data;
+
+    js::get_heap_stash(vctx)["realtime_script_data"].set_ptr(&shared_realtime_script_data);
 
     bool force_terminate = false;
 
@@ -367,6 +372,8 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             break;
         }
     }
+
+    js::get_heap_stash(vctx)["realtime_script_data"].set_ptr<realtime_script_data>(nullptr);
 }
 
 struct execution_blocker_guard
