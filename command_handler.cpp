@@ -329,6 +329,12 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
 
                         event_queue::timestamp_event_header& header = s.get_header_of(types[i]);
 
+                        if(header.fired)
+                        {
+                            printf("Already fired?\n");
+                            continue;
+                        }
+
                         if(header.originator_script_id != (uint32_t)current_id)
                         {
                             printf("Revoked event\n");
