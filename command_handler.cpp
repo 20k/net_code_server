@@ -257,10 +257,10 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             ///need to unconditionally trigger timestamps regardless of server lag, use a flag
             auto on_callback = [&](entity::entity& en, auto& event, entity::event_type type)
             {
-                printf("Hooray! I am a callback of type %i\n", type);
-
                 if(event.originator_script_id == (uint32_t)current_id)
                 {
+                    printf("Hooray! I am a callback of type %i\n", type);
+
                     if(args.has(event.callback))
                     {
                         js::value entity_id = js::make_value(vctx, (int)en.id);
@@ -275,21 +275,37 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                         }
                     }
 
-                    event.fired = true;
+                    {
+                        db::read_write_tx rwtx;
+
+                        entity::ship s;
+
+                        if(!db_disk_load(rwtx, s, en.id))
+                            throw std::runtime_error("Booped");
+
+                        s.call_for_type(type, [](entity::entity& fen, auto& fevent, entity::event_type ftype)
+                        {
+                            fevent.fired = true;
+                        });
+
+                        db_disk_overwrite(rwtx, s);
+                    }
+
+                    //event.fired = true;
+                }
+                else
+                {
+                    printf("Event revoked\n");
                 }
             };
 
-            space::playable_space& all_space = space::get_global_playable_space();
+            //space::playable_space& all_space = space::get_global_playable_space();
 
             auto [current_timestamp, last_timestamp] = tick::get_timestamps();
-
-            //all_space.on_trigger_event(current_timestamp, last_timestamp, on_callback);
 
             ///event timestamp list is sorted
             if(shared_realtime_script_data.event_timestamps.size() > 0)
             {
-                uint64_t timestamp = shared_realtime_script_data.event_timestamps[0];
-
                 int idx = 0;
 
                 std::vector<uint32_t> ids;

@@ -267,7 +267,7 @@ DEFINE_SERIALISE_FUNCTION(space::solar_system)
     DO_FSERIALISE(id);
     DO_FSERIALISE(name);
     DO_FSERIALISE(seclevel);
-    DO_FSERIALISE(sorted_ships);
+    DO_FSERIALISE(ships);
 }
 
 template<typename T>
