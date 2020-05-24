@@ -257,46 +257,39 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             ///need to unconditionally trigger timestamps regardless of server lag, use a flag
             auto on_callback = [&](entity::entity& en, auto& event, entity::event_type type)
             {
-                if(event.originator_script_id == (uint32_t)current_id)
+                printf("Hooray! I am a callback of type %i\n", type);
+
+                if(args.has(event.callback))
                 {
-                    printf("Hooray! I am a callback of type %i\n", type);
+                    js::value entity_id = js::make_value(vctx, (int)en.id);
+                    js::value quantity = js::make_value(vctx, event.quantity);
 
-                    if(args.has(event.callback))
+                    auto [success, result] = js::call_prop(args, event.callback, entity_id, quantity);
+
+                    if(!success)
                     {
-                        js::value entity_id = js::make_value(vctx, (int)en.id);
-                        js::value quantity = js::make_value(vctx, event.quantity);
-
-                        auto [success, result] = js::call_prop(args, event.callback, entity_id, quantity);
-
-                        if(!success)
-                        {
-                            ret = (std::string)result;
-                            force_terminate = true;
-                        }
+                        ret = (std::string)result;
+                        force_terminate = true;
                     }
-
-                    {
-                        db::read_write_tx rwtx;
-
-                        entity::ship s;
-
-                        if(!db_disk_load(rwtx, s, en.id))
-                            throw std::runtime_error("Booped");
-
-                        s.call_for_type(type, [](entity::entity& fen, auto& fevent, entity::event_type ftype)
-                        {
-                            fevent.fired = true;
-                        });
-
-                        db_disk_overwrite(rwtx, s);
-                    }
-
-                    //event.fired = true;
                 }
-                else
+
                 {
-                    printf("Event revoked\n");
+                    db::read_write_tx rwtx;
+
+                    entity::ship s;
+
+                    if(!db_disk_load(rwtx, s, en.id))
+                        throw std::runtime_error("Booped");
+
+                    s.call_for_type(type, [](entity::entity& fen, auto& fevent, entity::event_type ftype)
+                    {
+                        fevent.fired = true;
+                    });
+
+                    db_disk_overwrite(rwtx, s);
                 }
+
+                //event.fired = true;
             };
 
             //space::playable_space& all_space = space::get_global_playable_space();
@@ -333,6 +326,14 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
 
                         if(!db_disk_load(rtx, s, ids[i]))
                             continue;
+
+                        event_queue::timestamp_event_header& header = s.get_header_of(types[i]);
+
+                        if(header.originator_script_id != (uint32_t)current_id)
+                        {
+                            printf("Revoked event\n");
+                            continue;
+                        }
                     }
 
                     s.call_for_type(types[i], on_callback);

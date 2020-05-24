@@ -36,6 +36,7 @@ namespace entity
 
         uint64_t get_next_event();
         uint64_t get_next_event_of(event_type type);
+        event_queue::timestamp_event_header& get_header_of(event_type type);
 
         template<typename T>
         void call_for_type(event_type type, T t)

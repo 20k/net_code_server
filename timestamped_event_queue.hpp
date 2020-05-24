@@ -21,16 +21,20 @@ namespace event_queue
         NONE,
     };
 
-    template<typename QuantityType>
-    struct timestamp_event_base : serialisable, free_function
+    struct timestamp_event_header
     {
         uint64_t timestamp = NEVER_TIMESTAMP;
-        QuantityType quantity = QuantityType();
         std::string originator_script;
         uint32_t originator_script_id = -1;
         uint32_t entity_id = -1;
         std::string callback;
         bool fired = true;
+    };
+
+    template<typename QuantityType>
+    struct timestamp_event_base : timestamp_event_header, serialisable, free_function
+    {
+        QuantityType quantity = QuantityType();
     };
 
     ///guaranteed that the return value with have a timestamp of timestamp_ms
