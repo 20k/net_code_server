@@ -724,7 +724,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
         js::get_heap_stash(inf.heap)["all_shared_data"].free_in_heap<std::shared_ptr<shared_command_handler_state>>();
         teardown_state(inf.heap);
 
-        printf("cleaned up resources\n");
+        //printf("cleaned up resources\n");
 
         if(launched_realtime)
         {
@@ -1353,9 +1353,9 @@ nlohmann::json make_response(const std::string& str)
 
 nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state> all_shared, const std::string& str)
 {
-    printf("yay command\n");
+    //printf("yay command\n");
 
-    lg::log(str);
+    //lg::log(str);
 
     if(strip_whitespace(tolower_str(str)) == "help" || strip_whitespace(tolower_str(str)) == "#help")
     {

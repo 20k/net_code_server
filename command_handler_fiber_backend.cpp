@@ -7,6 +7,7 @@
 #include <queue>
 #include <SFML/System/Sleep.hpp>
 #include <atomic>
+#include <deque>
 
 #ifndef __WIN32__
 #include <pthread.h>
@@ -26,8 +27,9 @@ bool is_thread_fiber()
 
 struct scheduler_data
 {
-    std::queue<boost::fibers::context*> q;
+    std::deque<boost::fibers::context*> q;
     std::atomic_int approx_queue_size = 0;
+    boost::fibers::fiber::id dispatcher_id;
     //std::mutex lock;
 };
 
@@ -69,7 +71,11 @@ struct custom_scheduler : boost::fibers::algo::algorithm
     {
         //std::lock_guard guard(dat.lock);
 
-        dat.q.push(f);
+        if(f->get_id() == dat.dispatcher_id)
+            dat.q.push_front(f);
+        else
+            dat.q.push_back(f);
+
         dat.approx_queue_size = dat.approx_queue_size + 1;
     }
 
@@ -81,7 +87,7 @@ struct custom_scheduler : boost::fibers::algo::algorithm
             return nullptr;
 
         boost::fibers::context* next = dat.q.front();
-        dat.q.pop();
+        dat.q.pop_front();
         dat.approx_queue_size = dat.approx_queue_size - 1;
 
         return next;
@@ -115,6 +121,10 @@ void worker_thread(int id, std::array<scheduler_data, HARDWARE_THREADS>* pothers
     #ifdef USE_FIBERS
     boost::fibers::use_scheduling_algorithm<custom_scheduler>(id, others[id]);
     is_fiber = 1;
+
+    others[id].dispatcher_id = boost::this_fiber::get_id();
+
+    std::cout << "WORKER FIBER ID " << others[id].dispatcher_id << std::endl;
 
     fiber_queue& queue = fqueue;
 
@@ -161,8 +171,7 @@ void worker_thread(int id, std::array<scheduler_data, HARDWARE_THREADS>* pothers
 
     while(1)
     {
-        //boost::this_fiber::yield();
-        boost::this_fiber::sleep_for(std::chrono::milliseconds(100));
+        boost::this_fiber::sleep_for(std::chrono::milliseconds(16));
 
         int my_size = others[id].q.size();
         bool small = true;
