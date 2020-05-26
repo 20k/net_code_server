@@ -216,7 +216,7 @@ void websocket_server(connection& conn)
 
                 next_client = conn.has_new_client();
 
-                printf("New client\n");
+                //printf("New client\n");
             }
         }
 

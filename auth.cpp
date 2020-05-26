@@ -4,6 +4,7 @@
 #include "command_handler.hpp"
 #include <networking/serialisable.hpp>
 #include "serialisables.hpp"
+#include "command_handler_fiber_backend.hpp"
 
 bool auth::load_from_db(db::read_tx& ctx, const std::string& auth_binary_in)
 {
@@ -47,5 +48,11 @@ void auth::insert_user_exclusive(const std::string& username)
 
 enforce_constant_time::~enforce_constant_time()
 {
-    while(clk.getElapsedTime().asMicroseconds() < 100 * 1000){}
+    float diff = clk.getElapsedTime().asMicroseconds() / 1000.f;
+
+    if(diff >= 100)
+        return;
+
+
+    fiber_sleep(100 - diff);
 }

@@ -52,7 +52,7 @@ void task_thread(scheduled_tasks& tasks)
     {
         tasks.check_all_tasks(clk.getElapsedTime().asMicroseconds() / 1000. / 1000.);
 
-        sthread::this_sleep(1000);
+        fiber_sleep(1000);
     }
 }
 

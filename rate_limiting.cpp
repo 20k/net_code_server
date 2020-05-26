@@ -25,6 +25,8 @@ void handle_sleep(sandbox_data* dat)
             return;
     }
 
+    float fiber_load = fiber_overload_factor();
+
     int sleep_mult = 1;
 
     ///need to conditionally throw if we're bad
@@ -104,7 +106,7 @@ void handle_sleep(sandbox_data* dat)
             double allowed_executable_time = (1/4.f) * frametime;
             double sleep_time = (1 - (1/4.f)) * frametime;
 
-            sleep_time += frametime * sleep_mult;
+            sleep_time += frametime * sleep_mult * fiber_load;
 
             if(dat->realtime_ms_awake_elapsed > allowed_executable_time)
             {
@@ -135,6 +137,8 @@ void handle_sleep(sandbox_data* dat)
     {
         double sleep_time = 1 * sleep_mult;
         double awake_time = 1;
+
+        sleep_time += (sleep_time + awake_time) * (fiber_load - 1);
 
         dat->ms_awake_elapsed_static += dat->clk.restart().asMicroseconds() / 1000.;
 
@@ -184,14 +188,7 @@ void handle_sleep(sandbox_data* dat)
 
     if(val > 0)
     {
-        if(!is_thread_fiber())
-            sf::sleep(sf::milliseconds(val));
-        else
-        {
-            #ifdef USE_FIBERS
-            boost::this_fiber::sleep_for(std::chrono::milliseconds(val));
-            #endif // USE_FIBERS
-        }
+        fiber_sleep(val);
     }
 
     dat->sleep_for -= val;

@@ -14,6 +14,8 @@
 #include <sched.h>
 #endif // __WIN32__
 
+#define SCRIPT_THREADS 3
+
 thread_local int is_fiber;
 
 bool is_thread_fiber()
@@ -71,9 +73,9 @@ struct custom_scheduler : boost::fibers::algo::algorithm
     {
         //std::lock_guard guard(dat.lock);
 
-        if(f->get_id() == dat.dispatcher_id)
+        /*if(f->get_id() == dat.dispatcher_id)
             dat.q.push_front(f);
-        else
+        else*/
             dat.q.push_back(f);
 
         dat.approx_queue_size = dat.approx_queue_size + 1;
@@ -171,7 +173,7 @@ void worker_thread(int id, std::array<scheduler_data, HARDWARE_THREADS>* pothers
 
     while(1)
     {
-        boost::this_fiber::sleep_for(std::chrono::milliseconds(16));
+        bool found_work = false;
 
         int my_size = others[id].q.size();
         bool small = true;
@@ -208,9 +210,13 @@ void worker_thread(int id, std::array<scheduler_data, HARDWARE_THREADS>* pothers
                 }, queue.q[0]).detach();
 
                 queue.q.erase(queue.q.begin());
-                continue;
+                found_work = true;
             }
         }
+
+        if(!found_work)
+            boost::this_fiber::sleep_for(std::chrono::milliseconds(1));
+
 
         ///work stealing doesn't work with quickjs
         /*{
@@ -236,6 +242,51 @@ void worker_thread(int id, std::array<scheduler_data, HARDWARE_THREADS>* pothers
     #endif // USE_FIBERS
 }
 
+/*struct fiber_overload_data
+{
+    std::array<scheduler_data, SCRIPT_THREADS>* data;
+};
+
+static fiber_overload_data global_data;
+
+float fiber_overload_factor()
+{
+    if(global_data.data == nullptr)
+        return 1;
+
+    float factor = 0;
+
+    for(int i=0; i < SCRIPT_THREADS; i++)
+    {
+        factor += (*global_data.data)[i].approx_queue_size / 2;
+    }
+
+    factor /= SCRIPT_THREADS;
+
+    return std::max(factor, 1.f);
+}*/
+
+static std::atomic_int scripts_running = 0;
+
+float fiber_overload_factor()
+{
+    float factor = (scripts_running / 2.f) / SCRIPT_THREADS;
+
+    //float factor = scripts_running / SCRIPT_THREADS
+
+    return std::max(factor, 1.f);
+}
+
+void fiber_work::notify(int cost)
+{
+    scripts_running += cost;
+}
+
+void fiber_work::unnotify(int cost)
+{
+    scripts_running -= cost;
+}
+
 void boot_fiber_manager()
 {
     printf("FIBER START\n");
@@ -243,11 +294,13 @@ void boot_fiber_manager()
     #ifdef USE_FIBERS
     printf("Boot Script Scheduler\n");
 
-    std::array<scheduler_data, 3>* script_workers = new std::array<scheduler_data, 3>;
+    std::array<scheduler_data, SCRIPT_THREADS>* script_workers = new std::array<scheduler_data, 3>;
 
-    for(int i=0; i < 3; i++)
+    //global_data.data = script_workers;
+
+    for(int i=0; i < SCRIPT_THREADS; i++)
     {
-        std::thread(worker_thread<3>, i, script_workers, true, std::ref(get_global_fiber_queue())).detach();
+        std::thread(worker_thread<SCRIPT_THREADS>, i, script_workers, true, std::ref(get_global_fiber_queue())).detach();
     }
 
     printf("Boot Server Scheduler");

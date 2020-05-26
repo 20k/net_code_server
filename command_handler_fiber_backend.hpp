@@ -12,7 +12,7 @@ bool is_thread_fiber();
 struct fiber_queue
 {
     std::vector<std::function<void()>> q;
-    lock_type_t lock;
+    std::mutex lock;
 
     template<typename T, typename... U>
     void add(T&& t, U&&... u)
@@ -50,5 +50,12 @@ fiber_queue& get_noncritical_fiber_queue()
 
 void fiber_sleep(double time_ms);
 void fiber_yield();
+float fiber_overload_factor(); ///1 if everything's fine, > 1 if we're overloaded
+
+namespace fiber_work
+{
+    void notify(int cost);
+    void unnotify(int cost);
+}
 
 #endif // COMMAND_HANDLER_FIBER_BACKEND_HPP_INCLUDED

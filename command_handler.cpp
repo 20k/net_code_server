@@ -411,7 +411,7 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             else
             {
                 double celapsed = elapsed.getElapsedTime().asMicroseconds() / 1000.;
-                double diff = max_frame_time_ms * sleep_mult - celapsed;
+                double diff = max_frame_time_ms * sleep_mult * fiber_overload_factor() - celapsed;
 
                 #ifdef USE_FIBERS
                 if(diff > 0)
@@ -469,6 +469,19 @@ struct execution_blocker_guard
     }
 };
 
+struct fiber_work_manager
+{
+    fiber_work_manager()
+    {
+        fiber_work::notify(1);
+    }
+
+    ~fiber_work_manager()
+    {
+        fiber_work::unnotify(1);
+    }
+};
+
 std::string run_in_user_context(std::string username, std::string command, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared, std::optional<float> custom_exec_time_s, bool force_exec)
 {
     //
@@ -503,6 +516,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
         }
 
         cleanup_auth_at_exit cleanup(id_mut, auth_guard, usr.get_auth_token_hex());
+        fiber_work_manager fbwork;
 
         if(force_exec)
         {
@@ -1386,7 +1400,7 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
             user fnd;
 
             {
-                mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
+                mongo_read_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
                 if(fnd.exists(mongo_user_info, user_name))
                 {
@@ -1442,7 +1456,8 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
 
         if(user_exists)
         {
-            {
+            ///What? Why is this a locking db operation?
+            /*{
                 mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
 
                 auth to_check;
@@ -1452,7 +1467,7 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
 
                 to_check.insert_user_exclusive(user_name);
                 to_check.overwrite_in_db(mongo_ctx);
-            }
+            }*/
 
             return make_response("Switched to User");
         }
@@ -1460,14 +1475,14 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
         {
             all_shared->state.set_user_name("");
 
+            db::read_write_tx rtx;
+
             {
                 auto fauth = all_shared->state.get_auth();
 
-                mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
-
                 auth to_check;
 
-                if(!to_check.load_from_db(mongo_ctx, fauth))
+                if(!to_check.load_from_db(rtx, fauth))
                     return make_response(make_error_col("Trying something sneaky eh 2?"));
 
                 #ifdef TESTING
@@ -1480,7 +1495,7 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
                     return make_response(make_error_col("Max users " + std::to_string(to_check.users.size()) + "/" + std::to_string(MAX_USERS)));
 
                 to_check.insert_user_exclusive(user_name);
-                to_check.overwrite_in_db(mongo_ctx);
+                to_check.overwrite_in_db(rtx);
             }
 
             {
@@ -1490,11 +1505,9 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
                 auto fauth = all_shared->state.get_auth();
 
                 {
-                    mongo_lock_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
-
-                    new_user.construct_new_user(mongo_user_info, user_name, fauth);
-                    new_user.load_from_db(mongo_user_info, user_name);
-                    new_user.overwrite_user_in_db(mongo_user_info);
+                    new_user.construct_new_user(rtx, user_name, fauth);
+                    new_user.load_from_db(rtx, user_name);
+                    new_user.overwrite_user_in_db(rtx);
                 }
 
                 all_shared->state.set_user_name(new_user.name);
@@ -2196,11 +2209,11 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
         {
             enforce_constant_time ect;
 
-            mongo_lock_proxy ctx = get_global_mongo_global_properties_context(-2);
+            db::read_tx rtx;
 
             auth user_auth;
 
-            if(!user_auth.load_from_db(ctx, auth_token))
+            if(!user_auth.load_from_db(rtx, auth_token))
             {
                 nlohmann::json data;
                 data["type"] = "server_msg";
@@ -2226,7 +2239,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
         if(auth_string == "")
             full_string = "No Users Found. Type user <username> to register";
 
-        std::cout << auth_string << std::endl;
+        //std::cout << auth_string << std::endl;
 
         nlohmann::json data;
         data["type"] = "server_msg";
