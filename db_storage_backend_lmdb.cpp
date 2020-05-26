@@ -224,6 +224,8 @@ db::read_tx::read_tx(bool enabled)
     }
     else
     {
+        (*tls_get_holds_lock())++;
+
         (*lock_count.get())++;
 
         if((*lock_count.get()) > 1)
@@ -245,6 +247,8 @@ db::read_write_tx::read_write_tx() : read_tx(false), guard(thread_mut)
 
 db::read_write_tx::~read_write_tx()
 {
+    (*tls_get_holds_lock())--;
+
     (*lock_count.get())--;
 }
 
