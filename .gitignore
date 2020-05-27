@@ -14,3 +14,4 @@ libs
 /log.txt
 /lmdb_storage/*.mdb
 /*.dll
+.vscode/
