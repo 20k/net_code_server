@@ -115,7 +115,8 @@ project "NetCodeServer"
         "lmdb",
         "winmm",
         "dbghelp",
-        "shlwapi"
+        "shlwapi",
+		":libmsgpackc.a"
     }
 
     linkoptions

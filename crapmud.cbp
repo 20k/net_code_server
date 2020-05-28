@@ -411,7 +411,7 @@
 			<Add option="-lboost_fiber-mt" />
 			<Add option="-lboost_context-mt" />
 			<Add option="-llmdb" />
-			<Add option="-lmsgpack" />
+			<Add option="-l:libmsgpackc.a" />
 			<Add directory="deps/libs" />
 			<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/win64" />
 			<Add directory="deps/liblmdb" />
