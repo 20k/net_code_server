@@ -323,11 +323,6 @@ bool db_load_impl(T& val, read_type& ctx, const std::string& key_name, const U& 
     if(!data.has_value())
         return false;
 
-    val = T();
-
-    /*nlohmann::json json = nlohmann::json::from_cbor(data.value().data_view);
-    deserialise(json, val, serialise_mode::DISK);*/
-
     val = deserialise_msg<T>(data.value().data_view);
 
     return true;
@@ -377,11 +372,6 @@ void db_overwrite_impl(T& val, read_write_type& ctx, const std::string& key_name
         ctx.ctx.update_json_one_new(selector, to_set);
     }
     #else
-
-    //std::cout << "WRITING KEYVAL " << key_val << " FOR " << key_name << std::endl;
-
-    //std::vector<uint8_t> vals = nlohmann::json::to_cbor(serialise(val, serialise_mode::DISK));
-
     std::string vals = serialise_msg(val);
 
     if(vals.size() == 0)
@@ -392,63 +382,6 @@ void db_overwrite_impl(T& val, read_write_type& ctx, const std::string& key_name
     ctx.write(db_id, any_to_string(key_val), view);
     #endif
 }
-
-#if 0
-///think this is no longer relevant with the db rewrite?
-template<>
-void db_overwrite_impl<item, std::string>(item& val, read_write_type& ctx, const std::string& key_name, const std::string& item_id, int db_id)
-{
-    #ifdef OLD_DB
-    nlohmann::json as_ser = serialise(val, serialise_mode::DISK);
-
-    nlohmann::json hacky_data = val.data;
-    hacky_data["item_id"] = val.item_id;
-
-    for(auto& i : hacky_data.items())
-    {
-        as_ser[i.key()] = i.value();
-    }
-
-    as_ser["item_id"] = val.item_id;
-
-    if(!db_exists_impl(ctx, key_name, item_id))
-    {
-        ctx.ctx.insert_json_one_new(as_ser);
-    }
-    else
-    {
-        nlohmann::json selector;
-        selector[key_name] = item_id;
-
-        nlohmann::json to_set;
-        to_set["$set"] = as_ser;
-
-        ctx.ctx.update_json_one_new(selector, to_set);
-    }
-    #else
-    nlohmann::json as_ser = serialise(val, serialise_mode::DISK);
-
-    nlohmann::json hacky_data = val.data;
-    hacky_data["item_id"] = val.item_id;
-
-    for(auto& i : hacky_data.items())
-    {
-        as_ser[i.key()] = i.value();
-    }
-
-    as_ser["item_id"] = val.item_id;
-
-    std::vector<uint8_t> vals = nlohmann::json::to_cbor(as_ser);
-
-    if(vals.size() == 0)
-        throw std::runtime_error("Vals.size() == 0");
-
-    std::string_view view((const char*)&vals[0], vals.size());
-
-    ctx.write(db_id, any_to_string(item_id), view);
-    #endif
-}
-#endif // 0
 
 template<typename T>
 std::vector<T> db_load_all_impl(read_type& ctx, const std::string& key_name, int db_id)
@@ -486,10 +419,6 @@ std::vector<T> db_load_all_impl(read_type& ctx, const std::string& key_name, int
     for(db::data& dat : data)
     {
         T& val = ret.emplace_back();
-
-        /*nlohmann::json json = nlohmann::json::from_cbor(dat.data_view);
-
-        deserialise(json, val, serialise_mode::DISK);*/
 
         val = deserialise_msg<T>(dat.data_view);
     }
