@@ -283,7 +283,7 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                     if(!db_disk_load(rwtx, s, en.id))
                         throw std::runtime_error("Booped");
 
-                    s.call_for_type(type, [](entity::entity& fen, auto& fevent, entity::event_type ftype)
+                    s.call_for_type(type, [&](entity::entity& fen, auto& fevent, entity::event_type ftype)
                     {
                         ///should be 100% accurate at determining if its the same event
                         ///New events cannot be scheduled for any time other than >= current time
