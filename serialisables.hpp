@@ -23,6 +23,15 @@ struct mongo_read_proxy;
     std::vector<type> db_disk_load_all(db::read_tx& ctx, const type& dummy) {return db_load_all_impl<type>(ctx, #key_name, (int)db_id);} \
     void db_disk_remove_all(db::read_write_tx& ctx, const type& dummy){return db_remove_all_impl<type>(ctx, #key_name, (int)db_id);}
 
+namespace entity
+{
+    struct ship;
+}
+
+namespace space
+{
+    struct solar_system;
+}
 
 DECLARE_SERIALISE_FUNCTION(user_limit);
 DECLARE_SERIALISE_FUNCTION(timestamped_position);
@@ -43,17 +52,6 @@ DECLARE_SERIALISE_FUNCTION(item);
 DECLARE_SERIALISE_FUNCTION(playspace_network_link);
 DECLARE_SERIALISE_FUNCTION(chat_channel);
 DECLARE_SERIALISE_FUNCTION(chat_message);
-
-namespace entity
-{
-    struct ship;
-}
-
-namespace space
-{
-    struct solar_system;
-}
-
 DEFINE_SERIALISE_FUNCTION(entity::ship);
 DEFINE_SERIALISE_FUNCTION(space::solar_system);
 
