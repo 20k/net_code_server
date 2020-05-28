@@ -259,6 +259,8 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             {
                 printf("Hooray! I am a callback of type %i\n", type);
 
+                uint64_t original_timestamp = event.timestamp;
+
                 if(args.has(event.callback))
                 {
                     js::value entity_id = js::make_value(vctx, (int)en.id);
@@ -283,6 +285,13 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
 
                     s.call_for_type(type, [](entity::entity& fen, auto& fevent, entity::event_type ftype)
                     {
+                        ///should be 100% accurate at determining if its the same event
+                        ///New events cannot be scheduled for any time other than >= current time
+                        ///old events can only be fired if they are < current timestamp
+                        ///can only ever have one event of a type
+                        if(original_timestamp != event.timestamp)
+                            return;
+
                         fevent.fired = true;
                     });
 
