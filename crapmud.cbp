@@ -411,6 +411,7 @@
 			<Add option="-lboost_fiber-mt" />
 			<Add option="-lboost_context-mt" />
 			<Add option="-llmdb" />
+			<Add option="-lmsgpack" />
 			<Add directory="deps/libs" />
 			<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/win64" />
 			<Add directory="deps/liblmdb" />
@@ -523,6 +524,7 @@
 		<Unit filename="quest_manager.hpp" />
 		<Unit filename="rate_limiting.cpp" />
 		<Unit filename="rate_limiting.hpp" />
+		<Unit filename="realtime_script_data.hpp" />
 		<Unit filename="reoccurring_task_handler.cpp" />
 		<Unit filename="reoccurring_task_handler.hpp" />
 		<Unit filename="rng.cpp" />

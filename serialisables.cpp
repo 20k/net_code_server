@@ -1,5 +1,6 @@
 #include "serialisables.hpp"
 #include <networking/serialisable.hpp>
+#include <networking/serialisable_msgpack.hpp>
 #include "user.hpp"
 #include "auth.hpp"
 #include <secret/node.hpp>
@@ -17,257 +18,258 @@
 #include <secret/solar_system.hpp>
 
 template<typename T>
-DEFINE_SERIALISE_FUNCTION(event_queue::timestamp_event_base<T>)
+DEFINE_MSG_FSERIALISE(event_queue::timestamp_event_base<T>)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(7);
 
-    DO_FSERIALISE(timestamp);
-    DO_FSERIALISE(quantity);
-    DO_FSERIALISE(originator_script);
-    DO_FSERIALISE(originator_script_id);
-    DO_FSERIALISE(entity_id);
-    DO_FSERIALISE(callback);
-    DO_FSERIALISE(fired);
+    DO_MSG_FSERIALISE_SIMPLE(timestamp);
+    DO_MSG_FSERIALISE_SIMPLE(quantity);
+    DO_MSG_FSERIALISE_SIMPLE(originator_script);
+    DO_MSG_FSERIALISE_SIMPLE(originator_script_id);
+    DO_MSG_FSERIALISE_SIMPLE(entity_id);
+    DO_MSG_FSERIALISE_SIMPLE(callback);
+    DO_MSG_FSERIALISE_SIMPLE(fired);
 }
 
 template<typename T>
-DEFINE_SERIALISE_FUNCTION(event_queue::event_stack<T>)
+DEFINE_MSG_FSERIALISE(event_queue::event_stack<T>)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(1);
 
-    DO_FSERIALISE(events);
+    DO_MSG_FSERIALISE_SIMPLE(events);
 }
 
-DEFINE_SERIALISE_FUNCTION(user_limit)
+DEFINE_MSG_FSERIALISE(user_limit)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(2);
 
-    DO_FSERIALISE(data);
-    DO_FSERIALISE(time_at);
+    DO_MSG_FSERIALISE_SIMPLE(data);
+    DO_MSG_FSERIALISE_SIMPLE(time_at);
 }
 
-DEFINE_SERIALISE_FUNCTION(timestamped_position)
+DEFINE_MSG_FSERIALISE(timestamped_position)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(5);
 
-    DO_FSERIALISE(type);
-    DO_FSERIALISE(timestamp);
-    DO_FSERIALISE(position);
-    DO_FSERIALISE(notif_on_finish);
-    DO_FSERIALISE(system_to_arrive_at);
+    DO_MSG_FSERIALISE_SIMPLE(type);
+    DO_MSG_FSERIALISE_SIMPLE(timestamp);
+    DO_MSG_FSERIALISE_SIMPLE(position);
+    DO_MSG_FSERIALISE_SIMPLE(notif_on_finish);
+    DO_MSG_FSERIALISE_SIMPLE(system_to_arrive_at);
 }
 
-DEFINE_SERIALISE_FUNCTION(timestamp_move_queue)
+DEFINE_MSG_FSERIALISE(timestamp_move_queue)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(1);
 
-    DO_FSERIALISE(timestamp_queue);
+    DO_MSG_FSERIALISE_SIMPLE(timestamp_queue);
 }
 
-DEFINE_SERIALISE_FUNCTION(user)
+DEFINE_MSG_FSERIALISE(user)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(14);
 
-    DO_FSERIALISE(name);
-    DO_FSERIALISE(cash);
-    DO_FSERIALISE(auth_hex);
-    DO_FSERIALISE(upgr_idx);
-    DO_FSERIALISE(loaded_upgr_idx);
-    DO_FSERIALISE(initial_connection_setup);
-    DO_FSERIALISE(call_stack);
-    DO_FSERIALISE(owner_list);
-    DO_FSERIALISE(users_i_have_access_to);
+    DO_MSG_FSERIALISE_SIMPLE(name);
+    DO_MSG_FSERIALISE_SIMPLE(cash);
+    DO_MSG_FSERIALISE_SIMPLE(auth_hex);
+    DO_MSG_FSERIALISE_SIMPLE(upgr_idx);
+    DO_MSG_FSERIALISE_SIMPLE(loaded_upgr_idx);
+    DO_MSG_FSERIALISE_SIMPLE(initial_connection_setup);
+    DO_MSG_FSERIALISE_SIMPLE(call_stack);
+    DO_MSG_FSERIALISE_SIMPLE(owner_list);
+    DO_MSG_FSERIALISE_SIMPLE(users_i_have_access_to);
+
     try
     {
-        DO_FSERIALISE(user_limits);
+        DO_MSG_FSERIALISE_SIMPLE(user_limits);
     }
     catch(...)
     {
 
     }
 
-    DO_FSERIALISE(pos);
-    DO_FSERIALISE(has_local_pos);
-    DO_FSERIALISE(hacked_progress);
-    DO_FSERIALISE(move_queue);
+    DO_MSG_FSERIALISE_SIMPLE(pos);
+    DO_MSG_FSERIALISE_SIMPLE(has_local_pos);
+    DO_MSG_FSERIALISE_SIMPLE(hacked_progress);
+    DO_MSG_FSERIALISE_SIMPLE(move_queue);
 }
 
-DEFINE_SERIALISE_FUNCTION(auth)
+DEFINE_MSG_FSERIALISE(auth)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(3);
 
-    DO_FSERIALISE(auth_token_hex);
-    DO_FSERIALISE(steam_id);
-    DO_FSERIALISE(users);
+    DO_MSG_FSERIALISE_SIMPLE(auth_token_hex);
+    DO_MSG_FSERIALISE_SIMPLE(steam_id);
+    DO_MSG_FSERIALISE_SIMPLE(users);
 }
 
-DEFINE_SERIALISE_FUNCTION(user_log_fragment)
+DEFINE_MSG_FSERIALISE(user_log_fragment)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(4);
 
-    DO_FSERIALISE(col);
-    DO_FSERIALISE(key);
-    DO_FSERIALISE(text);
-    DO_FSERIALISE(hide_key);
+    DO_MSG_FSERIALISE_SIMPLE(col);
+    DO_MSG_FSERIALISE_SIMPLE(key);
+    DO_MSG_FSERIALISE_SIMPLE(text);
+    DO_MSG_FSERIALISE_SIMPLE(hide_key);
 }
 
-DEFINE_SERIALISE_FUNCTION(user_log)
+DEFINE_MSG_FSERIALISE(user_log)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(1);
 
-    DO_FSERIALISE(frags);
+    DO_MSG_FSERIALISE_SIMPLE(frags);
 }
 
-DEFINE_SERIALISE_FUNCTION(user_node)
+DEFINE_MSG_FSERIALISE(user_node)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(9);
 
-    DO_FSERIALISE(type);
-    DO_FSERIALISE(state);
-    DO_FSERIALISE(max_locks);
-    DO_FSERIALISE(owned_by);
-    DO_FSERIALISE(unique_id);
-    DO_FSERIALISE(attached_locks);
-    DO_FSERIALISE(connected_to);
-    DO_FSERIALISE(new_logs);
-    DO_FSERIALISE(time_last_breached_at_s);
+    DO_MSG_FSERIALISE_SIMPLE(type);
+    DO_MSG_FSERIALISE_SIMPLE(state);
+    DO_MSG_FSERIALISE_SIMPLE(max_locks);
+    DO_MSG_FSERIALISE_SIMPLE(owned_by);
+    DO_MSG_FSERIALISE_SIMPLE(unique_id);
+    DO_MSG_FSERIALISE_SIMPLE(attached_locks);
+    DO_MSG_FSERIALISE_SIMPLE(connected_to);
+    DO_MSG_FSERIALISE_SIMPLE(new_logs);
+    DO_MSG_FSERIALISE_SIMPLE(time_last_breached_at_s);
 
-    if(ctx.serialisation && !ctx.encode)
+    if(!ctx.encode)
     {
-        while(me->new_logs.size() > MAX_LOGS)
-            me->new_logs.erase(me->new_logs.begin());
+        while(me.new_logs.size() > MAX_LOGS)
+            me.new_logs.erase(me.new_logs.begin());
     }
 }
 
-DEFINE_SERIALISE_FUNCTION(user_nodes)
+DEFINE_MSG_FSERIALISE(user_nodes)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(2);
 
-    DO_FSERIALISE(nodes);
-    DO_FSERIALISE(owned_by);
+    DO_MSG_FSERIALISE_SIMPLE(nodes);
+    DO_MSG_FSERIALISE_SIMPLE(owned_by);
 }
 
-DEFINE_SERIALISE_FUNCTION(npc_prop)
+DEFINE_MSG_FSERIALISE(npc_prop)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(2);
 
-    DO_FSERIALISE(val);
-    DO_FSERIALISE(cap);
+    DO_MSG_FSERIALISE_SIMPLE(val);
+    DO_MSG_FSERIALISE_SIMPLE(cap);
 }
 
-DEFINE_SERIALISE_FUNCTION(npc_prop_list)
+DEFINE_MSG_FSERIALISE(npc_prop_list)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(3);
 
-    DO_FSERIALISE(name);
-    DO_FSERIALISE(props);
-    DO_FSERIALISE(wh_puzz_set);
+    DO_MSG_FSERIALISE_SIMPLE(name);
+    DO_MSG_FSERIALISE_SIMPLE(props);
+    DO_MSG_FSERIALISE_SIMPLE(wh_puzz_set);
 }
 
-DEFINE_SERIALISE_FUNCTION(event_impl)
+DEFINE_MSG_FSERIALISE(event_impl)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(4);
 
-    DO_FSERIALISE(id);
-    DO_FSERIALISE(user_name);
-    DO_FSERIALISE(unique_event_tag);
-    DO_FSERIALISE(complete);
+    DO_MSG_FSERIALISE_SIMPLE(id);
+    DO_MSG_FSERIALISE_SIMPLE(user_name);
+    DO_MSG_FSERIALISE_SIMPLE(unique_event_tag);
+    DO_MSG_FSERIALISE_SIMPLE(complete);
 }
 
-DEFINE_SERIALISE_FUNCTION(task_data_db)
+DEFINE_MSG_FSERIALISE(task_data_db)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(6);
 
-    DO_FSERIALISE(start_time_s);
-    DO_FSERIALISE(end_time_s);
-    DO_FSERIALISE(called_callback);
-    DO_FSERIALISE(type);
-    DO_FSERIALISE(udata);
-    DO_FSERIALISE(count_offset);
+    DO_MSG_FSERIALISE_SIMPLE(start_time_s);
+    DO_MSG_FSERIALISE_SIMPLE(end_time_s);
+    DO_MSG_FSERIALISE_SIMPLE(called_callback);
+    DO_MSG_FSERIALISE_SIMPLE(type);
+    DO_MSG_FSERIALISE_SIMPLE(udata);
+    DO_MSG_FSERIALISE_SIMPLE(count_offset);
 }
 
-DEFINE_SERIALISE_FUNCTION(quest)
+DEFINE_MSG_FSERIALISE(quest)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(6);
 
-    DO_FSERIALISE(id);
-    DO_FSERIALISE(user_for);
-    DO_FSERIALISE(name);
-    DO_FSERIALISE(description);
-    DO_FSERIALISE(quest_data);
-    DO_FSERIALISE(run_on_complete);
+    DO_MSG_FSERIALISE_SIMPLE(id);
+    DO_MSG_FSERIALISE_SIMPLE(user_for);
+    DO_MSG_FSERIALISE_SIMPLE(name);
+    DO_MSG_FSERIALISE_SIMPLE(description);
+    DO_MSG_FSERIALISE_SIMPLE(quest_data);
+    DO_MSG_FSERIALISE_SIMPLE(run_on_complete);
 }
 
-DEFINE_SERIALISE_FUNCTION(low_level_structure)
+DEFINE_MSG_FSERIALISE(low_level_structure)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(6);
 
-    DO_FSERIALISE(name);
-    DO_FSERIALISE(px);
-    DO_FSERIALISE(py);
-    DO_FSERIALISE(pz);
-    DO_FSERIALISE(radius);
-    DO_FSERIALISE(user_list);
+    DO_MSG_FSERIALISE_SIMPLE(name);
+    DO_MSG_FSERIALISE_SIMPLE(px);
+    DO_MSG_FSERIALISE_SIMPLE(py);
+    DO_MSG_FSERIALISE_SIMPLE(pz);
+    DO_MSG_FSERIALISE_SIMPLE(radius);
+    DO_MSG_FSERIALISE_SIMPLE(user_list);
 }
 
-DEFINE_SERIALISE_FUNCTION(item)
+DEFINE_MSG_FSERIALISE(item)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(2);
 
-    DO_FSERIALISE(item_id);
-    DO_FSERIALISE(data);
+    DO_MSG_FSERIALISE_SIMPLE(item_id);
+    DO_MSG_FSERIALISE_SIMPLE(data);
 }
 
-DEFINE_SERIALISE_FUNCTION(playspace_network_link)
+DEFINE_MSG_FSERIALISE(playspace_network_link)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(3);
 
-    DO_FSERIALISE(name);
-    DO_FSERIALISE(links);
-    DO_FSERIALISE(strengths);
+    DO_MSG_FSERIALISE_SIMPLE(name);
+    DO_MSG_FSERIALISE_SIMPLE(links);
+    DO_MSG_FSERIALISE_SIMPLE(strengths);
 }
 
-DEFINE_SERIALISE_FUNCTION(chat_channel)
+DEFINE_MSG_FSERIALISE(chat_channel)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(4);
 
-    DO_FSERIALISE(channel_name);
-    DO_FSERIALISE(password);
-    DO_FSERIALISE(user_list);
-    DO_FSERIALISE(history);
+    DO_MSG_FSERIALISE_SIMPLE(channel_name);
+    DO_MSG_FSERIALISE_SIMPLE(password);
+    DO_MSG_FSERIALISE_SIMPLE(user_list);
+    DO_MSG_FSERIALISE_SIMPLE(history);
 }
 
-DEFINE_SERIALISE_FUNCTION(chat_message)
+DEFINE_MSG_FSERIALISE(chat_message)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(6);
 
-    DO_FSERIALISE(id);
-    DO_FSERIALISE(time_ms);
-    DO_FSERIALISE(originator);
-    DO_FSERIALISE(msg);
-    DO_FSERIALISE(recipient_list);
-    DO_FSERIALISE(sent_to_client);
+    DO_MSG_FSERIALISE_SIMPLE(id);
+    DO_MSG_FSERIALISE_SIMPLE(time_ms);
+    DO_MSG_FSERIALISE_SIMPLE(originator);
+    DO_MSG_FSERIALISE_SIMPLE(msg);
+    DO_MSG_FSERIALISE_SIMPLE(recipient_list);
+    DO_MSG_FSERIALISE_SIMPLE(sent_to_client);
 }
 
-DEFINE_SERIALISE_FUNCTION(entity::ship)
+DEFINE_MSG_FSERIALISE(entity::ship)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(5);
 
-    DO_FSERIALISE(id);
-    DO_FSERIALISE(solar_system_id);
-    DO_FSERIALISE(position);
-    DO_FSERIALISE(system_current);
-    DO_FSERIALISE(system_max);
+    DO_MSG_FSERIALISE_SIMPLE(id);
+    DO_MSG_FSERIALISE_SIMPLE(solar_system_id);
+    DO_MSG_FSERIALISE_SIMPLE(position);
+    DO_MSG_FSERIALISE_SIMPLE(system_current);
+    DO_MSG_FSERIALISE_SIMPLE(system_max);
 }
 
-DEFINE_SERIALISE_FUNCTION(space::solar_system)
+DEFINE_MSG_FSERIALISE(space::solar_system)
 {
-    SERIALISE_SETUP();
+    SETUP_MSG_FSERIALISE_SIMPLE(4);
 
-    DO_FSERIALISE(id);
-    DO_FSERIALISE(name);
-    DO_FSERIALISE(seclevel);
-    DO_FSERIALISE(ships);
+    DO_MSG_FSERIALISE_SIMPLE(id);
+    DO_MSG_FSERIALISE_SIMPLE(name);
+    DO_MSG_FSERIALISE_SIMPLE(seclevel);
+    DO_MSG_FSERIALISE_SIMPLE(ships);
 }
 
 template<typename T>
@@ -323,9 +325,10 @@ bool db_load_impl(T& val, read_type& ctx, const std::string& key_name, const U& 
 
     val = T();
 
-    nlohmann::json json = nlohmann::json::from_cbor(data.value().data_view);
+    /*nlohmann::json json = nlohmann::json::from_cbor(data.value().data_view);
+    deserialise(json, val, serialise_mode::DISK);*/
 
-    deserialise(json, val, serialise_mode::DISK);
+    val = deserialise_msg<T>(data.value().data_view);
 
     return true;
     #endif
@@ -377,7 +380,9 @@ void db_overwrite_impl(T& val, read_write_type& ctx, const std::string& key_name
 
     //std::cout << "WRITING KEYVAL " << key_val << " FOR " << key_name << std::endl;
 
-    std::vector<uint8_t> vals = nlohmann::json::to_cbor(serialise(val, serialise_mode::DISK));
+    //std::vector<uint8_t> vals = nlohmann::json::to_cbor(serialise(val, serialise_mode::DISK));
+
+    std::string vals = serialise_msg(val);
 
     if(vals.size() == 0)
         throw std::runtime_error("Vals.size() == 0");
@@ -388,6 +393,8 @@ void db_overwrite_impl(T& val, read_write_type& ctx, const std::string& key_name
     #endif
 }
 
+#if 0
+///think this is no longer relevant with the db rewrite?
 template<>
 void db_overwrite_impl<item, std::string>(item& val, read_write_type& ctx, const std::string& key_name, const std::string& item_id, int db_id)
 {
@@ -441,6 +448,7 @@ void db_overwrite_impl<item, std::string>(item& val, read_write_type& ctx, const
     ctx.write(db_id, any_to_string(item_id), view);
     #endif
 }
+#endif // 0
 
 template<typename T>
 std::vector<T> db_load_all_impl(read_type& ctx, const std::string& key_name, int db_id)
@@ -479,9 +487,11 @@ std::vector<T> db_load_all_impl(read_type& ctx, const std::string& key_name, int
     {
         T& val = ret.emplace_back();
 
-        nlohmann::json json = nlohmann::json::from_cbor(dat.data_view);
+        /*nlohmann::json json = nlohmann::json::from_cbor(dat.data_view);
 
-        deserialise(json, val, serialise_mode::DISK);
+        deserialise(json, val, serialise_mode::DISK);*/
+
+        val = deserialise_msg<T>(dat.data_view);
     }
 
     return ret;

@@ -2,6 +2,7 @@
 #define SERIALISABLES_HPP_INCLUDED
 
 #include <networking/serialisable_fwd.hpp>
+#include <networking/serialisable_msgpack_fwd.hpp>
 #include "db_storage_backend_lmdb.hpp"
 
 struct mongo_lock_proxy;
@@ -33,27 +34,27 @@ namespace space
     struct solar_system;
 }
 
-DECLARE_SERIALISE_FUNCTION(user_limit);
-DECLARE_SERIALISE_FUNCTION(timestamped_position);
-DECLARE_SERIALISE_FUNCTION(timestamp_move_queue);
-DECLARE_SERIALISE_FUNCTION(user);
-DECLARE_SERIALISE_FUNCTION(auth);
-DECLARE_SERIALISE_FUNCTION(user_log_fragment);
-DECLARE_SERIALISE_FUNCTION(user_log);
-DECLARE_SERIALISE_FUNCTION(user_node);
-DECLARE_SERIALISE_FUNCTION(user_nodes);
-DECLARE_SERIALISE_FUNCTION(npc_prop);
-DECLARE_SERIALISE_FUNCTION(npc_prop_list);
-DECLARE_SERIALISE_FUNCTION(task_data_db);
-DECLARE_SERIALISE_FUNCTION(event_impl);
-DECLARE_SERIALISE_FUNCTION(quest);
-DECLARE_SERIALISE_FUNCTION(low_level_structure);
-DECLARE_SERIALISE_FUNCTION(item);
-DECLARE_SERIALISE_FUNCTION(playspace_network_link);
-DECLARE_SERIALISE_FUNCTION(chat_channel);
-DECLARE_SERIALISE_FUNCTION(chat_message);
-DEFINE_SERIALISE_FUNCTION(entity::ship);
-DEFINE_SERIALISE_FUNCTION(space::solar_system);
+DECLARE_MSG_FSERIALISE(user_limit);
+DECLARE_MSG_FSERIALISE(timestamped_position);
+DECLARE_MSG_FSERIALISE(timestamp_move_queue);
+DECLARE_MSG_FSERIALISE(user);
+DECLARE_MSG_FSERIALISE(auth);
+DECLARE_MSG_FSERIALISE(user_log_fragment);
+DECLARE_MSG_FSERIALISE(user_log);
+DECLARE_MSG_FSERIALISE(user_node);
+DECLARE_MSG_FSERIALISE(user_nodes);
+DECLARE_MSG_FSERIALISE(npc_prop);
+DECLARE_MSG_FSERIALISE(npc_prop_list);
+DECLARE_MSG_FSERIALISE(task_data_db);
+DECLARE_MSG_FSERIALISE(event_impl);
+DECLARE_MSG_FSERIALISE(quest);
+DECLARE_MSG_FSERIALISE(low_level_structure);
+DECLARE_MSG_FSERIALISE(item);
+DECLARE_MSG_FSERIALISE(playspace_network_link);
+DECLARE_MSG_FSERIALISE(chat_channel);
+DECLARE_MSG_FSERIALISE(chat_message);
+DEFINE_MSG_FSERIALISE(entity::ship);
+DEFINE_MSG_FSERIALISE(space::solar_system);
 
 DECLARE_GENERIC_DB(npc_prop_list, std::string);
 DECLARE_GENERIC_DB(event_impl, std::string);
