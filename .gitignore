@@ -1,6 +1,7 @@
 /Deployed_Infrastructure/*.dll
 *.o
 *.exe
+*.d
 /Deployed_Infrastructure_old
 script_compile
 /script_compilation/node_modules/.bin
@@ -8,3 +9,9 @@ script_compile
 SFML
 boost
 libs
+/NetCodeServer.make
+/crash.txt
+/log.txt
+/lmdb_storage/*.mdb
+/*.dll
+.vscode/
