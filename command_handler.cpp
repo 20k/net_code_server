@@ -1484,42 +1484,44 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
         {
             all_shared->state.set_user_name("");
 
-            db::read_write_tx rtx;
-
             {
-                auto fauth = all_shared->state.get_auth();
-
-                auth to_check;
-
-                if(!to_check.load_from_db(rtx, fauth))
-                    return make_response(make_error_col("Trying something sneaky eh 2?"));
-
-                #ifdef TESTING
-                #define MAX_USERS 999
-                #else // TESTING
-                #define MAX_USERS 5
-                #endif
-
-                if(to_check.users.size() >= MAX_USERS)
-                    return make_response(make_error_col("Max users " + std::to_string(to_check.users.size()) + "/" + std::to_string(MAX_USERS)));
-
-                to_check.insert_user_exclusive(user_name);
-                to_check.overwrite_in_db(rtx);
-            }
-
-            {
-
-                user new_user;
-
-                auto fauth = all_shared->state.get_auth();
+                db::read_write_tx rtx;
 
                 {
-                    new_user.construct_new_user(rtx, user_name, fauth);
-                    new_user.load_from_db(rtx, user_name);
-                    new_user.overwrite_user_in_db(rtx);
+                    auto fauth = all_shared->state.get_auth();
+
+                    auth to_check;
+
+                    if(!to_check.load_from_db(rtx, fauth))
+                        return make_response(make_error_col("Trying something sneaky eh 2?"));
+
+                    #ifdef TESTING
+                    #define MAX_USERS 999
+                    #else // TESTING
+                    #define MAX_USERS 5
+                    #endif
+
+                    if(to_check.users.size() >= MAX_USERS)
+                        return make_response(make_error_col("Max users " + std::to_string(to_check.users.size()) + "/" + std::to_string(MAX_USERS)));
+
+                    to_check.insert_user_exclusive(user_name);
+                    to_check.overwrite_in_db(rtx);
                 }
 
-                all_shared->state.set_user_name(new_user.name);
+                {
+
+                    user new_user;
+
+                    auto fauth = all_shared->state.get_auth();
+
+                    {
+                        new_user.construct_new_user(rtx, user_name, fauth);
+                        new_user.load_from_db(rtx, user_name);
+                        new_user.overwrite_user_in_db(rtx);
+                    }
+
+                    all_shared->state.set_user_name(new_user.name);
+                }
             }
 
             std::string cur_name = all_shared->state.get_user_name();
