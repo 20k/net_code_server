@@ -40,6 +40,7 @@ enum class mongo_database_type
     GLOBAL_ID_COUNTER,
     SHIP_PROPERTIES,
     SOLAR_SYSTEM_PROPERTIES,
+    PLAYABLE_SPACE_PROPERTIES,
     MONGO_COUNT
 };
 

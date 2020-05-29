@@ -32,6 +32,7 @@ namespace entity
 namespace space
 {
     struct solar_system;
+    struct playable_space;
 }
 
 DECLARE_MSG_FSERIALISE(user_limit);
@@ -55,6 +56,7 @@ DECLARE_MSG_FSERIALISE(chat_channel);
 DECLARE_MSG_FSERIALISE(chat_message);
 DEFINE_MSG_FSERIALISE(entity::ship);
 DEFINE_MSG_FSERIALISE(space::solar_system);
+DEFINE_MSG_FSERIALISE(space::playable_space);
 
 DECLARE_GENERIC_DB(npc_prop_list, std::string);
 DECLARE_GENERIC_DB(event_impl, std::string);
@@ -70,5 +72,6 @@ DECLARE_GENERIC_DB(chat_message, size_t);
 DECLARE_GENERIC_DB(user_nodes, std::string);
 DECLARE_GENERIC_DB(entity::ship, uint32_t);
 DECLARE_GENERIC_DB(space::solar_system, uint32_t);
+DECLARE_GENERIC_DB(space::playable_space, uint32_t);
 
 #endif // SERIALISABLES_HPP_INCLUDED

@@ -275,6 +275,13 @@ DEFINE_MSG_FSERIALISE(space::solar_system)
     DO_MSG_FSERIALISE_SIMPLE(radius);
 }
 
+DEFINE_MSG_FSERIALISE(space::playable_space)
+{
+    SETUP_MSG_FSERIALISE_SIMPLE(1);
+
+    DO_MSG_FSERIALISE_SIMPLE(sols);
+}
+
 template<typename T>
 std::string any_to_string(const T& in)
 {
@@ -460,3 +467,4 @@ DEFINE_GENERIC_DB(chat_message, size_t, id, mongo_database_type::CHAT_MESSAGES);
 DEFINE_GENERIC_DB(user_nodes, std::string, owned_by, mongo_database_type::NODE_PROPERTIES);
 DEFINE_GENERIC_DB(entity::ship, uint32_t, id, mongo_database_type::SHIP_PROPERTIES);
 DEFINE_GENERIC_DB(space::solar_system, uint32_t, id, mongo_database_type::SOLAR_SYSTEM_PROPERTIES);
+DEFINE_GENERIC_DB(space::playable_space, uint32_t, id, mongo_database_type::PLAYABLE_SPACE_PROPERTIES);
