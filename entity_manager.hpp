@@ -11,7 +11,14 @@ namespace entity
     enum event_type
     {
         MOVE,
-        SYSTEM_RECHARGE,
+        SYSTEMS_START,
+        SHIELDS = SYSTEMS_START,
+        ARMOUR,
+        HULL,
+        FUEL, ///intra system, power
+        WARP_FUEL, ///inter system
+        JUMP_FUEL,  ///arbitrary inter system
+        SYSTEMS_END,
     };
 
     struct entity
@@ -42,9 +49,19 @@ namespace entity
         void call_for_type(event_type type, T t)
         {
             if(type == event_type::MOVE)
+            {
                 t(*this, position.events[1], type);
+            }
+            else if(type >= event_type::SYSTEMS_START && type < event_type::SYSTEMS_END)
+            {
+                int idx = (int)type - (int)event_type::SYSTEMS_START;
+
+                t(*this, system_current[idx].events[1], type);
+            }
             else
-                throw std::runtime_error("Other types not supported in call_for_type");
+            {
+                throw std::runtime_error("Type not supported in call_for_type");
+            }
         }
 
         vec3f get_position(uint64_t timestamp);
@@ -62,7 +79,9 @@ namespace entity
             {
                 if(system_current[i].events[1].timestamp >= last_timestamp && system_current[i].events[1].timestamp < current_timestamp && !system_current[i].events[1].fired)
                 {
-                    t(*this, system_current[i].events[1], event_type::SYSTEM_RECHARGE);
+                    int type = i + (int)SYSTEMS_START;
+
+                    t(*this, system_current[i].events[1], type);
                 }
             }
         }
@@ -70,10 +89,24 @@ namespace entity
         template<typename T>
         void add_event(uint64_t current_timestamp, const T& event, event_type type)
         {
-            if(type != MOVE)
-                throw std::runtime_error("Ship systems don't really exist yet, this function is a placeholder");
+            if constexpr(std::is_same_v<T, event_queue::timestamp_event_base<vec3f>>)
+            {
+                if(type != event_type::MOVE)
+                    throw std::runtime_error("Wrong type");
 
-            position.interrupt_event(current_timestamp, event);
+                position.interrupt_event(current_timestamp, event);
+            }
+
+            else if constexpr(std::is_same_v<T, event_queue::timestamp_event_base<float>>)
+            {
+                if(type < event_type::SYSTEMS_START || type >= event_type::SYSTEMS_END)
+                    throw std::runtime_error("Wrong time for float");
+
+                system_current[(int)type - (int)event_type::SYSTEMS_START].interrupt_event(current_timestamp, event);
+            }
+
+            else
+                throw std::runtime_error("Ship systems don't really exist yet, this function is a placeholder");
         }
     };
 }
