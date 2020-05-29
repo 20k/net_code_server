@@ -36,9 +36,9 @@ vec3f entity::ship::get_position(uint64_t timestamp)
     return position.get(timestamp);
 }
 
-std::array<float, SHIP_SPECS_COUNT> entity::ship::get_specs(uint64_t timestamp)
+std::array<float, entity::systems_count> entity::ship::get_specs(uint64_t timestamp)
 {
-    std::array<float, SHIP_SPECS_COUNT> ret;
+    std::array<float, systems_count> ret;
 
     for(int i=0; i < (int)ret.size(); i++)
     {

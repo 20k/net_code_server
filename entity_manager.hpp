@@ -4,8 +4,6 @@
 #include <vec/vec.hpp>
 #include "timestamped_event_queue.hpp"
 
-#define SHIP_SPECS_COUNT 6
-
 namespace entity
 {
     enum event_type
@@ -27,9 +25,11 @@ namespace entity
         uint32_t solar_system_id = -1;
     };
 
+    constexpr int systems_count = SYSTEMS_END - SYSTEMS_START;
+
     //using ship_stats = vec<SHIP_SPECS_COUNT, float>;
 
-    using ship_state = std::array<event_queue::event_stack<float>, SHIP_SPECS_COUNT>;
+    using ship_state = std::array<event_queue::event_stack<float>, systems_count>;
 
     ///ok so. You cannot queue up the events move -> dock
     ///because that is expected to happen from the javascript scripting side
@@ -39,7 +39,7 @@ namespace entity
         event_queue::event_stack<vec3f> position;
 
         ship_state system_current;
-        std::array<float, SHIP_SPECS_COUNT> system_max;
+        std::array<float, systems_count> system_max;
 
         uint64_t get_next_event();
         uint64_t get_next_event_of(event_type type);
@@ -65,7 +65,7 @@ namespace entity
         }
 
         vec3f get_position(uint64_t timestamp);
-        std::array<float, SHIP_SPECS_COUNT> get_specs(uint64_t timestamp);
+        std::array<float, systems_count> get_specs(uint64_t timestamp);
 
         template<typename T>
         void on_trigger_event(size_t current_timestamp, size_t last_timestamp, T t)
