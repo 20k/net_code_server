@@ -1125,31 +1125,34 @@ js::value queue_test_event(js::value_context* vctx, js::value id, js::value dest
 
     vec3f final_pos = vdest;
 
+    ///HACKY, calls the playable space constructor the first time and resets all the ships in the game
+    space::get_global_playable_space();
+
     {
-        db::read_tx rtx;
+        db::read_write_tx rwtx;
 
         entity::ship s;
 
-        if(!db_disk_load(rtx, s, (int)id))
+        if(!db_disk_load(rwtx, s, (int)id))
             return js::make_error(*vctx, "No such ship");
 
         final_pos += s.position.get(ctime);
+
+        event_queue::timestamp_event_base<vec3f> positional_event;
+        positional_event.timestamp = ctime + vdest.length() * 1000;
+        positional_event.quantity = final_pos;
+        positional_event.originator_script = get_script_host(*vctx) + "." + get_script_ending(*vctx); ///WRONG, USE SECRET HOSTS
+        positional_event.originator_script_id = rid;
+        positional_event.callback = callback;
+        positional_event.fired = false;
+        positional_event.entity_id = (int)id;
+
+        std::cout << "WHEN " << (positional_event.timestamp - ctime) << std::endl;
+
+        ///currently doing no ownership checks at all so that's a thing
+
+        space::get_global_playable_space().add_event_to_id(rwtx, *realtime_data, id, ctime, positional_event, entity::MOVE);
     }
-
-    event_queue::timestamp_event_base<vec3f> positional_event;
-    positional_event.timestamp = ctime + vdest.length() * 1000;
-    positional_event.quantity = final_pos;
-    positional_event.originator_script = get_script_host(*vctx) + "." + get_script_ending(*vctx); ///WRONG, USE SECRET HOSTS
-    positional_event.originator_script_id = rid;
-    positional_event.callback = callback;
-    positional_event.fired = false;
-    positional_event.entity_id = (int)id;
-
-    std::cout << "WHEN " << (positional_event.timestamp - ctime) << std::endl;
-
-    ///currently doing no ownership checks at all so that's a thing
-
-    space::get_global_playable_space().add_event_to_id(*realtime_data, id, ctime, positional_event, entity::MOVE);
 
     return js::make_success(*vctx);
 }
