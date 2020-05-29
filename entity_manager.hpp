@@ -102,7 +102,7 @@ namespace entity
                 if(type < event_type::SYSTEMS_START || type >= event_type::SYSTEMS_END)
                     throw std::runtime_error("Wrong time for float");
 
-                system_current[(int)type - (int)event_type::SYSTEMS_START].interrupt_event(current_timestamp, event);
+                system_current[type - event_type::SYSTEMS_START].interrupt_event(current_timestamp, event);
             }
 
             else
