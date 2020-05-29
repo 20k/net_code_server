@@ -19,16 +19,20 @@ uint64_t entity::ship::get_next_event_of(event_type type)
 {
     if(type == event_type::MOVE)
         return position.events[1].timestamp;
-
-    throw std::runtime_error("Unsupported get_next_event_of");
+    else if(type >= SYSTEMS_START && type < SYSTEMS_END)
+        return system_current[type - SYSTEMS_START].events[1].timestamp;
+    else
+        throw std::runtime_error("Unsupported get_next_event_of");
 }
 
 event_queue::timestamp_event_header& entity::ship::get_header_of(event_type type)
 {
     if(type == event_type::MOVE)
         return position.events[1];
-
-    throw std::runtime_error("Unsupported get_next_event_of");
+    else if(type >= SYSTEMS_START && type < SYSTEMS_END)
+        return system_current[type - SYSTEMS_START].events[1];
+    else
+        throw std::runtime_error("Unsupported get_header_of");
 }
 
 vec3f entity::ship::get_position(uint64_t timestamp)
