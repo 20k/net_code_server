@@ -3,29 +3,16 @@
 
 #include <vec/vec.hpp>
 #include "timestamped_event_queue.hpp"
+#include "entity_events.hpp"
+#include <secret/ship_components.hpp>
 
 namespace entity
 {
-    enum event_type
-    {
-        MOVE,
-        SYSTEMS_START,
-        SHIELDS = SYSTEMS_START,
-        ARMOUR,
-        HULL,
-        FUEL, ///intra system, power
-        WARP_FUEL, ///inter system
-        JUMP_FUEL,  ///arbitrary inter system
-        SYSTEMS_END,
-    };
-
     struct entity
     {
         uint32_t id = -1;
         uint32_t solar_system_id = -1;
     };
-
-    constexpr int systems_count = SYSTEMS_END - SYSTEMS_START;
 
     //using ship_stats = vec<SHIP_SPECS_COUNT, float>;
 
