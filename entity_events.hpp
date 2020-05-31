@@ -14,6 +14,7 @@ namespace entity
         JUMP_FUEL,  ///arbitrary inter system
         AMMO,
         THRUST,
+        POWER,
         SYSTEMS_END,
         MOVE = SYSTEMS_END,
     };
