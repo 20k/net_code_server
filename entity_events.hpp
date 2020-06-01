@@ -15,6 +15,9 @@ namespace entity
         AMMO,
         THRUST,
         POWER,
+        CARGO,
+        DOCK,
+        CONTROL,
         SYSTEMS_END,
         MOVE = SYSTEMS_END,
     };
