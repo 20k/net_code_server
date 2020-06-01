@@ -18,6 +18,8 @@ namespace entity
         CARGO,
         DOCK,
         CONTROL,
+        STEALTH,
+        CONSTRUCTION,
         SYSTEMS_END,
         MOVE = SYSTEMS_END,
     };
