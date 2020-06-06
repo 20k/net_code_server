@@ -96,6 +96,8 @@ namespace entity
                 throw std::runtime_error("Ship systems don't really exist yet, this function is a placeholder");
         }
     };
+
+    bool is_valid_ship_construction(const std::vector<int>& ids);
 }
 
 #endif // ENTITY_MANAGER_HPP_INCLUDED

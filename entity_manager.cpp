@@ -1,5 +1,6 @@
 #include "entity_manager.hpp"
 #include <assert.h>
+#include "entity_events.hpp"
 
 uint64_t entity::ship::get_next_event()
 {
@@ -50,6 +51,24 @@ std::array<float, entity::systems_count> entity::ship::get_specs(uint64_t timest
     }
 
     return ret;
+}
+
+bool entity::is_valid_ship_construction(const std::vector<int>& ids)
+{
+    int power_net = 0;
+    int control_net = 0;
+    int size_total = 0;
+
+    for(int id : ids)
+    {
+        component::base comp = component::get_base_by_id(id);
+
+        power_net += comp.produced_ps[::entity::POWER];
+        control_net += comp.produced_ps[::entity::CONTROL];
+        size_total += comp.size;
+    }
+
+    return power_net >= 0 && control_net > 0 && size_total <= 14;
 }
 
 namespace
