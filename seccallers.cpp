@@ -1097,6 +1097,22 @@ js::value os_call(js::value_context* vctx, std::string script_name, js::value as
     return val;
 }
 
+js::value make_debug_ship(js::value_context* vctx, js::value val)
+{
+    std::vector<int> component_ids = val;
+
+    if(!entity::is_valid_ship_construction(component_ids))
+        return js::make_error(*vctx, "Not a valid ship construction");
+
+    db::read_write_tx rwtx;
+
+    entity::ship new_ship;
+    new_ship.id = db::get_next_id(rwtx);
+    new_ship.solar_system_id = space::get_global_playable_space().sols[0];
+
+    return js::make_success(*vctx);
+}
+
 js::value queue_test_event(js::value_context* vctx, js::value id, js::value dest, std::string callback)
 {
     if(!js::get_heap_stash(*vctx).has("realtime_script_data"))

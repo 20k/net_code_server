@@ -27,6 +27,7 @@ namespace entity
 
         ship_state system_current;
         std::array<float, systems_count> system_max;
+        std::vector<component::concrete> components;
 
         uint64_t get_next_event();
         uint64_t get_next_event_of(event_type type);
