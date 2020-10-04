@@ -34,16 +34,4 @@ std::string rename_user_force(const std::string& from_name, const std::string& t
 nlohmann::json handle_client_poll_json(user& usr);
 void strip_old_msg_or_notif(mongo_lock_proxy& ctx);
 
-namespace connection_type
-{
-    enum connection_type
-    {
-        WEBSOCKET,
-        WEBSOCKET_SSL,
-        HTTP
-    };
-}
-
-using connection_t = connection_type::connection_type;
-
 #endif // COMMAND_HANDLER_HPP_INCLUDED
