@@ -336,7 +336,7 @@ void websocket_server(connection& conn)
             }
         }
 
-        if(disconnect_clock.getElapsedTime().asSeconds() > 5)
+        /*if(disconnect_clock.getElapsedTime().asSeconds() > 5)
         {
             ///disconnect unauthed users
             for(auto& i : user_states)
@@ -352,7 +352,7 @@ void websocket_server(connection& conn)
             }
 
             disconnect_clock.restart();
-        }
+        }*/
 
         for(auto& i : command_queue)
         {
