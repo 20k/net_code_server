@@ -216,23 +216,55 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                 any = true;
             }
 
-            if(args.has("on_input"))
+            if(args.has("on_textinput"))
             {
-                std::vector<unprocessed_key_info> unprocessed_keystrokes;
+                std::vector<unprocessed_key_info> unprocessed_text_input;
 
                 {
                     safe_lock_guard guard(state.lock);
 
-                    unprocessed_keystrokes = state.unprocessed_keystrokes[current_id];
+                    unprocessed_text_input = state.unprocessed_text_input[current_id];
 
-                    state.unprocessed_keystrokes[current_id].clear();
+                    state.unprocessed_text_input[current_id].clear();
                 }
 
-                while(unprocessed_keystrokes.size() > 0)
+                for(auto i : unprocessed_text_input)
                 {
-                    std::string c = unprocessed_keystrokes[0].key;
-                    bool is_repeat = unprocessed_keystrokes[0].is_repeat;
-                    unprocessed_keystrokes.erase(unprocessed_keystrokes.begin());
+                    std::string c = i.key;
+
+                    js::value local_args1(vctx);
+                    local_args1 = c;
+
+                    auto [success, result] = js::call_prop(args, "on_textinput", local_args1);
+
+                    if(!success)
+                    {
+                        ret = (std::string)result;
+                        force_terminate = true;
+                        break;
+                    }
+                }
+
+                ///DONT SET real_operation
+                any = true;
+            }
+
+            if(args.has("on_input"))
+            {
+                std::vector<unprocessed_key_info> unprocessed_key_input;
+
+                {
+                    safe_lock_guard guard(state.key_lock);
+
+                    unprocessed_key_input = state.unprocessed_key_input[current_id];
+
+                    state.unprocessed_key_input[current_id].clear();
+                }
+
+                for(auto i : unprocessed_key_input)
+                {
+                    std::string c = i.key;
+                    bool is_repeat = i.is_repeat;
 
                     js::value local_args1(vctx);
                     local_args1 = c;

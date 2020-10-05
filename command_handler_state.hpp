@@ -22,7 +22,8 @@ struct command_handler_state
     lock_type_t lock;
     shared_lock_type_t key_lock;
 
-    std::map<int, std::vector<unprocessed_key_info>> unprocessed_keystrokes;
+    std::map<int, std::vector<unprocessed_key_info>> unprocessed_text_input;
+    std::map<int, std::vector<unprocessed_key_info>> unprocessed_key_input;
     std::map<int, std::map<std::string, bool>> key_states;
 
     std::atomic_bool should_terminate_any_realtime{false};

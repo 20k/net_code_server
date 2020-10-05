@@ -65,6 +65,18 @@ void command_handler_state::set_key_state(int script_id, const std::string& str,
 
     std::unique_lock<shared_lock_type_t> guard(key_lock);
 
+    {
+        unprocessed_key_info key;
+        key.key = str;
+        unprocessed_key_input[script_id].push_back(key);
+
+        if(unprocessed_key_input[script_id].size() > 250)
+            unprocessed_key_input[script_id].clear();
+
+        if(unprocessed_key_input.size() > 2500)
+            unprocessed_key_input.clear();
+    }
+
     ///ur cheating!!!
     if(key_states.size() > 2500)
         key_states.clear();

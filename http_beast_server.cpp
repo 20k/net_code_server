@@ -105,12 +105,12 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
                         info.key = i;
                         info.is_repeat = all_shared->state.get_key_state(id)[i];
 
-                        all_shared->state.unprocessed_keystrokes[id].push_back(info);
+                        all_shared->state.unprocessed_text_input[id].push_back(info);
                     }
 
-                    while(all_shared->state.unprocessed_keystrokes[id].size() > 200)
+                    while(all_shared->state.unprocessed_text_input[id].size() > 200)
                     {
-                        all_shared->state.unprocessed_keystrokes[id].erase(all_shared->state.unprocessed_keystrokes[id].begin());
+                        all_shared->state.unprocessed_text_input[id].erase(all_shared->state.unprocessed_text_input[id].begin());
                     }
                 }
             }
