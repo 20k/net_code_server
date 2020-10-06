@@ -32,9 +32,7 @@
 #include "command_handler_fiber_backend.hpp"
 #include "chat_channels.hpp"
 #include "event_manager.hpp"
-#include <secret/solar_system.hpp>
 #include "entity_manager.hpp"
-#include "realtime_script_data.hpp"
 
 #ifdef USE_FIBERS
 #include <boost/fiber/operations.hpp>
@@ -151,10 +149,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
     mongo_diagnostics diagnostic_scope;*/
 
     js::value args = js::xfer_between_contexts(vctx, in_arg);
-
-    realtime_script_data shared_realtime_script_data;
-
-    js::get_heap_stash(vctx)["realtime_script_data"].set_ptr(&shared_realtime_script_data);
 
     bool force_terminate = false;
 
@@ -286,107 +280,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                 any = true;
             }
 
-            ///need to unconditionally trigger timestamps regardless of server lag, use a flag
-            auto on_callback = [&](entity::entity& en, auto& event, entity::event_type type)
-            {
-                printf("Hooray! I am a callback of type %i\n", type);
-
-                uint64_t original_timestamp = event.timestamp;
-
-                if(args.has(event.callback))
-                {
-                    js::value entity_id = js::make_value(vctx, (int)en.id);
-                    js::value quantity = js::make_value(vctx, event.quantity);
-
-                    auto [success, result] = js::call_prop(args, event.callback, entity_id, quantity);
-
-                    if(!success)
-                    {
-                        ret = (std::string)result;
-                        force_terminate = true;
-                    }
-                }
-
-                {
-                    db::read_write_tx rwtx;
-
-                    entity::ship s;
-
-                    if(!db_disk_load(rwtx, s, en.id))
-                        throw std::runtime_error("Booped");
-
-                    s.call_for_type(type, [&](entity::entity& fen, auto& fevent, entity::event_type ftype)
-                    {
-                        ///should be 100% accurate at determining if its the same event
-                        ///New events cannot be scheduled for any time other than >= current time
-                        ///old events can only be fired if they are < current timestamp
-                        ///can only ever have one event of a type
-                        if(original_timestamp != event.timestamp)
-                            return;
-
-                        fevent.fired = true;
-                    });
-
-                    db_disk_overwrite(rwtx, s);
-                }
-
-                //event.fired = true;
-            };
-
-            //space::playable_space& all_space = space::get_global_playable_space();
-
-            auto [current_timestamp, last_timestamp] = tick::get_timestamps();
-
-            ///event timestamp list is sorted
-            if(shared_realtime_script_data.event_timestamps.size() > 0)
-            {
-                int idx = 0;
-
-                std::vector<uint32_t> ids;
-                std::vector<entity::event_type> types;
-
-                for(idx = 0; idx < (int)shared_realtime_script_data.event_timestamps.size(); idx++)
-                {
-                    if(shared_realtime_script_data.event_timestamps[idx] >= current_timestamp)
-                        break;
-
-                    ids.push_back(shared_realtime_script_data.entity_ids[idx]);
-                    types.push_back(shared_realtime_script_data.event_types[idx]);
-                }
-
-                shared_realtime_script_data.entity_ids.erase(shared_realtime_script_data.entity_ids.begin(), shared_realtime_script_data.entity_ids.begin() + idx);
-                shared_realtime_script_data.event_types.erase(shared_realtime_script_data.event_types.begin(), shared_realtime_script_data.event_types.begin() + idx);
-                shared_realtime_script_data.event_timestamps.erase(shared_realtime_script_data.event_timestamps.begin(), shared_realtime_script_data.event_timestamps.begin() + idx);
-
-                for(int i=0; i < (int)ids.size(); i++)
-                {
-                    entity::ship s;
-
-                    {
-                        db::read_tx rtx;
-
-                        if(!db_disk_load(rtx, s, ids[i]))
-                            continue;
-
-                        event_queue::timestamp_event_header& header = s.get_header_of(types[i]);
-
-                        if(header.fired)
-                        {
-                            printf("Already fired?\n");
-                            continue;
-                        }
-
-                        if(header.originator_script_id != (uint32_t)current_id)
-                        {
-                            printf("Revoked event\n");
-                            continue;
-                        }
-                    }
-
-                    s.call_for_type(types[i], on_callback);
-                }
-            }
-
             if(args.has("on_update"))
             {
                 double current_dt = clk.restart().asMicroseconds() / 1000.;
@@ -474,8 +367,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             break;
         }
     }
-
-    js::get_heap_stash(vctx)["realtime_script_data"].set_ptr<realtime_script_data>(nullptr);
 }
 
 struct execution_blocker_guard
