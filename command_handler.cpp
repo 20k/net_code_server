@@ -32,6 +32,7 @@
 #include "command_handler_fiber_backend.hpp"
 #include "chat_channels.hpp"
 #include "event_manager.hpp"
+#include "js_ui.hpp"
 
 #ifdef USE_FIBERS
 #include <boost/fiber/operations.hpp>
@@ -591,6 +592,31 @@ std::string run_in_user_context(std::string username, std::string command, std::
                                 j["id"] = current_id;
                                 j["msg"] = str;
                                 j["type"] = "command_realtime";
+
+                                all_shared.value()->shared.add_back_write(j.dump());
+                            }
+                        }
+
+                        {
+                            std::optional<js_ui::ui_stack> stk_opt = js_ui::consume(inf.heap);
+
+                            if(stk_opt.has_value())
+                            {
+                                js_ui::ui_stack& stk = stk_opt.value();
+
+                                nlohmann::json j;
+                                j["id"] = current_id;
+                                j["type"] = "command_realtime_ui";
+                                j["msg"] = nlohmann::json::array();
+
+                                for(const js_ui::ui_element& e : stk.elements)
+                                {
+                                    nlohmann::json obj;
+                                    obj["type"] = e.type;
+                                    obj["value"] = e.value;
+
+                                    j["msg"].push_back(obj);
+                                }
 
                                 all_shared.value()->shared.add_back_write(j.dump());
                             }

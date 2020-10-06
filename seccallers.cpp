@@ -16,6 +16,7 @@
 #include "command_handler_fiber_backend.hpp"
 #include "time.hpp"
 #include "timestamped_event_queue.hpp"
+#include "js_ui.hpp"
 
 ///still needs to be defined while we're compiling duktape
 int my_timeout_check(void* udata)
@@ -442,13 +443,19 @@ void startup_state(js::value_context& vctx, const std::string& caller, const std
     heap["square_font"] = 0;
     heap["DB_ID"] = 0;
     heap["shared_caller_state"].set_ptr(shared_state);
+
+    js_ui::ui_stack* stk = new js_ui::ui_stack;
+    heap["ui_stack"].set_ptr(stk);
+    heap["blank_ui_is_significant"] = 0;
 }
 
 void teardown_state(js::value_context& vctx)
 {
     shared_duk_worker_state* shared_state = js::get_heap_stash(vctx).get("shared_caller_state").get_ptr<shared_duk_worker_state>();
-
     delete shared_state;
+
+    js_ui::ui_stack* stk = js::get_heap_stash(vctx).get("ui_stack").get_ptr<js_ui::ui_stack>();
+    delete stk;
 }
 
 std::string get_string_col(js::value_context* ctx, js::value val)
@@ -1180,6 +1187,13 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     js::add_key_value(global, "async_print", js::function<async_print>);
     js::add_key_value(global, "async_print_raw", js::function<async_print_raw>);
     js::add_key_value(global, "get_current_user", js::function<get_current_user>);
+
+    js::value imgui_obj(vctx);
+    imgui_obj["text"] = js::function<js_ui::text>;
+    imgui_obj["button"] = js::function<js_ui::button>;
+    imgui_obj["sameline"] = js::function<js_ui::sameline>;
+
+    js::add_key_value(global, "imgui", imgui_obj);
 
     /*#ifdef TESTING
     inject_c_function(ctx, hacky_get, "hacky_get", 0);

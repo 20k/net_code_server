@@ -511,6 +511,8 @@
 		<Unit filename="http_beast_server.hpp" />
 		<Unit filename="item.cpp" />
 		<Unit filename="item.hpp" />
+		<Unit filename="js_ui.cpp" />
+		<Unit filename="js_ui.hpp" />
 		<Unit filename="logging.cpp" />
 		<Unit filename="logging.hpp" />
 		<Unit filename="main.cpp" />
