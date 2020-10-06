@@ -44,7 +44,7 @@ void js_ui::button(js::value_context* vctx, std::string str)
     stk->elements.push_back(e);
 }
 
-void js_ui::sameline(js::value_contxt* vctx)
+void js_ui::sameline(js::value_context* vctx)
 {
     ui_element e;
     e.type = "sameline";

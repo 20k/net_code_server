@@ -20,6 +20,7 @@ namespace js_ui
     void text(js::value_context* vctx, std::string str);
     void button(js::value_context* vctx, std::string str);
     void sameline(js::value_context* vctx);
+
     std::optional<ui_stack> consume(js::value_context& vctx);
 }
 
