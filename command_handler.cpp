@@ -149,9 +149,7 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
 
     js::value args = js::xfer_between_contexts(vctx, in_arg);
 
-    bool force_terminate = false;
-
-    while(!force_terminate)
+    while(1)
     {
         try
         {
@@ -174,7 +172,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                     if(!success)
                     {
                         ret = (std::string)result;
-                        force_terminate = true;
                         break;
                     }
                 }
@@ -200,7 +197,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                     if(!success)
                     {
                         ret = (std::string)result;
-                        force_terminate = true;
                         break;
                     }
                 }
@@ -232,7 +228,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                     if(!success)
                     {
                         ret = (std::string)result;
-                        force_terminate = true;
                         break;
                     }
                 }
@@ -268,7 +263,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                     if(!success)
                     {
                         ret = (std::string)result;
-                        force_terminate = true;
                         break;
                     }
                 }
@@ -288,7 +282,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                 if(!success)
                 {
                     ret = (std::string)result;
-                    force_terminate = true;
                     break;
                 }
 
@@ -302,7 +295,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                 if(!success)
                 {
                     ret = (std::string)result;
-                    force_terminate = true;
                     break;
                 }
 
@@ -313,7 +305,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
 
             if(!any)
             {
-                force_terminate = true;
                 break;
             }
 
@@ -357,8 +348,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
         }
         catch(...)
         {
-            force_terminate = true;
-
             printf("Caught exception in async\n");
             break;
         }
