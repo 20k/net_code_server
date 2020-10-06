@@ -205,7 +205,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                     }
                 }
 
-                ///DONT SET real_operation
                 any = true;
             }
 
@@ -238,7 +237,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                     }
                 }
 
-                ///DONT SET real_operation
                 any = true;
             }
 
@@ -275,7 +273,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                     }
                 }
 
-                ///DONT SET real_operation
                 any = true;
             }
 
