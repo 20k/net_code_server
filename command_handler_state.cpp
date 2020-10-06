@@ -65,6 +65,7 @@ void command_handler_state::set_key_state(int script_id, const std::string& str,
 
     std::unique_lock<shared_lock_type_t> guard(key_lock);
 
+    if(is_down)
     {
         unprocessed_key_info key;
         key.key = str;
