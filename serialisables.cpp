@@ -14,8 +14,6 @@
 #include "db_storage_backend_lmdb.hpp"
 #include "mongo.hpp"
 #include "timestamped_event_queue.hpp"
-#include "entity_manager.hpp"
-#include <secret/solar_system.hpp>
 
 template<typename T>
 DEFINE_MSG_FSERIALISE(event_queue::timestamp_event_base<T>)
@@ -251,38 +249,6 @@ DEFINE_MSG_FSERIALISE(chat_message)
     DO_MSG_FSERIALISE_SIMPLE(sent_to_client);
 }
 
-DEFINE_MSG_FSERIALISE(entity::ship)
-{
-    SETUP_MSG_FSERIALISE_SIMPLE(6);
-
-    DO_MSG_FSERIALISE_SIMPLE(id);
-    DO_MSG_FSERIALISE_SIMPLE(solar_system_id);
-    DO_MSG_FSERIALISE_SIMPLE(position);
-    DO_MSG_FSERIALISE_SIMPLE(system_current);
-    DO_MSG_FSERIALISE_SIMPLE(system_max);
-    DO_MSG_FSERIALISE_SIMPLE(components);
-}
-
-DEFINE_MSG_FSERIALISE(space::solar_system)
-{
-    SETUP_MSG_FSERIALISE_SIMPLE(7);
-
-    DO_MSG_FSERIALISE_SIMPLE(id);
-    DO_MSG_FSERIALISE_SIMPLE(name);
-    DO_MSG_FSERIALISE_SIMPLE(seclevel);
-    DO_MSG_FSERIALISE_SIMPLE(ships);
-    DO_MSG_FSERIALISE_SIMPLE(connections);
-    DO_MSG_FSERIALISE_SIMPLE(position);
-    DO_MSG_FSERIALISE_SIMPLE(radius);
-}
-
-DEFINE_MSG_FSERIALISE(space::playable_space)
-{
-    SETUP_MSG_FSERIALISE_SIMPLE(1);
-
-    DO_MSG_FSERIALISE_SIMPLE(sols);
-}
-
 template<typename T>
 std::string any_to_string(const T& in)
 {
@@ -466,6 +432,3 @@ DEFINE_GENERIC_DB(auth, std::string, auth_token_hex, mongo_database_type::GLOBAL
 DEFINE_GENERIC_DB(chat_channel, std::string, channel_name, mongo_database_type::CHAT_CHANNEL_PROPERTIES);
 DEFINE_GENERIC_DB(chat_message, size_t, id, mongo_database_type::CHAT_MESSAGES);
 DEFINE_GENERIC_DB(user_nodes, std::string, owned_by, mongo_database_type::NODE_PROPERTIES);
-DEFINE_GENERIC_DB(entity::ship, uint32_t, id, mongo_database_type::SHIP_PROPERTIES);
-DEFINE_GENERIC_DB(space::solar_system, uint32_t, id, mongo_database_type::SOLAR_SYSTEM_PROPERTIES);
-DEFINE_GENERIC_DB(space::playable_space, uint32_t, id, mongo_database_type::PLAYABLE_SPACE_PROPERTIES);

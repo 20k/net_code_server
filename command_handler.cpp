@@ -32,7 +32,6 @@
 #include "command_handler_fiber_backend.hpp"
 #include "chat_channels.hpp"
 #include "event_manager.hpp"
-#include "entity_manager.hpp"
 
 #ifdef USE_FIBERS
 #include <boost/fiber/operations.hpp>

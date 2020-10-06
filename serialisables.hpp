@@ -24,17 +24,6 @@ struct mongo_read_proxy;
     std::vector<type> db_disk_load_all(db::read_tx& ctx, const type& dummy) {return db_load_all_impl<type>(ctx, #key_name, (int)db_id);} \
     void db_disk_remove_all(db::read_write_tx& ctx, const type& dummy){return db_remove_all_impl<type>(ctx, #key_name, (int)db_id);}
 
-namespace entity
-{
-    struct ship;
-}
-
-namespace space
-{
-    struct solar_system;
-    struct playable_space;
-}
-
 DECLARE_MSG_FSERIALISE(user_limit);
 DECLARE_MSG_FSERIALISE(timestamped_position);
 DECLARE_MSG_FSERIALISE(timestamp_move_queue);
@@ -54,9 +43,6 @@ DECLARE_MSG_FSERIALISE(item);
 DECLARE_MSG_FSERIALISE(playspace_network_link);
 DECLARE_MSG_FSERIALISE(chat_channel);
 DECLARE_MSG_FSERIALISE(chat_message);
-DEFINE_MSG_FSERIALISE(entity::ship);
-DEFINE_MSG_FSERIALISE(space::solar_system);
-DEFINE_MSG_FSERIALISE(space::playable_space);
 
 DECLARE_GENERIC_DB(npc_prop_list, std::string);
 DECLARE_GENERIC_DB(event_impl, std::string);
@@ -70,8 +56,5 @@ DECLARE_GENERIC_DB(auth, std::string);
 DECLARE_GENERIC_DB(chat_channel, std::string);
 DECLARE_GENERIC_DB(chat_message, size_t);
 DECLARE_GENERIC_DB(user_nodes, std::string);
-DECLARE_GENERIC_DB(entity::ship, uint32_t);
-DECLARE_GENERIC_DB(space::solar_system, uint32_t);
-DECLARE_GENERIC_DB(space::playable_space, uint32_t);
 
 #endif // SERIALISABLES_HPP_INCLUDED

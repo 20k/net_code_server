@@ -483,8 +483,6 @@
 		<Unit filename="deps/secret/one_shots.hpp" />
 		<Unit filename="deps/secret/secret.cpp" />
 		<Unit filename="deps/secret/secret.hpp" />
-		<Unit filename="deps/secret/ship_components.cpp" />
-		<Unit filename="deps/secret/ship_components.hpp" />
 		<Unit filename="deps/secret/special_user_scripts.cpp" />
 		<Unit filename="deps/secret/special_user_scripts.hpp" />
 		<Unit filename="deps/secret/structure.cpp" />
@@ -502,8 +500,6 @@
 		<Unit filename="duk_object_functions.hpp" />
 		<Unit filename="duktape.cpp" />
 		<Unit filename="entity_events.hpp" />
-		<Unit filename="entity_manager.cpp" />
-		<Unit filename="entity_manager.hpp" />
 		<Unit filename="event_manager.cpp" />
 		<Unit filename="event_manager.hpp" />
 		<Unit filename="http_beast_server.cpp" />
