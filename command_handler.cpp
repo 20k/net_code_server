@@ -156,6 +156,19 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
         {
             sf::Clock elapsed;
 
+            {
+                std::lock_guard guard(state.script_data_lock);
+
+                realtime_script_data& dat = state.script_data[current_id];
+
+                for(auto& i : dat.realtime_ui.element_states)
+                {
+                    ui_element_state& st = i.second;
+
+                    st.processed = true;
+                }
+            }
+
             bool any = false;
 
             if(args.has("on_wheelmoved"))
@@ -302,6 +315,22 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                 async_pipe(&vctx, (std::string)result);
 
                 any = true;
+            }
+
+            {
+                std::lock_guard guard(state.script_data_lock);
+
+                realtime_script_data& dat = state.script_data[current_id];
+
+                for(auto& i : dat.realtime_ui.element_states)
+                {
+                    ui_element_state& st = i.second;
+
+                    if(!st.processed)
+                        continue;
+
+                    st.value = "";
+                }
             }
 
             if(!any)

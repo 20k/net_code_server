@@ -16,9 +16,15 @@ struct unprocessed_key_info
     bool is_repeat = false;
 };
 
+struct ui_element_state
+{
+    bool processed = false;
+    std::string value;
+};
+
 struct realtime_ui_state
 {
-    std::map<std::string, std::string> element_states;
+    std::map<std::string, ui_element_state> element_states;
 };
 
 struct realtime_script_data

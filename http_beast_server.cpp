@@ -171,15 +171,27 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
 
         if(found_it != all_shared->state.script_data.end())
         {
+            if(ui_id.size() > 50)
+                ui_id.resize(50);
+
+            if(found_state.size() > 50)
+                found_state.resize(50);
+
             realtime_script_data& dat = found_it->second;
 
-            dat.realtime_ui.element_states[ui_id] = found_state;
+            ui_element_state st;
+            st.processed = true;
+            st.value = found_state;
+
+            dat.realtime_ui.element_states[ui_id] = st;
 
             while(dat.realtime_ui.element_states.size() > 100)
             {
                 dat.realtime_ui.element_states.erase(dat.realtime_ui.element_states.begin());
             }
         }
+
+        return true;
     }
 
     if(data["type"] == "send_script_info")
