@@ -119,40 +119,50 @@ void js_ui::sameline(js::value_context* vctx)
     stk->elements.push_back(e);
 }
 
-bool js_ui::isitemclicked(js::value_context* vctx)
+std::optional<ui_element_state*> get_last_element(js::value_context& vctx)
 {
-    ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<ui_stack>();
+    js_ui::ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
     if(stk->elements.size() == 0)
-        return false;
+        return std::nullopt;
 
-    command_handler_state* found_ptr = js::get_heap_stash(*vctx)["command_handler_state_pointer"].get_ptr<command_handler_state>();
+    command_handler_state* found_ptr = js::get_heap_stash(vctx)["command_handler_state_pointer"].get_ptr<command_handler_state>();
 
     if(found_ptr == nullptr)
-        return false;
+        return std::nullopt;
 
-    if(!js::get_heap_stash(*vctx).has("realtime_id"))
-        return false;
+    if(!js::get_heap_stash(vctx).has("realtime_id"))
+        return std::nullopt;
 
-    int realtime_id = js::get_heap_stash(*vctx)["realtime_id"];
+    int realtime_id = js::get_heap_stash(vctx)["realtime_id"];
 
     std::lock_guard guard(found_ptr->script_data_lock);
 
     auto realtime_it = found_ptr->script_data.find(realtime_id);
 
     if(realtime_it == found_ptr->script_data.end())
-        return false;
+        return std::nullopt;
 
     realtime_script_data& dat = realtime_it->second;
 
     std::string last_id = stk->elements.back().value;
 
     if(dat.realtime_ui.element_states.find(last_id) == dat.realtime_ui.element_states.end())
-        return false;
+        return std::nullopt;
 
     ui_element_state& st = dat.realtime_ui.element_states[last_id];
 
-    return st.value == "clicked";
+    return &st;
+}
+
+bool js_ui::isitemclicked(js::value_context* vctx)
+{
+    std::optional<ui_element_state*> last_element_opt = get_last_element(*vctx);
+
+    if(!last_element_opt.has_value())
+        return false;
+
+    return last_element_opt.value()->value == "clicked";
 }
 
 std::optional<js_ui::ui_stack> js_ui::consume(js::value_context& vctx)
