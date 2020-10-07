@@ -57,6 +57,24 @@ std::vector<std::string> sanitise_input_vec(std::vector<std::string> vec)
 
 bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handler_state>& all_shared, nlohmann::json data, sf::Clock& terminate_timer)
 {
+    ///the only way you can get here is race conditions, or being naughty
+    {
+        safe_lock_guard guard(all_shared->state.script_data_lock);
+
+        if(all_shared->state.script_data.size() > 50)
+        {
+            int kill = all_shared->state.script_data.size() - 40;
+
+            for(int i=0; i < kill; i++)
+            {
+                if(all_shared->state.script_data.size() == 0)
+                    throw std::runtime_error("Cannot erase begin");
+
+                all_shared->state.script_data.erase(all_shared->state.script_data.begin());
+            }
+        }
+    }
+
     if(data["type"] == "client_terminate_scripts")
     {
         int id = data["id"];
