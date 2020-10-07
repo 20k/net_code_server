@@ -61,17 +61,9 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
     {
         safe_lock_guard guard(all_shared->state.script_data_lock);
 
-        if(all_shared->state.script_data.size() > 50)
+        while(all_shared->state.script_data.size() > 50)
         {
-            int kill = all_shared->state.script_data.size() - 40;
-
-            for(int i=0; i < kill; i++)
-            {
-                if(all_shared->state.script_data.size() == 0)
-                    throw std::runtime_error("Cannot erase begin");
-
-                all_shared->state.script_data.erase(all_shared->state.script_data.begin());
-            }
+            all_shared->state.script_data.erase(all_shared->state.script_data.begin());
         }
     }
 
@@ -172,6 +164,22 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
         int id = data["id"];
         std::string ui_id = data["ui_id"];
         std::string found_state = data["state"];
+
+        safe_lock_guard guard(all_shared->state.script_data_lock);
+
+        auto found_it = all_shared->state.script_data.find(id);
+
+        if(found_it != all_shared->state.script_data.end())
+        {
+            realtime_script_data& dat = found_it->second;
+
+            dat.realtime_ui.element_states[ui_id] = found_state;
+
+            while(dat.realtime_ui.element_states.size() > 100)
+            {
+                dat.realtime_ui.element_states.erase(dat.realtime_ui.element_states.begin());
+            }
+        }
     }
 
     if(data["type"] == "send_script_info")

@@ -16,6 +16,11 @@ struct unprocessed_key_info
     bool is_repeat = false;
 };
 
+struct realtime_ui_state
+{
+    std::map<std::string, std::string> element_states;
+};
+
 struct realtime_script_data
 {
     std::vector<unprocessed_key_info> unprocessed_text_input;
@@ -28,6 +33,8 @@ struct realtime_script_data
     vec2f mousewheel_state;
 
     std::optional<std::pair<int, int>> received_sizes;
+
+    realtime_ui_state realtime_ui;
 };
 
 struct command_handler_state
