@@ -55,7 +55,7 @@ ImU32 ImHashStr(const char* data_p, size_t data_size, ImU32 seed)
 }
 }
 
-std::string sanitised_value(const std::string& str)
+std::string sanitise_value(const std::string& str)
 {
     auto hashed = ImHashStr(str.c_str(), str.size(), 0);
 
@@ -96,7 +96,7 @@ void js_ui::button(js::value_context* vctx, std::string str)
 {
     ui_element e;
     e.type = "button";
-    e.value = std::move(str);
+    e.value = sanitise_value(str);
 
     ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<ui_stack>();
 
