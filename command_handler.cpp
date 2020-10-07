@@ -208,11 +208,11 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             std::vector<unprocessed_key_info> unprocessed_text_input;
 
             {
-                safe_lock_guard guard(state.lock);
+                safe_lock_guard guard(state.script_data_lock);
 
-                unprocessed_text_input = state.unprocessed_text_input[current_id];
+                unprocessed_text_input = state.script_data[current_id].unprocessed_text_input;
 
-                state.unprocessed_text_input[current_id].clear();
+                state.script_data[current_id].unprocessed_text_input.clear();
             }
 
             if(args.has("on_textinput"))
@@ -239,11 +239,11 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             std::vector<unprocessed_key_info> unprocessed_key_input;
 
             {
-                safe_lock_guard guard(state.key_lock);
+                safe_lock_guard guard(state.script_data_lock);
 
-                unprocessed_key_input = state.unprocessed_key_input[current_id];
+                unprocessed_key_input = state.script_data[current_id].unprocessed_key_input;
 
-                state.unprocessed_key_input[current_id].clear();
+                state.script_data[current_id].unprocessed_key_input.clear();
             }
 
             if(args.has("on_input"))
@@ -626,9 +626,9 @@ std::string run_in_user_context(std::string username, std::string command, std::
                             return true;
 
                         {
-                            safe_lock_guard guard(all_shared.value()->state.lock);
+                            safe_lock_guard guard(all_shared.value()->state.script_data_lock);
 
-                            if(all_shared.value()->state.should_terminate_realtime[current_id])
+                            if(all_shared.value()->state.script_data[current_id].should_terminate_realtime)
                                 return true;
                         }
 

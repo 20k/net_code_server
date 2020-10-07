@@ -52,9 +52,11 @@ void handle_sleep(sandbox_data* dat)
             }
 
             {
-                safe_lock_guard guard(dat->all_shared->state.lock);
+                safe_lock_guard guard(dat->all_shared->state.script_data_lock);
 
-                if(dat->all_shared->state.should_terminate_realtime[dat->realtime_script_id])
+                realtime_script_data& sdata = dat->all_shared->state.script_data[dat->realtime_script_id];
+
+                if(sdata.should_terminate_realtime)
                 {
                     dat->terminate_realtime_gracefully = true;
                     throw std::runtime_error("Terminated Realtime Script");

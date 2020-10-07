@@ -68,12 +68,9 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
         }
         else
         {
-            safe_lock_guard guard(all_shared->state.lock);
+            safe_lock_guard guard(all_shared->state.script_data_lock);
 
-            if(all_shared->state.should_terminate_realtime.size() > 100)
-                all_shared->state.should_terminate_realtime.clear();
-
-            all_shared->state.should_terminate_realtime[id] = true;
+            all_shared->state.script_data[id].should_terminate_realtime = true;
         }
 
         return true;
@@ -97,20 +94,22 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
                 str = sanitise_input_vec(str);
 
                 {
-                    safe_lock_guard guard(all_shared->state.lock);
-
                     for(auto& i : str)
                     {
                         unprocessed_key_info info;
                         info.key = i;
                         info.is_repeat = all_shared->state.get_key_state(id)[i];
 
-                        all_shared->state.unprocessed_text_input[id].push_back(info);
+                        safe_lock_guard guard(all_shared->state.script_data_lock);
+                        all_shared->state.script_data[id].unprocessed_text_input.push_back(info);
                     }
 
-                    while(all_shared->state.unprocessed_text_input[id].size() > 200)
+                    safe_lock_guard guard(all_shared->state.script_data_lock);
+                    realtime_script_data& dat = all_shared->state.script_data[id];
+
+                    while(dat.unprocessed_text_input.size() > 200)
                     {
-                        all_shared->state.unprocessed_text_input[id].erase(all_shared->state.unprocessed_text_input[id].begin());
+                        dat.unprocessed_text_input.erase(dat.unprocessed_text_input.begin());
                     }
                 }
             }
@@ -148,6 +147,13 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
         }
 
         return true;
+    }
+
+    if(data["type"] == "client_ui_element")
+    {
+        int id = data["id"];
+        std::string ui_id = data["ui_id"];
+        std::string found_state = data["state"];
     }
 
     if(data["type"] == "send_script_info")

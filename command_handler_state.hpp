@@ -16,25 +16,31 @@ struct unprocessed_key_info
     bool is_repeat = false;
 };
 
+struct realtime_script_data
+{
+    std::vector<unprocessed_key_info> unprocessed_text_input;
+    std::vector<unprocessed_key_info> unprocessed_key_input;
+    std::map<std::string, bool> key_states;
+    float realtime_script_deltas_ms = 0;
+    bool should_terminate_realtime = false;
+
+    vec2f mouse_pos;
+    vec2f mousewheel_state;
+
+    std::optional<std::pair<int, int>> received_sizes;
+};
+
 struct command_handler_state
 {
     lock_type_t command_lock;
-    lock_type_t lock;
-    shared_lock_type_t key_lock;
 
-    std::map<int, std::vector<unprocessed_key_info>> unprocessed_text_input;
-    std::map<int, std::vector<unprocessed_key_info>> unprocessed_key_input;
-    std::map<int, std::map<std::string, bool>> key_states;
+    lock_type_t script_data_lock;
+    std::map<int, realtime_script_data> script_data;
 
     std::atomic_bool should_terminate_any_realtime{false};
 
-    lock_type_t realtime_script_deltas_lock;
-    std::map<int, float> realtime_script_deltas_ms;
-
     std::atomic_int number_of_oneshot_scripts{0};
     std::atomic_int number_of_oneshot_scripts_terminated{0};
-
-    std::map<int, bool> should_terminate_realtime;
 
     std::string get_auth_hex();
     std::string get_auth();
@@ -74,14 +80,6 @@ private:
     uint64_t steam_id = 0;
     //user current_user;
     std::string current_user_name;
-
-    std::map<int, std::pair<int, int>> received_sizes;
-    lock_type_t size_lock;
-
-    shared_lock_type_t mouse_lock;
-
-    std::map<int, vec2f> mouse_pos;
-    std::map<int, vec2f> mousewheel_state;
 };
 
 #endif // COMMAND_HANDLER_STATE_HPP_INCLUDED
