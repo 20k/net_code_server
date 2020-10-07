@@ -329,7 +329,15 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                     if(!st.processed)
                         continue;
 
-                    st.value = "";
+                    for(int kk=0; kk < (int)st.value.size(); kk++)
+                    {
+                        if(st.value[kk] == "clicked")
+                        {
+                            st.value.erase(st.value.begin() + kk);
+                            kk--;
+                            continue;
+                        }
+                    }
                 }
             }
 

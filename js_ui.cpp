@@ -155,6 +155,17 @@ std::optional<ui_element_state*> get_last_element(js::value_context& vctx)
     return &st;
 }
 
+bool is_any_of(const std::vector<std::string>& data, const std::string& val)
+{
+    for(const auto& i : data)
+    {
+        if(i == val)
+            return true;
+    }
+
+    return false;
+}
+
 bool js_ui::isitemclicked(js::value_context* vctx)
 {
     std::optional<ui_element_state*> last_element_opt = get_last_element(*vctx);
@@ -162,7 +173,7 @@ bool js_ui::isitemclicked(js::value_context* vctx)
     if(!last_element_opt.has_value())
         return false;
 
-    return last_element_opt.value()->value == "clicked";
+    return is_any_of(last_element_opt.value()->value, "clicked");
 }
 
 bool js_ui::isitemhovered(js::value_context* vctx)
@@ -172,7 +183,7 @@ bool js_ui::isitemhovered(js::value_context* vctx)
     if(!last_element_opt.has_value())
         return false;
 
-    return last_element_opt.value()->value == "hovered";
+    return is_any_of(last_element_opt.value()->value, "hovered");
 }
 
 std::optional<js_ui::ui_stack> js_ui::consume(js::value_context& vctx)

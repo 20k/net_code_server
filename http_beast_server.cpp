@@ -163,7 +163,10 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
     {
         int id = data["id"];
         std::string ui_id = data["ui_id"];
-        std::string found_state = data["state"];
+        std::vector<std::string> found_state = data["state"];
+
+        if(found_state.size() > 5)
+            found_state.clear();
 
         safe_lock_guard guard(all_shared->state.script_data_lock);
 

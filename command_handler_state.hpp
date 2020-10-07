@@ -19,7 +19,7 @@ struct unprocessed_key_info
 struct ui_element_state
 {
     bool processed = false;
-    std::string value;
+    std::vector<std::string> value;
 };
 
 struct realtime_ui_state
