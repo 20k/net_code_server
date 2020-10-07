@@ -1193,6 +1193,7 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["button"] = js::function<js_ui::button>;
     imgui_obj["sameline"] = js::function<js_ui::sameline>;
     imgui_obj["isitemclicked"] = js::function<js_ui::isitemclicked>;
+    imgui_obj["isitemhovered"] = js::function<js_ui::isitemhovered>;
 
     js::add_key_value(global, "imgui", imgui_obj);
 

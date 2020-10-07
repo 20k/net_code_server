@@ -21,6 +21,7 @@ namespace js_ui
     void button(js::value_context* vctx, std::string str);
     void sameline(js::value_context* vctx);
     bool isitemclicked(js::value_context* vctx);
+    bool isitemhovered(js::value_context* vctx);
 
     std::optional<ui_stack> consume(js::value_context& vctx);
 }

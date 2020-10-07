@@ -165,6 +165,16 @@ bool js_ui::isitemclicked(js::value_context* vctx)
     return last_element_opt.value()->value == "clicked";
 }
 
+bool js_ui::isitemhovered(js::value_context* vctx)
+{
+    std::optional<ui_element_state*> last_element_opt = get_last_element(*vctx);
+
+    if(!last_element_opt.has_value())
+        return false;
+
+    return last_element_opt.value()->value == "hovered";
+}
+
 std::optional<js_ui::ui_stack> js_ui::consume(js::value_context& vctx)
 {
     ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<ui_stack>();
