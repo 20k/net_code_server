@@ -6,6 +6,7 @@
 #include <SFML/System.hpp>
 #include <networking/serialisable_fwd.hpp>
 #include "db_storage_backend_lmdb.hpp"
+#include <toolkit/clock.hpp>
 
 ///so the key thing to remember is
 ///every user and steam auth has a non steamauth
@@ -25,7 +26,7 @@ struct auth : serialisable, free_function
 
 struct enforce_constant_time
 {
-    sf::Clock clk;
+    steady_timer clk;
 
     ~enforce_constant_time();
 };

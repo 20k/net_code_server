@@ -4,10 +4,11 @@
 #include <SFML/System.hpp>
 #include <iostream>
 #include <vector>
+#include <toolkit/clock.hpp>
 
 struct perfmon
 {
-    sf::Clock clk;
+    steady_timer clk;
 
     int line;
     std::string file;
@@ -38,9 +39,9 @@ struct perfmon
         if(enabled)
         {
             if(has_detailed)
-                std::cout << clk.getElapsedTime().asMicroseconds() / 1000. << "ms @" << line << " f " << file << " " << func;
+                std::cout << clk.get_elapsed_time_s() * 1000 << "ms @" << line << " f " << file << " " << func;
             else
-                std::cout << clk.getElapsedTime().asMicroseconds() / 1000.;
+                std::cout << clk.get_elapsed_time_s() * 1000;
 
             std::cout << " locks " << locks << " db hits " << db_hits << std::endl;
 

@@ -40,6 +40,7 @@
 #include "db_storage_backend_lmdb.hpp"
 #include "chat_channels.hpp"
 #include "time.hpp"
+#include <toolkit/clock.hpp>
 
 void test_hexbin()
 {
@@ -144,7 +145,7 @@ void pathfind_stresstest()
 {
     playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
 
-    sf::Clock clk;
+    steady_timer clk;
 
     for(int i=0; i < 1000; i++)
     {
@@ -154,7 +155,7 @@ void pathfind_stresstest()
             std::cout << "plsize " << plen.size() << std::endl;
     }
 
-    std::cout << "elapsed " << clk.getElapsedTime().asMilliseconds() << std::endl;
+    std::cout << "elapsed " << clk.get_elapsed_time_s() * 1000 << std::endl;
 
     while(1){}
 

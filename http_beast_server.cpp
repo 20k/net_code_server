@@ -38,6 +38,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <toolkit/clock.hpp>
 
 #include "command_handler.hpp"
 
@@ -55,7 +56,7 @@ std::vector<std::string> sanitise_input_vec(std::vector<std::string> vec)
     return vec;
 }
 
-bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handler_state>& all_shared, nlohmann::json data, sf::Clock& terminate_timer)
+bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handler_state>& all_shared, nlohmann::json data, steady_timer& terminate_timer)
 {
     ///the only way you can get here is race conditions, or being naughty
     {
@@ -239,12 +240,12 @@ void websocket_server(connection& conn)
 {
     std::map<int, std::shared_ptr<shared_command_handler_state>> user_states;
     std::map<int, std::deque<nlohmann::json>> command_queue;
-    std::map<int, sf::Clock> terminate_timers;
-    std::map<int, sf::Clock> time_since_join;
+    std::map<int, steady_timer> terminate_timers;
+    std::map<int, steady_timer> time_since_join;
 
-    sf::Clock ping_timer;
-    sf::Clock poll_clock; ///!!!
-    sf::Clock disconnect_clock;
+    steady_timer ping_timer;
+    steady_timer poll_clock; ///!!!
+    steady_timer disconnect_clock;
 
     while(1)
     {
@@ -304,7 +305,7 @@ void websocket_server(connection& conn)
             }
         }
 
-        if(ping_timer.getElapsedTime().asSeconds() > 2)
+        if(ping_timer.get_elapsed_time_s() > 2)
         {
             for(auto& i : user_states)
             {
@@ -428,13 +429,13 @@ void websocket_server(connection& conn)
             if(user_states.find(i.first) == user_states.end())
                 continue;
 
-            if(i.second.getElapsedTime().asMilliseconds() > 100)
+            if((i.second.get_elapsed_time_s() * 1000) > 100)
             {
                 user_states[i.first]->state.should_terminate_any_realtime = false;
             }
         }
 
-        if(poll_clock.getElapsedTime().asMicroseconds() / 1000. > 500)
+        if((poll_clock.get_elapsed_time_s() * 1000) > 500)
         {
             poll_clock.restart();
 

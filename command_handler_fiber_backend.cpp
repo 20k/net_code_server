@@ -266,11 +266,16 @@ float fiber_overload_factor()
     return std::max(factor, 1.f);
 }*/
 
-static std::atomic_int scripts_running = 0;
+std::atomic_int& get_scripts_running()
+{
+    static std::atomic_int scripts_running;
+
+    return scripts_running;
+}
 
 float fiber_overload_factor()
 {
-    float factor = (scripts_running / 2.f) / SCRIPT_THREADS;
+    float factor = (get_scripts_running() / 2.f) / SCRIPT_THREADS;
 
     //float factor = scripts_running / SCRIPT_THREADS
 
@@ -279,12 +284,12 @@ float fiber_overload_factor()
 
 void fiber_work::notify(int cost)
 {
-    scripts_running += cost;
+    get_scripts_running() += cost;
 }
 
 void fiber_work::unnotify(int cost)
 {
-    scripts_running -= cost;
+    get_scripts_running() -= cost;
 }
 
 void boot_fiber_manager()

@@ -83,7 +83,7 @@ void handle_sleep(sandbox_data* dat)
         double max_frame_time_ms = sleep_time / (1 - max_to_allowed);
         double max_allowed_frame_time_ms = max_frame_time_ms - sleep_time;
 
-        dat->realtime_ms_awake_elapsed += dat->clk.restart().asMicroseconds() / 1000.;
+        dat->realtime_ms_awake_elapsed += dat->clk.restart() * 1000;
 
         if(dat->realtime_ms_awake_elapsed > 100)
             dat->realtime_ms_awake_elapsed = 100;
@@ -120,10 +120,10 @@ void handle_sleep(sandbox_data* dat)
 
                 if(idiff > 0)
                 {
-                    sf::Clock real_sleep;
+                    steady_timer real_sleep;
                     boost::this_fiber::sleep_for(std::chrono::milliseconds((int)idiff));
 
-                    double elapsed = real_sleep.getElapsedTime().asMicroseconds() / 1000.;
+                    double elapsed = real_sleep.get_elapsed_time_s() * 1000;
 
                     dat->realtime_ms_awake_elapsed -= elapsed;
                     dat->clk.restart();
@@ -142,7 +142,7 @@ void handle_sleep(sandbox_data* dat)
 
         sleep_time += (sleep_time + awake_time) * (fiber_load - 1);
 
-        dat->ms_awake_elapsed_static += dat->clk.restart().asMicroseconds() / 1000.;
+        dat->ms_awake_elapsed_static += dat->clk.restart() * 1000;
 
         if(dat->ms_awake_elapsed_static > 100)
             dat->ms_awake_elapsed_static = 100;
@@ -165,9 +165,9 @@ void handle_sleep(sandbox_data* dat)
             {
                 int idiff = units * sleep_time;
 
-                sf::Clock real_sleep;
+                steady_timer real_sleep;
                 boost::this_fiber::sleep_for(std::chrono::milliseconds(idiff));
-                double real_time = real_sleep.getElapsedTime().asMicroseconds() / 1000.;
+                double real_time = real_sleep.get_elapsed_time_s() * 1000;
 
                 dat->ms_awake_elapsed_static -= (real_time / sleep_time) * awake_time;
             }
@@ -177,7 +177,7 @@ void handle_sleep(sandbox_data* dat)
             #endif // USE_FIBERS
         }
 
-        double elapsed_ms = dat->full_run_clock.getElapsedTime().asMicroseconds() / 1000.;
+        double elapsed_ms = dat->full_run_clock.get_elapsed_time_s() * 1000;
 
         if(elapsed_ms >= dat->max_elapsed_time_ms)
         {

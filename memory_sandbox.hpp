@@ -5,6 +5,7 @@
 #include <atomic>
 #include <SFML/System.hpp>
 #include <memory>
+#include <toolkit/clock.hpp>
 
 typedef struct
 {
@@ -37,7 +38,7 @@ struct sandbox_data
 {
     std::shared_ptr<shared_command_handler_state> all_shared = nullptr;
     int realtime_script_id = -1;
-    sf::Clock full_run_clock;
+    steady_timer full_run_clock;
     std::atomic_bool is_static{false};
     float max_elapsed_time_ms = 0;
     double ms_awake_elapsed_static = 0;
@@ -50,7 +51,7 @@ struct sandbox_data
 
     std::atomic_bool is_realtime{false};
     double realtime_ms_awake_elapsed{0};
-    sf::Clock clk;
+    steady_timer clk;
 };
 
 inline void *sandbox_alloc(void *udata, size_t size)

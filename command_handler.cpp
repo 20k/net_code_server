@@ -33,6 +33,7 @@
 #include "chat_channels.hpp"
 #include "event_manager.hpp"
 #include "js_ui.hpp"
+#include <toolkit/clock.hpp>
 
 #ifdef USE_FIBERS
 #include <boost/fiber/operations.hpp>
@@ -138,7 +139,7 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
     double current_framerate = js::get_heap_stash(nvctx).get("framerate_limit");
     current_framerate = clamp(current_framerate, 1., 30.);
 
-    sf::Clock clk;
+    steady_timer clk;
 
     js::value_context vctx(nvctx);
 
@@ -154,7 +155,7 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
     {
         try
         {
-            sf::Clock elapsed;
+            steady_timer elapsed;
 
             {
                 std::lock_guard guard(state.script_data_lock);
@@ -286,7 +287,7 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
 
             if(args.has("on_update"))
             {
-                double current_dt = clk.restart().asMicroseconds() / 1000.;
+                double current_dt = clk.restart() * 1000;
 
                 js::value local_args(vctx);
                 local_args = current_dt;
@@ -362,14 +363,14 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             ///remember to set work units here
             if(!is_thread_fiber())
             {
-                while(elapsed.getElapsedTime().asMicroseconds() / 1000. < (max_frame_time_ms * sleep_mult))
+                while((elapsed.get_elapsed_time_s() * 1000) < (max_frame_time_ms * sleep_mult))
                 {
                     sf::sleep(sf::milliseconds(1));
                 }
             }
             else
             {
-                double celapsed = elapsed.getElapsedTime().asMicroseconds() / 1000.;
+                double celapsed = elapsed.get_elapsed_time_s() * 1000;
                 double diff = max_frame_time_ms * sleep_mult * fiber_overload_factor() - celapsed;
 
                 #ifdef USE_FIBERS
@@ -532,13 +533,13 @@ std::string run_in_user_context(std::string username, std::string command, std::
         script_management_mode::mode current_mode = script_management_mode::DEFAULT;
 
         #ifdef PERF_DIAGNOSTICS
-        sf::Clock runtime;
+        steady_timer runtime;
         #endif // PERF_DIAGNOSTICS
 
         managed_duktape_thread(&inf, local_thread_id);
 
         #ifdef PERF_DIAGNOSTICS
-        std::cout << "TOTAL RUNTIME " << runtime.getElapsedTime().asMilliseconds() << std::endl;
+        std::cout << "TOTAL RUNTIME " << runtime.get_elapsed_time_s() * 1000 << std::endl;
         #endif // PERF_DIAGNOSTICS
 
         *tls_get_should_throw() = 0;

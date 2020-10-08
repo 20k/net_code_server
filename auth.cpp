@@ -48,11 +48,10 @@ void auth::insert_user_exclusive(const std::string& username)
 
 enforce_constant_time::~enforce_constant_time()
 {
-    float diff = clk.getElapsedTime().asMicroseconds() / 1000.f;
+    float diff = clk.get_elapsed_time_s() * 1000;
 
     if(diff >= 100)
         return;
-
 
     fiber_sleep(100 - diff);
 }
