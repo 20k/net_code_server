@@ -218,7 +218,6 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-std=c++17" />
-					<Add option="-g" />
 					<Add option="-march=nehalem" />
 					<Add option="-no-pie" />
 					<Add option="-DLOCAL_IP" />
@@ -241,8 +240,9 @@
 					<Add option="-lboost_context" />
 					<Add option="-l:liblmdb.so" />
 					<Add option="-l:libmsgpackc.a" />
+					<Add option="-g" />
 					<Add directory="deps/libs" />
-					<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/linux64" />
+					<Add directory="deps/steamworks_sdk_150/sdk/public/steam/lib/linux64" />
 					<Add directory="deps/SFML-2.5.1/lib" />
 					<Add directory="deps/liblmdb" />
 				</Linker>
@@ -257,7 +257,6 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-std=c++17" />
-					<Add option="-g" />
 					<Add option="-march=nehalem" />
 					<Add option="-no-pie" />
 					<Add option="-DEXTERN_IP" />
@@ -279,8 +278,9 @@
 					<Add option="-lboost_context" />
 					<Add option="-l:liblmdb.so" />
 					<Add option="-l:libmsgpackc.a" />
+					<Add option="-g" />
 					<Add directory="deps/libs" />
-					<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/linux64" />
+					<Add directory="deps/steamworks_sdk_150/sdk/public/steam/lib/linux64" />
 					<Add directory="deps/SFML-2.5.1/lib" />
 					<Add directory="deps/liblmdb" />
 				</Linker>
@@ -369,8 +369,44 @@
 					<Add option="-lboost_context" />
 					<Add option="-l:libmsgpackc.a" />
 					<Add directory="deps/libs" />
-					<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/linux64" />
+					<Add directory="deps/steamworks_sdk_150/sdk/public/steam/lib/linux64" />
 					<Add directory="deps/SFML-2.5.1/lib" />
+				</Linker>
+			</Target>
+			<Target title="LinuxDebug">
+				<Option output="bin/LDebug/crapmud" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/LDebug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="1" />
+				<Option projectLibDirsRelation="1" />
+				<Compiler>
+					<Add option="-std=c++17" />
+					<Add option="-march=nehalem" />
+					<Add option="-no-pie" />
+					<Add option="-DEXTERN_IP" />
+					<Add directory="deps/SFML-2.5.1/include" />
+					<Add directory="deps/liblmdb" />
+				</Compiler>
+				<Linker>
+					<Add option="-lsfml-system" />
+					<Add option="-lboost_system" />
+					<Add option="-lcrypto" />
+					<Add option="-lssl" />
+					<Add option="-fno-pie" />
+					<Add option="-lbacktrace" />
+					<Add option="-pthread" />
+					<Add option="-ldl" />
+					<Add option="-lsdkencryptedappticket" />
+					<Add option="-lboost_fiber" />
+					<Add option="-lboost_context" />
+					<Add option="-l:liblmdb.so" />
+					<Add option="-l:libmsgpackc.so" />
+					<Add option="-g" />
+					<Add directory="deps/libs" />
+					<Add directory="deps/steamworks_sdk_150/sdk/public/steam/lib/linux64" />
+					<Add directory="deps/SFML-2.5.1/lib" />
+					<Add directory="deps/liblmdb" />
 				</Linker>
 			</Target>
 		</Build>
@@ -418,7 +454,7 @@
 			<Add option="-llmdb" />
 			<Add option="-l:libmsgpackc.a" />
 			<Add directory="deps/libs" />
-			<Add directory="deps/steamworks_sdk_142/sdk/public/steam/lib/win64" />
+			<Add directory="deps/steamworks_sdk_150/sdk/public/steam/lib/win64" />
 			<Add directory="deps/liblmdb" />
 		</Linker>
 		<Unit filename="argument_object.cpp" />
@@ -504,7 +540,6 @@
 		<Unit filename="duk_object_functions.cpp" />
 		<Unit filename="duk_object_functions.hpp" />
 		<Unit filename="duktape.cpp" />
-		<Unit filename="entity_events.hpp" />
 		<Unit filename="event_manager.cpp" />
 		<Unit filename="event_manager.hpp" />
 		<Unit filename="http_beast_server.cpp" />

@@ -13,9 +13,17 @@
 #define CHECK_THROW(x) if(const int rc = x) { std::cout << rc << std::endl; throw std::runtime_error("DB Error " + std::to_string(rc) + " " + #x);}
 #define CHECK_ASSERT(x) if(const int rc = x) {printf("DB Error %i %s\n", rc, #x); assert(false && #x);}
 
-boost::fibers::mutex thread_mut;
+boost::fibers::mutex& get_thread_mut()
+{
+    static boost::fibers::mutex thread_mut;
+    return thread_mut;
+}
 
-tls_variable<int, 0> lock_count;
+tls_variable<int, 0>& get_lock_count()
+{
+    static tls_variable<int, 0> lock_count;
+    return lock_count;
+}
 
 struct db::backend
 {
@@ -226,9 +234,9 @@ db::read_tx::read_tx(bool enabled)
     {
         (*tls_get_holds_lock())++;
 
-        (*lock_count.get())++;
+        (*get_lock_count().get())++;
 
-        if((*lock_count.get()) > 1)
+        if((*get_lock_count().get()) > 1)
             assert(false);
     }
 }
@@ -238,7 +246,7 @@ db::read_tx::~read_tx()
 
 }
 
-db::read_write_tx::read_write_tx() : read_tx(false), guard(thread_mut)
+db::read_write_tx::read_write_tx() : read_tx(false), guard(get_thread_mut())
 {
     //printf("START\n");
 
@@ -249,7 +257,7 @@ db::read_write_tx::~read_write_tx()
 {
     (*tls_get_holds_lock())--;
 
-    (*lock_count.get())--;
+    (*get_lock_count().get())--;
 }
 
 std::optional<db::data> db::read_tx::read(int _db_id, std::string_view skey)

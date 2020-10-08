@@ -40,6 +40,7 @@ std::string random_binary_string(int len)
 #else
 
 #include <stdio.h>
+#include <stdexcept>
 
 std::string random_binary_string(int len)
 {

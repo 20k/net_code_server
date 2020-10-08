@@ -3,7 +3,7 @@
 #include "command_handler.hpp"
 
 #include <stdint.h>
-#include <steamworks_sdk_142/sdk/public/steam/steamencryptedappticket.h>
+#include <steamworks_sdk_150/sdk/public/steam/steamencryptedappticket.h>
 
 #include <vector>
 #include "time.hpp"

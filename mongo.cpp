@@ -17,28 +17,31 @@
 #include "rate_limiting.hpp"
 #include "tls.hpp"
 
-tls_variable<int, -2> thread_id_storage_key;
-tls_variable<int, 0> print_performance_diagnostics_key;
-tls_variable<int, 0> should_throw;
-tls_variable<int, 0> holds_lock;
-
 int* tls_get_thread_id_storage_hack()
 {
+    static tls_variable<int, -2> thread_id_storage_key;
+
     return thread_id_storage_key.get();
 }
 
 int* tls_get_print_performance_diagnostics()
 {
+    static tls_variable<int, 0> print_performance_diagnostics_key;
+
     return print_performance_diagnostics_key.get();
 }
 
 int* tls_get_should_throw()
 {
+    static tls_variable<int, 0> should_throw;
+
     return should_throw.get();
 }
 
 int* tls_get_holds_lock()
 {
+    static tls_variable<int, 0> holds_lock;
+
     return holds_lock.get();
 }
 
