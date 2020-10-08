@@ -1194,13 +1194,24 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["textdisabled"] = js::function<js_ui::textdisabled>;
     imgui_obj["bullettext"] = js::function<js_ui::bullettext>;
     imgui_obj["smallbutton"] = js::function<js_ui::smallbutton>;
+    imgui_obj["invisiblebutton"] = js::function<js_ui::invisiblebutton>;
+    imgui_obj["arrowbutton"] = js::function<js_ui::arrowbutton>;
     imgui_obj["button"] = js::function<js_ui::button>;
     imgui_obj["bullet"] = js::function<js_ui::bullet>;
     imgui_obj["pushstylecolor"] = js::function<js_ui::pushstylecolor>;
     imgui_obj["popstylecolor"] = js::function<js_ui::popstylecolor>;
+
+    imgui_obj["pushitemwidth"] = js::function<js_ui::pushitemwidth>;
+    imgui_obj["popitemwidth"] = js::function<js_ui::popitemwidth>;
+    imgui_obj["setnextitemwidth"] = js::function<js_ui::setnextitemwidth>;
+
+    imgui_obj["separator"] = js::function<js_ui::separator>;
     imgui_obj["sameline"] = js::function<js_ui::sameline>;
     imgui_obj["newline"] = js::function<js_ui::newline>;
     imgui_obj["spacing"] = js::function<js_ui::spacing>;
+    imgui_obj["dummy"] = js::function<js_ui::dummy>;
+    imgui_obj["indent"] = js::function<js_ui::indent>;
+    imgui_obj["unindent"] = js::function<js_ui::unindent>;
     imgui_obj["begingroup"] = js::function<js_ui::begingroup>;
     imgui_obj["endgroup"] = js::function<js_ui::endgroup>;
     imgui_obj["isitemclicked"] = js::function<js_ui::isitemclicked>;

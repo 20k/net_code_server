@@ -128,6 +128,14 @@ double san_col(double in)
     return clamp(in, 0., 1.);
 }
 
+double san_val(double in)
+{
+    if(!std::isfinite(in))
+        return 0;
+
+    return in;
+}
+
 void js_ui::textcolored(js::value_context* vctx, double r, double g, double b, double a, std::string str)
 {
     if(str.size() > 50)
@@ -168,6 +176,57 @@ void js_ui::bullettext(js::value_context* vctx, std::string str)
 void js_ui::smallbutton(js::value_context* vctx, std::string str)
 {
     create_sanitised_element(*vctx, "smallbutton", str);
+}
+
+void js_ui::invisiblebutton(js::value_context* vctx, std::string str, double w, double h)
+{
+    if(str.size() > 50)
+        return;
+
+    str = sanitise_value(str);
+
+    w = san_val(w);
+    h = san_val(h);
+
+    w = clamp(w, -9999, 9999);
+    h = clamp(h, -9999, 9999);
+
+    js_ui::ui_element e;
+    e.type = "invisiblebutton";
+    e.element_id = str;
+    e.arguments.push_back(str);
+    e.arguments.push_back(w);
+    e.arguments.push_back(h);
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    stk->elements.push_back(e);
+}
+
+void js_ui::arrowbutton(js::value_context* vctx, std::string str, int dir)
+{
+    if(str.size() > 50)
+        return;
+
+    str = sanitise_value(str);
+
+    dir = clamp(dir, 0, 3);
+
+    js_ui::ui_element e;
+    e.type = "arrowbutton";
+    e.element_id = str;
+    e.arguments.push_back(str);
+    e.arguments.push_back(dir);
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    stk->elements.push_back(e);
 }
 
 void js_ui::button(js::value_context* vctx, std::string str)
@@ -225,6 +284,57 @@ void js_ui::popstylecolor(js::value_context* vctx, int cnt)
     stk->elements.push_back(e);
 }
 
+void js_ui::pushitemwidth(js::value_context* vctx, double item_width)
+{
+    ///sure
+    item_width = clamp(san_val(item_width), -99999, 99999);
+
+    js_ui::ui_element e;
+    e.type = "pushitemwidth";
+    e.arguments.push_back(item_width);
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    stk->elements.push_back(e);
+}
+
+void js_ui::popitemwidth(js::value_context* vctx)
+{
+    js_ui::ui_element e;
+    e.type = "popitemwidth";
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    stk->elements.push_back(e);
+}
+
+void js_ui::setnextitemwidth(js::value_context* vctx, double item_width)
+{
+    item_width = clamp(san_val(item_width), -99999, 99999);
+
+    js_ui::ui_element e;
+    e.type = "setnextitemwidth";
+    e.arguments.push_back(item_width);
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    stk->elements.push_back(e);
+}
+
+void js_ui::separator(js::value_context* vctx)
+{
+    create_unsanitised_element(*vctx, "separator", "");
+}
+
 void js_ui::sameline(js::value_context* vctx)
 {
     create_unsanitised_element(*vctx, "sameline", "");
@@ -239,6 +349,60 @@ void js_ui::spacing(js::value_context* vctx)
 {
     create_unsanitised_element(*vctx, "spacing", "");
 }
+
+void js_ui::dummy(js::value_context* vctx, double w, double h)
+{
+    w = san_val(w);
+    h = san_val(h);
+
+    w = clamp(w, 0, 9999);
+    h = clamp(h, 0, 9999);
+
+    js_ui::ui_element e;
+    e.type = "dummy";
+    e.arguments.push_back(w);
+    e.arguments.push_back(h);
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    stk->elements.push_back(e);
+}
+
+void js_ui::indent(js::value_context* vctx, double indent_w)
+{
+    indent_w = clamp(san_val(indent_w), -9999, 9999);
+
+    js_ui::ui_element e;
+    e.type = "indent";
+    e.arguments.push_back(indent_w);
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    stk->elements.push_back(e);
+}
+
+void js_ui::unindent(js::value_context* vctx, double indent_w)
+{
+    indent_w = clamp(san_val(indent_w), -9999, 9999);
+
+    js_ui::ui_element e;
+    e.type = "unindent";
+    e.arguments.push_back(indent_w);
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    stk->elements.push_back(e);
+}
+
 
 void js_ui::begingroup(js::value_context* vctx)
 {

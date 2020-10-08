@@ -23,15 +23,25 @@ namespace js_ui
     void textdisabled(js::value_context* vctx, std::string str);
     void bullettext(js::value_context* vctx, std::string str);
     void smallbutton(js::value_context* vctx, std::string str);
+    void invisiblebutton(js::value_context* vctx, std::string str, double w, double h);
+    void arrowbutton(js::value_context* vctx, std::string str, int dir);
     void button(js::value_context* vctx, std::string str);
     void bullet(js::value_context* vctx);
 
     void pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a);
     void popstylecolor(js::value_context* vctx, int cnt);
 
+    void pushitemwidth(js::value_context* vctx, double item_width);
+    void popitemwidth(js::value_context* vctx);
+    void setnextitemwidth(js::value_context* vctx, double item_width);
+
+    void separator(js::value_context* vctx);
     void sameline(js::value_context* vctx);
     void newline(js::value_context* vctx);
     void spacing(js::value_context* vctx);
+    void dummy(js::value_context* vctx, double w, double h);
+    void indent(js::value_context* vctx, double intent_w);
+    void unindent(js::value_context* vctx, double intent_w);
     void begingroup(js::value_context* vctx);
     void endgroup(js::value_context* vctx);
     bool isitemclicked(js::value_context* vctx);
