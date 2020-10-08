@@ -223,7 +223,6 @@
 					<Add option="-DLOCAL_IP" />
 					<Add option="-DUSE_FIBERS" />
 					<Add directory="deps/SFML-2.5.1/include" />
-					<Add directory="deps/liblmdb" />
 				</Compiler>
 				<Linker>
 					<Add option="-O2" />
@@ -238,13 +237,13 @@
 					<Add option="-lsdkencryptedappticket" />
 					<Add option="-lboost_fiber" />
 					<Add option="-lboost_context" />
-					<Add option="-l:liblmdb.so" />
+					<Add option="-llmdb" />
 					<Add option="-l:libmsgpackc.a" />
 					<Add option="-g" />
 					<Add directory="deps/libs" />
 					<Add directory="deps/steamworks_sdk_150/sdk/public/steam/lib/linux64" />
 					<Add directory="deps/SFML-2.5.1/lib" />
-					<Add directory="deps/liblmdb" />
+					<Add directory="deps/liblmdb_lin" />
 				</Linker>
 			</Target>
 			<Target title="LinuxDeploy">
@@ -261,7 +260,6 @@
 					<Add option="-no-pie" />
 					<Add option="-DEXTERN_IP" />
 					<Add directory="deps/SFML-2.5.1/include" />
-					<Add directory="deps/liblmdb" />
 				</Compiler>
 				<Linker>
 					<Add option="-O2" />
@@ -276,13 +274,13 @@
 					<Add option="-lsdkencryptedappticket" />
 					<Add option="-lboost_fiber" />
 					<Add option="-lboost_context" />
-					<Add option="-l:liblmdb.so" />
+					<Add option="-llmdb" />
 					<Add option="-l:libmsgpackc.a" />
 					<Add option="-g" />
 					<Add directory="deps/libs" />
 					<Add directory="deps/steamworks_sdk_150/sdk/public/steam/lib/linux64" />
 					<Add directory="deps/SFML-2.5.1/lib" />
-					<Add directory="deps/liblmdb" />
+					<Add directory="deps/liblmdb_lin" />
 				</Linker>
 			</Target>
 			<Target title="ProfileNoOpt">
@@ -367,6 +365,7 @@
 					<Add option="-lsdkencryptedappticket" />
 					<Add option="-lboost_fiber" />
 					<Add option="-lboost_context" />
+					<Add option="-llmdb" />
 					<Add option="-l:libmsgpackc.a" />
 					<Add directory="deps/libs" />
 					<Add directory="deps/steamworks_sdk_150/sdk/public/steam/lib/linux64" />
@@ -386,7 +385,6 @@
 					<Add option="-no-pie" />
 					<Add option="-DEXTERN_IP" />
 					<Add directory="deps/SFML-2.5.1/include" />
-					<Add directory="deps/liblmdb" />
 				</Compiler>
 				<Linker>
 					<Add option="-lsfml-system" />
@@ -400,13 +398,13 @@
 					<Add option="-lsdkencryptedappticket" />
 					<Add option="-lboost_fiber" />
 					<Add option="-lboost_context" />
-					<Add option="-l:liblmdb.so" />
+					<Add option="-llmdb" />
 					<Add option="-l:libmsgpackc.so" />
 					<Add option="-g" />
 					<Add directory="deps/libs" />
 					<Add directory="deps/steamworks_sdk_150/sdk/public/steam/lib/linux64" />
 					<Add directory="deps/SFML-2.5.1/lib" />
-					<Add directory="deps/liblmdb" />
+					<Add directory="deps/liblmdb_lin" />
 				</Linker>
 			</Target>
 		</Build>
