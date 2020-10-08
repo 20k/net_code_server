@@ -217,8 +217,8 @@
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-std=c++17" />
 					<Add option="-g" />
-					<Add option="-std=c++1z" />
 					<Add option="-march=nehalem" />
 					<Add option="-no-pie" />
 					<Add option="-DLOCAL_IP" />
@@ -256,8 +256,8 @@
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-std=c++17" />
 					<Add option="-g" />
-					<Add option="-std=c++1z" />
 					<Add option="-march=nehalem" />
 					<Add option="-no-pie" />
 					<Add option="-DEXTERN_IP" />
@@ -346,8 +346,8 @@
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
+					<Add option="-std=c++17" />
 					<Add option="-g" />
-					<Add option="-std=c++1z" />
 					<Add option="-march=nehalem" />
 					<Add option="-no-pie" />
 					<Add option="-DLOCAL_IP" />
