@@ -19,12 +19,12 @@ namespace js_ui
     };
 
     void text(js::value_context* vctx, std::string str);
+    void textcolored(js::value_context* vctx, double r, double g, double b, double a, std::string str);
     void textdisabled(js::value_context* vctx, std::string str);
     void bullettext(js::value_context* vctx, std::string str);
     void smallbutton(js::value_context* vctx, std::string str);
     void button(js::value_context* vctx, std::string str);
     void bullet(js::value_context* vctx);
-
 
     void sameline(js::value_context* vctx);
     void newline(js::value_context* vctx);

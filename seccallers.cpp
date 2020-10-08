@@ -1190,6 +1190,7 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
 
     js::value imgui_obj(vctx);
     imgui_obj["text"] = js::function<js_ui::text>;
+    imgui_obj["textcolored"] = js::function<js_ui::textcolored>;
     imgui_obj["textdisabled"] = js::function<js_ui::textdisabled>;
     imgui_obj["bullettext"] = js::function<js_ui::bullettext>;
     imgui_obj["smallbutton"] = js::function<js_ui::smallbutton>;

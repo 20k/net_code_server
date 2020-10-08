@@ -1,5 +1,6 @@
 #include "js_ui.hpp"
 #include "command_handler_state.hpp"
+#include <cmath>
 
 namespace
 {
@@ -117,6 +118,45 @@ void create_sanitised_element(js::value_context& vctx, const std::string& type, 
 void js_ui::text(js::value_context* vctx, std::string str)
 {
     create_unsanitised_element(*vctx, "text", str);
+}
+
+void js_ui::textcolored(js::value_context* vctx, double r, double g, double b, double a, std::string str)
+{
+    if(str.size() > 50)
+        return;
+
+    if(!std::isfinite(r))
+        return;
+
+    if(!std::isfinite(g))
+        return;
+
+    if(!std::isfinite(b))
+        return;
+
+    if(!std::isfinite(a))
+        return;
+
+    r = clamp(r, 0.f, 1.f);
+    g = clamp(g, 0.f, 1.f);
+    b = clamp(b, 0.f, 1.f);
+    a = clamp(a, 0.f, 1.f);
+
+    js_ui::ui_element e;
+    e.type = "textcolored";
+    e.element_id = str;
+    e.arguments.push_back(r);
+    e.arguments.push_back(g);
+    e.arguments.push_back(b);
+    e.arguments.push_back(a);
+    e.arguments.push_back(str);
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    stk->elements.push_back(e);
 }
 
 void js_ui::textdisabled(js::value_context* vctx, std::string str)
