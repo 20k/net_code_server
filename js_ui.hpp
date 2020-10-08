@@ -9,7 +9,8 @@ namespace js_ui
     struct ui_element
     {
         std::string type;
-        std::string value;
+        std::string element_id;
+        std::vector<nlohmann::json> arguments;
     };
 
     struct ui_stack

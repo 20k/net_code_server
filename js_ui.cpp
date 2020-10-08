@@ -69,7 +69,7 @@ bool too_large(js_ui::ui_stack& stk)
     for(const js_ui::ui_element& e : stk.elements)
     {
         sum += e.type.size();
-        sum += e.value.size();
+        sum += e.element_id.size();
     }
 
     if(sum >= 1024 * 1024 * 10)
@@ -80,9 +80,13 @@ bool too_large(js_ui::ui_stack& stk)
 
 void create_unsanitised_element(js::value_context& vctx, const std::string& type, const std::string& value)
 {
+    if(value.size() > 50)
+        return;
+
     js_ui::ui_element e;
     e.type = type;
-    e.value = value;
+    e.element_id = value;
+    e.arguments.push_back(value);
 
     js_ui::ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
@@ -94,9 +98,13 @@ void create_unsanitised_element(js::value_context& vctx, const std::string& type
 
 void create_sanitised_element(js::value_context& vctx, const std::string& type, const std::string& value)
 {
+    if(value.size() > 50)
+        return;
+
     js_ui::ui_element e;
     e.type = type;
-    e.value = sanitise_value(value);
+    e.element_id = sanitise_value(value);
+    e.arguments.push_back(value);
 
     js_ui::ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
@@ -187,7 +195,7 @@ std::optional<ui_element_state*> get_last_element(js::value_context& vctx)
 
     realtime_script_data& dat = realtime_it->second;
 
-    std::string last_id = stk->elements.back().value;
+    std::string last_id = stk->elements.back().element_id;
 
     if(dat.realtime_ui.element_states.find(last_id) == dat.realtime_ui.element_states.end())
         return std::nullopt;
