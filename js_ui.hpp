@@ -18,8 +18,18 @@ namespace js_ui
     };
 
     void text(js::value_context* vctx, std::string str);
+    void textdisabled(js::value_context* vctx, std::string str);
+    void bullettext(js::value_context* vctx, std::string str);
+    void smallbutton(js::value_context* vctx, std::string str);
     void button(js::value_context* vctx, std::string str);
+    void bullet(js::value_context* vctx);
+
+
     void sameline(js::value_context* vctx);
+    void newline(js::value_context* vctx);
+    void spacing(js::value_context* vctx);
+    void begingroup(js::value_context* vctx);
+    void endgroup(js::value_context* vctx);
     bool isitemclicked(js::value_context* vctx);
     bool isitemhovered(js::value_context* vctx);
 

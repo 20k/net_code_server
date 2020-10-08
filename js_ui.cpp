@@ -78,45 +78,87 @@ bool too_large(js_ui::ui_stack& stk)
     return false;
 }
 
-void js_ui::text(js::value_context* vctx, std::string str)
+void create_unsanitised_element(js::value_context& vctx, const std::string& type, const std::string& value)
 {
-    ui_element e;
-    e.type = "text";
-    e.value = std::move(str);
+    js_ui::ui_element e;
+    e.type = type;
+    e.value = value;
 
-    ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<ui_stack>();
+    js_ui::ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
     if(too_large(*stk))
         return;
 
     stk->elements.push_back(e);
+}
+
+void create_sanitised_element(js::value_context& vctx, const std::string& type, const std::string& value)
+{
+    js_ui::ui_element e;
+    e.type = type;
+    e.value = sanitise_value(value);
+
+    js_ui::ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    stk->elements.push_back(e);
+}
+
+void js_ui::text(js::value_context* vctx, std::string str)
+{
+    create_unsanitised_element(*vctx, "text", str);
+}
+
+void js_ui::textdisabled(js::value_context* vctx, std::string str)
+{
+    create_unsanitised_element(*vctx, "textdisabled", str);
+}
+
+void js_ui::bullettext(js::value_context* vctx, std::string str)
+{
+    create_unsanitised_element(*vctx, "bullettext", str);
+}
+
+void js_ui::smallbutton(js::value_context* vctx, std::string str)
+{
+    create_sanitised_element(*vctx, "smallbutton", str);
 }
 
 void js_ui::button(js::value_context* vctx, std::string str)
 {
-    ui_element e;
-    e.type = "button";
-    e.value = sanitise_value(str);
+    create_sanitised_element(*vctx, "button", str);
+}
 
-    ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    stk->elements.push_back(e);
+void js_ui::bullet(js::value_context* vctx)
+{
+    create_unsanitised_element(*vctx, "bullet", "");
 }
 
 void js_ui::sameline(js::value_context* vctx)
 {
-    ui_element e;
-    e.type = "sameline";
+    create_unsanitised_element(*vctx, "sameline", "");
+}
 
-    ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<ui_stack>();
+void js_ui::newline(js::value_context* vctx)
+{
+    create_unsanitised_element(*vctx, "newline", "");
+}
 
-    if(too_large(*stk))
-        return;
+void js_ui::spacing(js::value_context* vctx)
+{
+    create_unsanitised_element(*vctx, "spacing", "");
+}
 
-    stk->elements.push_back(e);
+void js_ui::begingroup(js::value_context* vctx)
+{
+    create_unsanitised_element(*vctx, "begingroup", "");
+}
+
+void js_ui::endgroup(js::value_context* vctx)
+{
+    create_unsanitised_element(*vctx, "endgroup", "");
 }
 
 std::optional<ui_element_state*> get_last_element(js::value_context& vctx)

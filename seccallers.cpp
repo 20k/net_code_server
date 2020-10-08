@@ -1190,8 +1190,16 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
 
     js::value imgui_obj(vctx);
     imgui_obj["text"] = js::function<js_ui::text>;
+    imgui_obj["textdisabled"] = js::function<js_ui::textdisabled>;
+    imgui_obj["bullettext"] = js::function<js_ui::bullettext>;
+    imgui_obj["smallbutton"] = js::function<js_ui::smallbutton>;
     imgui_obj["button"] = js::function<js_ui::button>;
+    imgui_obj["bullet"] = js::function<js_ui::bullet>;
     imgui_obj["sameline"] = js::function<js_ui::sameline>;
+    imgui_obj["newline"] = js::function<js_ui::newline>;
+    imgui_obj["spacing"] = js::function<js_ui::spacing>;
+    imgui_obj["begingroup"] = js::function<js_ui::begingroup>;
+    imgui_obj["endgroup"] = js::function<js_ui::endgroup>;
     imgui_obj["isitemclicked"] = js::function<js_ui::isitemclicked>;
     imgui_obj["isitemhovered"] = js::function<js_ui::isitemhovered>;
 
