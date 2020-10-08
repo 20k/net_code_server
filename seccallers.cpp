@@ -1196,6 +1196,8 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["smallbutton"] = js::function<js_ui::smallbutton>;
     imgui_obj["button"] = js::function<js_ui::button>;
     imgui_obj["bullet"] = js::function<js_ui::bullet>;
+    imgui_obj["pushstylecolor"] = js::function<js_ui::pushstylecolor>;
+    imgui_obj["popstylecolor"] = js::function<js_ui::popstylecolor>;
     imgui_obj["sameline"] = js::function<js_ui::sameline>;
     imgui_obj["newline"] = js::function<js_ui::newline>;
     imgui_obj["spacing"] = js::function<js_ui::spacing>;

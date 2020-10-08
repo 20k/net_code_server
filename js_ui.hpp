@@ -26,6 +26,9 @@ namespace js_ui
     void button(js::value_context* vctx, std::string str);
     void bullet(js::value_context* vctx);
 
+    void pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a);
+    void popstylecolor(js::value_context* vctx, int cnt);
+
     void sameline(js::value_context* vctx);
     void newline(js::value_context* vctx);
     void spacing(js::value_context* vctx);
