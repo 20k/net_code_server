@@ -343,6 +343,12 @@ void js_ui::sameline(js::value_context* vctx, std::optional<double> offset_from_
     if(!spacing.has_value())
         spacing = -1;
 
+    offset_from_start.value() = san_val(offset_from_start.value());
+    spacing.value() = san_val(spacing.value());
+
+    offset_from_start.value() = clamp(offset_from_start.value(), -9999, 9999);
+    spacing.value() = clamp(spacing.value(), -9999, 9999);
+
     js_ui::ui_element e;
     e.type = "sameline";
     e.arguments.push_back(offset_from_start.value());
