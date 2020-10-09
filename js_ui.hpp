@@ -36,7 +36,7 @@ namespace js_ui
     void setnextitemwidth(js::value_context* vctx, double item_width);
 
     void separator(js::value_context* vctx);
-    void sameline(js::value_context* vctx);
+    void sameline(js::value_context* vctx, std::optional<double> offset_from_start, std::optional<double> spacing);
     void newline(js::value_context* vctx);
     void spacing(js::value_context* vctx);
     void dummy(js::value_context* vctx, double w, double h);

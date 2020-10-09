@@ -335,9 +335,25 @@ void js_ui::separator(js::value_context* vctx)
     create_unsanitised_element(*vctx, "separator", "");
 }
 
-void js_ui::sameline(js::value_context* vctx)
+void js_ui::sameline(js::value_context* vctx, std::optional<double> offset_from_start, std::optional<double> spacing)
 {
-    create_unsanitised_element(*vctx, "sameline", "");
+    if(!offset_from_start.has_value())
+        offset_from_start = 0;
+
+    if(!spacing.has_value())
+        spacing = -1;
+
+    js_ui::ui_element e;
+    e.type = "sameline";
+    e.arguments.push_back(offset_from_start.value());
+    e.arguments.push_back(spacing.value());
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    stk->elements.push_back(e);
 }
 
 void js_ui::newline(js::value_context* vctx)
