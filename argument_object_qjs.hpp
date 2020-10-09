@@ -73,6 +73,8 @@ namespace qarg
     JSValue push(JSContext* ctx, const JSValue& in);
     template<int N, typename T>
     JSValue push(JSContext* ctx, const vec<N, T>& in);
+    template<typename T>
+    JSValue push(JSContext* ctx, const std::optional<T>& v);
 
     inline
     JSValue push(JSContext* ctx, const char* v)
@@ -227,6 +229,20 @@ namespace qarg
         static_assert(N <= 4);
 
         return push(ctx, val);
+    }
+
+    template<typename T>
+    inline
+    JSValue push(JSContext* ctx, const std::optional<T>& in)
+    {
+        if(in.has_value())
+        {
+            return push(ctx, in.value());
+        }
+        else
+        {
+            return push(ctx, js_quickjs::undefined_t());
+        }
     }
 
     #define UNDEF() if(JS_IsUndefined(val)){out = std::remove_reference_t<decltype(out)>(); return;}
@@ -684,6 +700,12 @@ namespace js_quickjs
 
     js_quickjs::value execute_promises(js_quickjs::value_context& vctx, js_quickjs::value& potential_promise);
 
+    template<typename T, typename Enable = void>
+    struct is_optional : std::false_type {};
+
+    template<typename T>
+    struct is_optional<std::optional<T>> : std::true_type {};
+
     template<typename T, typename... U>
     constexpr bool is_first_context()
     {
@@ -723,12 +745,23 @@ namespace js_quickjs
                 value val(vctx);
                 val = js_quickjs::undefined;
 
+                if constexpr(is_optional<T>::value)
+                    return std::nullopt;
+
                 return val;
             }
             else
             {
                 value val(vctx);
                 val = argv[N - 1];
+
+                if constexpr(is_optional<T>::value)
+                {
+                    if(val.is_undefined())
+                        return std::nullopt;
+                    else
+                        return (typename T::value_type)val;
+                }
 
                 return val;
             }
