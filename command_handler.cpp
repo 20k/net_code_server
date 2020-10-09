@@ -652,7 +652,9 @@ std::string run_in_user_context(std::string username, std::string command, std::
                                     nlohmann::json obj;
                                     obj["type"] = e.type;
                                     obj["arguments"] = e.arguments;
-                                    obj["element_id"] = e.element_id;
+
+                                    if(e.element_id != "")
+                                        obj["element_id"] = e.element_id;
 
                                     j["msg"].push_back(obj);
                                 }

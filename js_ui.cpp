@@ -155,9 +155,14 @@ void js_ui::textcolored(js::value_context* vctx, double r, double g, double b, d
     b = san_col(b);
     a = san_col(a);
 
+    r = round(r * 100) / 100.;
+    g = round(g * 100) / 100.;
+    b = round(b * 100) / 100.;
+    a = round(a * 100) / 100.;
+
     js_ui::ui_element e;
     e.type = "textcolored";
-    e.element_id = str;
+    //e.element_id = str;
     e.arguments.push_back(r);
     e.arguments.push_back(g);
     e.arguments.push_back(b);
