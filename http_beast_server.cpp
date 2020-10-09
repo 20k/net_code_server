@@ -367,11 +367,14 @@ void websocket_server(connection& conn)
                 if(next_command.size() == 0)
                     continue;
 
-                if(next_command.size() > MAX_MESSAGE_SIZE)
+                if(next_command.size() > MAX_MESSAGE_SIZE * 1.5)
                 {
-                    next_command.resize(MAX_MESSAGE_SIZE);
+                    /*next_command.resize(MAX_MESSAGE_SIZE);
 
-                    next_command += " [Truncated, > " + std::to_string(MAX_MESSAGE_SIZE) + "]";
+                    next_command += " [Truncated, > " + std::to_string(MAX_MESSAGE_SIZE) + "]";*/
+
+                    next_command.clear();
+                    continue;
                 }
 
                 write_data to_write;
