@@ -136,6 +136,15 @@ double san_val(double in)
     return in;
 }
 
+double san_clamp(double in)
+{
+    in = san_val(in);
+
+    in = clamp(in, -9999, 9999);
+
+    return in;
+}
+
 void js_ui::textcolored(js::value_context* vctx, double r, double g, double b, double a, std::string str)
 {
     if(str.size() > 50)
@@ -185,11 +194,8 @@ void js_ui::invisiblebutton(js::value_context* vctx, std::string str, double w, 
 
     str = sanitise_value(str);
 
-    w = san_val(w);
-    h = san_val(h);
-
-    w = clamp(w, -9999, 9999);
-    h = clamp(h, -9999, 9999);
+    w = san_clamp(w);
+    h = san_clamp(h);
 
     js_ui::ui_element e;
     e.type = "invisiblebutton";
@@ -229,9 +235,35 @@ void js_ui::arrowbutton(js::value_context* vctx, std::string str, int dir)
     stk->elements.push_back(e);
 }
 
-void js_ui::button(js::value_context* vctx, std::string str)
+void js_ui::button(js::value_context* vctx, std::string str, std::optional<double> w, std::optional<double> h)
 {
-    create_sanitised_element(*vctx, "button", str);
+    if(str.size() > 50)
+        return;
+
+    if(!w.has_value())
+        w = 0;
+
+    if(!h.has_value())
+        h = 0;
+
+    str = sanitise_value(str);
+
+    w.value() = san_clamp(w.value());
+    h.value() = san_clamp(h.value());
+
+    js_ui::ui_element e;
+    e.type = "button";
+    e.element_id = str;
+    e.arguments.push_back(str);
+    e.arguments.push_back(w.value());
+    e.arguments.push_back(h.value());
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    stk->elements.push_back(e);
 }
 
 void js_ui::bullet(js::value_context* vctx)
@@ -267,14 +299,17 @@ void js_ui::pushstylecolor(js::value_context* vctx, int idx, double r, double g,
     stk->elements.push_back(e);
 }
 
-void js_ui::popstylecolor(js::value_context* vctx, int cnt)
+void js_ui::popstylecolor(js::value_context* vctx, std::optional<int> cnt)
 {
-    if(cnt < 0)
+    if(!cnt.has_value())
+        cnt = 1;
+
+    if(cnt.value() < 0)
         return;
 
     js_ui::ui_element e;
     e.type = "popstylecolor";
-    e.arguments.push_back(cnt);
+    e.arguments.push_back(cnt.value());
 
     js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
@@ -287,7 +322,7 @@ void js_ui::popstylecolor(js::value_context* vctx, int cnt)
 void js_ui::pushitemwidth(js::value_context* vctx, double item_width)
 {
     ///sure
-    item_width = clamp(san_val(item_width), -99999, 99999);
+    item_width = san_clamp(item_width);
 
     js_ui::ui_element e;
     e.type = "pushitemwidth";
@@ -316,7 +351,7 @@ void js_ui::popitemwidth(js::value_context* vctx)
 
 void js_ui::setnextitemwidth(js::value_context* vctx, double item_width)
 {
-    item_width = clamp(san_val(item_width), -99999, 99999);
+    item_width = san_clamp(item_width);
 
     js_ui::ui_element e;
     e.type = "setnextitemwidth";
@@ -343,11 +378,8 @@ void js_ui::sameline(js::value_context* vctx, std::optional<double> offset_from_
     if(!spacing.has_value())
         spacing = -1;
 
-    offset_from_start.value() = san_val(offset_from_start.value());
-    spacing.value() = san_val(spacing.value());
-
-    offset_from_start.value() = clamp(offset_from_start.value(), -9999, 9999);
-    spacing.value() = clamp(spacing.value(), -9999, 9999);
+    offset_from_start.value() = san_clamp(offset_from_start.value());
+    spacing.value() = san_clamp(spacing.value());
 
     js_ui::ui_element e;
     e.type = "sameline";
@@ -393,13 +425,16 @@ void js_ui::dummy(js::value_context* vctx, double w, double h)
     stk->elements.push_back(e);
 }
 
-void js_ui::indent(js::value_context* vctx, double indent_w)
+void js_ui::indent(js::value_context* vctx, std::optional<double> indent_w)
 {
-    indent_w = clamp(san_val(indent_w), -9999, 9999);
+    if(!indent_w.has_value())
+        indent_w = 0;
+
+    indent_w.value() = san_clamp(indent_w.value());
 
     js_ui::ui_element e;
     e.type = "indent";
-    e.arguments.push_back(indent_w);
+    e.arguments.push_back(indent_w.value());
 
     js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
@@ -409,13 +444,16 @@ void js_ui::indent(js::value_context* vctx, double indent_w)
     stk->elements.push_back(e);
 }
 
-void js_ui::unindent(js::value_context* vctx, double indent_w)
+void js_ui::unindent(js::value_context* vctx, std::optional<double> indent_w)
 {
-    indent_w = clamp(san_val(indent_w), -9999, 9999);
+    if(!indent_w.has_value())
+        indent_w = 0;
+
+    indent_w.value() = san_clamp(indent_w.value());
 
     js_ui::ui_element e;
     e.type = "unindent";
-    e.arguments.push_back(indent_w);
+    e.arguments.push_back(indent_w.value());
 
     js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
