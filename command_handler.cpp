@@ -648,7 +648,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                                 std::set<std::string> typeidx;
 
-                                steady_timer process_time;
+                                //steady_timer process_time;
 
                                 j["argument"] =  nlohmann::json::array();
                                 j["types"] = nlohmann::json::array();
@@ -666,37 +666,14 @@ std::string run_in_user_context(std::string username, std::string command, std::
                                     int idx = std::distance(typeidx.begin(), typeidx.find(e.type));
 
                                     types.push_back(idx);
-
-                                    /*nlohmann::json local_arg = nlohmann::json::array();
-
-                                    for(auto& i : e.arguments)
-                                    {
-                                        if(auto val = std::get_if<int>(&i); val)
-                                        {
-                                            local_arg.push_back(*val);
-                                            continue;
-                                        }
-                                        if(auto val = std::get_if<double>(&i); val)
-                                        {
-                                            local_arg.push_back(*val);
-                                            continue;
-                                        }
-                                        if(auto val = std::get_if<std::string>(&i); val)
-                                        {
-                                            local_arg.push_back(*val);
-                                            continue;
-                                        }
-                                    }
-
-                                    arg.push_back(std::move(local_arg));*/
                                     arg.push_back(std::move(e.arguments));
                                 }
 
                                 j["typeidx"] = typeidx;
 
                                 all_shared.value()->shared.add_back_write(j.dump());
-                                float ftime = process_time.get_elapsed_time_s() * 1000;
-                                printf("Elapsed %f\n", ftime);
+                                //float ftime = process_time.get_elapsed_time_s() * 1000;
+                                //printf("Elapsed %f\n", ftime);
                             }
                         }
 
