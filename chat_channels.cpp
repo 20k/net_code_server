@@ -323,7 +323,12 @@ std::vector<std::pair<std::string, chat_message>> chats::get_and_update_chat_msg
 
             msg.sent_to_client[offset] = 1;
 
-            ret.push_back({chan.channel_name, msg});
+            std::string processed_name = chan.channel_name;
+
+            if(processed_name == "$$local")
+                processed_name = "local";
+
+            ret.push_back({processed_name, msg});
 
             db_disk_overwrite(mongo_ctx, msg);
         }
