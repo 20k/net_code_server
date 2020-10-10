@@ -645,21 +645,35 @@ std::string run_in_user_context(std::string username, std::string command, std::
                                 nlohmann::json j;
                                 j["id"] = current_id;
                                 j["type"] = "command_realtime_ui";
-                                j["msg"] = nlohmann::json::array();
 
-                                for(const js_ui::ui_element& e : stk.elements)
+                                std::set<std::string> typeidx;
+
+                                //steady_timer process_time;
+
+                                j["argument"] =  nlohmann::json::array();
+                                j["types"] = nlohmann::json::array();
+
+                                nlohmann::json& arg = j["argument"];
+                                nlohmann::json& types = j["types"];
+
+                                for(js_ui::ui_element& e : stk.elements)
                                 {
-                                    nlohmann::json obj;
-                                    obj["type"] = e.type;
-                                    obj["arguments"] = e.arguments;
+                                    if(auto it = typeidx.find(e.type); it == typeidx.end())
+                                    {
+                                        typeidx.insert(e.type);
+                                    }
 
-                                    if(e.element_id != "")
-                                        obj["element_id"] = e.element_id;
+                                    int idx = std::distance(typeidx.begin(), typeidx.find(e.type));
 
-                                    j["msg"].push_back(obj);
+                                    types.push_back(idx);
+                                    arg.push_back(std::move(e.arguments));
                                 }
 
+                                j["typeidx"] = typeidx;
+
                                 all_shared.value()->shared.add_back_write(j.dump());
+                                //float ftime = process_time.get_elapsed_time_s() * 1000;
+                                //printf("Elapsed %f\n", ftime);
                             }
                         }
 
