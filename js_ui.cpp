@@ -567,8 +567,9 @@ std::optional<js_ui::ui_stack> js_ui::consume(js::value_context& vctx)
     if(too_large(*stk))
         return ui_stack();
 
-    ui_stack ret = *stk;
+    ui_stack ret;
 
+    ret.elements = std::move(stk->elements);
     stk->elements.clear();
 
     js::get_heap_stash(vctx)["blank_ui_is_significant"] = 1;

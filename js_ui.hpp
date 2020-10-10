@@ -3,6 +3,7 @@
 
 #include "argument_object.hpp"
 #include <optional>
+#include <variant>
 
 namespace js_ui
 {
