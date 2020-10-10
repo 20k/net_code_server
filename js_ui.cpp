@@ -162,7 +162,7 @@ void js_ui::textcolored(js::value_context* vctx, double r, double g, double b, d
 
     js_ui::ui_element e;
     e.type = "textcolored";
-    //e.element_id = str;
+    e.element_id = str;
     e.arguments.push_back(r);
     e.arguments.push_back(g);
     e.arguments.push_back(b);
