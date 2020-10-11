@@ -433,6 +433,7 @@ namespace js_quickjs
         //value(value&& other);
         ///pushes a fresh object
         value(value_context& ctx);
+        value(value_context& ctx, const js_quickjs::undefined_t&);
         value(value_context& ctx, const value& other);
         value(value_context& ctx, const value& base, const std::string& key);
         value(value_context& ctx, const value& base, int key);

@@ -318,6 +318,15 @@ js_quickjs::value::value(js_quickjs::value_context& _vctx)
     has_value = true;
 }
 
+js_quickjs::value::value(js_quickjs::value_context& _vctx, const js_quickjs::undefined_t&)
+{
+    vctx = &_vctx;
+    ctx = vctx->ctx;
+
+    val = JS_UNDEFINED;
+    has_value = false;
+}
+
 js_quickjs::value::value(js_quickjs::value_context& vctx, const js_quickjs::value& other) : js_quickjs::value(other)
 {
 
@@ -1142,7 +1151,7 @@ js_quickjs::value js_quickjs::get_heap_stash(js_quickjs::value_context& vctx)
 {
     heap_stash* stash = (heap_stash*)JS_GetRuntimeOpaque(JS_GetRuntime(vctx.ctx));
 
-    js_quickjs::value ret(vctx);
+    js_quickjs::value ret(vctx, js_quickjs::undefined);
     ret = stash->heap_stash_value;
 
     return ret;
