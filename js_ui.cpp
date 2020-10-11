@@ -27,6 +27,8 @@ const ImU32 GCrc32LookupTable[256] =
     0xBDBDF21C,0xCABAC28A,0x53B39330,0x24B4A3A6,0xBAD03605,0xCDD70693,0x54DE5729,0x23D967BF,0xB3667A2E,0xC4614AB8,0x5D681B02,0x2A6F2B94,0xB40BBE37,0xC30C8EA1,0x5A05DF1B,0x2D02EF8D,
 };
 
+#define MAX_STR_SIZE 5000
+
 ImU32 ImHashStr(const char* data_p, size_t data_size, ImU32 seed)
 {
     seed = ~seed;
@@ -65,41 +67,43 @@ std::string sanitise_value(const std::string& str)
 
 bool too_large(js_ui::ui_stack& stk)
 {
-    uint64_t sum = 0;
+    uint64_t sum = stk.current_size;
 
-    for(const js_ui::ui_element& e : stk.elements)
+    for(uint64_t idx = stk.current_idx; idx < stk.elements.size(); idx++)
     {
-        sum += e.type.size();
-        sum += e.element_id.size();
+        sum += stk.elements[idx].type.size();
+        sum += stk.elements[idx].element_id.size();
     }
 
-    if(sum >= 1024 * 1024 * 10)
-        return true;
+    stk.current_idx = stk.elements.size();
+    stk.current_size = sum;
 
-    return false;
+    return sum >= 1024 * 1024 * 10;
 }
 
-void create_unsanitised_element(js::value_context& vctx, const std::string& type, const std::string& value)
+void create_unsanitised_element(js::value_context& vctx, const std::string& type, std::optional<std::string> value = std::nullopt)
 {
-    if(value.size() > 50)
+    if(value.has_value() && value.value().size() > MAX_STR_SIZE)
         return;
-
-    js_ui::ui_element e;
-    e.type = type;
-    e.element_id = value;
-    e.arguments.push_back(value);
 
     js_ui::ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
     if(too_large(*stk))
         return;
 
-    stk->elements.push_back(e);
+    js_ui::ui_element& e = stk->elements.emplace_back();
+    e.type = type;
+
+    if(value.has_value())
+    {
+        e.element_id = value.value();
+        e.arguments.push_back(value.value());
+    }
 }
 
 void create_sanitised_element(js::value_context& vctx, const std::string& type, const std::string& value)
 {
-    if(value.size() > 50)
+    if(value.size() > MAX_STR_SIZE)
         return;
 
     js_ui::ui_element e;
@@ -147,7 +151,7 @@ double san_clamp(double in)
 
 void js_ui::textcolored(js::value_context* vctx, double r, double g, double b, double a, std::string str)
 {
-    if(str.size() > 50)
+    if(str.size() > MAX_STR_SIZE)
         return;
 
     r = san_col(r);
@@ -194,7 +198,7 @@ void js_ui::smallbutton(js::value_context* vctx, std::string str)
 
 void js_ui::invisiblebutton(js::value_context* vctx, std::string str, double w, double h)
 {
-    if(str.size() > 50)
+    if(str.size() > MAX_STR_SIZE)
         return;
 
     str = sanitise_value(str);
@@ -219,7 +223,7 @@ void js_ui::invisiblebutton(js::value_context* vctx, std::string str, double w, 
 
 void js_ui::arrowbutton(js::value_context* vctx, std::string str, int dir)
 {
-    if(str.size() > 50)
+    if(str.size() > MAX_STR_SIZE)
         return;
 
     str = sanitise_value(str);
@@ -242,7 +246,7 @@ void js_ui::arrowbutton(js::value_context* vctx, std::string str, int dir)
 
 void js_ui::button(js::value_context* vctx, std::string str, std::optional<double> w, std::optional<double> h)
 {
-    if(str.size() > 50)
+    if(str.size() > MAX_STR_SIZE)
         return;
 
     if(!w.has_value())
@@ -273,7 +277,7 @@ void js_ui::button(js::value_context* vctx, std::string str, std::optional<doubl
 
 void js_ui::bullet(js::value_context* vctx)
 {
-    create_unsanitised_element(*vctx, "bullet", "");
+    create_unsanitised_element(*vctx, "bullet");
 }
 
 void js_ui::pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a)
@@ -372,7 +376,7 @@ void js_ui::setnextitemwidth(js::value_context* vctx, double item_width)
 
 void js_ui::separator(js::value_context* vctx)
 {
-    create_unsanitised_element(*vctx, "separator", "");
+    create_unsanitised_element(*vctx, "separator");
 }
 
 void js_ui::sameline(js::value_context* vctx, std::optional<double> offset_from_start, std::optional<double> spacing)
@@ -386,27 +390,25 @@ void js_ui::sameline(js::value_context* vctx, std::optional<double> offset_from_
     offset_from_start.value() = san_clamp(offset_from_start.value());
     spacing.value() = san_clamp(spacing.value());
 
-    js_ui::ui_element e;
-    e.type = "sameline";
-    e.arguments.push_back(offset_from_start.value());
-    e.arguments.push_back(spacing.value());
-
     js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
     if(too_large(*stk))
         return;
 
-    stk->elements.push_back(e);
+    js_ui::ui_element& e = stk->elements.emplace_back();
+    e.type = "sameline";
+    e.arguments.push_back(offset_from_start.value());
+    e.arguments.push_back(spacing.value());
 }
 
 void js_ui::newline(js::value_context* vctx)
 {
-    create_unsanitised_element(*vctx, "newline", "");
+    create_unsanitised_element(*vctx, "newline");
 }
 
 void js_ui::spacing(js::value_context* vctx)
 {
-    create_unsanitised_element(*vctx, "spacing", "");
+    create_unsanitised_element(*vctx, "spacing");
 }
 
 void js_ui::dummy(js::value_context* vctx, double w, double h)
@@ -471,12 +473,12 @@ void js_ui::unindent(js::value_context* vctx, std::optional<double> indent_w)
 
 void js_ui::begingroup(js::value_context* vctx)
 {
-    create_unsanitised_element(*vctx, "begingroup", "");
+    create_unsanitised_element(*vctx, "begingroup");
 }
 
 void js_ui::endgroup(js::value_context* vctx)
 {
-    create_unsanitised_element(*vctx, "endgroup", "");
+    create_unsanitised_element(*vctx, "endgroup");
 }
 
 std::optional<ui_element_state*> get_last_element(js::value_context& vctx)

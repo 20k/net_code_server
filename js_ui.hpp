@@ -17,6 +17,8 @@ namespace js_ui
     struct ui_stack
     {
         std::vector<ui_element> elements;
+        uint64_t current_size = 0;
+        uint64_t current_idx = 0;
     };
 
     void text(js::value_context* vctx, std::string str);
