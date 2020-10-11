@@ -572,7 +572,7 @@ std::optional<js_ui::ui_stack> js_ui::consume(js::value_context& vctx)
     ui_stack ret;
 
     ret.elements = std::move(stk->elements);
-    stk->elements.clear();
+    *stk = ui_stack();
 
     js::get_heap_stash(vctx)["blank_ui_is_significant"] = 1;
 
