@@ -175,15 +175,13 @@ namespace qarg
     inline
     JSValue push(JSContext* ctx, T* in)
     {
-        return JS_NewBigUint64(ctx, (uint64_t)in);
-        //return JS_MKPTR(0, in);
+        return JS_MKPTR(JS_TAG_UNINITIALIZED, in);
     }
 
     inline
     JSValue push(JSContext* ctx, std::nullptr_t in)
     {
-        return JS_NewBigUint64(ctx, 0);
-        //return JS_MKPTR(0, 0);
+        return JS_MKPTR(JS_TAG_UNINITIALIZED, in);
     }
 
     JSValue push(JSContext* ctx, const js_quickjs::value& in);
@@ -395,10 +393,7 @@ namespace qarg
     {
         UNDEF();
 
-        int64_t vptr = 0;
-        JS_ToBigInt64(vctx.ctx, &vptr, val);
-
-        memcpy((void*)&out, (void*)&vptr, sizeof(out));
+        out = (T*)JS_VALUE_GET_PTR(val);
     }
 
     inline
