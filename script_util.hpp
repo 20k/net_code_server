@@ -11,9 +11,6 @@
 #include "argument_object.hpp"
 #include "db_storage_backend_lmdb.hpp"
 
-inline
-std::string base_scripts_string = "./scripts/";
-
 struct mongo_lock_proxy;
 
 using autos_t = std::vector<std::pair<std::string, std::string>>;

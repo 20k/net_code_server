@@ -736,57 +736,6 @@ bool script_info::exists_in_db(db::read_tx& ctx)
     return db_disk_exists(ctx, my_script);
 }
 
-#if 0
-void script_info::load_from_disk_with_db_metadata(const std::string& name_)
-{
-    std::string base = base_scripts_string;
-
-    unparsed_source = get_script_from_name_string(base, name_);
-
-    script_data sdata = parse_script(unparsed_source);
-
-    parsed_source = sdata.parsed_source;
-    seclevel = sdata.seclevel;
-    valid = sdata.valid;
-
-    if(!valid)
-        return;
-
-    name = name_;
-
-    std::vector<std::string> splits = no_ss_split(name, ".");
-
-    assert(splits.size() == 2);
-
-    std::string owner = splits[0];
-
-    item my_script;
-    my_script.set_prop("item_id", name);
-    my_script.set_prop("in_public", 0);
-    my_script.set_prop("trust", 0);
-    my_script.set_prop("owner", owner);
-    my_script.set_prop("is_script", 1);
-    my_script.set_prop("unparsed_source", unparsed_source);
-
-    mongo_lock_proxy mongo_ctx = get_global_mongo_user_items_context();
-
-    if(!my_script.exists_in_db(mongo_ctx))
-    {
-        my_script.create_in_db(mongo_ctx);
-    }
-
-    #define OVERWRITE
-    #ifdef OVERWRITE
-    else
-    {
-        my_script.update_in_db(mongo_ctx);
-    }
-    #endif // OVERWRITE
-
-    my_script.load_from_db(mongo_ctx);
-}
-#endif
-
 void set_script_info(js::value_context& vctx, const std::string& full_script_name)
 {
     std::vector<std::string> strings = no_ss_split(full_script_name, ".");
