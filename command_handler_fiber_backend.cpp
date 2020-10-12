@@ -62,6 +62,7 @@ struct custom_scheduler : boost::fibers::algo::algorithm
 {
     int my_id = 0;
     scheduler_data& dat;
+    uint64_t counter = 0;
 
     custom_scheduler(int id, scheduler_data& _dat) : my_id(id), dat(_dat)
     {
@@ -101,12 +102,14 @@ struct custom_scheduler : boost::fibers::algo::algorithm
         return dat.q.size() > 0;
     }
 
-    void suspend_until(std::chrono::steady_clock::time_point const&) noexcept override
+    void suspend_until(std::chrono::steady_clock::time_point const& until) noexcept override
     {
-        //#ifndef EXTERN_IP
-        sf::sleep(sf::milliseconds(1));
-        //std::this_thread::yield();
-        //#endif // EXTERN_IP
+        if((counter % 100) == 0)
+            sf::sleep(sf::milliseconds(1));
+        else
+            std::this_thread::yield();
+
+        counter++;
     }
 
     void notify() noexcept override
