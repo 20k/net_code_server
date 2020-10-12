@@ -120,67 +120,25 @@ void handle_sleep(sandbox_data* dat)
             if(!dat->new_frame)
             {
                 allowed_executable_time = 1;
-                sleep_time = 4 * fiber_load;
             }
 
-            /*allowed_executable_time = 1;
-            sleep_time = 4;*/
-
-            //sleep_time += sleep_mult * (fiber_load - 1) * 4;
-
-            //sleep_time += frametime * sleep_mult * (fiber_load - 1);
-
-            //std::cout << "SLEEP " << frametime << " " << sleep_time << " ELAPSED " << dat->realtime_ms_awake_elapsed << " LOAD " << fiber_load << std::endl;
+            sleep_time = 4 * fiber_load;
 
             if(dat->realtime_ms_awake_elapsed > allowed_executable_time)
             {
-                //double awake_overshoot = dat->realtime_ms_awake_elapsed - allowed_executable_time;
+                double awake_overshoot_frac = (dat->realtime_ms_awake_elapsed - allowed_executable_time) / allowed_executable_time;
 
-                fiber_sleep(sleep_time);
-                dat->realtime_ms_awake_elapsed = 0;
+                double full_sleep_time = sleep_time + awake_overshoot_frac * 4;
+
+                steady_timer elapsed;
+                fiber_sleep(full_sleep_time);
+
+                double real_slept = elapsed.get_elapsed_time_s() * 1000;
+
+                double sleep_slice = real_slept / full_sleep_time;
+
+                dat->realtime_ms_awake_elapsed = -sleep_slice * 1;
                 dat->clk.restart();
-
-                //printf("Overshoot %f\n", awake_overshoot);
-
-                //double total_sleep = extra + sleep_time;
-
-                //double total_sleep = sleep_time;
-
-                //int idiff = (int)total_sleep;
-
-                //if(total_sleep > 0)
-                {
-                    /*steady_timer real_sleep;
-                    fiber_sleep(idiff);
-
-                    double elapsed = real_sleep.get_elapsed_time_s() * 1000;
-
-                    printf("FEL %lf\n", elapsed);
-
-                    //dat->realtime_ms_awake_elapsed -= elapsed;
-                    dat->realtime_ms_awake_elapsed = 0;
-                    dat->clk.restart();*/
-
-                    /*double extra_sleep = awake_overshoot * 4;
-                    double total_sleep = sleep_time + awake_overshoot * 0;
-
-                    steady_timer timer;
-                    fiber_sleep(total_sleep);
-                    float slept_for = timer.get_elapsed_time_s() * 1000.;
-
-                    double oversleep = slept_for - total_sleep;
-
-                    double awake_mod = oversleep / 4;
-
-                    awake_mod = clamp(awake_mod, -4., 4.);
-
-                    dat->realtime_ms_awake_elapsed = 0;
-                    //dat->realtime_ms_awake_elapsed = -awake_mod;
-                    dat->clk.restart();
-                    //dat->realtime_ms_awake_elapsed = clamp(dat->realtime_ms_awake_elapsed, -20, 100);
-
-                    printf("Slept for %f %f\n", total_sleep, slept_for);*/
-                }
 
                 dat->new_frame = false;
             }
