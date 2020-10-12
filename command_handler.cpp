@@ -362,27 +362,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
 
             int sleep_mult = all_shared->live_work_units();
 
-            ///remember to set work units here
-            /*if(!is_thread_fiber())
-            {
-                while((elapsed.get_elapsed_time_s() * 1000) < (max_frame_time_ms * sleep_mult))
-                {
-                    sf::sleep(sf::milliseconds(1));
-                }
-            }
-            else
-            {
-                ///so: i think the problem with erratic framerates is using elapsed, whereas the underlying rate limiter might go to sleep
-                ///its weird that the frame deltatime isn't affected though
-                double celapsed = elapsed.get_elapsed_time_s() * 1000;
-                double diff = max_frame_time_ms * sleep_mult * fiber_overload_factor() - celapsed;
-
-                #ifdef USE_FIBERS
-                if(diff > 0)
-                    boost::this_fiber::sleep_for(std::chrono::milliseconds((int)diff));
-                #endif // USE_FIBERS
-            }*/
-
             {
                 double frametime = (1/current_framerate) * 1000;
 
