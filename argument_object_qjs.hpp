@@ -799,6 +799,8 @@ namespace js_quickjs
 
         js_quickjs::value_context vctx(ctx);
 
+        vctx.execute_timeout_check();
+
         js_quickjs::value func_this(vctx);
         func_this = this_val;
 

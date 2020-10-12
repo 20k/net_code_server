@@ -152,8 +152,6 @@ double san_clamp(double in)
 
 void js_ui::textcolored(js::value_context* vctx, double r, double g, double b, double a, std::string str)
 {
-    //vctx->execute_timeout_check();
-
     if(str.size() > MAX_STR_SIZE)
         return;
 
