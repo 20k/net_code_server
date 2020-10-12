@@ -381,8 +381,14 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                     double time_to_end_of_allowed = allowed_executable_time - sand_data->realtime_ms_awake_elapsed;
                     double total_sleep = time_to_end_of_allowed + sleep_time;
 
+                    steady_timer oversleep;
                     fiber_sleep(total_sleep);
+
+                    double elapsed_oversleep = oversleep.get_elapsed_time_s() * 1000.;
+                    elapsed_oversleep = clamp(elapsed_oversleep, -2., 2.);
+
                     sand_data->realtime_ms_awake_elapsed = 0;
+                    //sand_data->realtime_ms_awake_elapsed = -elapsed_oversleep;
                 }
                 else
                 {
