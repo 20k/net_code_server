@@ -397,22 +397,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                 ///did not forcibly rate limit
                 if(sand_data->new_frame && allowed_executable_time > sand_data->realtime_ms_awake_elapsed)
                 {
-                    /*double unused_time_slice = (allowed_executable_time - sand_data->realtime_ms_awake_elapsed) / allowed_executable_time;
-
-                    double total_sleep = -unused_time_slice * sleep_time + sleep_time;
-
-                    printf("S1 %f %f %f unused %f\n", frame_elapsed, sleep_time, total_sleep, unused_time_slice);
-                    steady_timer oversleep;
-                    fiber_sleep(total_sleep);
-                    double real_elapsed = oversleep.get_elapsed_time_s() * 1000.;
-
-                    double oversleep_fraction = real_elapsed / total_sleep;
-
-                    oversleep_fraction = clamp(oversleep_fraction, -1.5, 1.5);
-
-                    sand_data->realtime_ms_awake_elapsed = 0;*/
-                    //sand_data->realtime_ms_awake_elapsed = -oversleep_fraction * allowed_executable_time;
-
                     double time_to_end_of_allowed = allowed_executable_time - sand_data->realtime_ms_awake_elapsed;
                     double total_sleep = time_to_end_of_allowed + sleep_time;
 
@@ -422,7 +406,7 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                 else
                 {
                     double overrun_time_slice = (sand_data->realtime_ms_awake_elapsed - allowed_executable_time) / 1;
-                    double extra_sleep = overrun_time_slice * 4;
+                    double extra_sleep = overrun_time_slice * 3;
 
                     extra_sleep = clamp(extra_sleep, 0., 100.);
 

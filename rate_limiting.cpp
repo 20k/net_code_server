@@ -105,8 +105,6 @@ void handle_sleep(sandbox_data* dat)
         }
         else
         {
-            //printf("ELAPSE %f\n", current_elapsed_time);
-
             #ifdef USE_FIBERS
             double current_framerate = dat->framerate_limit;
 
@@ -122,13 +120,13 @@ void handle_sleep(sandbox_data* dat)
                 allowed_executable_time = 1;
             }
 
-            sleep_time = 4 * fiber_load;
+            sleep_time = 3 * fiber_load * sleep_mult;
 
             if(dat->realtime_ms_awake_elapsed > allowed_executable_time)
             {
                 double awake_overshoot_frac = (dat->realtime_ms_awake_elapsed - allowed_executable_time) / allowed_executable_time;
 
-                double full_sleep_time = sleep_time + awake_overshoot_frac * 4;
+                double full_sleep_time = sleep_time + awake_overshoot_frac * 3;
 
                 steady_timer elapsed;
                 fiber_sleep(full_sleep_time);

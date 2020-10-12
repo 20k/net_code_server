@@ -30,7 +30,7 @@ namespace js_quickjs
 
         value_context(JSContext* ctx);
         value_context(value_context&);
-        value_context(JSInterruptHandler interrupt = nullptr);
+        value_context(JSInterruptHandler handler = nullptr);
         ~value_context();
 
         value_context& operator=(const value_context& other);
@@ -40,9 +40,6 @@ namespace js_quickjs
         value get_current_this();
 
         void execute_jobs();
-        ///the timeout check is called implicitly, but in the case where there are a lot of
-        ///c api function calls that take a lot of time, it may not be called very frequently
-        ///for granularity purposes then, it can be useful to call this on an api transition
         void execute_timeout_check();
     };
 

@@ -4444,7 +4444,7 @@ main.cpp: stacktrace.hpp script_util.hpp seccallers.hpp mongo.hpp user.hpp item.
 
 logging.cpp: logging.hpp
 
-js_ui.cpp: js_ui.hpp command_handler_state.hpp
+js_ui.cpp: js_ui.hpp command_handler_state.hpp rate_limiting.hpp
 
 js_ui.hpp: argument_object.hpp
 
