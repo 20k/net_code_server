@@ -63,8 +63,9 @@ struct custom_scheduler : boost::fibers::algo::algorithm
     int my_id = 0;
     scheduler_data& dat;
     uint64_t counter = 0;
+    bool high_priority = false;
 
-    custom_scheduler(int id, scheduler_data& _dat) : my_id(id), dat(_dat)
+    custom_scheduler(int id, scheduler_data& _dat, bool _high_priority) : my_id(id), dat(_dat), high_priority(_high_priority)
     {
 
     }
@@ -104,10 +105,17 @@ struct custom_scheduler : boost::fibers::algo::algorithm
 
     void suspend_until(std::chrono::steady_clock::time_point const& until) noexcept override
     {
-        if((counter % 100) == 0)
-            sf::sleep(sf::milliseconds(1));
+        if(high_priority)
+        {
+            if((counter % 100) == 0)
+                sf::sleep(sf::milliseconds(1));
+            else
+                std::this_thread::yield();
+        }
         else
-            std::this_thread::yield();
+        {
+            sf::sleep(sf::milliseconds(1));
+        }
 
         counter++;
     }
@@ -124,7 +132,7 @@ void worker_thread(int id, std::array<scheduler_data, HARDWARE_THREADS>* pothers
     std::array<scheduler_data, HARDWARE_THREADS>& others = *pothers;
 
     #ifdef USE_FIBERS
-    boost::fibers::use_scheduling_algorithm<custom_scheduler>(id, others[id]);
+    boost::fibers::use_scheduling_algorithm<custom_scheduler>(id, others[id], high_priority);
     is_fiber = 1;
 
     others[id].dispatcher_id = boost::this_fiber::get_id();
