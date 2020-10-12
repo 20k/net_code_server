@@ -1,6 +1,7 @@
 #include "js_ui.hpp"
 #include "command_handler_state.hpp"
 #include <cmath>
+#include "rate_limiting.hpp"
 
 namespace
 {
@@ -151,6 +152,8 @@ double san_clamp(double in)
 
 void js_ui::textcolored(js::value_context* vctx, double r, double g, double b, double a, std::string str)
 {
+    vctx->execute_timeout_check();
+
     if(str.size() > MAX_STR_SIZE)
         return;
 
@@ -381,6 +384,8 @@ void js_ui::separator(js::value_context* vctx)
 
 void js_ui::sameline(js::value_context* vctx, std::optional<double> offset_from_start, std::optional<double> spacing)
 {
+    //handle_sleep(js::get_sandbox_data<sandbox_data>(*vctx));
+
     if(!offset_from_start.has_value())
         offset_from_start = 0;
 
@@ -403,6 +408,8 @@ void js_ui::sameline(js::value_context* vctx, std::optional<double> offset_from_
 
 void js_ui::newline(js::value_context* vctx)
 {
+    //handle_sleep(js::get_sandbox_data<sandbox_data>(*vctx));
+
     create_unsanitised_element(*vctx, "newline");
 }
 

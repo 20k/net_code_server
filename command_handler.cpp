@@ -155,6 +155,9 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
     {
         try
         {
+            sandbox_data* sand_data = js::get_sandbox_data<sandbox_data>(vctx);
+            sand_data->new_frame = true;
+
             steady_timer elapsed;
 
             {
@@ -353,7 +356,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
 
             ///DO PROMISES STUFF
 
-            sandbox_data* sand_data = js::get_sandbox_data<sandbox_data>(vctx);
 
             ///need to set work units based on how much of elapsed frametime is used
             double max_frame_time_ms = (1./current_framerate) * 1000.;
@@ -361,7 +363,7 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             int sleep_mult = all_shared->live_work_units();
 
             ///remember to set work units here
-            if(!is_thread_fiber())
+            /*if(!is_thread_fiber())
             {
                 while((elapsed.get_elapsed_time_s() * 1000) < (max_frame_time_ms * sleep_mult))
                 {
@@ -370,6 +372,8 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             }
             else
             {
+                ///so: i think the problem with erratic framerates is using elapsed, whereas the underlying rate limiter might go to sleep
+                ///its weird that the frame deltatime isn't affected though
                 double celapsed = elapsed.get_elapsed_time_s() * 1000;
                 double diff = max_frame_time_ms * sleep_mult * fiber_overload_factor() - celapsed;
 
@@ -377,13 +381,78 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                 if(diff > 0)
                     boost::this_fiber::sleep_for(std::chrono::milliseconds((int)diff));
                 #endif // USE_FIBERS
+            }*/
+
+            {
+                double frametime = (1/current_framerate) * 1000;
+
+                double fiber_load = fiber_overload_factor();
+
+                double allowed_executable_time = (1/4.f) * frametime;
+                double sleep_time = (1 - (1/4.f)) * frametime;
+                sleep_time += frametime * sleep_mult * (fiber_load - 1);
+
+                double frame_elapsed = elapsed.get_elapsed_time_s() * 1000;
+
+                ///did not forcibly rate limit
+                if(sand_data->new_frame && allowed_executable_time > sand_data->realtime_ms_awake_elapsed)
+                {
+                    double unused_time_slice = (allowed_executable_time - sand_data->realtime_ms_awake_elapsed) / allowed_executable_time;
+
+                    double total_sleep = -unused_time_slice * sleep_time + sleep_time;
+
+                    printf("S1 %f %f %f unused %f\n", frame_elapsed, sleep_time, total_sleep, unused_time_slice);
+                    fiber_sleep(total_sleep);
+
+                    sand_data->realtime_ms_awake_elapsed = 0;
+                }
+                else
+                {
+                    /*double awake_remaining = 1 - sand_data->realtime_ms_awake_elapsed;
+
+                    awake_remaining = std::max(awake_remaining, 0.);
+
+                    double sleep_equivalent = 4 * awake_remaining;
+
+                    sleep_time -= sleep_equivalent;
+
+                    sleep_time = std::max(sleep_time, 0.);
+
+                    steady_timer timer;
+                    fiber_sleep(sleep_time);
+                    float slept_for = timer.get_elapsed_time_s() * 1000.;
+
+                    double oversleep = slept_for - sleep_time;
+
+                    double awake_mod = oversleep / 4;
+
+                    awake_mod = clamp(awake_mod, 4, 4.);
+
+                    //sand_data->realtime_ms_awake_elapsed = 0;
+                    sand_data->realtime_ms_awake_elapsed = -awake_mod;
+
+                    printf("FTIME %f %f\n", sleep_time, slept_for);*/
+
+                    double overrun_time_slice = (sand_data->realtime_ms_awake_elapsed - allowed_executable_time) / 1;
+                    double extra_sleep = overrun_time_slice * 4;
+
+                    extra_sleep = clamp(extra_sleep, 0., 100.);
+
+                    fiber_sleep(extra_sleep + sleep_time);
+
+                    sand_data->realtime_ms_awake_elapsed = 0;
+                }
             }
+
+            sand_data->clk.restart();
+            //sand_data->realtime_ms_awake_elapsed = 0;
 
             if(callback(vctx))
                 break;
 
-            sand_data->clk.restart();
-            sand_data->realtime_ms_awake_elapsed = 0;
+            //float drdrdr = elapsed.get_elapsed_time_s() * 1000.;
+
+            //printf("ELAPSED %f\n", drdrdr);
         }
         catch(...)
         {

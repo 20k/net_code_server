@@ -52,6 +52,7 @@ struct sandbox_data
     std::atomic_bool is_realtime{false};
     double realtime_ms_awake_elapsed{0};
     steady_timer clk;
+    bool new_frame = false;
 };
 
 inline void *sandbox_alloc(void *udata, size_t size)

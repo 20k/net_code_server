@@ -307,7 +307,9 @@ void js_quickjs::value_context::execute_timeout_check()
     if(handler != nullptr)
     {
         ///todo: handle return values
-        handler(heap, JS_GetInterruptHandlerOpaque(heap));
+        int ret = handler(heap, JS_GetInterruptHandlerOpaque(heap));
+
+        (void)ret;
     }
 }
 

@@ -19,6 +19,9 @@ bool is_script_timeout(js::value_context& vctx)
 
 void handle_sleep(sandbox_data* dat)
 {
+    if(dat == nullptr)
+        return;
+
     if(tls_get_holds_lock())
     {
         if(*tls_get_holds_lock() > 0)
@@ -83,7 +86,9 @@ void handle_sleep(sandbox_data* dat)
         double max_frame_time_ms = sleep_time / (1 - max_to_allowed);
         double max_allowed_frame_time_ms = max_frame_time_ms - sleep_time;
 
-        dat->realtime_ms_awake_elapsed += dat->clk.restart() * 1000;
+        double current_elapsed_time = dat->clk.restart() * 1000;
+
+        dat->realtime_ms_awake_elapsed += current_elapsed_time;
 
         if(dat->realtime_ms_awake_elapsed > 100)
             dat->realtime_ms_awake_elapsed = 100;
@@ -100,36 +105,84 @@ void handle_sleep(sandbox_data* dat)
         }
         else
         {
+            //printf("ELAPSE %f\n", current_elapsed_time);
+
             #ifdef USE_FIBERS
             double current_framerate = dat->framerate_limit;
 
             double frametime = (1/current_framerate) * 1000;
 
             double allowed_executable_time = (1/4.f) * frametime;
-            double sleep_time = (1 - (1/4.f)) * frametime;
+            double sleep_time = (1 - (1/4.f)) * frametime * fiber_load;
 
-            sleep_time += frametime * sleep_mult * fiber_load;
+            ///so, when frames fire off, they have a big chunk of allowed time
+            ///this then gets reduced to 1ms on, 4ms off after they miss the frame budget
+            if(!dat->new_frame)
+            {
+                allowed_executable_time = 1;
+                sleep_time = 4 * fiber_load;
+            }
+
+            /*allowed_executable_time = 1;
+            sleep_time = 4;*/
+
+            //sleep_time += sleep_mult * (fiber_load - 1) * 4;
+
+            //sleep_time += frametime * sleep_mult * (fiber_load - 1);
+
+            //std::cout << "SLEEP " << frametime << " " << sleep_time << " ELAPSED " << dat->realtime_ms_awake_elapsed << " LOAD " << fiber_load << std::endl;
 
             if(dat->realtime_ms_awake_elapsed > allowed_executable_time)
             {
-                double extra = dat->realtime_ms_awake_elapsed - allowed_executable_time;
+                //double awake_overshoot = dat->realtime_ms_awake_elapsed - allowed_executable_time;
 
-                double total_sleep = extra + sleep_time;
+                fiber_sleep(sleep_time);
+                dat->realtime_ms_awake_elapsed = 0;
+                dat->clk.restart();
 
-                int idiff = (int)total_sleep;
+                //printf("Overshoot %f\n", awake_overshoot);
 
-                if(idiff > 0)
+                //double total_sleep = extra + sleep_time;
+
+                //double total_sleep = sleep_time;
+
+                //int idiff = (int)total_sleep;
+
+                //if(total_sleep > 0)
                 {
-                    steady_timer real_sleep;
-                    boost::this_fiber::sleep_for(std::chrono::milliseconds((int)idiff));
+                    /*steady_timer real_sleep;
+                    fiber_sleep(idiff);
 
                     double elapsed = real_sleep.get_elapsed_time_s() * 1000;
 
-                    dat->realtime_ms_awake_elapsed -= elapsed;
-                    dat->clk.restart();
+                    printf("FEL %lf\n", elapsed);
 
-                    dat->realtime_ms_awake_elapsed = clamp(dat->realtime_ms_awake_elapsed, -20, 100);
+                    //dat->realtime_ms_awake_elapsed -= elapsed;
+                    dat->realtime_ms_awake_elapsed = 0;
+                    dat->clk.restart();*/
+
+                    /*double extra_sleep = awake_overshoot * 4;
+                    double total_sleep = sleep_time + awake_overshoot * 0;
+
+                    steady_timer timer;
+                    fiber_sleep(total_sleep);
+                    float slept_for = timer.get_elapsed_time_s() * 1000.;
+
+                    double oversleep = slept_for - total_sleep;
+
+                    double awake_mod = oversleep / 4;
+
+                    awake_mod = clamp(awake_mod, -4., 4.);
+
+                    dat->realtime_ms_awake_elapsed = 0;
+                    //dat->realtime_ms_awake_elapsed = -awake_mod;
+                    dat->clk.restart();
+                    //dat->realtime_ms_awake_elapsed = clamp(dat->realtime_ms_awake_elapsed, -20, 100);
+
+                    printf("Slept for %f %f\n", total_sleep, slept_for);*/
                 }
+
+                dat->new_frame = false;
             }
             #endif // USE_FIBERS
         }
@@ -190,7 +243,7 @@ void handle_sleep(sandbox_data* dat)
 
     if(val > 0)
     {
-        fiber_sleep(val);
+        //fiber_sleep(val);
     }
 
     dat->sleep_for -= val;

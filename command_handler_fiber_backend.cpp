@@ -37,14 +37,13 @@ struct scheduler_data
 
 void fiber_sleep(double time_ms)
 {
-    int ms = (int)time_ms;
-
     if(is_thread_fiber())
     {
-        boost::this_fiber::sleep_for(std::chrono::milliseconds(ms));
+        boost::this_fiber::sleep_for(std::chrono::microseconds((int)(time_ms * 1000.)));
     }
     else
     {
+        int ms = (int)round(time_ms);
         sthread::this_sleep(ms);
     }
 }
@@ -106,6 +105,7 @@ struct custom_scheduler : boost::fibers::algo::algorithm
     {
         //#ifndef EXTERN_IP
         sf::sleep(sf::milliseconds(1));
+        //std::this_thread::yield();
         //#endif // EXTERN_IP
     }
 
