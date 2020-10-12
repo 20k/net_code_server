@@ -300,6 +300,17 @@ void js_quickjs::value_context::execute_jobs()
     }
 }
 
+void js_quickjs::value_context::execute_timeout_check()
+{
+    JSInterruptHandler* handler = JS_GetInterruptHandler(heap);
+
+    if(handler != nullptr)
+    {
+        ///todo: handle return values
+        handler(heap, JS_GetInterruptHandlerOpaque(heap));
+    }
+}
+
 js_quickjs::value::value(const js_quickjs::value& other)
 {
     vctx = other.vctx;
