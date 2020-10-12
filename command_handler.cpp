@@ -390,7 +390,9 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
 
                 double allowed_executable_time = (1/4.f) * frametime;
                 double sleep_time = (1 - (1/4.f)) * frametime;
-                sleep_time += frametime * sleep_mult * (fiber_load - 1);
+
+                sleep_time += frametime * (sleep_mult - 1);
+                sleep_time += frametime * (fiber_load - 1);
 
                 double frame_elapsed = elapsed.get_elapsed_time_s() * 1000;
 

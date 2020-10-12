@@ -120,7 +120,11 @@ void handle_sleep(sandbox_data* dat)
                 allowed_executable_time = 1;
             }
 
-            sleep_time = 3 * fiber_load * sleep_mult;
+            ///1:3, 1ms awake + 3ms asleep = 4ms, aka 1/4 awake and 3/4 asleep
+            sleep_time = 3;
+            ///one 'frame'
+            sleep_time += 4 * (fiber_load - 1);
+            sleep_time += 4 * (sleep_mult - 1);
 
             if(dat->realtime_ms_awake_elapsed > allowed_executable_time)
             {
