@@ -6,7 +6,6 @@
 #include <mutex>
 #include "stacktrace.hpp"
 #include <iostream>
-#include <SFML/System/Clock.hpp>
 #include "safe_thread.hpp"
 
 #define CID_STRING "_cid"

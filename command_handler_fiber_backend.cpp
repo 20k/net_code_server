@@ -2,7 +2,6 @@
 
 #include <boost/fiber/all.hpp>
 #include <boost/fiber/algo/round_robin.hpp>
-#include <SFML/System/Clock.hpp>
 #include "safe_thread.hpp"
 #include <queue>
 #include <SFML/System/Sleep.hpp>
