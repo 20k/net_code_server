@@ -150,16 +150,6 @@ struct safe_mutex
 
     void lock()
     {
-        /*sf::Clock clk;
-
-        while(!mutex.try_lock())
-        {
-            if(clk.getElapsedTime().asMilliseconds() > 5000)
-            {
-                std::cout << get_stacktrace() << std::endl;
-            }
-        }*/
-
         mutex.lock();
     }
 

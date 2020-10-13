@@ -46,11 +46,11 @@ void on_heal_network_link(int cnt, std::vector<std::string> data)
 
 void task_thread(scheduled_tasks& tasks)
 {
-    sf::Clock clk;
+    steady_timer clk;
 
     while(1)
     {
-        tasks.check_all_tasks(clk.getElapsedTime().asMicroseconds() / 1000. / 1000.);
+        tasks.check_all_tasks(clk.get_elapsed_time_s());
 
         fiber_sleep(1000);
     }
