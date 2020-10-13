@@ -105,7 +105,7 @@ struct custom_scheduler : boost::fibers::algo::algorithm
 
     void suspend_until(std::chrono::steady_clock::time_point const& until) noexcept override
     {
-        if(high_priority)
+        /*if(high_priority)
         {
             if((counter % 100) == 0)
                 sf::sleep(sf::milliseconds(1));
@@ -115,7 +115,9 @@ struct custom_scheduler : boost::fibers::algo::algorithm
         else
         {
             sf::sleep(sf::milliseconds(1));
-        }
+        }*/
+
+        sf::sleep(sf::milliseconds(1));
 
         counter++;
     }
