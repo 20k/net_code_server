@@ -251,7 +251,6 @@ void websocket_server(connection& conn)
     {
         try
         {
-
         {
             std::optional<uint64_t> next_client = conn.has_new_client();
 
@@ -346,6 +345,8 @@ void websocket_server(connection& conn)
                 if(handle_termination_shortcircuit(user_states[dat.id], parsed, terminate_timers[dat.id]))
                     continue;
 
+                //printf("Reading from %" PRIu64 "\n", dat.id);
+
                 command_queue[dat.id].push_back(parsed);
             }
             catch(...)
@@ -376,6 +377,8 @@ void websocket_server(connection& conn)
                     next_command.clear();
                     continue;
                 }
+
+                //printf("Writing to %i\n", i.first);
 
                 write_data to_write;
                 to_write.id = i.first;
