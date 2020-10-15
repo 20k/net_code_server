@@ -1,3 +1,4 @@
+#ifndef NO_STEAM
 #include "steam_auth.hpp"
 #include "command_handler_state.hpp"
 #include "command_handler.hpp"
@@ -110,3 +111,11 @@ std::optional<steam_auth_data> get_steam_auth(const std::string& hex_auth_data)
 
     return ret;
 }
+#else
+#include "steam_auth.hpp"
+
+std::optional<steam_auth_data> get_steam_auth(const std::string&)
+{
+    return std::nullopt;
+}
+#endif

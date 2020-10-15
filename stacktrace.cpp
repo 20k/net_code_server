@@ -1,5 +1,6 @@
 #include "stacktrace.hpp"
 
+#ifndef NO_STACKTRACE
 #include <signal.h>     // ::signal, ::raise
 #include <boost/stacktrace.hpp>
 #include <boost/filesystem.hpp>
@@ -68,3 +69,25 @@ std::string name_from_ptr(void* ptr)
 {
     return boost::stacktrace::frame((boost::stacktrace::detail::native_frame_ptr_t)ptr).name();
 }
+#else
+void stack_on_start()
+{
+
+}
+
+void signal_handler(int signum)
+{
+
+}
+
+std::string get_stacktrace()
+{
+    return "";
+}
+
+std::string name_from_ptr(void* ptr)
+{
+    return "";
+}
+
+#endif
