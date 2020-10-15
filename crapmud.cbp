@@ -353,6 +353,7 @@
 					<Add option="-DCONFIG_BIGNUM" />
 					<Add option="-DDUMP_LEAKS" />
 					<Add option="-DLOCAL_IP" />
+					<Add option="-DUSE_VALGRIND" />
 					<Add directory="deps/SFML-2.5.1/include" />
 				</Compiler>
 				<Linker>
