@@ -206,7 +206,7 @@ DEP_DEBUGFIBERS =
 OUT_DEBUGFIBERS = bin/DebugFibers/crapmud
 
 INC_LINUXRELEASEVALGRIND = $(INC) -Ideps/SFML-2.5.1/include
-CFLAGS_LINUXRELEASEVALGRIND = $(CFLAGS) -std=c++17 -march=nehalem -no-pie -DLOCAL_IP
+CFLAGS_LINUXRELEASEVALGRIND =  -std=c++17 -march=nehalem -no-pie -DBOOST_STACKTRACE_USE_BACKTRACE -DSERVER -DCONFIG_VERSION="" -DCONFIG_BIGNUM -DDUMP_LEAKS -DLOCAL_IP
 RESINC_LINUXRELEASEVALGRIND = $(RESINC)
 RCFLAGS_LINUXRELEASEVALGRIND = $(RCFLAGS)
 LIBDIR_LINUXRELEASEVALGRIND = -Ldeps/libs -Ldeps/steamworks_sdk_150/sdk/public/steam/lib/linux64 -Ldeps/SFML-2.5.1/lib -Ldeps/liblmdb_lin
@@ -4399,6 +4399,8 @@ memory_sandbox.hpp: safe_thread.hpp
 mongo.hpp: perfmon.hpp db_storage_backend.hpp db_storage_backend_lmdb.hpp
 
 db_storage_backend.hpp: stacktrace.hpp safe_thread.hpp
+
+db_storage_backend_lmdb.hpp: safe_thread.hpp
 
 shared_command_handler_state.hpp: command_handler_state.hpp command_handler.hpp shared_data.hpp
 

@@ -142,7 +142,7 @@ void handle_sleep(sandbox_data* dat)
             int idiff = units * sleep_time;
 
             steady_timer real_sleep;
-            boost::this_fiber::sleep_for(std::chrono::milliseconds(idiff));
+            fiber_sleep(idiff);
             double real_time = real_sleep.get_elapsed_time_s() * 1000;
 
             dat->ms_awake_elapsed_static -= (real_time / sleep_time) * awake_time;
