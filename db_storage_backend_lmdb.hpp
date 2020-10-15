@@ -4,7 +4,8 @@
 #include <optional>
 #include <string_view>
 #include <vector>
-#include <boost/fiber/mutex.hpp>
+
+#include "safe_thread.hpp"
 
 typedef unsigned int MDB_dbi;
 typedef struct MDB_txn MDB_txn;
@@ -64,7 +65,7 @@ namespace db
         void drop(int _db_id);
 
     private:
-        std::lock_guard<boost::fibers::mutex> guard;
+        std::lock_guard<lock_type_t> guard;
     };
 
     size_t get_next_id(db::read_write_tx& rwtx);

@@ -13,9 +13,9 @@
 #define CHECK_THROW(x) if(const int rc = x) { std::cout << rc << std::endl; throw std::runtime_error("DB Error " + std::to_string(rc) + " " + #x);}
 #define CHECK_ASSERT(x) if(const int rc = x) {printf("DB Error %i %s\n", rc, #x); assert(false && #x);}
 
-boost::fibers::mutex& get_thread_mut()
+lock_type_t& get_thread_mut()
 {
-    static boost::fibers::mutex thread_mut;
+    static lock_type_t thread_mut;
     return thread_mut;
 }
 

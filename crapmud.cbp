@@ -344,17 +344,15 @@
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
 					<Add option="-std=c++17" />
-					<Add option="-g" />
 					<Add option="-march=nehalem" />
 					<Add option="-no-pie" />
 					<Add option="-DLOCAL_IP" />
-					<Add option="-DUSE_FIBERS" />
 					<Add directory="deps/SFML-2.5.1/include" />
 				</Compiler>
 				<Linker>
 					<Add option="-O1" />
 					<Add option="-lsfml-system" />
-					<Add option="-lboost_system" />
+					<Add option="-l:libboost_system.a" />
 					<Add option="-lcrypto" />
 					<Add option="-lssl" />
 					<Add option="-fno-pie" />
@@ -362,13 +360,15 @@
 					<Add option="-pthread" />
 					<Add option="-ldl" />
 					<Add option="-lsdkencryptedappticket" />
-					<Add option="-lboost_fiber" />
-					<Add option="-lboost_context" />
+					<Add option="-l:libboost_fiber.a" />
+					<Add option="-l:libboost_context.a" />
 					<Add option="-llmdb" />
 					<Add option="-l:libmsgpackc.a" />
+					<Add option="-g" />
 					<Add directory="deps/libs" />
 					<Add directory="deps/steamworks_sdk_150/sdk/public/steam/lib/linux64" />
 					<Add directory="deps/SFML-2.5.1/lib" />
+					<Add directory="deps/liblmdb_lin" />
 				</Linker>
 			</Target>
 			<Target title="LinuxDebug">

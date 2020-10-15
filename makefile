@@ -19,7 +19,7 @@ LIB =
 LDFLAGS = -lmingw32 -lsfml-system -lws2_32 -lboost_system-mt -lmswsock -lole32 -lboost_filesystem-mt -ldbgeng -lcrypto -lssl -ldl -fno-pie -lbacktrace -lsdkencryptedappticket64 -lboost_fiber-mt -lboost_context-mt -llmdb -l:libmsgpackc.a
 
 INC_DEBUG = $(INC)
-CFLAGS_DEBUG = $(CFLAGS) -Og -g -DLOCAL_IP
+CFLAGS_DEBUG = $(CFLAGS) -g -DLOCAL_IP
 RESINC_DEBUG = $(RESINC)
 RCFLAGS_DEBUG = $(RCFLAGS)
 LIBDIR_DEBUG = $(LIBDIR)
@@ -206,12 +206,12 @@ DEP_DEBUGFIBERS =
 OUT_DEBUGFIBERS = bin/DebugFibers/crapmud
 
 INC_LINUXRELEASEVALGRIND = $(INC) -Ideps/SFML-2.5.1/include
-CFLAGS_LINUXRELEASEVALGRIND = $(CFLAGS) -std=c++17 -g -march=nehalem -no-pie -DLOCAL_IP -DUSE_FIBERS
+CFLAGS_LINUXRELEASEVALGRIND = $(CFLAGS) -std=c++17 -march=nehalem -no-pie -DLOCAL_IP
 RESINC_LINUXRELEASEVALGRIND = $(RESINC)
 RCFLAGS_LINUXRELEASEVALGRIND = $(RCFLAGS)
-LIBDIR_LINUXRELEASEVALGRIND = -Ldeps/libs -Ldeps/steamworks_sdk_150/sdk/public/steam/lib/linux64 -Ldeps/SFML-2.5.1/lib
+LIBDIR_LINUXRELEASEVALGRIND = -Ldeps/libs -Ldeps/steamworks_sdk_150/sdk/public/steam/lib/linux64 -Ldeps/SFML-2.5.1/lib -Ldeps/liblmdb_lin
 LIB_LINUXRELEASEVALGRIND = $(LIB)
-LDFLAGS_LINUXRELEASEVALGRIND =  -O1 -lsfml-system -lboost_system -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket -lboost_fiber -lboost_context -llmdb -l:libmsgpackc.a
+LDFLAGS_LINUXRELEASEVALGRIND =  -O1 -lsfml-system -l:libboost_system.a -lcrypto -lssl -fno-pie -lbacktrace -pthread -ldl -lsdkencryptedappticket -l:libboost_fiber.a -l:libboost_context.a -llmdb -l:libmsgpackc.a -g
 OBJDIR_LINUXRELEASEVALGRIND = obj/LReleaseValgrind
 DEP_LINUXRELEASEVALGRIND = 
 OUT_LINUXRELEASEVALGRIND = bin/LReleaseValgrind/crapmud
