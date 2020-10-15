@@ -344,6 +344,7 @@
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
+					<Add option="-O1" />
 					<Add option="-std=c++17" />
 					<Add option="-march=nehalem" />
 					<Add option="-no-pie" />
@@ -435,6 +436,8 @@
 			<Add option="-DCONFIG_BIGNUM" />
 			<Add option="-DDUMP_LEAKS" />
 			<Add option="-DUSE_FIBERS" />
+			<Add option="-DSUPPORT_NO_SSL_SERVER" />
+			<Add option="-DSERVER_ONLY" />
 			<Add directory="deps" />
 			<Add directory="deps/liblmdb" />
 		</Compiler>

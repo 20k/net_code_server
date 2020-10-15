@@ -491,5 +491,11 @@ void boot_connection_handlers()
 
     //sthread(websocket_server, std::ref(*c1)).detach();
     sthread(websocket_server, std::ref(*c2)).detach();
+
+    connection* c3 = new connection;
+    c3->host("0.0.0.0", HOST_WEBSOCKET_PORT, connection_type::PLAIN);
+
+    sthread(websocket_server, std::ref(*c3)).detach();
+
     //sthread(websocket_server, std::ref(*c3)).detach();
 }

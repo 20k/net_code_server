@@ -2445,7 +2445,6 @@ void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shar
 
         shared_data& shared = all_shared->shared;
         shared.add_back_write(result.dump());
-
     });
 
     #endif // USE_FIBERS

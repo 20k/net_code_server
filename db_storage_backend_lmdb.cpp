@@ -50,7 +50,7 @@ struct db::backend
         mdb_env_set_maxdbs(env, 50);
 
         ///10000 MB
-        #ifndef USE_VALGRIND
+        #ifdef USE_VALGRIND
         mdb_env_set_mapsize(env, 10485760ull * 100ull);
         #else
         mdb_env_set_mapsize(env, 10485760ull * 10000ull);

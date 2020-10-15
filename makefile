@@ -12,7 +12,7 @@ LD = g++
 WINDRES = windres
 
 INC = -Ideps -Ideps/liblmdb
-CFLAGS = -Wnon-virtual-dtor -Winit-self -Wunreachable-code -Wextra -Wall -std=c++17 -fexceptions -Wno-narrowing -fno-strict-aliasing -Wno-unused-parameter -Wno-unused-label -no-pie -Werror=return-type -Wno-cast-function-type -DBOOST_STACKTRACE_USE_BACKTRACE -DSERVER -DCONFIG_VERSION="" -DCONFIG_BIGNUM -DDUMP_LEAKS -DUSE_FIBERS
+CFLAGS = -Wnon-virtual-dtor -Winit-self -Wunreachable-code -Wextra -Wall -std=c++17 -fexceptions -Wno-narrowing -fno-strict-aliasing -Wno-unused-parameter -Wno-unused-label -no-pie -Werror=return-type -Wno-cast-function-type -DBOOST_STACKTRACE_USE_BACKTRACE -DSERVER -DCONFIG_VERSION="" -DCONFIG_BIGNUM -DDUMP_LEAKS -DUSE_FIBERS -DSUPPORT_NO_SSL_SERVER -DSERVER_ONLY
 RESINC = 
 LIBDIR = -Ldeps/libs -Ldeps/steamworks_sdk_150/sdk/public/steam/lib/win64 -Ldeps/liblmdb
 LIB = 
@@ -206,7 +206,7 @@ DEP_DEBUGFIBERS =
 OUT_DEBUGFIBERS = bin/DebugFibers/crapmud
 
 INC_LINUXRELEASEVALGRIND = $(INC) -Ideps/SFML-2.5.1/include
-CFLAGS_LINUXRELEASEVALGRIND =  -std=c++17 -march=nehalem -no-pie -DBOOST_STACKTRACE_USE_BACKTRACE -DSERVER -DCONFIG_VERSION="" -DCONFIG_BIGNUM -DDUMP_LEAKS -DLOCAL_IP
+CFLAGS_LINUXRELEASEVALGRIND =  -O1 -std=c++17 -march=nehalem -no-pie -DBOOST_STACKTRACE_USE_BACKTRACE -DSERVER -DCONFIG_VERSION="" -DCONFIG_BIGNUM -DDUMP_LEAKS -DLOCAL_IP -DUSE_VALGRIND
 RESINC_LINUXRELEASEVALGRIND = $(RESINC)
 RCFLAGS_LINUXRELEASEVALGRIND = $(RCFLAGS)
 LIBDIR_LINUXRELEASEVALGRIND = -Ldeps/libs -Ldeps/steamworks_sdk_150/sdk/public/steam/lib/linux64 -Ldeps/SFML-2.5.1/lib -Ldeps/liblmdb_lin
