@@ -264,7 +264,7 @@
 				<Linker>
 					<Add option="-O2" />
 					<Add option="-lsfml-system" />
-					<Add option="-lboost_system" />
+					<Add option="-l:libboost_system.a" />
 					<Add option="-lcrypto" />
 					<Add option="-lssl" />
 					<Add option="-fno-pie" />
@@ -272,8 +272,8 @@
 					<Add option="-pthread" />
 					<Add option="-ldl" />
 					<Add option="-lsdkencryptedappticket" />
-					<Add option="-lboost_fiber" />
-					<Add option="-lboost_context" />
+					<Add option="-l:libboost_fiber.a" />
+					<Add option="-l:libboost_context.a" />
 					<Add option="-llmdb" />
 					<Add option="-l:libmsgpackc.a" />
 					<Add option="-g" />

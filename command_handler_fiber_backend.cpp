@@ -15,6 +15,7 @@
 
 #define SCRIPT_THREADS 3
 
+//this might be a trick on windows, CHECKME
 thread_local int is_fiber;
 
 bool is_thread_fiber()
