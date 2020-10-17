@@ -213,8 +213,6 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
         return true;
     }
 
-    std::string mstr = "client_script_mouseinput ";
-
     if(data["type"] == "update_mouse_to_script")
     {
         int id = data["id"];
