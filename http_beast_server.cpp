@@ -483,8 +483,11 @@ void boot_connection_handlers()
     /*connection* c1 = new connection;
     c1->host("0.0.0.0", HOST_WEBSOCKET_SSL_PORT, connection_type::SSL);*/
 
+    connection_settings sett;
+    sett.max_window_bits = 9;
+
     connection* c2 = new connection;
-    c2->host("0.0.0.0", HOST_WEBSOCKET_SSL_PORT_2, connection_type::SSL);
+    c2->host("0.0.0.0", HOST_WEBSOCKET_SSL_PORT_2, connection_type::SSL, sett);
 
     //connection* c3 = new connection;
     //c3->host("0.0.0.0", HOST_WEBSOCKET_PORT, connection_type::PLAIN);
@@ -493,7 +496,7 @@ void boot_connection_handlers()
     sthread(websocket_server, std::ref(*c2)).detach();
 
     connection* c3 = new connection;
-    c3->host("0.0.0.0", HOST_WEBSOCKET_PORT, connection_type::PLAIN);
+    c3->host("0.0.0.0", HOST_WEBSOCKET_PORT, connection_type::PLAIN, sett);
 
     sthread(websocket_server, std::ref(*c3)).detach();
 
