@@ -497,6 +497,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
         static std::atomic_int gthread_id{1};
         int32_t local_thread_id = gthread_id++;
 
+        #ifndef LOCAL_IP
         if(!force_exec)
         {
             safe_lock_guard lk(id_mut);
@@ -506,6 +507,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
             auth_guard[usr.get_auth_token_hex()] = 1;
         }
+        #endif // LOCAL_IP
 
         cleanup_auth_at_exit cleanup(id_mut, auth_guard, usr.get_auth_token_hex());
         fiber_work_manager fbwork;
