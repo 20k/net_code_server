@@ -311,14 +311,22 @@ void websocket_server(connection& conn)
                 if(!i.second->state.is_authenticated())
                     continue;
 
-                nlohmann::json data;
-                data["type"] = "server_ping";
+                try
+                {
+                    nlohmann::json data;
+                    data["type"] = "server_ping";
 
-                write_data wdat;
-                wdat.id = i.first;
-                wdat.data = data.dump();
+                    write_data wdat;
+                    wdat.id = i.first;
+                    wdat.data = data.dump();
 
-                conn.write_to(wdat);
+                    conn.write_to(wdat);
+                }
+                catch(std::exception& err)
+                {
+                    std::cout << "Exception in server ping " << err.what() << std::endl;
+                    conn.force_disconnect(i.first);
+                }
             }
 
             ping_timer.restart();
@@ -331,9 +339,6 @@ void websocket_server(connection& conn)
             conn.pop_read(dat.id);
 
             if(user_states.find(dat.id) == user_states.end())
-                continue;
-
-            if(dat.data.size() > 400000)
                 continue;
 
             nlohmann::json parsed;
@@ -368,29 +373,26 @@ void websocket_server(connection& conn)
                 if(next_command.size() == 0)
                     continue;
 
-                if(next_command.size() > MAX_MESSAGE_SIZE * 1.5)
+                try
                 {
-                    /*next_command.resize(MAX_MESSAGE_SIZE);
+                    write_data to_write;
+                    to_write.id = i.first;
+                    to_write.data = next_command;
 
-                    next_command += " [Truncated, > " + std::to_string(MAX_MESSAGE_SIZE) + "]";*/
-
-                    next_command.clear();
-                    continue;
+                    conn.write_to(to_write);
                 }
-
-                //printf("Writing to %i\n", i.first);
-
-                write_data to_write;
-                to_write.id = i.first;
-                to_write.data = next_command;
-
-                conn.write_to(to_write);
+                catch(std::exception& e)
+                {
+                    std::cout << "Exception in server write " << e.what() << std::endl;
+                    conn.force_disconnect(i.first);
+                    break;
+                }
 
                 write_count++;
             }
         }
 
-        /*if(disconnect_clock.getElapsedTime().asSeconds() > 5)
+        /*if(disconnect_clock.get_elapsed_time_s() > 5)
         {
             ///disconnect unauthed users
             for(auto& i : user_states)
@@ -399,7 +401,7 @@ void websocket_server(connection& conn)
 
                 std::shared_ptr<shared_command_handler_state>& shared_state = i.second;
 
-                if(!shared_state->state.is_authenticated() && (time_since_join[i.first].getElapsedTime().asMicroseconds() / 1000.) > auth_time_ms)
+                if(!shared_state->state.is_authenticated() && (time_since_join[i.first].get_elapsed_time_s() * 1000) > auth_time_ms)
                 {
                     conn.force_disconnect(i.first);
                 }
@@ -463,7 +465,11 @@ void websocket_server(connection& conn)
 
                     conn.write_to(dat);
                 }
-                catch(...){}
+                catch(std::exception& e)
+                {
+                    std::cout << "Exception in server client_poll " << e.what() << std::endl;
+                    conn.force_disconnect(i.first);
+                }
             }
         }
         }
@@ -485,6 +491,8 @@ void boot_connection_handlers()
 
     connection_settings sett;
     sett.max_window_bits = 9;
+    sett.max_write_size = MAX_MESSAGE_SIZE;
+    sett.max_read_size = MAX_MESSAGE_SIZE;
 
     connection* c2 = new connection;
     c2->host("0.0.0.0", HOST_WEBSOCKET_SSL_PORT_2, connection_type::SSL, sett);
