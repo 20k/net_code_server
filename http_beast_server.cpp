@@ -344,10 +344,9 @@ void websocket_server(connection& conn)
             if(user_states.find(dat.id) == user_states.end())
                 continue;
 
-            nlohmann::json parsed;
-
             try
             {
+                nlohmann::json parsed;
                 parsed = nlohmann::json::parse(dat.data);
 
                 if(handle_termination_shortcircuit(user_states[dat.id], parsed, terminate_timers[dat.id]))
@@ -355,11 +354,12 @@ void websocket_server(connection& conn)
 
                 //printf("Reading from %" PRIu64 "\n", dat.id);
 
-                command_queue[dat.id].push_back(parsed);
+                command_queue[dat.id].push_back(std::move(parsed));
             }
-            catch(...)
+            catch(std::exception& err)
             {
-                continue;
+                conn.force_disconnect(dat.id);
+                std::cout << "Caught json parse exception " << err.what() << std::endl;
             }
         }
 
