@@ -493,7 +493,7 @@ void boot_connection_handlers()
     c1->host("0.0.0.0", HOST_WEBSOCKET_SSL_PORT, connection_type::SSL);*/
 
     connection_settings sett;
-    sett.max_window_bits = 9;
+    sett.max_window_bits = 15;
     sett.max_write_size = MAX_MESSAGE_SIZE;
     sett.max_read_size = MAX_MESSAGE_SIZE;
 
