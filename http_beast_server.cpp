@@ -56,7 +56,7 @@ std::vector<std::string> sanitise_input_vec(std::vector<std::string> vec)
     return vec;
 }
 
-bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handler_state>& all_shared, nlohmann::json data, steady_timer& terminate_timer)
+bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handler_state>& all_shared, nlohmann::json& data, steady_timer& terminate_timer)
 {
     ///the only way you can get here is race conditions, or being naughty
     {
@@ -68,7 +68,12 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
         }
     }
 
-    if(data["type"] == "client_terminate_scripts")
+    if(data.count("type") == 0)
+        return false;
+
+    std::string type = data["type"];
+
+    if(type == "client_terminate_scripts")
     {
         int id = data["id"];
 
@@ -87,7 +92,7 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
         return true;
     }
 
-    if(data["type"] == "send_keystrokes_to_script")
+    if(type == "send_keystrokes_to_script")
     {
         int id = data["id"];
 
@@ -160,7 +165,7 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
         return true;
     }
 
-    if(data["type"] == "client_ui_element")
+    if(type == "client_ui_element")
     {
         int id = data["id"];
         std::string ui_id = data["ui_id"];
@@ -198,7 +203,7 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
         return true;
     }
 
-    if(data["type"] == "send_script_info")
+    if(type == "send_script_info")
     {
         int id = data["id"];
 
@@ -213,7 +218,7 @@ bool handle_termination_shortcircuit(const std::shared_ptr<shared_command_handle
         return true;
     }
 
-    if(data["type"] == "update_mouse_to_script")
+    if(type == "update_mouse_to_script")
     {
         int id = data["id"];
 
