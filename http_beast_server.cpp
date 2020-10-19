@@ -455,24 +455,7 @@ void websocket_server(connection& conn)
                 nlohmann::json fake;
                 fake["type"] = "client_poll";
 
-                try
-                {
-                    nlohmann::json out = handle_command(i.second, fake);
-
-                    if(out.count("type") == 0)
-                        continue;
-
-                    write_data dat;
-                    dat.id = i.first;
-                    dat.data = out.dump();
-
-                    conn.write_to(dat);
-                }
-                catch(std::exception& e)
-                {
-                    std::cout << "Exception in server client_poll " << e.what() << std::endl;
-                    conn.force_disconnect(i.first);
-                }
+                async_handle_command(i.second, std::move(fake));
             }
         }
         }
