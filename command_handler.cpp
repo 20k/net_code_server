@@ -2425,7 +2425,7 @@ void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shar
 
     sthread([all_shared, data = std::move(data)]()
     {
-        nlohmann::json result = handle_command(all_shared, data);
+        nlohmann::json result = handle_command(all_shared, std::move(data));
 
         all_shared->execution_requested = false;
 
@@ -2440,7 +2440,7 @@ void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shar
 
     get_global_fiber_queue().add([all_shared, data = std::move(data)]()
     {
-        nlohmann::json result = handle_command(all_shared, data);
+        nlohmann::json result = handle_command(all_shared, std::move(data));
 
         all_shared->execution_requested = false;
 
