@@ -2116,7 +2116,9 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
         }
     }
 
-    if(str["type"] == "generic_server_command")
+    std::string type = str["type"];
+
+    if(type == "generic_server_command")
     {
         std::string to_exec;
         nlohmann::json tag;
@@ -2139,7 +2141,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
         return data;
     }
 
-    if(str["type"] == "client_chat")
+    if(type == "client_chat")
     {
         bool respond = str.count("respond") > 0 && ((int)str["respond"]) > 0;
 
@@ -2163,7 +2165,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
     ///this path specifically may be called in parallel with the other parts
     ///hence the current user guard
     ///latter check is just for backwards compat
-    if(str["type"] == "client_poll" || str["type"] == "client_poll_json")
+    if(type == "client_poll" || type == "client_poll_json")
     {
         if(current_auth == "" || current_user == "")
             return nlohmann::json();
@@ -2202,7 +2204,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
         return handle_client_poll_json(usr);
     }
 
-    if(str["type"] == "autocomplete_request")
+    if(type == "autocomplete_request")
     {
         if(current_auth == "" || current_user == "")
             return nlohmann::json();
@@ -2210,7 +2212,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
         return handle_autocompletes_json(current_user, str["data"]);
     }
 
-    if(str["type"] == "key_auth")
+    if(type == "key_auth")
     {
         if(str.count("data") == 0)
         {
@@ -2287,7 +2289,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
         return data;
     }
 
-    if(str["type"] == "steam_auth")
+    if(type == "steam_auth")
     {
         printf("AUTH STEAM\n");
 
