@@ -2417,11 +2417,11 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
     return data;
 }
 
-void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const nlohmann::json& data)
+void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, nlohmann::json data)
 {
     #ifndef USE_FIBERS
 
-    sthread([=]()
+    sthread([all_shared, data = std::move(data)]()
     {
         nlohmann::json result = handle_command(all_shared, data);
 
@@ -2436,7 +2436,7 @@ void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shar
 
     #else
 
-    get_global_fiber_queue().add([=]()
+    get_global_fiber_queue().add([all_shared, data = std::move(data)]()
     {
         nlohmann::json result = handle_command(all_shared, data);
 

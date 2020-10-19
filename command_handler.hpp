@@ -21,7 +21,7 @@ void throwaway_user_thread(const std::string& username, const std::string& comma
 
 ///context?
 nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_shared, nlohmann::json data);
-void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, const nlohmann::json& data);
+void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, nlohmann::json data);
 
 nlohmann::json handle_autocompletes_json(const std::string& username, const std::string& in);
 
