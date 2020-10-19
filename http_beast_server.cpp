@@ -358,8 +358,8 @@ void websocket_server(connection& conn)
             }
             catch(std::exception& err)
             {
-                conn.force_disconnect(dat.id);
                 std::cout << "Caught json parse exception " << err.what() << std::endl;
+                conn.force_disconnect(dat.id);
             }
         }
 
