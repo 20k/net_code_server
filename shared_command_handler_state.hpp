@@ -11,6 +11,7 @@ struct shared_command_handler_state
     int64_t my_id = 0;
 
     shared_data shared;
+    steady_timer terminate_timer;
 
     std::atomic_bool execution_is_blocked{false};
     std::atomic_bool execution_requested{false};
