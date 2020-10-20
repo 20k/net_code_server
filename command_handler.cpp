@@ -704,10 +704,20 @@ std::string run_in_user_context(std::string username, std::string command, std::
                                     int idx = std::distance(typeidx.begin(), typeidx.find(e.type));
 
                                     types.push_back(idx);
-                                    arg.push_back(std::move(e.arguments));
+                                    //arg.push_back(std::move(e.arguments));
+
+                                    for(auto& found_arg : e.arguments)
+                                    {
+                                        arg.push_back(std::move(found_arg));
+                                    }
                                 }
 
                                 j["typeidx"] = typeidx;
+
+                                /*std::cout << "TIDX SIZE " << typeidx.size() << " ARGSIZE " << types.size() << std::endl;
+
+                                printf("Naive size %i\n", j.dump().size());
+                                printf("msgpack size %i\n", nlohmann::json::to_msgpack(j).size());*/
 
                                 all_shared.value()->shared.add_back_write(j.dump());
                                 //float ftime = process_time.get_elapsed_time_s() * 1000;
