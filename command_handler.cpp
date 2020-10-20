@@ -2558,7 +2558,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
         int id = str["id"];
 
         if(id < 0)
-            return true;
+            return nlohmann::json();
 
         int width = str["width"];
         int height = str["height"];
@@ -2573,7 +2573,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
         int id = str["id"];
 
         if(id < 0)
-            return true;
+            return nlohmann::json();
 
         float mouse_x = str["mouse_x"];
         float mouse_y = str["mouse_y"];
