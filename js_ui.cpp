@@ -165,6 +165,11 @@ void js_ui::textcolored(js::value_context* vctx, double r, double g, double b, d
     b = round(b * 100) / 100.;
     a = round(a * 100) / 100.;
 
+    /*r = round(r * 100);
+    g = round(g * 100);
+    b = round(b * 100);
+    a = round(a * 100);*/
+
     js_ui::ui_element e;
     e.type = "textcolored";
     e.element_id = str;
