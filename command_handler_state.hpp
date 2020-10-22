@@ -20,6 +20,7 @@ struct ui_element_state
 {
     bool processed = false;
     std::vector<std::string> value;
+    nlohmann::json client_override_arguments;
 };
 
 struct realtime_ui_state

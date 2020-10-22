@@ -2556,12 +2556,16 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
 
             realtime_script_data& dat = found_it->second;
 
-            ui_element_state st;
+            ui_element_state& st = dat.realtime_ui.element_states[ui_id];;
             st.processed = true;
             st.value = found_state;
 
-            dat.realtime_ui.element_states[ui_id] = st;
+            ///so arguments might overwrite the last one, but not the end of the world
+            ///big issue is that if we have a lot of dynamic ui elements, might pile up unused junk
+            if(str.count("arguments"))
+                st.client_override_arguments = str["arguments"];
 
+            ///unused junk will get cleaned up here, but basically randomly
             while(dat.realtime_ui.element_states.size() > 100)
             {
                 dat.realtime_ui.element_states.erase(dat.realtime_ui.element_states.begin());

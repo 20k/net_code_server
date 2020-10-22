@@ -281,17 +281,71 @@ void js_ui::button(js::value_context* vctx, std::string str, std::optional<doubl
     stk->elements.push_back(e);
 }
 
+std::optional<ui_element_state*> get_named_element(js::value_context& vctx, const std::string& name)
+{
+    command_handler_state* found_ptr = js::get_heap_stash(vctx)["command_handler_state_pointer"].get_ptr<command_handler_state>();
+
+    if(found_ptr == nullptr)
+        return std::nullopt;
+
+    if(!js::get_heap_stash(vctx).has("realtime_id"))
+        return std::nullopt;
+
+    int realtime_id = js::get_heap_stash(vctx)["realtime_id"];
+
+    std::lock_guard guard(found_ptr->script_data_lock);
+
+    auto realtime_it = found_ptr->script_data.find(realtime_id);
+
+    if(realtime_it == found_ptr->script_data.end())
+        return std::nullopt;
+
+    realtime_script_data& dat = realtime_it->second;
+
+    if(dat.realtime_ui.element_states.find(name) == dat.realtime_ui.element_states.end())
+        return std::nullopt;
+
+    ui_element_state& st = dat.realtime_ui.element_states[name];
+
+    return &st;
+}
+
 void js_ui::checkbox(js::value_context* vctx, std::string str, js::value wrapper_object)
 {
     if(str.size() > MAX_STR_SIZE)
         return;
+
+    str = sanitise_value(str);
 
     if(!wrapper_object.has("v"))
         return;
 
     js::value val = wrapper_object["v"];
 
+    std::optional<ui_element_state*> ui_state_opt = get_named_element(*vctx, str);
 
+    if(ui_state_opt.has_value())
+    {
+        ui_element_state& ui_state = *ui_state_opt.value();
+
+        if(ui_state.client_override_arguments.size() > 0)
+        {
+            val = ui_state.client_override_arguments[0];
+        }
+
+        ui_state.client_override_arguments = nlohmann::json();
+    }
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    js_ui::ui_element& e = stk->elements.emplace_back();
+
+    e.type = "checkbox";
+    e.arguments.push_back(str);
+    e.arguments.push_back((int)val);
 }
 
 void js_ui::bullet(js::value_context* vctx)
