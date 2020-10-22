@@ -690,10 +690,10 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                                 //steady_timer process_time;
 
-                                j["argument"] =  nlohmann::json::array();
+                                j["arguments"] =  nlohmann::json::array();
                                 j["types"] = nlohmann::json::array();
 
-                                nlohmann::json& arg = j["argument"];
+                                nlohmann::json& arg = j["arguments"];
                                 nlohmann::json& types = j["types"];
 
                                 for(js_ui::ui_element& e : stk.elements)
