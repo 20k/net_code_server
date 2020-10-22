@@ -2562,8 +2562,10 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
 
             ///so arguments might overwrite the last one, but not the end of the world
             ///big issue is that if we have a lot of dynamic ui elements, might pile up unused junk
-            if(str.count("arguments"))
+            if(str.count("arguments") > 0)
+            {
                 st.client_override_arguments = str["arguments"];
+            }
 
             ///unused junk will get cleaned up here, but basically randomly
             while(dat.realtime_ui.element_states.size() > 100)
