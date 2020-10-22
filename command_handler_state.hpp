@@ -34,6 +34,7 @@ struct realtime_script_data
     std::map<std::string, bool> key_states;
     float realtime_script_deltas_ms = 0;
     bool should_terminate_realtime = false;
+    uint64_t client_seq_id = 0;
 
     vec2f mouse_pos;
     vec2f mousewheel_state;
@@ -87,6 +88,9 @@ struct command_handler_state
     void add_realtime_script(int script_id);
     void remove_realtime_script(int script_id);
     void set_realtime_script_delta(int script_id, float work_units);
+
+    void set_client_sequence_id(int script_id, int seq_id);
+    int get_client_sequence_id(int script_id);
 
 private:
     std::string auth;

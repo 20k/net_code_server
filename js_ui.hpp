@@ -12,6 +12,8 @@ namespace js_ui
         std::string type;
         std::string element_id;
         std::vector<nlohmann::json> arguments;
+
+        std::vector<js::value> argument_state;
     };
 
     struct ui_stack
@@ -19,6 +21,9 @@ namespace js_ui
         std::vector<ui_element> elements;
         uint64_t current_size = 0;
         uint64_t current_idx = 0;
+
+        uint64_t server_sequence_id = 0;
+        uint64_t last_client_sequence_id = 0;
     };
 
     void text(js::value_context* vctx, std::string str);
@@ -29,6 +34,7 @@ namespace js_ui
     void invisiblebutton(js::value_context* vctx, std::string str, double w, double h);
     void arrowbutton(js::value_context* vctx, std::string str, int dir);
     void button(js::value_context* vctx, std::string str, std::optional<double> w, std::optional<double> h);
+    void checkbox(js::value_context* vctx, std::string str, js::value wrapper_object);
     void bullet(js::value_context* vctx);
 
     void pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a);
@@ -49,6 +55,9 @@ namespace js_ui
     void endgroup(js::value_context* vctx);
     bool isitemclicked(js::value_context* vctx);
     bool isitemhovered(js::value_context* vctx);
+
+    js::value ref(js::value_context* vctx, js::value val);
+    js::value get(js::value_context* vctx, js::value val);
 
     std::optional<ui_stack> consume(js::value_context& vctx);
 }

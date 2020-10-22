@@ -281,6 +281,19 @@ void js_ui::button(js::value_context* vctx, std::string str, std::optional<doubl
     stk->elements.push_back(e);
 }
 
+void js_ui::checkbox(js::value_context* vctx, std::string str, js::value wrapper_object)
+{
+    if(str.size() > MAX_STR_SIZE)
+        return;
+
+    if(!wrapper_object.has("v"))
+        return;
+
+    js::value val = wrapper_object["v"];
+
+
+}
+
 void js_ui::bullet(js::value_context* vctx)
 {
     create_unsanitised_element(*vctx, "bullet");
@@ -556,6 +569,22 @@ bool js_ui::isitemhovered(js::value_context* vctx)
         return false;
 
     return is_any_of(last_element_opt.value()->value, "hovered");
+}
+
+js::value js_ui::ref(js::value_context* vctx, js::value val)
+{
+    js::value ret(*vctx);
+    ret["v"] = val;
+
+    return ret;
+}
+
+js::value js_ui::get(js::value_context* vctx, js::value val)
+{
+    if(!val.has("v"))
+        return js::value(*vctx, js::undefined);
+
+    return val["v"];
 }
 
 std::optional<js_ui::ui_stack> js_ui::consume(js::value_context& vctx)
