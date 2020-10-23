@@ -1220,6 +1220,8 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["isitemclicked"] = js::function<js_ui::isitemclicked>;
     imgui_obj["isitemhovered"] = js::function<js_ui::isitemhovered>;
 
+    imgui_obj["dragfloat"] = js::function<js_ui::dragfloat>;
+
     ///helpers for js reference semanticsitus
     imgui_obj["ref"] = js::function<js_ui::ref>;
     imgui_obj["get"] = js::function<js_ui::get>;

@@ -3,6 +3,7 @@
 #include <cmath>
 #include "rate_limiting.hpp"
 #include <tuple>
+#include "db_storage_backend.hpp"
 
 namespace
 {
@@ -58,6 +59,13 @@ ImU32 ImHashStr(const char* data_p, size_t data_size, ImU32 seed)
     }
     return ~crc;
 }
+}
+
+std::string generate_unique_id()
+{
+    size_t id = db_storage_backend::get_unique_id();
+
+    return std::to_string(id) + "##idboy";
 }
 
 std::string sanitise_value(const std::string& str)
@@ -162,6 +170,12 @@ namespace process
     {
         in = san_col(in);
         in = round(in * 255) / 255.;
+    }
+
+    void float_value(double& in)
+    {
+        in = san_val(in);
+        in = clamp(in, -FLT_MAX/INT_MAX, FLT_MAX/INT_MAX);
     }
 
     void dimension(double& in)
@@ -355,6 +369,30 @@ void js_ui::progressbar(js::value_context* vctx, double fraction, std::optional<
 void js_ui::bullet(js::value_context* vctx)
 {
     add_element(vctx, "bullet", "");
+}
+
+bool js_ui::dragfloat(js::value_context* vctx, std::string str, js::value v, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
+{
+    process::id(str);
+
+    process::inout_ref(*vctx, v, str);
+
+    if(!v_speed.has_value())
+        v_speed = 1;
+
+    if(!v_min.has_value())
+        v_min = 0;
+
+    if(!v_max.has_value())
+        v_max = 0;
+
+    process::float_value(v_speed.value());
+    process::float_value(v_min.value());
+    process::float_value(v_max.value());
+
+    add_element(vctx, "dragfloat", str, str, (double)v, v_speed.value(), v_min.value(), v_max.value());
+
+    return false;
 }
 
 void js_ui::pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a)

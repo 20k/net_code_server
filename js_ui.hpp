@@ -39,6 +39,8 @@ namespace js_ui
     void progressbar(js::value_context* vctx, double fraction, std::optional<double> w, std::optional<double> h, std::optional<std::string> overlay);
     void bullet(js::value_context* vctx);
 
+    bool dragfloat(js::value_context* vctx, std::string str, js::value v, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max);
+
     void pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a);
     void popstylecolor(js::value_context* vctx, std::optional<int> cnt);
 
