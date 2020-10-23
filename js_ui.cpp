@@ -374,7 +374,7 @@ void js_ui::bullet(js::value_context* vctx)
 bool js_ui::dragfloat(js::value_context* vctx, std::string str, js::value v, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
 {
     if(str.size() > MAX_STR_SIZE)
-        return;
+        return false;
 
     process::id(str);
     process::inout_ref(*vctx, v, str);
@@ -393,6 +393,22 @@ bool js_ui::dragfloat(js::value_context* vctx, std::string str, js::value v, std
     process::float_value(v_max.value());
 
     add_element(vctx, "dragfloat", str, str, (double)v, v_speed.value(), v_min.value(), v_max.value());
+
+    return false;
+}
+
+bool js_ui::sliderfloat(js::value_context* vctx, std::string str, js::value v, double v_min, double v_max)
+{
+    if(str.size() > MAX_STR_SIZE)
+        return false;
+
+    process::id(str);
+    process::inout_ref(*vctx, v, str);
+
+    process::float_value(v_min);
+    process::float_value(v_max);
+
+    add_element(vctx, "sliderfloat", str, str, (double)v, v_min, v_max);
 
     return false;
 }
