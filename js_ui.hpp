@@ -35,6 +35,8 @@ namespace js_ui
     void arrowbutton(js::value_context* vctx, std::string str, int dir);
     void button(js::value_context* vctx, std::string str, std::optional<double> w, std::optional<double> h);
     void checkbox(js::value_context* vctx, std::string str, js::value is_checked);
+    void radiobutton(js::value_context* vctx, std::string str, int is_active);
+    void progressbar(js::value_context* vctx, double fraction, std::optional<double> w, std::optional<double> h, std::optional<std::string> overlay);
     void bullet(js::value_context* vctx);
 
     void pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a);

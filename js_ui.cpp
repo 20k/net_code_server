@@ -175,6 +175,12 @@ namespace process
         in = clamp(in, 0., 9999.);
     }
 
+    void fraction(double& in)
+    {
+        in = san_val(in);
+        in = clamp(in, 0., 1.);
+    }
+
     void id(std::string& in)
     {
         in = sanitise_value(in);
@@ -306,6 +312,38 @@ void js_ui::checkbox(js::value_context* vctx, std::string str, js::value is_chec
     process::inout_ref(*vctx, is_checked, str);
 
     add_element(vctx, "checkbox", str, str, (int)is_checked);
+}
+
+void js_ui::radiobutton(js::value_context* vctx, std::string str, int is_active)
+{
+    if(str.size() > MAX_STR_SIZE)
+        return;
+
+    process::id(str);
+
+    add_element(vctx, "radiobutton", str, str, is_active);
+}
+
+void js_ui::progressbar(js::value_context* vctx, double fraction, std::optional<double> w, std::optional<double> h, std::optional<std::string> overlay)
+{
+    if(!w.has_value())
+        w = 0;
+
+    if(!h.has_value())
+        h = 0;
+
+    if(!overlay.has_value())
+        overlay = "";
+
+    if(overlay.value().size() > MAX_STR_SIZE)
+        return;
+
+    process::dimension(w.value());
+    process::dimension(h.value());
+
+    process::fraction(fraction);
+
+    add_element(vctx, "progressbar", "", fraction, w.value(), h.value(), overlay.value());
 }
 
 void js_ui::bullet(js::value_context* vctx)

@@ -1198,6 +1198,8 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["arrowbutton"] = js::function<js_ui::arrowbutton>;
     imgui_obj["button"] = js::function<js_ui::button>;
     imgui_obj["checkbox"] = js::function<js_ui::checkbox>;
+    imgui_obj["radiobutton"] = js::function<js_ui::radiobutton>;
+    imgui_obj["progressbar"] = js::function<js_ui::progressbar>;
     imgui_obj["bullet"] = js::function<js_ui::bullet>;
     imgui_obj["pushstylecolor"] = js::function<js_ui::pushstylecolor>;
     imgui_obj["popstylecolor"] = js::function<js_ui::popstylecolor>;
