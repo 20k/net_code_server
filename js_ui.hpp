@@ -34,7 +34,7 @@ namespace js_ui
     void invisiblebutton(js::value_context* vctx, std::string str, double w, double h);
     void arrowbutton(js::value_context* vctx, std::string str, int dir);
     void button(js::value_context* vctx, std::string str, std::optional<double> w, std::optional<double> h);
-    void checkbox(js::value_context* vctx, std::string str, js::value wrapper_object);
+    void checkbox(js::value_context* vctx, std::string str, js::value is_checked);
     void bullet(js::value_context* vctx);
 
     void pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a);

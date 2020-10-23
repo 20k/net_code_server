@@ -2,6 +2,7 @@
 #include "command_handler_state.hpp"
 #include <cmath>
 #include "rate_limiting.hpp"
+#include <tuple>
 
 namespace
 {
@@ -150,25 +151,100 @@ double san_clamp(double in)
     return in;
 }
 
+std::optional<ui_element_state*> get_named_element(js::value_context& vctx, const std::string& name)
+{
+    command_handler_state* found_ptr = js::get_heap_stash(vctx)["command_handler_state_pointer"].get_ptr<command_handler_state>();
+
+    if(found_ptr == nullptr)
+        return std::nullopt;
+
+    if(!js::get_heap_stash(vctx).has("realtime_id"))
+        return std::nullopt;
+
+    int realtime_id = js::get_heap_stash(vctx)["realtime_id"];
+
+    std::lock_guard guard(found_ptr->script_data_lock);
+
+    auto realtime_it = found_ptr->script_data.find(realtime_id);
+
+    if(realtime_it == found_ptr->script_data.end())
+        return std::nullopt;
+
+    realtime_script_data& dat = realtime_it->second;
+
+    if(dat.realtime_ui.element_states.find(name) == dat.realtime_ui.element_states.end())
+        return std::nullopt;
+
+    ui_element_state& st = dat.realtime_ui.element_states[name];
+
+    return &st;
+}
+
+js::value replace_arg(js::value val, js::value_context& vctx, const std::string& name)
+{
+    std::optional<ui_element_state*> ui_state_opt = get_named_element(vctx, name);
+
+    if(ui_state_opt.has_value())
+    {
+        ui_element_state& ui_state = *ui_state_opt.value();
+
+        if(ui_state.client_override_arguments.size() > 0)
+        {
+            val = ui_state.client_override_arguments[0];
+        }
+
+        ui_state.client_override_arguments = nlohmann::json();
+    }
+
+    return val;
+}
+
+namespace process
+{
+    void colour(double& in)
+    {
+        in = san_col(in);
+        in = round(in * 255) / 255.;
+    }
+
+    void dimension(double& in)
+    {
+        in = san_clamp(in);
+    }
+
+    void positive_dimension(double& in)
+    {
+        in = san_val(in);
+        in = clamp(in, 0., 9999.);
+    }
+
+    void id(std::string& in)
+    {
+        in = sanitise_value(in);
+    }
+
+    void inout_ref(js::value_context& vctx, js::value& val, const std::string& id)
+    {
+        if(!val.has("v"))
+            throw std::runtime_error("No property v on imgui reference shim object");
+
+        js::value real = val["v"];
+
+        real = replace_arg(real, vctx, id);
+
+        val = real;
+    }
+}
+
 void js_ui::textcolored(js::value_context* vctx, double r, double g, double b, double a, std::string str)
 {
     if(str.size() > MAX_STR_SIZE)
         return;
 
-    r = san_col(r);
-    g = san_col(g);
-    b = san_col(b);
-    a = san_col(a);
-
-    r = round(r * 100) / 100.;
-    g = round(g * 100) / 100.;
-    b = round(b * 100) / 100.;
-    a = round(a * 100) / 100.;
-
-    /*r = round(r * 100);
-    g = round(g * 100);
-    b = round(b * 100);
-    a = round(a * 100);*/
+    process::colour(r);
+    process::colour(g);
+    process::colour(b);
+    process::colour(a);
 
     js_ui::ui_element e;
     e.type = "textcolored";
@@ -207,10 +283,10 @@ void js_ui::invisiblebutton(js::value_context* vctx, std::string str, double w, 
     if(str.size() > MAX_STR_SIZE)
         return;
 
-    str = sanitise_value(str);
+    process::id(str);
 
-    w = san_clamp(w);
-    h = san_clamp(h);
+    process::dimension(w);
+    process::dimension(h);
 
     js_ui::ui_element e;
     e.type = "invisiblebutton";
@@ -232,7 +308,7 @@ void js_ui::arrowbutton(js::value_context* vctx, std::string str, int dir)
     if(str.size() > MAX_STR_SIZE)
         return;
 
-    str = sanitise_value(str);
+    process::id(str);
 
     dir = clamp(dir, 0, 3);
 
@@ -261,10 +337,10 @@ void js_ui::button(js::value_context* vctx, std::string str, std::optional<doubl
     if(!h.has_value())
         h = 0;
 
-    str = sanitise_value(str);
+    process::id(str);
 
-    w.value() = san_clamp(w.value());
-    h.value() = san_clamp(h.value());
+    process::dimension(w.value());
+    process::dimension(h.value());
 
     js_ui::ui_element e;
     e.type = "button";
@@ -281,60 +357,13 @@ void js_ui::button(js::value_context* vctx, std::string str, std::optional<doubl
     stk->elements.push_back(e);
 }
 
-std::optional<ui_element_state*> get_named_element(js::value_context& vctx, const std::string& name)
-{
-    command_handler_state* found_ptr = js::get_heap_stash(vctx)["command_handler_state_pointer"].get_ptr<command_handler_state>();
-
-    if(found_ptr == nullptr)
-        return std::nullopt;
-
-    if(!js::get_heap_stash(vctx).has("realtime_id"))
-        return std::nullopt;
-
-    int realtime_id = js::get_heap_stash(vctx)["realtime_id"];
-
-    std::lock_guard guard(found_ptr->script_data_lock);
-
-    auto realtime_it = found_ptr->script_data.find(realtime_id);
-
-    if(realtime_it == found_ptr->script_data.end())
-        return std::nullopt;
-
-    realtime_script_data& dat = realtime_it->second;
-
-    if(dat.realtime_ui.element_states.find(name) == dat.realtime_ui.element_states.end())
-        return std::nullopt;
-
-    ui_element_state& st = dat.realtime_ui.element_states[name];
-
-    return &st;
-}
-
-void js_ui::checkbox(js::value_context* vctx, std::string str, js::value wrapper_object)
+void js_ui::checkbox(js::value_context* vctx, std::string str, js::value is_checked)
 {
     if(str.size() > MAX_STR_SIZE)
         return;
 
-    str = sanitise_value(str);
-
-    if(!wrapper_object.has("v"))
-        return;
-
-    js::value val = wrapper_object["v"];
-
-    std::optional<ui_element_state*> ui_state_opt = get_named_element(*vctx, str);
-
-    if(ui_state_opt.has_value())
-    {
-        ui_element_state& ui_state = *ui_state_opt.value();
-
-        if(ui_state.client_override_arguments.size() > 0)
-        {
-            val = ui_state.client_override_arguments[0];
-        }
-
-        ui_state.client_override_arguments = nlohmann::json();
-    }
+    process::id(str);
+    process::inout_ref(*vctx, is_checked, str);
 
     js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
@@ -345,7 +374,7 @@ void js_ui::checkbox(js::value_context* vctx, std::string str, js::value wrapper
 
     e.type = "checkbox";
     e.arguments.push_back(str);
-    e.arguments.push_back((int)val);
+    e.arguments.push_back((int)is_checked);
 }
 
 void js_ui::bullet(js::value_context* vctx)
@@ -358,10 +387,10 @@ void js_ui::pushstylecolor(js::value_context* vctx, int idx, double r, double g,
     if(idx < 0)
         return;
 
-    r = san_col(r);
-    g = san_col(g);
-    b = san_col(b);
-    a = san_col(a);
+    process::colour(r);
+    process::colour(g);
+    process::colour(b);
+    process::colour(a);
 
     ///IDX IS NOT SANITISED ON THE SERVER
 
@@ -404,7 +433,7 @@ void js_ui::popstylecolor(js::value_context* vctx, std::optional<int> cnt)
 void js_ui::pushitemwidth(js::value_context* vctx, double item_width)
 {
     ///sure
-    item_width = san_clamp(item_width);
+    process::dimension(item_width);
 
     js_ui::ui_element e;
     e.type = "pushitemwidth";
@@ -433,7 +462,7 @@ void js_ui::popitemwidth(js::value_context* vctx)
 
 void js_ui::setnextitemwidth(js::value_context* vctx, double item_width)
 {
-    item_width = san_clamp(item_width);
+    process::dimension(item_width);
 
     js_ui::ui_element e;
     e.type = "setnextitemwidth";
@@ -454,16 +483,14 @@ void js_ui::separator(js::value_context* vctx)
 
 void js_ui::sameline(js::value_context* vctx, std::optional<double> offset_from_start, std::optional<double> spacing)
 {
-    //handle_sleep(js::get_sandbox_data<sandbox_data>(*vctx));
-
     if(!offset_from_start.has_value())
         offset_from_start = 0;
 
     if(!spacing.has_value())
         spacing = -1;
 
-    offset_from_start.value() = san_clamp(offset_from_start.value());
-    spacing.value() = san_clamp(spacing.value());
+    process::dimension(offset_from_start.value());
+    process::dimension(spacing.value());
 
     js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
@@ -478,8 +505,6 @@ void js_ui::sameline(js::value_context* vctx, std::optional<double> offset_from_
 
 void js_ui::newline(js::value_context* vctx)
 {
-    //handle_sleep(js::get_sandbox_data<sandbox_data>(*vctx));
-
     create_unsanitised_element(*vctx, "newline");
 }
 
@@ -490,11 +515,8 @@ void js_ui::spacing(js::value_context* vctx)
 
 void js_ui::dummy(js::value_context* vctx, double w, double h)
 {
-    w = san_val(w);
-    h = san_val(h);
-
-    w = clamp(w, 0, 9999);
-    h = clamp(h, 0, 9999);
+    process::positive_dimension(w);
+    process::positive_dimension(h);
 
     js_ui::ui_element e;
     e.type = "dummy";
@@ -514,7 +536,7 @@ void js_ui::indent(js::value_context* vctx, std::optional<double> indent_w)
     if(!indent_w.has_value())
         indent_w = 0;
 
-    indent_w.value() = san_clamp(indent_w.value());
+    process::dimension(indent_w.value());
 
     js_ui::ui_element e;
     e.type = "indent";
@@ -533,7 +555,7 @@ void js_ui::unindent(js::value_context* vctx, std::optional<double> indent_w)
     if(!indent_w.has_value())
         indent_w = 0;
 
-    indent_w.value() = san_clamp(indent_w.value());
+    process::dimension(indent_w.value());
 
     js_ui::ui_element e;
     e.type = "unindent";
@@ -546,7 +568,6 @@ void js_ui::unindent(js::value_context* vctx, std::optional<double> indent_w)
 
     stk->elements.push_back(e);
 }
-
 
 void js_ui::begingroup(js::value_context* vctx)
 {
