@@ -373,8 +373,10 @@ void js_ui::bullet(js::value_context* vctx)
 
 bool js_ui::dragfloat(js::value_context* vctx, std::string str, js::value v, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
 {
-    process::id(str);
+    if(str.size() > MAX_STR_SIZE)
+        return;
 
+    process::id(str);
     process::inout_ref(*vctx, v, str);
 
     if(!v_speed.has_value())
