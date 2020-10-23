@@ -83,49 +83,6 @@ bool too_large(js_ui::ui_stack& stk)
     return sum >= 1024 * 1024 * 10;
 }
 
-void create_unsanitised_element(js::value_context& vctx, const std::string& type, std::optional<std::string> value = std::nullopt)
-{
-    if(value.has_value() && value.value().size() > MAX_STR_SIZE)
-        return;
-
-    js_ui::ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    js_ui::ui_element& e = stk->elements.emplace_back();
-    e.type = type;
-
-    if(value.has_value())
-    {
-        e.element_id = value.value();
-        e.arguments.push_back(value.value());
-    }
-}
-
-void create_sanitised_element(js::value_context& vctx, const std::string& type, const std::string& value)
-{
-    if(value.size() > MAX_STR_SIZE)
-        return;
-
-    js_ui::ui_element e;
-    e.type = type;
-    e.element_id = sanitise_value(value);
-    e.arguments.push_back(value);
-
-    js_ui::ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    stk->elements.push_back(e);
-}
-
-void js_ui::text(js::value_context* vctx, std::string str)
-{
-    create_unsanitised_element(*vctx, "text", str);
-}
-
 double san_col(double in)
 {
     if(!std::isfinite(in))
@@ -236,6 +193,29 @@ namespace process
     }
 }
 
+template<typename... T>
+void add_element(js::value_context* vctx, const std::string& type, const std::string& element_id, T&&... args)
+{
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    js_ui::ui_element& e = stk->elements.emplace_back();
+    e.type = type;
+    e.element_id = element_id;
+    (e.arguments.push_back(args), ...);
+}
+
+
+void js_ui::text(js::value_context* vctx, std::string str)
+{
+    if(str.size() > MAX_STR_SIZE)
+        return;
+
+    add_element(vctx, "text", str, str);
+}
+
 void js_ui::textcolored(js::value_context* vctx, double r, double g, double b, double a, std::string str)
 {
     if(str.size() > MAX_STR_SIZE)
@@ -246,36 +226,31 @@ void js_ui::textcolored(js::value_context* vctx, double r, double g, double b, d
     process::colour(b);
     process::colour(a);
 
-    js_ui::ui_element e;
-    e.type = "textcolored";
-    e.element_id = str;
-    e.arguments.push_back(r);
-    e.arguments.push_back(g);
-    e.arguments.push_back(b);
-    e.arguments.push_back(a);
-    e.arguments.push_back(str);
-
-    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    stk->elements.push_back(e);
+    add_element(vctx, "textcolored", str, r, g, b, a, str);
 }
 
 void js_ui::textdisabled(js::value_context* vctx, std::string str)
 {
-    create_unsanitised_element(*vctx, "textdisabled", str);
+    if(str.size() > MAX_STR_SIZE)
+        return;
+
+    add_element(vctx, "textdisabled", str, str);
 }
 
 void js_ui::bullettext(js::value_context* vctx, std::string str)
 {
-    create_unsanitised_element(*vctx, "bullettext", str);
+    if(str.size() > MAX_STR_SIZE)
+        return;
+
+    add_element(vctx, "bullettext", str, str);
 }
 
 void js_ui::smallbutton(js::value_context* vctx, std::string str)
 {
-    create_sanitised_element(*vctx, "smallbutton", str);
+    if(str.size() > MAX_STR_SIZE)
+        return;
+
+    add_element(vctx, "smallbutton", str, str);
 }
 
 void js_ui::invisiblebutton(js::value_context* vctx, std::string str, double w, double h)
@@ -288,19 +263,7 @@ void js_ui::invisiblebutton(js::value_context* vctx, std::string str, double w, 
     process::dimension(w);
     process::dimension(h);
 
-    js_ui::ui_element e;
-    e.type = "invisiblebutton";
-    e.element_id = str;
-    e.arguments.push_back(str);
-    e.arguments.push_back(w);
-    e.arguments.push_back(h);
-
-    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    stk->elements.push_back(e);
+    add_element(vctx, "invisiblebutton", str, str, w, h);
 }
 
 void js_ui::arrowbutton(js::value_context* vctx, std::string str, int dir)
@@ -312,18 +275,7 @@ void js_ui::arrowbutton(js::value_context* vctx, std::string str, int dir)
 
     dir = clamp(dir, 0, 3);
 
-    js_ui::ui_element e;
-    e.type = "arrowbutton";
-    e.element_id = str;
-    e.arguments.push_back(str);
-    e.arguments.push_back(dir);
-
-    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    stk->elements.push_back(e);
+    add_element(vctx, "arrowbutton", str, str, dir);
 }
 
 void js_ui::button(js::value_context* vctx, std::string str, std::optional<double> w, std::optional<double> h)
@@ -342,19 +294,7 @@ void js_ui::button(js::value_context* vctx, std::string str, std::optional<doubl
     process::dimension(w.value());
     process::dimension(h.value());
 
-    js_ui::ui_element e;
-    e.type = "button";
-    e.element_id = str;
-    e.arguments.push_back(str);
-    e.arguments.push_back(w.value());
-    e.arguments.push_back(h.value());
-
-    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    stk->elements.push_back(e);
+    add_element(vctx, "button", str, str, w.value(), h.value());
 }
 
 void js_ui::checkbox(js::value_context* vctx, std::string str, js::value is_checked)
@@ -365,21 +305,12 @@ void js_ui::checkbox(js::value_context* vctx, std::string str, js::value is_chec
     process::id(str);
     process::inout_ref(*vctx, is_checked, str);
 
-    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    js_ui::ui_element& e = stk->elements.emplace_back();
-
-    e.type = "checkbox";
-    e.arguments.push_back(str);
-    e.arguments.push_back((int)is_checked);
+    add_element(vctx, "checkbox", str, str, (int)is_checked);
 }
 
 void js_ui::bullet(js::value_context* vctx)
 {
-    create_unsanitised_element(*vctx, "bullet");
+    add_element(vctx, "bullet", "");
 }
 
 void js_ui::pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a)
@@ -393,21 +324,7 @@ void js_ui::pushstylecolor(js::value_context* vctx, int idx, double r, double g,
     process::colour(a);
 
     ///IDX IS NOT SANITISED ON THE SERVER
-
-    js_ui::ui_element e;
-    e.type = "pushstylecolor";
-    e.arguments.push_back(idx);
-    e.arguments.push_back(r);
-    e.arguments.push_back(g);
-    e.arguments.push_back(b);
-    e.arguments.push_back(a);
-
-    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    stk->elements.push_back(e);
+    add_element(vctx, "pushstylecolor", "", idx, r, g, b, a);
 }
 
 void js_ui::popstylecolor(js::value_context* vctx, std::optional<int> cnt)
@@ -418,16 +335,7 @@ void js_ui::popstylecolor(js::value_context* vctx, std::optional<int> cnt)
     if(cnt.value() < 0)
         return;
 
-    js_ui::ui_element e;
-    e.type = "popstylecolor";
-    e.arguments.push_back(cnt.value());
-
-    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    stk->elements.push_back(e);
+    add_element(vctx, "popstylecolor", "", cnt.value());
 }
 
 void js_ui::pushitemwidth(js::value_context* vctx, double item_width)
@@ -435,50 +343,24 @@ void js_ui::pushitemwidth(js::value_context* vctx, double item_width)
     ///sure
     process::dimension(item_width);
 
-    js_ui::ui_element e;
-    e.type = "pushitemwidth";
-    e.arguments.push_back(item_width);
-
-    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    stk->elements.push_back(e);
+    add_element(vctx, "pushitemwidth", "", item_width);
 }
 
 void js_ui::popitemwidth(js::value_context* vctx)
 {
-    js_ui::ui_element e;
-    e.type = "popitemwidth";
-
-    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    stk->elements.push_back(e);
+    add_element(vctx, "popitemwidth", "");
 }
 
 void js_ui::setnextitemwidth(js::value_context* vctx, double item_width)
 {
     process::dimension(item_width);
 
-    js_ui::ui_element e;
-    e.type = "setnextitemwidth";
-    e.arguments.push_back(item_width);
-
-    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    stk->elements.push_back(e);
+    add_element(vctx, "setnextitemwidth", "", item_width);
 }
 
 void js_ui::separator(js::value_context* vctx)
 {
-    create_unsanitised_element(*vctx, "separator");
+    add_element(vctx, "separator", "");
 }
 
 void js_ui::sameline(js::value_context* vctx, std::optional<double> offset_from_start, std::optional<double> spacing)
@@ -492,25 +374,17 @@ void js_ui::sameline(js::value_context* vctx, std::optional<double> offset_from_
     process::dimension(offset_from_start.value());
     process::dimension(spacing.value());
 
-    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    js_ui::ui_element& e = stk->elements.emplace_back();
-    e.type = "sameline";
-    e.arguments.push_back(offset_from_start.value());
-    e.arguments.push_back(spacing.value());
+    add_element(vctx, "sameline", "", offset_from_start.value(), spacing.value());
 }
 
 void js_ui::newline(js::value_context* vctx)
 {
-    create_unsanitised_element(*vctx, "newline");
+    add_element(vctx, "newline", "");
 }
 
 void js_ui::spacing(js::value_context* vctx)
 {
-    create_unsanitised_element(*vctx, "spacing");
+    add_element(vctx, "spacing", "");
 }
 
 void js_ui::dummy(js::value_context* vctx, double w, double h)
@@ -518,17 +392,7 @@ void js_ui::dummy(js::value_context* vctx, double w, double h)
     process::positive_dimension(w);
     process::positive_dimension(h);
 
-    js_ui::ui_element e;
-    e.type = "dummy";
-    e.arguments.push_back(w);
-    e.arguments.push_back(h);
-
-    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    stk->elements.push_back(e);
+    add_element(vctx, "dummy", "", w, h);
 }
 
 void js_ui::indent(js::value_context* vctx, std::optional<double> indent_w)
@@ -538,16 +402,7 @@ void js_ui::indent(js::value_context* vctx, std::optional<double> indent_w)
 
     process::dimension(indent_w.value());
 
-    js_ui::ui_element e;
-    e.type = "indent";
-    e.arguments.push_back(indent_w.value());
-
-    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    stk->elements.push_back(e);
+    add_element(vctx, "indent", "", indent_w.value());
 }
 
 void js_ui::unindent(js::value_context* vctx, std::optional<double> indent_w)
@@ -557,26 +412,17 @@ void js_ui::unindent(js::value_context* vctx, std::optional<double> indent_w)
 
     process::dimension(indent_w.value());
 
-    js_ui::ui_element e;
-    e.type = "unindent";
-    e.arguments.push_back(indent_w.value());
-
-    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
-        return;
-
-    stk->elements.push_back(e);
+    add_element(vctx, "unindent", "", indent_w.value());
 }
 
 void js_ui::begingroup(js::value_context* vctx)
 {
-    create_unsanitised_element(*vctx, "begingroup");
+    add_element(vctx, "begingroup", "");
 }
 
 void js_ui::endgroup(js::value_context* vctx)
 {
-    create_unsanitised_element(*vctx, "endgroup");
+    add_element(vctx, "endgroup", "");
 }
 
 std::optional<ui_element_state*> get_last_element(js::value_context& vctx)
