@@ -251,18 +251,19 @@ void js_ui::bullettext(js::value_context* vctx, std::string str)
     add_element(vctx, "bullettext", str, str);
 }
 
-void js_ui::smallbutton(js::value_context* vctx, std::string str)
+bool js_ui::smallbutton(js::value_context* vctx, std::string str)
 {
     if(str.size() > MAX_STR_SIZE)
-        return;
+        return false;
 
     add_element(vctx, "smallbutton", str, str);
+    return isitemclicked(vctx);
 }
 
-void js_ui::invisiblebutton(js::value_context* vctx, std::string str, double w, double h)
+bool js_ui::invisiblebutton(js::value_context* vctx, std::string str, double w, double h)
 {
     if(str.size() > MAX_STR_SIZE)
-        return;
+        return false;
 
     process::id(str);
 
@@ -270,24 +271,26 @@ void js_ui::invisiblebutton(js::value_context* vctx, std::string str, double w, 
     process::dimension(h);
 
     add_element(vctx, "invisiblebutton", str, str, w, h);
+    return isitemclicked(vctx);
 }
 
-void js_ui::arrowbutton(js::value_context* vctx, std::string str, int dir)
+bool js_ui::arrowbutton(js::value_context* vctx, std::string str, int dir)
 {
     if(str.size() > MAX_STR_SIZE)
-        return;
+        return false;
 
     process::id(str);
 
     dir = clamp(dir, 0, 3);
 
     add_element(vctx, "arrowbutton", str, str, dir);
+    return isitemclicked(vctx);
 }
 
-void js_ui::button(js::value_context* vctx, std::string str, std::optional<double> w, std::optional<double> h)
+bool js_ui::button(js::value_context* vctx, std::string str, std::optional<double> w, std::optional<double> h)
 {
     if(str.size() > MAX_STR_SIZE)
-        return;
+        return false;
 
     if(!w.has_value())
         w = 0;
@@ -301,27 +304,30 @@ void js_ui::button(js::value_context* vctx, std::string str, std::optional<doubl
     process::dimension(h.value());
 
     add_element(vctx, "button", str, str, w.value(), h.value());
+    return isitemclicked(vctx);
 }
 
-void js_ui::checkbox(js::value_context* vctx, std::string str, js::value is_checked)
+bool js_ui::checkbox(js::value_context* vctx, std::string str, js::value is_checked)
 {
     if(str.size() > MAX_STR_SIZE)
-        return;
+        return false;
 
     process::id(str);
     process::inout_ref(*vctx, is_checked, str);
 
     add_element(vctx, "checkbox", str, str, (int)is_checked);
+    return isitemclicked(vctx);
 }
 
-void js_ui::radiobutton(js::value_context* vctx, std::string str, int is_active)
+bool js_ui::radiobutton(js::value_context* vctx, std::string str, int is_active)
 {
     if(str.size() > MAX_STR_SIZE)
-        return;
+        return false;
 
     process::id(str);
 
     add_element(vctx, "radiobutton", str, str, is_active);
+    return isitemclicked(vctx);
 }
 
 void js_ui::progressbar(js::value_context* vctx, double fraction, std::optional<double> w, std::optional<double> h, std::optional<std::string> overlay)

@@ -30,12 +30,12 @@ namespace js_ui
     void textcolored(js::value_context* vctx, double r, double g, double b, double a, std::string str);
     void textdisabled(js::value_context* vctx, std::string str);
     void bullettext(js::value_context* vctx, std::string str);
-    void smallbutton(js::value_context* vctx, std::string str);
-    void invisiblebutton(js::value_context* vctx, std::string str, double w, double h);
-    void arrowbutton(js::value_context* vctx, std::string str, int dir);
-    void button(js::value_context* vctx, std::string str, std::optional<double> w, std::optional<double> h);
-    void checkbox(js::value_context* vctx, std::string str, js::value is_checked);
-    void radiobutton(js::value_context* vctx, std::string str, int is_active);
+    bool smallbutton(js::value_context* vctx, std::string str);
+    bool invisiblebutton(js::value_context* vctx, std::string str, double w, double h);
+    bool arrowbutton(js::value_context* vctx, std::string str, int dir);
+    bool button(js::value_context* vctx, std::string str, std::optional<double> w, std::optional<double> h);
+    bool checkbox(js::value_context* vctx, std::string str, js::value is_checked);
+    bool radiobutton(js::value_context* vctx, std::string str, int is_active);
     void progressbar(js::value_context* vctx, double fraction, std::optional<double> w, std::optional<double> h, std::optional<std::string> overlay);
     void bullet(js::value_context* vctx);
 
