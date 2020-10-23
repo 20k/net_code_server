@@ -40,6 +40,14 @@ namespace js_ui
     void bullet(js::value_context* vctx);
 
     bool dragfloat(js::value_context* vctx, std::string str, js::value v, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max);
+    bool dragfloat2(js::value_context* vctx, std::string str, js::value v1, js::value v2, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max);
+    bool dragfloat3(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max);
+    bool dragfloat4(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, js::value v4, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max);
+    bool dragint(js::value_context* vctx, std::string str, js::value v, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max);
+    bool dragint2(js::value_context* vctx, std::string str, js::value v1, js::value v2, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max);
+    bool dragint3(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max);
+    bool dragint4(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, js::value v4, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max);
+
     bool sliderfloat(js::value_context* vctx, std::string str, js::value v, double v_min, double v_max);
 
     void pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a);

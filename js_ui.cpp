@@ -145,7 +145,7 @@ std::optional<ui_element_state*> get_named_element(js::value_context& vctx, cons
     return &st;
 }
 
-js::value replace_arg(js::value val, js::value_context& vctx, const std::string& name)
+js::value replace_arg(js::value val, js::value_context& vctx, const std::string& name, int which)
 {
     std::optional<ui_element_state*> ui_state_opt = get_named_element(vctx, name);
 
@@ -153,9 +153,9 @@ js::value replace_arg(js::value val, js::value_context& vctx, const std::string&
     {
         ui_element_state& ui_state = *ui_state_opt.value();
 
-        if(ui_state.client_override_arguments.size() > 0)
+        if((int)ui_state.client_override_arguments.size() > which)
         {
-            val = ui_state.client_override_arguments[0];
+            val = ui_state.client_override_arguments[which];
         }
 
         ui_state.client_override_arguments = nlohmann::json();
@@ -176,6 +176,12 @@ namespace process
     {
         in = san_val(in);
         in = clamp(in, -FLT_MAX/INT_MAX, FLT_MAX/INT_MAX);
+    }
+
+    void int_value(double& in)
+    {
+        in = san_val(in);
+        in = clamp(in, INT_MIN, INT_MAX);
     }
 
     void dimension(double& in)
@@ -200,14 +206,14 @@ namespace process
         in = sanitise_value(in);
     }
 
-    void inout_ref(js::value_context& vctx, js::value& val, const std::string& id)
+    void inout_ref(js::value_context& vctx, js::value& val, const std::string& id, int which = 0)
     {
         if(!val.has("v"))
             throw std::runtime_error("No property v on imgui reference shim object");
 
         js::value real = val["v"];
 
-        real = replace_arg(real, vctx, id);
+        real = replace_arg(real, vctx, id, which);
 
         val = real;
     }
@@ -371,12 +377,90 @@ void js_ui::bullet(js::value_context* vctx)
     add_element(vctx, "bullet", "");
 }
 
-bool js_ui::dragfloat(js::value_context* vctx, std::string str, js::value v, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
+template<typename T, int N>
+///JS doesn't have ints, so its doubles, and ints are emulated
+bool dragTN(const std::string& type, js::value_context* vctx, std::string str, std::array<js::value, N> v, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
 {
     if(str.size() > MAX_STR_SIZE)
         return false;
 
     process::id(str);
+
+    for(int i=0; i < N; i++)
+    {
+        process::inout_ref(*vctx, v[i], str, i);
+    }
+
+    if(!v_speed.has_value())
+        v_speed = 1;
+
+    if(!v_min.has_value())
+        v_min = 0;
+
+    if(!v_max.has_value())
+        v_max = 0;
+
+    process::float_value(v_speed.value());
+
+    if(std::is_same_v<T, double>)
+    {
+        process::float_value(v_min.value());
+        process::float_value(v_max.value());
+    }
+
+    if(std::is_same_v<T, int>)
+    {
+        process::int_value(v_min.value());
+        process::int_value(v_max.value());
+    }
+
+    std::array<double, N> to_send;
+
+    if(std::is_same_v<T, double>)
+    {
+        for(int i=0; i < N; i++)
+        {
+            to_send[i] = v[i];
+            process::float_value(to_send[i]);
+        }
+    }
+
+    if(std::is_same_v<T, int>)
+    {
+        for(int i=0; i < N; i++)
+        {
+            to_send[i] = v[i];
+            process::int_value(to_send[i]);
+        }
+    }
+
+    static_assert(std::is_same_v<T, int> || std::is_same_v<T, double>);
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return false;
+
+    js_ui::ui_element& e = stk->elements.emplace_back();
+    e.type = type;
+    e.element_id = str;
+    e.arguments.push_back(str);
+
+    for(int i=0; i < N; i++)
+    {
+        e.arguments.push_back(to_send[i]);
+    }
+
+    e.arguments.push_back(v_speed.value());
+    e.arguments.push_back(v_min.value());
+    e.arguments.push_back(v_max.value());
+
+    return false;
+}
+
+bool js_ui::dragfloat(js::value_context* vctx, std::string str, js::value v, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
+{
+    /*process::id(str);
     process::inout_ref(*vctx, v, str);
 
     if(!v_speed.has_value())
@@ -394,7 +478,44 @@ bool js_ui::dragfloat(js::value_context* vctx, std::string str, js::value v, std
 
     add_element(vctx, "dragfloat", str, str, (double)v, v_speed.value(), v_min.value(), v_max.value());
 
-    return false;
+    return false;*/
+
+    return dragTN<double, 1>("dragfloat", vctx, str, {v}, v_speed, v_min, v_max);
+}
+
+bool js_ui::dragfloat2(js::value_context* vctx, std::string str, js::value v1, js::value v2, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
+{
+    return dragTN<double, 2>("dragfloat2", vctx, str, {v1, v2}, v_speed, v_min, v_max);
+}
+
+bool js_ui::dragfloat3(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
+{
+    return dragTN<double, 3>("dragfloat3", vctx, str, {v1, v2, v3}, v_speed, v_min, v_max);
+}
+
+bool js_ui::dragfloat4(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, js::value v4, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
+{
+    return dragTN<double, 4>("dragfloat4", vctx, str, {v1, v2, v3, v4}, v_speed, v_min, v_max);
+}
+
+bool js_ui::dragint(js::value_context* vctx, std::string str, js::value v, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
+{
+    return dragTN<int, 1>("dragint", vctx, str, {v}, v_speed, v_min, v_max);
+}
+
+bool js_ui::dragint2(js::value_context* vctx, std::string str, js::value v1, js::value v2, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
+{
+    return dragTN<int, 2>("dragint2", vctx, str, {v1, v2}, v_speed, v_min, v_max);
+}
+
+bool js_ui::dragint3(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
+{
+    return dragTN<int, 3>("dragint3", vctx, str, {v1, v2, v3}, v_speed, v_min, v_max);
+}
+
+bool js_ui::dragint4(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, js::value v4, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
+{
+    return dragTN<int, 4>("dragint4", vctx, str, {v1, v2, v3, v4}, v_speed, v_min, v_max);
 }
 
 bool js_ui::sliderfloat(js::value_context* vctx, std::string str, js::value v, double v_min, double v_max)

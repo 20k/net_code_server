@@ -1221,6 +1221,13 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["isitemhovered"] = js::function<js_ui::isitemhovered>;
 
     imgui_obj["dragfloat"] = js::function<js_ui::dragfloat>;
+    imgui_obj["dragfloat2"] = js::function<js_ui::dragfloat2>;
+    imgui_obj["dragfloat3"] = js::function<js_ui::dragfloat3>;
+    imgui_obj["dragfloat4"] = js::function<js_ui::dragfloat4>;
+    imgui_obj["dragint"] = js::function<js_ui::dragint>;
+    imgui_obj["dragint2"] = js::function<js_ui::dragint2>;
+    imgui_obj["dragint3"] = js::function<js_ui::dragint3>;
+    imgui_obj["dragint4"] = js::function<js_ui::dragint4>;
     imgui_obj["sliderfloat"] = js::function<js_ui::sliderfloat>;
 
     ///helpers for js reference semanticsitus
