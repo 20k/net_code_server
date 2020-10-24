@@ -2575,7 +2575,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
                 st.client_override_arguments = str["arguments"];
             }
 
-            if(str.count("sequence_id"))
+            if(str.count("sequence_id") > 0)
             {
                 dat.client_seq_id = str["sequence_id"];
             }
