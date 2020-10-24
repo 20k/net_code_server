@@ -440,22 +440,15 @@ bool dragTN(const std::string& type, js::value_context* vctx, std::string str, s
 
     std::array<double, N> to_send;
 
-    if(std::is_same_v<T, double>)
+    for(int i=0; i < N; i++)
     {
-        for(int i=0; i < N; i++)
-        {
-            to_send[i] = v[i];
-            process::float_value(to_send[i]);
-        }
-    }
+        to_send[i] = v[i];
 
-    if(std::is_same_v<T, int>)
-    {
-        for(int i=0; i < N; i++)
-        {
-            to_send[i] = v[i];
+        if(std::is_same_v<T, double>)
+            process::float_value(to_send[i]);
+
+        if(std::is_same_v<T, int>)
             process::int_value(to_send[i]);
-        }
     }
 
     static_assert(std::is_same_v<T, int> || std::is_same_v<T, double>);
