@@ -563,6 +563,37 @@ bool js_ui::sliderfloat4(js::value_context* vctx, std::string str, js::value v1,
     return sliderTN<double, 4>("sliderfloat4", vctx, str, {v1, v2, v3, v4}, v_min, v_max);
 }
 
+bool js_ui::sliderangle(js::value_context* vctx, std::string str, js::value v, std::optional<double> v_min, std::optional<double> v_max)
+{
+    if(!v_min.has_value())
+        v_min = -360.0;
+
+    if(!v_max.has_value())
+        v_max = 360.0;
+
+    return sliderTN<double, 1>("sliderangle", vctx, str, {v}, v_min.value(), v_max.value());
+}
+
+bool js_ui::sliderint(js::value_context* vctx, std::string str, js::value v, double v_min, double v_max)
+{
+    return sliderTN<int, 1>("sliderint", vctx, str, {v}, v_min, v_max);
+}
+
+bool js_ui::sliderint2(js::value_context* vctx, std::string str, js::value v1, js::value v2, double v_min, double v_max)
+{
+    return sliderTN<int, 2>("sliderint2", vctx, str, {v1, v2}, v_min, v_max);
+}
+
+bool js_ui::sliderint3(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, double v_min, double v_max)
+{
+    return sliderTN<int, 3>("sliderint3", vctx, str, {v1, v2, v3}, v_min, v_max);
+}
+
+bool js_ui::sliderint4(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, js::value v4, double v_min, double v_max)
+{
+    return sliderTN<int, 4>("sliderint4", vctx, str, {v1, v2, v3, v4}, v_min, v_max);
+}
+
 void js_ui::pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a)
 {
     if(idx < 0)

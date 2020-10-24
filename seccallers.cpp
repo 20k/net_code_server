@@ -1232,6 +1232,11 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["sliderfloat2"] = js::function<js_ui::sliderfloat2>;
     imgui_obj["sliderfloat3"] = js::function<js_ui::sliderfloat3>;
     imgui_obj["sliderfloat4"] = js::function<js_ui::sliderfloat4>;
+    imgui_obj["sliderangle"] = js::function<js_ui::sliderangle>;
+    imgui_obj["sliderint"] = js::function<js_ui::sliderint>;
+    imgui_obj["sliderint2"] = js::function<js_ui::sliderint2>;
+    imgui_obj["sliderint3"] = js::function<js_ui::sliderint3>;
+    imgui_obj["sliderint4"] = js::function<js_ui::sliderint4>;
 
     ///helpers for js reference semanticsitus
     imgui_obj["ref"] = js::function<js_ui::ref>;

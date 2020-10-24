@@ -53,6 +53,12 @@ namespace js_ui
     bool sliderfloat3(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, double v_min, double v_max);
     bool sliderfloat4(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, js::value v4, double v_min, double v_max);
 
+    bool sliderangle(js::value_context* vctx, std::string str, js::value v, std::optional<double> v_min, std::optional<double> v_max);
+    bool sliderint(js::value_context* vctx, std::string str, js::value v, double v_min, double v_max);
+    bool sliderint2(js::value_context* vctx, std::string str, js::value v1, js::value v2, double v_min, double v_max);
+    bool sliderint3(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, double v_min, double v_max);
+    bool sliderint4(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, js::value v4, double v_min, double v_max);
+
     void pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a);
     void popstylecolor(js::value_context* vctx, std::optional<int> cnt);
 
