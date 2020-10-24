@@ -404,6 +404,44 @@ void js_ui::bullet(js::value_context* vctx)
     add_element(vctx, "bullet", "");
 }
 
+template<typename T, int N, typename... U>
+bool sliderdragTNimpl(const std::string& type, js::value_context* vctx, std::string str, std::array<js::value, N> v, U&&... vals)
+{
+    std::array<double, N> to_send;
+
+    for(int i=0; i < N; i++)
+    {
+        to_send[i] = v[i];
+
+        if(std::is_same_v<T, double>)
+            process::float_value(to_send[i]);
+
+        if(std::is_same_v<T, int>)
+            process::int_value(to_send[i]);
+    }
+
+    static_assert(std::is_same_v<T, int> || std::is_same_v<T, double>);
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return false;
+
+    js_ui::ui_element& e = stk->elements.emplace_back();
+    e.type = type;
+    e.element_id = str;
+    e.arguments.push_back(str);
+
+    for(int i=0; i < N; i++)
+    {
+        e.arguments.push_back(to_send[i]);
+    }
+
+    (e.arguments.push_back(vals), ...);
+
+    return false;
+}
+
 template<typename T, int N>
 ///JS doesn't have ints, so its doubles, and ints are emulated
 bool dragTN(const std::string& type, js::value_context* vctx, std::string str, std::array<js::value, N> v, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
@@ -438,41 +476,31 @@ bool dragTN(const std::string& type, js::value_context* vctx, std::string str, s
         process::int_value(v_max.value());
     }
 
-    std::array<double, N> to_send;
+    return sliderdragTNimpl<T, N>(type, vctx, str, v, v_speed.value(), v_min.value(), v_max.value());
+}
 
-    for(int i=0; i < N; i++)
-    {
-        to_send[i] = v[i];
-
-        if(std::is_same_v<T, double>)
-            process::float_value(to_send[i]);
-
-        if(std::is_same_v<T, int>)
-            process::int_value(to_send[i]);
-    }
-
-    static_assert(std::is_same_v<T, int> || std::is_same_v<T, double>);
-
-    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
-
-    if(too_large(*stk))
+template<typename T, int N>
+bool sliderTN(const std::string& type, js::value_context* vctx, std::string str, std::array<js::value, N> v, double v_min, double v_max)
+{
+    if(str.size() > MAX_STR_SIZE)
         return false;
 
-    js_ui::ui_element& e = stk->elements.emplace_back();
-    e.type = type;
-    e.element_id = str;
-    e.arguments.push_back(str);
+    process::id(str);
+    process::inout_ref<N>(*vctx, v, str);
 
-    for(int i=0; i < N; i++)
+    if(std::is_same_v<T, double>)
     {
-        e.arguments.push_back(to_send[i]);
+        process::float_value(v_min);
+        process::float_value(v_max);
     }
 
-    e.arguments.push_back(v_speed.value());
-    e.arguments.push_back(v_min.value());
-    e.arguments.push_back(v_max.value());
+    if(std::is_same_v<T, int>)
+    {
+        process::int_value(v_min);
+        process::int_value(v_max);
+    }
 
-    return false;
+    return sliderdragTNimpl<T, N>(type, vctx, str, v, v_min, v_max);
 }
 
 bool js_ui::dragfloat(js::value_context* vctx, std::string str, js::value v, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
@@ -517,18 +545,7 @@ bool js_ui::dragint4(js::value_context* vctx, std::string str, js::value v1, js:
 
 bool js_ui::sliderfloat(js::value_context* vctx, std::string str, js::value v, double v_min, double v_max)
 {
-    if(str.size() > MAX_STR_SIZE)
-        return false;
-
-    process::id(str);
-    process::inout_ref(*vctx, v, str);
-
-    process::float_value(v_min);
-    process::float_value(v_max);
-
-    add_element(vctx, "sliderfloat", str, str, (double)v, v_min, v_max);
-
-    return false;
+    return sliderTN<double, 1>("sliderfloat", vctx, str, {v}, v_min, v_max);
 }
 
 void js_ui::pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a)
