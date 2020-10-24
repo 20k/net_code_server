@@ -90,8 +90,8 @@ struct command_handler_state
     void remove_realtime_script(int script_id);
     void set_realtime_script_delta(int script_id, float work_units);
 
-    void set_client_sequence_id(int script_id, int seq_id);
-    int get_client_sequence_id(int script_id);
+    //void set_client_sequence_id(int script_id, int seq_id);
+    //int get_client_sequence_id(int script_id);
 
 private:
     std::string auth;

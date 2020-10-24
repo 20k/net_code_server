@@ -231,7 +231,7 @@ void command_handler_state::set_realtime_script_delta(int script_id, float work_
     dat.realtime_script_deltas_ms = work_units;
 }
 
-void command_handler_state::set_client_sequence_id(int script_id, int seq_id)
+/*void command_handler_state::set_client_sequence_id(int script_id, int seq_id)
 {
     std::lock_guard guard(script_data_lock);
 
@@ -245,4 +245,4 @@ int command_handler_state::get_client_sequence_id(int script_id)
 
     realtime_script_data& dat = script_data[script_id];
     return dat.client_seq_id;
-}
+}*/

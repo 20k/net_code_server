@@ -151,10 +151,18 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
 
     js::value args = js::xfer_between_contexts(vctx, in_arg);
 
+    uint64_t last_sequence_id = 0;
+
     while(1)
     {
         try
         {
+            {
+                std::lock_guard guard(state.script_data_lock);
+
+                last_sequence_id = state.script_data[current_id].client_seq_id;
+            }
+
             sandbox_data* sand_data = js::get_sandbox_data<sandbox_data>(vctx);
             sand_data->new_frame = true;
 
@@ -414,7 +422,7 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             sand_data->clk.restart();
             //sand_data->realtime_ms_awake_elapsed = 0;
 
-            if(callback(vctx))
+            if(callback(vctx, last_sequence_id))
                 break;
 
             //float drdrdr = elapsed.get_elapsed_time_s() * 1000.;
@@ -658,7 +666,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                     uint64_t server_packet_sequence_id = 0;
 
-                    auto update_check = [&](js::value_context& vctx)
+                    auto update_check = [&](js::value_context& vctx, uint64_t current_ack_state)
                     {
                         while(shared_duk_state->has_output_data_available())
                         {
@@ -719,7 +727,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                                 //ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<ui_stack>();
 
-                                j["client_seq_ack"] = all_shared.value()->state.get_client_sequence_id(current_id);
+                                j["client_seq_ack"] = current_ack_state;
 
                                 /*std::cout << "TIDX SIZE " << typeidx.size() << " ARGSIZE " << types.size() << std::endl;
                                 printf("Naive size %i\n", j.dump().size());
