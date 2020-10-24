@@ -1229,6 +1229,9 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["dragint3"] = js::function<js_ui::dragint3>;
     imgui_obj["dragint4"] = js::function<js_ui::dragint4>;
     imgui_obj["sliderfloat"] = js::function<js_ui::sliderfloat>;
+    imgui_obj["sliderfloat2"] = js::function<js_ui::sliderfloat2>;
+    imgui_obj["sliderfloat3"] = js::function<js_ui::sliderfloat3>;
+    imgui_obj["sliderfloat4"] = js::function<js_ui::sliderfloat4>;
 
     ///helpers for js reference semanticsitus
     imgui_obj["ref"] = js::function<js_ui::ref>;
