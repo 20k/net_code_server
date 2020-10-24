@@ -243,11 +243,6 @@ namespace process
         }
 
         vals = replace_args<N>(res, vctx, id);
-
-        for(int i=0; i < N; i++)
-        {
-            printf("HI %i\n", (int)vals[i]);
-        }
     }
 }
 
