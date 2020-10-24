@@ -145,7 +145,8 @@ std::optional<ui_element_state*> get_named_element(js::value_context& vctx, cons
     return &st;
 }
 
-js::value replace_arg(js::value val, js::value_context& vctx, const std::string& name, int which)
+template<int N>
+std::array<js::value, N> replace_args(std::array<js::value, N> vals, js::value_context& vctx, const std::string& name)
 {
     std::optional<ui_element_state*> ui_state_opt = get_named_element(vctx, name);
 
@@ -153,15 +154,23 @@ js::value replace_arg(js::value val, js::value_context& vctx, const std::string&
     {
         ui_element_state& ui_state = *ui_state_opt.value();
 
-        if((int)ui_state.client_override_arguments.size() > which)
+        if(!ui_state.client_override_arguments.is_array())
+            return vals;
+
+        std::vector<nlohmann::json> arr_args = ui_state.client_override_arguments;
+
+        if((int)arr_args.size() != N)
+            return vals;
+
+        for(int i=0; i < (int)arr_args.size(); i++)
         {
-            val = ui_state.client_override_arguments[which];
+            vals[i] = ui_state.client_override_arguments[i];
         }
 
         ui_state.client_override_arguments = nlohmann::json();
     }
 
-    return val;
+    return vals;
 }
 
 namespace process
@@ -206,16 +215,39 @@ namespace process
         in = sanitise_value(in);
     }
 
-    void inout_ref(js::value_context& vctx, js::value& val, const std::string& id, int which = 0)
+    void inout_ref(js::value_context& vctx, js::value& val, const std::string& id)
     {
         if(!val.has("v"))
             throw std::runtime_error("No property v on imgui reference shim object");
 
         js::value real = val["v"];
 
-        real = replace_arg(real, vctx, id, which);
+        std::array<js::value, 1> arr_val = {real};
+
+        real = replace_args<1>(arr_val, vctx, id)[0];
 
         val = real;
+    }
+
+    template<int N>
+    void inout_ref(js::value_context& vctx, std::array<js::value, N>& vals, const std::string& id)
+    {
+        std::array<js::value, N> res = vals;
+
+        for(int i=0; i < N; i++)
+        {
+            if(!vals[i].has("v"))
+                throw std::runtime_error("No property v on imgui reference shim object, member " + std::to_string(i));
+
+            res[i] = vals[i]["v"];
+        }
+
+        vals = replace_args<N>(res, vctx, id);
+
+        for(int i=0; i < N; i++)
+        {
+            printf("HI %i\n", (int)vals[i]);
+        }
     }
 }
 
@@ -386,10 +418,7 @@ bool dragTN(const std::string& type, js::value_context* vctx, std::string str, s
 
     process::id(str);
 
-    for(int i=0; i < N; i++)
-    {
-        process::inout_ref(*vctx, v[i], str, i);
-    }
+    process::inout_ref<N>(*vctx, v, str);
 
     if(!v_speed.has_value())
         v_speed = 1;
@@ -460,26 +489,6 @@ bool dragTN(const std::string& type, js::value_context* vctx, std::string str, s
 
 bool js_ui::dragfloat(js::value_context* vctx, std::string str, js::value v, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
 {
-    /*process::id(str);
-    process::inout_ref(*vctx, v, str);
-
-    if(!v_speed.has_value())
-        v_speed = 1;
-
-    if(!v_min.has_value())
-        v_min = 0;
-
-    if(!v_max.has_value())
-        v_max = 0;
-
-    process::float_value(v_speed.value());
-    process::float_value(v_min.value());
-    process::float_value(v_max.value());
-
-    add_element(vctx, "dragfloat", str, str, (double)v, v_speed.value(), v_min.value(), v_max.value());
-
-    return false;*/
-
     return dragTN<double, 1>("dragfloat", vctx, str, {v}, v_speed, v_min, v_max);
 }
 

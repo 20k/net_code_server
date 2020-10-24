@@ -320,6 +320,13 @@ js_quickjs::value::value(const js_quickjs::value& other)
 
     val = JS_DupValue(other.ctx, other.val);
     has_value = true;
+
+    if(other.has_parent)
+    {
+        has_parent = true;
+        parent_value = JS_DupValue(other.ctx, other.parent_value);
+        indices = other.indices;
+    }
 }
 
 js_quickjs::value::value(js_quickjs::value_context& _vctx)
@@ -925,11 +932,43 @@ js_quickjs::value& js_quickjs::value::operator=(const value& right)
     if(!has_value && !right.has_value)
         return *this;
 
-    qstack_manager m(*this);
+    ///update my parent with their value
+    /*if(has_parent)
+    {
+        qstack_manager m(*this);
 
-    val = JS_DupValue(ctx, right.val);
+        val = JS_DupValue(ctx, right.val);
 
-    return *this;
+        return *this;
+    }
+    ///do normal stack management, then take parent of other value
+    else*/
+    {
+        {
+            qstack_manager m(*this);
+
+            val = JS_DupValue(ctx, right.val);
+        }
+
+        if(has_parent)
+            JS_FreeValue(ctx, parent_value);
+
+        has_parent = false;
+
+        if(right.has_parent)
+            parent_value = JS_DupValue(ctx, right.parent_value);
+
+        has_parent = right.has_parent;
+        indices = right.indices;
+
+        has_value = right.has_value;
+        released = right.released;
+
+        ctx = right.ctx;
+        vctx = right.vctx;
+
+        return *this;
+    }
 }
 
 js_quickjs::value& js_quickjs::value::operator=(js_quickjs::undefined_t)
