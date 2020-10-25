@@ -1238,6 +1238,18 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["sliderint3"] = js::function<js_ui::sliderint3>;
     imgui_obj["sliderint4"] = js::function<js_ui::sliderint4>;
 
+    imgui_obj["inputtext"] = js::function<js_ui::inputtext>;
+    imgui_obj["inputtextmultiline"] = js::function<js_ui::inputtextmultiline>;
+    imgui_obj["inputint"] = js::function<js_ui::inputint>;
+    imgui_obj["inputfloat"] = js::function<js_ui::inputfloat>;
+    imgui_obj["inputdouble"] = js::function<js_ui::inputdouble>;
+    imgui_obj["inputint2"] = js::function<js_ui::inputint2>;
+    imgui_obj["inputfloat2"] = js::function<js_ui::inputfloat2>;
+    imgui_obj["inputint3"] = js::function<js_ui::inputint3>;
+    imgui_obj["inputfloat3"] = js::function<js_ui::inputfloat3>;
+    imgui_obj["inputint4"] = js::function<js_ui::inputint4>;
+    imgui_obj["inputfloat4"] = js::function<js_ui::inputfloat4>;
+
     ///helpers for js reference semanticsitus
     imgui_obj["ref"] = js::function<js_ui::ref>;
     imgui_obj["get"] = js::function<js_ui::get>;

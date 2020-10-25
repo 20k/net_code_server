@@ -187,6 +187,12 @@ namespace process
         in = clamp(in, -FLT_MAX/INT_MAX, FLT_MAX/INT_MAX);
     }
 
+    void double_value(double& in)
+    {
+        in = san_val(in);
+        in = clamp(in, -DBL_MAX, DBL_MAX);
+    }
+
     void int_value(double& in)
     {
         in = san_val(in);
@@ -450,7 +456,6 @@ bool dragTN(const std::string& type, js::value_context* vctx, std::string str, s
         return false;
 
     process::id(str);
-
     process::inout_ref<N>(*vctx, v, str);
 
     if(!v_speed.has_value())
@@ -501,6 +506,71 @@ bool sliderTN(const std::string& type, js::value_context* vctx, std::string str,
     }
 
     return sliderdragTNimpl<T, N>(type, vctx, str, v, v_min, v_max);
+}
+
+template<typename T, int N>
+bool inputTN(const std::string& type, js::value_context* vctx, std::string str, std::array<js::value, N> v)
+{
+    if(str.size() > MAX_STR_SIZE)
+        return false;
+
+    process::id(str);
+    process::inout_ref<N>(*vctx, v, str);
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return false;
+
+    std::array<T, N> to_send;
+
+    for(int i=0; i < N; i++)
+    {
+        //to_send[i] = (T)v[i];
+
+        if constexpr(std::is_same_v<T, double>)
+        {
+            double to_san = v[i];
+            process::double_value(to_san);
+
+            to_send[i] = to_san;
+        }
+
+        if constexpr(std::is_same_v<T, float>)
+        {
+            double to_san = v[i];
+            process::float_value(to_san);
+
+            to_send[i] = to_san;
+        }
+
+        if constexpr(std::is_same_v<T, int>)
+        {
+            double to_san = v[i];
+            process::int_value(to_san);
+
+            to_send[i] = to_san;
+        }
+
+        if constexpr(std::is_same_v<T, std::string>)
+        {
+            std::string val = v[i];
+
+            to_send[i] = val;
+        }
+    }
+
+    js_ui::ui_element& e = stk->elements.emplace_back();
+    e.type = type;
+    e.element_id = str;
+    e.arguments.push_back(str);
+
+    for(int i=0; i < N; i++)
+    {
+        e.arguments.push_back(to_send[i]);
+    }
+
+    return false;
 }
 
 bool js_ui::dragfloat(js::value_context* vctx, std::string str, js::value v, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
@@ -592,6 +662,61 @@ bool js_ui::sliderint3(js::value_context* vctx, std::string str, js::value v1, j
 bool js_ui::sliderint4(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, js::value v4, double v_min, double v_max)
 {
     return sliderTN<int, 4>("sliderint4", vctx, str, {v1, v2, v3, v4}, v_min, v_max);
+}
+
+bool js_ui::inputtext(js::value_context* vctx, std::string str, js::value buffer)
+{
+    return inputTN<std::string, 1>("inputtext", vctx, str, {buffer});
+}
+
+bool js_ui::inputtextmultiline(js::value_context* vctx, std::string str, js::value buffer)
+{
+    return inputTN<std::string, 1>("inputtextmultiline", vctx, str, {buffer});
+}
+
+bool js_ui::inputint(js::value_context* vctx, std::string str, js::value v)
+{
+    return inputTN<int, 1>("inputint", vctx, str, {v});
+}
+
+bool js_ui::inputfloat(js::value_context* vctx, std::string str, js::value v)
+{
+    return inputTN<float, 1>("inputfloat", vctx, str, {v});
+}
+
+bool js_ui::inputdouble(js::value_context* vctx, std::string str, js::value v)
+{
+    return inputTN<double, 1>("inputdouble", vctx, str, {v});
+}
+
+bool js_ui::inputint2(js::value_context* vctx, std::string str, js::value v1, js::value v2)
+{
+    return inputTN<int, 2>("inputint2", vctx, str, {v1, v2});
+}
+
+bool js_ui::inputfloat2(js::value_context* vctx, std::string str, js::value v1, js::value v2)
+{
+    return inputTN<float, 2>("inputfloat2", vctx, str, {v1, v2});
+}
+
+bool js_ui::inputint3(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3)
+{
+    return inputTN<int, 3>("inputint3", vctx, str, {v1, v2, v3});
+}
+
+bool js_ui::inputfloat3(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3)
+{
+    return inputTN<float, 3>("inputfloat3", vctx, str, {v1, v2, v3});
+}
+
+bool js_ui::inputint4(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, js::value v4)
+{
+    return inputTN<int, 4>("inputint4", vctx, str, {v1, v2, v3, v4});
+}
+
+bool js_ui::inputfloat4(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, js::value v4)
+{
+    return inputTN<float, 4>("inputfloat4", vctx, str, {v1, v2, v3, v4});
 }
 
 void js_ui::pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a)

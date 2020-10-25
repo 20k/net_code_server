@@ -59,6 +59,18 @@ namespace js_ui
     bool sliderint3(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, double v_min, double v_max);
     bool sliderint4(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, js::value v4, double v_min, double v_max);
 
+    bool inputtext(js::value_context* vctx, std::string str, js::value buffer);
+    bool inputtextmultiline(js::value_context* vctx, std::string str, js::value buffer);
+    bool inputint(js::value_context* vctx, std::string str, js::value v);
+    bool inputfloat(js::value_context* vctx, std::string str, js::value v);
+    bool inputdouble(js::value_context* vctx, std::string str, js::value v);
+    bool inputint2(js::value_context* vctx, std::string str, js::value v1, js::value v2);
+    bool inputfloat2(js::value_context* vctx, std::string str, js::value v1, js::value v2);
+    bool inputint3(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3);
+    bool inputfloat3(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3);
+    bool inputint4(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, js::value v4);
+    bool inputfloat4(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, js::value v4);
+
     void pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a);
     void popstylecolor(js::value_context* vctx, std::optional<int> cnt);
 
