@@ -146,21 +146,25 @@ std::optional<ui_element_state*> get_named_element(js::value_context& vctx, cons
 }
 
 template<int N>
-std::array<js::value, N> replace_args(std::array<js::value, N> vals, js::value_context& vctx, const std::string& name)
+std::pair<std::array<js::value, N>, bool> replace_args(std::array<js::value, N> vals, js::value_context& vctx, const std::string& name)
 {
     std::optional<ui_element_state*> ui_state_opt = get_named_element(vctx, name);
+
+    bool any_dirty = false;
 
     if(ui_state_opt.has_value())
     {
         ui_element_state& ui_state = *ui_state_opt.value();
 
         if(!ui_state.client_override_arguments.is_array())
-            return vals;
+            return {vals, false};
 
         std::vector<nlohmann::json> arr_args = ui_state.client_override_arguments;
 
         if((int)arr_args.size() != N)
-            return vals;
+            return {vals, false};
+
+        any_dirty = true;
 
         for(int i=0; i < (int)arr_args.size(); i++)
         {
@@ -170,7 +174,7 @@ std::array<js::value, N> replace_args(std::array<js::value, N> vals, js::value_c
         ui_state.client_override_arguments = nlohmann::json();
     }
 
-    return vals;
+    return {vals, any_dirty};
 }
 
 namespace process
@@ -221,22 +225,21 @@ namespace process
         in = sanitise_value(in);
     }
 
-    void inout_ref(js::value_context& vctx, js::value& val, const std::string& id)
+    bool inout_ref(js::value_context& vctx, js::value& val, const std::string& id)
     {
         if(!val.has("v"))
             throw std::runtime_error("No property v on imgui reference shim object");
 
-        js::value real = val["v"];
+        std::array<js::value, 1> arr_val = {val["v"]};
 
-        std::array<js::value, 1> arr_val = {real};
+        auto [rval, dirty] = replace_args<1>(arr_val, vctx, id);
 
-        real = replace_args<1>(arr_val, vctx, id)[0];
-
-        val = real;
+        val = rval[0];
+        return dirty;
     }
 
     template<int N>
-    void inout_ref(js::value_context& vctx, std::array<js::value, N>& vals, const std::string& id)
+    bool inout_ref(js::value_context& vctx, std::array<js::value, N>& vals, const std::string& id)
     {
         std::array<js::value, N> res = vals;
 
@@ -248,7 +251,10 @@ namespace process
             res[i] = vals[i]["v"];
         }
 
-        vals = replace_args<N>(res, vctx, id);
+        auto [rvals, dirty] = replace_args<N>(res, vctx, id);
+
+        vals = rvals;
+        return dirty;
     }
 }
 
@@ -366,10 +372,10 @@ bool js_ui::checkbox(js::value_context* vctx, std::string str, js::value is_chec
         return false;
 
     process::id(str);
-    process::inout_ref(*vctx, is_checked, str);
+    bool dirty = process::inout_ref(*vctx, is_checked, str);
 
     add_element(vctx, "checkbox", str, str, (int)is_checked);
-    return isitemclicked(vctx);
+    return dirty;
 }
 
 bool js_ui::radiobutton(js::value_context* vctx, std::string str, int is_active)
@@ -411,7 +417,7 @@ void js_ui::bullet(js::value_context* vctx)
 }
 
 template<typename T, int N, typename... U>
-bool sliderdragTNimpl(const std::string& type, js::value_context* vctx, std::string str, std::array<js::value, N> v, U&&... vals)
+void sliderdragTNimpl(const std::string& type, js::value_context* vctx, std::string str, std::array<js::value, N> v, U&&... vals)
 {
     std::array<double, N> to_send;
 
@@ -431,7 +437,7 @@ bool sliderdragTNimpl(const std::string& type, js::value_context* vctx, std::str
     js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
     if(too_large(*stk))
-        return false;
+        return;
 
     js_ui::ui_element& e = stk->elements.emplace_back();
     e.type = type;
@@ -444,8 +450,6 @@ bool sliderdragTNimpl(const std::string& type, js::value_context* vctx, std::str
     }
 
     (e.arguments.push_back(vals), ...);
-
-    return false;
 }
 
 template<typename T, int N>
@@ -456,7 +460,7 @@ bool dragTN(const std::string& type, js::value_context* vctx, std::string str, s
         return false;
 
     process::id(str);
-    process::inout_ref<N>(*vctx, v, str);
+    bool dirty = process::inout_ref<N>(*vctx, v, str);
 
     if(!v_speed.has_value())
         v_speed = 1;
@@ -481,7 +485,8 @@ bool dragTN(const std::string& type, js::value_context* vctx, std::string str, s
         process::int_value(v_max.value());
     }
 
-    return sliderdragTNimpl<T, N>(type, vctx, str, v, v_speed.value(), v_min.value(), v_max.value());
+    sliderdragTNimpl<T, N>(type, vctx, str, v, v_speed.value(), v_min.value(), v_max.value());
+    return dirty;
 }
 
 template<typename T, int N>
@@ -491,7 +496,7 @@ bool sliderTN(const std::string& type, js::value_context* vctx, std::string str,
         return false;
 
     process::id(str);
-    process::inout_ref<N>(*vctx, v, str);
+    bool dirty = process::inout_ref<N>(*vctx, v, str);
 
     if(std::is_same_v<T, double>)
     {
@@ -505,7 +510,8 @@ bool sliderTN(const std::string& type, js::value_context* vctx, std::string str,
         process::int_value(v_max);
     }
 
-    return sliderdragTNimpl<T, N>(type, vctx, str, v, v_min, v_max);
+    sliderdragTNimpl<T, N>(type, vctx, str, v, v_min, v_max);
+    return dirty;
 }
 
 template<typename T, int N>
@@ -515,7 +521,7 @@ bool inputTN(const std::string& type, js::value_context* vctx, std::string str, 
         return false;
 
     process::id(str);
-    process::inout_ref<N>(*vctx, v, str);
+    bool dirty = process::inout_ref<N>(*vctx, v, str);
 
     js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
@@ -570,7 +576,7 @@ bool inputTN(const std::string& type, js::value_context* vctx, std::string str, 
         e.arguments.push_back(to_send[i]);
     }
 
-    return false;
+    return dirty;
 }
 
 bool js_ui::dragfloat(js::value_context* vctx, std::string str, js::value v, std::optional<double> v_speed, std::optional<double> v_min, std::optional<double> v_max)
