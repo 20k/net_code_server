@@ -24,6 +24,9 @@ namespace js_ui
 
         uint64_t server_sequence_id = 0;
         uint64_t last_client_sequence_id = 0;
+
+        std::vector<std::string> group_id_stack;
+        std::string last_group_id;
     };
 
     void text(js::value_context* vctx, std::string str);
@@ -85,8 +88,8 @@ namespace js_ui
     void dummy(js::value_context* vctx, double w, double h);
     void indent(js::value_context* vctx, std::optional<double> indent_w);
     void unindent(js::value_context* vctx, std::optional<double> indent_w);
-    void begingroup(js::value_context* vctx);
-    void endgroup(js::value_context* vctx, std::string id_str);
+    void begingroup(js::value_context* vctx, std::string id_str);
+    void endgroup(js::value_context* vctx);
     bool isitemclicked(js::value_context* vctx);
     bool isitemhovered(js::value_context* vctx);
 

@@ -827,16 +827,38 @@ void js_ui::unindent(js::value_context* vctx, std::optional<double> indent_w)
     add_element(vctx, "unindent", "", indent_w.value());
 }
 
-void js_ui::begingroup(js::value_context* vctx)
-{
-    add_element(vctx, "begingroup", "");
-}
-
-void js_ui::endgroup(js::value_context* vctx, std::string id_str)
+void js_ui::begingroup(js::value_context* vctx, std::string id_str)
 {
     process::id(id_str);
 
-    add_element(vctx, "endgroup", id_str, id_str);
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    add_element(vctx, "begingroup", id_str, id_str);
+
+    stk->group_id_stack.push_back(id_str);
+}
+
+void js_ui::endgroup(js::value_context* vctx)
+{
+    add_element(vctx, "endgroup", "");
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return;
+
+    if(stk->group_id_stack.size() > 0)
+    {
+        stk->last_group_id = stk->group_id_stack.back();
+        stk->group_id_stack.pop_back();
+    }
+    else
+    {
+        stk->last_group_id = "";
+    }
 }
 
 std::optional<ui_element_state*> get_last_element(js::value_context& vctx)
@@ -866,6 +888,12 @@ std::optional<ui_element_state*> get_last_element(js::value_context& vctx)
     realtime_script_data& dat = realtime_it->second;
 
     std::string last_id = stk->elements.back().element_id;
+    std::string last_type = stk->elements.back().type;
+
+    if(last_type == "endgroup")
+    {
+        last_id = stk->last_group_id;
+    }
 
     if(dat.realtime_ui.element_states.find(last_id) == dat.realtime_ui.element_states.end())
         return std::nullopt;
