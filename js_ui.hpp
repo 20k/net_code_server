@@ -26,7 +26,6 @@ namespace js_ui
         uint64_t last_client_sequence_id = 0;
 
         std::vector<std::string> group_id_stack;
-        std::string last_group_id;
     };
 
     void text(js::value_context* vctx, std::string str);

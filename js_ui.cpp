@@ -827,6 +827,10 @@ void js_ui::unindent(js::value_context* vctx, std::optional<double> indent_w)
     add_element(vctx, "unindent", "", indent_w.value());
 }
 
+///This function accepts an id, but it simply stashes it so it can be sent with endgroup
+///this is confusing because the network layer does not match the api for begingroup, and endgroup
+///but is necessary to achieve imgui.begingroup("hellothere") imgui.endgroup(), vs imgui.begingroup() imgui.endgroup("hellothere")
+///which is out of keeping with the rest of the imgui api. Document this in the networking format with big letters
 void js_ui::begingroup(js::value_context* vctx, std::string id_str)
 {
     process::id(id_str);
@@ -836,29 +840,27 @@ void js_ui::begingroup(js::value_context* vctx, std::string id_str)
     if(too_large(*stk))
         return;
 
-    add_element(vctx, "begingroup", id_str, id_str);
+    add_element(vctx, "begingroup", "");
 
     stk->group_id_stack.push_back(id_str);
 }
 
 void js_ui::endgroup(js::value_context* vctx)
 {
-    add_element(vctx, "endgroup", "");
-
     js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
     if(too_large(*stk))
         return;
 
+    std::string my_id;
+
     if(stk->group_id_stack.size() > 0)
     {
-        stk->last_group_id = stk->group_id_stack.back();
+        my_id = stk->group_id_stack.back();
         stk->group_id_stack.pop_back();
     }
-    else
-    {
-        stk->last_group_id = "";
-    }
+
+    add_element(vctx, "endgroup", my_id, my_id);
 }
 
 std::optional<ui_element_state*> get_last_element(js::value_context& vctx)
@@ -889,11 +891,6 @@ std::optional<ui_element_state*> get_last_element(js::value_context& vctx)
 
     std::string last_id = stk->elements.back().element_id;
     std::string last_type = stk->elements.back().type;
-
-    if(last_type == "endgroup")
-    {
-        last_id = stk->last_group_id;
-    }
 
     if(dat.realtime_ui.element_states.find(last_id) == dat.realtime_ui.element_states.end())
         return std::nullopt;
@@ -953,6 +950,8 @@ js::value js_ui::get(js::value_context* vctx, js::value val)
 std::optional<js_ui::ui_stack> js_ui::consume(js::value_context& vctx)
 {
     ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<ui_stack>();
+
+    stk->group_id_stack.clear();
 
     if(stk->elements.size() == 0)
     {
