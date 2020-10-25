@@ -832,9 +832,11 @@ void js_ui::begingroup(js::value_context* vctx)
     add_element(vctx, "begingroup", "");
 }
 
-void js_ui::endgroup(js::value_context* vctx)
+void js_ui::endgroup(js::value_context* vctx, std::string id_str)
 {
-    add_element(vctx, "endgroup", "");
+    process::id(id_str);
+
+    add_element(vctx, "endgroup", id_str, id_str);
 }
 
 std::optional<ui_element_state*> get_last_element(js::value_context& vctx)

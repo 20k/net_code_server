@@ -86,7 +86,7 @@ namespace js_ui
     void indent(js::value_context* vctx, std::optional<double> indent_w);
     void unindent(js::value_context* vctx, std::optional<double> indent_w);
     void begingroup(js::value_context* vctx);
-    void endgroup(js::value_context* vctx);
+    void endgroup(js::value_context* vctx, std::string id_str);
     bool isitemclicked(js::value_context* vctx);
     bool isitemhovered(js::value_context* vctx);
 
