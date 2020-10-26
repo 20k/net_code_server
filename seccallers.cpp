@@ -1250,6 +1250,12 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["inputint4"] = js::function<js_ui::inputint4>;
     imgui_obj["inputfloat4"] = js::function<js_ui::inputfloat4>;
 
+    imgui_obj["coloredit3"] = js::function<js_ui::coloredit3>;
+    imgui_obj["coloredit4"] = js::function<js_ui::coloredit4>;
+    imgui_obj["colorpicker3"] = js::function<js_ui::colorpicker3>;
+    imgui_obj["colorpicker4"] = js::function<js_ui::colorpicker4>;
+    imgui_obj["colorbutton"] = js::function<js_ui::colorbutton>;
+
     ///helpers for js reference semanticsitus
     imgui_obj["ref"] = js::function<js_ui::ref>;
     imgui_obj["get"] = js::function<js_ui::get>;
