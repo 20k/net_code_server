@@ -73,6 +73,14 @@ namespace js_ui
     bool inputint4(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, js::value v4);
     bool inputfloat4(js::value_context* vctx, std::string str, js::value v1, js::value v2, js::value v3, js::value v4);
 
+    bool coloredit3(js::value_context* vctx, std::string str, js::value r, js::value g, js::value b);
+    bool coloredit4(js::value_context* vctx, std::string str, js::value r, js::value g, js::value b, js::value a);
+
+    bool colorpicker3(js::value_context* vctx, std::string str, js::value r, js::value g, js::value b);
+    bool colorpicker4(js::value_context* vctx, std::string str, js::value r, js::value g, js::value b, js::value a);
+
+    bool colorbutton(js::value_context* vctx, std::string str, js::value r, js::value g, js::value b, js::value a, std::optional<double> unused, std::optional<double> w, std::optional<double> h);
+
     void pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a);
     void popstylecolor(js::value_context* vctx, std::optional<int> cnt);
 

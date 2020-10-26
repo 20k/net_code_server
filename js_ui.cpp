@@ -725,6 +725,78 @@ bool js_ui::inputfloat4(js::value_context* vctx, std::string str, js::value v1, 
     return inputTN<float, 4>("inputfloat4", vctx, str, {v1, v2, v3, v4});
 }
 
+template<typename T, int N, typename... U>
+bool colorTN(const std::string& type, js::value_context* vctx, std::string str, std::array<js::value, N> v, U&&... u)
+{
+    if(str.size() > MAX_STR_SIZE)
+        return false;
+
+    process::id(str);
+    bool dirty = process::inout_ref<N>(*vctx, v, str);
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(too_large(*stk))
+        return false;
+
+    std::array<T, N> to_send;
+
+    for(int i=0; i < N; i++)
+    {
+        double to_san = v[i];
+        process::double_value(to_san);
+
+        to_send[i] = to_san;
+    }
+
+    js_ui::ui_element& e = stk->elements.emplace_back();
+    e.type = type;
+    e.element_id = str;
+    e.arguments.push_back(str);
+
+    for(int i=0; i < N; i++)
+    {
+        e.arguments.push_back(to_send[i]);
+    }
+
+    (e.arguments.push_back(u), ...);
+
+    return dirty;
+}
+
+bool js_ui::coloredit3(js::value_context* vctx, std::string str, js::value r, js::value g, js::value b)
+{
+    return colorTN<double, 3>("coloredit3", vctx, str, {r, g, b});
+}
+
+bool js_ui::coloredit4(js::value_context* vctx, std::string str, js::value r, js::value g, js::value b, js::value a)
+{
+    return colorTN<double, 4>("coloredit4", vctx, str, {r, g, b, a});
+}
+
+bool js_ui::colorpicker3(js::value_context* vctx, std::string str, js::value r, js::value g, js::value b)
+{
+    return colorTN<double, 3>("colorpicker3", vctx, str, {r, g, b});
+}
+
+bool js_ui::colorpicker4(js::value_context* vctx, std::string str, js::value r, js::value g, js::value b, js::value a)
+{
+    return colorTN<double, 4>("colorpicker4", vctx, str, {r, g, b, a});
+}
+
+bool js_ui::colorbutton(js::value_context* vctx, std::string str, js::value r, js::value g, js::value b, js::value a, std::optional<double> unused, std::optional<double> w, std::optional<double> h)
+{
+    if(!w.has_value())
+        w = 0;
+
+    if(!h.has_value())
+        h = 0;
+
+    unused = 0;
+
+    return colorTN<double, 4>("colorbutton", vctx, str, {r,g, b, a}, unused.value(), w.value(), h.value());
+}
+
 void js_ui::pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a)
 {
     if(idx < 0)
