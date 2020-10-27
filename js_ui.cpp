@@ -962,7 +962,6 @@ std::optional<ui_element_state*> get_last_element(js::value_context& vctx)
     realtime_script_data& dat = realtime_it->second;
 
     std::string last_id = stk->elements.back().element_id;
-    std::string last_type = stk->elements.back().type;
 
     if(dat.realtime_ui.element_states.find(last_id) == dat.realtime_ui.element_states.end())
         return std::nullopt;
