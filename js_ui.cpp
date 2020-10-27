@@ -116,7 +116,7 @@ double san_clamp(double in)
     return in;
 }
 
-std::optional<ui_element_state*> get_named_element(js::value_context& vctx, const std::string& name)
+std::optional<std::pair<ui_element_state*, std::unique_lock<lock_type_t>>> get_named_element(js::value_context& vctx, const std::string& name)
 {
     command_handler_state* found_ptr = js::get_heap_stash(vctx)["command_handler_state_pointer"].get_ptr<command_handler_state>();
 
@@ -128,7 +128,7 @@ std::optional<ui_element_state*> get_named_element(js::value_context& vctx, cons
 
     int realtime_id = js::get_heap_stash(vctx)["realtime_id"];
 
-    std::lock_guard guard(found_ptr->script_data_lock);
+    std::unique_lock<lock_type_t> guard(found_ptr->script_data_lock);
 
     auto realtime_it = found_ptr->script_data.find(realtime_id);
 
@@ -142,39 +142,35 @@ std::optional<ui_element_state*> get_named_element(js::value_context& vctx, cons
 
     ui_element_state& st = dat.realtime_ui.element_states[name];
 
-    return &st;
+    return std::pair<ui_element_state*, std::unique_lock<lock_type_t>>{&st, std::move(guard)};
 }
 
 template<int N>
 std::pair<std::array<js::value, N>, bool> replace_args(std::array<js::value, N> vals, js::value_context& vctx, const std::string& name)
 {
-    std::optional<ui_element_state*> ui_state_opt = get_named_element(vctx, name);
+    std::optional value_opt = get_named_element(vctx, name);
 
-    bool any_dirty = false;
+    if(!value_opt.has_value())
+        return {vals, false};
 
-    if(ui_state_opt.has_value())
+    ui_element_state& ui_state = *value_opt.value().first;
+
+    if(!ui_state.client_override_arguments.is_array())
+        return {vals, false};
+
+    std::vector<nlohmann::json> arr_args = ui_state.client_override_arguments;
+
+    if((int)arr_args.size() != N)
+        return {vals, false};
+
+    for(int i=0; i < (int)arr_args.size(); i++)
     {
-        ui_element_state& ui_state = *ui_state_opt.value();
-
-        if(!ui_state.client_override_arguments.is_array())
-            return {vals, false};
-
-        std::vector<nlohmann::json> arr_args = ui_state.client_override_arguments;
-
-        if((int)arr_args.size() != N)
-            return {vals, false};
-
-        any_dirty = true;
-
-        for(int i=0; i < (int)arr_args.size(); i++)
-        {
-            vals[i] = ui_state.client_override_arguments[i];
-        }
-
-        ui_state.client_override_arguments = nlohmann::json();
+        vals[i] = ui_state.client_override_arguments[i];
     }
 
-    return {vals, any_dirty};
+    ui_state.client_override_arguments = nlohmann::json();
+
+    return {vals, true};
 }
 
 namespace process
@@ -935,7 +931,7 @@ void js_ui::endgroup(js::value_context* vctx)
     add_element(vctx, "endgroup", my_id, my_id);
 }
 
-std::optional<ui_element_state*> get_last_element(js::value_context& vctx)
+std::optional<std::pair<ui_element_state*, std::unique_lock<lock_type_t>>> get_last_element(js::value_context& vctx)
 {
     js_ui::ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
@@ -952,7 +948,7 @@ std::optional<ui_element_state*> get_last_element(js::value_context& vctx)
 
     int realtime_id = js::get_heap_stash(vctx)["realtime_id"];
 
-    std::lock_guard guard(found_ptr->script_data_lock);
+    std::unique_lock<lock_type_t> guard(found_ptr->script_data_lock);
 
     auto realtime_it = found_ptr->script_data.find(realtime_id);
 
@@ -968,7 +964,7 @@ std::optional<ui_element_state*> get_last_element(js::value_context& vctx)
 
     ui_element_state& st = dat.realtime_ui.element_states[last_id];
 
-    return &st;
+    return std::pair<ui_element_state*, std::unique_lock<lock_type_t>>{&st, std::move(guard)};
 }
 
 bool is_any_of(const std::vector<std::string>& data, const std::string& val)
@@ -984,22 +980,22 @@ bool is_any_of(const std::vector<std::string>& data, const std::string& val)
 
 bool js_ui::isitemclicked(js::value_context* vctx)
 {
-    std::optional<ui_element_state*> last_element_opt = get_last_element(*vctx);
+    auto last_element_opt = get_last_element(*vctx);
 
     if(!last_element_opt.has_value())
         return false;
 
-    return is_any_of(last_element_opt.value()->value, "clicked");
+    return is_any_of(last_element_opt.value().first->value, "clicked");
 }
 
 bool js_ui::isitemhovered(js::value_context* vctx)
 {
-    std::optional<ui_element_state*> last_element_opt = get_last_element(*vctx);
+    auto last_element_opt = get_last_element(*vctx);
 
     if(!last_element_opt.has_value())
         return false;
 
-    return is_any_of(last_element_opt.value()->value, "hovered");
+    return is_any_of(last_element_opt.value().first->value, "hovered");
 }
 
 js::value js_ui::ref(js::value_context* vctx, js::value val)
