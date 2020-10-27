@@ -1256,6 +1256,11 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["colorpicker4"] = js::function<js_ui::colorpicker4>;
     imgui_obj["colorbutton"] = js::function<js_ui::colorbutton>;
 
+    imgui_obj["treenode"] = js::function<js_ui::treenode>;
+    imgui_obj["treepush"] = js::function<js_ui::treepush>;
+    imgui_obj["treepop"] = js::function<js_ui::treepop>;
+    imgui_obj["setnextitemopen"] = js::function<js_ui::setnextitemopen>;
+
     ///helpers for js reference semanticsitus
     imgui_obj["ref"] = js::function<js_ui::ref>;
     imgui_obj["get"] = js::function<js_ui::get>;

@@ -75,11 +75,16 @@ namespace js_ui
 
     bool coloredit3(js::value_context* vctx, std::string str, js::value r, js::value g, js::value b);
     bool coloredit4(js::value_context* vctx, std::string str, js::value r, js::value g, js::value b, js::value a);
-
     bool colorpicker3(js::value_context* vctx, std::string str, js::value r, js::value g, js::value b);
     bool colorpicker4(js::value_context* vctx, std::string str, js::value r, js::value g, js::value b, js::value a);
-
     bool colorbutton(js::value_context* vctx, std::string str, js::value r, js::value g, js::value b, js::value a, std::optional<double> unused, std::optional<double> w, std::optional<double> h);
+
+    bool treenode(js::value_context* vctx, std::string str);
+    void treepush(js::value_context* vctx, std::string str);
+    void treepop(js::value_context* vctx);
+    void setnextitemopen(js::value_context* vctx, bool is_open);
+
+    bool selectable(js::value_context* vctx, std::string str, js::value overloaded_ref_or_bool, double unused, std::optional<double> w, std::optional<double> h);
 
     void pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a);
     void popstylecolor(js::value_context* vctx, std::optional<int> cnt);
@@ -104,6 +109,8 @@ namespace js_ui
     js::value get(js::value_context* vctx, js::value val);
 
     std::optional<ui_stack> consume(js::value_context& vctx);
+
+    bool last_element_has_state(js::value_context* vctx, const std::string& state);
 }
 
 #endif // JS_UI_HPP_INCLUDED

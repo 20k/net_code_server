@@ -793,6 +793,32 @@ bool js_ui::colorbutton(js::value_context* vctx, std::string str, js::value r, j
     return colorTN<double, 4>("colorbutton", vctx, str, {r,g, b, a}, unused.value(), w.value(), h.value());
 }
 
+bool js_ui::treenode(js::value_context* vctx, std::string str)
+{
+    process::id(str);
+
+    add_element(vctx, "treenode", str, str);
+
+    return last_element_has_state(vctx, "treenodeactive");
+}
+
+void js_ui::treepush(js::value_context* vctx, std::string str)
+{
+    process::id(str);
+
+    add_element(vctx, "treepush", str, str);
+}
+
+void js_ui::treepop(js::value_context* vctx)
+{
+    add_element(vctx, "treepop", "");
+}
+
+void js_ui::setnextitemopen(js::value_context* vctx, bool is_open)
+{
+    add_element(vctx, "setnextitemopen", "", is_open);
+}
+
 void js_ui::pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a)
 {
     if(idx < 0)
@@ -978,24 +1004,24 @@ bool is_any_of(const std::vector<std::string>& data, const std::string& val)
     return false;
 }
 
-bool js_ui::isitemclicked(js::value_context* vctx)
+bool js_ui::last_element_has_state(js::value_context* vctx, const std::string& state)
 {
     auto last_element_opt = get_last_element(*vctx);
 
     if(!last_element_opt.has_value())
         return false;
 
-    return is_any_of(last_element_opt.value().first->value, "clicked");
+    return is_any_of(last_element_opt.value().first->value, state);
+}
+
+bool js_ui::isitemclicked(js::value_context* vctx)
+{
+    return last_element_has_state(vctx, "clicked");
 }
 
 bool js_ui::isitemhovered(js::value_context* vctx)
 {
-    auto last_element_opt = get_last_element(*vctx);
-
-    if(!last_element_opt.has_value())
-        return false;
-
-    return is_any_of(last_element_opt.value().first->value, "hovered");
+    return last_element_has_state(vctx, "hovered");
 }
 
 js::value js_ui::ref(js::value_context* vctx, js::value val)
