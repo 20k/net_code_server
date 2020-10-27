@@ -695,6 +695,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                                 j["type"] = "command_realtime_ui";
 
                                 std::set<std::string> typeidx;
+                                std::vector<int> argument_counts;
 
                                 //steady_timer process_time;
 
@@ -709,12 +710,14 @@ std::string run_in_user_context(std::string username, std::string command, std::
                                     typeidx.insert(e.type);
                                 }
 
+                                argument_counts.resize(typeidx.size());
+
                                 for(js_ui::ui_element& e : stk.elements)
                                 {
                                     int idx = std::distance(typeidx.begin(), typeidx.find(e.type));
 
                                     types.push_back(idx);
-                                    //arg.push_back(std::move(e.arguments));
+                                    argument_counts[idx] = e.arguments.size();
 
                                     for(auto& found_arg : e.arguments)
                                     {
@@ -723,6 +726,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
                                 }
 
                                 j["typeidx"] = typeidx;
+                                j["typeargc"] = argument_counts;
                                 j["server_seq_id"] = server_packet_sequence_id;
 
                                 //ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<ui_stack>();
