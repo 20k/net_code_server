@@ -81,7 +81,7 @@ namespace js_ui
 
     bool treenode(js::value_context* vctx, std::string str);
     void treepush(js::value_context* vctx, std::string str);
-    void treepop(js::value_context* vctx);
+    void treeend(js::value_context* vctx);
     void setnextitemopen(js::value_context* vctx, bool is_open);
 
     bool selectable(js::value_context* vctx, std::string str, js::value overloaded_ref_or_bool, double unused, std::optional<double> w, std::optional<double> h);
