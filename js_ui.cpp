@@ -814,6 +814,15 @@ void js_ui::treeend(js::value_context* vctx)
     add_element(vctx, "treeend", "");
 }
 
+bool js_ui::collapsingheader(js::value_context* vctx, std::string str)
+{
+    process::id(str);
+
+    add_element(vctx, "collapsingheader", str, str);
+
+    return last_element_has_state(vctx, "treenodeactive");
+}
+
 void js_ui::setnextitemopen(js::value_context* vctx, bool is_open)
 {
     add_element(vctx, "setnextitemopen", "", is_open);

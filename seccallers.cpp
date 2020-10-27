@@ -1260,6 +1260,7 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["treepush"] = js::function<js_ui::treepush>;
     imgui_obj["treeend"] = js::function<js_ui::treeend>;
     imgui_obj["setnextitemopen"] = js::function<js_ui::setnextitemopen>;
+    imgui_obj["collapsingheader"] = js::function<js_ui::collapsingheader>;
 
     ///helpers for js reference semanticsitus
     imgui_obj["ref"] = js::function<js_ui::ref>;
