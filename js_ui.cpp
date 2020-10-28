@@ -799,7 +799,7 @@ bool js_ui::treenode(js::value_context* vctx, std::string str)
 
     add_element(vctx, "treenode", str, str);
 
-    return last_element_has_state(vctx, "treenodeactive");
+    return last_element_has_state(vctx, "returnstrue");
 }
 
 void js_ui::treepush(js::value_context* vctx, std::string str)
@@ -820,12 +820,47 @@ bool js_ui::collapsingheader(js::value_context* vctx, std::string str)
 
     add_element(vctx, "collapsingheader", str, str);
 
-    return last_element_has_state(vctx, "treenodeactive");
+    return last_element_has_state(vctx, "returnstrue");
 }
 
 void js_ui::setnextitemopen(js::value_context* vctx, bool is_open)
 {
     add_element(vctx, "setnextitemopen", "", is_open);
+}
+
+bool js_ui::selectable(js::value_context* vctx, std::string str, js::value overloaded_ref_or_bool, double unused, std::optional<double> w, std::optional<double> h)
+{
+    process::id(str);
+
+    if(!w.has_value())
+        w = 0;
+
+    if(!h.has_value())
+        h = 0;
+
+    process::dimension(w.value());
+    process::dimension(h.value());
+
+    unused = 0;
+
+    bool is_dirty = false;
+
+    ///if its a 'reference' type
+    if(overloaded_ref_or_bool.has("v"))
+    {
+        is_dirty = process::inout_ref(*vctx, overloaded_ref_or_bool, str);
+    }
+    else
+    {
+        js::value dummy_val(*vctx);
+        dummy_val["v"] = 0;
+
+        is_dirty = process::inout_ref(*vctx, dummy_val, str);
+    }
+
+    add_element(vctx, "selectable", str, str, (int)overloaded_ref_or_bool, (int)unused, w.value(), h.value());
+
+    return is_dirty;
 }
 
 void js_ui::pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a)

@@ -1261,6 +1261,7 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["treeend"] = js::function<js_ui::treeend>;
     imgui_obj["setnextitemopen"] = js::function<js_ui::setnextitemopen>;
     imgui_obj["collapsingheader"] = js::function<js_ui::collapsingheader>;
+    imgui_obj["selectable"] = js::function<js_ui::selectable>;
 
     ///helpers for js reference semanticsitus
     imgui_obj["ref"] = js::function<js_ui::ref>;
