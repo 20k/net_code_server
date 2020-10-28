@@ -1264,6 +1264,8 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["selectable"] = js::function<js_ui::selectable>;
 
     imgui_obj["listbox"] = js::function<js_ui::listbox>;
+    imgui_obj["plotlines"] = js::function<js_ui::plotlines>;
+    imgui_obj["plothistogram"] = js::function<js_ui::plothistogram>;
 
     ///helpers for js reference semanticsitus
     imgui_obj["ref"] = js::function<js_ui::ref>;

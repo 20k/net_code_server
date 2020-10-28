@@ -89,6 +89,16 @@ namespace js_ui
 
     bool listbox(js::value_context* vctx, std::string str, js::value current_value, std::vector<std::string> names, std::optional<double> height_in_items);
 
+    void plotlines(js::value_context* vctx, std::string str, std::vector<double> values, std::optional<int> value_offset,
+                   std::optional<std::string> overlay_string,
+                   std::optional<double> scale_min, std::optional<double> scale_max,
+                   std::optional<double> graph_w, std::optional<double> graph_h);
+
+    void plothistogram(js::value_context* vctx, std::string str, std::vector<double> values, std::optional<int> value_offset,
+                   std::optional<std::string> overlay_string,
+                   std::optional<double> scale_min, std::optional<double> scale_max,
+                   std::optional<double> graph_w, std::optional<double> graph_h);
+
     void pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a);
     void popstylecolor(js::value_context* vctx, std::optional<int> cnt);
 

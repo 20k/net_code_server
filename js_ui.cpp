@@ -879,6 +879,84 @@ bool js_ui::listbox(js::value_context* vctx, std::string str, js::value current_
     return dirty;
 }
 
+void js_ui::plotlines(js::value_context* vctx, std::string str, std::vector<double> values, std::optional<int> value_offset,
+                   std::optional<std::string> overlay_string,
+                   std::optional<double> scale_min, std::optional<double> scale_max,
+                   std::optional<double> graph_w, std::optional<double> graph_h)
+{
+    process::id(str);
+
+    if(!value_offset.has_value())
+        value_offset = 0;
+
+    value_offset = clamp(value_offset.value(), 0, (int)values.size());
+
+    if(!overlay_string.has_value())
+        overlay_string = "";
+
+    if(overlay_string.value().size() > MAX_STR_SIZE)
+        return;
+
+    if(!scale_min.has_value())
+        scale_min = FLT_MAX;
+
+    if(!scale_max.has_value())
+        scale_max = FLT_MAX;
+
+    scale_min.value() = san_val(scale_min.value());
+    scale_max.value() = san_val(scale_max.value());
+
+    if(!graph_w.has_value())
+        graph_w = 0;
+
+    if(!graph_h.has_value())
+        graph_h = 0;
+
+    process::dimension(graph_w.value());
+    process::dimension(graph_h.value());
+
+    add_element(vctx, "plotlines", str, str, values, value_offset.value(), overlay_string.value(), scale_min.value(), scale_max.value(), graph_w.value(), graph_h.value());
+}
+
+void js_ui::plothistogram(js::value_context* vctx, std::string str, std::vector<double> values, std::optional<int> value_offset,
+                   std::optional<std::string> overlay_string,
+                   std::optional<double> scale_min, std::optional<double> scale_max,
+                   std::optional<double> graph_w, std::optional<double> graph_h)
+{
+    process::id(str);
+
+    if(!value_offset.has_value())
+        value_offset = 0;
+
+    value_offset = clamp(value_offset.value(), 0, (int)values.size());
+
+    if(!overlay_string.has_value())
+        overlay_string = "";
+
+    if(overlay_string.value().size() > MAX_STR_SIZE)
+        return;
+
+    if(!scale_min.has_value())
+        scale_min = FLT_MAX;
+
+    if(!scale_max.has_value())
+        scale_max = FLT_MAX;
+
+    scale_min.value() = san_val(scale_min.value());
+    scale_max.value() = san_val(scale_max.value());
+
+    if(!graph_w.has_value())
+        graph_w = 0;
+
+    if(!graph_h.has_value())
+        graph_h = 0;
+
+    process::dimension(graph_w.value());
+    process::dimension(graph_h.value());
+
+    add_element(vctx, "plothistogram", str, str, values, value_offset.value(), overlay_string.value(), scale_min.value(), scale_max.value(), graph_w.value(), graph_h.value());
+}
+
 void js_ui::pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a)
 {
     if(idx < 0)
