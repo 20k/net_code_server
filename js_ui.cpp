@@ -863,6 +863,22 @@ bool js_ui::selectable(js::value_context* vctx, std::string str, js::value overl
     return is_dirty;
 }
 
+bool js_ui::listbox(js::value_context* vctx, std::string str, js::value current_value, std::vector<std::string> names, std::optional<double> height_in_items)
+{
+    process::id(str);
+
+    if(!height_in_items.has_value())
+        height_in_items = -1;
+
+    height_in_items.value() = clamp(san_val(height_in_items.value()), -1, 9999999);
+
+    bool dirty = process::inout_ref(*vctx, current_value, str);
+
+    add_element(vctx, "listbox", str, str, (int)current_value, names, height_in_items.value());
+
+    return dirty;
+}
+
 void js_ui::pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a)
 {
     if(idx < 0)

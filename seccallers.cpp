@@ -1263,6 +1263,8 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["collapsingheader"] = js::function<js_ui::collapsingheader>;
     imgui_obj["selectable"] = js::function<js_ui::selectable>;
 
+    imgui_obj["listbox"] = js::function<js_ui::listbox>;
+
     ///helpers for js reference semanticsitus
     imgui_obj["ref"] = js::function<js_ui::ref>;
     imgui_obj["get"] = js::function<js_ui::get>;

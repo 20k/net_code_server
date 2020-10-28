@@ -87,6 +87,8 @@ namespace js_ui
 
     bool selectable(js::value_context* vctx, std::string str, js::value overloaded_ref_or_bool, double unused, std::optional<double> w, std::optional<double> h);
 
+    bool listbox(js::value_context* vctx, std::string str, js::value current_value, std::vector<std::string> names, std::optional<double> height_in_items);
+
     void pushstylecolor(js::value_context* vctx, int idx, double r, double g, double b, double a);
     void popstylecolor(js::value_context* vctx, std::optional<int> cnt);
 
