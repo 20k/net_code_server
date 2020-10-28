@@ -874,7 +874,7 @@ bool js_ui::listbox(js::value_context* vctx, std::string str, js::value current_
 
     bool dirty = process::inout_ref(*vctx, current_value, str);
 
-    add_element(vctx, "listbox", str, str, (int)current_value, names, height_in_items.value());
+    add_element(vctx, "listbox", str, str, (int)current_value, names, (int)height_in_items.value());
 
     return dirty;
 }
