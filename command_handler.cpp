@@ -343,7 +343,7 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
 
                     for(int kk=0; kk < (int)st.value.size(); kk++)
                     {
-                        if(st.value[kk] == "clicked")
+                        if(js_ui::is_edge_event(st.value[kk]))
                         {
                             st.value.erase(st.value.begin() + kk);
                             kk--;
@@ -2568,9 +2568,31 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
 
             realtime_script_data& dat = found_it->second;
 
-            ui_element_state& st = dat.realtime_ui.element_states[ui_id];;
-            st.processed = true;
-            st.value = found_state;
+            ui_element_state& st = dat.realtime_ui.element_states[ui_id];
+            //st.processed = true;
+
+            std::set<std::string> old_events;
+
+            for(auto& i : st.value)
+            {
+                if(js_ui::is_edge_event(i))
+                {
+                    old_events.insert(i);
+                }
+            }
+
+            for(auto& i : found_state)
+            {
+                old_events.insert(i);
+            }
+
+            st.value.clear();
+            st.value.reserve(old_events.size());
+
+            for(auto it = old_events.begin(); it != old_events.end();)
+            {
+                 st.value.push_back(std::move(old_events.extract(it++).value()));
+            }
 
             ///so arguments might overwrite the last one, but not the end of the world
             ///big issue is that if we have a lot of dynamic ui elements, might pile up unused junk

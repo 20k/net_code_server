@@ -61,6 +61,11 @@ ImU32 ImHashStr(const char* data_p, size_t data_size, ImU32 seed)
 }
 }
 
+bool js_ui::is_edge_event(const std::string& v)
+{
+    return v == "clicked" || v == "edited" || v == "activated" || v == "deactivated" || v == "deactivatedafteredit" || v == "toggledopen";
+}
+
 std::string generate_unique_id()
 {
     size_t id = db_storage_backend::get_unique_id();
@@ -1202,20 +1207,20 @@ bool js_ui::isitemtoggledopen(js::value_context* vctx)
     return last_element_has_state(vctx, "toggledopen");
 }
 
-bool any_element_has_state(js::value_context* vctx, const std::string& state)
+bool any_element_has_state(js::value_context& vctx, const std::string& state)
 {
     js_ui::ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
 
     if(stk->elements.size() == 0)
-        return std::nullopt;
+        return false;
 
     command_handler_state* found_ptr = js::get_heap_stash(vctx)["command_handler_state_pointer"].get_ptr<command_handler_state>();
 
     if(found_ptr == nullptr)
-        return std::nullopt;
+        return false;
 
     if(!js::get_heap_stash(vctx).has("realtime_id"))
-        return std::nullopt;
+        return false;
 
     int realtime_id = js::get_heap_stash(vctx)["realtime_id"];
 
@@ -1224,11 +1229,11 @@ bool any_element_has_state(js::value_context* vctx, const std::string& state)
     auto realtime_it = found_ptr->script_data.find(realtime_id);
 
     if(realtime_it == found_ptr->script_data.end())
-        return std::nullopt;
+        return false;
 
     realtime_script_data& dat = realtime_it->second;
 
-    for(auto& i : dat.element_states)
+    for(auto& i : dat.realtime_ui.element_states)
     {
         ui_element_state& st = i.second;
 
@@ -1241,17 +1246,17 @@ bool any_element_has_state(js::value_context* vctx, const std::string& state)
 
 bool js_ui::isanyitemhovered(js::value_context* vctx)
 {
-    return any_element_has_state(vctx, "hovered");
+    return any_element_has_state(*vctx, "hovered");
 }
 
 bool js_ui::isanyitemactive(js::value_context* vctx)
 {
-    return any_element_has_state(vctx, "active");
+    return any_element_has_state(*vctx, "active");
 }
 
 bool js_ui::isanyitemfocused(js::value_context* vctx)
 {
-    return any_element_has_state(vctx, "focused");
+    return any_element_has_state(*vctx, "focused");
 }
 
 js::value js_ui::ref(js::value_context* vctx, js::value val)

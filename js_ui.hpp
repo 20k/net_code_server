@@ -28,6 +28,8 @@ namespace js_ui
         std::vector<std::string> group_id_stack;
     };
 
+    bool is_edge_event(const std::string& str);
+
     void text(js::value_context* vctx, std::string str);
     void textcolored(js::value_context* vctx, double r, double g, double b, double a, std::string str);
     void textdisabled(js::value_context* vctx, std::string str);
