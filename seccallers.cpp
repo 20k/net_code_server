@@ -1217,8 +1217,20 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["unindent"] = js::function<js_ui::unindent>;
     imgui_obj["begingroup"] = js::function<js_ui::begingroup>;
     imgui_obj["endgroup"] = js::function<js_ui::endgroup>;
-    imgui_obj["isitemclicked"] = js::function<js_ui::isitemclicked>;
+
     imgui_obj["isitemhovered"] = js::function<js_ui::isitemhovered>;
+    imgui_obj["isitemactive"] = js::function<js_ui::isitemactive>;
+    imgui_obj["isitemfocused"] = js::function<js_ui::isitemfocused>;
+    imgui_obj["isitemclicked"] = js::function<js_ui::isitemclicked>;
+    imgui_obj["isitemvisible"] = js::function<js_ui::isitemvisible>;
+    imgui_obj["isitemedited"] = js::function<js_ui::isitemedited>;
+    imgui_obj["isitemactivated"] = js::function<js_ui::isitemactivated>;
+    imgui_obj["isitemdeactivated"] = js::function<js_ui::isitemdeactivated>;
+    imgui_obj["isitemdeactivatedafteredit"] = js::function<js_ui::isitemdeactivatedafteredit>;
+    imgui_obj["isitemtoggledopen"] = js::function<js_ui::isitemtoggledopen>;
+    imgui_obj["isanyitemhovered"] = js::function<js_ui::isanyitemhovered>;
+    imgui_obj["isanyitemactive"] = js::function<js_ui::isanyitemactive>;
+    imgui_obj["isanyitemfocused"] = js::function<js_ui::isanyitemfocused>;
 
     imgui_obj["dragfloat"] = js::function<js_ui::dragfloat>;
     imgui_obj["dragfloat2"] = js::function<js_ui::dragfloat2>;

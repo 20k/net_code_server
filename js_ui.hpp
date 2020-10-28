@@ -115,8 +115,19 @@ namespace js_ui
     void unindent(js::value_context* vctx, std::optional<double> indent_w);
     void begingroup(js::value_context* vctx, std::string id_str);
     void endgroup(js::value_context* vctx);
-    bool isitemclicked(js::value_context* vctx);
     bool isitemhovered(js::value_context* vctx);
+    bool isitemactive(js::value_context* vctx);
+    bool isitemfocused(js::value_context* vctx);
+    bool isitemclicked(js::value_context* vctx);
+    bool isitemvisible(js::value_context* vctx);
+    bool isitemedited(js::value_context* vctx);
+    bool isitemactivated(js::value_context* vctx);
+    bool isitemdeactivated(js::value_context* vctx);
+    bool isitemdeactivatedafteredit(js::value_context* vctx);
+    bool isitemtoggledopen(js::value_context* vctx);
+    bool isanyitemhovered(js::value_context* vctx);
+    bool isanyitemactive(js::value_context* vctx);
+    bool isanyitemfocused(js::value_context* vctx);
 
     js::value ref(js::value_context* vctx, js::value val);
     js::value get(js::value_context* vctx, js::value val);
