@@ -1292,6 +1292,8 @@ js::value js_ui::acceptdragdroppayload(js::value_context* vctx, std::string type
 {
     js::value val(*vctx);
 
+    add_element(vctx, "acceptdragdroppayload", "");
+
     return val;
 }
 
