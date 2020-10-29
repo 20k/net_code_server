@@ -1388,6 +1388,11 @@ bool is_allowed_user(const std::string& user)
     banned.insert("db");
     banned.insert("core");
     banned.insert("extern");
+    banned.insert("market");
+    banned.insert("news");
+    banned.insert("world_service");
+    banned.insert("stocks");
+    banned.insert("stock");
 
     return banned.find(user) == banned.end();
 }
