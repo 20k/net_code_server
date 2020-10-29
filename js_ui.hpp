@@ -136,7 +136,7 @@ namespace js_ui
     void enddragdropsource(js::value_context* vctx);
 
     bool begindragdroptarget(js::value_context* vctx);
-    js::value acceptdragdroppayload(js::value_context* vctx, std::string type);
+    js::value acceptdragdroppayload(js::value_context* vctx, std::string str, std::string type);
     void enddragdroptarget(js::value_context* vctx);
     js::value getdragdroppayload(js::value_context* vctx);
 

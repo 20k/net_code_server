@@ -1288,11 +1288,16 @@ bool js_ui::begindragdroptarget(js::value_context* vctx)
     return false;
 }
 
-js::value js_ui::acceptdragdroppayload(js::value_context* vctx, std::string type)
+js::value js_ui::acceptdragdroppayload(js::value_context* vctx, std::string str, std::string type)
 {
-    js::value val(*vctx);
+    process::id(str);
 
-    add_element(vctx, "acceptdragdroppayload", "");
+    js::value val(*vctx);
+    val["v"] = js::null;
+
+    process::inout_ref(*vctx, val, str);
+
+    add_element(vctx, "acceptdragdroppayload", str, str);
 
     return val;
 }
