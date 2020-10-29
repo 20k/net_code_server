@@ -1342,12 +1342,12 @@ void js_ui::enddragdroptarget(js::value_context* vctx)
     add_element(vctx, "enddragdroptarget", "");
 }
 
-js::value js_ui::getdragdroppayload(js::value_context* vctx)
+/*js::value js_ui::getdragdroppayload(js::value_context* vctx)
 {
     js::value val(*vctx);
 
     return val;
-}
+}*/
 
 js::value js_ui::ref(js::value_context* vctx, js::value val)
 {

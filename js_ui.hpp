@@ -140,8 +140,7 @@ namespace js_ui
     bool begindragdroptarget(js::value_context* vctx);
     js::value acceptdragdroppayload(js::value_context* vctx, std::string type);
     void enddragdroptarget(js::value_context* vctx);
-    js::value getdragdroppayload(js::value_context* vctx);
-
+    //js::value getdragdroppayload(js::value_context* vctx);
 
     js::value ref(js::value_context* vctx, js::value val);
     js::value get(js::value_context* vctx, js::value val);

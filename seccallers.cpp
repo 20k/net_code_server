@@ -1286,7 +1286,7 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["begindragdroptarget"] = js::function<js_ui::begindragdroptarget>;
     imgui_obj["acceptdragdroppayload"] = js::function<js_ui::acceptdragdroppayload>;
     imgui_obj["enddragdroptarget"] = js::function<js_ui::enddragdroptarget>;
-    imgui_obj["getdragdroppayload"] = js::function<js_ui::getdragdroppayload>;
+    //imgui_obj["getdragdroppayload"] = js::function<js_ui::getdragdroppayload>;
 
     ///helpers for js reference semanticsitus
     imgui_obj["ref"] = js::function<js_ui::ref>;
