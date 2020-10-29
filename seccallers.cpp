@@ -1279,6 +1279,15 @@ void register_funcs(js::value_context& vctx, int seclevel, const std::string& sc
     imgui_obj["plotlines"] = js::function<js_ui::plotlines>;
     imgui_obj["plothistogram"] = js::function<js_ui::plothistogram>;
 
+    imgui_obj["begindragdropsource"] = js::function<js_ui::begindragdropsource>;
+    imgui_obj["setdragdroppayload"] = js::function<js_ui::setdragdroppayload>;
+    imgui_obj["enddragdropsource"] = js::function<js_ui::enddragdropsource>;
+
+    imgui_obj["begindragdroptarget"] = js::function<js_ui::begindragdroptarget>;
+    imgui_obj["acceptdragdroppayload"] = js::function<js_ui::acceptdragdroppayload>;
+    imgui_obj["enddragdroptarget"] = js::function<js_ui::enddragdroptarget>;
+    imgui_obj["getdragdroppayload"] = js::function<js_ui::getdragdroppayload>;
+
     ///helpers for js reference semanticsitus
     imgui_obj["ref"] = js::function<js_ui::ref>;
     imgui_obj["get"] = js::function<js_ui::get>;

@@ -1259,6 +1259,54 @@ bool js_ui::isanyitemfocused(js::value_context* vctx)
     return any_element_has_state(*vctx, "focused");
 }
 
+bool js_ui::begindragdropsource(js::value_context* vctx)
+{
+    add_element(vctx, "begindragdropsource", "");
+
+    return false;
+}
+
+bool js_ui::setdragdroppayload(js::value_context* vctx, std::string type, js::value buffer)
+{
+    if(type.size() > 32)
+        throw std::runtime_error("Type in setdragdroppayload cannot be bigger than 32");
+
+    add_element(vctx, "setdragdroppayload", "", type, (std::string)buffer);
+
+    return false;
+}
+
+void js_ui::enddragdropsource(js::value_context* vctx)
+{
+    add_element(vctx, "enddragdropsource", "");
+}
+
+bool js_ui::begindragdroptarget(js::value_context* vctx)
+{
+    add_element(vctx, "begindragdroptarget", "");
+
+    return false;
+}
+
+js::value js_ui::acceptdragdroppayload(js::value_context* vctx, std::string type)
+{
+    js::value val(*vctx);
+
+    return val;
+}
+
+void js_ui::enddragdroptarget(js::value_context* vctx)
+{
+    add_element(vctx, "enddragdroptarget", "");
+}
+
+js::value js_ui::getdragdroppayload(js::value_context* vctx)
+{
+    js::value val(*vctx);
+
+    return val;
+}
+
 js::value js_ui::ref(js::value_context* vctx, js::value val)
 {
     js::value ret(*vctx);
