@@ -1136,6 +1136,16 @@ std::optional<std::pair<ui_element_state*, std::unique_lock<lock_type_t>>> get_l
     return std::pair<ui_element_state*, std::unique_lock<lock_type_t>>{&st, std::move(guard)};
 }
 
+std::optional<std::string> get_last_element_id(js::value_context& vctx)
+{
+    js_ui::ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(stk->elements.size() == 0)
+        return std::nullopt;
+
+    return stk->elements.back().element_id;
+}
+
 bool is_any_of(const std::vector<std::string>& data, const std::string& val)
 {
     for(const auto& i : data)
@@ -1261,9 +1271,15 @@ bool js_ui::isanyitemfocused(js::value_context* vctx)
 
 bool js_ui::begindragdropsource(js::value_context* vctx)
 {
-    add_element(vctx, "begindragdropsource", "");
+    auto last_element_opt = get_last_element_id(*vctx);
 
-    return false;
+    std::string id = last_element_opt.value_or("");
+
+    std::string begin_id = id + "bs";
+
+    add_element(vctx, "begindragdropsource", begin_id, begin_id);
+
+    return last_element_has_state(vctx, "returnstrue");
 }
 
 bool js_ui::setdragdroppayload(js::value_context* vctx, std::string type, js::value buffer)
@@ -1283,27 +1299,46 @@ void js_ui::enddragdropsource(js::value_context* vctx)
 
 bool js_ui::begindragdroptarget(js::value_context* vctx)
 {
-    add_element(vctx, "begindragdroptarget", "");
+    auto last_element_opt = get_last_element_id(*vctx);
 
-    return false;
+    std::string id = last_element_opt.value_or("");
+
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    stk->target_drag_drop_id_stack.push_back(id);
+
+    std::string begin_id = id + "bt";
+
+    add_element(vctx, "begindragdroptarget", begin_id, begin_id);
+
+    return last_element_has_state(vctx, "returnstrue");
 }
 
-js::value js_ui::acceptdragdroppayload(js::value_context* vctx, std::string str, std::string type)
+js::value js_ui::acceptdragdroppayload(js::value_context* vctx, std::string type)
 {
-    process::id(str);
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    std::string id = stk->target_drag_drop_id_stack.size() > 0 ? stk->target_drag_drop_id_stack.back() : "";
+
+    std::string accept_id = id + "ac";
 
     js::value val(*vctx);
     val["v"] = js::null;
 
-    process::inout_ref(*vctx, val, str);
+    process::inout_ref(*vctx, val, accept_id);
 
-    add_element(vctx, "acceptdragdroppayload", str, str);
+    add_element(vctx, "acceptdragdroppayload", accept_id, accept_id);
 
     return val;
 }
 
 void js_ui::enddragdroptarget(js::value_context* vctx)
 {
+    js_ui::ui_stack* stk = js::get_heap_stash(*vctx)["ui_stack"].get_ptr<js_ui::ui_stack>();
+
+    if(stk->target_drag_drop_id_stack.size() > 0)
+        stk->target_drag_drop_id_stack.pop_back();
+
     add_element(vctx, "enddragdroptarget", "");
 }
 
@@ -1335,6 +1370,8 @@ std::optional<js_ui::ui_stack> js_ui::consume(js::value_context& vctx)
     ui_stack* stk = js::get_heap_stash(vctx)["ui_stack"].get_ptr<ui_stack>();
 
     stk->group_id_stack.clear();
+    stk->source_drag_drop_id_stack.clear();
+    stk->target_drag_drop_id_stack.clear();
 
     if(stk->elements.size() == 0)
     {

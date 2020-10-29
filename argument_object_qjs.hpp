@@ -792,7 +792,7 @@ namespace js_quickjs
         ///need to pad arguments up to this size with undefined
         if(argc > js_quickjs::num_args(func))
         {
-            return JS_ThrowInternalError(ctx, "Bad quickjs function");
+            return JS_ThrowInternalError(ctx, "Bad quickjs function, too many args");
         }
 
         static_assert(is_first_context<U...>());

@@ -26,6 +26,8 @@ namespace js_ui
         uint64_t last_client_sequence_id = 0;
 
         std::vector<std::string> group_id_stack;
+        std::vector<std::string> source_drag_drop_id_stack;
+        std::vector<std::string> target_drag_drop_id_stack;
     };
 
     bool is_edge_event(const std::string& str);
@@ -136,7 +138,7 @@ namespace js_ui
     void enddragdropsource(js::value_context* vctx);
 
     bool begindragdroptarget(js::value_context* vctx);
-    js::value acceptdragdroppayload(js::value_context* vctx, std::string str, std::string type);
+    js::value acceptdragdroppayload(js::value_context* vctx, std::string type);
     void enddragdroptarget(js::value_context* vctx);
     js::value getdragdroppayload(js::value_context* vctx);
 
