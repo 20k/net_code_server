@@ -814,9 +814,9 @@ void js_ui::treepush(js::value_context* vctx, std::string str)
     add_element(vctx, "treepush", str, str);
 }
 
-void js_ui::treeend(js::value_context* vctx)
+void js_ui::treepop(js::value_context* vctx)
 {
-    add_element(vctx, "treeend", "");
+    add_element(vctx, "treepop", "");
 }
 
 bool js_ui::collapsingheader(js::value_context* vctx, std::string str)

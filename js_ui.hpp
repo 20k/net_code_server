@@ -85,7 +85,7 @@ namespace js_ui
 
     bool treenode(js::value_context* vctx, std::string str);
     void treepush(js::value_context* vctx, std::string str);
-    void treeend(js::value_context* vctx);
+    void treepop(js::value_context* vctx);
     bool collapsingheader(js::value_context* vctx, std::string str);
     void setnextitemopen(js::value_context* vctx, bool is_open);
 
