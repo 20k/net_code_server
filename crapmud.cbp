@@ -588,6 +588,8 @@
 		<Unit filename="shared_command_handler_state.hpp" />
 		<Unit filename="shared_duk_worker_state.cpp" />
 		<Unit filename="shared_duk_worker_state.hpp" />
+		<Unit filename="sleeper.cpp" />
+		<Unit filename="sleeper.hpp" />
 		<Unit filename="source_maps.cpp" />
 		<Unit filename="source_maps.hpp" />
 		<Unit filename="stacktrace.cpp" />

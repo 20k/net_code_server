@@ -6,6 +6,7 @@
 #include <SFML/System.hpp>
 #include <memory>
 #include <toolkit/clock.hpp>
+#include "sleeper.hpp"
 
 typedef struct
 {
@@ -41,7 +42,6 @@ struct sandbox_data
     steady_timer full_run_clock;
     std::atomic_bool is_static{false};
     float max_elapsed_time_ms = 0;
-    double ms_awake_elapsed_static = 0;
     double framerate_limit = 30;
 
     size_t total_allocated = 0;
@@ -50,9 +50,8 @@ struct sandbox_data
     std::atomic_int sleep_for{0};
 
     std::atomic_bool is_realtime{false};
-    double realtime_ms_awake_elapsed{0};
-    steady_timer clk;
-    bool new_frame = false;
+    sleeper sleep_realtime;
+    sleeper sleep_static;
 };
 
 inline void *sandbox_alloc(void *udata, size_t size)

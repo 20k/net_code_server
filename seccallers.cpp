@@ -386,7 +386,7 @@ js::value set_realtime_framerate_limit(js::value_context* vctx, js::value arg)
     if(!isfinite(val))
         return js::make_error(*vctx, "Must be finite");
 
-    val = clamp(val, 1, 60);
+    val = clamp(val, 1, 30);
 
     js::get_heap_stash(*vctx).get("framerate_limit") = val;
 
@@ -439,7 +439,7 @@ void startup_state(js::value_context& vctx, const std::string& caller, const std
     heap["caller_stack"] = caller_stack;
     heap["script_host"] = script_host;
     heap["script_ending"] = script_ending;
-    heap["framerate_limit"] = 60;
+    heap["framerate_limit"] = 30;
     heap["square_font"] = 0;
     heap["DB_ID"] = 0;
     heap["shared_caller_state"].set_ptr(shared_state);

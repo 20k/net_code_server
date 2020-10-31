@@ -75,52 +75,26 @@ void handle_sleep(sandbox_data* dat)
 
     if(dat->is_realtime)
     {
-        ///I think this is all broken
-        double current_elapsed_time = dat->clk.restart() * 1000;
-
-        dat->realtime_ms_awake_elapsed += current_elapsed_time;
-
-        if(dat->realtime_ms_awake_elapsed > 100)
-            dat->realtime_ms_awake_elapsed = 100;
-
         double current_framerate = dat->framerate_limit;
 
         double frametime = (1/current_framerate) * 1000;
 
         double allowed_executable_time = (1/4.f) * frametime;
-        double sleep_time = (1 - (1/4.f)) * frametime * fiber_load;
 
         ///so, when frames fire off, they have a big chunk of allowed time
         ///this then gets reduced to 1ms on, 4ms off after they miss the frame budget
-        if(!dat->new_frame)
+        if(dat->sleep_realtime.exceeded_awake)
         {
             allowed_executable_time = 1;
         }
 
         ///1:3, 1ms awake + 3ms asleep = 4ms, aka 1/4 awake and 3/4 asleep
-        sleep_time = 3;
+        double sleep_time = 3;
         ///one 'frame'
         sleep_time += 4 * (fiber_load - 1);
         sleep_time += 4 * (sleep_mult - 1);
 
-        if(dat->realtime_ms_awake_elapsed > allowed_executable_time)
-        {
-            double awake_overshoot_frac = (dat->realtime_ms_awake_elapsed - allowed_executable_time) / allowed_executable_time;
-
-            double full_sleep_time = sleep_time + awake_overshoot_frac * 3;
-
-            steady_timer elapsed;
-            fiber_sleep(full_sleep_time);
-
-            double real_slept = elapsed.get_elapsed_time_s() * 1000;
-
-            double sleep_slice = real_slept / full_sleep_time;
-
-            dat->realtime_ms_awake_elapsed = -sleep_slice * 1;
-            dat->clk.restart();
-
-            dat->new_frame = false;
-        }
+        dat->sleep_realtime.sleep_for(allowed_executable_time, sleep_time);
     }
 
     if(dat->is_static)
@@ -130,26 +104,7 @@ void handle_sleep(sandbox_data* dat)
 
         sleep_time += (sleep_time + awake_time) * (fiber_load - 1);
 
-        dat->ms_awake_elapsed_static += dat->clk.restart() * 1000;
-
-        if(dat->ms_awake_elapsed_static > 100)
-            dat->ms_awake_elapsed_static = 100;
-
-        int units = dat->ms_awake_elapsed_static / awake_time;
-
-        if(units > 0)
-        {
-            int idiff = units * sleep_time;
-
-            steady_timer real_sleep;
-            fiber_sleep(idiff);
-            double real_time = real_sleep.get_elapsed_time_s() * 1000;
-
-            dat->ms_awake_elapsed_static -= (real_time / sleep_time) * awake_time;
-        }
-
-        dat->ms_awake_elapsed_static = clamp(dat->ms_awake_elapsed_static, -20, 100);
-        dat->clk.restart();
+        dat->sleep_static.sleep_for(awake_time, sleep_time);
 
         double elapsed_ms = dat->full_run_clock.get_elapsed_time_s() * 1000;
 

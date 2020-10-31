@@ -41,6 +41,7 @@
 #include "chat_channels.hpp"
 #include "time.hpp"
 #include <toolkit/clock.hpp>
+#include "sleeper.hpp"
 
 void test_hexbin()
 {

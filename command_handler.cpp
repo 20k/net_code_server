@@ -164,7 +164,7 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
             }
 
             sandbox_data* sand_data = js::get_sandbox_data<sandbox_data>(vctx);
-            sand_data->new_frame = true;
+            sand_data->sleep_realtime.reset();
 
             steady_timer elapsed;
 
@@ -384,43 +384,17 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                 double frame_elapsed = elapsed.get_elapsed_time_s() * 1000;
 
                 ///did not forcibly rate limit
-                if(sand_data->new_frame && allowed_executable_time > sand_data->realtime_ms_awake_elapsed)
+                if(!sand_data->sleep_realtime.exceeded_awake && allowed_executable_time > sand_data->sleep_realtime.awake_ms)
                 {
-                    double time_to_end_of_allowed = allowed_executable_time - sand_data->realtime_ms_awake_elapsed;
-                    double total_sleep = time_to_end_of_allowed + sleep_time;
-
-                    steady_timer oversleep;
-                    fiber_sleep(total_sleep);
-
-                    double elapsed_oversleep = oversleep.get_elapsed_time_s() * 1000.;
-                    elapsed_oversleep = clamp(elapsed_oversleep, -2., 2.);
-
-                    sand_data->realtime_ms_awake_elapsed = 0;
-                    //sand_data->realtime_ms_awake_elapsed = -elapsed_oversleep;
+                    sand_data->sleep_realtime.consume_remaining_time(allowed_executable_time, sleep_time);
                 }
                 else
                 {
-                    double overrun_time_slice = (sand_data->realtime_ms_awake_elapsed - allowed_executable_time) / 1;
-                    double extra_sleep = overrun_time_slice * 3;
-
-                    extra_sleep = clamp(extra_sleep, 0., 100.);
-
-                    double full_sleep_time = extra_sleep + sleep_time;
-
-                    steady_timer oversleep;
-                    fiber_sleep(full_sleep_time);
-                    double real_elapsed = oversleep.get_elapsed_time_s() * 1000.;
-
-                    double oversleep_fraction = real_elapsed / full_sleep_time;
-
-                    oversleep_fraction = clamp(oversleep_fraction, -1.5, 1.5);
-
-                    sand_data->realtime_ms_awake_elapsed = -oversleep_fraction * 1;
+                    sand_data->sleep_realtime.consume_remaining_time(1, 3 + 4 * (sleep_mult - 1) + 4 * (fiber_load - 1));
+                    sand_data->sleep_realtime.consume_remaining_time(0, sleep_time);
+                    //sand_data->sleep_realtime.sleep_for(1, sleep_time);
                 }
             }
-
-            sand_data->clk.restart();
-            //sand_data->realtime_ms_awake_elapsed = 0;
 
             if(callback(vctx, last_sequence_id))
                 break;
