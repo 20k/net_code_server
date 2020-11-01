@@ -1,7 +1,7 @@
 #include "sleeper.hpp"
 #include "command_handler_fiber_backend.hpp"
 
-void sleeper::sleep_for(double max_awake_time_ms, double sleep_time)
+void sleeper::check_sleep(double max_awake_time_ms, double sleep_time)
 {
     awake_ms += clk.get_elapsed_time_s() * 1000;
 

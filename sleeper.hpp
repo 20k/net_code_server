@@ -9,7 +9,7 @@ struct sleeper
     double awake_ms = 0;
     bool exceeded_awake = false;
 
-    void sleep_for(double max_awake_time_ms, double sleep_time);
+    void check_sleep(double max_awake_time_ms, double sleep_time);
     void consume_remaining_time(double max_awake_time_ms, double sleep_time);
     void reset();
 };

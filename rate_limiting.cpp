@@ -94,7 +94,7 @@ void handle_sleep(sandbox_data* dat)
         sleep_time += 4 * (fiber_load - 1);
         sleep_time += 4 * (sleep_mult - 1);
 
-        dat->sleep_realtime.sleep_for(allowed_executable_time, sleep_time);
+        dat->sleep_realtime.check_sleep(allowed_executable_time, sleep_time);
     }
 
     if(dat->is_static)
@@ -104,7 +104,7 @@ void handle_sleep(sandbox_data* dat)
 
         sleep_time += (sleep_time + awake_time) * (fiber_load - 1);
 
-        dat->sleep_static.sleep_for(awake_time, sleep_time);
+        dat->sleep_static.check_sleep(awake_time, sleep_time);
 
         double elapsed_ms = dat->full_run_clock.get_elapsed_time_s() * 1000;
 
