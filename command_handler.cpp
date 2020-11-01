@@ -357,16 +357,12 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                 break;
             }
 
+            ///handles promises
             #ifdef USE_QUICKJS
             vctx.execute_jobs();
             #endif // USE_QUICKJS
 
-            ///DO PROMISES STUFF
-
-
             ///need to set work units based on how much of elapsed frametime is used
-            double max_frame_time_ms = (1./current_framerate) * 1000.;
-
             int sleep_mult = all_shared->live_work_units();
 
             {
@@ -391,7 +387,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                 {
                     sand_data->sleep_realtime.consume_remaining_time(1, 3 + 4 * (sleep_mult - 1) + 4 * (fiber_load - 1));
                     sand_data->sleep_realtime.consume_remaining_time(0, sleep_time);
-                    //sand_data->sleep_realtime.sleep_for(1, sleep_time);
                 }
             }
 
