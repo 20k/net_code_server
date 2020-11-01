@@ -137,7 +137,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                                    int current_id, T& callback, std::shared_ptr<shared_command_handler_state>& all_shared)
 {
     double current_framerate = js::get_heap_stash(nvctx).get("framerate_limit");
-    current_framerate = clamp(current_framerate, 1., 30.);
 
     steady_timer clk;
 
