@@ -376,8 +376,6 @@ void async_realtime_script_handler(js::value_context& nvctx, js::value in_arg, c
                 sleep_time += frametime * (sleep_mult - 1);
                 sleep_time += frametime * (fiber_load - 1);
 
-                double frame_elapsed = elapsed.get_elapsed_time_s() * 1000;
-
                 ///did not forcibly rate limit
                 if(!sand_data->sleep_realtime.exceeded_awake && allowed_executable_time > sand_data->sleep_realtime.awake_ms)
                 {
