@@ -52,36 +52,26 @@ void websocket_server(connection& conn)
     steady_timer poll_clock; ///!!!
     steady_timer disconnect_clock;
 
+    connection_received_data received_data;
+
     while(1)
     {
         try
         {
-        {
-            std::optional<uint64_t> next_client = conn.has_new_client();
+            conn.receive_bulk(received_data);
 
-            while(next_client.has_value())
+            for(uint64_t next_client : received_data.new_clients)
             {
-                user_states[next_client.value()] = std::make_shared<shared_command_handler_state>();
-                time_since_join[next_client.value()].restart();
-
-                conn.pop_new_client();
-
-                next_client = conn.has_new_client();
-
-                //printf("New client\n");
+                user_states[next_client] = std::make_shared<shared_command_handler_state>();
+                time_since_join[next_client].restart();
             }
-        }
 
         {
-            std::optional<uint64_t> disconnected_client = conn.has_disconnected_client();
-
-            while(disconnected_client.has_value())
+            for(uint64_t disconnected_client : received_data.disconnected_clients)
             {
                 printf("Disconnected Client\n");
 
-                conn.pop_disconnected_client();
-
-                int disconnected_id = disconnected_client.value();
+                int disconnected_id = disconnected_client;
 
                 if(user_states.find(disconnected_id) != user_states.end())
                 {
@@ -99,8 +89,6 @@ void websocket_server(connection& conn)
                 {
                     time_since_join.erase(disconnected_id);
                 }
-
-                disconnected_client = conn.has_disconnected_client();
             }
         }
 
@@ -132,28 +120,29 @@ void websocket_server(connection& conn)
             ping_timer.restart();
         }
 
-        while(conn.has_read())
+        //while(auto next_read = received_data.get_next_read())
+        for(auto [id, all_data] : received_data.read_queue)
         {
-            write_data dat = conn.read_from();
-
-            conn.pop_read(dat.id);
-
-            if(user_states.find(dat.id) == user_states.end())
+            if(user_states.find(id) == user_states.end())
                 continue;
 
-            try
+            for(const write_data& dat : all_data)
             {
-                nlohmann::json parsed;
-                parsed = nlohmann::json::parse(dat.data);
+                try
+                {
+                    nlohmann::json parsed;
+                    parsed = nlohmann::json::parse(dat.data);
 
-                //printf("Reading from %" PRIu64 "\n", dat.id);
+                    //printf("Reading from %" PRIu64 "\n", dat.id);
 
-                command_queue[dat.id].push_back(std::move(parsed));
-            }
-            catch(std::exception& err)
-            {
-                std::cout << "Caught json parse exception " << err.what() << std::endl;
-                conn.force_disconnect(dat.id);
+                    command_queue[dat.id].push_back(std::move(parsed));
+                }
+                catch(std::exception& err)
+                {
+                    std::cout << "Caught json parse exception " << err.what() << std::endl;
+                    conn.force_disconnect(dat.id);
+                    break;
+                }
             }
         }
 
