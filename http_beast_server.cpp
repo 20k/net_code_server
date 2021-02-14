@@ -38,6 +38,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <set>
 #include <toolkit/clock.hpp>
 
 #include "command_handler.hpp"
@@ -47,6 +48,8 @@ void websocket_server(connection& conn)
     std::map<int, std::shared_ptr<shared_command_handler_state>> user_states;
     std::map<int, std::deque<nlohmann::json>> command_queue;
     std::map<int, steady_timer> time_since_join;
+
+    std::set<int> http_clients;
 
     steady_timer ping_timer;
     steady_timer poll_clock; ///!!!
@@ -60,6 +63,31 @@ void websocket_server(connection& conn)
         try
         {
             conn.receive_bulk(received_data);
+
+            for(auto& i : received_data.new_http_clients)
+            {
+                http_clients.insert(i);
+            }
+
+            for(auto& i : received_data.upgraded_to_websocket)
+            {
+                auto it = http_clients.find(i);
+
+                if(it != http_clients.end())
+                    http_clients.erase(it);
+            }
+
+            for(auto& i : received_data.read_queue)
+            {
+                if(auto it = http_clients.find(i.first); it != http_clients.end())
+                {
+                    write_data dat;
+                    dat.id = i.first;
+                    dat.data = "helo";
+
+                    send_data.write_to(dat);
+                }
+            }
 
             for(uint64_t next_client : received_data.new_clients)
             {

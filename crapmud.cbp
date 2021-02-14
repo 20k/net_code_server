@@ -421,7 +421,7 @@
 			<Add option="-Wunreachable-code" />
 			<Add option="-Wextra" />
 			<Add option="-Wall" />
-			<Add option="-std=c++17" />
+			<Add option="-std=c++20" />
 			<Add option="-fexceptions" />
 			<Add option="-Wno-narrowing" />
 			<Add option="-fno-strict-aliasing" />
