@@ -53,6 +53,7 @@ void websocket_server(connection& conn)
     steady_timer disconnect_clock;
 
     connection_received_data received_data;
+    connection_send_data send_data(conn.get_settings());
 
     while(1)
     {
@@ -108,12 +109,16 @@ void websocket_server(connection& conn)
                     wdat.id = i.first;
                     wdat.data = data.dump();
 
-                    conn.write_to(wdat);
+                    if(!send_data.write_to(wdat))
+                    {
+                        std::cout << "Exceeded write capacity in server write" << std::endl;
+                        send_data.disconnect(i.first);
+                    }
                 }
                 catch(std::exception& err)
                 {
                     std::cout << "Exception in server ping " << err.what() << std::endl;
-                    conn.force_disconnect(i.first);
+                    send_data.disconnect(i.first);
                 }
             }
 
@@ -140,7 +145,7 @@ void websocket_server(connection& conn)
                 catch(std::exception& err)
                 {
                     std::cout << "Caught json parse exception " << err.what() << std::endl;
-                    conn.force_disconnect(dat.id);
+                    send_data.disconnect(dat.id);
                     break;
                 }
             }
@@ -165,12 +170,17 @@ void websocket_server(connection& conn)
                     to_write.id = i.first;
                     to_write.data = next_command;
 
-                    conn.write_to(to_write);
+                    if(!send_data.write_to(to_write))
+                    {
+                        std::cout << "Exceeded write capacity in server write" << std::endl;
+                        send_data.disconnect(i.first);
+                        break;
+                    }
                 }
                 catch(std::exception& e)
                 {
                     std::cout << "Exception in server write " << e.what() << std::endl;
-                    conn.force_disconnect(i.first);
+                    send_data.disconnect(i.first);
                     break;
                 }
 
@@ -238,6 +248,9 @@ void websocket_server(connection& conn)
                 async_handle_command(i.second, std::move(fake));
             }
         }
+
+        conn.send_bulk(send_data);
+
         }
         catch(std::exception& e)
         {
