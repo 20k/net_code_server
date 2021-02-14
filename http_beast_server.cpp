@@ -168,7 +168,7 @@ void websocket_server(connection& conn)
                 {
                     write_data to_write;
                     to_write.id = i.first;
-                    to_write.data = next_command;
+                    to_write.data = std::move(next_command);
 
                     if(!send_data.write_to(to_write))
                     {
