@@ -83,7 +83,7 @@ void websocket_server(connection& conn)
                 {
                     write_data dat;
                     dat.id = i.first;
-                    dat.data = "helo";
+                    dat.data = "doot";
 
                     send_data.write_to(dat);
                 }
