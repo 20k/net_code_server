@@ -52,7 +52,10 @@ struct file_cache
         if(auto it = cache.find(name); it != cache.end())
             return it->second;
 
-        std::string data = read_file_bin(name);
+        std::string data;
+
+        if(file_exists(name))
+            data = read_file_bin(name);
 
         cache[name] = data;
 
@@ -103,8 +106,8 @@ void websocket_server(connection& conn)
                     http_write_info dat;
                     dat.id = i.first;
                     dat.code = http_write_info::status_code::ok;
-                    /*dat.mime_type = "text/plain";
-                    dat.body = req.path;*/
+                    dat.mime_type = "text/plain";
+                    /*dat.body = req.path;*/
 
                     if(req.path.ends_with("index.html"))
                     {
@@ -134,7 +137,11 @@ void websocket_server(connection& conn)
                         dat.code = http_write_info::status_code::not_found;
                     }
 
-                    send_data.write_to_http(dat);
+                    if(!send_data.write_to_http_unchecked(dat))
+                    {
+                        printf("Exception in http write\n");
+                        send_data.disconnect(i.first);
+                    }
                 }
             }
 
