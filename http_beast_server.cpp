@@ -43,6 +43,23 @@
 
 #include "command_handler.hpp"
 
+struct file_cache
+{
+    std::map<std::string, std::string> cache;
+
+    std::string& get(const std::string& name)
+    {
+        if(auto it = cache.find(name); it != cache.end())
+            return it->second;
+
+        std::string data = read_file_bin(name);
+
+        cache[name] = data;
+
+        return cache[name];
+    }
+};
+
 void websocket_server(connection& conn)
 {
     std::map<int, std::shared_ptr<shared_command_handler_state>> user_states;
@@ -57,6 +74,8 @@ void websocket_server(connection& conn)
 
     connection_received_data received_data;
     connection_send_data send_data(conn.get_settings());
+
+    file_cache fcache;
 
     while(1)
     {
@@ -83,8 +102,37 @@ void websocket_server(connection& conn)
                 {
                     http_write_info dat;
                     dat.id = i.first;
-                    dat.mime_type = "text/plain";
-                    dat.body = req.path;
+                    dat.code = http_write_info::status_code::ok;
+                    /*dat.mime_type = "text/plain";
+                    dat.body = req.path;*/
+
+                    if(req.path.ends_with("index.html"))
+                    {
+                        dat.mime_type = "text/html";
+                        dat.body = fcache.get("./doc_root/index.html");
+                    }
+
+                    else if(req.path.ends_with("index.js"))
+                    {
+                        dat.mime_type = "text/javascript";
+                        dat.body = fcache.get("./doc_root/index.js");
+                    }
+
+                    else if(req.path.ends_with("index.worker.js"))
+                    {
+                        dat.mime_type = "text/javascript";
+                        dat.body = fcache.get("./doc_root/index.worker.js");
+                    }
+
+                    else if(req.path.ends_with("index.wasm"))
+                    {
+                        dat.mime_type = "application/wasm";
+                        dat.body = fcache.get("./doc_root/index.wasm");
+                    }
+                    else
+                    {
+                        dat.code = http_write_info::status_code::not_found;
+                    }
 
                     send_data.write_to_http(dat);
                 }
