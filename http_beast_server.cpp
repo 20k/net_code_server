@@ -81,11 +81,14 @@ void websocket_server(connection& conn)
             {
                 if(auto it = http_clients.find(i.first); it != http_clients.end())
                 {
-                    write_data dat;
-                    dat.id = i.first;
-                    dat.data = "doot";
+                    for(auto& req : i.second)
+                    {
+                        write_data dat;
+                        dat.id = i.first;
+                        dat.data = req.data;
 
-                    send_data.write_to(dat);
+                        send_data.write_to(dat);
+                    }
                 }
             }
 
