@@ -81,12 +81,6 @@ void websocket_server(connection& conn)
             {
                 for(auto& req : i.second)
                 {
-                    /*write_data dat;
-                    dat.id = i.first;
-                    dat.data = req.data;
-
-                    send_data.write_to(dat);*/
-
                     http_write_info dat;
                     dat.id = i.first;
                     dat.mime_type = "text/plain";
