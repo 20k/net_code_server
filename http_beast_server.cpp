@@ -77,18 +77,22 @@ void websocket_server(connection& conn)
                     http_clients.erase(it);
             }
 
-            for(auto& i : received_data.read_queue)
+            for(auto& i : received_data.http_read_queue)
             {
-                if(auto it = http_clients.find(i.first); it != http_clients.end())
+                for(auto& req : i.second)
                 {
-                    for(auto& req : i.second)
-                    {
-                        write_data dat;
-                        dat.id = i.first;
-                        dat.data = req.data;
+                    /*write_data dat;
+                    dat.id = i.first;
+                    dat.data = req.data;
 
-                        send_data.write_to(dat);
-                    }
+                    send_data.write_to(dat);*/
+
+                    http_write_info dat;
+                    dat.id = i.first;
+                    dat.mime_type = "text/plain";
+                    dat.body = req.path;
+
+                    send_data.write_to_http(dat);
                 }
             }
 
@@ -140,7 +144,7 @@ void websocket_server(connection& conn)
                     wdat.id = i.first;
                     wdat.data = data.dump();
 
-                    if(!send_data.write_to(wdat))
+                    if(!send_data.write_to_websocket(wdat))
                     {
                         std::cout << "Exceeded write capacity in server write" << std::endl;
                         send_data.disconnect(i.first);
@@ -157,7 +161,7 @@ void websocket_server(connection& conn)
         }
 
         //while(auto next_read = received_data.get_next_read())
-        for(auto [id, all_data] : received_data.read_queue)
+        for(auto [id, all_data] : received_data.websocket_read_queue)
         {
             if(user_states.find(id) == user_states.end())
                 continue;
@@ -201,7 +205,7 @@ void websocket_server(connection& conn)
                     to_write.id = i.first;
                     to_write.data = std::move(next_command);
 
-                    if(!send_data.write_to(to_write))
+                    if(!send_data.write_to_websocket(to_write))
                     {
                         std::cout << "Exceeded write capacity in server write" << std::endl;
                         send_data.disconnect(i.first);
