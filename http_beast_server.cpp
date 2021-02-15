@@ -154,7 +154,7 @@ void websocket_server(connection& conn)
         {
             for(uint64_t disconnected_client : received_data.disconnected_clients)
             {
-                printf("Disconnected Client\n");
+                //printf("Disconnected Client\n");
 
                 int disconnected_id = disconnected_client;
 
