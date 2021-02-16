@@ -107,7 +107,6 @@ void websocket_server(connection& conn)
                     dat.id = i.first;
                     dat.code = http_write_info::status_code::ok;
                     dat.mime_type = "text/plain";
-                    /*dat.body = req.path;*/
 
                     if(req.path.ends_with("index.html"))
                     {
@@ -134,7 +133,8 @@ void websocket_server(connection& conn)
                     }
                     else
                     {
-                        dat.code = http_write_info::status_code::not_found;
+                        dat.mime_type = "text/html";
+                        dat.body = fcache.get("./doc_root/index.html");
                     }
 
                     if(!send_data.write_to_http_unchecked(dat))
