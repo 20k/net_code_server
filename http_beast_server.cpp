@@ -137,6 +137,8 @@ void websocket_server(connection& conn)
                         dat.body = fcache.get("./doc_root/index.html");
                     }
 
+                    dat.keep_alive = req.keep_alive;
+
                     if(!send_data.write_to_http_unchecked(dat))
                     {
                         printf("Exception in http write\n");
