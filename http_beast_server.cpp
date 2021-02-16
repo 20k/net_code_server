@@ -174,6 +174,11 @@ void websocket_server(connection& conn)
                 {
                     time_since_join.erase(disconnected_id);
                 }
+
+                if(http_clients.find(disconnected_id) != http_clients.end())
+                {
+                    http_clients.erase(disconnected_id);
+                }
             }
         }
 
