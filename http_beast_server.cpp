@@ -47,7 +47,7 @@ struct file_cache
 {
     std::map<std::string, std::string> cache;
 
-    std::string& get(const std::string& name)
+    std::string_view get(const std::string& name)
     {
         if(auto it = cache.find(name); it != cache.end())
             return it->second;
