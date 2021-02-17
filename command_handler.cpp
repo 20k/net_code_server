@@ -444,10 +444,24 @@ struct fiber_work_manager
     }
 };
 
+std::vector<std::string> get_user_call_stack(const std::string& username_in)
+{
+    user usr;
+
+    {
+        mongo_read_proxy mongo_ctx = get_global_mongo_user_info_context(-2);
+
+        if(!usr.load_from_db(mongo_ctx, username_in))
+            return {username_in};
+    }
+
+    usr.cleanup_call_stack(-2);
+
+    return usr.get_call_stack();
+}
+
 std::string run_in_user_context(std::string username, std::string command, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared, std::optional<float> custom_exec_time_s, bool force_exec)
 {
-    //
-
     try
     {
         execution_blocker_guard exec_guard(all_shared);
@@ -488,16 +502,15 @@ std::string run_in_user_context(std::string username, std::string command, std::
             exec_guard.unblock();
         }
 
+        std::vector<std::string> call_stack = get_user_call_stack(username);
+
         unsafe_info inf;
 
         sandbox_data* sand_data = js::get_sandbox_data<sandbox_data>(inf.heap);
 
-        usr.cleanup_call_stack(local_thread_id);
-        std::string executing_under = usr.get_call_stack().back();
-
         shared_duk_worker_state* shared_duk_state = new shared_duk_worker_state;
 
-        startup_state(inf.heap, executing_under, executing_under, "invoke", usr.get_call_stack(), shared_duk_state);
+        startup_state(inf.heap, call_stack.back(), call_stack.back(), "invoke", call_stack, shared_duk_state);
 
         js::get_heap_stash(inf.heap).get("thread_id") = local_thread_id;
 
@@ -522,7 +535,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
             heap_stash["all_shared_data"].set_ptr(nullptr);
         }
 
-        inf.execute_as = usr.get_call_stack().back();
+        inf.execute_as = call_stack.back();
         inf.command = command;
 
         sand_data->is_static = true;
