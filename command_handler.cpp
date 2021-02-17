@@ -41,7 +41,7 @@
 
 struct unsafe_info
 {
-    user* usr;
+    std::string execute_as;
     std::string command;
     int finished = 0;
     js::value_context heap;
@@ -61,7 +61,7 @@ struct unsafe_info
 
 void unsafe_wrapper(unsafe_info& info)
 {
-    auto [val, msg] = js_unified_force_call_data(info.heap, info.command, info.usr->get_call_stack().back());
+    auto [val, msg] = js_unified_force_call_data(info.heap, info.command, info.execute_as);
 
     info.ret = msg;
     info.returned_val = std::move(val);
@@ -522,7 +522,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
             heap_stash["all_shared_data"].set_ptr(nullptr);
         }
 
-        inf.usr = &usr;
+        inf.execute_as = usr.get_call_stack().back();
         inf.command = command;
 
         sand_data->is_static = true;
