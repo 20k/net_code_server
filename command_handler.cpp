@@ -35,10 +35,6 @@
 #include "js_ui.hpp"
 #include <toolkit/clock.hpp>
 
-#ifdef USE_FIBERS
-#include <boost/fiber/operations.hpp>
-#endif // USE_FIBERS
-
 #ifndef __WIN32__
 #include <unistd.h>
 #endif // __WIN32__
