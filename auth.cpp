@@ -46,6 +46,17 @@ void auth::insert_user_exclusive(const std::string& username)
     users.push_back(username);
 }
 
+bool auth::contains_user(const std::string& username)
+{
+    for(const auto& i : users)
+    {
+        if(i == username)
+            return true;
+    }
+
+    return false;
+}
+
 enforce_constant_time::~enforce_constant_time()
 {
     float diff = clk.get_elapsed_time_s() * 1000;

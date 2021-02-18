@@ -431,6 +431,15 @@ std::map<std::string, double> mouse_get_position(js::value_context* vctx)
 
 void startup_state(js::value_context& vctx, const std::string& caller, const std::string& script_host, const std::string& script_ending, const std::vector<std::string>& caller_stack, shared_duk_worker_state* shared_state)
 {
+    bool has_world_user = false;
+
+    {
+        db::read_tx rtx;
+
+        if(user().load_from_db(rtx, caller_stack[0]))
+           has_world_user = true;
+    }
+
     js::value heap = js::get_heap_stash(vctx);
     heap["HASH_D"] = "";
     heap["print_str"] = "";
@@ -443,6 +452,7 @@ void startup_state(js::value_context& vctx, const std::string& caller, const std
     heap["square_font"] = 0;
     heap["DB_ID"] = 0;
     heap["shared_caller_state"].set_ptr(shared_state);
+    heap["has_world_user"] = (int)has_world_user;
 
     js_ui::ui_stack* stk = new js_ui::ui_stack;
     heap["ui_stack"].set_ptr(stk);
@@ -806,9 +816,12 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
     quest_manager& qm = get_global_quest_manager();
 
     ///IF IS PRIVILEGED SCRIPT, RETURN THAT CFUNC
-    if(privileged_functions.find(to_call_fullname) != privileged_functions.end())
+    if(auto it = privileged_functions.find(to_call_fullname); privileged_functions.find(to_call_fullname) != privileged_functions.end())
     {
-        auto it = privileged_functions.find(to_call_fullname);
+        bool has_world_user = (int)js::get_heap_stash(*vctx)["has_world_user"];
+
+        if(!has_world_user)
+            return js::make_error(*vctx, "Cannot run core scripts without a full account");
 
         SL_GUARD(it->second.sec_level);
 

@@ -1455,97 +1455,74 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
         if(!is_allowed_user(user_name))
             return make_response(make_error_col("Claiming or using this specific username is disallowed. If you already own it you may #delete_user the user in question"));
 
-        bool user_exists = false;
-
         {
-            bool should_set = false;
-            user fnd;
+            std::optional<std::string> found_username;
 
             {
-                mongo_read_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
+                db::read_tx rtx;
 
-                if(fnd.exists(mongo_user_info, user_name))
+                auth my_auth;
+
+                if(my_auth.load_from_db(rtx, all_shared->state.get_auth()) && my_auth.contains_user(user_name))
                 {
-                    user_exists = true;
-
-                    fnd.load_from_db(mongo_user_info, user_name);
-
-                    should_set = true;
+                    found_username = user_name;
                 }
 
-                auto allowed = fnd.get_call_stack();
+                user fnd;
+
+                if(fnd.exists(rtx, user_name))
+                {
+                    fnd.load_from_db(rtx, user_name);
+
+                    if(fnd.get_auth_token_hex() != all_shared->state.get_auth_hex())
+                    {
+                        return make_response(make_error_col("Incorrect Auth, someone else has registered this account or you are using a different pc and key.key file"));
+                    }
+
+                    found_username = fnd.name;
+                }
             }
 
-            if(should_set)
-            {
-                if(fnd.get_auth_token_hex() != all_shared->state.get_auth_hex())
-                {
-                    return make_response(make_error_col("Incorrect Auth, someone else has registered this account or you are using a different pc and key.key file"));
-                }
+            //auto allowed = fnd.get_call_stack();
 
-                all_shared->state.set_user_name(fnd.name);
+            if(found_username.has_value())
+            {
+                ///What? Why is this a locking db operation?
+                /*{
+                    mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
+
+                    auth to_check;
+
+                    if(!to_check.load_from_db(mongo_ctx, all_shared->state.get_auth()))
+                        return make_response(make_error_col("Trying something sneaky eh?"));
+
+                    to_check.insert_user_exclusive(user_name);
+                    to_check.overwrite_in_db(mongo_ctx);
+                }*/
+
+                all_shared->state.set_user_name(found_username.value());
+                return make_response("Switched to user");
             }
 
             /*for(auto& i : allowed)
             {
                 std::cout <<" a  " << i << std::endl;
             }*/
-
-            /*{
-                bool overwrite = false;
-
-                mongo_user_info.change_collection(user_name, true);
-
-                if(state.current_user.exists(mongo_user_info, user_name) && !user_exists)
-                {
-                    overwrite = true;
-                    user_exists = true;
-
-                    state.current_user.load_from_db(mongo_user_info, user_name);
-                }
-
-                mongo_user_info.change_collection("all_users", true);
-
-                if(overwrite && !state.current_user.exists(mongo_user_info, user_name))
-                {
-                    state.current_user.construct_new_user(mongo_user_info, user_name, state.current_user.auth);
-                    state.current_user.overwrite_user_in_db(mongo_user_info);
-
-                    return "User Migrated. Please run this command again";
-                }
-            }*/
         }
 
-        if(user_exists)
-        {
-            ///What? Why is this a locking db operation?
-            /*{
-                mongo_lock_proxy mongo_ctx = get_global_mongo_global_properties_context(-2);
-
-                auth to_check;
-
-                if(!to_check.load_from_db(mongo_ctx, all_shared->state.get_auth()))
-                    return make_response(make_error_col("Trying something sneaky eh?"));
-
-                to_check.insert_user_exclusive(user_name);
-                to_check.overwrite_in_db(mongo_ctx);
-            }*/
-
-            return make_response("Switched to User");
-        }
-        else
+        ///user does not exist
         {
             all_shared->state.set_user_name("");
 
             {
                 db::read_write_tx rtx;
 
+                auth my_auth;
+
                 {
                     auto fauth = all_shared->state.get_auth();
 
-                    auth to_check;
-
-                    if(!to_check.load_from_db(rtx, fauth))
+                    if(!my_auth.load_from_db(rtx, fauth))
                         return make_response(make_error_col("Trying something sneaky eh 2?"));
 
                     #ifdef TESTING
@@ -1554,13 +1531,25 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
                     #define MAX_USERS 5
                     #endif
 
-                    if(to_check.users.size() >= MAX_USERS)
-                        return make_response(make_error_col("Max users " + std::to_string(to_check.users.size()) + "/" + std::to_string(MAX_USERS)));
+                    if(my_auth.users.size() >= MAX_USERS)
+                        return make_response(make_error_col("Max users " + std::to_string(my_auth.users.size()) + "/" + std::to_string(MAX_USERS)));
 
-                    to_check.insert_user_exclusive(user_name);
-                    to_check.overwrite_in_db(rtx);
+                    std::vector<auth> all = db_disk_load_all(rtx, auth());
+
+                    for(const auth& a : all)
+                    {
+                        for(const std::string& username : a.users)
+                        {
+                            if(username == user_name && a.auth_token_hex != all_shared->state.get_auth_hex())
+                                return make_response(make_error_col("Another account has already claimed this username"));
+                        }
+                    }
+
+                    my_auth.insert_user_exclusive(user_name);
+                    my_auth.overwrite_in_db(rtx);
                 }
 
+                if(!my_auth.is_free_account)
                 {
 
                     user new_user;
