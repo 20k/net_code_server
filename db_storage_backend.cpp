@@ -312,6 +312,7 @@ using mutex_t = lock_type_t;
 struct database
 {
     std::map<std::string, std::vector<nlohmann::json>> all_data;
+    std::map<std::string, std::map<size_t, size_t>> data_size;
     std::map<std::string, bool> collection_imported;
 
     mutex_t all_coll_guard;
@@ -329,6 +330,27 @@ struct database
     std::vector<nlohmann::json>& get_collection_nolock(const std::string& coll)
     {
         return all_data[coll];
+    }
+
+    std::map<size_t, size_t>& get_collection_size(const std::string& coll)
+    {
+        std::lock_guard guard(all_coll_guard);
+
+        return data_size[coll];
+    }
+
+    size_t get_total_size(const std::string& coll)
+    {
+        std::lock_guard guard(all_coll_guard);
+
+        size_t val = 0;
+
+        for(auto& i : data_size[coll])
+        {
+            val += i.second;
+        }
+
+        return val;
     }
 
     mutex_t& get_lock(const std::string& coll)
@@ -369,11 +391,11 @@ bool json_prop_true(const nlohmann::json& js, const std::string& key)
     return false;
 }
 
-void import_from_disk(bool force);
-
 struct db_storage
 {
     std::array<database, (int)mongo_database_type::MONGO_COUNT> all_data;
+
+    int max_db_size = 16 * 1024 * 1024;
 
     size_t global_id = 0;
     size_t reserved_global_id = 0;
@@ -422,14 +444,32 @@ struct db_storage
     ///todo: make atomic
     void flush(const database_type& db, const std::string& coll, const nlohmann::json& data)
     {
-        flush_to(ROOT_STORE, db, coll, data);
+        assert(data.count(CID_STRING) == 1);
+        flush_to(ROOT_STORE, db, coll, nlohmann::json::to_cbor(data), data.at(CID_STRING));
     }
 
-    void flush_to(const std::string& root, const database_type& db, const std::string& coll, const nlohmann::json& data)
+    void flush_to(const std::string& root, const database_type& db, const std::string& coll, const std::vector<uint8_t>& data, size_t cid)
     {
-        assert(data.count(CID_STRING) == 1);
-
         assert(coll.find('/') == std::string::npos);
+
+        {
+            database& cdb = get_db(db);
+
+            cdb.get_collection_size(coll)[cid] = data.size();
+
+            int total_size = cdb.get_total_size(coll);
+
+            if(total_size > max_db_size)
+            {
+                {
+                    std::lock_guard guard(cdb.get_db_lock());
+
+                    cdb.collection_imported[coll] = false;
+                }
+
+                throw std::runtime_error("Exceeded db storage size");
+            }
+        }
 
         std::string db_dir = root + "/" + std::to_string((int)db);
 
@@ -447,21 +487,23 @@ struct db_storage
         mkdir(collection_dir.c_str(), 0777);
         #endif // __WIN32__
 
-        std::string final_dir = collection_dir + "/" + std::to_string((size_t)data.at(CID_STRING));
+        std::string final_dir = collection_dir + "/" + std::to_string(cid);
 
-        //std::string dumped = data.dump();
-
-        std::vector<uint8_t> dumped = nlohmann::json::to_cbor(data);
-
-        if(dumped.size() == 0)
+        if(data.size() == 0)
             return;
 
-        atomic_write(final_dir, dumped);
+        atomic_write(final_dir, data);
     }
 
     void disk_erase(const database_type& db, const std::string& coll, const nlohmann::json& data)
     {
         assert(data.count(CID_STRING) > 0);
+
+        {
+            database& cdb = get_db(db);
+            std::map<size_t, size_t>& sizes = cdb.get_collection_size(coll);
+            sizes.erase(data[CID_STRING]);
+        }
 
         remove(get_filename(db, coll, data).c_str());
     }
@@ -482,8 +524,10 @@ struct db_storage
         }
 
         std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
+        std::map<size_t, size_t>& collection_size = cdb.get_collection_size(coll);
 
         collection.clear();
+        collection_size.clear();
 
         std::string coll_path = std::string(ROOT_STORE) + "/" + std::to_string((int)db_idx) + "/" + coll;
 
@@ -502,7 +546,16 @@ struct db_storage
 
         tinydir_close(&dir);
 
+        std::vector<std::string> file_names;
+
         for_each_file(coll_path, [&](const std::string& file_name)
+        {
+            file_names.push_back(file_name);
+        });
+
+        std::sort(file_names.begin(), file_names.end());
+
+        for(const std::string& file_name : file_names)
         {
             COOPERATE_KILL_THREAD_LOCAL();
 
@@ -545,8 +598,8 @@ struct db_storage
             }
 
             collection.push_back(fdata);
-
-        });
+            collection_size[(size_t)fdata[CID_STRING]] = data.size();
+        }
 
         {
             std::lock_guard guard(cdb.get_db_lock());
@@ -559,18 +612,20 @@ struct db_storage
     {
         database& cdb = get_db(db);
 
-        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
-
         std::lock_guard guard(cdb.get_lock(coll));
 
-        ///nothing can touch the collection while we do this so its fine
-        bool is_imported = cdb.is_imported(coll);
+        ///so, it used to be that the db would not import the database if just inserting
+        ///this was a huge issue for massively fragmented dbs like the msg db that might be enormous, but don't need to be read
+        ///nowadays this is done by lmdb, and forcing an import for user dbs (which is the only consumer of this system)
+        ///is necessary for db caps
+        import_collection_nolock(db, coll);
+
+        std::vector<nlohmann::json>& collection = cdb.get_collection(coll);
 
         auto fdata = js;
         fdata[CID_STRING] = get_next_id();
 
-        if(is_imported)
-            collection.push_back(fdata);
+        collection.push_back(fdata);
 
         flush(db, coll, fdata);
     }
@@ -727,42 +782,6 @@ db_storage& get_db_storage()
     return store;
 }
 
-void import_from_disk(bool force)
-{
-    db_storage& store = get_db_storage();
-
-    std::string root = ROOT_STORE;
-
-    for(int db_idx=0; db_idx < (int)mongo_database_type::MONGO_COUNT; db_idx++)
-    {
-        std::string db_dir = root + "/" + std::to_string((int)db_idx);
-
-        if(force)
-        {
-            for_each_dir(db_dir, [&](const std::string& coll)
-            {
-                if(store.all_data[db_idx].collection_imported[coll])
-                    return;
-
-                for_each_file(db_dir + "/" + coll, [&](const std::string& file_name)
-                {
-                    std::string path = db_dir + "/" + coll + "/" + file_name;
-
-                    std::string data = read_file_bin(path);
-
-                    nlohmann::json fdata = nlohmann::json::from_cbor(data);
-
-                    store.all_data[db_idx].all_data[coll].push_back(fdata);
-
-                    store.all_data[db_idx].collection_imported[coll] = true;
-                });
-            });
-        }
-    }
-
-    std::cout << "imported from disk" << std::endl;
-}
-
 void init_db_storage_backend()
 {
     db_storage_backend::run_tests();
@@ -811,22 +830,6 @@ void init_db_storage_backend()
     for(int idx=0; idx < (int)mongo_database_type::MONGO_COUNT; idx++)
     {
         store.all_data[(int)mongo_databases[idx]->last_db_type];
-    }
-
-    import_from_disk(false);
-
-    database& user_db = store.get_db((int)mongo_database_type::USER_ACCESSIBLE);
-
-    std::map<std::string, std::vector<nlohmann::json>>& all_user_dbs = user_db.all_data;
-
-    for(auto& i : all_user_dbs)
-    {
-        std::vector<nlohmann::json>& data = i.second;
-
-        std::sort(data.begin(), data.end(), [](const nlohmann::json& i1, const nlohmann::json& i2)
-        {
-            return i1.at(CID_STRING).get<size_t>() < i2.at(CID_STRING).get<size_t>();
-        });
     }
 }
 
