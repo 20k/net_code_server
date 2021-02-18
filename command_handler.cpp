@@ -444,20 +444,38 @@ struct fiber_work_manager
     }
 };
 
-std::vector<std::string> get_user_call_stack(const std::string& username_in)
+std::vector<std::string> get_user_call_stack(const std::string& username)
 {
     user usr;
 
     {
-        mongo_read_proxy mongo_ctx = get_global_mongo_user_info_context(-2);
+        mongo_read_proxy ctx = get_global_mongo_user_info_context(-2);
 
-        if(!usr.load_from_db(mongo_ctx, username_in))
-            return {username_in};
+        if(!usr.load_from_db(ctx, username))
+            return {username};
     }
 
     usr.cleanup_call_stack(-2);
 
     return usr.get_call_stack();
+}
+
+std::optional<std::string> get_auth_token_hex(const std::string& username, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared)
+{
+    {
+        user usr;
+        mongo_read_proxy ctx = get_global_mongo_user_info_context(-2);
+
+        if(usr.load_from_db(ctx, username))
+            return usr.get_auth_token_hex();
+    }
+
+    if(all_shared.has_value())
+    {
+        return all_shared.value()->state.get_auth_hex();
+    }
+
+    return std::nullopt;
 }
 
 std::string run_in_user_context(std::string username, std::string command, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared, std::optional<float> custom_exec_time_s, bool force_exec)
@@ -466,34 +484,32 @@ std::string run_in_user_context(std::string username, std::string command, std::
     {
         execution_blocker_guard exec_guard(all_shared);
 
-        user usr;
-
-        {
-            mongo_read_proxy mongo_ctx = get_global_mongo_user_info_context(-2);
-
-            if(!usr.load_from_db(mongo_ctx, username))
-                return "No such user";
-        }
-
         static lock_type_t id_mut;
 
         static std::map<std::string, int> auth_guard;
         static std::atomic_int gthread_id{1};
         int32_t local_thread_id = gthread_id++;
 
+        auto auth_opt = get_auth_token_hex(username, all_shared);
+
+        if(!auth_opt.has_value())
+            return "No auth token found in shared state or user";
+
+        std::string auth_token = auth_opt.value();
+
         #ifndef LOCAL_IP
         if(!force_exec)
         {
             safe_lock_guard lk(id_mut);
 
-            if(auth_guard[usr.get_auth_token_hex()] == 1)
+            if(auth_guard[auth_token] == 1)
                 return make_error_col("Cannot run two scripts at once in different contexts!");
 
-            auth_guard[usr.get_auth_token_hex()] = 1;
+            auth_guard[auth_token] = 1;
         }
         #endif // LOCAL_IP
 
-        cleanup_auth_at_exit cleanup(id_mut, auth_guard, usr.get_auth_token_hex());
+        cleanup_auth_at_exit cleanup(id_mut, auth_guard, auth_token);
         fiber_work_manager fbwork;
 
         if(force_exec)
