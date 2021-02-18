@@ -942,7 +942,7 @@ void on_create_user(const std::string& usr)
 
 std::string get_update_message()
 {
-    return "If you cannot login, a bad update deleted key.key files. PM me (20k) on discord with a username that you owned and I will recover it. Run #scripts.core() to get started";
+    return "Welcome to net_code_! Pm me (20k) on discord if you have any issues, otherwise good luck :)";
 }
 
 void delete_notifs_for(const std::string& name)
@@ -1895,6 +1895,32 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
         return "secret " + to_ret;
     }
     #endif // ALLOW_SELF_AUTH
+    else if(starts_with(str, "#make_free_auth"))
+    {
+        printf("Created non-Steam Account\n");
+
+        std::string to_ret = random_binary_string(128);
+
+        auth to_insert;
+        to_insert.auth_token_hex = binary_to_hex(to_ret);
+        to_insert.is_free_account = true;
+
+        all_shared->state.set_auth(to_ret);
+
+        {
+            db::read_write_tx rwtx;
+            to_insert.overwrite_in_db(rwtx);
+        }
+
+        std::string full_string = "Account Created. Type user <username> to create a new user";
+
+        nlohmann::json data;
+        data["type"] = "server_msg";
+        data["data"] = make_success_col("Auth Success") + "\n" + full_string + "\n" + get_update_message();
+        data["authenticated"] = 1;
+
+        return data;
+    }
     else
     {
         auto name = all_shared->state.get_user_name();
@@ -2295,7 +2321,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
             {
                 nlohmann::json data;
                 data["type"] = "server_msg";
-                data["data"] = make_error_col("Auth Failed, have you run \"register client\" at least once?");
+                data["data"] = make_error_col("Auth Failed");
 
                 return data;
             }
