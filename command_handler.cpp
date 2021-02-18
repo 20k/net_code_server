@@ -1572,6 +1572,8 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
 
             all_shared->state.set_user_name(cur_name);
 
+            fiber_sleep(1000);
+
             return make_response(make_success_col("Constructed new User"));
         }
     }
@@ -1897,6 +1899,8 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
     #endif // ALLOW_SELF_AUTH
     else if(starts_with(str, "#make_free_auth"))
     {
+        fiber_sleep(1000);
+
         printf("Created non-Steam Account\n");
 
         std::string to_ret = random_binary_string(128);
