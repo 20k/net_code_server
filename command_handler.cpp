@@ -1511,13 +1511,14 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
         }
 
         ///user does not exist
+        auth my_auth;
+
         {
             all_shared->state.set_user_name("");
 
             {
                 db::read_write_tx rtx;
 
-                auth my_auth;
 
                 {
                     auto fauth = all_shared->state.get_auth();
@@ -1551,7 +1552,6 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
 
                 if(!my_auth.is_free_account)
                 {
-
                     user new_user;
 
                     auto fauth = all_shared->state.get_auth();
@@ -1568,7 +1568,8 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
 
             std::string cur_name = all_shared->state.get_user_name();
 
-            on_create_user(cur_name);
+            if(!my_auth.is_free_account)
+                on_create_user(cur_name);
 
             all_shared->state.set_user_name(cur_name);
 
