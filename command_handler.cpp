@@ -1519,7 +1519,6 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
             {
                 db::read_write_tx rtx;
 
-
                 {
                     auto fauth = all_shared->state.get_auth();
 
