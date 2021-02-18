@@ -1560,9 +1560,9 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
                         new_user.load_from_db(rtx, user_name);
                         new_user.overwrite_user_in_db(rtx);
                     }
-
-                    all_shared->state.set_user_name(new_user.name);
                 }
+
+                all_shared->state.set_user_name(user_name);
             }
 
             std::string cur_name = all_shared->state.get_user_name();
@@ -1925,12 +1925,8 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
     {
         auto name = all_shared->state.get_user_name();
 
-        {
-            mongo_read_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
-
-            if(!user().exists(mongo_user_info, name))
-                return make_response("No account or not logged in");
-        }
+        if(name == "")
+            return make_response("No account or not logged in");
 
         return make_response(run_in_user_context(name, str, all_shared));
     }
@@ -2142,30 +2138,28 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
     std::string current_user = all_shared->state.get_user_name();
     std::string current_auth = all_shared->state.get_auth();
 
-    user found;
-
     if(current_user != "")
     {
-        mongo_read_proxy ctx = get_global_mongo_user_info_context(-2);
+        db::read_tx rtx;
 
-        if(!found.load_from_db(ctx, current_user))
+        auth my_auth;
+
+        if(!my_auth.load_from_db(rtx, current_auth))
         {
-            all_shared->state.set_user_name("");
-
             nlohmann::json data;
             data["type"] = "server_msg";
-            data["data"] = "Invalid User";
+            data["data"] = "User not logged in while having a set user, fatal error";
 
             return data;
         }
 
-        if(found.get_auth_token_binary() != current_auth)
+        if(!my_auth.contains_user(current_user))
         {
             all_shared->state.set_user_name("");
 
             nlohmann::json data;
             data["type"] = "server_msg";
-            data["data"] = "Invalid Auth";
+            data["data"] = "Logged into a user for which you don't have auth, fatal error";
 
             return data;
         }
