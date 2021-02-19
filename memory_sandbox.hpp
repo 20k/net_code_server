@@ -48,6 +48,7 @@ struct sandbox_data
     std::atomic_bool terminate_semi_gracefully{false};
     std::atomic_bool terminate_realtime_gracefully{false};
     std::atomic_int sleep_for{0};
+    std::atomic_bool printed_kill{false};
 
     std::atomic_bool is_realtime{false};
     sleeper sleep_realtime;

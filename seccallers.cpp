@@ -41,7 +41,7 @@ int interrupt_handler(JSRuntime* rt, void* udata)
         return 1;
     }
     if(sand_data->terminate_realtime_gracefully)
-    { printf("Cooperating with kill realtime\n");
+    { if(!sand_data->printed_kill){printf("Cooperating with kill realtime\n"); sand_data->printed_kill = true;}
         return 1;
     }
     try

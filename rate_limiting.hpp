@@ -135,11 +135,11 @@ void handle_sleep(sandbox_data* dat);
 
 #define COOPERATE_KILL_UDATA(udata) sandbox_data* sand_data = (sandbox_data*)udata; \
                                     if(sand_data->terminate_semi_gracefully) \
-                                    { printf("Cooperating with kill udata\n");\
+                                    { if(!sand_data->printed_kill){printf("Cooperating with kill udata\n"); sand_data->printed_kill = true;}\
                                         throw std::runtime_error("Script ran for more than 5000ms and was cooperatively terminated");\
                                     } \
                                     if(sand_data->terminate_realtime_gracefully) \
-                                    { printf("Cooperating with kill realtime\n"); \
+                                    { if(!sand_data->printed_kill){printf("Cooperating with kill realtime\n"); sand_data->printed_kill = true;} \
                                         throw std::runtime_error("Terminated realtime script"); \
                                     } \
                                     handle_sleep(sand_data); \
@@ -147,22 +147,22 @@ void handle_sleep(sandbox_data* dat);
 #define COOPERATE_KILL() duk_memory_functions mem_funcs_duk; duk_get_memory_functions(ctx, &mem_funcs_duk); \
                          sandbox_data* sand_data = (sandbox_data*)mem_funcs_duk.udata; \
                          if(sand_data->terminate_semi_gracefully) \
-                         { printf("Cooperating with kill\n");\
+                         { if(!sand_data->printed_kill){printf("Cooperating with kill\n");}\
                              throw std::runtime_error("Script ran for more than 5000ms and was cooperatively terminated");\
                          } \
                          if(sand_data->terminate_realtime_gracefully) \
-                         { printf("Cooperating with kill realtime\n"); \
+                         { if(!sand_data->printed_kill){printf("Cooperating with kill realtime\n"); sand_data->printed_kill = true;}\
                             throw std::runtime_error("Terminated realtime script"); \
                          } \
                          handle_sleep(sand_data);
 
 #define COOPERATE_KILL_VCTX() sandbox_data* sand_data = js::get_sandbox_data<sandbox_data>(*vctx); \
                               if(sand_data->terminate_semi_gracefully) \
-                              { printf("Cooperating with kill\n");\
+                              { if(!sand_data->printed_kill){printf("Cooperating with kill\n"); sand_data->printed_kill = true;}\
                                   throw std::runtime_error("Script ran for more than 5000ms and was cooperatively terminated");\
                               } \
                               if(sand_data->terminate_realtime_gracefully) \
-                              { printf("Cooperating with kill realtime\n"); \
+                              { if(!sand_data->printed_kill){printf("Cooperating with kill realtime\n"); sand_data->printed_kill = true;} \
                                  throw std::runtime_error("Terminated realtime script"); \
                               } \
                               handle_sleep(sand_data);
