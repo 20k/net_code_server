@@ -2,6 +2,7 @@
 #include "memory_sandbox.hpp"
 #include "argument_object.hpp"
 
+///todo: this seems pretty uh. bad. If the value gets freed, this will be ub everywhere
 uint64_t value_to_key(const js_quickjs::value& root)
 {
     void* ptr = root.val.u.ptr;
