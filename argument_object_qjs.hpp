@@ -41,6 +41,7 @@ namespace js_quickjs
 
         void execute_jobs();
         void execute_timeout_check();
+        void compact_heap_stash();
     };
 
     using funcptr_t = JSValue (*)(JSContext*, JSValueConst, int, JSValueConst*);

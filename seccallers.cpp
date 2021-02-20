@@ -789,6 +789,8 @@ js::value js_call(js::value_context* vctx, int sl, js::value arg)
 {
     COOPERATE_KILL_VCTX();
 
+    vctx->compact_heap_stash();
+
     js::value current_function = js::get_current_function(*vctx);
 
     std::string secret_script_host = current_function.get_hidden("script_host");
@@ -1091,6 +1093,8 @@ js::value sl_call(js::value_context* vctx, std::string script_name, js::value as
 
     val.add_hidden("script_host", secret_script_host);
 
+    vctx->compact_heap_stash();
+
     return val;
 }
 
@@ -1111,6 +1115,8 @@ js::value os_call(js::value_context* vctx, std::string script_name, js::value as
     std::string secret_script_host = current_function.get_hidden("script_host");
 
     val.add_hidden("script_host", secret_script_host);
+
+    vctx->compact_heap_stash();
 
     return val;
 }

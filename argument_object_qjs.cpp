@@ -29,6 +29,7 @@ struct heap_stash
     JSValue heap_stash_value;
     JSContext* ctx = nullptr;
     std::map<uint64_t, std::map<std::string, JSValue>> hidden_map;
+    std::map<uint64_t, std::pair<JSValue, uint64_t>> reference_count;
 
     heap_stash(JSContext* global)
     {
@@ -41,26 +42,88 @@ struct heap_stash
     {
         JS_FreeValue(ctx, heap_stash_value);
 
-        /*if(hidden_map.size() != 0)
-        {
-            printf("Hidden map failure\n");
-
-            for(auto& i : hidden_map)
-            {
-                for(auto& j : i.second)
-                {
-                    std::cout << "Key " << j.first << std::endl;
-                }
-            }
-        }
-
-        assert(hidden_map.size() == 0);*/
-
         for(auto& i : hidden_map)
         {
             for(auto& j : i.second)
             {
                 JS_FreeValue(ctx, j.second);
+            }
+        }
+
+        for(auto& i : reference_count)
+        {
+            std::pair<JSValue, uint64_t>& entry = i.second;
+
+            if(JS_VALUE_HAS_REF_COUNT(entry.first))
+            {
+                JSRefCountHeader *p = (JSRefCountHeader *)JS_VALUE_GET_PTR(entry.first);
+
+                for(int kk=0; kk < entry.second; kk++)
+                {
+                    JS_FreeValue(ctx, entry.first);
+                }
+            }
+        }
+    }
+
+    void add_ref(JSValue val)
+    {
+        uint64_t key = value_to_key(val);
+
+        reference_count[key].first = JS_DupValue(ctx, val);
+        reference_count[key].second++;
+    }
+
+    void remove_ref(JSValue val)
+    {
+        uint64_t key = value_to_key(val);
+
+        std::pair<JSValue, uint64_t>& entry = reference_count[key];
+
+        if(JS_VALUE_HAS_REF_COUNT(val))
+        {
+            JSRefCountHeader *p = (JSRefCountHeader *)JS_VALUE_GET_PTR(val);
+
+            if(p->ref_count <= entry.second)
+            {
+                for(int kk=0; kk < entry.second; kk++)
+                {
+                    JS_FreeValue(ctx, val);
+                }
+
+                entry.second = 0;
+
+                for(auto& i : hidden_map[key])
+                {
+                    JS_FreeValue(ctx, i.second);
+                }
+
+                hidden_map[key].clear();
+            }
+        }
+    }
+
+    void compact()
+    {
+        for(auto& i : reference_count)
+        {
+            remove_ref(i.second.first);
+        }
+
+        for(auto it = reference_count.begin(); it != reference_count.end();)
+        {
+            if(it->second.second == 0)
+            {
+                if(auto map_it = hidden_map.find(it->first); map_it != hidden_map.end())
+                {
+                    hidden_map.erase(map_it);
+                }
+
+                it = reference_count.erase(it);
+            }
+            else
+            {
+                it++;
             }
         }
     }
@@ -74,7 +137,11 @@ struct heap_stash
 
         JSValue dup = JS_DupValue(root.ctx, val.val);
 
+        assert(hidden_map[rkey].find(key) == hidden_map[rkey].end());
+
         hidden_map[rkey].emplace(key, dup);
+
+        add_ref(root.val);
     }
 
     bool has_hidden(const js_quickjs::value& root, const std::string& key)
@@ -113,7 +180,7 @@ struct heap_stash
         return val;
     }
 
-    void remove_hidden(const js_quickjs::value& root, const std::string& key)
+    /*void remove_hidden(const js_quickjs::value& root, const std::string& key)
     {
         uint64_t rkey = value_to_key(root);
 
@@ -130,41 +197,7 @@ struct heap_stash
         JS_FreeValue(root.ctx, it2->second);
 
         it->second.erase(it2);
-    }
-
-    void remove_all_hidden(const js_quickjs::value& root)
-    {
-        uint64_t rkey = value_to_key(root);
-
-        auto it = hidden_map.find(rkey);
-
-        if(it == hidden_map.end())
-            return;
-
-        for(auto& i : it->second)
-        {
-            JS_FreeValue(root.ctx, i.second);
-        }
-
-        hidden_map.erase(it);
-    }
-
-    void remove_all_hidden(JSContext* ctx, const JSValue& root)
-    {
-        uint64_t rkey = value_to_key(root);
-
-        auto it = hidden_map.find(rkey);
-
-        if(it == hidden_map.end())
-            return;
-
-        for(auto& i : it->second)
-        {
-            JS_FreeValue(ctx, i.second);
-        }
-
-        hidden_map.erase(it);
-    }
+    }*/
 };
 
 struct global_stash
@@ -301,6 +334,13 @@ void js_quickjs::value_context::execute_jobs()
     }
 }
 
+void js_quickjs::value_context::compact_heap_stash()
+{
+    heap_stash* stash = get_heap_stash(ctx);
+
+    stash->compact();
+}
+
 void js_quickjs::value_context::execute_timeout_check()
 {
     JSInterruptHandler* handler = JS_GetInterruptHandler(heap);
@@ -403,37 +443,11 @@ js_quickjs::value::~value()
 {
     if(!released && has_value)
     {
-        if((is_function() || is_object()))
-        {
-            assert(JS_VALUE_HAS_REF_COUNT(val));
-
-            JSRefCountHeader *p = (JSRefCountHeader *)JS_VALUE_GET_PTR(val);
-
-            if(p->ref_count <= 1)
-            {
-                heap_stash* stash = get_heap_stash(ctx);
-
-                stash->remove_all_hidden(*this);
-            }
-        }
-
         JS_FreeValue(ctx, val);
     }
 
     if(has_parent)
     {
-        if(JS_VALUE_HAS_REF_COUNT(parent_value))
-        {
-            JSRefCountHeader *p = (JSRefCountHeader *)JS_VALUE_GET_PTR(parent_value);
-
-            if(p->ref_count <= 1)
-            {
-                heap_stash* stash = get_heap_stash(ctx);
-
-                stash->remove_all_hidden(ctx, parent_value);
-            }
-        }
-
         JS_FreeValue(ctx, parent_value);
     }
 }
@@ -720,10 +734,6 @@ js_quickjs::qstack_manager::qstack_manager(js_quickjs::value& _val) : val(_val)
 {
     if(val.has_value)
     {
-        heap_stash* stash = get_heap_stash(_val.ctx);
-
-        stash->remove_all_hidden(_val);
-
         JS_FreeValue(val.ctx, val.val);
     }
 }
