@@ -1405,6 +1405,10 @@ js::value msg__recent(priv_context& priv_ctx, js::value_context& vctx, js::value
         pruned_messages.push_back(cmsg);
     }
 
+    ///yeah this is bad
+    while((int)pruned_messages.size() > num)
+        pruned_messages.erase(pruned_messages.begin());
+
     if(pretty)
     {
         std::sort(pruned_messages.begin(), pruned_messages.end(), [](const chat_message& i1, const chat_message& i2)
@@ -1412,10 +1416,6 @@ js::value msg__recent(priv_context& priv_ctx, js::value_context& vctx, js::value
             return i1.time_ms > i2.time_ms;
         });
     }
-
-    ///yeah this is bad
-    while((int)pruned_messages.size() > num)
-        pruned_messages.erase(pruned_messages.begin());
 
     if(!pretty)
     {

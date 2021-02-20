@@ -4,10 +4,27 @@
 #include "serialisables.hpp"
 #include <libncclient/nc_util.hpp>
 
-void prune_chat_history(chat_channel& in)
+///wait, is this losing notifs in the db?
+void prune_chat_history(db::read_write_tx& rwtx, chat_channel& in)
 {
-    while(in.history.size() > 100)
-        in.history.erase(in.history.begin());
+    int num_to_erase = (int)in.history.size() - 100;
+
+    if(num_to_erase <= 0)
+        return;
+
+    for(int i=0; i < num_to_erase; i++)
+    {
+        size_t id = in.history[i];
+
+        chat_message msg;
+        msg.id = id;
+
+        db_disk_remove(rwtx, msg);
+    }
+
+    in.history = std::vector<size_t>(in.history.begin() + num_to_erase, in.history.end());
+
+    assert(in.history.size() == 100);
 }
 
 void chats::say_in_local(const std::string& msg, const std::vector<std::string>& to, const std::string& from)
@@ -31,7 +48,7 @@ void chats::say_in_local(const std::string& msg, const std::vector<std::string>&
     db_disk_load(ctx, chan, "$$local");
     chan.history.push_back(cmsg.id);
 
-    prune_chat_history(chan);
+    prune_chat_history(ctx, chan);
 
     db_disk_overwrite(ctx, chan);
 }
@@ -57,7 +74,7 @@ bool chats::say_in_channel(const std::string& msg, const std::string& channel, c
     db_disk_overwrite(ctx, cmsg);
 
     chan.history.push_back(cmsg.id);
-    prune_chat_history(chan);
+    prune_chat_history(ctx, chan);
 
     db_disk_overwrite(ctx, chan);
 
@@ -89,7 +106,7 @@ void chats::tell_to(const std::string& msg, const std::string& to, const std::st
     db_disk_load(ctx, chan, channel);
 
     chan.history.push_back(cmsg.id);
-    prune_chat_history(chan);
+    prune_chat_history(ctx, chan);
 
     db_disk_overwrite(ctx, chan);
 }
@@ -118,7 +135,7 @@ void chats::create_notif_to(const std::string& msg, const std::string& to)
     ///will create if it doesn't exist, notifs are a virtual channel
     db_disk_load(ctx, chan, channel);
     chan.history.push_back(cmsg.id);
-    prune_chat_history(chan);
+    prune_chat_history(ctx, chan);
 
     db_disk_overwrite(ctx, chan);
 }
