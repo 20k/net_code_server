@@ -54,14 +54,9 @@ struct heap_stash
         {
             std::pair<JSValue, uint64_t>& entry = i.second;
 
-            if(JS_VALUE_HAS_REF_COUNT(entry.first))
+            for(int kk=0; kk < (int)entry.second; kk++)
             {
-                JSRefCountHeader *p = (JSRefCountHeader *)JS_VALUE_GET_PTR(entry.first);
-
-                for(int kk=0; kk < entry.second; kk++)
-                {
-                    JS_FreeValue(ctx, entry.first);
-                }
+                JS_FreeValue(ctx, entry.first);
             }
         }
     }
@@ -84,9 +79,9 @@ struct heap_stash
         {
             JSRefCountHeader *p = (JSRefCountHeader *)JS_VALUE_GET_PTR(val);
 
-            if(p->ref_count <= entry.second)
+            if(p->ref_count <= (int)entry.second)
             {
-                for(int kk=0; kk < entry.second; kk++)
+                for(int kk=0; kk < (int)entry.second; kk++)
                 {
                     JS_FreeValue(ctx, val);
                 }
