@@ -1989,6 +1989,7 @@ void strip_old_msg_or_notif(mongo_lock_proxy& ctx)
     chats::strip_all_old();
 }
 
+///todo: return nothing if nothing has changed
 nlohmann::json handle_client_poll_json(user& usr)
 {
     usr.cleanup_call_stack(-2);
