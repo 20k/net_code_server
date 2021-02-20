@@ -2236,33 +2236,13 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
         if(SHOULD_RATELIMIT(current_auth, POLL))
             return nlohmann::json();
 
-        ///the set_user_name side of this is nonsensical, todo: come back and cleanup this function
-        {
-            mongo_read_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
-
-            user u1;
-
-            if(!u1.load_from_db(mongo_user_info, current_user))
-                return nlohmann::json();
-
-            all_shared->state.set_user_name(u1.name);
-        }
-
-        std::string cur_name = all_shared->state.get_user_name();
-
         user usr;
 
         {
-            mongo_read_proxy user_info = get_global_mongo_user_info_context(-2);
+            db::read_tx rtx;
 
-            if(!usr.load_from_db(user_info, cur_name))
-            {
-                nlohmann::json data;
-                data["type"] = "server_msg";
-                data["data"] = "Error, invalid username in client_poll";
-
-                return data;
-            }
+            if(!usr.load_from_db(rtx, current_user))
+                return nlohmann::json();
         }
 
         return handle_client_poll_json(usr);
