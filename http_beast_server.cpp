@@ -131,6 +131,12 @@ void websocket_server(connection& conn)
                         dat.mime_type = "application/wasm";
                         dat.body = fcache.get("./doc_root/index.wasm");
                     }
+
+                    else if(req.path.ends_with("favicon.ico"))
+                    {
+                        dat.mime_type = "image/x-icon";
+                        dat.body = fcache.get("./doc_root/favicon.ico");
+                    }
                     else
                     {
                         dat.mime_type = "text/html";
