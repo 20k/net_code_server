@@ -2236,6 +2236,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
         if(SHOULD_RATELIMIT(current_auth, POLL))
             return nlohmann::json();
 
+        ///the set_user_name side of this is nonsensical, todo: come back and cleanup this function
         {
             mongo_read_proxy mongo_user_info = get_global_mongo_user_info_context(-2);
 
