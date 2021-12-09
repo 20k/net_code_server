@@ -5,6 +5,7 @@
 #include <array>
 #include <libncclient/nc_util.hpp>
 #include <nlohmann/json.hpp>
+#include <optional>
 
 #define BITS_PER_VLQ 5
 
