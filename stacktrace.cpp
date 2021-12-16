@@ -3,9 +3,13 @@
 #ifndef NO_STACKTRACE
 #include <signal.h>     // ::signal, ::raise
 #include <boost/stacktrace.hpp>
-#include <boost/filesystem.hpp>
 #include <iostream>
 #include <sstream>
+
+#ifdef __WIN32__
+#include <fstream>
+#include <filesystem>
+#endif // __WIN32__
 
 void signal_handler(int signum)
 {
@@ -38,7 +42,7 @@ void stack_on_start()
     ::signal(SIGABRT, &signal_handler);
 
     #ifdef __WIN32__
-    if (boost::filesystem::exists("./backtrace.dump"))
+    if (std::filesystem::exists("./backtrace.dump"))
     {
         // there is a backtrace
         std::ifstream ifs("./backtrace.dump");
@@ -48,8 +52,8 @@ void stack_on_start()
 
         // cleaning up
         ifs.close();
-        if(boost::filesystem::exists("./backtrace_1.dump"))
-            boost::filesystem::remove("./backtrace_1.dump");
+        if(std::filesystem::exists("./backtrace_1.dump"))
+            std::filesystem::remove("./backtrace_1.dump");
 
         rename("./backtrace.dump", "./backtrace_1.dump");
     }
