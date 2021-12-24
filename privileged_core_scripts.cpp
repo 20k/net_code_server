@@ -543,7 +543,7 @@ js::value scripts__me(priv_context& priv_ctx, js::value_context& vctx, js::value
     }
     else
     {
-        std::string str = format_pretty_names(names, true);
+        std::string str = format_pretty_names(names, false);
 
         return js::make_value(vctx, str);
     }
@@ -593,7 +593,7 @@ js::value scripts__public(priv_context& priv_ctx, js::value_context& vctx, js::v
 
     if(pretty)
     {
-        std::string str = format_pretty_names(names, true);
+        std::string str = format_pretty_names(names, false);
 
         return js::make_value(vctx, str);
     }
