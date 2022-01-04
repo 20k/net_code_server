@@ -836,7 +836,7 @@ js::value cash_internal_xfer(js::value_context& vctx, const std::string& from, c
         qm.process(get_thread_id(vctx), from, dat);
     }
 
-    create_xfer_notif(vctx, from, to, amount);
+    create_xfer_notif(from, to, amount);
 
     return js::make_success(vctx);
 }
@@ -1280,7 +1280,7 @@ js::value msg__tell(priv_context& priv_ctx, js::value_context& vctx, js::value& 
     return js::make_success(vctx);
 }
 
-void create_notification(int lock_id, const std::string& to, const std::string& notif_msg)
+void create_notification(const std::string& to, const std::string& notif_msg)
 {
     //COOPERATE_KILL();
 
@@ -1290,42 +1290,45 @@ void create_notification(int lock_id, const std::string& to, const std::string& 
     if(notif_msg.size() > 10000)
         return;
 
-    ///TODO: KIND OF SHITTY
-    chats::create_notif_to(notif_msg, to);
+    async::start([notif_msg, to]()
+    {
+        ///TODO: KIND OF SHITTY
+        chats::create_notif_to(notif_msg, to);
+    });
 }
 
-void create_xfer_notif(js::value_context& vctx, const std::string& xfer_from, const std::string& xfer_to, double amount)
+void create_xfer_notif(const std::string& xfer_from, const std::string& xfer_to, double amount)
 {
     std::string notif_from = make_notif_col("-Sent " + to_string_with_enforced_variable_dp(amount, 2) + " (xfer)-");
     std::string notif_to = make_notif_col("-Received " + to_string_with_enforced_variable_dp(amount, 2) + " (xfer)-");
 
     if(xfer_from != "")
-        create_notification(get_thread_id(vctx), xfer_from, notif_from);
+        create_notification(xfer_from, notif_from);
 
     if(xfer_to != "")
-        create_notification(get_thread_id(vctx), xfer_to, notif_to);
+        create_notification(xfer_to, notif_to);
 }
 
-void create_xfer_item_notif(js::value_context& vctx, const std::string& xfer_from, const std::string& xfer_to, const std::string& item_name)
+void create_xfer_item_notif(const std::string& xfer_from, const std::string& xfer_to, const std::string& item_name)
 {
     std::string notif_from = make_notif_col("-Lost " + item_name + " (xfer)-");
     std::string notif_to = make_notif_col("-Received " + item_name + " (xfer)-");
 
     if(xfer_from != "")
-        create_notification(get_thread_id(vctx), xfer_from, notif_from);
+        create_notification(xfer_from, notif_from);
 
     if(xfer_to != "")
-        create_notification(get_thread_id(vctx), xfer_to, notif_to);
+        create_notification(xfer_to, notif_to);
 }
 
-void create_destroy_item_notif(js::value_context& vctx, const std::string& to, const std::string& item_name)
+void create_destroy_item_notif(const std::string& to, const std::string& item_name)
 {
     if(item_name == "")
         return;
 
     std::string cull_msg = make_notif_col("-Destroyed " + item_name + "-");
 
-    create_notification(get_thread_id(vctx), to, cull_msg);
+    create_notification(to, cull_msg);
 }
 
 std::string format_time(const std::string& in)
@@ -1811,13 +1814,6 @@ std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr,
     return "";
 }
 
-std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr, user_nodes& nodes, std::string& accum, int thread_id)
-{
-    db::read_write_tx ctx;
-
-    return load_item_raw(node_idx, load_idx, unload_idx, usr, nodes, accum, ctx);
-}
-
 js::value push_internal_items_view(js::value_context& vctx, int pretty, int full, user_nodes& nodes, user& found_user, std::string preamble, bool pvp)
 {
     low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
@@ -1981,22 +1977,24 @@ js::value item__cull(priv_context& priv_ctx, js::value_context& vctx, js::value&
 
         std::string accum;
 
-        auto ret = load_item_raw(-1, -1, idx, opt_user_and_nodes->first, opt_user_and_nodes->second, accum, get_thread_id(vctx));
-
-        if(ret != "")
-            returns.push_back(js::make_error(vctx, ret));
-        else
-            returns.push_back(js::make_success(vctx));
-
         {
             mongo_lock_proxy items_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
 
+            auto ret = load_item_raw(-1, -1, idx, opt_user_and_nodes->first, opt_user_and_nodes->second, accum, items_ctx);
+
+            if(ret != "")
+                returns.push_back(js::make_error(vctx, ret));
+            else
+                returns.push_back(js::make_success(vctx));
+
             item found;
             db_disk_load(items_ctx, found, id);
-
-            create_destroy_item_notif(vctx, get_caller(vctx), found.get_prop("short_name"));
-
             db_disk_remove(items_ctx, found);
+
+            std::string caller = get_caller(vctx);
+            std::string short_name = found.get_prop("short_name");
+
+            create_destroy_item_notif(caller, short_name);
         }
 
         usr.remove_item(id);
@@ -2065,9 +2063,11 @@ js::value item__manage(priv_context& priv_ctx, js::value_context& vctx, js::valu
 
     if(load_idx >= 0 || unload_idx >= 0)
     {
+        db::read_write_tx rwtx;
+
         std::string accum;
 
-        auto ret = load_item_raw(node_idx, load_idx, unload_idx, found_user, nodes, accum, get_thread_id(vctx));
+        auto ret = load_item_raw(node_idx, load_idx, unload_idx, found_user, nodes, accum, rwtx);
 
         if(ret != "")
             return js::make_error(vctx, ret);
@@ -2123,11 +2123,13 @@ js::value item__load(priv_context& priv_ctx, js::value_context& vctx, js::value&
 
     for(int& idx : indices)
     {
+        db::read_write_tx rwtx;
+
         if(idx >= 0)
         {
             std::string accum;
 
-            auto ret = load_item_raw(node_idx, idx, -1, user_and_node_opt->first, user_and_node_opt->second, accum, get_thread_id(vctx));
+            auto ret = load_item_raw(node_idx, idx, -1, user_and_node_opt->first, user_and_node_opt->second, accum, rwtx);
 
             if(ret != "")
                 rvector.push_back(js::make_error(vctx, ret + " for index " + std::to_string(idx)));
@@ -2184,9 +2186,11 @@ js::value item__unload(priv_context& priv_ctx, js::value_context& vctx, js::valu
     {
         if(idx >= 0)
         {
+            db::read_write_tx rwtx;
+
             std::string accum;
 
-            auto ret = load_item_raw(node_idx, -1, idx, user_and_node_opt->first, user_and_node_opt->second, accum, get_thread_id(vctx));
+            auto ret = load_item_raw(node_idx, -1, idx, user_and_node_opt->first, user_and_node_opt->second, accum, rwtx);
 
             if(ret != "")
                 rvector.push_back(js::make_error(vctx, ret + " for index " + std::to_string(idx)));
@@ -2208,19 +2212,35 @@ js::value item__unload(priv_context& priv_ctx, js::value_context& vctx, js::valu
     return js::make_error(vctx, "Implementation error in item.unload");
 }
 
-js::value push_xfer_item_id_with_logs(js::value_context& vctx, std::string item_id, user& from_user, user& to_user, bool is_pvp)
+struct xfer_item_info
+{
+    float items_to_destroy_link = 100;
+
+    std::vector<std::string> path;
+
+    std::optional<low_level_structure*> sys_from_opt;
+    std::optional<low_level_structure*> sys_to_opt;
+
+    xfer_item_info(js::value_context& vctx, const std::string& from_user, const std::string& to_user)
+    {
+        #ifdef XFER_PATHS
+        path = get_global_playspace_network_manager().get_accessible_path_to(vctx, to_user, from_user, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, 1.f / items_to_destroy_link);
+        #endif // XFER_PATHS
+
+        low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
+
+        sys_from_opt = low_level_structure_manage.get_system_of(from_user);
+        sys_to_opt = low_level_structure_manage.get_system_of(to_user);
+    }
+};
+
+js::value push_xfer_item_id_with_logs(js::value_context& vctx, xfer_item_info& inf, std::string item_id, user& from_user, user& to_user, bool is_pvp, db::read_write_tx& rwtx)
 {
     if(from_user.name == to_user.name)
         return js::make_success(vctx);
 
-    float items_to_destroy_link = 100;
-
-    playspace_network_manager& playspace_network_manage = get_global_playspace_network_manager();
-
     #ifdef XFER_PATHS
-    std::vector<std::string> path = playspace_network_manage.get_accessible_path_to(vctx, to_user.name, from_user.name, (path_info::path_info)(path_info::NONE | path_info::ALLOW_WARP_BOUNDARY | path_info::TEST_ACTION_THROUGH_WARP_NPCS), -1, 1.f / items_to_destroy_link);
-
-    if(path.size() == 0)
+    if(inf.path.size() == 0)
         return js::make_error(vctx, "No path to user through the network");
     #endif // XFER_PATHS
 
@@ -2229,24 +2249,17 @@ js::value push_xfer_item_id_with_logs(js::value_context& vctx, std::string item_
     {
         item it;
 
-        mongo_read_proxy mongo_context = get_global_mongo_user_items_context(-2);
-
-        if(!db_disk_load(mongo_context, it, item_id))
+        if(!db_disk_load(rwtx, it, item_id))
             return js::make_error(vctx, "No such item");
 
         found_item_description = it.get_prop("short_name") + "/" + item_id;
     }
 
-    low_level_structure_manager& low_level_structure_manage = get_global_low_level_structure_manager();
-
-    auto sys_from_opt = low_level_structure_manage.get_system_of(from_user);
-    auto sys_to_opt = low_level_structure_manage.get_system_of(to_user);
-
-    if(!sys_from_opt.has_value() || !sys_to_opt.has_value())
+    if(!inf.sys_from_opt.has_value() || !inf.sys_to_opt.has_value())
         return js::make_error(vctx, "Really bad error: not in a system in push_xfer_item_id_with_logs");
 
-    low_level_structure& sys_from = *sys_from_opt.value();
-    low_level_structure& sys_to = *sys_to_opt.value();
+    low_level_structure& sys_from = *inf.sys_from_opt.value();
+    low_level_structure& sys_to = *inf.sys_to_opt.value();
 
     size_t current_time = get_wall_time();
 
@@ -2283,27 +2296,36 @@ js::value push_xfer_item_id_with_logs(js::value_context& vctx, std::string item_
 
     item placeholder;
 
-    if(placeholder.transfer_from_to_by_index(from_user.item_to_index(item_id), from_user, to_user, get_thread_id(vctx)))
+    if(placeholder.transfer_from_to_by_index(from_user.item_to_index(item_id), from_user, to_user, rwtx))
     {
-        user_log next;
-        next.add("type", "item_xfer", "N");
+        std::string caller = get_caller(vctx);
 
-        #ifdef XFER_PATHS
-        playspace_network_manage.modify_path_per_link_strength_with_logs(path, -1.f / items_to_destroy_link, {next}, get_thread_id(vctx));
-        #endif // XFER_PATHS
+        std::string to_name = to_user.name;
+        std::string from_name = from_user.name;
 
-        //std::string xfer = "`NItem xfer` | from: " + from  + ", to: " + to + ", name: " + found_item_description;
+        std::string placeholder_name = placeholder.get_prop("short_name");
 
-        next.add("from", from_user.name, string_to_colour(from_user.name));
-        next.add("to", to_user.name, string_to_colour(to_user.name));
-        next.add("name", found_item_description, "");
+        std::vector<std::string> path = inf.path;
+        float items_to_destroy_link = inf.items_to_destroy_link;
 
-        make_logs_on(vctx, from_user.name, user_node_info::ITEM_SEG, {next});
-        make_logs_on(vctx, to_user.name, user_node_info::ITEM_SEG, {next});
+        async::start([caller, to_name, from_name, path, items_to_destroy_link, placeholder_name, found_item_description]()
+        {
+            user_log next;
+            next.add("type", "item_xfer", "N");
 
-        //duk_push_int(ctx, placeholder.get_prop_as_integer("item_id"));
+            #ifdef XFER_PATHS
+            get_global_playspace_network_manager().modify_path_per_link_strength_with_logs(path, -1.f / items_to_destroy_link, {next}, -2);
+            #endif // XFER_PATHS
 
-        create_xfer_item_notif(vctx, from_user.name, to_user.name, placeholder.get_prop("short_name"));
+            next.add("from", from_name, string_to_colour(from_name));
+            next.add("to", to_name, string_to_colour(to_name));
+            next.add("name", found_item_description, "");
+
+            make_logs_on(caller, from_name, user_node_info::ITEM_SEG, {next}, -2);
+            make_logs_on(caller, to_name, user_node_info::ITEM_SEG, {next}, -2);
+
+            create_xfer_item_notif(from_name, to_name, placeholder_name);
+        });
 
         return js::make_success(vctx);
     }
@@ -2311,9 +2333,9 @@ js::value push_xfer_item_id_with_logs(js::value_context& vctx, std::string item_
         return js::make_error(vctx, "Something went wrong (I appreciate this is not helpful)");
 }
 
-js::value push_xfer_item_with_logs(js::value_context& vctx, int item_idx, user& from, user& to, bool is_pvp)
+js::value push_xfer_item_with_logs(js::value_context& vctx, xfer_item_info& inf, int item_idx, user& from, user& to, bool is_pvp, db::read_write_tx& rwtx)
 {
-    return push_xfer_item_id_with_logs(vctx, from.index_to_item(item_idx), from, to, is_pvp);
+    return push_xfer_item_id_with_logs(vctx, inf, from.index_to_item(item_idx), from, to, is_pvp, rwtx);
 }
 
 js::value item__xfer_to(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl)
@@ -2325,6 +2347,8 @@ js::value item__xfer_to(priv_context& priv_ctx, js::value_context& vctx, js::val
 
     std::string from = get_caller(vctx);
     std::string to = arg["user"];
+
+    xfer_item_info xfer_info(vctx, from, to);
 
     db::read_write_tx rtx;
 
@@ -2354,7 +2378,7 @@ js::value item__xfer_to(priv_context& priv_ctx, js::value_context& vctx, js::val
         if(ret != "")
             rvector.push_back(js::make_error(vctx, ret + " for index " + std::to_string(item_idx)));
         else
-            rvector.push_back(push_xfer_item_with_logs(vctx, item_idx, usr_from, usr_to, false));
+            rvector.push_back(push_xfer_item_with_logs(vctx, xfer_info, item_idx, usr_from, usr_to, false, rtx));
     }
 
     {
@@ -2801,7 +2825,7 @@ std::optional<js::value> handle_confirmed(js::value_context& vctx, bool confirm,
 
         make_logs_on(vctx, username, user_node_info::CASH_SEG, {next});
 
-        create_xfer_notif(vctx, username, "", price);
+        create_xfer_notif(username, "", price);
     }
 
     return std::nullopt;
@@ -2951,26 +2975,30 @@ js::value item__steal(priv_context& priv_ctx, js::value_context& vctx, js::value
         }
     }
 
+    xfer_item_info xfer_inf(vctx, found_user.name, get_caller(vctx));
+
     std::vector<js::value> rvector;
-
-    mongo_lock_proxy steal_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
-
     user to_user;
-    to_user.load_from_db(steal_ctx, get_caller(vctx));
 
-    for(auto& item_id : item_ids)
     {
-        std::string accum;
-        auto ret = load_item_raw(-1, -1, found_user.item_to_index(item_id), found_user, nodes, accum, get_thread_id(vctx));
+        mongo_lock_proxy steal_ctx = get_global_mongo_user_info_context(get_thread_id(vctx));
 
-        if(ret != "")
-            rvector.push_back(js::make_error(vctx, ret));
-        else
-            rvector.push_back(push_xfer_item_id_with_logs(vctx, item_id, found_user, to_user, true));
+        to_user.load_from_db(steal_ctx, get_caller(vctx));
+
+        for(auto& item_id : item_ids)
+        {
+            std::string accum;
+            auto result = load_item_raw(-1, -1, found_user.item_to_index(item_id), found_user, nodes, accum, steal_ctx);
+
+            if(result != "")
+                rvector.push_back(js::make_error(vctx, result));
+            else
+                rvector.push_back(push_xfer_item_id_with_logs(vctx, xfer_inf, item_id, found_user, to_user, true, steal_ctx));
+        }
+
+        to_user.overwrite_user_in_db(steal_ctx);
+        found_user.overwrite_user_in_db(steal_ctx);
     }
-
-    to_user.overwrite_user_in_db(steal_ctx);
-    found_user.overwrite_user_in_db(steal_ctx);
 
     if(is_arr)
         return js::make_value(vctx, rvector);
@@ -3345,7 +3373,9 @@ js::value hack_internal(priv_context& priv_ctx, js::value_context& vctx, js::val
 
                     array_data["lock_breached"] = true;
 
-                    create_notification(get_thread_id(vctx), name_of_person_being_attacked, make_notif_col("-" + i.get_prop("short_name") + " breached-"));
+                    std::string short_name = i.get_prop("short_name");
+
+                    create_notification(name_of_person_being_attacked, make_notif_col("-" + short_name + " breached-"));
 
                     ///wants to be synchronous so that we don't overlap writes
                     mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(get_thread_id(vctx));
@@ -3382,7 +3412,7 @@ js::value hack_internal(priv_context& priv_ctx, js::value_context& vctx, js::val
 
         msg += dat;
 
-        create_notification(get_thread_id(vctx), name_of_person_being_attacked, make_error_col("-" + user_node_info::long_names[current_node->type] + " Node Compromised-"));
+        create_notification(name_of_person_being_attacked, make_error_col("-" + user_node_info::long_names[current_node->type] + " Node Compromised-"));
     }
 
     if(all_success)
@@ -6207,7 +6237,7 @@ js::value sys__access(priv_context& priv_ctx, js::value_context& vctx, js::value
 
                     array_data["engaged"] = true;
 
-                    create_notification(get_thread_id(vctx), my_user.name, make_notif_col("-Arrived at " + connected_system + "-"));
+                    create_notification(my_user.name, make_notif_col("-Arrived at " + connected_system + "-"));
                 }
             }
         }

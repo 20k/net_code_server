@@ -157,7 +157,7 @@ struct item : serialisable, free_function
 
     bool transfer_from_to(const std::string& from, const std::string& to, int thread_id);
 
-    bool transfer_from_to_by_index(int index, user& from, user& to, int thread_id);
+    bool transfer_from_to_by_index(int index, user& from, user& to, db::read_write_tx& rwtx);
 
     bool should_rotate();
     void handle_rotate();

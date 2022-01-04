@@ -79,7 +79,7 @@ struct user : serialisable, free_function
 
     std::map<std::string, double> get_properties_from_loaded_items(db::read_tx& ctx);
 
-    std::map<std::string, double> get_total_user_properties(int thread_id);
+    std::map<std::string, double> get_total_user_properties();
 
     bool has_loaded_item(const std::string& id);
     bool load_item(const std::string& id);

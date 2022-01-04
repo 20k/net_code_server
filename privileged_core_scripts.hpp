@@ -111,10 +111,10 @@ js::value msg__manage(priv_context& priv_ctx, js::value_context& vctx, js::value
 js::value msg__send(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 js::value msg__tell(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
-void create_notification(int lock_id, const std::string& to, const std::string& notif_msg);
-void create_xfer_notif(js::value_context& vctx, const std::string& xfer_from, const std::string& xfer_to, double amount);
-void create_xfer_item_notif(js::value_context& vctx, const std::string& xfer_from, const std::string& xfer_to, const std::string& item_name);
-void create_destroy_item_notif(js::value_context& vctx, const std::string& to, const std::string& item_name);
+void create_notification(const std::string& to, const std::string& notif_msg);
+void create_xfer_notif(const std::string& xfer_from, const std::string& xfer_to, double amount);
+void create_xfer_item_notif(const std::string& xfer_from, const std::string& xfer_to, const std::string& item_name);
+void create_destroy_item_notif(const std::string& to, const std::string& item_name);
 
 ///formats time
 std::string format_time(const std::string& in);
@@ -142,7 +142,6 @@ std::string format_item(item& i, bool is_short, user& usr, user_nodes& nodes);
 void change_item_raw(mongo_lock_proxy& mongo_ctx, int load_idx, int unload_idx, user& found_user);*/
 
 
-std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr, user_nodes& nodes, std::string& accum, int thread_id);
 std::string load_item_raw(int node_idx, int load_idx, int unload_idx, user& usr, user_nodes& nodes, std::string& accum, db::read_write_tx& ctx);
 
 js::value push_internal_items_view(js::value_context& vctx, int pretty, int full, user_nodes& nodes, user& found_user, std::string preamble, bool pvp);
@@ -156,8 +155,6 @@ js::value item__list(priv_context& priv_ctx, js::value_context& vctx, js::value&
 js::value item__load(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 
 js::value item__unload(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
-
-js::value push_xfer_item_with_logs(js::value_context& vctx, int item_idx, user& from, user& to, bool is_pvp);
 
 js::value item__xfer_to(priv_context& priv_ctx, js::value_context& vctx, js::value& arg, int sl);
 

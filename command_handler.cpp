@@ -1755,9 +1755,7 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
 
             std::map<std::string, double> user_details;
 
-            {
-                user_details = cur.get_total_user_properties(-2);
-            }
+            user_details = cur.get_total_user_properties();
 
             int num_chars = script_inf.unparsed_source.size();
             int max_chars = user_details["char_count"];

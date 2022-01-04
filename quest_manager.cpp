@@ -285,7 +285,7 @@ void quest::send_new_quest_alert_to(int lock_id, const std::string& to)
 {
     std::string notif = "New Mission Received:\n" + get_as_string() + "\n";
 
-    create_notification(lock_id, to, notif);
+    create_notification(to, notif);
 }
 
 enum class quest_state
@@ -369,7 +369,7 @@ void process_qm(quest_manager& qm, int lock_id, const std::string& caller, T& t)
 
     if(str != "")
     {
-        create_notification(lock_id, caller, "Completed:\n" + str + "\n");
+        create_notification(caller, "Completed:\n" + str + "\n");
     }
 }
 

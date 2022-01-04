@@ -125,7 +125,7 @@ std::map<std::string, double> user::get_properties_from_loaded_items(db::read_tx
     return ret;
 }
 
-std::map<std::string, double> user::get_total_user_properties(int thread_id)
+std::map<std::string, double> user::get_total_user_properties()
 {
     std::map<std::string, double> found;
 
@@ -190,7 +190,7 @@ bool user::load_item(const std::string& id)
     std::vector<std::string> items = loaded_upgr_idx;
 
     ///non blocking get total user properties
-    if(items.size() >= get_total_user_properties(-2)["max_items"])
+    if(items.size() >= get_total_user_properties()["max_items"])
         return false;
 
     items.push_back(id);
@@ -827,7 +827,7 @@ void user::pump_notifications(int lock_id)
         ///handle any notifs
         if(current_time >= q.timestamp && q.notif_on_finish != "")
         {
-            create_notification(lock_id, name, q.notif_on_finish);
+            create_notification(name, q.notif_on_finish);
 
             q.notif_on_finish = "";
 
@@ -882,7 +882,7 @@ void user::pump_notifications(int lock_id)
 
                         target_system.steal_user(*this, current_system, u2.get_local_pos(), u1.get_local_pos(), i);
 
-                        create_notification(lock_id, name, make_notif_col("-Arrived at " + target_system.name + "-"));
+                        create_notification(name, make_notif_col("-Arrived at " + target_system.name + "-"));
 
                         #ifdef DEBUG_WARP
                         ///the problem is that we reset the move queue in steal user
@@ -892,7 +892,7 @@ void user::pump_notifications(int lock_id)
                     }
                     else
                     {
-                        create_notification(lock_id, name, make_notif_col("-Could not activate, out of range-"));
+                        create_notification(name, make_notif_col("-Could not activate, out of range-"));
 
                         reset_internal_queue();
 
@@ -904,7 +904,7 @@ void user::pump_notifications(int lock_id)
                 }
                 else
                 {
-                    create_notification(lock_id, name, make_notif_col("-Could not establish link between systems (internal server error?)-"));
+                    create_notification(name, make_notif_col("-Could not establish link between systems (internal server error?)-"));
 
                     reset_internal_queue();
 

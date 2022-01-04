@@ -30,7 +30,7 @@ bool item::transfer_to_user(const std::string& username, int thread_id)
             return false;
 
         ///NON BLOCKING
-        int max_items = temp.get_total_user_properties(thread_id)["max_items"];
+        int max_items = temp.get_total_user_properties()["max_items"];
 
         if(temp.num_items() >= max_items)
             return false;
@@ -52,7 +52,7 @@ bool item::transfer_to_user(const std::string& username, int thread_id)
     return true;
 }
 
-bool item::transfer_from_to_by_index(int index, user& u1, user& u2, int thread_id)
+bool item::transfer_from_to_by_index(int index, user& u1, user& u2, db::read_write_tx& rwtx)
 {
     if(u1.name == u2.name)
         return true;
@@ -65,64 +65,22 @@ bool item::transfer_from_to_by_index(int index, user& u1, user& u2, int thread_i
     if(item_id == "")
         return false;
 
-    if(u2.num_items() >= u2.get_total_user_properties(thread_id)["max_items"])
+    if(u2.num_items() >= u2.get_total_user_properties()["max_items"])
         return false;
-
-    /*std::cout << "ITEM ID " << item_id << " WITH INDEX " << index << std::endl;
-
-    std::cout << "FROM " << u1.name << std::endl;
-
-    for(auto& i : u1.upgr_idx)
-    {
-        std::cout << i << std::endl;
-    }
-
-    std::cout << "TO " << u2.name << std::endl;
-
-    for(auto& i : u2.upgr_idx)
-    {
-        std::cout << i << std::endl;
-    }*/
 
     u1.remove_item(item_id);
     u2.append_item(item_id);
 
-    /*std::cout << "FROM AFTER " << u1.name << std::endl;
+    db_disk_load(rwtx, *this, item_id);
 
-    for(auto& i : u1.upgr_idx)
-    {
-        std::cout << i << std::endl;
-    }
+    set_as("owner", u2.name);
+    set_as("item_id", item_id);
 
-    std::cout << "TO " << u2.name << std::endl;
+    ///unregister script bundle
+    if((int)get_int("item_type") == item_types::EMPTY_SCRIPT_BUNDLE)
+        set_as("registered_as", "");
 
-    for(auto& i : u2.upgr_idx)
-    {
-        std::cout << i << std::endl;
-    }
-
-    std::cout << "DONE\n";*/
-
-    {
-        mongo_lock_proxy item_ctx = get_global_mongo_user_items_context(thread_id);
-
-        db_disk_load(item_ctx, *this, item_id);
-
-        set_as("owner", u2.name);
-        set_as("item_id", item_id);
-
-        ///unregister script bundle
-        if((int)get_int("item_type") == item_types::EMPTY_SCRIPT_BUNDLE)
-            set_as("registered_as", "");
-
-        db_disk_overwrite(item_ctx, *this);
-    }
-
-    /*{
-        mongo_lock_proxy user_ctx = get_global_mongo_user_info_context(thread_id);
-        u1.overwrite_user_in_db(user_ctx);
-        u2.overwrite_user_in_db(user_ctx);
-    }*/
+    db_disk_overwrite(rwtx, *this);
 
     return true;
 }

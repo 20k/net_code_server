@@ -48,6 +48,15 @@ fiber_queue& get_noncritical_fiber_queue()
     return q;
 }
 
+namespace async
+{
+    template<typename T>
+    void start(T&& t)
+    {
+        get_noncritical_fiber_queue().add(std::forward<T>(t));
+    }
+}
+
 void fiber_sleep(double time_ms);
 void fiber_yield();
 float fiber_overload_factor(); ///1 if everything's fine, > 1 if we're overloaded
