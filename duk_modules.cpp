@@ -85,7 +85,7 @@ std::map<std::string, std::string> build_module_binary_cache()
 
     auto cache = module_cache();
 
-    js::value_context vctx;
+    js::value_context vctx(nullptr, nullptr);
 
     for(auto& data : cache)
     {

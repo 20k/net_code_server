@@ -25,15 +25,15 @@ uint64_t value_to_key(const JSValue& root)
 
 struct heap_stash
 {
-    sandbox_data* sandbox = nullptr;
+    void* sandbox = nullptr;
     JSValue heap_stash_value;
     JSContext* ctx = nullptr;
     std::map<uint64_t, std::map<std::string, JSValue>> hidden_map;
     std::map<uint64_t, std::pair<JSValue, uint64_t>> reference_count;
 
-    heap_stash(JSContext* global)
+    heap_stash(JSContext* global, void* _sandbox)
     {
-        sandbox = new sandbox_data;
+        sandbox = _sandbox;
         heap_stash_value = JS_NewObject(global);
         ctx = global;
     }
@@ -212,9 +212,9 @@ struct global_stash
     }
 };
 
-void init_heap(JSContext* root, JSInterruptHandler interrupt)
+void init_heap(JSContext* root, JSInterruptHandler interrupt, void* sandbox)
 {
-    heap_stash* heap = new heap_stash(root);
+    heap_stash* heap = new heap_stash(root, sandbox);
     global_stash* stash = new global_stash(root);
 
     JS_SetContextOpaque(root, (void*)stash);
@@ -254,14 +254,14 @@ js_quickjs::value_context::value_context(value_context& other)
     context_owner = true;
 }
 
-js_quickjs::value_context::value_context(JSInterruptHandler interrupt)
+js_quickjs::value_context::value_context(JSInterruptHandler interrupt, void* sandbox)
 {
     heap = JS_NewRuntime();
     ctx = JS_NewContext(heap);
 
     JS_SetMemoryLimit(heap, 1024*1024*4);
 
-    init_heap(ctx, interrupt);
+    init_heap(ctx, interrupt, sandbox);
 
     runtime_owner = true;
     context_owner = true;
@@ -1459,7 +1459,7 @@ struct quickjs_tester
     {
         printf("Testing quick\n");
 
-        js_quickjs::value_context vctx;
+        js_quickjs::value_context vctx(nullptr, nullptr);
 
         {
             js_quickjs::value val(vctx);

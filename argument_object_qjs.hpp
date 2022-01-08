@@ -26,7 +26,7 @@ namespace js_quickjs
 
         value_context(JSContext* ctx);
         value_context(value_context&);
-        value_context(JSInterruptHandler handler = nullptr);
+        value_context(JSInterruptHandler handler, void* sandbox);
         ~value_context();
 
         value_context& operator=(const value_context& other);

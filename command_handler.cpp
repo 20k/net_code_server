@@ -52,7 +52,7 @@ struct unsafe_info
     #ifndef USE_QUICKJS
     unsafe_info() : returned_val(heap)
     #else
-    unsafe_info() : heap(interrupt_handler), returned_val(heap)
+    unsafe_info() : heap(interrupt_handler, new sandbox_data), returned_val(heap)
     #endif
     {
 
@@ -1734,7 +1734,7 @@ nlohmann::json handle_command_impl(std::shared_ptr<shared_command_handler_state>
             std::string compile_error;
 
             {
-                js::value_context vctx;
+                js::value_context vctx(nullptr, nullptr);
 
                 compile_error = script_inf.load_from_unparsed_source(vctx, data_source, fullname, is_es6, false);
             }
