@@ -1228,6 +1228,8 @@ void* js_quickjs::get_sandbox_data_impl(js_quickjs::value_context& vctx)
 {
     heap_stash* stash = (heap_stash*)JS_GetRuntimeOpaque(JS_GetRuntime(vctx.ctx));
 
+    assert(stash->sandbox);
+
     return (void*)stash->sandbox;
 }
 
