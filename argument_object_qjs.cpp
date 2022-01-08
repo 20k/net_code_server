@@ -1,6 +1,5 @@
 #include "argument_object_qjs.hpp"
-#include "memory_sandbox.hpp"
-#include "argument_object.hpp"
+#include <iostream>
 
 ///todo: this seems pretty uh. bad. If the value gets freed, this will be ub everywhere
 uint64_t value_to_key(const js_quickjs::value& root)
@@ -1324,18 +1323,18 @@ js_quickjs::value js_quickjs::execute_promises(js_quickjs::value_context& vctx, 
                     __resolvePromise;
                 )";
 
-        js::value prom_function = js::eval(vctx, to_eval);
+        js_quickjs::value prom_function = js_quickjs::eval(vctx, to_eval);
 
-        js::call(prom_function, js_val);
+        js_quickjs::call(prom_function, js_val);
 
         vctx.execute_jobs();
 
-        js_val = js::get_global(vctx).get("__promiseValue");
-        bool is_err = (bool)js::get_global(vctx).get("__promiseResult") == false;
+        js_val = js_quickjs::get_global(vctx).get("__promiseValue");
+        bool is_err = (bool)js_quickjs::get_global(vctx).get("__promiseResult") == false;
 
         if(js_val.is_exception() || js_val.is_error() || is_err)
         {
-            js_val = js::make_error(vctx, js_val.to_error_message());
+            js_val = js_quickjs::make_error(vctx, js_val.to_error_message());
         }
     }
     else
