@@ -766,7 +766,7 @@ js_quickjs::qstack_manager::~qstack_manager()
     }
 }
 
-JSValue qarg::push(JSContext* ctx, const js_quickjs::value& in)
+JSValue js_quickjs::args::push(JSContext* ctx, const js_quickjs::value& in)
 {
     if(!in.has_value)
         return JS_UNDEFINED;
@@ -774,7 +774,7 @@ JSValue qarg::push(JSContext* ctx, const js_quickjs::value& in)
     return JS_DupValue(ctx, in.val);
 }
 
-void qarg::get(js_quickjs::value_context& vctx, const JSValue& val, js_quickjs::value& out)
+void js_quickjs::args::get(js_quickjs::value_context& vctx, const JSValue& val, js_quickjs::value& out)
 {
     if(JS_IsUndefined(val))
         return;
@@ -782,7 +782,7 @@ void qarg::get(js_quickjs::value_context& vctx, const JSValue& val, js_quickjs::
     out = val;
 }
 
-void qarg::get(js_quickjs::value_context& vctx, const JSValue& val, std::vector<std::pair<js_quickjs::value, js_quickjs::value>>& out)
+void js_quickjs::args::get(js_quickjs::value_context& vctx, const JSValue& val, std::vector<std::pair<js_quickjs::value, js_quickjs::value>>& out)
 {
     UNDEF();
 
@@ -824,7 +824,7 @@ void qarg::get(js_quickjs::value_context& vctx, const JSValue& val, std::vector<
     js_free(vctx.ctx, names);
 }
 
-void qarg::get(js_quickjs::value_context& vctx, const JSValue& val, std::vector<js_quickjs::value>& out)
+void js_quickjs::args::get(js_quickjs::value_context& vctx, const JSValue& val, std::vector<js_quickjs::value>& out)
 {
     UNDEF();
 
@@ -856,7 +856,7 @@ js_quickjs::value& js_quickjs::value::operator=(const char* v)
 {
     qstack_manager m(*this);
 
-    val = qarg::push(ctx, v);
+    val = args::push(ctx, v);
 
     return *this;
 }
@@ -865,7 +865,7 @@ js_quickjs::value& js_quickjs::value::operator=(const std::string& v)
 {
     qstack_manager m(*this);
 
-    val = qarg::push(ctx, v);
+    val = args::push(ctx, v);
 
     return *this;
 }
@@ -874,7 +874,7 @@ js_quickjs::value& js_quickjs::value::operator=(int64_t v)
 {
     qstack_manager m(*this);
 
-    val = qarg::push(ctx, v);
+    val = args::push(ctx, v);
 
     return *this;
 }
@@ -883,7 +883,7 @@ js_quickjs::value& js_quickjs::value::operator=(int v)
 {
     qstack_manager m(*this);
 
-    val = qarg::push(ctx, v);
+    val = args::push(ctx, v);
 
     return *this;
 }
@@ -892,7 +892,7 @@ js_quickjs::value& js_quickjs::value::operator=(double v)
 {
     qstack_manager m(*this);
 
-    val = qarg::push(ctx, v);
+    val = args::push(ctx, v);
 
     return *this;
 }
@@ -901,7 +901,7 @@ js_quickjs::value& js_quickjs::value::operator=(bool v)
 {
     qstack_manager m(*this);
 
-    val = qarg::push(ctx, v);
+    val = args::push(ctx, v);
 
     return *this;
 }
@@ -981,7 +981,7 @@ js_quickjs::value& js_quickjs::value::operator=(js_quickjs::undefined_t)
 {
     qstack_manager m(*this);
 
-    val = qarg::push(ctx, js_quickjs::undefined);
+    val = args::push(ctx, js_quickjs::undefined);
 
     return *this;
 }
@@ -990,7 +990,7 @@ js_quickjs::value& js_quickjs::value::operator=(js_quickjs::null_t)
 {
     qstack_manager m(*this);
 
-    val = qarg::push(ctx, js_quickjs::null);
+    val = args::push(ctx, js_quickjs::null);
 
     return *this;
 }
@@ -999,7 +999,7 @@ js_quickjs::value& js_quickjs::value::operator=(const nlohmann::json& in)
 {
     qstack_manager m(*this);
 
-    val = qarg::push(ctx, in);
+    val = args::push(ctx, in);
 
     return *this;
 }
@@ -1008,7 +1008,7 @@ js_quickjs::value& js_quickjs::value::operator=(js_quickjs::funcptr_t in)
 {
     qstack_manager m(*this);
 
-    val = qarg::push(ctx, in);
+    val = args::push(ctx, in);
 
     return *this;
 }
@@ -1017,7 +1017,7 @@ js_quickjs::value& js_quickjs::value::operator=(const JSValue& in)
 {
     qstack_manager m(*this);
 
-    val = qarg::push(ctx, in);
+    val = args::push(ctx, in);
 
     return *this;
 }
@@ -1037,7 +1037,7 @@ js_quickjs::value::operator std::string() const
         return std::string();
 
     std::string ret;
-    qarg::get(*vctx, val, ret);
+    args::get(*vctx, val, ret);
 
     return ret;
 }
@@ -1048,7 +1048,7 @@ js_quickjs::value::operator int64_t() const
         return int64_t();
 
     int64_t ret;
-    qarg::get(*vctx, val, ret);
+    args::get(*vctx, val, ret);
 
     return ret;
 }
@@ -1059,7 +1059,7 @@ js_quickjs::value::operator int() const
         return int();
 
     int ret;
-    qarg::get(*vctx, val, ret);
+    args::get(*vctx, val, ret);
 
     return ret;
 }
@@ -1070,7 +1070,7 @@ js_quickjs::value::operator double() const
         return double();
 
     double ret;
-    qarg::get(*vctx, val, ret);
+    args::get(*vctx, val, ret);
 
     return ret;
 }
@@ -1081,7 +1081,7 @@ js_quickjs::value::operator bool() const
         return bool();
 
     bool ret;
-    qarg::get(*vctx, val, ret);
+    args::get(*vctx, val, ret);
 
     return ret;
 }
@@ -1092,7 +1092,7 @@ std::vector<std::pair<js_quickjs::value, js_quickjs::value>> js_quickjs::value::
         return std::vector<std::pair<js_quickjs::value, js_quickjs::value>>();
 
     std::vector<std::pair<js_quickjs::value, js_quickjs::value>> ret;
-    qarg::get(*vctx, val, ret);
+    args::get(*vctx, val, ret);
 
     return ret;
 }

@@ -9,7 +9,6 @@
 #include "duktape.h"
 #include <assert.h>
 #include <nlohmann/json.hpp>
-#include "argument_object_common.hpp"
 
 using context_t = duk_context;
 

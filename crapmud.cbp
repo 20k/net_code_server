@@ -466,7 +466,6 @@
 		</Linker>
 		<Unit filename="argument_object.cpp" />
 		<Unit filename="argument_object.hpp" />
-		<Unit filename="argument_object_common.hpp" />
 		<Unit filename="argument_object_duk.cpp" />
 		<Unit filename="argument_object_duk.hpp" />
 		<Unit filename="argument_object_qjs.cpp" />
