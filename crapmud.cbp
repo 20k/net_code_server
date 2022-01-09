@@ -468,8 +468,6 @@
 		<Unit filename="argument_object.hpp" />
 		<Unit filename="argument_object_duk.cpp" />
 		<Unit filename="argument_object_duk.hpp" />
-		<Unit filename="argument_object_qjs.cpp" />
-		<Unit filename="argument_object_qjs.hpp" />
 		<Unit filename="ascii_helpers.cpp" />
 		<Unit filename="ascii_helpers.hpp" />
 		<Unit filename="auth.cpp" />
@@ -509,6 +507,8 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="deps/quickjs/quickjs.h" />
+		<Unit filename="deps/quickjs_cpp/quickjs_cpp.cpp" />
+		<Unit filename="deps/quickjs_cpp/quickjs_cpp.hpp" />
 		<Unit filename="deps/secret/common.cpp" />
 		<Unit filename="deps/secret/common.hpp" />
 		<Unit filename="deps/secret/initial_link_setup.cpp" />

@@ -5,7 +5,7 @@
 //#define USE_DUKTAPE
 
 #ifdef USE_QUICKJS
-#include "argument_object_qjs.hpp"
+#include <quickjs_cpp/quickjs_cpp.hpp>
 namespace js = js_quickjs;
 #endif // USE_QUICKJS
 
