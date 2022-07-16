@@ -5,13 +5,13 @@
 		<Option title="crapmud" />
 		<Option makefile="makefile" />
 		<Option pch_mode="2" />
-		<Option compiler="gcc" />
+		<Option compiler="gcc-msys2-mingw64" />
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/Debug/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-Og" />
 					<Add option="-g" />
@@ -22,7 +22,7 @@
 				<Option output="bin/Release/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-g" />
@@ -34,7 +34,7 @@
 				<Option output="bin/ReleaseNoSymbols/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/ReleaseNoSymbols/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-march=nehalem" />
@@ -50,7 +50,7 @@
 				<Option output="bin/Profile/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Profile/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-pg" />
@@ -66,7 +66,7 @@
 				<Option output="bin/Deploy/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Deploy/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-fexpensive-optimizations" />
 					<Add option="-O3" />
@@ -86,7 +86,7 @@
 				<Option output="bin/ReleaseTest/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/ReleaseTest/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-march=nehalem" />
@@ -102,7 +102,7 @@
 				<Option output="bin/Debug/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-DLOCAL_IP" />
@@ -116,7 +116,7 @@
 				<Option output="bin/DebugTest/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/DebugTest/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-Og" />
@@ -128,7 +128,7 @@
 				<Option output="bin/DeployM/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/DeployM/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-g" />
@@ -145,7 +145,7 @@
 				<Option output="bin/ReleaseTestDebug/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/ReleaseTestDebug/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-march=nehalem" />
@@ -158,7 +158,7 @@
 				<Option output="bin/ReleaseTestDebugClang/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/ReleaseTestDebugClang/" />
 				<Option type="1" />
-				<Option compiler="clang" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-fsanitize=undefined-trap -fsanitize-undefined-trap-on-error" />
 					<Add option="-m64" />
@@ -176,7 +176,7 @@
 				<Option output="bin/ReleaseTestProfile/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/ReleaseTestProfile/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-march=nehalem" />
@@ -193,7 +193,7 @@
 				<Option output="bin/ReleaseTestLTO/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/ReleaseTestLTO/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-fexpensive-optimizations" />
 					<Add option="-flto" />
@@ -212,7 +212,7 @@
 				<Option output="bin/LRelease/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/LRelease/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
@@ -250,7 +250,7 @@
 				<Option output="bin/LDeploy/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/LDeploy/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
@@ -287,7 +287,7 @@
 				<Option output="bin/ProfileNoOpt/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/ProfileNoOpt/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-pg" />
 					<Add option="-g" />
@@ -308,7 +308,7 @@
 				<Option output="bin/ReleaseNoSymFibers/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/ReleaseNoSymFibers/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-march=nehalem" />
@@ -325,7 +325,7 @@
 				<Option output="bin/DebugFibers/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/DebugFibers/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Compiler>
 					<Add option="-Og" />
 					<Add option="-g" />
@@ -340,7 +340,7 @@
 				<Option output="bin/LReleaseValgrind/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/LReleaseValgrind/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Option projectCompilerOptionsRelation="1" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
@@ -384,7 +384,7 @@
 				<Option output="bin/LDebug/crapmud" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/LDebug/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="gcc-msys2-mingw64" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
@@ -491,6 +491,7 @@
 		<Unit filename="deps/networking/serialisable.cpp" />
 		<Unit filename="deps/networking/serialisable.hpp" />
 		<Unit filename="deps/networking/serialisable_fwd.hpp" />
+		<Unit filename="deps/networking/serialisable_msgpack.hpp" />
 		<Unit filename="deps/quickjs/cutils.c">
 			<Option compilerVar="CC" />
 		</Unit>
