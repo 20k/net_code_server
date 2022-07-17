@@ -48,7 +48,7 @@ void handle_sleep(sandbox_data* dat)
 
         if(dat->is_realtime)
         {
-            if(dat->all_shared->state.should_terminate_any_realtime)
+            if(dat->all_shared->state.should_terminate_any_script)
             {
                 dat->terminate_realtime_gracefully = true;
                 throw std::runtime_error("Terminated Realtime Script");
@@ -112,6 +112,18 @@ void handle_sleep(sandbox_data* dat)
         {
             dat->terminate_semi_gracefully = true;
             throw std::runtime_error("Script ran for more than 5000ms and was cooperatively terminated");
+        }
+
+        if(dat->all_shared->live_work_units() > 10)
+        {
+            dat->terminate_semi_gracefully = true;
+            throw std::runtime_error("Too many running scripts (10)");
+        }
+
+        if(dat->all_shared->state.should_terminate_any_script)
+        {
+            dat->terminate_semi_gracefully = true;
+            throw std::runtime_error("Terminated Script");
         }
     }
 

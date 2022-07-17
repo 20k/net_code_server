@@ -52,7 +52,7 @@ struct command_handler_state
     lock_type_t script_data_lock;
     std::map<int, realtime_script_data> script_data;
 
-    std::atomic_bool should_terminate_any_realtime{false};
+    std::atomic_bool should_terminate_any_script{false};
 
     std::atomic_int number_of_oneshot_scripts{0};
     std::atomic_int number_of_oneshot_scripts_terminated{0};

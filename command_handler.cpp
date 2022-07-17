@@ -736,7 +736,7 @@ std::string run_in_user_context(std::string username, std::string command, std::
 
                         server_packet_sequence_id++;
 
-                        if(all_shared.value()->state.should_terminate_any_realtime)
+                        if(all_shared.value()->state.should_terminate_any_script)
                             return true;
 
                         {
@@ -2460,7 +2460,7 @@ nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_
 
         if(id <= -1)
         {
-            all_shared->state.should_terminate_any_realtime = true;
+            all_shared->state.should_terminate_any_script = true;
             all_shared->terminate_timer.restart();
         }
         else

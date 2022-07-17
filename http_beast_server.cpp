@@ -168,7 +168,7 @@ void websocket_server(connection& conn)
 
                 if(user_states.find(disconnected_id) != user_states.end())
                 {
-                    user_states[disconnected_id]->state.should_terminate_any_realtime = true;
+                    user_states[disconnected_id]->state.should_terminate_any_script = true;
 
                     user_states.erase(disconnected_id);
                 }
@@ -329,7 +329,7 @@ void websocket_server(connection& conn)
         {
             if((i.second->terminate_timer.get_elapsed_time_s() * 1000) > 100)
             {
-                i.second->state.should_terminate_any_realtime = false;
+                i.second->state.should_terminate_any_script = false;
             }
         }
 
