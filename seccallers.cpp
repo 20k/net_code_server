@@ -777,6 +777,8 @@ void async_launch_script_name(js::value_context& vctx, int sl, const std::string
 
     #else
 
+    fiber_sleep(10);
+
     get_global_fiber_queue().add([=]()
     {
         run_in_user_context(caller, seclevel + call_end, ptr, std::nullopt, true);
