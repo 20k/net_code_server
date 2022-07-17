@@ -19,6 +19,8 @@ struct global_state;
 std::string run_in_user_context(std::string username, std::string command, std::optional<std::shared_ptr<shared_command_handler_state>> all_shared, std::optional<float> custom_exec_time_s = std::nullopt, bool force_exec = false);
 void throwaway_user_thread(const std::string& username, const std::string& command, std::optional<float> custom_exec_time_s = std::nullopt, bool force_exec = false);
 
+bool can_immediately_handle_command(nlohmann::json data);
+
 ///context?
 nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_shared, nlohmann::json data);
 void async_handle_command(std::shared_ptr<shared_command_handler_state> all_shared, nlohmann::json data);

@@ -314,9 +314,12 @@ void websocket_server(connection& conn)
 
             if(my_queue.size() > 0)
             {
-                if(!shared->execution_is_blocked && !shared->execution_requested)
+                bool is_immediate_command = can_immediately_handle_command(my_queue.front());
+
+                if((!shared->execution_is_blocked && !shared->execution_requested) || is_immediate_command)
                 {
-                    shared->execution_requested = true;
+                    if(!is_immediate_command)
+                        shared->execution_requested = true;
 
                     async_handle_command(shared, my_queue.front());
 

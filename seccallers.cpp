@@ -777,7 +777,6 @@ void async_launch_script_name(js::value_context& vctx, int sl, const std::string
 
     #else
 
-    ///todo: fix fork bomb
     fiber_sleep(10);
 
     get_global_fiber_queue().add([=]()

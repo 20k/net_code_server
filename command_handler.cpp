@@ -2136,6 +2136,16 @@ std::vector<std::string> sanitise_input_vec(std::vector<std::string> vec)
     return vec;
 }
 
+bool can_immediately_handle_command(nlohmann::json str)
+{
+    std::string type = str["type"];
+
+    if(type == "generic_server_command")
+        return false;
+
+    return true;
+}
+
 nlohmann::json handle_command(std::shared_ptr<shared_command_handler_state> all_shared, nlohmann::json str)
 {
     std::string current_user = all_shared->state.get_user_name();
