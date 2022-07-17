@@ -330,7 +330,7 @@ void websocket_server(connection& conn)
 
         for(auto& i : user_states)
         {
-            if((i.second->terminate_timer.get_elapsed_time_s() * 1000) > 100)
+            if((i.second->terminate_timer.get_elapsed_time_s() * 1000) > 1000)
             {
                 i.second->state.should_terminate_any_script = false;
             }
