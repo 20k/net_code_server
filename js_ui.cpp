@@ -1,9 +1,7 @@
 #include "js_ui.hpp"
 #include "command_handler_state.hpp"
 #include <cmath>
-#include "rate_limiting.hpp"
 #include <tuple>
-#include "db_storage_backend.hpp"
 
 namespace
 {
@@ -64,13 +62,6 @@ ImU32 ImHashStr(const char* data_p, size_t data_size, ImU32 seed)
 bool js_ui::is_edge_event(const std::string& v)
 {
     return v == "clicked" || v == "edited" || v == "activated" || v == "deactivated" || v == "deactivatedafteredit" || v == "toggledopen";
-}
-
-std::string generate_unique_id()
-{
-    size_t id = db_storage_backend::get_unique_id();
-
-    return std::to_string(id) + "##idboy";
 }
 
 std::string sanitise_value(const std::string& str)
